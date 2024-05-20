@@ -20,7 +20,13 @@ Scenario('banner admin', ({ I, DT, DTE, Document }) => {
 });
 
 Scenario('banner editor', ({ I, DTE, Document }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=21343");
+    let confLng = I.getConfLng();
+    if("sk" === confLng) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=21343");
+    } else if("en" === confLng) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=81749");
+    }
+
     DTE.waitForEditor();
     I.wait(5);
 
@@ -32,16 +38,23 @@ Scenario('banner editor', ({ I, DTE, Document }) => {
     Document.screenshot("/redactor/apps/banner/editor-dialog.png");
     I.switchTo();
 
-    I.amOnPage("/apps/bannerovy-system/");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/bannerovy-system/");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/bannerovy-system/banner-system.html");
+    }
     I.wait(5);
     Document.screenshotElement("div.banner-image", "/redactor/apps/banner/banner-image.png");
     Document.screenshotElement("div.banner-html", "/redactor/apps/banner/banner-html.png");
     Document.screenshotElement("div.banner-content", "/redactor/apps/banner/banner-content.png");
 });
 
-Scenario('Video banner', ({ I, Document }) => {
+Scenario('Video banner', ({ I, Document, Browser }) => {
+    I.assertEqual(Browser.isFirefox(), true, "There is a problem to play video in chromium, please run the test in Firefox");
+
+    //TODO - problem with video, but manually it works
     I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_yt.html");
-    I.seeElement("div.embed-responsive > iframe.video")
+    I.seeElement("div.embed-responsive > iframe.video");
     Document.screenshot("/redactor/apps/banner/banner-video.png", 1000, 800);
 });
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OtpPaymentInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">OtpPaymentInformation.java</span></div><h1>OtpPaymentInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  OtpPaymentInformation.java
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 31.8.2009 14:08:23
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+public class OtpPaymentInformation extends PaymentInformation
+{
+	
+	OtpPaymentInformation()
+<span class="nc" id="L24">	{</span>
+<span class="nc" id="L25">		this.merchantId = Constants.getString(&quot;basketPaymentOtpMid&quot;);</span>
+<span class="nc" id="L26">		this.key = getDecrypredKey(Constants.getString(&quot;basketPaymentOtpKey&quot;));</span>
+<span class="nc" id="L27">	}		</span>
+	
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L32">		String confUrl = Constants.getString(&quot;basketPaymentOtpUrl&quot;);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L34">			return confUrl;</span>
+		else
+<span class="nc" id="L36">			return &quot;https://www.otpdirekt.sk/index_eshop1024.html&quot;;</span>
+	}
+	
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L42">		return true;</span>
+	}
+	
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{
+<span class="nc" id="L48">		StringBuilder form = new StringBuilder().</span>
+<span class="nc" id="L49">		append(&quot;&lt;FORM action=&quot;+getUrlString()+&quot; METHOD=\&quot;GET\&quot; name='payForm'&gt;&quot;).</span>
+<span class="nc" id="L50">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;ESHOP\&quot; value=&quot;+getMerchantId()+&quot; /&gt;&quot;).</span>
+<span class="nc" id="L51">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CASTKA\&quot; value=&quot;+payment.getAmountString()+&quot; /&gt;&quot;).</span>
+<span class="nc" id="L52">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;VS\&quot; value=&quot;+payment.getVariableSymbol()+&quot; /&gt;&quot;).</span>
+<span class="nc" id="L53">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CS\&quot; value=&quot;+payment.getConstantSymbol()+&quot; /&gt;&quot;).</span>
+<span class="nc" id="L54">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;URL\&quot; value=&quot;+request.getAttribute(&quot;RURL&quot;)+&quot; /&gt;&quot;);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (Tools.isNotEmpty(payment.getSpecificSymbol()))</span>
+<span class="nc" id="L56">			form.append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;SS\&quot; value=&quot;+payment.getSpecificSymbol()+&quot; /&gt;&quot;);</span>
+<span class="nc" id="L57">		form.append(&quot;&lt;/FORM&gt;&quot;);</span>
+<span class="nc" id="L58">		return form.toString();</span>
+	}
+	
+	@Override
+	public boolean validateBankResponce(HttpServletRequest request) throws Exception
+	{
+		//nemaju SIGN ani nic????, treba pockat na dospecifikovanie
+<span class="nc" id="L65">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

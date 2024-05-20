@@ -30,7 +30,7 @@ import sk.iway.iwcm.utils.MapUtils;
 public class IwcmRequest extends HttpServletRequestWrapper
 {
 	//private final HttpServletRequest original;
-	private Map<String, String[]> changedParameterValues = new HashMap<String, String[]>();
+	private Map<String, String[]> changedParameterValues = new HashMap<>();
 
 	public IwcmRequest(HttpServletRequest original)
 	{
@@ -65,12 +65,12 @@ public class IwcmRequest extends HttpServletRequestWrapper
 			return changedParameterValues.get(parameter);
 
 		//[#32245 - Penetracni testy novy web] - osetrenie formlarovych parametrov aby nemohli obsahovat HTML kod
-		String values[] = super.getParameterValues(parameter);
+		String[] values = super.getParameterValues(parameter);
 		if (values==null || values.length<1) return values;
 
 		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
-		String valuesFiltered[] = new String[values.length];
-		if (values!=null && values.length>0)
+		String[] valuesFiltered = new String[values.length];
+		if (values.length>0)
 		{
 			for (int i=0; i<values.length; i++)
 			{

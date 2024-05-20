@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestaurantMenuEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.restaurant_menu.jpa</a> &gt; <span class="el_source">RestaurantMenuEntity.java</span></div><h1>RestaurantMenuEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.restaurant_menu.jpa;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name = &quot;restaurant_menu&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESTAURANT_MENU)
+<span class="fc" id="L35">public class RestaurantMenuEntity {</span>
+
+    @Id
+    @Column(name = &quot;menu_id&quot;)
+    @GeneratedValue(generator=&quot;WJGen_restaurant_menu&quot;)
+	@TableGenerator(name=&quot;WJGen_restaurant_menu&quot;,pkColumnValue=&quot;restaurant_menu&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;,orderable = false)
+    private Long id;
+
+    @Column(name = &quot;day&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title=&quot;components.stat.seo.google.position.searching.day&quot;,
+        sortAfter = &quot;editorFields.dayOfWeek&quot;,
+        orderable = false
+    )
+	private Date dayDate;
+
+    @Column(name = &quot;priority&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.stat.seo.google.position.searching.position&quot;,
+        orderable = false
+    )
+    private Integer priority;
+
+    @Column(name = &quot;domain_id&quot;)
+    @NotNull
+    private Integer domainId;
+
+    @Column(name = &quot;menu_meals_id&quot;, insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long mealId;
+
+<span class="fc" id="L69">    @Transient</span>
+    @DataTableColumnNested
+	private RestaurantMenuEditorFields editorFields = null;
+
+    @ManyToOne
+	@JsonBackReference(value=&quot;restaurantMenuMealsEntity&quot;)
+	@JoinColumn(name=&quot;menu_meals_id&quot;)
+	private RestaurantMenuMealsEntity meal;
+
+    //For FE old version -&gt; for jsp
+	@Transient
+	public int getDayNumber() {
+<span class="fc" id="L81">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L82">		cal.setTime(dayDate);</span>
+<span class="fc" id="L83">		return cal.get(Calendar.DAY_OF_WEEK);</span>
+	}
+
+	@Transient
+	public String getDayFormated() {
+<span class="fc" id="L88">		SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;dd.MM.yyyy&quot;);</span>
+<span class="fc" id="L89">		return dateFormat.format(dayDate);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

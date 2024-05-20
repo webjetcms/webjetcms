@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.grideditor.dto</a> &gt; <span class="el_source">GroupDto.java</span></div><h1>GroupDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.grideditor.dto;
+
+import java.util.List;
+
+<span class="fc" id="L5">public class GroupDto {</span>
+    private String id;
+    private String textKey;
+    private List&lt;BlockDto&gt; blocks;
+    private String filePath;
+
+    // only for group that has other action
+    private String style;
+    private String action;
+    private String content;
+    private String imagePath;
+    private boolean premium;
+
+    public String getId() {
+<span class="fc" id="L19">        return id;</span>
+    }
+
+    public void setId(String id) {
+<span class="fc" id="L23">        this.id = id;</span>
+<span class="fc" id="L24">    }</span>
+
+    public String getTextKey() {
+<span class="fc" id="L27">        return textKey;</span>
+    }
+
+    public void setTextKey(String textKey) {
+<span class="fc" id="L31">        this.textKey = textKey;</span>
+<span class="fc" id="L32">    }</span>
+
+    public String getAction() {
+<span class="fc" id="L35">        return action;</span>
+    }
+
+    public void setAction(String action) {
+<span class="nc" id="L39">        this.action = action;</span>
+<span class="nc" id="L40">    }</span>
+
+    public String getContent() {
+<span class="fc" id="L43">        return content;</span>
+    }
+
+    public void setContent(String content) {
+<span class="nc" id="L47">        this.content = content;</span>
+<span class="nc" id="L48">    }</span>
+
+    public List&lt;BlockDto&gt; getBlocks() {
+<span class="fc" id="L51">        return blocks;</span>
+    }
+
+    public void setBlocks(List&lt;BlockDto&gt; blocks) {
+<span class="fc" id="L55">        this.blocks = blocks;</span>
+<span class="fc" id="L56">    }</span>
+
+    public String getImagePath() {
+<span class="fc" id="L59">        return imagePath;</span>
+    }
+
+    public void setImagePath(String imagePath) {
+<span class="fc" id="L63">        this.imagePath = imagePath;</span>
+<span class="fc" id="L64">    }</span>
+
+    public boolean isPremium() {
+<span class="fc" id="L67">        return premium;</span>
+    }
+
+    public void setPremium(boolean premium) {
+<span class="nc" id="L71">        this.premium = premium;</span>
+<span class="nc" id="L72">    }</span>
+
+    public String getFilePath() {
+<span class="fc" id="L75">        return filePath;</span>
+    }
+
+    public void setFilePath(String filePath) {
+<span class="fc" id="L79">        this.filePath = filePath;</span>
+<span class="fc" id="L80">    }</span>
+
+    public String getStyle() {
+<span class="fc" id="L83">        return style;</span>
+    }
+
+    public void setStyle(String style) {
+<span class="nc" id="L87">        this.style = style;</span>
+<span class="nc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

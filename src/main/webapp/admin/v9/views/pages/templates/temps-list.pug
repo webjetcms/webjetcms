@@ -29,9 +29,12 @@ block content
 
             tempsTable = WJ.DataTable({
                 url: "/admin/rest/templates/temps-list",
+                serverSide: false,
                 columns: columns,
                 editorId: "tempId",
-                tabs: tabs
+                tabs: tabs,
+                fetchOnEdit: true,
+                fetchOnCreate: true
             });
         });
 

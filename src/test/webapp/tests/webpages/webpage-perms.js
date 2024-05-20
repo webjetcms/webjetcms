@@ -168,7 +168,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     I.see("K tomuto adresáru nemáte prístupové práva")
     I.wait(2);
-    I.click("button.toast-close-button");
+    I.toastrClose();
     I.wait(2);
     I.dontSee("K tomuto adresáru nemáte prístupové práva")
 

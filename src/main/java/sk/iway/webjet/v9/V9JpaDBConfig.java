@@ -31,7 +31,7 @@ import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
     basePackages = {
         "sk.iway.iwcm.components.gallery",
         "sk.iway.iwcm.system",
-        "sk.iway.iwcm.system.audit",
+        "sk.iway.iwcm.system.audit.jpa",
         "sk.iway.iwcm.components.redirects",
         "sk.iway.iwcm.components.translation_keys.jpa",
         "sk.iway.iwcm.components.forms",
@@ -69,7 +69,9 @@ import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
         "sk.iway.iwcm.components.forum.jpa",
         "sk.iway.iwcm.components.seo.jpa",
         "sk.iway.iwcm.components.rating.jpa",
-        "sk.iway.iwcm.components.restaurant_menu.jpa"
+        "sk.iway.iwcm.components.restaurant_menu.jpa",
+        "sk.iway.iwcm.components.quiz.jpa",
+        "sk.iway.iwcm.components.blog.jpa"
     }
 ) // package s repozitarmi
 public class V9JpaDBConfig {
@@ -88,7 +90,7 @@ public class V9JpaDBConfig {
         emf.setPackagesToScan(
                             "sk.iway.iwcm.components.gallery",
                             "sk.iway.iwcm.system",
-                            "sk.iway.iwcm.system.audit",
+                            "sk.iway.iwcm.system.audit.jpa",
                             "sk.iway.iwcm.components.forms",
                             "sk.iway.iwcm.components.forms.archive",
                             "sk.iway.iwcm.components.redirects",
@@ -126,7 +128,9 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.forum.jpa",
                             "sk.iway.iwcm.components.seo.jpa",
                             "sk.iway.iwcm.components.rating.jpa",
-                            "sk.iway.iwcm.components.restaurant_menu.jpa"
+                            "sk.iway.iwcm.components.restaurant_menu.jpa",
+                            "sk.iway.iwcm.components.quiz.jpa",
+                            "sk.iway.iwcm.components.blog.jpa"
         );
 
         Properties properties = new Properties();
@@ -135,6 +139,7 @@ public class V9JpaDBConfig {
 
         if (Constants.DB_TYPE == Constants.DB_ORACLE) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);
         else if (Constants.DB_TYPE == Constants.DB_MSSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);
+        else if (Constants.DB_TYPE == Constants.DB_PGSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
         else properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
 
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);

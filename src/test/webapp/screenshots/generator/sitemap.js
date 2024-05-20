@@ -5,8 +5,11 @@ Before(({ I, login }) => {
 });
 
 Scenario('sitemap editor', async ({ I, DTE, Document }) => {
+    let confLng = I.getConfLng();
+    //Default let SK
+    let docId = ("en" === confLng) ? 81851 : 24217;
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=24217");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
     DTE.waitForEditor();
     I.wait(5);
 
@@ -17,7 +20,7 @@ Scenario('sitemap editor', async ({ I, DTE, Document }) => {
     Document.screenshot("/redactor/apps/sitemap/editor-dialog.png");
     I.switchTo();
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=24217");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
     DTE.waitForEditor();
     DTE.cancel();
 
@@ -26,6 +29,11 @@ Scenario('sitemap editor', async ({ I, DTE, Document }) => {
     I.click("#pills-dt-groups-datatable-menu-tab");
     Document.screenshot("/redactor/apps/sitemap/groups-dialog.png");
 
-    I.amOnPage("/apps/mapa-stranok/");
+    if(("sk" === confLng)) {
+        I.amOnPage("/apps/mapa-stranok/");
+    } else if(("en" === confLng)) {
+        I.amOnPage("/apps/sitemap/");
+    }
+    
     Document.screenshotElement("div.sitemaptest", "/redactor/apps/sitemap/sitemap.png");
 });

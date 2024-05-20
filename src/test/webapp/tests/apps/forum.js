@@ -251,7 +251,7 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     I.see(body + "_ANSWER");
 
     I.click("div.filter-input > button");
-    I.click("a.dropdown-item > span > i.fa-trash-can-undo");
+    I.click("a.dropdown-item > span > i.ti-trash");
 
     I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + "editorFields\\.statusIcons" });
 

@@ -38,7 +38,8 @@ public class EnumerationTypeEditorFields implements Serializable {
         //Check loop dependecie (A can have B as child, but B cant have A as child same time)
         //If leep dependecie is ok, then set enumeration child bean (if null or -1 its empty select)
         Integer childId = enumerationTypeOriginal.getEditorFields().getChildEnumTypeId() == null ? -1 : enumerationTypeOriginal.getEditorFields().getChildEnumTypeId();
-        Integer oldChildId = etr.getChildEnumTypeId(enumerationTypeOriginal.getEnumerationTypeId());
+        Integer oldChildId = null;
+        if (enumerationTypeOriginal.getEnumerationTypeId()!=null) oldChildId = etr.getChildEnumTypeId(enumerationTypeOriginal.getEnumerationTypeId());
         oldChildId = oldChildId == null ? -1 : oldChildId;
 
         //Check only if childId is changed

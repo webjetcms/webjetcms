@@ -11,6 +11,7 @@ Scenario('template-groups-zakladne testy', async ({ I, DataTables }) => {
         dataTable: 'tempsGroupsListTable',
         requiredFields: ['name'],
         perms: 'menuTemplatesGroup',
+        skipSwitchDomain: true
     });
 });
 

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatableResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatableResponse.java</span></div><h1>DatatableResponse.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.struts.util.ResponseUtils;
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * Title        webjet8
+ * Company      Interway a. s. (www.interway.sk)
+ * Copyright    Interway a. s. (c) 2001-2019
+ * @author       tmarcinkova $
+ * @created      2019/05/10 12:43
+ *
+ * This is the structure we send back to the jQuery DataTables Editor plugin
+ * when the user is inserting/updating/deleting things.
+ *
+ * @param &lt;T&gt; the class being wrapped.
+ */
+
+@Getter
+@Setter
+<span class="fc" id="L26">public class DatatableResponse&lt;T&gt; {</span>
+	private List&lt;T&gt; data;
+	private String error;
+	private List&lt;DatatableFieldError&gt; fieldErrors;
+	private Boolean forceReload;
+    private List&lt;NotifyBean&gt; notify;
+
+	public List&lt;T&gt; getData() {
+<span class="fc" id="L34">		return data;</span>
+	}
+
+	public void setData(List&lt;T&gt; data) {
+<span class="fc" id="L38">		this.data = data;</span>
+<span class="fc" id="L39">	}</span>
+
+	public String getError() {
+<span class="fc" id="L42">		return ResponseUtils.filter(error);</span>
+	}
+
+	public void setError(String error) {
+<span class="fc" id="L46">		this.error = error;</span>
+<span class="fc" id="L47">	}</span>
+
+	public List&lt;DatatableFieldError&gt; getFieldErrors() {
+<span class="fc" id="L50">		return fieldErrors;</span>
+	}
+
+	public void setFieldErrors(List&lt;DatatableFieldError&gt; fieldErrors) {
+<span class="fc" id="L54">		this.fieldErrors = fieldErrors;</span>
+<span class="fc" id="L55">	}</span>
+
+	public void add(T newData) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		if (newData == null) return;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (data == null)</span>
+<span class="fc" id="L60">			data = new ArrayList&lt;T&gt;();</span>
+<span class="fc" id="L61">		data.add(newData);</span>
+<span class="fc" id="L62">	}</span>
+
+	public Boolean getForceReload() {
+<span class="fc" id="L65">		return forceReload;</span>
+	}
+
+	public void setForceReload(Boolean forceReload) {
+<span class="fc" id="L69">		this.forceReload = forceReload;</span>
+<span class="fc" id="L70">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

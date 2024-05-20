@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExcelImportQA.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.qa</a> &gt; <span class="el_source">ExcelImportQA.java</span></div><h1>ExcelImportQA.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.qa;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.Password;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *  ExcelImport.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 20.9.2006 15:45:59
+ *@modified     $Date: 2006/11/30 09:47:04 $
+ */
+public class ExcelImportQA extends ExcelImportJXL
+{
+	public ExcelImportQA(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="nc" id="L35">		super(in, request, out);</span>
+<span class="nc" id="L36">	}</span>
+
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (row.length &lt; 2)</span>
+<span class="nc" id="L42">			return;</span>
+
+<span class="nc" id="L44">		String question = getValue(row, &quot;question&quot;);</span>
+<span class="nc" id="L45">		String answer = getValue(row, &quot;answer&quot;);</span>
+
+<span class="nc bnc" id="L47" title="All 4 branches missed.">		if (Tools.isNotEmpty(question) &amp;&amp; Tools.isNotEmpty(answer))</span>
+		{
+<span class="nc" id="L49">			println(prop.getText(&quot;components.qa.excel_import.importing&quot;) + &quot; &quot; + question, rowCounter);</span>
+
+<span class="nc" id="L51">			boolean publishOnWeb = true;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (Tools.isNotEmpty(getValue(row, &quot;publish_on_web&quot;)))</span>
+			{
+<span class="nc" id="L54">				publishOnWeb = getBooleanValue(row, &quot;publish_on_web&quot;);</span>
+			}
+
+<span class="nc" id="L57">			PreparedStatement ps = null;</span>
+			try
+			{
+<span class="nc" id="L60">				ps = db_conn.prepareStatement(&quot;INSERT INTO questions_answers (group_name, category_name, question_date, answer_date, question, answer, from_name, from_email, to_name, to_email, publish_on_web, hash, allow_publish_on_web, from_phone, from_company, field_a, field_b, field_c, field_d, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L61">				int psCounter = 1;</span>
+<span class="nc" id="L62">				ps.setString(psCounter++, getValue(row, &quot;group_name&quot;));</span>
+<span class="nc" id="L63">				ps.setString(psCounter++, getValue(row, &quot;category_name&quot;));</span>
+<span class="nc" id="L64">				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(getValue(row, &quot;question_date&quot;))));</span>
+<span class="nc" id="L65">				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(getValue(row, &quot;answer_date&quot;))));</span>
+<span class="nc" id="L66">				DB.setClob(ps, psCounter++, question);</span>
+<span class="nc" id="L67">				DB.setClob(ps, psCounter++, answer);</span>
+<span class="nc" id="L68">				ps.setString(psCounter++, getValue(row, &quot;from_name&quot;));</span>
+<span class="nc" id="L69">				ps.setString(psCounter++, getValue(row, &quot;from_email&quot;));</span>
+<span class="nc" id="L70">				ps.setString(psCounter++, getValue(row, &quot;to_name&quot;));</span>
+<span class="nc" id="L71">				ps.setString(psCounter++, getValue(row, &quot;to_email&quot;));</span>
+<span class="nc" id="L72">				ps.setBoolean(psCounter++, publishOnWeb);</span>
+<span class="nc" id="L73">				ps.setString(psCounter++, Password.generatePassword(10));</span>
+<span class="nc" id="L74">				ps.setBoolean(psCounter++, publishOnWeb);</span>
+
+<span class="nc" id="L76">				ps.setString(psCounter++, getValue(row, &quot;from_phone&quot;));</span>
+<span class="nc" id="L77">				ps.setString(psCounter++, getValue(row, &quot;from_company&quot;));</span>
+<span class="nc" id="L78">				ps.setString(psCounter++, getValue(row, &quot;field_a&quot;));</span>
+<span class="nc" id="L79">				ps.setString(psCounter++, getValue(row, &quot;field_b&quot;));</span>
+<span class="nc" id="L80">				ps.setString(psCounter++, getValue(row, &quot;field_c&quot;));</span>
+<span class="nc" id="L81">				ps.setString(psCounter++, getValue(row, &quot;field_d&quot;));</span>
+<span class="nc" id="L82">				ps.setInt(psCounter++, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L84">				ps.execute();</span>
+<span class="nc" id="L85">				ps.close();</span>
+			}
+<span class="nc" id="L87">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L89">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L90">				printlnError(&quot;ERROR: &quot; + ex.getMessage(), rowCounter);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L96" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L97">						ps.close();</span>
+				}
+<span class="nc" id="L99">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L101">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L102">				}</span>
+			}
+		}
+<span class="nc" id="L105">	}</span>
+
+	@Override
+	public String getValue(Cell[] row, String name) throws Exception
+	{
+<span class="nc" id="L110">		String value = super.getValue(row, name);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (Tools.isEmpty(value))</span>
+<span class="nc" id="L112">			value = &quot;&quot;;</span>
+
+<span class="nc" id="L114">		return(value);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

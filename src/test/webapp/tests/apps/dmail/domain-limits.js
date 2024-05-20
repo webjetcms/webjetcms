@@ -9,7 +9,7 @@ Scenario('domain-limits-zakladne testy', async ({I, DataTables}) => {
     I.amOnPage("/apps/dmail/admin/domain-limits/");
     await DataTables.baseTest({
         dataTable: 'domainLimitsDataTable',
-        perms: 'menuEmail',
+        perms: 'cmp_dmail_domainlimits',
         createSteps: function(I, options) {
         },
         editSteps: function(I, options) {
@@ -19,5 +19,6 @@ Scenario('domain-limits-zakladne testy', async ({I, DataTables}) => {
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
+        skipSwitchDomain: true
     });
 });

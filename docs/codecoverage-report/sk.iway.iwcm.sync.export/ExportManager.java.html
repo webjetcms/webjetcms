@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.export</a> &gt; <span class="el_source">ExportManager.java</span></div><h1>ExportManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.export;
+
+import java.beans.XMLEncoder;
+import java.io.File;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspWriter;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.DocNoteBean;
+import sk.iway.iwcm.editor.DocNoteDB;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.zip.ZipEntry;
+import sk.iway.iwcm.system.zip.ZipOutputStream;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.spirit.MediaDB;
+import sk.iway.spirit.model.Media;
+
+/**
+ * Export stranok.
+ * Pouzitie:
+ * &lt;pre&gt;
+ * ExportManager export = ExportManager.create(request, session);
+ * export.exportGroup(groupId); // linku na vystup ulozi do ${zipfile}
+ * &lt;/pre&gt;
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 8.6.2012 19:13:50
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class ExportManager
+{
+
+	private HttpServletRequest _request; //NOSONAR
+	private HttpSession _session; //NOSONAR
+
+	private String virtualBase;  // virtualny adresar na export
+	private String realBase;  // realny adresar na export
+
+	private Identity user;
+
+<span class="nc" id="L71">	private GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc" id="L73">	private List&lt;ArchiveEntry&gt; entries = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L75">	private JspWriter out = null;</span>
+
+	public static ExportManager create(HttpServletRequest request, HttpSession session)
+	{
+<span class="nc" id="L79">		ExportManager manager = new ExportManager();</span>
+<span class="nc" id="L80">		manager.init(request, session);</span>
+<span class="nc" id="L81">		return manager;</span>
+	}
+
+<span class="nc" id="L84">	private ExportManager(){</span>
+		// nepouzivat priamo; instancie vytvarame cez ExportManazer.create
+<span class="nc" id="L86">	}</span>
+
+	private void init(HttpServletRequest request, HttpSession session)
+	{
+<span class="nc" id="L90">		_request = request;</span>
+<span class="nc" id="L91">		_session = session;</span>
+
+<span class="nc" id="L93">		user = (Identity) _session.getAttribute(Constants.USER_KEY);</span>
+
+<span class="nc" id="L95">		initFolders(-1);</span>
+<span class="nc" id="L96">	}</span>
+
+	private void initFolders(int rootGroupId)
+	{
+<span class="nc" id="L100">		String groupIdAppend = &quot;&quot;;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (rootGroupId &gt; 0)</span>
+		{
+<span class="nc" id="L103">			groupIdAppend = rootGroupId+&quot;/&quot;;</span>
+		}
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		virtualBase = Constants.getBoolean(&quot;multiDomainEnabled&quot;)</span>
+<span class="nc" id="L107">		? (&quot;/files/&quot; + MultiDomainFilter.getDomainAlias(DocDB.getDomain(_request)) + &quot;/protected/backup/&quot;+groupIdAppend)</span>
+<span class="nc" id="L108">		: &quot;/files/protected/backup/&quot;+groupIdAppend;</span>
+
+<span class="nc" id="L110">		virtualBase = Tools.replace(virtualBase, &quot;//&quot;, &quot;/&quot;);</span>
+
+<span class="nc" id="L112">		realBase = realPath(virtualBase);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (!new IwcmFile(realBase).exists())</span>
+		{
+<span class="nc" id="L115">			new IwcmFile(realBase).mkdirs();</span>
+		}
+<span class="nc" id="L117">	}</span>
+
+	/**
+	 * Exportuje vsetko v danom adresari.
+	 *
+	 * @param groupId       identifikator adresara
+	 * @throws IOException  chyba pri zapisovani na disk alebo zipovani
+	 */
+	public void exportGroup(int groupId) throws IOException
+	{
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (null == user) return;  // neprihlaseny pouzivatel nemoze exportovat</span>
+
+<span class="nc" id="L129">		writeOut(&quot;Export id: &quot;+groupId);</span>
+
+<span class="nc" id="L131">		initFolders(groupId);</span>
+
+<span class="nc" id="L133">		String zipFilename = DocDB.getDomain(_request) + &quot;-&quot; + new SimpleDateFormat(&quot;yyyy-MM-dd-HHmm&quot;).format(new Date()) + &quot;.zip&quot;;</span>
+
+		//pre cloud cachujeme uz raz exportovane ZIP subory za dany den
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+		{
+<span class="nc" id="L138">			zipFilename = Constants.getInstallName() + &quot;-&quot; + new SimpleDateFormat(&quot;yyyy-MM-dd&quot;).format(new Date()) + &quot;-&quot;+groupId+&quot;.zip&quot;;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (FileTools.isFile(virtualBase+zipFilename))</span>
+			{
+<span class="nc" id="L141">				Logger.debug(ExportManager.class, &quot;Returning ZIP from cache: &quot;+zipFilename);</span>
+<span class="nc" id="L142">				_request.setAttribute(&quot;zipfile&quot;, virtualBase + zipFilename);</span>
+<span class="nc" id="L143">				return;</span>
+			}
+		}
+
+<span class="nc" id="L147">		writeOut(&quot;Zip: &quot;+virtualBase+&quot;/&quot;+zipFilename);</span>
+
+		// exportuj uzivatelske skupiny
+<span class="nc" id="L150">		List&lt;UserGroupDetails&gt; userGroups = UserGroupsDB.getInstance().getUserGroups();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (null != userGroups)</span>
+		{
+<span class="nc" id="L153">			write(&quot;usergroups.xml&quot;, userGroups);</span>
+		}
+
+<span class="nc" id="L156">		writeOut(&quot;usergroups.xml&quot;);</span>
+
+		// exportuj perex skupiny
+<span class="nc" id="L159">		List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if (null != perexGroups)</span>
+		{
+<span class="nc" id="L162">			write(&quot;perexgroups.xml&quot;, perexGroups);</span>
+		}
+
+<span class="nc" id="L165">		writeOut(&quot;perexgroups.xml&quot;);</span>
+
+		// exportuj sablony
+<span class="nc" id="L168">		List&lt;TemplateDetails&gt; templates = TemplatesDB.getInstance().getTemplates();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (null != templates)</span>
+		{
+<span class="nc" id="L171">			write(&quot;temps.xml&quot;, templates);</span>
+		}
+
+<span class="nc" id="L174">		writeOut(&quot;temps.xml&quot;);</span>
+
+		// exportuj adresare
+<span class="nc" id="L177">		List&lt;GroupDetails&gt; groups = groupsDB.getGroupsTree(groupId, true, true);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (null != groups)</span>
+		{
+<span class="nc" id="L180">			write(&quot;groups.xml&quot;, groups);</span>
+		}
+
+<span class="nc" id="L183">		writeOut(&quot;groups.xml&quot;);</span>
+
+		//exportuj poznamky pre redaktorov
+<span class="nc" id="L186">		List&lt;DocNoteBean&gt; docNotes = DocNoteDB.getInstance().getCurrentDocNotes();</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (null != docNotes)</span>
+		{
+<span class="nc" id="L189">			write(&quot;notes.xml&quot;, docNotes);</span>
+		}
+
+<span class="nc" id="L192">		writeOut(&quot;notes.xml&quot;);</span>
+
+		// exportuj stranky
+<span class="nc" id="L195">		List&lt;DocDetails&gt; docs = getAllDocs(groupId);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (!docs.isEmpty()) {</span>
+<span class="nc" id="L197">			write(&quot;docs.xml&quot;, docs);</span>
+		}
+
+<span class="nc" id="L200">		writeOut(&quot;docs.xml&quot;);</span>
+
+<span class="nc" id="L202">		Content content = new Content();</span>
+<span class="nc" id="L203">		ContentBuilder callback = new ContentBuilder(content, _request);</span>
+<span class="nc" id="L204">		int counter = 0;</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		for (DocDetails doc : docs)</span>
+		{
+<span class="nc" id="L207">			counter++;</span>
+<span class="nc" id="L208">			DocExporter.export(doc, callback);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			if (counter % 10 == 0) writeOut(&quot;doc &quot;+counter+&quot;/&quot;+docs.size());</span>
+<span class="nc" id="L210">		}</span>
+
+<span class="nc" id="L212">		writeOut(&quot;content.xml&quot;);</span>
+
+		//pridaj subory ak je definovany adresar
+<span class="nc" id="L215">		String[] addDirs = _request.getParameterValues(&quot;adddir&quot;);</span>
+<span class="nc bnc" id="L216" title="All 4 branches missed.">		if (addDirs != null &amp;&amp; addDirs.length&gt;0)</span>
+		{
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			for (String dir : addDirs)</span>
+			{
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (FileBrowserTools.hasForbiddenSymbol(dir)) continue;</span>
+
+<span class="nc" id="L222">				addCustomFiles(dir, callback, docs, 0);</span>
+			}
+		}
+
+<span class="nc" id="L226">		writeOut(&quot;customfiles&quot;);</span>
+
+<span class="nc" id="L228">		List&lt;Content.File&gt; contentFiles = content.getFiles();</span>
+<span class="nc" id="L229">		counter = 0;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		for (Content.File contentFile : contentFiles)</span>
+		{
+<span class="nc" id="L232">			counter++;</span>
+<span class="nc" id="L233">			Logger.debug(ExportManager.class, &quot;Adding file:&quot;+contentFile.getVirtualPath());</span>
+<span class="nc" id="L234">			String realFile = realPath(contentFile.getVirtualPath());</span>
+<span class="nc" id="L235">			String zipFile = &quot;content/&quot; + contentFile.getZipPath();</span>
+<span class="nc" id="L236">			IwcmFile iFile = new IwcmFile(realFile);</span>
+<span class="nc" id="L237">			contentFile.setSize(iFile.length());</span>
+<span class="nc" id="L238">			contentFile.setTime(iFile.lastModified());</span>
+<span class="nc" id="L239">			entries.add(new ArchiveEntry(zipFile, realFile));</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (counter % 10 == 0) writeOut(&quot;files &quot;+counter+&quot;/&quot;+contentFiles.size());</span>
+<span class="nc" id="L242">		}</span>
+<span class="nc" id="L243">		write(&quot;content.xml&quot;, content);</span>
+
+<span class="nc" id="L245">		writeOut(&quot;content.xml&quot;);</span>
+
+		//exportuj media
+<span class="nc" id="L248">		List&lt;Media&gt; media = MediaDB.getMedia(_session, &quot;documents&quot;, -1, null, 0, false);</span>
+<span class="nc" id="L249">		write(&quot;media.xml&quot;, media);</span>
+
+<span class="nc" id="L251">		writeOut(&quot;media.xml&quot;);</span>
+
+<span class="nc" id="L253">		IwcmFile exportFile = new IwcmFile(realBase, zipFilename);</span>
+
+<span class="nc" id="L255">		writeOut(&quot;Export ZIP: &quot;+exportFile.getVirtualPath());</span>
+
+<span class="nc" id="L257">		IwcmOutputStream output = new IwcmOutputStream(exportFile);</span>
+<span class="nc" id="L258">		ZipOutputStream zipOut = new ZipOutputStream(output);</span>
+<span class="nc" id="L259">		counter = 0;</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		for (ArchiveEntry entry : entries)</span>
+		{
+<span class="nc" id="L262">			counter++;</span>
+<span class="nc" id="L263">			addToZipArchive(zipOut, entry.entryPath, entry.filePath);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (counter % 10 == 0) writeOut(&quot;zipping &quot;+counter+&quot;/&quot;+entries.size());</span>
+<span class="nc" id="L265">		}</span>
+<span class="nc" id="L266">		zipOut.close();</span>
+
+<span class="nc" id="L268">		writeOut(&quot;ZIP OK&quot;);</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		for (String filename : new String[]{ &quot;docs.xml&quot;, &quot;groups.xml&quot;, &quot;temps.xml&quot;, &quot;usergroups.xml&quot;, &quot;content.xml&quot; })</span>
+		{
+<span class="nc" id="L272">			new IwcmFile(filename).delete();</span>
+		}
+
+		//zapis do auditu cestu k suboru
+<span class="nc" id="L276">		Adminlog.add(Adminlog.TYPE_EXPORT_WEBJET, &quot;Exporting web pages, group=&quot;+groupId+&quot; exported ZIP=&quot;+exportFile.getVirtualPath(), groupId, -1);</span>
+
+<span class="nc" id="L278">		_request.setAttribute(&quot;zipfile&quot;, virtualBase + zipFilename);</span>
+<span class="nc" id="L279">	}</span>
+
+	/**
+	 * Prida do exportu custom adresare (subory) volane parametrom adddir (pouziva sa v cloude)
+	 * @param dir - URL adresa adresara, napr. /images/template/common, alebo /images/template/temp48
+	 * @param callback
+	 * @param docs
+	 * @param failsafeCounter - failsafe counter, na zaciatku 0, potom sa pri rekurzii zvysuje, max hlbka je 10
+	 */
+	private void addCustomFiles(String dir, ContentBuilder callback, List&lt;DocDetails&gt; docs, int failsafeCounter)
+	{
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (failsafeCounter &gt; 10) return;</span>
+
+<span class="nc bnc" id="L292" title="All 4 branches missed.">		if (dir.startsWith(&quot;/images&quot;) || dir.startsWith(&quot;/files&quot;))</span>
+		{
+<span class="nc" id="L294">			IwcmFile fDir = new IwcmFile(Tools.getRealPath(dir));</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			if (fDir.isDirectory())</span>
+			{
+<span class="nc" id="L297">				IwcmFile[] files = fDir.listFiles();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				for (IwcmFile file : files)</span>
+				{
+<span class="nc bnc" id="L300" title="All 2 branches missed.">					if (file.isDirectory())</span>
+					{
+<span class="nc" id="L302">						addCustomFiles(dir + &quot;/&quot; + file.getName(), callback, docs, failsafeCounter+1);</span>
+					}
+<span class="nc bnc" id="L304" title="All 2 branches missed.">					else if (file.canRead())</span>
+					{
+<span class="nc" id="L306">						callback.setDoc(docs.get(0));</span>
+<span class="nc" id="L307">						Logger.debug(ExportManager.class, &quot;Adddir, file=&quot;+file.getVirtualPath());</span>
+<span class="nc" id="L308">						callback.addLink(file.getVirtualPath());</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L313">	}</span>
+
+	private List&lt;DocDetails&gt; getAllDocs(int rootGroupId)
+	{
+<span class="nc" id="L317">		List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L318">		List&lt;GroupDetails&gt; groups = groupsDB.getGroupsTree(rootGroupId, true, true);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		for (GroupDetails group : groups)</span>
+		{
+<span class="nc" id="L321">			List&lt;DocDetails&gt; groupDocs = getDocByGroup(group.getGroupId()); //DocDB.getInstance().getDocByGroup(group.getGroupId());</span>
+<span class="nc" id="L322">			docs.addAll(groupDocs);</span>
+<span class="nc" id="L323">		}</span>
+<span class="nc" id="L324">		return docs;</span>
+	}
+
+	/**
+	 * Pouzite priamo tu citanie z DB pretoze sa maju exportovat aj not available stranky, co standarde DocDB nevie kvoli tomu aby to nahodou niekto nepouzil ;-)
+	 * @param groupId
+	 * @return
+	 */
+	private List&lt;DocDetails&gt; getDocByGroup(int groupId)
+	{
+<span class="nc" id="L334">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L335">		java.sql.Connection db_conn = null;</span>
+<span class="nc" id="L336">		java.sql.PreparedStatement ps = null;</span>
+<span class="nc" id="L337">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L340">			db_conn = DBPool.getConnectionReadUncommited();</span>
+
+			//read user permissions for every org struct
+
+<span class="nc" id="L344">			StringBuilder order = new StringBuilder(&quot;d.title&quot;);</span>
+<span class="nc" id="L345">			order.append(&quot; ASC&quot;);</span>
+
+			String sql;
+			DocDetails doc;
+<span class="nc" id="L349">			String usersTablePrefix = Constants.getString(&quot;usersTablePrefix&quot;);</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L352">				sql = &quot;SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d, &quot;+usersTablePrefix+&quot;users u WHERE d.author_id=u.user_id(+) AND group_id=&quot; + groupId + &quot; ORDER BY &quot; + order.toString();</span>
+			}
+			else
+			{
+<span class="nc" id="L356">				sql = &quot;SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN &quot;+usersTablePrefix+&quot;users u ON d.author_id=u.user_id WHERE group_id=&quot; + groupId + &quot; ORDER BY &quot; + order.toString();</span>
+			}
+<span class="nc" id="L358">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L359">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L363">				doc = DocDB.getDocDetails(rs, false);</span>
+
+<span class="nc" id="L365">				ret.add(doc);</span>
+			}
+<span class="nc" id="L367">			rs.close();</span>
+<span class="nc" id="L368">			ps.close();</span>
+<span class="nc" id="L369">			db_conn.close();</span>
+<span class="nc" id="L370">			db_conn = null;</span>
+<span class="nc" id="L371">			ps = null;</span>
+<span class="nc" id="L372">			rs = null;</span>
+		}
+<span class="nc" id="L374">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+		finally{
+			try{
+<span class="nc bnc" id="L377" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L380">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+<span class="nc" id="L382">		return (ret);</span>
+	}
+
+	/**
+	 * Ulozi objekt do suboru vo formate XML.
+	 *
+	 * @param filename  retazec s nazvom suboru
+	 * @param object    objekt, ktory ideme serializovat
+	 * @throws IOException
+	 */
+	private void write(String filename, Object object) throws IOException
+	{
+<span class="nc" id="L394">		IwcmOutputStream output = new IwcmOutputStream(new IwcmFile(realBase, filename));</span>
+<span class="nc" id="L395">		XMLEncoder encoder = new XMLEncoder(output);</span>
+<span class="nc" id="L396">		encoder.writeObject(object);</span>
+<span class="nc" id="L397">		encoder.close();</span>
+<span class="nc" id="L398">		output.close();</span>
+<span class="nc" id="L399">		entries.add(new ArchiveEntry(filename, realBase + File.separator + filename));</span>
+<span class="nc" id="L400">	}</span>
+
+	static void addToZipArchive(ZipOutputStream zipOut, String entryPath, String filePath)
+	{
+		try
+		{
+<span class="nc" id="L406">			ZipEntry entry = new ZipEntry(entryPath);</span>
+<span class="nc" id="L407">			IwcmFile inFile = new IwcmFile(filePath);</span>
+<span class="nc" id="L408">			entry.setSize(inFile.length());</span>
+<span class="nc" id="L409">			entry.setTime(inFile.lastModified());</span>
+
+<span class="nc" id="L411">			zipOut.putNextEntry(entry);</span>
+<span class="nc" id="L412">			IwcmInputStream in = new IwcmInputStream(inFile);</span>
+<span class="nc" id="L413">			int bytesRead = -1;</span>
+<span class="nc" id="L414">			byte[] buffer = new byte[1024];</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">			while ((bytesRead = in.read(buffer)) != -1)</span>
+			{
+<span class="nc" id="L417">				zipOut.write(buffer, 0, bytesRead);</span>
+			}
+<span class="nc" id="L419">			in.close();</span>
+
+<span class="nc" id="L421">			zipOut.closeEntry();</span>
+		}
+<span class="nc" id="L423">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L425">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L426">		}</span>
+<span class="nc" id="L427">	}</span>
+
+	private static String realPath(String virtualPath)
+	{
+<span class="nc" id="L431">		return Tools.getRealPath(virtualPath);</span>
+	}
+
+	static class ArchiveEntry
+	{
+
+		public final String entryPath;
+		public final String filePath;  // real
+
+		public ArchiveEntry(String entryPath, String filePath)
+<span class="nc" id="L441">		{</span>
+<span class="nc" id="L442">			this.entryPath = entryPath;</span>
+<span class="nc" id="L443">			this.filePath = filePath;</span>
+<span class="nc" id="L444">		}</span>
+
+	}
+
+	public void setOut(JspWriter out) {
+<span class="nc" id="L449">		this.out = out;</span>
+<span class="nc" id="L450">	}</span>
+
+	private void writeOut(String text) {
+<span class="nc bnc" id="L453" title="All 2 branches missed.">		if (out == null) return;</span>
+		try {
+<span class="nc" id="L455">			out.println(&quot;&lt;p&gt;&quot;+Tools.formatDateTimeSeconds(Tools.getNow())+&quot; &quot;+text+&quot;&lt;/p&gt;&quot;);</span>
+<span class="nc" id="L456">			out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L457">			out.flush();</span>
+		}
+<span class="nc" id="L459">		catch (Exception ex) {</span>
+
+<span class="nc" id="L461">		}</span>
+<span class="nc" id="L462">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

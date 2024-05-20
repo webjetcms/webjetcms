@@ -6,7 +6,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%@ taglib uri="/WEB-INF/datetime.tld" prefix="dt"%><iwcm:checkLogon admin="true" perms="menuWebpages"/>
+<iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 <%
 
 String userLanguage = Prop.getLng(request, true);
@@ -468,13 +468,13 @@ $(document).ready(function(){
 	</div>
 
 	<div class="paging">
-		<a href="javascript:;" class="prev btn btn-primary" style="vertical-align: top; margin-top: 10px;"><span class="fa fa-backward"></span></a>
+		<a href="javascript:;" class="prev btn btn-primary" style="vertical-align: top; margin-top: 10px;"><span class="ti ti-player-track-prev"></span></a>
 
 		<div class="pages">
 
 		</div>
 
-		<a href="javascript:;" class="next btn btn-primary" style="vertical-align: top; margin-top: 10px;"><span class="fa fa-forward"></span></a>
+		<a href="javascript:;" class="next btn btn-primary" style="vertical-align: top; margin-top: 10px;"><span class="ti ti-player-track-next"></span></a>
 
 		<a style="position: absolute; right: 20px; color: black; font-weight: normal; text-decoration: none !important;" href="https://pixabay.com" target="_blank">powered by<br/><img src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/images/pixabaylogo.png" width="80"/></a>
 	</div>
@@ -498,7 +498,7 @@ $(document).ready(function(){
                                         <label for="imageWidth" class="col-xs-2 control-label"><iwcm:text key="editor.table.width"/></label>
                                         <div class="col-xs-10">
                                         	<div class="input-icon right">
-					                        	<i class="fa fa-exclamation tooltips" data-original-title="Please write a valid width" data-container="body"></i>
+					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid width" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageWidth" maxlength="4" />
 					                        </div>
                                         </div>
@@ -507,7 +507,7 @@ $(document).ready(function(){
                                         <label for="imageHeight" class="col-xs-2 control-label"><iwcm:text key="editor.table.height"/></label>
                                         <div class="col-xs-10">
                                         	<div class="input-icon right">
-					                        	<i class="fa fa-exclamation tooltips" data-original-title="Please write a valid height" data-container="body"></i>
+					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid height" data-container="body"></i>
 					                        	<input type="text" class="form-control" id="imageHeight" maxlength="4" />
 					                        </div>
                                         </div>

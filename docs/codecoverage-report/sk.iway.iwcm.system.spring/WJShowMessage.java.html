@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WJShowMessage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">WJShowMessage.java</span></div><h1>WJShowMessage.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+/**
+ * IwcmTextMessage.java
+ *
+ * Class IwcmTextMessage is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2019
+ * @author      $Author: mhruby $
+ * @version     $Revision: 1.0 $
+ * created      19. 12. 2019 21:43
+ * modified     13. 12. 2019 18:19
+ */
+
+public class WJShowMessage {
+
+<span class="nc" id="L20">    private String type = WJShowMessageEnum.INFO.getText();</span>
+    private String textKey;
+    private String param1;
+    private String param2;
+    private String param3;
+
+<span class="nc" id="L26">    public WJShowMessage() {</span>
+<span class="nc" id="L27">    }</span>
+
+<span class="nc" id="L29">    public WJShowMessage(String textKey) {</span>
+<span class="nc" id="L30">        this.textKey = textKey;</span>
+<span class="nc" id="L31">    }</span>
+
+    public String getTextKey() {
+<span class="nc" id="L34">        return textKey;</span>
+    }
+
+    public WJShowMessage setTextKey(String textKey) {
+<span class="nc" id="L38">        this.textKey = textKey;</span>
+<span class="nc" id="L39">        return this;</span>
+    }
+
+    public String getParam1() {
+<span class="nc" id="L43">        return param1;</span>
+    }
+
+    public WJShowMessage setParam1(String param1) {
+<span class="nc" id="L47">        this.param1 = param1;</span>
+<span class="nc" id="L48">        return this;</span>
+    }
+
+    public String getParam2() {
+<span class="nc" id="L52">        return param2;</span>
+    }
+
+    public WJShowMessage setParam2(String param2) {
+<span class="nc" id="L56">        this.param2 = param2;</span>
+<span class="nc" id="L57">        return this;</span>
+    }
+
+    public String getParam3() {
+<span class="nc" id="L61">        return param3;</span>
+    }
+
+    public WJShowMessage setParam3(String param3) {
+<span class="nc" id="L65">        this.param3 = param3;</span>
+<span class="nc" id="L66">        return this;</span>
+    }
+
+    public String getType() {
+<span class="nc" id="L70">        return type;</span>
+    }
+
+    public WJShowMessage setType(String type) {
+<span class="nc" id="L74">        this.type = type;</span>
+<span class="nc" id="L75">        return this;</span>
+    }
+
+    public WJShowMessage setType(WJShowMessageEnum WJShowMessageEnum) {
+<span class="nc" id="L79">        this.type = WJShowMessageEnum.getText();</span>
+<span class="nc" id="L80">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

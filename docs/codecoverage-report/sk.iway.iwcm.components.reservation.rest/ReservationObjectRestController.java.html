@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationObjectRestController.java</span></div><h1>ReservationObjectRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+
+import java.util.List;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEditorFields;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/reservation/reservation_object&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_reservation')&quot;)
+@Datatable
+public class ReservationObjectRestController extends DatatableRestControllerV2&lt;ReservationObjectEntity, Long&gt; {
+
+    private final ReservationObjectRepository reservationObjectRepository;
+    private final ReservationObjectTimesRepository reservationObjectTimesRepository;
+    private final ReservationObjectPriceRepository reservationObjectPriceRepository;
+
+    @Autowired
+    public ReservationObjectRestController(ReservationObjectRepository reservationObjectRepository,
+    ReservationObjectTimesRepository reservationObjectTimesRepository, ReservationObjectPriceRepository reservationObjectPriceRepository) {
+<span class="fc" id="L41">        super(reservationObjectRepository);</span>
+<span class="fc" id="L42">        this. reservationObjectRepository = reservationObjectRepository;</span>
+<span class="fc" id="L43">        this.reservationObjectTimesRepository = reservationObjectTimesRepository;</span>
+<span class="fc" id="L44">        this.reservationObjectPriceRepository = reservationObjectPriceRepository;</span>
+<span class="fc" id="L45">    }</span>
+
+    @Override
+    public Page&lt;ReservationObjectEntity&gt; getAllItems(Pageable pageable) {
+        //Use custom select with domain id
+<span class="fc" id="L50">        Page&lt;ReservationObjectEntity&gt; items = reservationObjectRepository.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable);</span>
+
+<span class="fc" id="L52">        DatatablePageImpl&lt;ReservationObjectEntity&gt; page = new DatatablePageImpl&lt;&gt;(items);</span>
+        //In case of .GETALL we set only column addPassword from editorFields
+<span class="fc" id="L54">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L55">        return page;</span>
+    }
+
+    @Override
+    public ReservationObjectEntity getOneItem(long id) {
+        ReservationObjectEntity entity;
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if(id == -1) {</span>
+<span class="fc" id="L62">            entity = new ReservationObjectEntity();</span>
+<span class="fc" id="L63">            processFromEntity(entity, ProcessItemAction.CREATE);</span>
+        } else {
+<span class="fc" id="L65">            entity = reservationObjectRepository.getById(id);</span>
+<span class="fc" id="L66">            processFromEntity(entity, ProcessItemAction.EDIT);</span>
+        }
+
+<span class="fc" id="L69">        return entity;</span>
+    }
+
+    @Override
+    public ReservationObjectEntity processFromEntity(ReservationObjectEntity entity, ProcessItemAction action) {
+
+        //Special situation, saved entity with allready set editorFields
+        //We dont want processFromEntity because it can re-write our data
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if(entity.getEditorFields() != null) return entity;</span>
+
+        //If editorFields if null create new
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        ReservationObjectEditorFields roef = entity.getEditorFields() == null ? new ReservationObjectEditorFields() : entity.getEditorFields();</span>
+
+        //Set editor fields values and this editorFields set into entity
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if(action == ProcessItemAction.EDIT) //Only if we editing entity that exist, we use bind reservationObjectTimes from DB</span>
+<span class="fc" id="L84">            roef.fromReservationObjectEntity(entity, action, reservationObjectTimesRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId()));</span>
+        else
+<span class="fc" id="L86">            roef.fromReservationObjectEntity(entity, action, null);</span>
+
+<span class="fc" id="L88">        return entity;</span>
+    }
+
+    @Override
+    public ReservationObjectEntity processToEntity(ReservationObjectEntity entity, ProcessItemAction action) {
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if(entity.getEditorFields() != null)</span>
+<span class="fc" id="L94">            entity.getEditorFields().toReservationObjectEntity(entity, action, reservationObjectTimesRepository);</span>
+
+<span class="fc" id="L96">        return entity;</span>
+    }
+
+    @Override
+    public boolean beforeDelete(ReservationObjectEntity entity) {
+        //Before delete remove bind ReservationObjectTimes records from DB
+<span class="fc" id="L102">        List&lt;ReservationObjectTimesEntity&gt; timeEntitiesToDelete = reservationObjectTimesRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L103" title="1 of 4 branches missed.">        if(timeEntitiesToDelete != null &amp;&amp; timeEntitiesToDelete.size() &gt; 0)</span>
+<span class="fc" id="L104">            reservationObjectTimesRepository.deleteAll(timeEntitiesToDelete);</span>
+
+        //Before delete remove bind ReservationObjectPrices records from DB
+<span class="fc" id="L107">        List&lt;ReservationObjectPriceEntity&gt; pricesToDelete = reservationObjectPriceRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L108" title="2 of 4 branches missed.">        if(pricesToDelete != null &amp;&amp; pricesToDelete.size() &gt; 0)</span>
+<span class="nc" id="L109">            reservationObjectPriceRepository.deleteAll(pricesToDelete);</span>
+
+<span class="fc" id="L111">        return true;</span>
+    }
+
+	@Override
+	public void beforeSave(ReservationObjectEntity entity) {
+<span class="fc" id="L116">        ReservationObjectEditorFields roef = entity.getEditorFields();</span>
+        //Check password validations
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if(roef.getAddPassword()) {</span>
+<span class="pc bpc" id="L119" title="2 of 4 branches missed.">            if(roef.getNewPassword() == null || roef.getNewPassword().isEmpty()) throwError(&quot;reservation.reservation_object.password_error_empty&quot;);</span>
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">            if(roef.getPasswordCheck() == null || roef.getPasswordCheck().isEmpty()) throwError(&quot;reservation.reservation_object.password_error_empty&quot;);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if(!roef.getNewPassword().equals(roef.getPasswordCheck())) throwError(&quot;passwordsNotMatch&quot;);</span>
+        }
+
+        //Email validation
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if(entity.getMustAccepted()) {</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">            if(entity.getEmailAccepter() == null || entity.getEmailAccepter().isEmpty()) throwError(&quot;components.reservation.reservation_manager.addReservationObject.one&quot;);</span>
+            //Email validation
+            try {
+<span class="nc" id="L129">                InternetAddress emailAddr = new InternetAddress(entity.getEmailAccepter());</span>
+<span class="nc" id="L130">                emailAddr.validate();</span>
+<span class="nc" id="L131">            } catch (AddressException ex) {</span>
+<span class="nc" id="L132">                throwError(&quot;components.form.email.not_valid&quot;);</span>
+<span class="nc" id="L133">            }</span>
+	    }
+<span class="fc" id="L135">    }</span>
+
+    @Override
+    public void afterSave(ReservationObjectEntity entity, ReservationObjectEntity saved) {
+        //We must call toReservationObjectEntity after save with action EDIT
+        //Reason, we must save ReservationObjectTimes but we need entity.ID (and this ID is set after save)
+<span class="fc" id="L141">        ReservationObjectEditorFields roef = entity.getEditorFields();</span>
+<span class="fc" id="L142">        roef.toReservationObjectEntity(entity, ProcessItemAction.EDIT, reservationObjectTimesRepository);</span>
+<span class="fc" id="L143">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

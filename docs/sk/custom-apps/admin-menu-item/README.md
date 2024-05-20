@@ -8,11 +8,11 @@ V tejto ukáže naprogramujeme správu kontaktov, využitá je tabuľka ```conta
 
 ## Backend
 
-Ideálne riešenie využíva Spring DATA repozitár, REST controller a datatabuľku generovanú z ```@DataTableColumn``` [anotácií](../../developer/datatables-editor/datatable-columns.md).
+Ideálne riešenie využíva Spring DATA repozitár, REST controller a datatabuľku generovanú z ```@DataTableColumn```, [anotácií](../../developer/datatables-editor/datatable-columns.md).
 
-Ukážková JPA entita aj s anotáciami ```@DataTableColumn``` [pre datatabuľku a editor](../../developer/datatables-editor/datatable-columns.md). Tiež si všimnite anotáciu ```@EntityListeners``` pre automatické [zapisovanie auditu](../../developer/backend/auditing.md) pri zmene entity.
+Ukážková JPA entita aj s anotáciami ```@DataTableColumn```, [pre datatabuľku a editor](../../developer/datatables-editor/datatable-columns.md). Tiež si všimnite anotáciu ```@EntityListeners``` pre automatické [zapisovanie auditu](../../developer/backend/auditing.md) pri zmene entity.
 
-Povinné polia a iné validácie [nastavujete anotáciami](../../developer/datatables/restcontroller.md#validácia--povinné-polia) ```@NotBlank,@Size,@Email``` atď.
+Povinné polia a iné validácie [nastavujete anotáciami](../../developer/datatables/restcontroller.md#validácia--povinné-polia), ```@NotBlank,@Size,@Email``` atď.
 
 POZOR: v entite nepoužívajte primitívne typy `int, long` ale len objektové `Integer, Long`, inak nebude korektne fungovať filtrovanie/vyhľadávanie.
 

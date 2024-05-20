@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UniPlatbaInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">UniPlatbaInformation.java</span></div><h1>UniPlatbaInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import java.util.Arrays;
+import java.util.Enumeration;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  UniPlatbaInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 26.8.2009 14:12:32
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+class UniPlatbaInformation extends PaymentInformation
+{
+
+	
+	public UniPlatbaInformation()
+<span class="nc" id="L29">	{</span>
+		//nacitaj konfiguracne hodnoty do fieldov
+<span class="nc" id="L31">		merchantId = Constants.getString(&quot;basketPaymentUniPlatbaMid&quot;);</span>
+<span class="nc" id="L32">		key = getDecrypredKey(Constants.getString(&quot;basketPaymentUniPlatbaKey&quot;));</span>
+<span class="nc" id="L33">		constantSymbol = Constants.getInt(&quot;basketPaymentUniPlatbaConstantSymbol&quot;);</span>
+<span class="nc" id="L34">	}</span>
+	
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L39">		String confUrl = Constants.getString(&quot;basketPaymentUniPlatbaUrl&quot;);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L41">			return confUrl;</span>
+		else
+<span class="nc" id="L43">			return &quot;&quot;;</span>
+		//return &quot;http://epaymentsimulator.monogram.sk/UCB_UniPlatba.aspx&quot;;
+	}
+	
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L50">		return true;</span>
+	}
+	
+	
+	
+	@Override
+	public boolean validateBankResponce(HttpServletRequest request) throws Exception
+	{
+<span class="nc" id="L58">		String vs=null;</span>
+<span class="nc" id="L59">		String res=null;</span>
+<span class="nc" id="L60">		String sign=null;</span>
+<span class="nc" id="L61">		Enumeration&lt;?&gt; parameterNames = request.getParameterNames();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		while (parameterNames.hasMoreElements())</span>
+		{
+<span class="nc" id="L64">			String parameterName = parameterNames.nextElement().toString();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (&quot;VS&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L66">				vs = request.getParameter(parameterName);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			else if(&quot;RES&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L68">				res = request.getParameter(parameterName);				</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			else if(&quot;SIGN&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L70">				sign = request.getParameter(parameterName);</span>
+<span class="nc" id="L71">		}</span>
+		
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (Tools.isAnyEmpty(sign, vs, res))</span>
+<span class="nc" id="L74">			throw new InvalidBankResponceException();</span>
+		
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (!Arrays.asList(&quot;OK&quot;, &quot;NO&quot;).contains(res))</span>
+<span class="nc" id="L77">			throw new InvalidBankResponceException();</span>
+		
+<span class="nc" id="L79">		String signWeExpect = generateSign(vs + res);</span>
+		
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (!signWeExpect.equals(sign))</span>
+<span class="nc" id="L82">			throw new InvalidSignatureException(&quot;Expected: &quot;+signWeExpect+&quot;, got: &quot;+sign);</span>
+		
+<span class="nc" id="L84">		return &quot;OK&quot;.equals(res);</span>
+	}
+	
+
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{			
+<span class="nc" id="L91">		String action = getUrlString();</span>
+		
+<span class="nc" id="L93">		StringBuilder form = new StringBuilder().</span>
+<span class="nc" id="L94">			append(&quot;&lt;form method=\&quot;get\&quot; action=\&quot;&quot;+action+&quot;\&quot; name='payForm'&gt;&quot;).</span>
+<span class="nc" id="L95">			append(&quot;&lt;input type='hidden' name='MID' value='&quot;+getMerchantId()+&quot;'/&gt;&quot;).</span>
+<span class="nc" id="L96">			append(&quot;&lt;input type='hidden' name='LNG' value='&quot;+getLng()+&quot;'/&gt;&quot;).</span>
+<span class="nc" id="L97">			append(&quot;&lt;input type='hidden' name='AMT' value='&quot;+payment.getAmountString()+&quot;'/&gt;&quot;).</span>
+<span class="nc" id="L98">			append(&quot;&lt;input type='hidden' name='VS' value='&quot;+payment.getVariableSymbol()+&quot;'/&gt;&quot;).</span>
+<span class="nc" id="L99">			append(&quot;&lt;input type='hidden' name='CS' value='&quot;+payment.getConstantSymbol()+&quot;'/&gt;&quot;);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if(Tools.isNotEmpty(payment.getSpecificSymbol()))</span>
+<span class="nc" id="L101">			form.append(&quot;&lt;input type='hidden' name='SS' value='&quot;+payment.getSpecificSymbol()+&quot;'/&gt;&quot;);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if(Tools.isNotEmpty(payment.getDescription()))</span>
+<span class="nc" id="L103">			form.append(&quot;&lt;input type='hidden' name='DESC' value='&quot;+payment.getDescriptionFormatted(35, false)+&quot;'/&gt;&quot;);</span>
+<span class="nc" id="L104">		form.append(&quot;&lt;input type='hidden' name='sign' value='&quot;+generateOutgoingSign(payment, request)+&quot;'/&gt;&quot;).</span>
+<span class="nc" id="L105">			append(&quot;&lt;/form&gt;&quot;);</span>
+<span class="nc" id="L106">		return form.toString();</span>
+	}
+	
+	private String generateOutgoingSign(Payment payment, HttpServletRequest request)
+	{
+<span class="nc" id="L111">		StringBuilder toHash = new StringBuilder().</span>
+<span class="nc" id="L112">			append(getMerchantId()).</span>
+<span class="nc" id="L113">			append(getLng()).</span>
+<span class="nc" id="L114">			append(payment.getAmountString()).</span>
+<span class="nc" id="L115">			append(payment.getVariableSymbol()).</span>
+<span class="nc" id="L116">			append(payment.getConstantSymbol());</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if(Tools.isNotEmpty(payment.getSpecificSymbol()))</span>
+<span class="nc" id="L118">			toHash.append(payment.getSpecificSymbol());</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if(Tools.isNotEmpty(payment.getDescription()))</span>
+<span class="nc" id="L120">			toHash.append(payment.getDescriptionFormatted(35, false));</span>
+			
+<span class="nc" id="L122">		return generateSign(toHash.toString());</span>
+	}
+	
+	private String generateSign(String stringToEncypher)
+	{
+<span class="nc" id="L127">		return DefaultHashCalculator.calculateHash(stringToEncypher, getKey());</span>
+	}
+
+	private String getLng()
+	{
+<span class="nc" id="L132">		String lng = SetCharacterEncodingFilter.getCurrentRequestBean().getLng();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if(&quot;eng&quot;.equals(lng))</span>
+		{
+<span class="nc" id="L135">			return &quot;EN&quot;;</span>
+		}
+<span class="nc" id="L137">		return &quot;SK&quot;;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

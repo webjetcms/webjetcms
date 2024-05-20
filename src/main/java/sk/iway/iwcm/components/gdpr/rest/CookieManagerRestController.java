@@ -88,6 +88,10 @@ public class CookieManagerRestController extends DatatableRestControllerV2<Cooki
 
         if(id != -1) {
             entity = cookieMangerDB.getById((int) id);
+            int domainId = CloudToolsForCore.getDomainId();
+            if(entity.getDomainId() != domainId) {
+                return null;
+            }
             setTranslationKeysIntoEntity(entity, prop);
         } else {
             entity = new CookieManagerBean();

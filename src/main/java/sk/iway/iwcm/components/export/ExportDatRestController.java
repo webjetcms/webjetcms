@@ -19,20 +19,20 @@ import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/export-dat")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_export')")
-public class ExportDatRestController extends DatatableRestControllerV2<ExportDatBean, Long> {
+public class ExportDatRestController extends DatatableRestControllerAvailableGroups<ExportDatBean, Long> {
 
     private final ExportDatRepository exportDatBeanRepository;
 
     @Autowired
     public ExportDatRestController(ExportDatRepository exportDatBeanRepository) {
-        super(exportDatBeanRepository);
+        super(exportDatBeanRepository, "id", "groupIds");
         this.exportDatBeanRepository = exportDatBeanRepository;
     }
 
@@ -41,7 +41,7 @@ public class ExportDatRestController extends DatatableRestControllerV2<ExportDat
 
         DatatablePageImpl<ExportDatBean> page;
 
-        page = new DatatablePageImpl<>(exportDatBeanRepository.findAll(pageable));
+        page = new DatatablePageImpl<>(filterByPerms(exportDatBeanRepository.findAll()));
 
         processFromEntity(page, ProcessItemAction.GETALL);
 

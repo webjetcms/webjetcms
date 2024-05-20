@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleAuthenticatorQRGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.googleauth</a> &gt; <span class="el_source">GoogleAuthenticatorQRGenerator.java</span></div><h1>GoogleAuthenticatorQRGenerator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.googleauth;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
+/**
+ *  GoogleAuthenticatorQRGenerator.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2017
+ *@author       $Author: jeeff mminda $
+ *@version      $Revision: 1.3 $
+ *@created      Date: Jun 5, 2017 9:54:19 AM
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+import org.apache.http.client.utils.URIBuilder;
+
+/**
+ * This class provides helper methods to create a QR code containing the
+ * provided credential.  The generated QR code can be fed to the Google
+ * Authenticator application so that it can configure itself with the data
+ * contained therein.
+ */
+<span class="nc" id="L25">public final class GoogleAuthenticatorQRGenerator {</span>
+    
+    /**
+     * The format string to generate the Google Chart HTTP API call.
+     */
+    private static final String TOTP_URI_FORMAT =
+            &quot;https://chart.googleapis.com/chart?chs=200x200&amp;chld=M%%7C0&amp;cht=qr&amp;chl=%s&quot;;
+
+    /**
+     * This method wraps the invocation of &lt;code&gt;URLEncoder##encode&lt;/code&gt;
+     * method using the &quot;UTF-8&quot; encoding.  This call also wraps the
+     * &lt;code&gt;UnsupportedEncodingException&lt;/code&gt; thrown by
+     * &lt;code&gt;URLEncoder##encode&lt;/code&gt; into a &lt;code&gt;RuntimeException&lt;/code&gt;.
+     * Such an exception should never be thrown.
+     *
+     * @param s The string to URL-encode.
+     * @return the URL-encoded string.
+     */
+    private static String internalURLEncode(String s) {
+        try {
+<span class="nc" id="L45">            return URLEncoder.encode(s, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L46">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L47">            throw new RuntimeException(&quot;UTF-8 encoding is not supported by URLEncoder.&quot;, e);</span>
+        }
+    }
+
+    /**
+     * The label is used to identify which account a key is associated with.
+     * It contains an account name, which is a URI-encoded string, optionally
+     * prefixed by an issuer string identifying the provider or service managing
+     * that account.  This issuer prefix can be used to prevent collisions
+     * between different accounts with different providers that might be
+     * identified using the same account name, e.g. the user's email address.
+     * The issuer prefix and account name should be separated by a literal or
+     * url-encoded colon, and optional spaces may precede the account name.
+     * Neither issuer nor account name may themselves contain a colon.
+     * Represented in ABNF according to RFC 5234:
+     * &lt;p/&gt;
+     * label = accountname / issuer (“:” / “%3A”) *”%20” accountname
+     *
+     * @see &lt;a href=&quot;https://code.google.com/p/google-authenticator/wiki/KeyUriFormat&quot;&gt;Google Authenticator - KeyUriFormat&lt;/a&gt;
+     */
+    private static String formatLabel(String issuer, String accountName) {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">        if (accountName == null || accountName.trim().length() == 0) {</span>
+<span class="nc" id="L69">            throw new IllegalArgumentException(&quot;Account name must not be empty.&quot;);</span>
+        }
+        
+<span class="nc" id="L72">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (issuer != null) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (issuer.contains(&quot;:&quot;)) {</span>
+<span class="nc" id="L75">                throw new IllegalArgumentException(&quot;Issuer cannot contain the \':\' character.&quot;);</span>
+            }
+
+<span class="nc" id="L78">            sb.append(issuer);</span>
+<span class="nc" id="L79">            sb.append(&quot;:&quot;);</span>
+        }
+
+<span class="nc" id="L82">        sb.append(accountName);</span>
+
+<span class="nc" id="L84">        return sb.toString();</span>
+    }
+
+    /**
+     * Returns the URL of a Google Chart API call to generate a QR barcode to
+     * be loaded into the Google Authenticator application.  The user scans this
+     * bar code with the application on their smart phones or enters the
+     * secret manually.
+     * &lt;p/&gt;
+     * The current implementation supports the following features:
+     * &lt;ul&gt;
+     * &lt;li&gt;Label, made up of an optional issuer and an account name.&lt;/li&gt;
+     * &lt;li&gt;Secret parameter.&lt;/li&gt;
+     * &lt;li&gt;Issuer parameter.&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param credentials The generated credentials.  This parameter shall not be null.
+     * @return the Google Chart API call URL to generate a QR code containing
+     * the provided information.
+     * @see &lt;a href=&quot;https://code.google.com/p/google-authenticator/wiki/KeyUriFormat&quot;&gt;Google Authenticator - KeyUriFormat&lt;/a&gt;
+     */
+    public static String getOtpAuthURL(String issuer,
+                                       String accountName,
+                                       GoogleAuthenticatorKey credentials) {
+
+<span class="nc" id="L112">        return String.format(</span>
+                TOTP_URI_FORMAT,
+<span class="nc" id="L114">                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, credentials)));</span>
+    }
+
+    /**
+     * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
+     * Use a secure transport since this URI contains the secret.
+     * &lt;p/&gt;
+     * The current implementation supports the following features:
+     * &lt;ul&gt;
+     * &lt;li&gt;Label, made up of an optional issuer and an account name.&lt;/li&gt;
+     * &lt;li&gt;Secret parameter.&lt;/li&gt;
+     * &lt;li&gt;Issuer parameter.&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param credentials The generated credentials.  This parameter shall not be null.
+     * @return an otpauth scheme URI for loading into a client application.
+     * @see &lt;a href=&quot;https://code.google.com/p/google-authenticator/wiki/KeyUriFormat&quot;&gt;Google Authenticator - KeyUriFormat&lt;/a&gt;
+     */
+    public static String getOtpAuthTotpURL(String issuer,
+                                           String accountName,
+                                           GoogleAuthenticatorKey credentials) {
+        
+<span class="nc" id="L139">        URIBuilder uri = new URIBuilder()</span>
+<span class="nc" id="L140">            .setScheme(&quot;otpauth&quot;)</span>
+<span class="nc" id="L141">            .setHost(&quot;totp&quot;)</span>
+<span class="nc" id="L142">            .setPath(&quot;/&quot; + formatLabel(issuer, accountName))</span>
+<span class="nc" id="L143">            .setParameter(&quot;secret&quot;, credentials.getKey());</span>
+
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (issuer != null) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (issuer.contains(&quot;:&quot;)) {</span>
+<span class="nc" id="L148">                throw new IllegalArgumentException(&quot;Issuer cannot contain the \':\' character.&quot;);</span>
+            }
+
+<span class="nc" id="L151">            uri.setParameter(&quot;issuer&quot;, issuer);</span>
+        }
+        
+        /*
+            The following parameters aren't needed since they are all defaults.
+            We can exclude them to make the URI shorter.
+         */
+        // uri.setParameter(&quot;algorithm&quot;, &quot;SHA1&quot;);
+        // uri.setParameter(&quot;digits&quot;, &quot;6&quot;);
+        // uri.setParameter(&quot;period&quot;, &quot;30&quot;);
+        
+<span class="nc" id="L162">        return uri.toString();</span>
+
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

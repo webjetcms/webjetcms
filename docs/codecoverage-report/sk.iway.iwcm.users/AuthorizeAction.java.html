@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthorizeAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">AuthorizeAction.java</span></div><h1>AuthorizeAction.java</h1><pre class="source lang-java linenums">
+package sk.iway.iwcm.users;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.RandomStringUtils;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.RegUserAction;
+
+
+/**
+ *  Autorizácia registrovaneho navstevnika webu
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.11 $
+ *@created      Nedeľe, 2002, júl 7
+ *@modified     $Date: 2004/03/08 14:53:59 $
+ */
+<span class="nc" id="L37">public class AuthorizeAction</span>
+{
+	public static boolean sendInfoEmail(int userId, Identity approveByUser, HttpServletRequest request)
+	{
+<span class="fc" id="L41">		return sendInfoEmail(userId, null, approveByUser, request);</span>
+	}
+
+	/**
+	 * Posle email o registracii s menom a heslom
+	 * @param userId
+	 * @param password
+	 * @param request
+	 * @return
+	 */
+	public static boolean sendInfoEmail(int userId, String password, Identity approveByUser, HttpServletRequest request)
+	{
+<span class="fc" id="L53">		boolean emailSend = false;</span>
+		try
+		{
+<span class="fc" id="L56">			UserDetails uform = UsersDB.getUser(userId);</span>
+<span class="fc" id="L57">			Logger.debug(AuthorizeAction.class, &quot;sendInfoemail, uform: &quot; + uform.getUserId());</span>
+
+<span class="fc" id="L59">			boolean userGenerated = false;</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">			if (approveByUser==null)</span>
+			{
+<span class="fc" id="L62">				approveByUser = new Identity();</span>
+<span class="fc" id="L63">				approveByUser.setLastName(Tools.getServerName(request));</span>
+<span class="fc" id="L64">				approveByUser.setEmail(uform.getEmail());</span>
+<span class="fc" id="L65">				userGenerated = true;</span>
+<span class="fc" id="L66">				Logger.debug(AuthorizeAction.class, &quot;approveByUser: &quot; + approveByUser.getLastName() + &quot; &quot; + approveByUser.getEmail() + &quot; generated: &quot; + userGenerated);</span>
+			}
+
+			//	skus ziskat ugd pre dane ppids
+<span class="fc" id="L70">			UserGroupDetails userGroupDetails = null;</span>
+<span class="fc" id="L71">			UserGroupDetails userGroupDetails2 = null;</span>
+			try
+			{
+<span class="fc" id="L74">				StringTokenizer st = new StringTokenizer(uform.getUserGroupsIds(), &quot;,&quot;);</span>
+				int ppid;
+<span class="fc" id="L76">				UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">				while (st.hasMoreTokens() &amp;&amp; userGroupDetails==null)</span>
+				{
+<span class="fc" id="L79">					ppid = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">					if (ppid &gt; 0)</span>
+					{
+<span class="fc" id="L82">						userGroupDetails2 = ugDB.getUserGroup(ppid);</span>
+<span class="pc bpc" id="L83" title="2 of 4 branches missed.">						if (userGroupDetails2!=null &amp;&amp; userGroupDetails2.getEmailDocId()&gt;0)</span>
+						{
+							//ak ma grupa zadany emailDocId, pouzi
+<span class="nc" id="L86">							userGroupDetails = userGroupDetails2;</span>
+<span class="nc" id="L87">							break;</span>
+						}
+					}
+				}
+			}
+<span class="nc" id="L92">			catch (Exception e)</span>
+			{
+<span class="nc" id="L94">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L95">			}</span>
+
+<span class="pc bpc" id="L97" title="2 of 4 branches missed.">			if (uform.getEmail().length() &gt; 5 &amp;&amp; uform.getEmail().indexOf('@') &gt; 1)</span>
+			{
+
+<span class="fc" id="L100">				String url = Tools.getBaseHref(request);</span>
+
+<span class="fc" id="L102">				Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+<span class="fc" id="L104">				String subject = Constants.getString(&quot;approveEmailSubject&quot;);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">				if (Tools.isEmpty(subject))</span>
+				{
+<span class="fc" id="L107">					subject = prop.getText(&quot;iwcm.users.authorize_action.pristup_do_neverejnej_casti&quot;, url);</span>
+				}
+
+<span class="fc" id="L110">				String body = Constants.getString(&quot;approveEmailText&quot;);</span>
+
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">				if (Tools.isEmpty(body))</span>
+				{
+<span class="fc" id="L114">					body = prop.getText(&quot;iwcm.users.authorize_action.vasa_ziadost&quot;)+&quot;\n&quot;;</span>
+
+<span class="fc" id="L116">					body += prop.getText(&quot;iwcm.users.authorize_action.pre_pristup_pouzite&quot;)+&quot;\n\n&quot;;</span>
+
+<span class="fc" id="L118">					body += &quot;   &quot;+prop.getText(&quot;iwcm.users.authorize_action.prihlasovacie_meno&quot;)+&quot;: &quot; + uform.getLogin() + &quot;\n&quot;;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">					if (!Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+					{
+<span class="nc" id="L121">						body += &quot;   &quot;+prop.getText(&quot;iwcm.users.authorize_action.heslo&quot;)+&quot;: &quot; + uform.getPassword() + &quot;\n&quot;;</span>
+					}
+<span class="fc bfc" id="L123" title="All 2 branches covered.">					else if(Tools.isNotEmpty(password))</span>
+					{
+<span class="fc" id="L125">						body += &quot;   &quot;+prop.getText(&quot;iwcm.users.authorize_action.heslo&quot;)+&quot;: &quot; + password + &quot;\n&quot;;</span>
+					}
+<span class="fc" id="L127">					body += &quot;\n\n\n&quot; + url;</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (body.startsWith(&quot;docid=&quot;))</span>
+					{
+<span class="nc" id="L133">						int docid = Integer.parseInt(body.substring(6));</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">						if (userGroupDetails == null)</span>
+						{
+<span class="nc" id="L136">							userGroupDetails = new UserGroupDetails();</span>
+						}
+<span class="nc bnc" id="L138" title="All 2 branches missed.">						if (userGroupDetails.getEmailDocId() &lt; 1)</span>
+						{
+<span class="nc" id="L140">							userGroupDetails.setEmailDocId(docid);</span>
+						}
+					}
+				}
+				//moznost specifikovat odosielatela a text mailu per formular
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">				if(request.getAttribute(&quot;approveEmailDocId&quot;)!=null)</span>
+				{
+<span class="nc" id="L147">					int docid = Integer.parseInt((String)request.getAttribute(&quot;approveEmailDocId&quot;),10);</span>
+<span class="nc" id="L148">					Logger.debug(AuthorizeAction.class, &quot;sendInfoemail, approveEmailDocId: &quot; + docid);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">					if(docid &gt; 0)</span>
+					{
+<span class="nc bnc" id="L151" title="All 2 branches missed.">						if (userGroupDetails!=null) userGroupDetails.setEmailDocId(docid);</span>
+<span class="nc" id="L152">						userGenerated =true;</span>
+					}
+				}
+
+<span class="pc bpc" id="L156" title="3 of 4 branches missed.">				if (userGroupDetails!=null &amp;&amp; userGroupDetails.getEmailDocId()&gt;0)</span>
+				{
+					try
+					{
+
+<span class="nc" id="L161">						DocDB docDB = DocDB.getInstance(); //servlet.getServletContext(), false, DBPool.getDBName(request));</span>
+<span class="nc" id="L162">						DocDetails docDetails = docDB.getDoc(userGroupDetails.getEmailDocId());</span>
+<span class="nc" id="L163">						body = docDetails.getData();</span>
+<span class="nc" id="L164">						subject = docDetails.getTitle();</span>
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">						if (userGenerated)</span>
+						{
+<span class="nc bnc" id="L168" title="All 2 branches missed.">							if(request.getAttribute(&quot;approveEmailDocId&quot;)!=null)</span>
+							{
+<span class="nc bnc" id="L170" title="All 2 branches missed.">								if(Tools.isNotEmpty(docDetails.getFieldA())) approveByUser.setLastName(docDetails.getFieldA());</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">								if(Tools.isNotEmpty(docDetails.getFieldB())) approveByUser.setEmail(docDetails.getFieldB());</span>
+							}
+							else
+							{
+<span class="nc" id="L175">								approveByUser.setLastName(docDetails.getAuthorName());</span>
+<span class="nc" id="L176">								approveByUser.setEmail(docDetails.getAuthorEmail());</span>
+							}
+						}
+					}
+<span class="nc" id="L180">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L182">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L183">					}</span>
+				}
+
+<span class="pc bpc" id="L186" title="2 of 4 branches missed.">				if (Tools.isEmpty(body) || body.length()&lt;10) return false;</span>
+
+<span class="fc" id="L188">				body = updateEmailText(body, uform, password, request);</span>
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">				if (body.length() &gt; 10)</span>
+				{
+					//String body2 = new String(body.getBytes(&quot;windows-1250&quot;));
+<span class="fc" id="L193">					emailSend = SendMail.send(approveByUser.getFullName(), approveByUser.getEmail(), uform.getEmail(), subject, body);</span>
+				}
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">				if (!emailSend)</span>
+				{
+<span class="nc" id="L197">					request.setAttribute(&quot;emailSendFail&quot;, &quot;true&quot;);</span>
+				}
+				else
+				{
+<span class="fc" id="L201">					request.setAttribute(&quot;from&quot;, approveByUser.getFullName()+&quot;&lt;&quot;+approveByUser.getEmail()+&quot;&gt;&quot;);</span>
+<span class="fc" id="L202">					request.setAttribute(&quot;to&quot;, uform.getEmail());</span>
+<span class="fc" id="L203">					request.setAttribute(&quot;subject&quot;, subject);</span>
+<span class="fc" id="L204">					body = Tools.replace(body, &quot;\n&quot;, &quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L205">					request.setAttribute(&quot;body&quot;, body);</span>
+				}
+
+			}
+		}
+<span class="nc" id="L210">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L212">			emailSend = false;</span>
+<span class="nc" id="L213">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L214">		}</span>
+<span class="fc" id="L215">		return(emailSend);</span>
+	}
+
+	/**
+	 * Update codes !LOGGED_USER_xxx with special codes like:
+	 * !LOGGED_USER_PASSWORD!
+	 * !APPROVER_USER_NAME!
+	 * !APPROVER_USER_PHONE!
+	 * !APPROVER_USER_EMAIL!
+	 * in email text
+	 * @param body
+	 * @param uform
+	 * @param password - user password or null
+	 * @param request
+	 * @return
+	 */
+	public static String updateEmailText(String body, UserDetails uform, String password, HttpServletRequest request) {
+		//	replacni !BR! za \n
+<span class="fc" id="L233">		body = Tools.replace(body, &quot;!BR!&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L234">		body = Tools.replace(body, &quot;!LOGIN_NAME!&quot;, uform.getLogin());</span>
+<span class="fc" id="L235">		body = Tools.replace(body, &quot;!LOGGED_USER_LOGIN!&quot;, uform.getLogin());</span>
+
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">		if(!Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+		{
+<span class="nc" id="L239">			body = Tools.replace(body, &quot;!PASSWORD!&quot;, uform.getPassword());</span>
+<span class="nc" id="L240">			body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, uform.getPassword());</span>
+		}
+<span class="fc bfc" id="L242" title="All 2 branches covered.">		else if(Tools.isNotEmpty(password))</span>
+		{
+<span class="fc" id="L244">			body = Tools.replace(body, &quot;!PASSWORD!&quot;, password);</span>
+<span class="fc" id="L245">			body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, password);</span>
+		}
+
+		/* Vyuzite v SIAF - do textu emailu sa doplni tel. cislo &quot;admina&quot; ktory spravil import - kedze adminov je viac, vzdy chcu konkretne t.c. */
+<span class="fc" id="L249">		UserDetails loggedUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">		if (loggedUser != null)</span>
+		{
+<span class="fc" id="L252">			body = Tools.replace(body, &quot;!TASKED_USER_PHONE!&quot;, loggedUser.getPhone());</span>
+<span class="fc" id="L253">			body = Tools.replace(body, &quot;!TASKED_USER_EMAIL!&quot;, loggedUser.getEmailAddress());</span>
+<span class="fc" id="L254">			body = Tools.replace(body, &quot;!APPROVER_USER_NAME!&quot;, loggedUser.getFullName());</span>
+<span class="fc" id="L255">			body = Tools.replace(body, &quot;!APPROVER_USER_PHONE!&quot;, loggedUser.getPhone());</span>
+<span class="fc" id="L256">			body = Tools.replace(body, &quot;!APPROVER_USER_EMAIL!&quot;, loggedUser.getEmailAddress());</span>
+		}
+		/*	***  */
+
+<span class="fc" id="L260">		body = Tools.replace(body, &quot;!TITLE!&quot;, uform.getTitle());</span>
+<span class="fc" id="L261">		body = Tools.replace(body, &quot;!NAME!&quot;, uform.getFullName());</span>
+<span class="fc" id="L262">		body = Tools.replace(body, &quot;!name!&quot;, uform.getFullName());</span>
+<span class="fc" id="L263">		body = Tools.replace(body, &quot;!FIRST_NAME!&quot;, uform.getFirstName());</span>
+<span class="fc" id="L264">		body = Tools.replace(body, &quot;!LAST_NAME!&quot;, uform.getLastName());</span>
+
+<span class="fc" id="L266">		body = DocTools.updateUserCodes(new Identity(uform), new StringBuilder(body)).toString();</span>
+
+		//for safety reason
+<span class="fc" id="L269">		body = Tools.replace(body, &quot;!PASSWORD!&quot;, &quot;*****&quot;);</span>
+<span class="fc" id="L270">		body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, &quot;*****&quot;);</span>
+
+		//uprav relativne cesty
+<span class="fc" id="L273">		body = SendMail.createAbsolutePath(body, request);</span>
+
+<span class="fc" id="L275">		return body;</span>
+	}
+
+
+	/**
+	 * autorizovanie pouzivatela + vygenerovanie nahodneho hesla + poslanie emailu
+	 * @param request
+	 * @param user - pouzivatel, ktory autorizuje
+	 * @param user_id - pouzivatel, ktoreho chceme autorizovat
+	 */
+	public static void authorize(HttpServletRequest request, Identity user, int user_id)
+	{
+<span class="nc" id="L287">		Connection db_conn = null;</span>
+<span class="nc" id="L288">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L291">			UserDetails uform = UsersDB.getUser(user_id);</span>
+
+			//mame ho ;-0
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			if (uform.getUserId() == user_id)</span>
+			{
+<span class="nc" id="L296">				Adminlog.add(Adminlog.TYPE_USER_AUTHORIZE, &quot;Authorize user :&quot;</span>
+<span class="nc" id="L297">							+ &quot;id= &quot; + uform.getUserId()</span>
+<span class="nc" id="L298">							+ &quot; login &quot; + uform.getLogin()</span>
+<span class="nc" id="L299">							+ &quot; name= &quot; + uform.getFullName(), -1, -1);</span>
+
+<span class="nc" id="L301">				String password = null;</span>
+<span class="nc bnc" id="L302" title="All 4 branches missed.">				if (uform.getFieldE().startsWith(RegUserAction.REQUIRE_AUTHORIZATION_AFTER_VERIFICATION) || Constants.getBoolean(&quot;authorizeRegeneratePassword&quot;))</span>
+				{
+					//vygeneruje nahodne heslo o dlzke 5 znakov, ak nevyhovuje bezpecnostnej politike, po prihlaseni sa vynuti zmena hesla
+<span class="nc" id="L305">					password = RandomStringUtils.randomAlphanumeric(5);</span>
+					//nakolko tu nemam normaenho usera ale len nejaky form, ziskam si ho znova ako trulko
+<span class="nc" id="L307">					UserDetails u = UsersDB.getUser(user_id);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">					if (u!=null)</span>
+					{
+<span class="nc" id="L310">						u.setPassword(password);</span>
+<span class="nc" id="L311">						u.setFieldE(&quot;&quot;);</span>
+<span class="nc" id="L312">						UsersDB.saveUser(u);</span>
+					}
+				}
+				//posli mu mail
+<span class="nc" id="L316">				boolean emailSend = sendInfoEmail(uform.getUserId(), password, user, request);</span>
+
+<span class="nc bnc" id="L318" title="All 2 branches missed.">				if (emailSend)</span>
+				{
+<span class="nc" id="L320">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L321">					ps = db_conn.prepareStatement(&quot;UPDATE users SET authorized=? WHERE user_id=?&quot;+UsersDB.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L322">					ps.setBoolean(1, true);</span>
+<span class="nc" id="L323">					ps.setInt(2, uform.getUserId());</span>
+<span class="nc" id="L324">					ps.execute();</span>
+<span class="nc" id="L325">					ps.close();</span>
+<span class="nc" id="L326">					ps = null;</span>
+
+<span class="nc" id="L328">					db_conn.close();</span>
+<span class="nc" id="L329">					db_conn = null;</span>
+				}
+
+			}
+
+
+		}
+<span class="nc" id="L336">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L338">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L344" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L345">					ps.close();</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L347">					db_conn.close();</span>
+			}
+<span class="nc" id="L349">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L351">			}</span>
+		}
+<span class="nc" id="L353">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

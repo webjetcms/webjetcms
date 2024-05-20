@@ -4,8 +4,7 @@ import java.util.Date;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-
-import com.drew.lang.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import lombok.Getter;
 import lombok.Setter;

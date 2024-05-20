@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Prop.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.i18n</a> &gt; <span class="el_source">Prop.java</span></div><h1>Prop.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.i18n;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.struts.util.ResponseUtils;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ *  Description of the Class
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.8 $
+ *@created      Streda, 2002, j�l 17
+ *@modified     $Date: 2004/03/18 15:44:59 $
+ */
+public class Prop
+{
+	public static final boolean DEFAULT_TEXTS = true;
+
+	public static final boolean CURRENT_TEXTS = false;
+
+	/**
+	 *  Description of the Field
+	 */
+	private static final String CONTEXT_I18N_PROP_HASHTABLE = &quot;context_i18n_prop_hashtable&quot;;
+	/**
+	 *  Description of the Field
+	 */
+	public static final String SESSION_I18N_PROP_LNG = &quot;session_i18n_prop_lng&quot;;
+
+	private IwayProperties properties;
+
+	//pre interne ucely instancie, pretoze po vytvoreni instancie tato uz nemala informaciu o jazyku !!
+	private final String language;
+
+<span class="fc" id="L55">	private static ConcurrentHashMap&lt;String, Set&lt;MissingKeysDto&gt;&gt; missingTexts = new ConcurrentHashMap&lt;String, Set&lt;MissingKeysDto&gt;&gt;();</span>
+
+	private static long lastUpdate;
+
+<span class="pc" id="L59">	private long created = System.currentTimeMillis();</span>
+
+	private Prop(IwayProperties properties, String lng)
+<span class="fc" id="L62">	{</span>
+<span class="fc" id="L63">		this.properties = properties;</span>
+<span class="fc" id="L64">		language = lng;</span>
+<span class="fc" id="L65">	}</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private static Map&lt;String, Prop&gt; getPropHashtabl(ServletContext context)
+	{
+<span class="fc" id="L70">		Map&lt;String, Prop&gt; propHashtable = null;</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">		if (context != null) propHashtable = (HashMap&lt;String, Prop&gt;)context.getAttribute(CONTEXT_I18N_PROP_HASHTABLE);</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">		if (propHashtable == null)</span>
+		{
+<span class="fc" id="L74">			propHashtable = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">			if (context!=null) context.setAttribute(CONTEXT_I18N_PROP_HASHTABLE, propHashtable);</span>
+		}
+<span class="fc" id="L77">		return propHashtable;</span>
+	}
+
+	private static Prop getPropFromHashtable(String lng)
+	{
+<span class="fc" id="L82">		return getPropFromHashtable(lng, Constants.getServletContext());</span>
+	}
+
+	private static Prop getPropFromHashtable(String lng, ServletContext servletContext)
+	{
+<span class="fc" id="L87">		Map&lt;String, Prop&gt; propHashtable = getPropHashtabl(servletContext);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (Tools.isEmpty(lng))</span>
+		{
+<span class="fc" id="L90">			lng = &quot;sk&quot;;</span>
+		}
+<span class="fc" id="L92">		Prop p = propHashtable.get(lng);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if (p == null)</span>
+		{
+<span class="fc bfc" id="L95" title="All 2 branches covered.">			if (&quot;ru&quot;.equals(lng))</span>
+			{
+<span class="fc" id="L97">				p = new Prop(new IwayProperties(&quot;utf-8&quot;),lng);</span>
+			}
+<span class="fc bfc" id="L99" title="All 2 branches covered.">			else if (&quot;sk&quot;.equals(lng))</span>
+			{
+<span class="fc" id="L101">				p = new Prop(new IwayProperties(&quot;utf-8&quot;),lng);</span>
+			}
+			else
+			{
+<span class="fc" id="L105">				p = new Prop(new IwayProperties(),lng);</span>
+			}
+<span class="fc" id="L107">			propHashtable.put(lng, p);</span>
+		}
+<span class="fc" id="L109">		return(p);</span>
+	}
+
+	/**
+	 * @Deprecated neviem na co toto sluzi, nikde sa nepouziva
+	 */
+	public Prop(ServletContext servletContext, boolean defaults, String lng)
+<span class="nc" id="L116">	{</span>
+<span class="nc" id="L117">		Logger.println(this,&quot;reading resources [&quot;+Constants.getInstallName()+&quot;]&quot;);</span>
+
+<span class="nc" id="L119">		properties = new IwayProperties();</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		loadLanguageProp(&quot;sk&quot;, toFileNamePart(&quot;sk&quot;), !defaults, servletContext);</span>
+<span class="nc" id="L122">		language = lng;</span>
+<span class="nc" id="L123">		ClusterDB.addRefresh(Prop.class);</span>
+<span class="nc" id="L124">	}</span>
+
+	private static String toFileNamePart(String lng)
+	{
+<span class="fc bfc" id="L128" title="All 2 branches covered.">		if (Tools.isEmpty(lng)) lng=&quot;sk&quot;;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">		return &quot;sk&quot;.equals(lng) ? &quot;&quot; : &quot;_&quot;+lng;</span>
+	}
+
+	private synchronized void loadLanguageProp(String languageKey, String fileLng, boolean loadCustomizedTexts, ServletContext servletContext)
+	{
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		if (Tools.isEmpty(languageKey)) languageKey = &quot;sk&quot;;</span>
+
+<span class="fc bfc" id="L136" title="All 2 branches covered.">		if (getPropFromHashtable(languageKey, servletContext).getProperties().isEmpty()==false)</span>
+<span class="fc" id="L137">			return;</span>
+		try
+		{
+<span class="fc" id="L140">			properties = getDefaulProperties(languageKey, fileLng, servletContext);</span>
+<span class="pc bpc" id="L141" title="1 of 4 branches missed.">			if (loadCustomizedTexts &amp;&amp; InitServlet.isWebjetConfigured())</span>
+			{
+<span class="fc" id="L143">				new ComplexQuery().</span>
+<span class="fc" id="L144">						setSql(&quot;SELECT * FROM &quot; + ConfDB.PROPERTIES_TABLE_NAME + &quot; WHERE lng = ? ORDER BY update_date ASC&quot;).</span>
+<span class="fc" id="L145">						setParams(languageKey).</span>
+<span class="fc" id="L146">						list(new Mapper&lt;Void&gt;(){</span>
+							@Override
+							public Void map(ResultSet rs) throws SQLException{
+<span class="fc" id="L149">								String key = DB.getDbString(rs, &quot;prop_key&quot;);</span>
+<span class="fc" id="L150">								String value = DB.getDbString(rs, &quot;prop_value&quot;);</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">								if (key != null) key = key.trim();</span>
+<span class="fc" id="L152">								properties.setProperty(key, value);</span>
+<span class="fc" id="L153">								return null;</span>
+							}
+						});
+			}
+		}
+<span class="nc" id="L158">		catch (Exception e)</span>
+		{
+<span class="nc" id="L160">			Logger.error(Prop.class, e.getMessage());</span>
+<span class="fc" id="L161">		}</span>
+<span class="fc" id="L162">	}</span>
+
+
+	public static Prop getInstance(HttpServletRequest request)
+	{
+<span class="fc" id="L167">		return(getInstance(Constants.getServletContext(), request));</span>
+	}
+
+	/**
+	 *  Gets the text attribute of the Prop class
+	 *
+	 *@param  servletContext  Description of the Parameter
+	 *@param  request         Description of the Parameter
+	 *@return                 The text value
+	 */
+	public static Prop getInstance(ServletContext servletContext, HttpServletRequest request)
+	{
+<span class="fc" id="L179">		String lng = getLng(request, false);</span>
+<span class="fc" id="L180">		boolean refresh = false;</span>
+
+<span class="fc" id="L182">		return(getInstance(servletContext, lng, refresh));</span>
+	}
+
+	public static Prop getInstance()
+	{
+<span class="fc" id="L187">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L188">		String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">		if (rb != null) lng = rb.getLng();</span>
+<span class="fc" id="L190">		return getInstance(Constants.getServletContext(), lng, false);</span>
+	}
+
+	public static String getLng(HttpSession session)
+	{
+<span class="nc" id="L195">		String lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (lng==null)</span>
+<span class="nc" id="L197">			lng = (String)session.getAttribute(&quot;lng&quot;);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (lng == null)</span>
+<span class="nc" id="L199">			lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="nc" id="L200">		return lng;</span>
+	}
+
+	public static String getLng(HttpServletRequest request, boolean noParameter)
+	{
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">		if (request == null) return Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc" id="L206">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L207">		String lng = null;</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">		if (noParameter == false) lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		else if (request.getParameter(&quot;__lng&quot;)!=null)</span>
+		{
+<span class="nc" id="L211">			lng = request.getParameter(&quot;__lng&quot;);</span>
+		}
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">		else if (request.getParameter(&quot;lng&quot;)!=null)</span>
+		{
+<span class="nc" id="L215">			lng = request.getParameter(&quot;lng&quot;);</span>
+		}
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		if (lng == null)</span>
+		{
+			//PageLng
+<span class="fc" id="L220">			lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+			//Logger.debug(Prop.class, &quot;getInstance1 lng=&quot;+lng);
+		}
+<span class="fc bfc" id="L223" title="All 2 branches covered.">		if (lng==null)</span>
+		{
+			//najskor musi ist test pre admina, aby sa nemenil jazyk admin casti
+<span class="fc" id="L226">			lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);</span>
+			//Logger.debug(Prop.class, &quot;getInstance3 lng=&quot;+lng);
+		}
+<span class="fc bfc" id="L229" title="All 2 branches covered.">		if (lng==null)</span>
+		{
+			//PageLng
+<span class="fc" id="L232">			lng = (String)session.getAttribute(&quot;lng&quot;);</span>
+			//Logger.debug(Prop.class, &quot;getInstance2 lng=&quot;+lng);
+		}
+<span class="fc bfc" id="L235" title="All 2 branches covered.">		if (lng == null)</span>
+		{
+<span class="fc" id="L237">			lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+			//Logger.debug(Prop.class, &quot;getInstance4 lng=&quot;+lng);
+		}
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		if (request.getAttribute(&quot;PageLng&quot;)==null)</span>
+		{
+<span class="fc bfc" id="L242" title="All 2 branches covered.">			if (session.getAttribute(SESSION_I18N_PROP_LNG)==null) session.setAttribute(SESSION_I18N_PROP_LNG, lng);</span>
+		}
+<span class="fc" id="L244">		return lng;</span>
+	}
+
+	/**
+	 * Vrati jazyk pre JS subory pre ckeditor, elfinder a podobne kde sa napr. pre CZ pouziva hodnota CS
+	 * @param request
+	 * @return
+	 */
+	public static String getLngForJavascript(HttpServletRequest request)
+	{
+<span class="fc" id="L254">		String lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">		if (lng == null) lng = PageLng.getUserLng(request);</span>
+
+<span class="fc bfc" id="L257" title="All 2 branches covered.">		if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">		else if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+
+<span class="fc" id="L260">		return lng;</span>
+	}
+
+	public static Prop getInstance(ServletContext servletContext, HttpSession session)
+	{
+<span class="nc" id="L265">		String lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (lng==null)</span>
+		{
+			//PageLng
+<span class="nc" id="L269">			lng = (String)session.getAttribute(&quot;lng&quot;);</span>
+		}
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		if (lng == null)</span>
+		{
+<span class="nc" id="L273">			lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+		}
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (session.getAttribute(SESSION_I18N_PROP_LNG)==null) session.setAttribute(SESSION_I18N_PROP_LNG, lng);</span>
+
+<span class="nc" id="L277">		boolean refresh = false;</span>
+
+<span class="nc" id="L279">		return(getInstance(servletContext, lng, refresh));</span>
+	}
+
+	public static Prop getInstance(String lng)
+	{
+<span class="fc" id="L284">		return(getInstance(Constants.getServletContext(), lng, false));</span>
+	}
+
+	/**
+	 * Obnovi instanciu Prop objektu ak je refresh nastavene na true
+	 * @param refresh
+	 * @return
+	 */
+	public static Prop getInstance(boolean refresh)
+	{
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">		if (refresh)</span>
+		{
+<span class="fc" id="L296">			Constants.getServletContext().removeAttribute(CONTEXT_I18N_PROP_HASHTABLE);</span>
+		}
+<span class="fc" id="L298">		return(getInstance(Constants.getServletContext(), &quot;sk&quot;, refresh));</span>
+	}
+
+	public static Prop getInstance(ServletContext servletContext, String lng, boolean refresh)
+	{
+<span class="fc bfc" id="L303" title="All 2 branches covered.">		if (&quot;cs&quot;.equals(lng)) lng = &quot;cz&quot;;</span>
+
+		//ziskaj properties subory
+<span class="fc" id="L306">		Prop lngProp = getPropFromHashtable(lng, servletContext);</span>
+
+		//lazy load inych jazykov ako slovenskeho
+<span class="pc bpc" id="L309" title="1 of 4 branches missed.">		if (lngProp.getProperties().isEmpty() || refresh)</span>
+		{
+<span class="fc bfc" id="L311" title="All 2 branches covered.">			if (refresh)</span>
+			{
+<span class="fc" id="L313">				lastUpdate = System.currentTimeMillis();</span>
+<span class="fc" id="L314">				lngProp.getProperties().clear();</span>
+			}
+<span class="fc" id="L316">			lngProp.loadLanguageProp(lng, toFileNamePart(lng), DEFAULT_TEXTS, servletContext);</span>
+		}
+
+<span class="fc bfc" id="L319" title="All 2 branches covered.">		if (refresh)</span>
+		{
+<span class="fc" id="L321">			Cache.getInstance().removeObjectStartsWithName(&quot;Prop.getDefaulProperties.&quot;);</span>
+<span class="fc" id="L322">			ClusterDB.addRefresh(Prop.class);</span>
+		}
+
+<span class="fc" id="L325">		return(lngProp);</span>
+	}
+
+	/**
+	 *  Gets the text attribute of the Prop object
+	 *
+	 *@param  key     Description of the Parameter
+	 *@return         The text value
+	 */
+	public String getText(String key)
+	{
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">		if (properties == null)</span>
+		{
+<span class="nc" id="L338">			return (key);</span>
+		}
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">		if (Tools.isEmpty(key)) return &quot;&quot;;</span>
+
+<span class="fc" id="L342">		String value = properties.getProperty(key, key);</span>
+
+		//hladanie kluca podla prefixu (skupiny sablon, id sablony)
+<span class="fc" id="L345">		List&lt;String&gt; prefixes = RequestBean.getTextKeyPrefixes();</span>
+<span class="fc" id="L346">		value = checkPrefixedValues(prefixes, key, value);</span>
+
+		//vyhladaj kluc podla domenoveho prefixu (podobne ako konf. premennu)
+<span class="fc" id="L349">		value = checkDomainAlias(key, value);</span>
+
+<span class="fc bfc" id="L351" title="All 8 branches covered.">		if (value.equals(key) &amp;&amp; key.endsWith(&quot;.tooltip&quot;)==false &amp;&amp; key.startsWith(&quot;displaytag.&quot;)==false &amp;&amp; key.startsWith(&quot;[[#{&quot;)==false &amp;&amp;</span>
+<span class="fc bfc" id="L352" title="All 6 branches covered.">			key.startsWith(&quot;components.translation_key.&quot;)==false &amp;&amp; &quot;&amp;nbsp;&quot;.equals(key)==false &amp;&amp; &quot;ID&quot;.equals(key)==false)</span>
+		{
+			//chybajuci string, pridaj ho do chybajucich
+<span class="fc" id="L355">			missingTexts.putIfAbsent(language, Collections.synchronizedSet(new HashSet&lt;MissingKeysDto&gt;()));</span>
+
+<span class="fc" id="L357">			String urlAddress = &quot;&quot;;</span>
+<span class="fc" id="L358">			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">			if (rb != null) urlAddress = rb.getUrl();</span>
+
+			//check if key was allready set as missing, if yes -&gt; just update lastMissing date value
+<span class="fc" id="L362">			boolean present = false;</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">			for(MissingKeysDto missingKey : missingTexts.get(language)) {</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">				if(missingKey.getKey().equals(key)) {</span>
+<span class="fc" id="L365">					present = true;</span>
+<span class="fc" id="L366">					missingKey.setLastMissing(new Date());</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(urlAddress)) missingKey.setUrlAddress(urlAddress);</span>
+					break;
+				}
+<span class="fc" id="L370">			}</span>
+
+			//if key is missing first time, add new MissingKeysDto variable into set of missing keys
+<span class="fc bfc" id="L373" title="All 2 branches covered.">			if(!present) missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));</span>
+
+			//try defaultLanguage property
+<span class="fc" id="L376">            String defaultLanguage = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="pc bpc" id="L377" title="3 of 4 branches missed.">            if (Tools.isNotEmpty(defaultLanguage) &amp;&amp; &quot;sk&quot;.equalsIgnoreCase(defaultLanguage)==false)</span>
+            {
+<span class="nc" id="L379">                IwayProperties defaultProp = getRes(defaultLanguage);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                if (defaultProp != null)</span>
+                {
+<span class="nc" id="L382">                    value = checkPrefixedValues(prefixes, key, defaultProp.getProperty(key, key));</span>
+                }
+            }
+
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">            if (value.equals(key))</span>
+            {
+                //try default properties
+<span class="fc" id="L389">                IwayProperties skProp = getRes(&quot;sk&quot;);</span>
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">                if (skProp != null) {</span>
+<span class="fc" id="L391">                    value = checkPrefixedValues(prefixes, key, skProp.getProperty(key, key));</span>
+                }
+            }
+		}
+<span class="pc bpc" id="L395" title="3 of 4 branches missed.">		if (value.startsWith(&quot;docid:&quot;) &amp;&amp; value.length()&lt;20)</span>
+		{
+			try
+			{
+<span class="nc" id="L399">				int docId = Tools.getIntValue(value.substring(value.indexOf(&quot;:&quot;)+1), -1);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (docId &gt; 0)</span>
+				{
+<span class="nc" id="L402">					DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L403">					DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L404" title="All 4 branches missed.">					if (doc != null &amp;&amp; Tools.isNotEmpty(doc.getData()))</span>
+					{
+<span class="nc" id="L406">						value = doc.getData();</span>
+					}
+				}
+			}
+<span class="nc" id="L410">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L412">				Logger.error(Prop.class, ex);</span>
+<span class="nc" id="L413">			}</span>
+		}
+
+<span class="fc" id="L416">        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L417" title="3 of 6 branches missed.">		if (requestBean != null &amp;&amp; requestBean.getParameter(&quot;showTextKeys&quot;) != null &amp;&amp; requestBean.isUserAdmin()) {</span>
+<span class="nc" id="L418">			value = &quot;[&quot; + key + &quot;] &quot; + value;</span>
+		}
+
+<span class="fc" id="L421">		return (value);</span>
+	}
+
+    /**
+     * Overi, ci existuje kluc s prefixom, vrati sa prvy co sa s prefixom najde (podla poradia v liste prefixov)
+     * @param prefixes - zoznam kontrolovanych prefixov
+     * @param key - textovy kluc
+     * @param currentValue - aktualna hodnota textu (pred kontrolou na prefix, ak sa nenajde, vrati sa toto)
+     * @return
+     */
+	private String checkPrefixedValues(List&lt;String&gt; prefixes, String key, String currentValue)
+    {
+<span class="fc" id="L433">        String value = currentValue;</span>
+<span class="fc bfc" id="L434" title="All 2 branches covered.">        if (prefixes!=null)</span>
+        {
+<span class="fc" id="L436">            String prefixedValue = null;</span>
+<span class="fc bfc" id="L437" title="All 2 branches covered.">            for (String prefix : prefixes)</span>
+            {
+<span class="fc" id="L439">                prefixedValue = properties.getProperty(prefix+&quot;.&quot;+key, prefixedValue);</span>
+<span class="fc" id="L440">            }</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">            if (prefixedValue!=null) value = prefixedValue;</span>
+        }
+
+<span class="fc" id="L444">        return value;</span>
+	 }
+
+
+	private String checkDomainAlias(String key, String currentValue)
+	{
+<span class="pc bpc" id="L450" title="3 of 4 branches missed.">		if (Constants.isConstantsAliasSearch()==false || key==null) return currentValue;</span>
+
+<span class="nc" id="L452">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L453" title="All 4 branches missed.">		if(requestBean!=null &amp;&amp; Tools.isNotEmpty(requestBean.getDomain()))</span>
+		{
+<span class="nc" id="L455">			String domainAlias = MultiDomainFilter.getDomainAlias(requestBean.getDomain());</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">			if (Tools.isEmpty(domainAlias))</span>
+			{
+<span class="nc" id="L458">				domainAlias = requestBean.getDomain();</span>
+			}
+<span class="nc bnc" id="L460" title="All 2 branches missed.">			if(Tools.isNotEmpty(domainAlias))</span>
+			{
+<span class="nc" id="L462">				String keyWithAlias=domainAlias+&quot;-&quot;+key;</span>
+				//ak taky zaznam s aliasom v hashtabulke existuje, tak sa vrati jeho meno, inak vrati defaultne meno
+<span class="nc" id="L464">				String valueWithAlias = properties.getProperty(keyWithAlias, null);</span>
+<span class="nc bnc" id="L465" title="All 4 branches missed.">				if (valueWithAlias != null &amp;&amp; valueWithAlias.equals(keyWithAlias)==false) return valueWithAlias;</span>
+			}
+		}
+<span class="nc" id="L468">		return currentValue;</span>
+	}
+
+	public String getText(String key, String param1)
+	{
+<span class="fc" id="L473">		return(getTextWithParams(key, param1));</span>
+	}
+
+	public String getText(String key, String param1, String param2)
+	{
+<span class="fc" id="L478">		return(getTextWithParams(key, param1, param2));</span>
+	}
+
+	public String getText(String key, String param1, String param2, String param3)
+	{
+<span class="fc" id="L483">		return(getTextWithParams(key, param1, param2, param3));</span>
+	}
+
+	public String getText(String key, String param1, String param2, String param3, String param4)
+	{
+<span class="nc" id="L488">		return(getTextWithParams(key, param1, param2, param3, param4));</span>
+	}
+
+	public String getText(String key, String param1, String param2, String param3, String param4, String param5)
+	{
+<span class="nc" id="L493">		return(getTextWithParams(key, param1, param2, param3, param4, param5));</span>
+	}
+
+	public String getText(String key, String param1, String param2, String param3, String param4, String param5, String param6)
+	{
+<span class="nc" id="L498">		return(getTextWithParams(key, param1, param2, param3, param4, param5, param6));</span>
+	}
+
+	public String getText(String key, String param1, String param2, String param3, String param4, String param5, String param6, String param7)
+	{
+<span class="nc" id="L503">		return(getTextWithParams(key, param1, param2, param3, param4, param5, param6,param7));</span>
+	}
+
+	public String getTextWithParams(String key, String... params)
+	{
+<span class="fc" id="L508">		String value = getText(key);</span>
+<span class="fc" id="L509">		int i = 1;</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">		for (String param : params)</span>
+		{
+<span class="fc" id="L512">			value = Tools.replace(value, &quot;!&quot;+i, param);</span>
+<span class="fc" id="L513">			value = Tools.replace(value, &quot;{&quot;+i+&quot;}&quot;, param);</span>
+<span class="fc" id="L514">			i++;</span>
+		}
+<span class="fc bfc" id="L516" title="All 2 branches covered.">		while (i &lt;= 7)</span>
+		{
+			//replacni placeholdre, je to do 7 pretoze tak fungovala povodna verzia
+<span class="fc" id="L519">			value = Tools.replace(value, &quot;!&quot;+i, &quot;&quot;);</span>
+<span class="fc" id="L520">			value = Tools.replace(value, &quot;{&quot;+i+&quot;}&quot;, &quot;&quot;);</span>
+<span class="fc" id="L521">			i++;</span>
+		}
+<span class="fc" id="L523">		return value;</span>
+	}
+
+	public Map&lt;String,String&gt; getTextStartingWith(String prefix)
+	{
+<span class="fc" id="L528">		Map&lt;String,String&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L529" title="All 2 branches covered.">		for (Map.Entry&lt;String,String&gt; entry : properties.entrySet())</span>
+		{
+<span class="fc bfc" id="L531" title="All 2 branches covered.">			if (entry.getKey().startsWith(prefix)) result.put(entry.getKey(), entry.getValue());</span>
+<span class="fc" id="L532">		}</span>
+<span class="fc" id="L533">		return result;</span>
+	}
+
+	public static List&lt;Map.Entry&lt;String, String&gt;&gt; sortByValue(Map&lt;String, String&gt; texts)
+	{
+<span class="nc" id="L538">		List&lt;Map.Entry&lt;String, String&gt;&gt; list = setToList(texts.entrySet());</span>
+
+		/*Collections.sort(list, new Comparator&lt;Map.Entry&lt;String, String&gt;&gt;()
+		{
+			@Override
+			public int compare(Map.Entry&lt;String, String&gt; o1, Map.Entry&lt;String, String&gt; o2)
+			{
+				return o1.getValue().compareTo(o2.getValue());
+			}
+		});*/
+<span class="nc" id="L548">		list.sort((Map.Entry&lt;String, String&gt; o1, Map.Entry&lt;String, String&gt; o2) -&gt; o1.getValue().compareTo(o2.getValue()));</span>
+
+<span class="nc" id="L550">		return list;</span>
+	}
+
+	public static List&lt;Map.Entry&lt;String, String&gt;&gt; sortByKey(Map&lt;String, String&gt; texts)
+	{
+<span class="nc" id="L555">		List&lt;Map.Entry&lt;String, String&gt;&gt; list = setToList(texts.entrySet());</span>
+
+		/*Collections.sort(list, new Comparator&lt;Map.Entry&lt;String, String&gt;&gt;()
+		{
+			@Override
+			public int compare(Map.Entry&lt;String, String&gt; o1, Map.Entry&lt;String, String&gt; o2)
+			{
+				return o1.getKey().compareTo(o2.getKey());
+			}
+		});*/
+<span class="nc" id="L565">		list.sort((Map.Entry&lt;String, String&gt; o1, Map.Entry&lt;String, String&gt; o2) -&gt; o1.getKey().compareTo(o2.getKey()));</span>
+
+<span class="nc" id="L567">		return list;</span>
+	}
+
+	public String getTextWithSuffix(String key, String suffix){
+<span class="fc" id="L571">		String suffixKey = key+&quot;.&quot;+suffix;</span>
+<span class="fc" id="L572">		String text = suffixKey;</span>
+
+<span class="fc" id="L574">		String textWithSuffix = getText(suffixKey);</span>
+<span class="fc" id="L575">		String textWithoutSuffix = getText(key);</span>
+
+<span class="pc bpc" id="L577" title="2 of 4 branches missed.">		if (Tools.isNotEmpty(textWithSuffix) &amp;&amp; !suffixKey.equals(textWithSuffix)){</span>
+<span class="nc" id="L578">		    text = textWithSuffix;</span>
+<span class="pc bpc" id="L579" title="2 of 4 branches missed.">        }else if(Tools.isNotEmpty(textWithoutSuffix) &amp;&amp; !key.equals(textWithoutSuffix)){</span>
+<span class="fc" id="L580">		    text = textWithoutSuffix;</span>
+        }
+
+<span class="fc" id="L583">		return text;</span>
+	}
+
+	private static List&lt;Map.Entry&lt;String, String&gt;&gt; setToList(Set&lt;Map.Entry&lt;String, String&gt;&gt; set)
+	{
+<span class="nc" id="L588">		List&lt;Map.Entry&lt;String, String&gt;&gt; list = new ArrayList&lt;&gt;(set);</span>
+
+<span class="nc" id="L590">		return list;</span>
+	}
+
+	/**
+	 * Staticke ziskanie prekladoveho textu ked nemam request ani session, zvoli naposledy pouzity jazyk
+	 * @param key
+	 * @param params
+	 * @return
+	 */
+	public static String getTxt(String key, String... params)
+	{
+<span class="fc" id="L601">		String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc" id="L602">		RequestBean reqb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">		if (reqb != null) lng = reqb.getLng();</span>
+
+<span class="fc" id="L605">		Prop prop = Prop.getInstance(lng);</span>
+
+<span class="fc" id="L607">		String value = prop.getText(key);</span>
+
+<span class="pc bpc" id="L609" title="1 of 2 branches missed.">		if (params != null)</span>
+		{
+<span class="fc" id="L611">			int counter = 1;</span>
+<span class="pc bpc" id="L612" title="1 of 2 branches missed.">			for (String param : params)</span>
+			{
+<span class="nc" id="L614">				value = Tools.replace(value, &quot;!&quot;+counter, param);</span>
+<span class="nc" id="L615">				value = Tools.replace(value, &quot;{&quot;+counter+&quot;}&quot;, param);</span>
+			}
+		}
+
+<span class="fc" id="L619">		return value;</span>
+	}
+
+	public String getTextProp(String key) {
+<span class="pc bpc" id="L623" title="1 of 2 branches missed.">		if (properties == null) {</span>
+<span class="nc" id="L624">			return null;</span>
+		}
+
+<span class="fc" id="L627">		String value = properties.getProperty(key, null);</span>
+
+<span class="fc" id="L629">		return value;</span>
+	}
+
+	public IwayProperties getProperties()
+	{
+<span class="fc" id="L634">		return properties;</span>
+	}
+
+	public IwayProperties getRes(String lng)
+	{
+<span class="fc" id="L639">		Prop prop = getPropFromHashtable(lng);</span>
+<span class="fc" id="L640">		return prop.getProperties();</span>
+	}
+
+	/**
+	 * nacitanie len default textov pre jazyk
+	 * @param languageKey
+	 * @param fileLng
+	 * @param servletContext
+	 * @return
+	 */
+	public static IwayProperties getDefaulProperties(String languageKey, String fileLng, ServletContext servletContext)
+	{
+		//use cache, file should not change frequently
+<span class="fc" id="L653">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L654">		String KEY = &quot;Prop.getDefaulProperties.&quot;+languageKey+&quot;.&quot;+fileLng;</span>
+<span class="fc" id="L655">		IwayProperties result = (IwayProperties) c.getObject(KEY);</span>
+<span class="fc bfc" id="L656" title="All 2 branches covered.">		if (result!=null) return result;</span>
+
+<span class="fc" id="L658">		final IwayProperties defaultTexts = new IwayProperties(&quot;utf-8&quot;);</span>
+<span class="pc bpc" id="L659" title="1 of 2 branches missed.">		if (Tools.isEmpty(languageKey)) languageKey = &quot;sk&quot;;</span>
+<span class="fc bfc" id="L660" title="All 6 branches covered.">		fileLng = (Tools.isEmpty(fileLng) || &quot;sk&quot;.equals(fileLng)) ? &quot;&quot; : fileLng.startsWith(&quot;_&quot;) ? fileLng : &quot;_&quot;+fileLng;</span>
+
+		try
+		{
+			String fileName;
+<span class="fc" id="L665">			fileName = &quot;/text&quot; + fileLng + &quot;.properties&quot;;</span>
+			// toto loadujem aj z JARu
+<span class="fc" id="L667">			IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/classes&quot;+fileName));</span>
+<span class="fc bfc" id="L668" title="All 2 branches covered.">			if (f.exists())</span>
+			{
+<span class="fc" id="L670">				Logger.println(Prop.class, &quot; -&gt; loading prop [&quot; + languageKey + &quot;]: &quot; + fileName);</span>
+<span class="fc" id="L671">				defaultTexts.load(f);</span>
+			}
+<span class="fc" id="L673">			String propInstallNames = Constants.getString(&quot;propInstallNames&quot;);</span>
+<span class="pc bpc" id="L674" title="1 of 2 branches missed.">			if (Tools.isEmpty(propInstallNames))</span>
+<span class="fc" id="L675">				propInstallNames = Constants.getInstallName();</span>
+
+			//ak je nastavene, skus aj logInstallName
+<span class="pc bpc" id="L678" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(Constants.getLogInstallName())) propInstallNames += &quot;,&quot;+Constants.getLogInstallName();</span>
+			//aby sa nacitalo text-webjet9.properties
+<span class="fc" id="L680">			propInstallNames = Constants.getString(&quot;defaultSkin&quot;)+&quot;,&quot;+propInstallNames;</span>
+
+<span class="fc" id="L682">			StringTokenizer st = new StringTokenizer(propInstallNames, &quot;,&quot;);</span>
+<span class="fc bfc" id="L683" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L685">				String installName = st.nextToken();</span>
+				// toto loadujem vzdy z classes adresara
+<span class="fc" id="L687">				fileName = &quot;/text&quot; + fileLng + &quot;-&quot; + installName + &quot;.properties&quot;;</span>
+<span class="fc" id="L688">				f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/classes&quot;+fileName));</span>
+<span class="fc bfc" id="L689" title="All 2 branches covered.">				if (f.exists())</span>
+				{
+<span class="fc" id="L691">					Logger.println(Prop.class, &quot; -&gt; loading prop [&quot; + languageKey + &quot;][&quot; + installName + &quot;]: &quot; + fileName);</span>
+<span class="fc" id="L692">					defaultTexts.load(f);</span>
+				}
+<span class="fc" id="L694">			}</span>
+		}
+<span class="nc" id="L696">		catch (Exception e)</span>
+		{
+<span class="nc" id="L698">			Logger.error(e);</span>
+<span class="fc" id="L699">		}</span>
+
+<span class="fc" id="L701">		c.setObjectSeconds(KEY, defaultTexts, 10*60, true);</span>
+
+<span class="fc" id="L703">		return defaultTexts;</span>
+	}
+
+	/**
+	 * Vrati texty zmenene pouzivatelom pre zadany jazyk.
+	 * Vracia ich ako zoznam vo forme Kluc =&gt; hodnota.
+	 *
+	 * @param language
+	 * @return
+	 */
+	public static IwayProperties getChangedProperties(String language){
+<span class="nc" id="L714">		return getChangedProperties(language, null);</span>
+	}
+
+
+	/**
+	 * Vrati texty zmenene pouzivatelom pre zadany jazyk a prefix.
+	 * Vracia ich ako zoznam vo forme Kluc =&gt; hodnota.
+	 *
+	 * @param language
+	 * @param prefix
+	 * @return
+	 */
+	public static IwayProperties getChangedProperties(String language, String prefix){
+<span class="fc" id="L727">		String[] languages = Constants.getArray(&quot;languages&quot;);</span>
+<span class="pc bpc" id="L728" title="1 of 2 branches missed.">		if (!ArrayUtils.contains(languages, language))</span>
+<span class="nc" id="L729">			throw new IllegalArgumentException(&quot;Unsupported language: ['&quot;+language+&quot;']&quot;);</span>
+
+<span class="fc" id="L731">		final IwayProperties changedTexts = new IwayProperties(&quot;utf-8&quot;);</span>
+
+		//nacitaj custom nazvy z databazy
+<span class="pc bpc" id="L734" title="1 of 2 branches missed.">		if(Tools.isEmpty(prefix))</span>
+		{
+<span class="nc" id="L736">			new ComplexQuery().</span>
+<span class="nc" id="L737">				setSql(&quot;SELECT * FROM &quot; +ConfDB.PROPERTIES_TABLE_NAME+&quot; WHERE lng = ? ORDER BY update_date ASC&quot;).</span>
+<span class="nc" id="L738">				setParams(language).</span>
+<span class="nc" id="L739">				list(new Mapper&lt;Void&gt;(){</span>
+					@Override
+					public Void map(ResultSet rs) throws SQLException
+					{
+<span class="nc" id="L743">						String key = DB.getDbString(rs, &quot;prop_key&quot;);</span>
+<span class="nc" id="L744">						String value = DB.getDbString(rs, &quot;prop_value&quot;);</span>
+<span class="nc bnc" id="L745" title="All 2 branches missed.">						if (key != null) key = key.trim();</span>
+<span class="nc" id="L746">						changedTexts.setProperty(key, value);</span>
+<span class="nc" id="L747">						return null;</span>
+					}
+
+				});
+		}
+		else
+		{
+<span class="fc" id="L754">			new ComplexQuery().</span>
+<span class="fc" id="L755">			setSql(&quot;SELECT * FROM &quot; +ConfDB.PROPERTIES_TABLE_NAME+&quot; WHERE lng = ? AND prop_key LIKE ? ORDER BY update_date ASC&quot;).</span>
+<span class="fc" id="L756">			setParams(language, prefix+&quot;%&quot;).</span>
+<span class="fc" id="L757">			list(new Mapper&lt;Void&gt;(){</span>
+				@Override
+				public Void map(ResultSet rs) throws SQLException
+				{
+<span class="fc" id="L761">					String key = DB.getDbString(rs, &quot;prop_key&quot;);</span>
+<span class="fc" id="L762">					String value = DB.getDbString(rs, &quot;prop_value&quot;);</span>
+<span class="pc bpc" id="L763" title="1 of 2 branches missed.">					if (key != null) key = key.trim();</span>
+<span class="fc" id="L764">					changedTexts.setProperty(key, value);</span>
+<span class="fc" id="L765">					return null;</span>
+				}
+
+			});
+		}
+
+		//vratime nase texty
+<span class="fc" id="L772">		return changedTexts;</span>
+	}
+
+	/**
+	 * @return Returns the lastUpdate.
+	 */
+	public boolean shouldBeUpdated()
+	{
+<span class="nc bnc" id="L780" title="All 2 branches missed.">		return lastUpdate &gt; created;</span>
+	}
+
+
+	/**
+	 * Vrati true / false podla toho, ci ma nahrate properties objekty, alebo nie
+	 * @return
+	 */
+	/*
+	private boolean isEmpty()
+	{
+		if (properties == null) return false;
+
+		return properties.isEmpty();
+	}
+
+	private void load(File f) throws IOException
+	{
+		if (properties == null) properties = new IwayProperties();
+		properties.load(f);
+	}
+
+	private void setProperty(String key, String value)
+	{
+		if (properties == null) properties = new IwayProperties();
+		properties.setProperty(key, value);
+	}
+
+	public String getProperty(String key)
+	{
+		return getProperty(key, key);
+	}
+
+	public String getProperty(String key, String defaultValue)
+	{
+		if (properties == null) return defaultValue;
+		return properties.getProperty(key, defaultValue);
+	}
+
+	public Enumeration&lt;String&gt; propertyNames()
+	{
+		return properties.propertyNames();
+	}
+	*/
+
+	/**
+	 * returns set of missing texts for language param
+	 * @param lng
+	 * @return
+	 */
+	public static Set&lt;MissingKeysDto&gt; getMissingTexts(String lng) {
+<span class="nc bnc" id="L831" title="All 2 branches missed.">		if(missingTexts.containsKey(lng))</span>
+<span class="nc" id="L832">			return missingTexts.get(lng);</span>
+
+<span class="nc" id="L834">		return null;</span>
+	}
+
+	/**
+	 * returns set of missing texts for ALL language's
+	 * @return
+	 */
+	public static Set&lt;MissingKeysDto&gt; getMissingTexts() {
+<span class="fc" id="L842">		Set&lt;MissingKeysDto&gt; allMissingTexts = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L844">		String[] lngArr = Constants.getArray(&quot;languages&quot;);</span>
+<span class="fc bfc" id="L845" title="All 2 branches covered.">		for(String lng : lngArr)</span>
+<span class="fc bfc" id="L846" title="All 2 branches covered.">			if(missingTexts.containsKey(lng))</span>
+<span class="fc" id="L847">				allMissingTexts.addAll(missingTexts.get(lng));</span>
+
+<span class="fc" id="L849">		return allMissingTexts;</span>
+	}
+
+	/**
+	 * Clears all missing texts
+	 */
+	public static void clearMissingTexts() {
+<span class="nc" id="L856">		missingTexts.clear();</span>
+<span class="nc" id="L857">	}</span>
+
+	/**
+	 * Delete missing text by key and language
+	 * @param key
+	 * @param lng
+	 */
+	public static void deleteMissingText(String key, String lng) {
+<span class="nc" id="L865">		Set&lt;MissingKeysDto&gt; keysByLng = missingTexts.get(lng);</span>
+<span class="nc bnc" id="L866" title="All 2 branches missed.">		for(MissingKeysDto dto : keysByLng) {</span>
+<span class="nc bnc" id="L867" title="All 2 branches missed.">			if(dto.getKey().equals(key)) {</span>
+<span class="nc" id="L868">				keysByLng.remove(dto);</span>
+<span class="nc" id="L869">				break;</span>
+			}
+<span class="nc" id="L871">		}</span>
+<span class="nc" id="L872">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

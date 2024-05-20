@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractExcelImportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.xls</a> &gt; <span class="el_source">AbstractExcelImportService.java</span></div><h1>AbstractExcelImportService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.xls;
+
+import org.apache.poi.ss.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.web.multipart.MultipartFile;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.xls.exception.ExcelImportServiceException;
+import sk.iway.iwcm.i18n.Prop;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+
+/**
+ * Abstraktna trieda pre import xlsx a xls do DB pomocou Spring repository.
+ *
+ * Data sa precitaju z Excl suboru, mapuju sa property podla prveho riadku.
+ * Nacitane su do listu importedRows a nasledne zapisane do databazy volanim saveListToDB().
+ *
+ * @param &lt;T&gt; Entita pre zapis do DB
+ */
+public abstract class AbstractExcelImportService&lt;T&gt; implements ExcelImportServiceInterface {
+
+<span class="fc" id="L34">    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractExcelImportService.class);</span>
+
+    private final CrudRepository&lt;T, Long&gt; repository;
+    private MultipartFile file;
+
+    private final ConversionService conversionService;
+    private final Class&lt;T&gt; typeArgumentClass;
+    private final Prop prop;
+    private List&lt;T&gt; importedRows;
+    private Map&lt;String, Method&gt; propertySetterMap;
+
+    private List&lt;String&gt; firstRowNames;
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L48">    protected AbstractExcelImportService(CrudRepository&lt;T, Long&gt; repository, ConversionService conversionService) {</span>
+<span class="fc" id="L49">        this.repository = repository;</span>
+<span class="fc" id="L50">        this.conversionService = conversionService;</span>
+        //noinspection unchecked
+<span class="fc" id="L52">        this.typeArgumentClass = (Class&lt;T&gt;) GenericTypeResolver.resolveTypeArgument(getClass(), AbstractExcelImportService.class);</span>
+<span class="fc" id="L53">        this.prop = Prop.getInstance();</span>
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Metoda pre import zaznamov do DB
+     * @param file Subor so zaznamami
+     */
+    public void importFile(MultipartFile file) {
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (file == null) {</span>
+<span class="nc" id="L62">            LOGGER.error(&quot;File cannot be empty&quot;);</span>
+<span class="nc" id="L63">            throw new ExcelImportServiceException(prop.getText(&quot;ExcelImportServiceAbstract.importFile.file_empty&quot;));</span>
+        }
+
+<span class="fc" id="L66">        this.file = file;</span>
+<span class="pc bpc" id="L67" title="5 of 6 branches missed.">        if (Tools.isEmpty(this.file.getOriginalFilename()) &amp;&amp; !this.file.getOriginalFilename().endsWith(&quot;xlsx&quot;) &amp;&amp; !this.file.getOriginalFilename().endsWith(&quot;xls&quot;)) {</span>
+<span class="nc" id="L68">            LOGGER.error(&quot;Filename doesnt end with xls or xlsx. Filename: {}&quot;, this.file.getOriginalFilename());</span>
+<span class="nc" id="L69">            throw new ExcelImportServiceException(prop.getText(&quot;ExcelImportServiceAbstract.importFile.filename_not_xls&quot;));</span>
+        }
+
+<span class="fc" id="L72">        LOGGER.trace(&quot;Loaded file, filename: {}&quot;, this.file.getOriginalFilename());</span>
+
+<span class="fc" id="L74">        Optional&lt;InputStream&gt; inputStreamOptional = getInputStreamOptional();</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (!inputStreamOptional.isPresent()) {</span>
+<span class="nc" id="L76">            LOGGER.error(&quot;InputStream is not readable&quot;);</span>
+<span class="nc" id="L77">            throw new ExcelImportServiceException(prop.getText(&quot;ExcelImportServiceAbstract.importFile.input_stream_not_readale&quot;));</span>
+        }
+
+<span class="fc" id="L80">        Optional&lt;Workbook&gt; workbookOptional = createWorkbookOptional(inputStreamOptional.get());</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (!workbookOptional.isPresent()) {</span>
+<span class="nc" id="L82">            LOGGER.error(&quot;Workbook is not readable&quot;);</span>
+<span class="nc" id="L83">            throw new ExcelImportServiceException(prop.getText(&quot;ExcelImportServiceAbstract.importFile.workbook_not_readale&quot;));</span>
+        }
+<span class="fc" id="L85">        LOGGER.trace(&quot;Workbook loaded&quot;);</span>
+
+<span class="fc" id="L87">        setAndClearImportedRows();</span>
+<span class="fc" id="L88">        setPropertyToSetterMap();</span>
+<span class="fc" id="L89">        Workbook workbook = workbookOptional.get();</span>
+
+<span class="fc" id="L91">        beforeWorkbook();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (Sheet sheet : workbook) {</span>
+<span class="fc" id="L93">            beforeSheet(sheet);</span>
+<span class="fc" id="L94">            LOGGER.debug(&quot;Sheet name: {}&quot;, sheet.getSheetName());</span>
+<span class="fc" id="L95">            setFirstRowNames(sheet);</span>
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (firstRowNames.isEmpty()) {</span>
+<span class="nc" id="L98">                LOGGER.error(&quot;Nothing to import found on this sheet&quot;);</span>
+<span class="nc" id="L99">                continue;</span>
+            }
+
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            for (Row row : sheet) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (row.getRowNum() == 0) {</span>
+<span class="fc" id="L104">                    LOGGER.trace(&quot;Skipping row number 0&quot;);</span>
+<span class="fc" id="L105">                    continue;</span>
+                }
+
+<span class="fc" id="L108">                beforeRow(row);</span>
+<span class="fc" id="L109">                Optional&lt;T&gt; optionalBean = convertRowToBeanAndAddToList(row);</span>
+<span class="fc" id="L110">                optionalBean.ifPresent(this::afterRow);</span>
+<span class="fc" id="L111">            }</span>
+
+<span class="fc" id="L113">            afterSheet(sheet);</span>
+<span class="fc" id="L114">        }</span>
+
+<span class="fc" id="L116">        afterWorkbook(importedRows);</span>
+
+
+        try {
+<span class="fc" id="L120">            saveListToDB();</span>
+        }
+<span class="nc" id="L122">        catch (ConstraintViolationException e) {</span>
+<span class="nc" id="L123">            ExcelImportServiceException excelImportServiceException = new ExcelImportServiceException();</span>
+<span class="nc" id="L124">            Set&lt;ConstraintViolation&lt;?&gt;&gt; constraintViolations = e.getConstraintViolations();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            for (ConstraintViolation&lt;?&gt; constraintViolation : constraintViolations) {</span>
+<span class="nc" id="L126">                excelImportServiceException.addError(constraintViolation.getMessage());</span>
+<span class="nc" id="L127">            }</span>
+
+<span class="nc" id="L129">            throw excelImportServiceException;</span>
+<span class="fc" id="L130">        }</span>
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * Metoda pre nastavenie, prip. zmazanie zoznamu entit
+     */
+    private void setAndClearImportedRows() {
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (importedRows == null) {</span>
+<span class="fc" id="L138">            importedRows = new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (!importedRows.isEmpty()) {</span>
+<span class="nc" id="L142">            importedRows.clear();</span>
+        }
+<span class="fc" id="L144">    }</span>
+
+    /**
+     * Metoda pre ulozenie entit do DB
+     */
+    public void saveListToDB() {
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (importedRows.isEmpty()) {</span>
+<span class="nc" id="L151">            LOGGER.debug(&quot;saveListToDB - List is empty&quot;);</span>
+<span class="nc" id="L152">            return;</span>
+        }
+
+<span class="fc" id="L155">        repository.saveAll(importedRows);</span>
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * Metoda pre nastavenie hash mapy s klucom, ktory je nazvov stlpca a hodnotou, ktora je pozadovany seter na entite
+     */
+    private void setPropertyToSetterMap() {
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if (propertySetterMap == null) {</span>
+<span class="fc" id="L163">            propertySetterMap = new HashMap&lt;&gt;();</span>
+        }
+
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (!propertySetterMap.isEmpty()) {</span>
+<span class="nc" id="L167">            propertySetterMap.clear();</span>
+        }
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        for (Method declaredMethod : typeArgumentClass.getDeclaredMethods()) {</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">            if (!declaredMethod.getName().startsWith(&quot;set&quot;)) {</span>
+<span class="fc" id="L172">                LOGGER.trace(&quot;setPropertySetterMap - Method name {} doesnt start with set, skipped&quot;, declaredMethod.getName());</span>
+<span class="fc" id="L173">                continue;</span>
+            }
+
+<span class="fc" id="L176">            String propertyName = declaredMethod.getName().toLowerCase().substring(3);</span>
+<span class="fc" id="L177">            propertySetterMap.put(propertyName, declaredMethod);</span>
+        }
+<span class="fc" id="L179">    }</span>
+
+    /**
+     * Metoda pre nastavenie zoznamu nazvov stlpcov
+     * @param sheet Sheet
+     */
+    private void setFirstRowNames(Sheet sheet) {
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (firstRowNames == null) {</span>
+<span class="fc" id="L187">            firstRowNames = new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (!firstRowNames.isEmpty()) {</span>
+<span class="nc" id="L191">            firstRowNames.clear();</span>
+        }
+
+<span class="fc" id="L194">        List&lt;String&gt; missingProperties = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">        for (Cell cell : sheet.getRow(0)) {</span>
+<span class="fc" id="L196">            firstRowNames.add(cell.getStringCellValue());</span>
+
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (!propertySetterMap.containsKey(cell.getStringCellValue().toLowerCase())) {</span>
+<span class="nc" id="L199">                missingProperties.add(cell.getStringCellValue());</span>
+            }
+<span class="fc" id="L201">        }</span>
+
+<span class="pc bpc" id="L203" title="3 of 4 branches missed.">        if (!missingProperties.isEmpty() &amp;&amp; LOGGER.isDebugEnabled()) {</span>
+<span class="nc" id="L204">            LOGGER.debug(&quot;setFirstRowNames - Properties: [{}] not found on class {}&quot;, Tools.join(missingProperties, &quot;, &quot;), typeArgumentClass.getName());</span>
+        }
+<span class="fc" id="L206">    }</span>
+
+    /**
+     * Metoda pre konvertovanie riadku na entitu
+     * @param row riadok excelu
+     * @return Optional entitu
+     */
+    public Optional&lt;T&gt; convertRowToBeanAndAddToList(Row row) {
+        try {
+<span class="fc" id="L215">            T object = BeanUtils.instantiateClass(typeArgumentClass);</span>
+<span class="fc" id="L216">            int i = 0;</span>
+<span class="fc" id="L217">            int changesCounter = 0;</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">            for (Cell cell : row) {</span>
+<span class="fc" id="L219">                String property = firstRowNames.get(i);</span>
+<span class="fc" id="L220">                i++;</span>
+<span class="fc" id="L221">                Object value = getTypedValueFromCell(cell);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                if (!propertySetterMap.containsKey(property.toLowerCase())) {</span>
+<span class="nc" id="L223">                    LOGGER.trace(&quot;convertRowToBeanAndAddToList - Property {}, value: {} skipped&quot;, property, value);</span>
+<span class="nc" id="L224">                    continue;</span>
+                }
+
+<span class="fc" id="L227">                Method method = propertySetterMap.get(property.toLowerCase());</span>
+<span class="fc" id="L228">                Class&lt;?&gt;[] parameterTypes = method.getParameterTypes();</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">                if (parameterTypes.length != 1) {</span>
+<span class="nc" id="L230">                    LOGGER.error(&quot;convertRowToBeanAndAddToList - Method {} has more than one parameter types&quot;, method.getName());</span>
+<span class="nc" id="L231">                    continue;</span>
+                }
+
+<span class="fc" id="L234">                Object retypedValue = retypeValue(value, parameterTypes[0]);</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">                if (retypedValue != null) {</span>
+<span class="fc" id="L236">                    method.invoke(object, retypedValue);</span>
+<span class="fc" id="L237">                    changesCounter++;</span>
+                }
+<span class="fc" id="L239">            }</span>
+
+<span class="fc bfc" id="L241" title="All 2 branches covered.">            if (changesCounter &gt; 0) {</span>
+<span class="fc" id="L242">                importedRows.add(object);</span>
+            }
+
+<span class="fc" id="L245">            return Optional.of(object);</span>
+<span class="nc" id="L246">        } catch (IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L247">            sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L250">        return Optional.empty();</span>
+    }
+
+    /**
+     * Metoda pre navrat spravne typovej hodnoty z excelu
+     * @param cell bunka
+     * @return Objekt prisluchajuci hodnote bunky
+     */
+    private Object getTypedValueFromCell(Cell cell) {
+        Object value;
+<span class="pc bpc" id="L260" title="3 of 6 branches missed.">        switch (cell.getCellType()) {</span>
+            case STRING:
+<span class="fc" id="L262">                value = cell.getStringCellValue();</span>
+<span class="fc" id="L263">                break;</span>
+            case BOOLEAN:
+<span class="nc" id="L265">                value = cell.getBooleanCellValue();</span>
+<span class="nc" id="L266">                break;</span>
+            case NUMERIC:
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                if (DateUtil.isCellDateFormatted(cell)) {</span>
+<span class="nc" id="L269">                    value = cell.getDateCellValue();</span>
+                } else {
+<span class="fc" id="L271">                    value = cell.getNumericCellValue();</span>
+                }
+<span class="fc" id="L273">                break;</span>
+            case ERROR:
+<span class="nc" id="L275">                value = cell.getErrorCellValue();</span>
+<span class="nc" id="L276">                break;</span>
+
+            case BLANK:
+<span class="fc" id="L279">                value = &quot;&quot;;</span>
+<span class="fc" id="L280">                break;</span>
+
+            default:
+<span class="nc" id="L283">                value = cell.getCellFormula();</span>
+                break;
+        }
+
+<span class="fc" id="L287">        return value;</span>
+    }
+
+    /**
+     * Pretypovanie hodnoty z excelu na pozadovanu hodnotu entity
+     * @param value hodnota
+     * @param parameterType typ premennej z entity
+     * @return spravne pretypovany Objekt
+     */
+    private Object retypeValue(Object value, Class&lt;?&gt; parameterType) {
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">        if (conversionService.canConvert(value.getClass(), parameterType)) {</span>
+<span class="fc" id="L298">            return conversionService.convert(value, parameterType);</span>
+        }
+
+<span class="nc" id="L301">        LOGGER.debug(&quot;retypeValue - Returning default value: {}, type: {}&quot;, value, value.getClass().getName());</span>
+<span class="nc" id="L302">        return value;</span>
+    }
+
+    /**
+     * Metoda pre vytvorenie workbooku
+     * @param inputStream InputStream
+     * @return Optional&lt;Workbook&gt;
+     */
+    private Optional&lt;Workbook&gt; createWorkbookOptional(InputStream inputStream) {
+        try {
+<span class="fc" id="L312">            return Optional.of(WorkbookFactory.create(inputStream));</span>
+<span class="nc" id="L313">        } catch (IOException e) {</span>
+<span class="nc" id="L314">            sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L317">        return Optional.empty();</span>
+    }
+
+    /**
+     * Metoda pre vytvorenie InputStreamu zo suboru
+     * @return Optional&lt;InputStream&gt;
+     */
+    private Optional&lt;InputStream&gt; getInputStreamOptional() {
+        try {
+<span class="fc" id="L326">            return Optional.of(new BufferedInputStream(this.file.getInputStream()));</span>
+<span class="nc" id="L327">        } catch (IOException e) {</span>
+<span class="nc" id="L328">            sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L331">        return Optional.empty();</span>
+    }
+
+    /**
+     * Metoda urcena na Override, volana pred iteraciou harkov
+     */
+    public void beforeWorkbook() {
+<span class="fc" id="L338">        LOGGER.debug(&quot;beforeSheets - Not implemented&quot;);</span>
+<span class="fc" id="L339">    }</span>
+
+    /**
+     * Metoda urcena na Override, volana po iteracii harkov
+     */
+    public void afterWorkbook(List&lt;T&gt; list) {
+<span class="fc" id="L345">        LOGGER.debug(&quot;afterSheets - Not implemented, list is empty: {}&quot;, list.isEmpty());</span>
+<span class="fc" id="L346">    }</span>
+
+    /**
+     * Metoda urcena na Override, volana pred ziskanim kazdeho riadku excelu
+     */
+    public void beforeRow(Row row) {
+<span class="nc" id="L352">        LOGGER.debug(&quot;beforeRow - Not implemented&quot;);</span>
+<span class="nc" id="L353">    }</span>
+
+    /**
+     * Metoda urcena na Override, volana po ziskanim kazdeho riadku excelu a konvertovanim na entitu
+     */
+    public void afterRow(T bean) {
+<span class="nc" id="L359">        LOGGER.debug(&quot;afterRow - Not implemented, bean: {}&quot;, bean);</span>
+<span class="nc" id="L360">    }</span>
+
+    /**
+     * Metoda urcena na Override, volana pred importovanim harku
+     */
+    private void beforeSheet(Sheet sheet) {
+<span class="fc" id="L366">        LOGGER.debug(&quot;beforeSheet - Not implemented, sheet: {}&quot;, sheet);</span>
+<span class="fc" id="L367">    }</span>
+
+    /**
+     * Metoda urcena na Override, volana po importovani harku
+     */
+    private void afterSheet(Sheet sheet) {
+<span class="fc" id="L373">        LOGGER.debug(&quot;afterSheet - Not implemented, sheet: {}&quot;, sheet);</span>
+<span class="fc" id="L374">    }</span>
+
+    /**
+     * Metoda pre navrat nazvov stlpcov
+     */
+    public List&lt;String&gt; getFirstRowNames() {
+<span class="fc" id="L380">        return firstRowNames;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

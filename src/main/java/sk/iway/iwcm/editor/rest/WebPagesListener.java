@@ -199,8 +199,8 @@ public class WebPagesListener {
             }
 
             if (Tools.isNotEmpty(user.getEditableGroups())) {
-                if (GroupsDB.isGroupViewable(user, system.getGroupId())) hasSystemTab = true;
-                if (GroupsDB.isGroupViewable(user, trash.getGroupId())) hasTrashTab = true;
+                if (GroupsDB.isGroupEditable(user, system.getGroupId()) || GroupsDB.isGroupViewable(user, system.getGroupId())) hasSystemTab = true;
+                if (GroupsDB.isGroupEditable(user, trash.getGroupId()) || GroupsDB.isGroupViewable(user, trash.getGroupId())) hasTrashTab = true;
             }
             if (Tools.isNotEmpty(user.getEditablePages())) {
                     //prejdi zoznam web stranok a over, ci tam nie je System alebo Kos

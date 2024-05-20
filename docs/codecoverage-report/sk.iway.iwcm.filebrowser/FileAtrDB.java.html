@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileAtrDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.filebrowser</a> &gt; <span class="el_source">FileAtrDB.java</span></div><h1>FileAtrDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.filebrowser;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  Objekt na pracu s atributmi suboru
+ *
+ *@Title        WebJET 4.0
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Streda, 2003, október 15
+ *@modified     $Date: 2004/02/27 16:12:18 $
+ */
+public class FileAtrDB
+{
+<span class="nc" id="L29">	protected FileAtrDB() {</span>
+		//utility class
+<span class="nc" id="L31">	}</span>
+
+	/**
+	 *  Description of the Field
+	 */
+	public static final int TYPE_STRING = 0;
+	/**
+	 *  Description of the Field
+	 */
+	public static final int TYPE_INT = 1;
+	/**
+	 *  Description of the Field
+	 */
+	public static final int TYPE_BOOL = 2;
+
+	/**
+	 *  vrati zoznam vsetkych atributov (aj nevyplnenych) pre dany subor
+	 *
+	 *@param  link     - cela cesta k suboru (URL)
+	 *@param  group    - skupina atributov
+	 *@param  request
+	 *@return
+	 */
+	public static List&lt;FileAtrBean&gt; getAtributes(String link, String group, HttpServletRequest request)
+	{
+<span class="nc" id="L56">		List&lt;FileAtrBean&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L57">		Connection db_conn = null;</span>
+<span class="nc" id="L58">		PreparedStatement ps = null;</span>
+<span class="nc" id="L59">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L62">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L63">			String sql = &quot;SELECT fad.*, fa.link, fa.file_name, fa.value_string, fa.value_int, fa.value_bool FROM file_atr_def fad &quot; +</span>
+					&quot;LEFT JOIN file_atr fa ON fad.atr_id = fa.atr_id &quot; +
+					&quot;AND fa.link=? &quot; +
+					&quot;WHERE fad.atr_group=? &quot; +
+					&quot;ORDER BY fad.order_priority &quot;;
+<span class="nc" id="L68">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L69">			ps.setString(1, link);</span>
+<span class="nc" id="L70">			ps.setString(2, group);</span>
+<span class="nc" id="L71">			rs = ps.executeQuery();</span>
+			FileAtrBean atr;
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L75">				atr = new FileAtrBean();</span>
+<span class="nc" id="L76">				atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L77">				atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L78">				atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L79">				atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L80">				atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L81">				atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L82">				atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L83">				atr.setLink(DB.getDbString(rs, &quot;link&quot;));</span>
+<span class="nc" id="L84">				atr.setFileName(DB.getDbString(rs, &quot;file_name&quot;));</span>
+<span class="nc" id="L85">				atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L86">				atr.setValueInt(rs.getInt(&quot;value_int&quot;));</span>
+<span class="nc" id="L87">				atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="nc" id="L88">				atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L89">				atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+<span class="nc" id="L90">				ret.add(atr);</span>
+			}
+<span class="nc" id="L92">			rs.close();</span>
+<span class="nc" id="L93">			ps.close();</span>
+<span class="nc" id="L94">			db_conn.close();</span>
+<span class="nc" id="L95">			rs = null;</span>
+<span class="nc" id="L96">			ps = null;</span>
+<span class="nc" id="L97">			db_conn = null;</span>
+		}
+<span class="nc" id="L99">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L101">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L108">					rs.close();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L110">					ps.close();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L112">					db_conn.close();</span>
+			}
+<span class="nc" id="L114">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L116">			}</span>
+		}
+<span class="nc" id="L118">		return (ret);</span>
+	}
+
+	/**
+	 *  Vrati List skupin, ktory ako hodnoty obsahuje dalsie Listy s
+	 *  atributmi v danej skupine
+	 *
+	 *@param  link     - cela cesta k suboru (URL)
+	 *@param  request
+	 *@return
+	 */
+	public static List&lt;List&lt;FileAtrBean&gt;&gt; getAtributes(String link, HttpServletRequest request)
+	{
+<span class="fc" id="L131">		List&lt;List&lt;FileAtrBean&gt;&gt; ret = new ArrayList&lt;&gt;();</span>
+		List&lt;FileAtrBean&gt; atrs;
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		for (LabelValueDetails lvd : getAtrGroups(request))</span>
+		{
+			//Logger.println(this,&quot;lvd-&gt;&quot;+lvd.getLabel());
+			//ok mame grupu
+<span class="nc" id="L137">			atrs = getAtributes(link, lvd.getLabel(), request);</span>
+<span class="nc" id="L138">			ret.add(atrs);</span>
+<span class="nc" id="L139">		}</span>
+
+<span class="fc" id="L141">		return (ret);</span>
+	}
+
+	/**
+	 *  vrati atribut atrId
+	 *
+	 *@param  atrId
+	 *@param  request
+	 *@return
+	 */
+	public static FileAtrBean getAtrDef(int atrId, HttpServletRequest request)
+	{
+<span class="nc" id="L153">		FileAtrBean atr = null;</span>
+<span class="nc" id="L154">		Connection db_conn = null;</span>
+<span class="nc" id="L155">		PreparedStatement ps = null;</span>
+<span class="nc" id="L156">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L159">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L160">			String sql = &quot;SELECT * FROM file_atr_def WHERE atr_id=?&quot;;</span>
+<span class="nc" id="L161">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L162">			ps.setInt(1, atrId);</span>
+<span class="nc" id="L163">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L166">				atr = new FileAtrBean();</span>
+<span class="nc" id="L167">				atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L168">				atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L169">				atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L170">				atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L171">				atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L172">				atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L173">				atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L174">				atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L175">				atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+			}
+<span class="nc" id="L177">			rs.close();</span>
+<span class="nc" id="L178">			ps.close();</span>
+<span class="nc" id="L179">			db_conn.close();</span>
+<span class="nc" id="L180">			rs = null;</span>
+<span class="nc" id="L181">			ps = null;</span>
+<span class="nc" id="L182">			db_conn = null;</span>
+		}
+<span class="nc" id="L184">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L186">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L193">					rs.close();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L195">					ps.close();</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L197">					db_conn.close();</span>
+			}
+<span class="nc" id="L199">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L201">			}</span>
+		}
+
+<span class="nc" id="L204">		return (atr);</span>
+	}
+
+	/**
+	 *  vrati zoznam skupin atributov
+	 *
+	 *@param  request
+	 *@return
+	 */
+	public static List&lt;LabelValueDetails&gt; getAtrGroups(HttpServletRequest request)
+	{
+<span class="fc" id="L215">		List&lt;LabelValueDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+		LabelValueDetails lvd;
+<span class="fc" id="L217">		Connection db_conn = null;</span>
+<span class="fc" id="L218">		PreparedStatement ps = null;</span>
+<span class="fc" id="L219">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L222">			db_conn = DBPool.getConnection(request);</span>
+<span class="fc" id="L223">			String sql = &quot;SELECT distinct atr_group FROM file_atr_def ORDER BY atr_group&quot;;</span>
+<span class="fc" id="L224">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L225">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L228">				lvd = new LabelValueDetails();</span>
+<span class="nc" id="L229">				lvd.setLabel(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L230">				lvd.setValue(lvd.getLabel());</span>
+<span class="nc" id="L231">				groups.add(lvd);</span>
+			}
+<span class="fc" id="L233">			rs.close();</span>
+<span class="fc" id="L234">			ps.close();</span>
+<span class="fc" id="L235">			db_conn.close();</span>
+<span class="fc" id="L236">			rs = null;</span>
+<span class="fc" id="L237">			ps = null;</span>
+<span class="fc" id="L238">			db_conn = null;</span>
+		}
+<span class="nc" id="L240">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L242">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L249">					rs.close();</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L251">					ps.close();</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L253">					db_conn.close();</span>
+			}
+<span class="nc" id="L255">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L257">			}</span>
+		}
+
+<span class="fc" id="L260">		return (groups);</span>
+	}
+
+	/**
+	 *  Vytvori tabulku so zoznamom suborov a jednotlivymi atributmi
+	 *
+	 *@param  rootPath    adresar, v ktorom sa ma nachadzat subor
+	 *@param  includeSub  ak true, vratane podadresarov
+	 *@param  group       skupina atributov, pre ktoru robime vypis (alebo null)
+	 *@param  request     Description of the Parameter
+	 *@return             The atributesTable value
+	 */
+	public static List&lt;FileAtrRowBean&gt; getAtributesTable(String rootPath, boolean includeSub, String group, HttpServletRequest request)
+	{
+<span class="nc" id="L274">		List&lt;FileAtrRowBean&gt; rows = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L276" title="All 4 branches missed.">		if (group != null &amp;&amp; Tools.isEmpty(group))</span>
+		{
+<span class="nc" id="L278">			group = null;</span>
+		}
+
+<span class="nc" id="L281">		Connection db_conn = null;</span>
+<span class="nc" id="L282">		PreparedStatement ps = null;</span>
+<span class="nc" id="L283">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L286">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L287">			StringBuilder sql = new StringBuilder(&quot;SELECT fad.*, fa.file_name, fa.link, fa.value_string, fa.value_int, fa.value_bool &quot;).append(</span>
+<span class="nc" id="L288">					&quot;FROM file_atr_def fad &quot;).append(</span>
+<span class="nc" id="L289">					&quot;LEFT JOIN file_atr fa ON fad.atr_id = fa.atr_id &quot;).append(</span>
+					&quot;WHERE fad.atr_id&gt;0 &quot;);
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (group != null)</span>
+			{
+<span class="nc" id="L293">				sql.append(&quot;AND fad.atr_group=?  &quot;);</span>
+			}
+
+<span class="nc" id="L296">			sql.append(&quot;ORDER BY fa.file_name, fa.link, fad.order_priority &quot;);</span>
+
+			//Logger.println(this,sql);
+
+<span class="nc" id="L300">			ps = db_conn.prepareStatement(sql.toString());</span>
+			//ps.setInt(1, docId);
+<span class="nc bnc" id="L302" title="All 2 branches missed.">			if (group != null)</span>
+			{
+<span class="nc" id="L304">				ps.setString(1, group);</span>
+			}
+<span class="nc" id="L306">			rs = ps.executeQuery();</span>
+<span class="nc" id="L307">			String lastLink = null;</span>
+<span class="nc" id="L308">			FileAtrRowBean rowBean = null;</span>
+<span class="nc" id="L309">			FileAtrBean atr = null;</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L312">				atr = new FileAtrBean();</span>
+<span class="nc" id="L313">				atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L314">				atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L315">				atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L316">				atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L317">				atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L318">				atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L319">				atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L320">				atr.setFileName(DB.getDbString(rs, &quot;file_name&quot;));</span>
+<span class="nc" id="L321">				atr.setLink(DB.getDbString(rs, &quot;link&quot;));</span>
+<span class="nc" id="L322">				atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L323">				atr.setValueInt(rs.getInt(&quot;value_int&quot;));</span>
+<span class="nc" id="L324">				atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="nc" id="L325">				atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L326">				atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+
+<span class="nc bnc" id="L328" title="All 2 branches missed.">				if (lastLink == null)</span>
+				{
+					//zaciatocna inicializacia
+<span class="nc" id="L331">					lastLink = atr.getLink();</span>
+
+<span class="nc" id="L333">					rowBean = new FileAtrRowBean();</span>
+
+<span class="nc" id="L335">					rowBean.setFileName(atr.getFileName());</span>
+<span class="nc" id="L336">					rowBean.setLink(DB.getDbString(rs, &quot;link&quot;));</span>
+				}
+
+<span class="nc bnc" id="L339" title="All 2 branches missed.">				if (lastLink.equals(atr.getLink()))</span>
+				{
+<span class="nc bnc" id="L341" title="All 2 branches missed.">					if (rowBean!=null) rowBean.addAtr(atr);</span>
+				}
+				else
+				{
+<span class="nc" id="L345">					rows.add(rowBean);</span>
+
+<span class="nc" id="L347">					rowBean = new FileAtrRowBean();</span>
+
+<span class="nc" id="L349">					rowBean.setFileName(atr.getFileName());</span>
+<span class="nc" id="L350">					rowBean.setLink(DB.getDbString(rs, &quot;link&quot;));</span>
+
+<span class="nc" id="L352">					rowBean.addAtr(atr);</span>
+
+<span class="nc" id="L354">					lastLink = atr.getLink();</span>
+				}
+			}
+
+<span class="nc bnc" id="L358" title="All 2 branches missed.">			if (rowBean != null)</span>
+			{
+<span class="nc" id="L360">				rows.add(rowBean);</span>
+			}
+
+<span class="nc" id="L363">			rs.close();</span>
+<span class="nc" id="L364">			ps.close();</span>
+<span class="nc" id="L365">			db_conn.close();</span>
+<span class="nc" id="L366">			rs = null;</span>
+<span class="nc" id="L367">			ps = null;</span>
+<span class="nc" id="L368">			db_conn = null;</span>
+		}
+<span class="nc" id="L370">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L372">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L379">					rs.close();</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L381">					ps.close();</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L383">					db_conn.close();</span>
+			}
+<span class="nc" id="L385">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L387">			}</span>
+		}
+
+<span class="nc" id="L390">		return (rows);</span>
+	}
+
+	/**
+	 *  Nacita zoznam suborov s atributom daneho nazvu, pouziva sa pre vytvorenie
+	 *  stromu atributov
+	 *
+	 *@param  atrName     nazov atributu, pre ktory vytvarame strom
+	 *@param  rootPath    adresar, v ktorom sa ma nachadzat subor (alebo null)
+	 *@param  includeSub  ak true, berieme aj podadresare
+	 *@param  group       nazov skupiny atributov (alebo null)
+	 *@param  request     Description of the Parameter
+	 *@return             The atributesTree value
+	 */
+	public static List&lt;FileAtrBean&gt; getAtributesTree(String atrName, String rootPath, boolean includeSub, String group, HttpServletRequest request)
+	{
+<span class="nc" id="L406">		List&lt;FileAtrBean&gt; rows = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L408" title="All 4 branches missed.">		if (group != null &amp;&amp; Tools.isEmpty(group))</span>
+		{
+<span class="nc" id="L410">			group = null;</span>
+		}
+
+<span class="nc" id="L413">		Connection db_conn = null;</span>
+<span class="nc" id="L414">		PreparedStatement ps = null;</span>
+<span class="nc" id="L415">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L418">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L419">			String sql = &quot;SELECT fad.*, fa.file_name, fa.link, fa.value_string, fa.value_int, fa.value_bool &quot; +</span>
+					&quot;FROM file_atr_def fad &quot; +
+					&quot;LEFT JOIN file_atr fa ON fad.atr_id = fa.atr_id &quot; +
+					&quot;WHERE fad.atr_name=? &quot;;
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			if (group != null)</span>
+			{
+<span class="nc" id="L425">				sql += &quot;AND fad.atr_group=?  &quot;;</span>
+			}
+
+<span class="nc" id="L428">			sql += &quot;ORDER BY value_string, fa.file_name, fa.link, fad.order_priority &quot;;</span>
+
+			//Logger.println(this,sql);
+
+<span class="nc" id="L432">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L433">			ps.setString(1, atrName);</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if (group != null)</span>
+			{
+<span class="nc" id="L436">				ps.setString(2, group);</span>
+			}
+<span class="nc" id="L438">			rs = ps.executeQuery();</span>
+<span class="nc" id="L439">			FileAtrBean atr = null;</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L442">				atr = new FileAtrBean();</span>
+<span class="nc" id="L443">				atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L444">				atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L445">				atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L446">				atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L447">				atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L448">				atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L449">				atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L450">				atr.setFileName(DB.getDbString(rs, &quot;file_name&quot;));</span>
+<span class="nc" id="L451">				atr.setLink(DB.getDbString(rs, &quot;link&quot;));</span>
+<span class="nc" id="L452">				atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L453">				atr.setValueInt(rs.getInt(&quot;value_int&quot;));</span>
+<span class="nc" id="L454">				atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="nc" id="L455">				atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L456">				atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+
+<span class="nc" id="L458">				rows.add(atr);</span>
+			}
+
+<span class="nc" id="L461">			rs.close();</span>
+<span class="nc" id="L462">			ps.close();</span>
+<span class="nc" id="L463">			db_conn.close();</span>
+<span class="nc" id="L464">			rs = null;</span>
+<span class="nc" id="L465">			ps = null;</span>
+<span class="nc" id="L466">			db_conn = null;</span>
+		}
+<span class="nc" id="L468">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L470">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L476" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L477">					rs.close();</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L479">					ps.close();</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L481">					db_conn.close();</span>
+			}
+<span class="nc" id="L483">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L485">			}</span>
+		}
+
+<span class="nc" id="L488">		return (rows);</span>
+	}
+
+	/**
+	 * Vrati zoznam pouzitych hodnot pre dane id atributu
+	 * @param atrId
+	 * @param request
+	 * @return
+	 */
+	public static List&lt;LabelValueDetails&gt; getUsedAtrValues(int atrId, HttpServletRequest request)
+	{
+<span class="nc" id="L499">		List&lt;LabelValueDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+		LabelValueDetails lvd;
+<span class="nc" id="L501">		Connection db_conn = null;</span>
+<span class="nc" id="L502">		PreparedStatement ps = null;</span>
+<span class="nc" id="L503">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L506">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L507">			String sql = &quot;SELECT distinct value_string FROM file_atr WHERE atr_id=? ORDER BY value_int, value_string&quot;;</span>
+<span class="nc" id="L508">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L509">			ps.setInt(1, atrId);</span>
+<span class="nc" id="L510">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L513">				lvd = new LabelValueDetails();</span>
+<span class="nc" id="L514">				lvd.setLabel(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L515">				lvd.setValue(lvd.getLabel());</span>
+<span class="nc" id="L516">				groups.add(lvd);</span>
+			}
+<span class="nc" id="L518">			rs.close();</span>
+<span class="nc" id="L519">			ps.close();</span>
+<span class="nc" id="L520">			db_conn.close();</span>
+<span class="nc" id="L521">			rs = null;</span>
+<span class="nc" id="L522">			ps = null;</span>
+<span class="nc" id="L523">			db_conn = null;</span>
+		}
+<span class="nc" id="L525">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L527">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L533" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L534">					rs.close();</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L536">					ps.close();</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L538">					db_conn.close();</span>
+			}
+<span class="nc" id="L540">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L542">			}</span>
+		}
+
+<span class="nc" id="L545">		return (groups);</span>
+	}
+
+	/**
+	 * Naplni informaciu o adresari z databazy (tabulka dir_url), jedna sa o
+	 * vlastnosti adresara
+	 * @param ef - edit form, musi mat vyplnene origDir
+	 */
+	public static void fillEditForm(EditForm ef)
+	{
+<span class="fc" id="L555">		Connection db_conn = null;</span>
+<span class="fc" id="L556">		PreparedStatement ps = null;</span>
+<span class="fc" id="L557">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L560">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L561">			ps = db_conn.prepareStatement(&quot;SELECT * FROM dirprop WHERE dir_url = ?&quot;);</span>
+<span class="fc" id="L562">			ps.setString(1, ef.getOrigDir());</span>
+<span class="fc" id="L563">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L564" title="All 2 branches covered.">			if (rs.next())</span>
+			{
+<span class="fc" id="L566">				ef.setIndexFulltext(rs.getBoolean(&quot;index_fulltext&quot;));</span>
+<span class="fc" id="L567">				ef.setPasswordProtectedString(DB.getDbString(rs, &quot;password_protected&quot;));</span>
+<span class="fc" id="L568">				ef.setLogonDocId(rs.getInt(&quot;logon_doc_id&quot;));</span>
+			}
+<span class="fc" id="L570">			rs.close();</span>
+<span class="fc" id="L571">			ps.close();</span>
+<span class="fc" id="L572">			rs = null;</span>
+<span class="fc" id="L573">			ps = null;</span>
+		}
+<span class="nc" id="L575">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L577">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L584">					db_conn.close();</span>
+<span class="pc bpc" id="L585" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L586">					rs.close();</span>
+<span class="pc bpc" id="L587" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L588">					ps.close();</span>
+			}
+<span class="nc" id="L590">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L592">			}</span>
+		}
+<span class="fc" id="L594">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

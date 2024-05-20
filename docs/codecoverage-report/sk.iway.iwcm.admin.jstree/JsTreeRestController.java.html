@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.jstree</a> &gt; <span class="el_source">JsTreeRestController.java</span></div><h1>JsTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.jstree;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Title        webjet8
+ * Company      Interway a. s. (www.interway.sk)
+ * Copyright    Interway a. s. (c) 2001-2019
+ * @author       lpasek $
+ * @created      2020/07/13 12:50
+ *
+ *  Abstraktny univerzalny RestController na pracu s JsTree
+ *
+ */
+<span class="fc" id="L29">public abstract class JsTreeRestController&lt;T&gt; {</span>
+<span class="fc" id="L30">    private static Logger log = LoggerFactory.getLogger(JsTreeRestController.class);</span>
+    private Prop prop;
+
+    @Autowired
+    private HttpServletRequest request;
+
+    /**
+     * Endpoint pre presun polozky v stromovej strukture
+     * @param item  - {@link JsTreeMoveItem} presunuta polozka
+     * @return
+     */
+    @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+    @PostMapping(&quot;/tree&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tree(@RequestBody JsTreeMoveItem item) {
+<span class="fc" id="L44">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L46">        log.debug(&quot;Pre tree&quot;);</span>
+<span class="fc" id="L47">        tree(result, item);</span>
+<span class="fc" id="L48">        log.debug(&quot;After tree&quot;);</span>
+
+<span class="fc" id="L50">        return ResponseEntity.ok(result);</span>
+    }
+
+    /**
+     * Endpoint pre presun polozky v stromovej strukture
+     * @param item  - {@link JsTreeMoveItem} presunuta polozka
+     * @return
+     */
+    @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+    @PostMapping(&quot;/move&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; moveItem(@RequestBody JsTreeMoveItem item) {
+<span class="fc" id="L61">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L63">        log.debug(&quot;Pre move&quot;);</span>
+<span class="fc" id="L64">        move(result, item);</span>
+<span class="fc" id="L65">        log.debug(&quot;After move&quot;);</span>
+
+<span class="fc" id="L67">        return ResponseEntity.ok(result);</span>
+    }
+
+    /**
+     * Endpoint pre ulozenie polozky
+     * @param item  - {@link JsTreeMoveItem} presunuta polozka
+     * @return
+     */
+    @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+    @PostMapping(&quot;/save&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; saveItem(@RequestBody T item) {
+<span class="nc" id="L78">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L80">        log.debug(&quot;Pre save&quot;);</span>
+<span class="nc" id="L81">        save(result, item);</span>
+<span class="nc" id="L82">        log.debug(&quot;After save&quot;);</span>
+
+<span class="nc" id="L84">        return ResponseEntity.ok(result);</span>
+    }
+
+    /**
+     * Endpoint pre zmazanie polozky
+     * @param item  - {@link JsTreeMoveItem} presunuta polozka
+     * @return
+     */
+    @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+    @PostMapping(&quot;/delete&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; deleteItem(@RequestBody T item) {
+<span class="nc" id="L95">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L97">        log.debug(&quot;Pre delete&quot;);</span>
+<span class="nc" id="L98">        delete(result, item);</span>
+<span class="nc" id="L99">        log.debug(&quot;After delete&quot;);</span>
+
+<span class="nc" id="L101">        return ResponseEntity.ok(result);</span>
+    }
+
+    /**
+     * @param result - mapa s vysledkom, ocakava sa kluc result (boolean) a moze obsahovat error (String), ktory sa na FE zobrazi v toastr.error
+     * @param item - {@link JsTreeMoveItem} presunuta polozka
+     */
+    protected abstract void tree(Map&lt;String, Object&gt; result, JsTreeMoveItem item);
+
+    /**
+     * @param result - mapa s vysledkom, ocakava sa kluc result (boolean) a moze obsahovat error (String), ktory sa na FE zobrazi v toastr.error
+     * @param item - {@link JsTreeMoveItem} presunuta polozka
+     */
+    protected abstract void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item);
+
+    /**
+     * @param result - mapa s vysledkom, ocakava sa kluc result (boolean) a moze obsahovat error (String), ktory sa na FE zobrazi v toastr.error
+     * @param item - {@link T} polozka na ulozenie
+     */
+    protected abstract void save(Map&lt;String, Object&gt; result, T item);
+
+    /**
+     * @param result - mapa s vysledkom, ocakava sa kluc result (boolean) a moze obsahovat error (String), ktory sa na FE zobrazi v toastr.error
+     * @param item - {@link T} polozka na zmazanie
+     */
+    protected abstract void delete(Map&lt;String, Object&gt; result, T item);
+
+    /**
+     * Metoda pre kontrolu pristupu pouzivatela pomocou requestu
+     * @param request
+     * @return
+     */
+    public abstract boolean checkAccessAllowed(HttpServletRequest request);
+
+    protected Prop getProp() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (prop == null) {</span>
+<span class="nc" id="L137">            prop = Prop.getInstance(getRequest());</span>
+        }
+<span class="nc" id="L139">        return prop;</span>
+    }
+
+    public HttpServletRequest getRequest() {
+<span class="fc" id="L143">        return request;</span>
+    }
+
+    public void setRequest(HttpServletRequest request) {
+<span class="nc" id="L147">        this.request = request;</span>
+<span class="nc" id="L148">    }</span>
+
+    public Identity getUser(){
+<span class="nc" id="L151">		return UsersDB.getCurrentUser(getRequest());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

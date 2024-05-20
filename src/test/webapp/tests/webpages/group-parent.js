@@ -57,7 +57,7 @@ Scenario('4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara', ({
      I.groupSetRootParent();
      I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
      I.waitForText('Koreňový priečinok', 5);
-     I.clickCss('.jstree-icon.jstree-themeicon.fas.fa-home.jstree-themeicon-custom');
+     I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
      DTE.save();
      // priecinok je ulozeny v korenovom priecinku
@@ -130,7 +130,7 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.say('upravenie nadradeneho priecinka na korenovy adresar');
      I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
      I.waitForText('Koreňový priečinok', 5);
-     I.clickCss('.jstree-icon.jstree-themeicon.fas.fa-home.jstree-themeicon-custom');
+     I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
      I.wait(1);
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
      I.wait(1);

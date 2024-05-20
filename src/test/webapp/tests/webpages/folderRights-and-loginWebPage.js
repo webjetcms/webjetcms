@@ -40,7 +40,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_3').find('.form-check-label'));
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.waitForElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name), 10);
+     I.waitForElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name), 10);
      I.wait(1);
 
      // 3. zrusenie ikony zamku priecinka name-autotest
@@ -55,8 +55,8 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_3').find('.form-check-label'));
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.fas.fa-folder.jstree-themeicon-custom').withText(folder_name));
-     I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name));
+     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
+     I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
      I.wait(1);
 
      // 4. vytvorenie podadresarov priecinka name-autotest
@@ -88,9 +88,9 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-passwordProtectedSubFolders_0').find('.form-check-label')); // aplikovat na vsetky
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.fas.fa-lock').withText(subfolder_one));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.fas.fa-lock').withText(subfolder_two));
+     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
+     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_one));
+     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_two));
      I.wait(1);
 
      // 6. zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky
@@ -103,12 +103,12 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-passwordProtectedSubFolders_0').find('.form-check-label')); // aplikovat na vsetky
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.fas.fa-folder.jstree-themeicon-custom').withText(folder_name));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.fas.fa-folder.jstree-themeicon-custom').withText(subfolder_one));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.fas.fa-folder.jstree-themeicon-custom').withText(subfolder_two));
-     I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.fas.fa-lock').withText(folder_name));
-     I.dontSeeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.fas.fa-lock').withText(subfolder_one));
-     I.dontSeeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.fas.fa-lock').withText(subfolder_two));
+     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
+     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(subfolder_one));
+     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(subfolder_two));
+     I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
+     I.dontSeeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_one));
+     I.dontSeeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_two));
      I.wait(1);
 
      // 7. Vymazanie priecinka name-autotest

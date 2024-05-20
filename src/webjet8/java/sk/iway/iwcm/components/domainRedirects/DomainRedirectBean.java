@@ -60,7 +60,8 @@ public class DomainRedirectBean implements Serializable
 	@NotBlank
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXT,
-		title = "components.redirect.label.to"
+		title = "components.redirect.label.to",
+		className = "multiweb-noteditable"
 	)
    private String redirectTo;
 

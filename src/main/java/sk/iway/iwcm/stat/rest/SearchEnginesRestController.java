@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.components.seo.rest.SeoService;
@@ -58,7 +57,6 @@ public class SearchEnginesRestController extends DatatableRestControllerV2<Searc
     @RequestMapping(
         value="/pieChartData",
         params={"dayDate", "rootDir"})
-    @ResponseBody
     public List<SearchEnginesDTO> getPieChartData(
                 @RequestParam("dayDate") String stringRange,
                 @RequestParam("rootDir") int rootGroupId) {
@@ -69,9 +67,8 @@ public class SearchEnginesRestController extends DatatableRestControllerV2<Searc
     }
 
     @RequestMapping(
-        value="/searchEnginesSelect", 
+        value="/searchEnginesSelect",
         params={"dayDate", "rootDir", "webPage"})
-    @ResponseBody
     public List<String> getSearchEnginesSelectValues(
             @RequestParam("dayDate") String dayDate,
             @RequestParam("rootDir") Integer rootDir,
@@ -81,7 +78,6 @@ public class SearchEnginesRestController extends DatatableRestControllerV2<Searc
     }
 
     @RequestMapping(value="/webPageSelect", params={"rootDir"})
-    @ResponseBody
     public Map<Integer, String> getWebPageSelectValues(@RequestParam("rootDir") int rootGroupId) {
         return SeoService.getWebPageSelectValues(rootGroupId, docDetailsRepository);
     }

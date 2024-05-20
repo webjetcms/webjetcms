@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HTMLTokenizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cvu.html</a> &gt; <span class="el_source">HTMLTokenizer.java</span></div><h1>HTMLTokenizer.java</h1><pre class="source lang-java linenums">/*
+ * HTML Parser
+ * Copyright (C) 1997 David McNicol
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * file COPYING for more details.
+ */
+
+package cvu.html;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.Vector;
+
+/**
+ * This class tokenizes a stream of HTML tags and blocks of text. After
+ * the stream has been tokenized an Enumeration of tokens can be accessed.
+ * @see TagToken
+ * @see TextToken
+ * @see java.util.Enumeration
+ * @author &lt;a href=&quot;http://www.strath.ac.uk/~ras97108/&quot;&gt;David McNicol&lt;/a&gt;
+ */
+@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+public class HTMLTokenizer {
+
+<span class="pc" id="L35">	private final int BUF_LEN = 256; // Maximum length of read buffer.</span>
+	private Vector tokens;	         // Store for finished tokens.
+
+	private char separator;	// Stores the current separator character.
+	private int start;	// Index of the start of the next token.
+
+	/**
+	 * Constructs a new HTMLTokenizer using the given filename
+	 * to create the input stream.
+	 * @param file the name of the file to open.
+	 */
+<span class="nc" id="L46">	public HTMLTokenizer (String file) {</span>
+
+		InputStream is; // The new input stream.
+
+		// Initialise the variables.
+<span class="nc" id="L51">		tokens = new Vector();</span>
+
+		try {
+			// Open an input stream using the file name.
+<span class="nc" id="L55">			is = new FileInputStream(file);</span>
+
+			// Parse the input stream.
+<span class="nc" id="L58">			parseInputStream(is);</span>
+		}
+<span class="nc" id="L60">		catch (IOException ioe) {</span>
+<span class="nc" id="L61">			sk.iway.iwcm.Logger.error(ioe);</span>
+<span class="nc" id="L62">		}</span>
+<span class="nc" id="L63">	}</span>
+
+   public HTMLTokenizer (char[] charbuf)
+<span class="fc" id="L66">   {</span>
+		// Initialise the variables.
+<span class="fc" id="L68">		tokens = new Vector();</span>
+      /*String data = new String(bytebuf);
+      int size = data.length();
+      char[] charbuf = new char[size];
+      int i;
+      for (i=0; i&lt;size; i++)
+      {
+         charbuf[i] = data.charAt(i);
+      }*/
+<span class="fc" id="L77">      separator = '&lt;';</span>
+<span class="fc" id="L78">      processBuffer(charbuf, null, charbuf.length);</span>
+
+      //notebook
+
+
+
+<span class="fc" id="L84">	}</span>
+
+	/**
+	 * Returns an enumeration of the tokens which have been
+	 * created by the HTMLTokenizer.
+	 */
+	public Enumeration getTokens () {
+<span class="fc" id="L91">		return tokens.elements();</span>
+	}
+
+	/**
+	 * Returns the vector in which the tokens are stored.
+	 */
+	public Vector getTokenVector () {
+<span class="nc" id="L98">		return tokens;</span>
+	}
+
+	/**
+	 * Parses the input stream given into tokens.
+	 * @param is the input stream to parse.
+	 */
+	private void parseInputStream (InputStream is) throws IOException {
+
+		byte[] readbuf;	     // Refers to the read buffer.
+		char[] charbuf;	     // Read buffer converted to characters.
+		StringBuffer unused; // Characters still to be processed.
+		int length;	     // Length of last chunk of read data.
+		int i;		     // Loop variable.
+
+		// Create new buffers.
+<span class="nc" id="L114">		readbuf = new byte[BUF_LEN];</span>
+<span class="nc" id="L115">		charbuf = new char[BUF_LEN];</span>
+<span class="nc" id="L116">		unused = null;</span>
+
+		// Set the separator initially.
+<span class="nc" id="L119">		separator = '&lt;';</span>
+
+		// Loop round while the end-of-file has not been reached.
+		while (true) {
+
+			// Read in the first chunk of data.
+<span class="nc" id="L125">			length = is.read(readbuf);</span>
+
+			// Check for end-of-file.
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (length &lt; 0) break;</span>
+
+			// Convert the byte array to characters.
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			for (i = 0; i &lt; length; i++)</span>
+<span class="nc" id="L132">				charbuf[i] = (char) readbuf[i];</span>
+
+			// Process it.
+<span class="nc" id="L135">			unused = processBuffer(charbuf, unused, length);</span>
+		}
+<span class="nc" id="L137">	}</span>
+
+	/**
+	 * Processes the given character array. The token buffer will be
+	 * updated to start with the contents of the given StringBuffer.
+	 * Any leftover parts of the buffer that have not been processed
+	 * are returned in a StringBuffer. The next call to processBuffer
+	 * will start where the last one left off by putting the returned
+	 * StringBuffer in the argument list of the next call.
+	 * @param charbuf the character array to be processed.
+	 * @param old the leftovers from the last call.
+	 * @param len the maximum length of the array to process.
+	 */
+	private StringBuffer processBuffer (char[] charbuf, StringBuffer old,
+	  int len) {
+
+		StringBuffer data; // Stores current token's data.
+		int idx;	   // The index of the next separator.
+		//int i;		   // Loop variable.
+
+		// Get a buffer for the current token.
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">		if (old != null)</span>
+<span class="nc" id="L159">			data = old;</span>
+		else
+<span class="fc" id="L161">			data = new StringBuffer(80);</span>
+
+		// Make sure the start index is initialized properly.
+<span class="fc" id="L164">		start = 0;</span>
+<span class="fc" id="L165">		idx = -1;</span>
+
+		while (true) {
+
+			// Set the new start index.
+<span class="fc" id="L170">			start = idx + 1;</span>
+
+			// Get the index of the separator.
+<span class="fc" id="L173">			idx = indexOf(separator, charbuf, start, len);</span>
+
+			// Check if the separator appears or not.
+<span class="fc bfc" id="L176" title="All 2 branches covered.">			if (idx &lt; 0) {</span>
+
+				// Update the data buffer.
+<span class="fc bfc" id="L179" title="All 2 branches covered.">				if (len - start &gt; 0)</span>
+<span class="fc" id="L180">				  data.append(charbuf, start, len - start);</span>
+
+				// If there is data in the buffer, return it.
+<span class="fc bfc" id="L183" title="All 2 branches covered.">				if (data.length() &gt; 0)</span>
+<span class="fc" id="L184">					return data;</span>
+				else
+<span class="fc" id="L186">					return null;</span>
+			}
+
+			// Append the start of the read buffer onto the
+			// data buffer.
+<span class="fc" id="L191">			data.append(charbuf, start, idx - start);</span>
+
+			// Check if we should create text or a tag.
+<span class="fc bfc" id="L194" title="All 2 branches covered.">			if (separator == '&lt;') {</span>
+
+				// Check if there is any content to store.
+<span class="fc bfc" id="L197" title="All 2 branches covered.">				if (data.length() &gt; 0) {</span>
+
+					// Create a new TextToken.
+<span class="fc" id="L200">					TextToken tt = new TextToken();</span>
+
+					// Put the data into the token.
+<span class="fc" id="L203">					tt.setText(data);</span>
+
+					// Store the new TextToken.
+<span class="fc" id="L206">					tokens.addElement(tt);</span>
+<span class="fc" id="L207">				}</span>
+			} else {
+
+				// Convert the data to a string.
+<span class="fc" id="L211">				String s = data.toString();</span>
+
+				// Create a new TagToken with it.
+<span class="fc" id="L214">				TagToken tt = new TagToken(s);</span>
+
+				// Store the new TagToken.
+<span class="fc" id="L217">				tokens.addElement(tt);</span>
+			}
+
+			// Create a new, empty data buffer.
+<span class="fc" id="L221">			data = new StringBuffer(BUF_LEN);</span>
+
+			// Swap the separator character.
+<span class="fc bfc" id="L224" title="All 2 branches covered.">			if (separator == '&lt;')</span>
+<span class="fc" id="L225">				separator = '&gt;';</span>
+			else
+<span class="fc" id="L227">				separator = '&lt;';</span>
+		}
+	}
+
+	/**
+	 * Returns the index of the given character in the given byte
+	 * array or -1 if the character does not appear there.
+	 * @param c the test character.
+	 * @param array the byte array to search.
+	 * @param start the first index to search.
+	 * @param len the maximum length to search.
+	 */
+	private int indexOf (char c, char[] array, int start, int len) {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		for (int i = start; i &lt; len; i++)</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			if (array[i] == c) return i;</span>
+
+<span class="fc" id="L243">		return -1;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

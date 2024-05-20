@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">IwcmRequest.java</span></div><h1>IwcmRequest.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.utils.MapUtils;
+
+/**
+ *  IwcmRequest.java
+ *
+ *  Allows user to wrap an incoming {@link HttpServletRequest} and alter its parameters.
+ *  The class acts transparently to a caller, acting as if supplied parameters
+ *  were received via standard Tomcat request creation.
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 26.11.2010 13:14:49
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class IwcmRequest extends HttpServletRequestWrapper
+{
+	//private final HttpServletRequest original;
+<span class="fc" id="L33">	private Map&lt;String, String[]&gt; changedParameterValues = new HashMap&lt;String, String[]&gt;();</span>
+
+	public IwcmRequest(HttpServletRequest original)
+	{
+		//this.original = original;
+<span class="fc" id="L38">		super(original);</span>
+<span class="fc" id="L39">	}</span>
+
+	@Override
+	public String getParameter(String parameter)
+	{
+<span class="fc bfc" id="L44" title="All 2 branches covered.">		if (changedParameterValues.containsKey(parameter))</span>
+<span class="fc" id="L45">			return changedParameterValues.get(parameter)[0];</span>
+
+		//[#32245 - Penetracni testy novy web] - osetrenie formlarovych parametrov aby nemohli obsahovat HTML kod
+		//testovaci payload zadany do inputu: &lt;input type=&quot;text&quot; oncopy=&quot;prompt(1)&quot; value=&quot;Try to copy this text&quot;&gt;
+<span class="fc" id="L49">		return ResponseUtils.filter(super.getParameter(parameter));</span>
+	}
+	@Override
+	public Map&lt;String, String[]&gt; getParameterMap()
+	{
+<span class="fc" id="L54">		return MapUtils.merge(changedParameterValues, super.getParameterMap());</span>
+	}
+	@Override
+	public Enumeration&lt;String&gt; getParameterNames()
+	{
+<span class="fc" id="L59">		return Collections.enumeration(getParameterMap().keySet());</span>
+	}
+	@Override
+	public String[] getParameterValues(String parameter)
+	{
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if (changedParameterValues.containsKey(parameter))</span>
+<span class="fc" id="L65">			return changedParameterValues.get(parameter);</span>
+
+		//[#32245 - Penetracni testy novy web] - osetrenie formlarovych parametrov aby nemohli obsahovat HTML kod
+<span class="fc" id="L68">		String values[] = super.getParameterValues(parameter);</span>
+<span class="pc bpc" id="L69" title="1 of 4 branches missed.">		if (values==null || values.length&lt;1) return values;</span>
+
+		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
+<span class="fc" id="L72">		String valuesFiltered[] = new String[values.length];</span>
+<span class="pc bpc" id="L73" title="2 of 4 branches missed.">		if (values!=null &amp;&amp; values.length&gt;0)</span>
+		{
+<span class="fc bfc" id="L75" title="All 2 branches covered.">			for (int i=0; i&lt;values.length; i++)</span>
+			{
+<span class="fc" id="L77">				valuesFiltered[i] = ResponseUtils.filter(values[i]);</span>
+			}
+		}
+
+<span class="fc" id="L81">		return valuesFiltered;</span>
+	}
+
+	public String getOriginalParameter(String key)
+	{
+<span class="nc" id="L86">		return super.getParameter(key);</span>
+	}
+
+	public void setParameter(String key, String value)
+	{
+<span class="fc" id="L91">		String[] values = getParameterValues(key);</span>
+<span class="pc bpc" id="L92" title="3 of 4 branches missed.">		if (values == null || values.length!=1)</span>
+		{
+<span class="fc" id="L94">			values = new String[1];</span>
+		}
+		//jeeff: povodne som uvazoval, ze sa len zvacsi to pole, to by sa ale potom nedala prepisat hodnota, pre pole treba pouzit setParameterValues
+<span class="fc" id="L97">		values[0] = value;</span>
+
+<span class="fc" id="L99">		changedParameterValues.put(key, values);</span>
+<span class="fc" id="L100">	}</span>
+
+	public void setParameterValues(String key, String[] values)
+	{
+<span class="nc" id="L104">		changedParameterValues.put(key, values);</span>
+<span class="nc" id="L105">	}</span>
+
+	public String param(String key)
+	{
+<span class="fc" id="L109">		return getParameter(key);</span>
+	}
+
+	public boolean hasParameter(String key)
+	{
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">		return param(key) != null;</span>
+	}
+
+	public Object attr(String key)
+	{
+<span class="nc" id="L119">		return getAttribute(key);</span>
+	}
+
+	public boolean hasAttribute(String key)
+	{
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		return attr(key) != null;</span>
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

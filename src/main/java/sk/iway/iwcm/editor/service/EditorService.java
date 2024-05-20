@@ -571,8 +571,9 @@ public class EditorService {
 	 */
 	private void updateWebpage(DocDetails editedDoc, DebugTimer dt) {
 		//premenovanie Groupy ak je stranka defaultna pre Grupu.
-		if(Constants.getBoolean("syncGroupAndWebpageTitle")) {
+		if(GroupsService.canSyncTitle(editedDoc.getDocId(), editedDoc.getGroupId())) {
 			DocDB.changeGroupTitle(editedDoc.getGroupId(), editedDoc.getDocId(), editedDoc.getTitle());
+			forceReload = true;
 		}
 
 		//Request publish could be set as false during loadApproveTables action (when author has no right to do this, and approve is needed)
@@ -604,6 +605,7 @@ public class EditorService {
 	 * @param publishEvents - true to publish WebjetEvents (default true)
 	 * @return
 	 */
+	@SuppressWarnings("java:S3516")
 	public boolean deleteWebpage(DocDetails doc, boolean publishEvents) {
 		String result = deleteWebpageLogic(doc.getDocId(), approveService, publishEvents);
 
@@ -612,12 +614,12 @@ public class EditorService {
 
 		//Delete needs to be approved
 		if(prop.getText("approveAction.err.cantApprove").equals(result)) {
-			String approversString = "";
+			StringBuilder approversString = new StringBuilder();
 			for(UserDetails approver : approveService.getApprovers()) {
-				if(!approversString.isEmpty()) approversString += ", ";
-				approversString += approver.getFullName();
+				if(!approversString.isEmpty()) approversString.append(", ");
+				approversString.append(approver.getFullName());
 			}
-			NotifyBean info = new NotifyBean(prop.getText("editor.approve.notifyTitle"), prop.getText("editor.approveDeleteRequestGet")+": "+approversString, NotifyBean.NotifyType.INFO, 60000);
+			NotifyBean info = new NotifyBean(prop.getText("editor.approve.notifyTitle"), prop.getText("editor.approveDeleteRequestGet")+": "+approversString.toString(), NotifyBean.NotifyType.INFO, 60000);
             addNotify(info);
 
 			return true;
@@ -638,7 +640,7 @@ public class EditorService {
 		// zmaz stare dokumenty, ktore nie su schvalene
 		List<Integer> historyIds;
 
-		historyIds = historyRepo.findOldHistoryIds(editedHistory.getDocId(), Long.valueOf(historyId), 0, currentUser.getUserId());
+		historyIds = historyRepo.findOldHistoryIds(editedHistory.getDocId(), Long.valueOf(historyId), false, currentUser.getUserId());
 		dt.diff("after was_approved history_id list");
 
 		if (historyIds.isEmpty()==false) {
@@ -1044,7 +1046,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
-		if (user.isEnabledItem("menuWebpages")==false) return false;
+		if (UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false) return false;
 
 		if (isDelete) {
 			if (user.isDisabledItem("deletePage")) {
@@ -1107,7 +1109,7 @@ public class EditorService {
 	 */
 	public void checkPermissions(Identity user, DocDetails doc, boolean isDelete) {
 		String errorKey = null;
-		if (user == null || user.isDisabledItem("menuWebpages") || doc == null) {
+		if (user == null || UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false || doc == null) {
 			errorKey = "error.userNotLogged";
 		} else if (isDelete && isPageEditable(user, doc, true)==false) {
 			errorKey = "admin.delete.deletePageDisabled.error";
@@ -1272,6 +1274,8 @@ public class EditorService {
 		// Set root groups L1, L2, L3
 		setRootGroupL(editedDoc.getGroupId(), editedDoc);
 
+		if (Tools.isEmpty(editedDoc.getNavbar())) editedDoc.setNavbar(editedDoc.getTitle());
+
 		if(isInsert) {
 			// Insert new doc entity via DocDeailsRepository
 			docRepo.save(editedDoc);
@@ -1384,7 +1388,9 @@ public class EditorService {
 	 * @param dt
 	 */
 	private void refreshTemplates(DocDetails editedDoc, DebugTimer dt) {
-		if (editedDoc.getGroupId() == Constants.getInt("tempGroupId") || editedDoc.getGroupId() == Constants.getInt("menuGroupId") || editedDoc.getGroupId() == Constants.getInt("headerFooterGroupId")) {
+		boolean isInSystemFolder = false;
+		if (editedDoc.getVirtualPath()!=null && editedDoc.getVirtualPath().startsWith("/system/")) isInSystemFolder = true;
+		if (isInSystemFolder || editedDoc.getGroupId() == Constants.getInt("tempGroupId") || editedDoc.getGroupId() == Constants.getInt("menuGroupId") || editedDoc.getGroupId() == Constants.getInt("headerFooterGroupId")) {
 			TemplatesDB.getInstance(true);
 			dt.diff("after templates DB getInstance");
 		}

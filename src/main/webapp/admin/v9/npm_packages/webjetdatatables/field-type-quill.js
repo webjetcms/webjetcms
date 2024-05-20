@@ -51,9 +51,9 @@ export function typeQuill() {
                     toolbar: toolbarOptions,
                     htmlEditButton: {
                         msg: WJ.translate("datatables.quill.htmlButton.tooltip.js"), //Custom message to display in the editor, default: Edit HTML here, when you click "OK" the quill editor's contents will be replaced
-                        okText: '<i class="fal fa-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
-                        cancelText: '<i class="fal fa-times"></i> '+WJ.translate("button.cancel"), // Text to display in the cancel button, default: Cancel
-                        buttonHTML: "<i class='fa fa-code'></i> ", // Text to display in the toolbar button, default: <>
+                        okText: '<i class="ti ti-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
+                        cancelText: '<i class="ti ti-x"></i> '+WJ.translate("button.cancel"), // Text to display in the cancel button, default: Cancel
+                        buttonHTML: "<i class='ti ti-code'></i> ", // Text to display in the toolbar button, default: <>
                         buttonTitle: WJ.translate("datatables.quill.htmlButton.tooltip.js"), // Text to display as the tooltip for the toolbar button, default: Show HTML source
                     }
                 }

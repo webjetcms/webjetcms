@@ -34,11 +34,12 @@ public class TemplateDetailsService {
         return templatesDB.getTemplate(templateId);
     }
 
-    List<TemplateDetails> getAllTemplateDetails(UserDetails currentUser) {
+    public List<TemplateDetails> getAllTemplateDetails(UserDetails currentUser) {
         Map<Integer, Integer> tableOfUsage = TemplatesDB.getInstance().numberOfPages();
         TemplatesDB templatesDB = TemplatesDB.getInstance();
 
-        List<TemplateDetails> templateDetails = TemplatesDB.filterTemplatesByUser(currentUser, templatesDB.getTemplatesSaved());
+        List<TemplateDetails> templateDetails = filterByCurrentDomainAndUser(currentUser, templatesDB.getTemplatesSaved());
+
         for (TemplateDetails detail : templateDetails) {
             Integer number = tableOfUsage.get(detail.getTempId());
             if (null != number) {
@@ -46,7 +47,19 @@ public class TemplateDetailsService {
             }
         }
 
-        if (Constants.getBoolean("enableStaticFilesExternalDir")) {
+        return templateDetails;
+    }
+
+    /**
+     * Filter templates by current domain
+     * @param templateDetails
+     * @return
+     */
+    public List<TemplateDetails> filterByCurrentDomainAndUser(UserDetails currentUser, List<TemplateDetails> templateDetails) {
+
+        templateDetails = TemplatesDB.filterTemplatesByUser(currentUser, templateDetails);
+
+        if (Constants.getBoolean("multiDomainEnabled")) {
             //show templates available only on current domain
             List<TemplateDetails> filtered = new ArrayList<>();
 
@@ -67,10 +80,8 @@ public class TemplateDetailsService {
                 }
             }
 
-            if (filtered.isEmpty()==false) templateDetails = filtered;
-
+            templateDetails = filtered;
         }
-
         return templateDetails;
     }
 
@@ -109,10 +120,6 @@ public class TemplateDetailsService {
         return deleted;
     }
 
-    List<TemplatesGroupBean> getTemplatesGroupBeans() {
-        return TemplatesGroupDB.getAllTemplatesGroups();
-    }
-
     /**
      * Vrati zoznam moznych JSP sablon pre zadanu sablonu
      * Hlada v adresaroch:
@@ -135,11 +142,11 @@ public class TemplateDetailsService {
 		if (dir.isDirectory())
 		{
             String templatesGroupDir = "";
-            if (templatesGroupId != null && templatesGroupId.intValue()>0) templatesGroupDir = (new SimpleQuery().forString("SELECT directory FROM templates_group WHERE templates_group_id = ?", templatesGroupId.intValue()));
+            if (templatesGroupId != null && templatesGroupId.intValue()>0) templatesGroupDir = (new SimpleQuery().forString("SELECT directory FROM templates_group WHERE templates_group_id = ?", templatesGroupId));
             // nepriradena skupina ma directory = "/"
 		    if ("/".equals(templatesGroupDir)) templatesGroupDir = "";
 
-			File dirSpec = new File(sk.iway.iwcm.Tools.getRealPath("/templates/"+ installName + "/" + templatesGroupDir));
+			File dirSpec = new File(sk.iway.iwcm.Tools.getRealPath("/templates/" + installName + "/" + templatesGroupDir)); //NOSONAR
 			if (dirSpec.exists() && dirSpec.isDirectory()){
 				dir = dirSpec;
 			} else {
@@ -185,8 +192,7 @@ public class TemplateDetailsService {
     {
         List<String> forwards = new ArrayList<>();
 
-        File files[] = dir.listFiles();
-        String fName;
+        File[] files = dir.listFiles();
         if (files!=null)
         {
             int i;
@@ -199,8 +205,9 @@ public class TemplateDetailsService {
                     {
                         continue;
                     }
-                    fName = files[i].getName();
-                    if (Tools.isNotEmpty(baseDir)) fName = baseDir+"/"+fName;
+                    String fName;
+                    if (Tools.isNotEmpty(baseDir)) fName = baseDir+"/"+files[i].getName();
+                    else fName = files[i].getName();
                     forwards.add(fName);
                 }
             }

@@ -1,0 +1,47 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-awaiting-publish-webpages',
+        [
+            [ '/admin/v9/apps/audit-awaiting-publish-webpages/', '[[#{components.adminlog.wait_publishing}]]', true]
+        ]
+    )
+
+    script.
+        window.helpLink = "/sysadmin/audit/audit-awaiting-publish-webpages";
+        var awaitingPublishWebpagesDataTable;
+        window.domReady.add(function () {
+            let url = "/admin/rest/web-pages/history";
+            let webpageColumns = [(${layout.getDataTableColumns("sk.iway.iwcm.editor.rest.DocHistoryDto")})];
+
+            window.importWebPagesDatatable().then(module => {
+                //add column visibility
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
+
+                let wpdInstance = new module.WebPagesDatatable({
+                    url:  WJ.urlAddParam(url, "auditVersion", true),
+                    columns:  ChartTools.filterColumns(["id", "title", "publishStartDate", "publishEndDate", "fullPath"], webpageColumns), //Filter only columns we want to show
+                    id: "awaitingPublishWebpagesDataTable",
+                    serverSide: false
+                });
+                changedWebPages = wpdInstance.createDatatable();
+
+                changedWebPages.hideButton("create");
+                changedWebPages.hideButton("edit");
+                changedWebPages.hideButton("duplicate");
+                changedWebPages.hideButton("remove");
+                changedWebPages.hideButton("celledit");
+                changedWebPages.hideButton("import");
+            });
+
+        });
+
+    //Hard style hide abtest button
+    style.
+        button.buttons-abtest {
+            display : none !important;
+        }
+
+    <table id="awaitingPublishWebpagesDataTable" class="datatableInit table"></table>

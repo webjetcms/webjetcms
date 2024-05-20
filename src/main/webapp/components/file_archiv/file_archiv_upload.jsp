@@ -294,7 +294,7 @@ if(user == null || (oldId > 0 && !user.isFolderWritable("/"+ab.getFab().getFileP
 						<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 							<stripes:text id="validFrom" name="fab.validFrom" class="form-control datepicker" />
 							<span class="input-group-btn">
-								<button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+								<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
 							</span>
 						</div>
 					</div>
@@ -309,7 +309,7 @@ if(user == null || (oldId > 0 && !user.isFolderWritable("/"+ab.getFab().getFileP
 						<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 							<stripes:text id="validTo" name="fab.validTo" class="form-control datepicker" />
 							<span class="input-group-btn">
-								<button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+								<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
 							</span>
 						</div>
 					</div>
@@ -348,7 +348,7 @@ if(user == null || (oldId > 0 && !user.isFolderWritable("/"+ab.getFab().getFileP
 					<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 						<stripes:text name="dateUploadLater" id="dateUploadLater" class=" datepicker form-control" />
 						<span class="input-group-btn">
-							<button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+							<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
 						</span>
 					</div>
 				</div>
@@ -362,7 +362,7 @@ if(user == null || (oldId > 0 && !user.isFolderWritable("/"+ab.getFab().getFileP
 					<div class="input-group">
 						<stripes:text name="timeUploadLater" id="timeUploadLater" class="form-control timepicker timepicker-24" />
 						<span class="input-group-btn">
-							<button type="button" class="btn default"><i class="fa fa-clock-o"></i></button>
+							<button type="button" class="btn default"><i class="ti ti-clock"></i></button>
 						</span>
 					</div>
 				</div>

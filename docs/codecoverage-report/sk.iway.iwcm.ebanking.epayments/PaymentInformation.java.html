@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">PaymentInformation.java</span></div><h1>PaymentInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.Password;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  PaymentInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 26.8.2009 14:08:38
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+<span class="nc" id="L19">public abstract class PaymentInformation</span>
+{
+
+	protected String merchantId;
+
+	protected String key;
+
+	protected int constantSymbol;
+
+	public String getMerchantId()
+	{
+<span class="nc" id="L30">		return this.merchantId;</span>
+	}
+
+	public String getReturnEmail()
+	{
+<span class="nc" id="L35">		return &quot;&quot;;</span>
+	}
+
+	/**
+	 * Returns a private key assigned to the merchant in order to run e-bussiness
+	 */
+	public String getKey()
+	{
+<span class="nc" id="L43">		return this.key;</span>
+	}
+
+	public abstract String getUrlString();
+
+	/**
+	 * Returns a constant symbol part of the bank account number.
+	 * It throws an exception in case no such symbol is set(Security issues)
+	 */
+	public int getConstantSymbol()
+	{
+<span class="nc" id="L54">		return constantSymbol;</span>
+	}
+
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L59">		return false;</span>
+	}
+
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{
+<span class="nc" id="L64">		return &quot;&quot;;</span>
+	}
+
+	/**
+	 * Validuje spravnost navratovej odpovede banky. Overi ci su pritomne povinne parametre a ci sedi podpisovy hash, ak nie vyhodi Exception.
+	 * Ak je odpoved formalne v poriadku, vrati TRUE v pripade kladnej (platba bola uspesna), FALSE v pripade zapornej odpovede (platba nebola uspesna).
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean validateBankResponce(HttpServletRequest request) throws Exception
+	{
+<span class="nc" id="L76">		return false;</span>
+	}
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L82">		return this.getClass().getSimpleName()+&quot; mid =&gt; &quot;+getMerchantId()+&quot; key =&gt; &quot;+getKey();</span>
+	}
+
+	public String generateEditorForm()
+	{
+<span class="nc" id="L87">		return &quot;&quot;;</span>
+	}
+
+	/**
+	 * Vrati variabilny symbol, potrebny pre sparovanie platby, z navratoveho requestu banky. Vacsina bank ho vracia ako URL parameter `VS` alebo `vs`,
+	 * vtedy staci pouzit metodu predka, ak banka vracia informaciu inak, je potrebny Override v implementacii.
+	 * &lt;br&gt;&lt;br&gt;
+	 * Ak banka nevracia variabilny symbol tak bude velmi obtiazne ak nie nemozne platbu sparovat.
+	 * @param request
+	 * @return Variabilny symbol
+	 */
+	public String getResponceVS(HttpServletRequest request)
+	{
+<span class="nc" id="L100">		String vs=null;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		vs = request.getParameter(&quot;VS&quot;)!=null ? request.getParameter(&quot;VS&quot;) : request.getParameter(&quot;vs&quot;);</span>
+<span class="nc" id="L102">		return vs;</span>
+	}
+
+	public String getDecrypredKey(String key)
+	{
+		try
+		{
+<span class="nc" id="L109">			Password password = new Password();</span>
+<span class="nc" id="L110">			return password.decrypt(key);</span>
+		}
+<span class="nc" id="L112">		catch(Exception e)</span>
+		{
+<span class="nc" id="L114">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L116">		return &quot;&quot;;</span>
+	}
+
+	/**
+	 * vrati specialny symbol
+	 * @param request
+	 * @return
+	 */
+	public String getResponceSS(HttpServletRequest request)
+	{
+<span class="nc" id="L126">		String ss=null;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		ss = request.getParameter(&quot;SS&quot;)!=null ? request.getParameter(&quot;SS&quot;) : request.getParameter(&quot;ss&quot;);</span>
+<span class="nc" id="L128">		return ss;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

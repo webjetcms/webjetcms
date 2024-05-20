@@ -11,7 +11,8 @@ Scenario('from-regexps zakladne testy', async ({I, DataTables}) => {
         perms: 'cmp_form',
         testingData: {
             type: "autotest-type"
-        }
+        },
+        skipSwitchDomain: true
     });
 });
 

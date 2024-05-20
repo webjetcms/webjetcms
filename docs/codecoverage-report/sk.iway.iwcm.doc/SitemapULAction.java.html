@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SitemapULAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">SitemapULAction.java</span></div><h1>SitemapULAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  Zobrazi dokumenty v stromovej strukture
+ *	  - pomocou tagov &lt;ul&gt;&lt;li&gt;
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.13 $
+ *@created      $Date: 2009/05/04 09:07:32 $
+ *@modified     $Date: 2009/05/04 09:07:32 $
+ */
+
+public class SitemapULAction
+{
+	private SitemapULAction() {
+
+	}
+
+	public static String doTree(int rootGroup, int maxDepth, int colsNum)
+	{
+<span class="nc" id="L36">		return doTree(rootGroup, maxDepth, colsNum, null);</span>
+	}
+
+	public static String doTree(int rootGroup, int maxDepth, int colsNum, HttpServletRequest request) {
+<span class="nc" id="L40">		int currentDepth = 0;</span>
+<span class="nc" id="L41">		int rowsNum = 0;</span>
+		List&lt;GroupDetails&gt; mainGroups;
+<span class="nc" id="L43">		StringBuilder outStr = new StringBuilder();</span>
+<span class="nc" id="L44">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L45">		List&lt;GroupDetails&gt; treeList = groupsDB.getGroupsAll();</span>
+		// Logger.println(this,&quot;size=&quot;+treeList.size()+&quot; root=&quot;+rootGroup);
+		// return(doTreeRecursive(rootGroup, treeList, maxDepth, currentDepth));
+
+<span class="nc bnc" id="L49" title="All 4 branches missed.">		if (maxDepth &gt; 0 &amp;&amp; colsNum &gt; 0) {</span>
+<span class="nc" id="L50">			mainGroups = getMainGroups(rootGroup, treeList, request);</span>
+<span class="nc" id="L51">			rowsNum = mainGroups.size() / colsNum;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (mainGroups.size() % colsNum &gt; 0)</span>
+<span class="nc" id="L53">				rowsNum++;</span>
+
+<span class="nc" id="L55">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L56">			outStr.append(&quot;&lt;table border=1&gt;\n&quot;);</span>
+<span class="nc" id="L57">			Iterator&lt;GroupDetails&gt; iter = mainGroups.iterator();</span>
+			GroupDetails group;
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			for (int iR = 0; iR &lt; rowsNum; iR++) {</span>
+<span class="nc" id="L60">				outStr.append(&quot;\t&lt;tr&gt;\n&quot;);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">				for (int iC = 0; iC &lt; colsNum; iC++) {</span>
+<span class="nc" id="L62">					outStr.append(&quot;\t\t&lt;td align='left' valign='top'&gt;\n&quot;);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">					if (iter.hasNext()) {</span>
+<span class="nc" id="L64">						group = iter.next();</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">						if (group.getShowInSitemap(request) == GroupDetails.MENU_TYPE_HIDDEN) {</span>
+<span class="nc" id="L67">							continue;</span>
+						}
+
+<span class="nc" id="L70">						outStr.append(&quot;&lt;ul&gt;\n&quot;);</span>
+<span class="nc" id="L71">						outStr.append(&quot;&lt;li&gt;&lt;a href='&quot;).append(docDB.getDocLink(group.getDefaultDocId())).append(&quot;'&gt;&quot;)</span>
+<span class="nc" id="L72">								.append(group.getNavbarName()).append(&quot;&lt;/a&gt;\n&quot;);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">						if (group.getShowInSitemap(request) == GroupDetails.MENU_TYPE_NORMAL) {</span>
+<span class="nc" id="L74">							outStr.append(&quot;\t\t\t\t&quot;).append(</span>
+<span class="nc" id="L75">									doTreeRecursive(group.getGroupId(), treeList, maxDepth, currentDepth, request));</span>
+						}
+<span class="nc" id="L77">						outStr.append(&quot;&lt;/li&gt;\n&quot;);</span>
+
+						/*
+						 * if (group.getShowInSitemap(request) != GroupDetails.MENU_TYPE_ONLYDEFAULT)
+						 * {
+						 * List docs = docDB.getDocByGroup(group.getGroupId());
+						 * Iterator iter2 = docs.iterator();
+						 * while (iter2.hasNext())
+						 * {
+						 * DocDetails doc = (DocDetails)iter2.next();
+						 * if (doc.isAvailable() &amp;&amp; doc.isShowInSitemap(request) &amp;&amp; doc.getDocId() !=
+						 * group.getDefaultDocId())
+						 * {
+						 * outStr +=
+						 * &quot;&lt;li&gt;&lt;a href='&quot;+docDB.getDocLink(doc.getDocId())+&quot;'&gt;&quot;+doc.getNavbar()+
+						 * &quot;&lt;/a&gt;&lt;/li&gt;\n&quot;;
+						 * }
+						 * }
+						 * }
+						 */
+<span class="nc" id="L97">						outStr.append(&quot;&lt;/ul&gt;\n&quot;);</span>
+
+						// outStr += &quot;\t\t\t\t&quot; +group.getGroupId();
+						// outStr += &quot;\n&quot;;
+					} else {
+<span class="nc" id="L102">						outStr.append(&quot;&amp;nbsp;\n&quot;);</span>
+					}
+<span class="nc" id="L104">					outStr.append(&quot;\t\t&lt;/td&gt;\n&quot;);</span>
+
+				}
+<span class="nc" id="L107">				outStr.append(&quot;\t&lt;/tr&gt;\n&quot;);</span>
+			}
+<span class="nc" id="L109">			outStr.append(&quot;&lt;/table&gt;\n&quot;);</span>
+		}
+<span class="nc" id="L111">		return outStr.toString();</span>
+
+	}
+
+/*	private static String doTreeRecursive(int rootGroup, List treeList, int maxDepth, int currentDepth)
+	{
+		String out = &quot;&quot;;
+
+		try
+		{
+			Iterator iter = treeList.iterator();
+			GroupDetails group;
+
+			out += &quot;&lt;ul&gt;\n&quot;;
+			DocDB docDB = DocDB.getInstance();
+
+			while (iter.hasNext())
+			{
+				group = (GroupDetails)iter.next();
+
+				if (group.isInternal() || group.getShowInSitemap(request)==GroupDetails.MENU_TYPE_HIDDEN)
+				{
+					continue;
+				}
+
+				if (group.getParentGroupId() == rootGroup)
+				{
+					Logger.println(this,&quot;currentDepth: &quot;+currentDepth+ &quot;maxDepth: &quot;+maxDepth);
+
+					if (currentDepth &lt; maxDepth)
+					{
+						out += &quot;&lt;li&gt;&lt;a href='&quot;+docDB.getDocLink(group.getDefaultDocId())+&quot;'&gt;&quot; + group.getNavbarName()+&quot;&lt;/a&gt;\n&quot;;
+						out += doTreeRecursive(group.getGroupId(), treeList, maxDepth, currentDepth+1);
+						out += &quot;&lt;/li&gt;\n&quot;;
+					}
+					else
+					{
+						return(&quot;&quot;);
+					}
+				}
+				//currentDepth = 0;
+			}
+
+			GroupsDB groupsDB = GroupsDB.getInstance();
+			group = groupsDB.getGroup(rootGroup);
+			if (group.getShowInSitemap(request) != GroupDetails.MENU_TYPE_ONLYDEFAULT)
+			{
+
+				List docs = docDB.getDocByGroup(rootGroup);
+				Iterator iter2 = docs.iterator();
+				group = groupsDB.getGroup(rootGroup);
+				while (iter2.hasNext())
+				{
+				   DocDetails doc = (DocDetails)iter2.next();
+
+				   if (doc.isAvailable() &amp;&amp; doc.isShowInSitemap(request) &amp;&amp; doc.getDocId() != group.getDefaultDocId())
+				   {
+				      out += &quot;&lt;li&gt;&lt;a href='&quot;+docDB.getDocLink(doc.getDocId())+&quot;'&gt;&quot;+doc.getNavbar()+&quot;&lt;/a&gt;&lt;/li&gt;\n&quot;;
+				   }
+				}
+			}
+			out += &quot;&lt;/ul&gt;\n&quot;;
+
+			if (&quot;&lt;ul&gt;\n&lt;/ul&gt;\n&quot;.equals(out))
+			{
+			   out = &quot;&quot;;
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.error(SitemapULAction.class, ex);
+		}
+
+		return out;
+	}
+*/
+	public static List&lt;GroupDetails&gt; getMainGroups(int rootGroup, List&lt;GroupDetails&gt; treeList) {
+<span class="nc" id="L188">		return getMainGroups(rootGroup, treeList, null);</span>
+	}
+
+	public static List&lt;GroupDetails&gt; getMainGroups(int rootGroup, List&lt;GroupDetails&gt; treeList, HttpServletRequest request)
+	{
+<span class="fc" id="L193">		List&lt;GroupDetails&gt; mainGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">		for (GroupDetails group : treeList)</span>
+		{
+<span class="fc bfc" id="L196" title="All 4 branches covered.">			if (group.isInternal() || group.getShowInSitemap(request)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+			{
+<span class="fc" id="L198">				continue;</span>
+			}
+<span class="fc bfc" id="L200" title="All 2 branches covered.">			if (group.getParentGroupId() == rootGroup)</span>
+			{
+<span class="fc" id="L202">				mainGroups.add(group);</span>
+			}
+<span class="fc" id="L204">		}</span>
+<span class="fc" id="L205">		return mainGroups;</span>
+	}
+
+	public static String doTreeRecursive(int rootGroup, List&lt;GroupDetails&gt; treeList, int maxDepth, int currentDepth)
+	{
+<span class="nc" id="L210">		return doTreeRecursive(rootGroup, treeList, maxDepth, currentDepth, null);</span>
+	}
+
+	public static String doTreeRecursive(int rootGroup, List&lt;GroupDetails&gt; treeList, int maxDepth, int currentDepth, HttpServletRequest request)
+	{
+<span class="fc" id="L215">		StringBuilder out = new StringBuilder();</span>
+
+		try
+		{
+<span class="fc" id="L219">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L220">			GroupDetails rootGroupDetails = groupsDB.getGroup(rootGroup);</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">			if (rootGroupDetails.getShowInSitemap(request)==GroupDetails.MENU_TYPE_NOSUB) return &quot;&quot;;</span>
+
+<span class="fc" id="L223">			out.append(&quot;&lt;ul&gt;\n&quot;);</span>
+<span class="fc" id="L224">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L225">			DocDetails dd = null;</span>
+<span class="fc" id="L226">			boolean isExternalLink = false;</span>
+
+<span class="fc bfc" id="L228" title="All 2 branches covered.">			for (GroupDetails group : treeList)</span>
+			{
+
+<span class="fc bfc" id="L231" title="All 4 branches covered.">				if (group.isInternal() || group.getShowInSitemap(request)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+				{
+<span class="fc" id="L233">					continue;</span>
+				}
+
+<span class="fc bfc" id="L236" title="All 2 branches covered.">				if (group.getParentGroupId() == rootGroup)</span>
+				{
+					//Logger.println(this,&quot;currentDepth: &quot;+currentDepth+ &quot;maxDepth: &quot;+maxDepth);
+
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">					if (currentDepth &lt; maxDepth)</span>
+					{
+<span class="fc" id="L242">						String[] navbarParam = SitemapULAction.fixAparam(group.getNavbarName());</span>
+<span class="fc" id="L243">						dd = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+<span class="pc bpc" id="L244" title="4 of 6 branches missed.">						isExternalLink = (dd != null &amp;&amp; Tools.isNotEmpty(dd.getExternalLink()) &amp;&amp; dd.getExternalLink().trim().toLowerCase().startsWith(&quot;http&quot;));</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">						out.append(&quot;&lt;li&quot;).append(isExternalLink ? &quot; class=\&quot;externalLink\&quot;&gt;&quot; : &quot;&gt;&quot;).append(&quot;&lt;a href='&quot;).append(docDB.getDocLink(group.getDefaultDocId())).append('\'').append(navbarParam[1]).</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">						append(isExternalLink ? &quot; target=\&quot;_blank\&quot;&quot; : &quot;&quot;).</span>
+<span class="fc" id="L247">						append('&gt;').append(navbarParam[0]).append(&quot;&lt;/a&gt;\n&quot;);</span>
+<span class="pc bpc" id="L248" title="3 of 4 branches missed.">						if (group.getShowInSitemap(request) == GroupDetails.MENU_TYPE_NORMAL || group.getShowInSitemap(request) == GroupDetails.MENU_TYPE_ONLYDEFAULT)</span>
+						{
+<span class="fc" id="L250">							out.append(doTreeRecursive(group.getGroupId(), treeList, maxDepth, currentDepth+1, request));</span>
+						}
+<span class="fc" id="L252">						out.append(&quot;&lt;/li&gt;\n&quot;);</span>
+					}
+					else
+					{
+						break;
+					}
+				}
+				//currentDepth = 0;
+<span class="fc" id="L260">			}</span>
+
+<span class="fc" id="L262">			GroupDetails group = rootGroupDetails;</span>
+<span class="pc bpc" id="L263" title="2 of 4 branches missed.">			if (group.getShowInSitemap(request) != GroupDetails.MENU_TYPE_ONLYDEFAULT &amp;&amp; currentDepth &lt; maxDepth)</span>
+			{
+
+<span class="fc" id="L266">				List&lt;DocDetails&gt; docs = docDB.getDocByGroup(rootGroup, DocDB.ORDER_PRIORITY, true, -1, -1, false); // docDB.getDocByGroup(rootGroup);</span>
+
+<span class="fc" id="L268">				group = groupsDB.getGroup(rootGroup);</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">				for (DocDetails doc : docs)</span>
+				{
+<span class="pc bpc" id="L271" title="1 of 6 branches missed.">				   if (doc.isAvailable() &amp;&amp; doc.isShowInSitemap(request) &amp;&amp; doc.getDocId() != group.getDefaultDocId())</span>
+				   {
+<span class="fc" id="L273">				   	String[] navbarParam = SitemapULAction.fixAparam(doc.getNavbar());</span>
+<span class="pc bpc" id="L274" title="3 of 4 branches missed.">				   	isExternalLink = (Tools.isNotEmpty(doc.getExternalLink()) &amp;&amp; doc.getExternalLink().trim().toLowerCase().startsWith(&quot;http&quot;));</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">				   	out.append(&quot;&lt;li&quot;).append(isExternalLink ? &quot; class=\&quot;externalLink\&quot;&gt;&quot; : &quot;&gt;&quot;).append(&quot;&lt;a href='&quot;).append(docDB.getDocLink(doc.getDocId())).append('\'').append(navbarParam[1]).</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">				   	append(isExternalLink ? &quot; target=\&quot;_blank\&quot;&quot; : &quot;&quot;).</span>
+<span class="fc" id="L277">				   	append('&gt;').append(navbarParam[0]).append(&quot;&lt;/a&gt;&lt;/li&gt;\n&quot;);</span>
+				   }
+<span class="fc" id="L279">				}</span>
+			}
+<span class="fc" id="L281">			out.append(&quot;&lt;/ul&gt;\n&quot;);</span>
+
+<span class="fc bfc" id="L283" title="All 2 branches covered.">			if (&quot;&lt;ul&gt;\n&lt;/ul&gt;\n&quot;.equals(out.toString()))</span>
+			{
+<span class="fc" id="L285">			   out.delete(0, out.length());</span>
+			}
+		}
+<span class="nc" id="L288">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L290">			Logger.error(SitemapULAction.class, ex);</span>
+<span class="fc" id="L291">		}</span>
+
+<span class="fc" id="L293">		return out.toString();</span>
+	}
+
+	/**
+	 * Z povodneho nazvu vrati nazov bez &lt;APARAM ako [0] a hodnotu APARAM ako [1] (ak je zadana)
+	 * @param navbarName
+	 * @return
+	 */
+	public static String[] fixAparam(String navbarName)
+	{
+<span class="fc" id="L303">		String aParam = &quot;&quot;;</span>
+<span class="fc" id="L304">		String navnarNameUCase = navbarName.toUpperCase();</span>
+<span class="fc" id="L305">		int aParamStart = navnarNameUCase.indexOf(&quot;&lt;APARAM&quot;);</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">		if (aParamStart != -1)</span>
+		{
+			try
+			{
+<span class="nc" id="L310">				int aParamEnd = navnarNameUCase.indexOf('&gt;', aParamStart);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">				if (aParamEnd &gt; aParamStart)</span>
+				{
+<span class="nc" id="L313">					aParam = &quot; &quot; + navbarName.substring(aParamStart + 7, aParamEnd);</span>
+					//odstran aParam z textu
+<span class="nc" id="L315">					navbarName = Tools.replace(navbarName, navbarName.substring(aParamStart, aParamEnd + 1), &quot;&quot;);</span>
+				}
+			}
+<span class="nc" id="L318">			catch (Exception ex)</span>
+			{
+				//
+<span class="nc" id="L321">			}</span>
+		}
+<span class="fc" id="L323">		String[] ret = new String[2];</span>
+<span class="fc" id="L324">		ret[0] = navbarName;</span>
+<span class="fc" id="L325">		ret[1] = aParam;</span>
+<span class="fc" id="L326">		return ret;</span>
+	}
+
+	/**
+	 * Generovanie sitemapy podla priznaku &quot;Vyhladavatelne&quot; vo web strankach na ziadost TB - tiket 23535
+	 * @param rootGroupId - ID root adresara
+	 * @param maxDepth - maximalna hlbka do ktorej sa prehladava
+	 * @param actualDepth
+	 * @param request
+	 * @return
+	 */
+	public static StringBuilder getTreeSearchable(int rootGroupId, int maxDepth, int actualDepth, HttpServletRequest request)
+	{
+<span class="nc" id="L339">		String abTestingName = Constants.getString(&quot;ABTestingName&quot;, &quot;&quot;);</span>
+<span class="nc" id="L340">		StringBuilder htmlCode = new StringBuilder();</span>
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		if (actualDepth &gt; maxDepth) return htmlCode;</span>
+
+<span class="nc" id="L344">		String spacer = &quot;                                                                                                      &quot;;</span>
+		try
+		{
+<span class="nc" id="L347">			spacer = spacer.substring(0, actualDepth*3);</span>
+		}
+<span class="nc" id="L349">		catch (Exception e)</span>
+		{
+<span class="nc" id="L351">			spacer = &quot;&quot;;</span>
+<span class="nc" id="L352">		}</span>
+
+<span class="nc" id="L354">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L355">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L356">		List&lt;GroupDetails&gt; subGroups = groupsDB.getGroups(rootGroupId);</span>
+
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		for (GroupDetails group : subGroups)</span>
+		{
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (group.isInternal()) continue;</span>
+
+<span class="nc" id="L362">			StringBuilder subGroupsHtmlCode = getTreeSearchable(group.getGroupId(), maxDepth, actualDepth+1, request);</span>
+
+			//ziskaj zoznam stranok v tomto adresari
+<span class="nc" id="L365">			List&lt;DocDetails&gt; docs = docDB.getBasicDocDetailsByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY);</span>
+<span class="nc" id="L366">			StringBuilder docsHtmlCode = new StringBuilder();</span>
+
+<span class="nc" id="L368">			DocDetails defaultDoc = null;</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			for (DocDetails doc : docs)</span>
+			{
+<span class="nc" id="L372">				String virtualPath = doc.getVirtualPath();</span>
+<span class="nc bnc" id="L373" title="All 4 branches missed.">				if (Tools.isNotEmpty(abTestingName) &amp;&amp; virtualPath.contains(abTestingName)) {</span>
+<span class="nc" id="L374">					continue;</span>
+				}
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">				if (doc.getDocId()==group.getDefaultDocId())</span>
+				{
+<span class="nc" id="L379">					defaultDoc = doc;</span>
+<span class="nc" id="L380">					continue;</span>
+				}
+
+<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (doc.isAvailable()==false) continue;</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (doc.isSearchable()==false) continue;</span>
+
+<span class="nc" id="L386">				String title = doc.getTitle();</span>
+
+<span class="nc" id="L388">				docsHtmlCode.append(spacer).append(&quot;&lt;li&quot;).append(&quot;&gt;&lt;a href=\&quot;&quot;).append(docDB.getDocLink(doc.getDocId(), request)).append('\&quot;').append('&gt;');</span>
+<span class="nc" id="L389">				docsHtmlCode.append(ResponseUtils.filter(title) + &quot;&lt;/a&gt;&lt;/li&gt;\n&quot;);</span>
+<span class="nc" id="L390">			}</span>
+
+			//ak je default stranka adresara oznacena ako NOT searchable nedaj cely adresar do mapy stranok
+<span class="nc bnc" id="L393" title="All 4 branches missed.">			if (defaultDoc!=null &amp;&amp; defaultDoc.isSearchable()==false) continue;</span>
+
+
+<span class="nc" id="L396">			String title = &quot;&quot;;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (defaultDoc != null) title = defaultDoc.getTitle();</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			if (Tools.isNotEmpty(group.getGroupName())) title = group.getGroupName();</span>
+<span class="nc" id="L399">			htmlCode.append(spacer).append(&quot;&lt;li&quot;).append(&quot;&gt;&lt;a href=\&quot;&quot;).append(docDB.getDocLink(group.getDefaultDocId(), request)).append('\&quot;').append('&gt;');</span>
+<span class="nc" id="L400">			htmlCode.append(ResponseUtils.filter(title));</span>
+<span class="nc" id="L401">			htmlCode.append(&quot;&lt;/a&gt;\n&quot;);</span>
+
+<span class="nc bnc" id="L403" title="All 4 branches missed.">			if (subGroupsHtmlCode.length()&gt;0 || docsHtmlCode.length()&gt;0)</span>
+			{
+
+<span class="nc" id="L406">				htmlCode.append(spacer).append(&quot;&lt;ul&gt;\n&quot;);</span>
+
+<span class="nc bnc" id="L408" title="All 2 branches missed.">				if (subGroupsHtmlCode.length() &gt; 0) htmlCode.append(subGroupsHtmlCode);</span>
+
+<span class="nc bnc" id="L410" title="All 2 branches missed.">				if (docsHtmlCode.length() &gt; 0) htmlCode.append(docsHtmlCode);</span>
+
+<span class="nc" id="L412">				htmlCode.append(spacer).append(&quot;&lt;/ul&gt;\n&quot;);</span>
+			}
+
+<span class="nc" id="L415">			htmlCode.append(spacer).append(&quot;&lt;/li&gt;\n&quot;);</span>
+
+
+<span class="nc" id="L418">		}</span>
+
+<span class="nc" id="L420">		return htmlCode;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

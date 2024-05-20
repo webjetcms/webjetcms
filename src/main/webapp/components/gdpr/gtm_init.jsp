@@ -19,18 +19,29 @@
                %>];
                var json = {};
                var enabled = false;
+               var gtmName = "";
                for (var classification of gdprCookieClassifications) {
-                  var gtmName = classification;
+                  gtmName = classification;
+                  enabled = cookieValue.indexOf(classification)!=-1;
+
                   if ("marketingove"===classification) gtmName = "ad_storage";
                   else if ("statisticke"===classification) gtmName = "analytics_storage";
 
                   enabled = cookieValue.indexOf(classification)!=-1;
 
-                  json[gtmName] = enabled;
+                  json[gtmName] = enabled?'granted':'denied';
+
+                  if ("ad_storage"===gtmName) {
+                     json['ad_user_data'] = json[gtmName];
+                     json['ad_personalization'] = json[gtmName];
+                  }
                }
                //console.log("json=", json);
                return json;
             }
             function gtag(){dataLayer.push(arguments)};
-            gtag('consent', 'default', gtagGetConsentJson('<%=org.apache.struts.util.ResponseUtils.filter(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))%>'));
+            gtag('consent', 'default', gtagGetConsentJson('nutne'));
+            <% if (Tools.isNotEmpty(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))) { %>
+               gtag('consent', 'update', gtagGetConsentJson('<%=org.apache.struts.util.ResponseUtils.filter(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))%>'));
+            <% } %>
         </script>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeflaterOutputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.zip</a> &gt; <span class="el_source">DeflaterOutputStream.java</span></div><h1>DeflaterOutputStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.zip;
+
+
+/**
+ *  InflaterInputStream.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 9.6.2005 9:27:13
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+/*
+ * @(#)DeflaterOutputStream.java	1.32 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.Deflater;
+
+/**
+ * This class implements an output stream filter for compressing data in
+ * the &quot;deflate&quot; compression format. It is also used as the basis for other
+ * types of compression filters, such as GZIPOutputStream.
+ *
+ * @see		Deflater
+ * @version 	1.32, 01/23/03
+ * @author 	David Connelly
+ */
+public class DeflaterOutputStream extends FilterOutputStream {
+    /**
+     * Compressor for this stream.
+     */
+    protected Deflater def;
+
+    /**
+     * Output buffer for writing compressed data.
+     */
+    protected byte[] buf;
+
+    /**
+     * Indicates that the stream has been closed.
+     */
+
+<span class="nc" id="L52">    private boolean closed = false;</span>
+
+    /**
+     * Creates a new output stream with the specified compressor and
+     * buffer size.
+     * @param out the output stream
+     * @param def the compressor (&quot;deflater&quot;)
+     * @param size the output buffer size
+     * @exception IllegalArgumentException if size is &lt;= 0
+     */
+    public DeflaterOutputStream(OutputStream out, Deflater def, int size) {
+<span class="nc" id="L63">        super(out);</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">        if (out == null || def == null) {</span>
+<span class="nc" id="L65">            throw new NullPointerException();</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        } else if (size &lt;= 0) {</span>
+<span class="nc" id="L67">            throw new IllegalArgumentException(&quot;buffer size &lt;= 0&quot;);</span>
+        }
+<span class="nc" id="L69">        this.def = def;</span>
+<span class="nc" id="L70">        buf = new byte[size];</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Creates a new output stream with the specified compressor and
+     * a default buffer size.
+     * @param out the output stream
+     * @param def the compressor (&quot;deflater&quot;)
+     */
+    public DeflaterOutputStream(OutputStream out, Deflater def) {
+<span class="nc" id="L80">	this(out, def, 512);</span>
+<span class="nc" id="L81">    }</span>
+
+<span class="nc" id="L83">    boolean usesDefaultDeflater = false;</span>
+
+    /**
+     * Creates a new output stream with a defaul compressor and buffer size.
+     * @param out the output stream
+     */
+    public DeflaterOutputStream(OutputStream out) {
+<span class="nc" id="L90">	this(out, new Deflater());</span>
+<span class="nc" id="L91">        usesDefaultDeflater = true;</span>
+<span class="nc" id="L92">    }</span>
+
+    /**
+     * Writes a byte to the compressed output stream. This method will
+     * block until the byte can be written.
+     * @param b the byte to be written
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public void write(int b) throws IOException {
+<span class="nc" id="L102">        byte[] buf = new byte[1];</span>
+<span class="nc" id="L103">	buf[0] = (byte)(b &amp; 0xff);</span>
+<span class="nc" id="L104">	write(buf, 0, 1);</span>
+<span class="nc" id="L105">    }</span>
+
+    /**
+     * Writes an array of bytes to the compressed output stream. This
+     * method will block until all the bytes are written.
+     * @param b the data to be written
+     * @param off the start offset of the data
+     * @param len the length of the data
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public void write(byte[] b, int off, int len) throws IOException {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">	if (def.finished()) {</span>
+<span class="nc" id="L118">	    throw new IOException(&quot;write beyond end of stream&quot;);</span>
+	}
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if ((off | len | (off + len) | (b.length - (off + len))) &lt; 0) {</span>
+<span class="nc" id="L121">	    throw new IndexOutOfBoundsException();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">	} else if (len == 0) {</span>
+<span class="nc" id="L123">	    return;</span>
+	}
+<span class="nc bnc" id="L125" title="All 2 branches missed.">	if (!def.finished()) {</span>
+<span class="nc" id="L126">	    def.setInput(b, off, len);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">	    while (!def.needsInput()) {</span>
+<span class="nc" id="L128">		deflate();</span>
+	    }
+	}
+<span class="nc" id="L131">    }</span>
+
+    /**
+     * Finishes writing compressed data to the output stream without closing
+     * the underlying stream. Use this method when applying multiple filters
+     * in succession to the same output stream.
+     * @exception IOException if an I/O error has occurred
+     */
+    public void finish() throws IOException {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">	if (!def.finished()) {</span>
+<span class="nc" id="L141">	    def.finish();</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">	    while (!def.finished()) {</span>
+<span class="nc" id="L143">		deflate();</span>
+	    }
+	}
+<span class="nc" id="L146">    }</span>
+
+    /**
+     * Writes remaining compressed data to the output stream and closes the
+     * underlying stream.
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public void close() throws IOException {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        if (!closed) {</span>
+<span class="nc" id="L156">            finish();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (usesDefaultDeflater)</span>
+<span class="nc" id="L158">                def.end();</span>
+<span class="nc" id="L159">            out.close();</span>
+<span class="nc" id="L160">            closed = true;</span>
+        }
+<span class="nc" id="L162">    }</span>
+
+    /**
+     * Writes next block of compressed data to the output stream.
+     * @throws IOException if an I/O error has occurred
+     */
+    protected void deflate() throws IOException {
+<span class="nc" id="L169">	int len = def.deflate(buf, 0, buf.length);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">	if (len &gt; 0) {</span>
+<span class="nc" id="L171">	    out.write(buf, 0, len);</span>
+	}
+<span class="nc" id="L173">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

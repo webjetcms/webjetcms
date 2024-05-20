@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinkCheckService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">LinkCheckService.java</span></div><h1>LinkCheckService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import cvu.html.HTMLTokenizer;
+import cvu.html.TagToken;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.rest.LinkCheckDto;
+import sk.iway.iwcm.editor.rest.LinkCheckErrorDto;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ * Functions and logic to prepare linkCheck arrays
+ */
+@Service
+public class LinkCheckService {
+
+<span class="fc" id="L30">    public LinkCheckService() {</span>
+		//
+<span class="fc" id="L32">	}</span>
+
+	//Enum of posible error types
+<span class="fc" id="L35">	public static enum ErrorTypes {</span>
+<span class="fc" id="L36">		PAGE_NOT_EXIST,</span>
+<span class="fc" id="L37">		DOC_NOT_AVAILABLE,</span>
+<span class="fc" id="L38">		FILE_NOT_EXIST,</span>
+<span class="fc" id="L39">		IMAGE_NOT_EXIST,</span>
+<span class="fc" id="L40">		LINK_NOT_EXIST</span>
+	}
+
+    private String stripParameters(String url) {
+		//Remove /thumb/
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">		if (url.indexOf(&quot;/thumb/&quot;) != -1)</span>
+<span class="nc" id="L46">            url = Tools.replace(url, &quot;/thumb&quot;, &quot;&quot;);</span>
+
+<span class="fc" id="L48">		int i = url.indexOf('?');</span>
+<span class="fc" id="L49">		int j = url.indexOf('#');</span>
+
+<span class="pc bpc" id="L51" title="1 of 4 branches missed.">		if (i==-1 &amp;&amp; j==-1) return url;</span>
+
+		try {
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">			if (i!=-1) url = url.substring(0, i);</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">			if (j!=-1) url = url.substring(0, j);</span>
+<span class="nc" id="L56">		} catch (Exception e) {</span>
+<span class="nc" id="L57">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L58">		}</span>
+
+<span class="fc" id="L60">		return url;</span>
+	}
+
+	/**
+	 * Check doc and link to check if any error occurs. Return list of found errors.
+	 * @param doc doc to check
+	 * @param docDB DocDB instance
+	 * @param groupsDB GroupsDB instance
+	 * @param prop Prop instance
+	 * @return List of LinkCheckErrorDto objects, evry object represend one found specific error (if no error was found, return instance of empty List)
+	 */
+    private List&lt;LinkCheckErrorDto&gt; checkLinks(DocDetails doc, DocDB docDB, GroupsDB groupsDB, Prop prop) {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">		if(doc.getData() == null) return null;</span>
+
+<span class="fc" id="L74">		List&lt;LinkCheckErrorDto&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L75">		HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(doc.getData(), &quot;/&gt;&quot;, &quot;&gt;&quot;).toCharArray());</span>
+
+        //HTMLTree htmlTree = new HTMLTree(htmlTokenizer);
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L79">		Enumeration&lt;Object&gt; e = htmlTokenizer.getTokens();</span>
+		TagToken tagToken;
+		Object o;
+		String tagName;
+		String href;
+		String src;
+		int docId;
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		while (e.hasMoreElements()) {</span>
+<span class="fc" id="L87">			o = e.nextElement();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">			if (o instanceof TagToken) {</span>
+
+<span class="fc" id="L90">				tagToken = (TagToken) o;</span>
+<span class="fc" id="L91">				tagName = tagToken.getName();</span>
+<span class="pc bpc" id="L92" title="1 of 4 branches missed.">				if (tagName == null || tagToken.isEndTag()) continue;</span>
+
+<span class="fc" id="L94">				href = tagToken.getAttribute(&quot;href&quot;);</span>
+<span class="fc bfc" id="L95" title="All 4 branches covered.">				if (href != null &amp;&amp; href.startsWith(&quot;#&quot;)==false) {</span>
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">					if (href.equalsIgnoreCase(&quot;javascript:&quot;)) {</span>
+						//
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">					} else if (href.toLowerCase().startsWith(&quot;http://&quot;) || href.toLowerCase().startsWith(&quot;https://&quot;)) {</span>
+                        //External link
+						//Its OK, we dont know check that
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">					} else if (href.toLowerCase().startsWith(&quot;javascript:&quot;)) {</span>
+						//Its OK, we dont know check that
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">					} else if (href.toLowerCase().startsWith(&quot;mailto:&quot;)) {</span>
+						//Its OK, we dont know check that
+<span class="pc bpc" id="L106" title="3 of 4 branches missed.">					} else if (href.toLowerCase().startsWith(&quot;#&quot;) &amp;&amp; href.length() &gt; 1) {</span>
+						//Its OK, we dont know check that
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">					} else if (href.toLowerCase().equals(&quot;/&quot;)) {</span>
+						//Its OK, we dont know check that
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">					} else if (href.startsWith(&quot;/showdoc.do&quot;)) {</span>
+                        //Get docId param
+<span class="nc" id="L112">						docId = Tools.getIntValue(Tools.getParameterFromUrl(href, &quot;docid&quot;), -1);</span>
+<span class="nc" id="L113">						DocDetails checkDoc = docDB.getBasicDocDetails(docId, false);</span>
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">						if (checkDoc == null)</span>
+<span class="nc" id="L116">							errors.add(new LinkCheckErrorDto(ErrorTypes.PAGE_NOT_EXIST, href));</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">						else if (checkDoc.isAvailable() == false)</span>
+<span class="nc" id="L118">							errors.add(new LinkCheckErrorDto(ErrorTypes.DOC_NOT_AVAILABLE, href));</span>
+<span class="nc" id="L119">					} else {</span>
+<span class="fc" id="L120">						href = stripParameters(href);</span>
+						//Check in DocDB
+<span class="fc" id="L122">						String domain = null;</span>
+<span class="fc" id="L123">						GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">						if (group != null) domain = group.getDomainName();</span>
+
+<span class="fc" id="L127">						docId = docDB.getVirtualPathDocId(href, domain);</span>
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">						if (docId &lt; 0) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">							if (FileTools.isFile(href)==false)</span>
+							{
+<span class="fc" id="L132">								errors.add(new LinkCheckErrorDto(isFileOrLink(href), href));</span>
+							}
+						} else {
+<span class="fc" id="L135">							DocDetails checkDoc = docDB.getBasicDocDetails(docId, false);</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                            if (checkDoc == null) errors.add(new LinkCheckErrorDto(ErrorTypes.PAGE_NOT_EXIST, href));</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">							else if (checkDoc.isAvailable() == false) errors.add(new LinkCheckErrorDto(ErrorTypes.DOC_NOT_AVAILABLE, href));</span>
+						}
+					}
+				}
+
+<span class="fc" id="L143">				src = tagToken.getAttribute(&quot;src&quot;);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">				if (Tools.isNotEmpty(src)) {</span>
+
+<span class="pc bpc" id="L146" title="2 of 4 branches missed.">					if (src.toLowerCase().startsWith(&quot;http://&quot;) || src.toLowerCase().startsWith(&quot;https://&quot;)) {</span>
+						//We dont know
+					} else {
+<span class="fc" id="L149">						src = stripParameters(src);</span>
+
+                        //Check if exist on disc
+<span class="fc bfc" id="L152" title="All 2 branches covered.">						if (FileTools.isFile(src) == false)</span>
+<span class="fc" id="L153">							errors.add(new LinkCheckErrorDto(isFileOrLink(src), src));</span>
+					}
+				}
+			}
+		}
+
+<span class="fc" id="L159">		return(errors);</span>
+	}
+
+	/**
+	 * Transform input DocDetails object to LinkCheckDto object.
+	 * @param doc DocDetails object to transform
+	 * @param error string of error to by add into LinkCheckDto class
+	 * @param link string of url of page to by add into LinkCheckDto class
+	 * @return new LinkCheckDto object created from entered params (if entered doc is null, null will be returned)
+	 */
+	private LinkCheckDto docDetailsToLinkCheck(DocDetails doc, String error, String link) {
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">		if(doc == null) return null;</span>
+
+<span class="fc" id="L172">		LinkCheckDto linkCheck = new LinkCheckDto();</span>
+<span class="fc" id="L173">		linkCheck.setId(doc.getId());</span>
+<span class="fc" id="L174">		linkCheck.setPage(doc.getFullPath());</span>
+<span class="fc" id="L175">		linkCheck.setError(error);</span>
+<span class="fc" id="L176">		linkCheck.setLink(link);</span>
+
+<span class="fc" id="L178">		return linkCheck;</span>
+	}
+
+	/**
+	 * Get error specification text from translate key, based on input ErrorType
+	 * @param errorType represents which error specification text we want
+	 * @param prop Prop instance
+	 * @return string error specification text from translate key (if entered ErrorType is not mentioned in function, return empty string &quot;&quot;)
+	 */
+	private String getErrorTextFromEnum(ErrorTypes errorType, Prop prop) {
+<span class="fc bfc" id="L188" title="All 2 branches covered.">		if(errorType == ErrorTypes.DOC_NOT_AVAILABLE) return prop.getText(&quot;linkcheck.doc_not_available&quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">		else if(errorType == ErrorTypes.FILE_NOT_EXIST) return prop.getText(&quot;linkcheck.file_not_exist&quot;);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">		else if(errorType == ErrorTypes.IMAGE_NOT_EXIST) return prop.getText(&quot;linkcheck.image_not_exist&quot;);</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">		else if(errorType == ErrorTypes.LINK_NOT_EXIST) return prop.getText(&quot;linkcheck.link_not_exist&quot;);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		else if(errorType == ErrorTypes.PAGE_NOT_EXIST) return prop.getText(&quot;linkcheck.page_not_exist&quot;);</span>
+<span class="nc" id="L193">		else return &quot;&quot;;</span>
+	}
+
+	/**
+	 * Get DocDetails under entered group and DocDetails of child groups. For every DocDetails run error test (link check). If error was found,
+	 *  create LinkCheckDto object that represent specific error of specifi DocDetails and divide them into one of List of errors. Return
+	 * specific list based on entered tableType param.
+	 * @param groupId id of group, whose DocDetails will be checked (even every child group)
+	 * @param tableType which one of assembled Lists of errors will be returned (if entered tableType is not mentioned in function, return instance of empty List)
+	 * @param docDetailsRepository DocDetailsRepository instance
+	 * @return List of LinkCheckDto objects, based on entered groupId and tableType choise
+	 */
+	public List&lt;LinkCheckDto&gt; linkCheckList(int groupId, String tableType, DocDetailsRepository docDetailsRepository) {
+<span class="fc" id="L206">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L207">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L208">        Prop prop = Prop.getInstance();</span>
+
+<span class="fc" id="L210">		List&lt;LinkCheckDto&gt; emptyPageList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L211">		List&lt;LinkCheckDto&gt; brokenLinksList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L212">		List&lt;LinkCheckDto&gt; hiddenPageList = new ArrayList&lt;&gt;();</span>
+        List&lt;LinkCheckErrorDto&gt; errors;
+
+<span class="fc" id="L215">		int linkCheckEmptyPageSize = Constants.getInt(&quot;linkCheckEmptyPageSize&quot;);</span>
+<span class="fc" id="L216">		String searchGroups = null;</span>
+
+        //najdi child grupy
+<span class="fc bfc" id="L219" title="All 2 branches covered.">		for (GroupDetails group : groupsDB.getGroupsTree(groupId, true, true)) {</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">			if (group != null) {</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">				if (searchGroups == null)</span>
+<span class="fc" id="L222">				    searchGroups = Integer.toString(group.getGroupId());</span>
+				else
+<span class="fc" id="L224">				    searchGroups += &quot;,&quot; + group.getGroupId();</span>
+			}
+<span class="fc" id="L226">		}</span>
+
+<span class="fc" id="L228">        List&lt;DocDetails&gt; posibleValues = docDetailsRepository.findAllByGroupIdIn(Tools.getTokensInt(searchGroups, &quot;,&quot;), Pageable.ofSize(500)).getContent();</span>
+
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        for(DocDetails doc : posibleValues) {</span>
+<span class="fc" id="L231">            errors = checkLinks(doc, docDB, groupsDB, prop);</span>
+
+<span class="fc bfc" id="L233" title="All 2 branches covered.">			for(LinkCheckErrorDto error : errors) {</span>
+<span class="fc" id="L234">				ErrorTypes errorType = error.getErrorType();</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">				if(errorType == ErrorTypes.DOC_NOT_AVAILABLE)</span>
+<span class="fc" id="L236">					hiddenPageList.add(docDetailsToLinkCheck(doc, getErrorTextFromEnum(errorType, prop), error.getLink())); //ak ma stranka zakazane zobrazovanie -&gt; iba pre odkaz - ak sa zo stranky odkazuje na stranku so zakazanym zobrazovanim</span>
+				else
+<span class="fc" id="L238">					brokenLinksList.add(docDetailsToLinkCheck(doc, getErrorTextFromEnum(errorType, prop), error.getLink()));</span>
+<span class="fc" id="L239">			}</span>
+
+			//vynecham stranky s nastavenym externym odkazom
+<span class="pc bpc" id="L242" title="1 of 6 branches missed.">            if(Tools.isEmpty(doc.getExternalLink()) &amp;&amp; (doc.getData() == null || doc.getData().length() &lt; linkCheckEmptyPageSize)) {</span>
+<span class="fc" id="L243">                String errorText = &quot;&quot;;</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">                if(doc.getData() == null) errorText = prop.getText(&quot;linkcheck.page_probably_empty&quot;);</span>
+<span class="fc" id="L245">                else errorText = prop.getText(&quot;linkcheck.page_probably_empty&quot;) + &quot;: &quot; + doc.getData().length() + &quot; &quot; + prop.getText(&quot;linkcheck.chars&quot;);</span>
+
+<span class="fc" id="L247">                emptyPageList.add(docDetailsToLinkCheck(doc, errorText, doc.getVirtualPath()));</span>
+            }
+<span class="fc" id="L249">        }</span>
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if(tableType.equals(&quot;brokenLinks&quot;)) return brokenLinksList;</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        else if(tableType.equals(&quot;hiddenPages&quot;)) return hiddenPageList;</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">        else if(tableType.equals(&quot;emptyPages&quot;)) return emptyPageList;</span>
+
+<span class="nc" id="L255">        return new ArrayList&lt;&gt;();</span>
+    }
+
+	/**
+	 * By href link determines if it's probably File or general link
+	 * @param href - URL path
+	 * @return
+	 */
+	private ErrorTypes isFileOrLink(String href) {
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">		if (href == null) return ErrorTypes.LINK_NOT_EXIST;</span>
+<span class="pc bpc" id="L265" title="1 of 4 branches missed.">		if (href.startsWith(&quot;/images&quot;) || href.startsWith(&quot;/shared/images&quot;)) return ErrorTypes.IMAGE_NOT_EXIST;</span>
+<span class="pc bpc" id="L266" title="1 of 4 branches missed.">		if (href.startsWith(&quot;/files&quot;) || href.startsWith(&quot;/shared&quot;)) return ErrorTypes.FILE_NOT_EXIST;</span>
+<span class="fc" id="L267">		return ErrorTypes.LINK_NOT_EXIST;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

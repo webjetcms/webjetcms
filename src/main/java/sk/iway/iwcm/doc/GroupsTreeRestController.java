@@ -75,7 +75,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         if (click != null && (click.contains("dt-tree-group-root") || click.contains("dt-tree-groupid-root")) && id<0) {
             //id<0=zobraz root group
             GroupsJsTreeItem rootItem = new GroupsJsTreeItem(WebpagesService.getRootGroup(), user, false);
-            rootItem.setIcon("fas fa-home");
+            rootItem.setIcon("ti ti-home");
             rootItem.getState().setLoaded(true);
             rootItem.getState().setOpened(true);
             items.add(rootItem);
@@ -89,7 +89,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
                 domainGroup.setGroupName(domain);
 
                 GroupsJsTreeItem rootItem = new GroupsJsTreeItem(domainGroup, user, false);
-                rootItem.setIcon("fas fa-home");
+                rootItem.setIcon("ti ti-home");
                 rootItem.setId("domain:"+domain);
                 items.add(rootItem);
             }
@@ -113,7 +113,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             String referer = getRequest().getHeader("referer");
             if(false == (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups")) ) {
                 //If root group is in list, remove it
-                if( Integer.valueOf( items.get(0).getId() ) == 0)
+                if(items.size()>0 && Integer.valueOf( items.get(0).getId() ) == 0)
                     items.remove(0);
             }
         }
@@ -316,7 +316,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         //User can edit all groups -> so return group (no check needed)
         //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
         String referer = getRequest().getHeader("referer");
-        if( Tools.isEmpty(user.getEditableGroups()) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
+        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
             if(groupId > 0) return groupsDB.findGroup(groupId);
 
             GroupDetails rootGroup = new GroupDetails();
@@ -335,7 +335,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
            return groupsDB.findGroup(groupId);
         } else {
             //Problem, user missing rights for this group ... return first permitted group
-            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(), ",");
+            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), ",");
 
             //Use first groupId
             return groupsDB.findGroup( permittedGroups[0] );

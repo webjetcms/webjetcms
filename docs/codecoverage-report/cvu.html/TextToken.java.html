@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TextToken.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cvu.html</a> &gt; <span class="el_source">TextToken.java</span></div><h1>TextToken.java</h1><pre class="source lang-java linenums">/*
+ * HTML Parser
+ * Copyright (C) 1997 David McNicol
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * file COPYING for more details.
+ */
+
+package cvu.html;
+
+/**
+ * This represents a block of text.
+ * @see HTMLTokenizer
+ * @author &lt;a href=&quot;http://www.strath.ac.uk/~ras97108/&quot;&gt;David McNicol&lt;/a&gt;
+ */
+public class TextToken
+{
+
+	/** The content of the token. */
+	private StringBuffer text;
+
+	/**
+	 * Constructs a new token.
+	 */
+<span class="fc" id="L32">	public TextToken () {</span>
+<span class="fc" id="L33">		text = new StringBuffer();</span>
+<span class="fc" id="L34">	}</span>
+
+	/**
+	 * Sets the content of the Token.
+	 * @param newText the new content of the Token.
+	 */
+	public void setText (String newText) {
+
+		// Replace the old StringBuffer with a new one.
+<span class="nc" id="L43">		text = new StringBuffer(newText);</span>
+<span class="nc" id="L44">	}</span>
+
+	/**
+	 * Sets the content of the Token.
+	 * @param newText the new content of the Token.
+	 */
+	public void setText (StringBuffer newText) {
+
+		// Replace the old StringBuffer with a new one.
+<span class="fc" id="L53">		text = newText;</span>
+<span class="fc" id="L54">	}</span>
+
+	/**
+	 * Appends some content to the token.
+	 * @param more the new content to add.
+	 */
+	public void appendText (String more) {
+<span class="nc" id="L61">		text.append(more);</span>
+<span class="nc" id="L62">	}</span>
+
+	/**
+	 * Returns the contents of the token.
+	 */
+	public String getText () {
+<span class="nc" id="L68">		return new String(text);</span>
+	}
+
+	/** Returns a string version of the TextToken. */
+	@Override
+	public String toString () {
+<span class="fc" id="L74">		return text.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

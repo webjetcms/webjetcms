@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ElectronicPayments.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">ElectronicPayments.java</span></div><h1>ElectronicPayments.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ *  ElectronicPayments.java
+ *
+ *  Library class serving as a collection of methods dealing with
+ *  various ways of electronic payments.
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.8 $
+ *@created      Date: 2.7.2008 11:13:42
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+public final class ElectronicPayments
+{
+	private ElectronicPayments(){}
+
+	/**
+	 * Returns the set of available electronic payment methods, which
+	 * are correctly configured.
+	 *
+	 * @return {@link Set}&lt;String&gt;
+	 */
+	public static final Set&lt;PaymentType&gt; getSupportedPaymentMethods()
+	{
+<span class="nc" id="L35">		Set&lt;PaymentType&gt; paymentMethods = new HashSet&lt;PaymentType&gt;();</span>
+
+<span class="nc bnc" id="L37" title="All 2 branches missed.">		for (PaymentType type : PaymentType.values())</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">			if (type.isConfigured())</span>
+<span class="nc" id="L39">				paymentMethods.add(type);</span>
+<span class="nc" id="L40">		paymentMethods.removeAll(getBlackListPaymentMethods());</span>
+<span class="nc" id="L41">		return Collections.unmodifiableSet(paymentMethods);</span>
+	}
+
+	public static final Set&lt;String&gt; getSupportedPaymentMethodsToBasketString()
+	{
+<span class="nc" id="L46">		Set&lt;String&gt; paymentMethodsToBasketString = new HashSet&lt;String&gt;();</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		for(PaymentType type:getSupportedPaymentMethods())</span>
+		{
+<span class="nc" id="L49">			paymentMethodsToBasketString.add(type.toBasketString());</span>
+<span class="nc" id="L50">		}</span>
+<span class="nc" id="L51">		return Collections.unmodifiableSet(paymentMethodsToBasketString);</span>
+	}
+
+	/**
+	 * Factory method for producing parameter classes for
+	 * providing configuration information about the payment type.
+	 *
+	 * It throws an exception in case such a payment type is not configured correctly.
+	 *
+	 * @param paymentType String
+	 * @return {@link PaymentMethodInformation}
+	 */
+	public static PaymentInformation getPaymentInformation(PaymentType type)
+	{
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (!type.isConfigured())</span>
+<span class="nc" id="L66">			throw new IllegalStateException(type+&quot; misses one of its configuration values. Required: &quot;+type.requiredConstants);</span>
+<span class="nc bnc" id="L67" title="All 9 branches missed.">		switch (type)</span>
+		{
+<span class="nc" id="L69">			case TATRA_PAY :		return new TatraPayInformation();</span>
+<span class="nc" id="L70">			case CARD_PAY :		return new CardPayInformation();</span>
+<span class="nc" id="L71">			case VUB_E_PLATBY: 	return new VubEplatbyInformation();</span>
+<span class="nc" id="L72">			case POST_BANK: 		return new PostBankInformation();</span>
+<span class="nc" id="L73">			case SPORO_PAY: 		return new SporoPayInformation();</span>
+<span class="nc" id="L74">			case UNI_PLATBA: 		return new UniPlatbaInformation();</span>
+<span class="nc" id="L75">			case OTP_BANK:			return new OtpPaymentInformation();</span>
+<span class="nc" id="L76">			case DEXIA_PAY:		return new DexiaPayInformation();</span>
+			//case CSOB_TLACITKO:	return new CsobTlacitkoInformation();
+<span class="nc" id="L78">			default:	throw new IllegalArgumentException(&quot;Uknown payment type&quot;);</span>
+		}
+	}
+
+	/**
+	 * Returns all the electronic payment methods, which are currently implemented
+	 * @return {@link Set}&lt;String&gt;
+	 */
+	public static Set&lt;PaymentType&gt; getKnownPaymentMethods()
+	{
+<span class="nc" id="L88">		Set&lt;PaymentType&gt; storage = new HashSet&lt;PaymentType&gt;(Arrays.asList(PaymentType.values()));</span>
+<span class="nc" id="L89">		storage.removeAll(getBlackListPaymentMethods());</span>
+<span class="nc" id="L90">		return storage;</span>
+	}
+
+	public static final Set&lt;String&gt; getKnownPaymentMethodsToBasketString()
+	{
+<span class="nc" id="L95">		Set&lt;String&gt; paymentMethodsToBasketString = new HashSet&lt;String&gt;();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		for(PaymentType type:getKnownPaymentMethods())</span>
+		{
+<span class="nc" id="L98">			paymentMethodsToBasketString.add(type.toBasketString());</span>
+<span class="nc" id="L99">		}</span>
+<span class="nc" id="L100">		return Collections.unmodifiableSet(paymentMethodsToBasketString);</span>
+	}
+
+
+	public static boolean isPaymentMethodConfigured(PaymentType paymentType)
+	{
+<span class="nc" id="L106">		return paymentType.isConfigured();</span>
+	}
+
+	/**
+	 * Returns all electronic payment methods that are not working, either due to being in development/testing mode or that are not supported due to
+	 * insufficient security or because they don't support online responce
+	 * @return
+	 */
+	public static Set&lt;PaymentType&gt; getBlackListPaymentMethods()
+	{
+<span class="nc" id="L116">		Set&lt;PaymentType&gt; blackList = new HashSet&lt;PaymentType&gt;();</span>
+<span class="nc" id="L117">		blackList.add(PaymentType.CSOB_TLACITKO);</span>
+<span class="nc" id="L118">		blackList.add(PaymentType.OTP_BANK);</span>
+<span class="nc" id="L119">		blackList.add(PaymentType.POST_BANK);</span>
+<span class="nc" id="L120">		return blackList;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

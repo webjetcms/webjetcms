@@ -1,5 +1,6 @@
 const DT = require("./DT");
 const DTE = require("./DTE");
+const Document = require("./Document");
 
 const { I } = inject();
 
@@ -26,6 +27,7 @@ module.exports = {
         options.url = url;
 
         options.columnTypes = [];
+        options.columns = columns;
 
         I.say("Datatable.id="+options.id+" url="+url);
         try {
@@ -87,6 +89,13 @@ module.exports = {
         let skipRefresh = false;
         if (typeof options.skipRefresh != "undefined") skipRefresh=options.skipRefresh;
 
+        let skipSwitchDomain = false;
+        if (typeof options.skipSwitchDomain != "undefined") skipSwitchDomain=options.skipSwitchDomain;
+        options.skipSwitchDomain = skipSwitchDomain;
+
+        let switchDomainName = "mirroring.tau27.iway.sk";
+        if (typeof options.switchDomainName != "undefined") switchDomainName=options.switchDomainName;
+
         let testingData = options.testingData || {};
         /* Testovanie - pridavanie */
         I.say("Testovanie - pridavanie");
@@ -101,29 +110,44 @@ module.exports = {
 
         I.click("Pridať", {css: containerModal+"div.DTE_Form_Buttons"});
         DTE.waitForLoader();
-        requiredFields.forEach(field => {
-            var fieldFixed = field.replace(".", "\\.");
-            I.see("Povinné pole", `div.DTE_Field_Name_${fieldFixed}`);
-        });
-
-        requiredFields.forEach((field, index) => {
-            if (typeof testingData[field] != "undefined") testingData[index] = testingData[field];
-            if (typeof testingData[index] == "undefined") {
-                if (field.toLocaleLowerCase().indexOf("email")!=-1) {
-                    testingData[index] = `${field}-autotest-${randomTextShort}@onetimeusemail.com`;
-                } else {
-                    testingData[index] = `${field}-autotest-${randomText}`;
-                }
+        let index = 0;
+        for (const field of requiredFields) {
+            let fieldFixed = field.replace(".", "\\.");
+            let value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            if (typeof value == "undefined" || value == "") {
+                I.see("Povinné pole", `div.DTE_Field_Name_${fieldFixed}`);
+            } else {
+                I.say("-->Pole "+field+" je vyplnene, hodnota="+value);
+                testingData[index] = value;
             }
-            I.say("setting testingData["+index+"]="+ testingData[index] );
+            index++;
+        };
 
-            if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, testingData[index]);
-            else I.fillField(`#DTE_Field_${field}`, `${testingData[index]}`);
+        index = 0;
+        for (const field of requiredFields) {
+            let value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            if (typeof value == "undefined" || value == "") {
 
-            I.click("Pridať", {css: containerModal+"div.DTE_Form_Buttons"});
-            DTE.waitForLoader();
+                if (typeof testingData[field] != "undefined") testingData[index] = testingData[field];
+                if (typeof testingData[index] == "undefined") {
+                    if (field.toLocaleLowerCase().indexOf("email")!=-1) {
+                        testingData[index] = `${field}-autotest-${randomTextShort}@onetimeusemail.com`;
+                    } else {
+                        testingData[index] = `${field}-autotest-${randomText}`;
+                    }
+                }
+                I.say("setting testingData["+index+"]="+ testingData[index] );
+
+                if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, testingData[index]);
+                else I.fillField(`#DTE_Field_${field}`, `${testingData[index]}`);
+
+                I.click("Pridať", {css: containerModal+"div.DTE_Form_Buttons"});
+                DTE.waitForLoader();
+            }
             if (index != requiredFields.length - 1) I.dontSee("Povinné pole", `#DTE_Field_${field}`);
-        });
+
+            index++;
+        };
         options.testingData = testingData;
 
         //over, ze sa modal zatvoril/zaznam sa ulozil
@@ -141,8 +165,24 @@ module.exports = {
         /* Testovanie - vyhladavanie */
         I.say("Testovanie - vyhladavanie");
         requiredFields.forEach((field, index) => {
-            I.say(field+"=>"+testingData[index]);
-            DT.filter(field, testingData[index]);
+            let fieldType = options.columnTypes[field];
+            I.say(field+"["+index+"]=>"+testingData[index]+" type="+fieldType);
+            if ("datetime" === fieldType || "date" === fieldType) {
+                field = "from-"+field;
+            }
+
+            if ("select" === fieldType) {
+                //DT.filterSelect(field, testingData[index]);
+                //we must select by option value not text
+                I.selectOption({ css: "div.dataTables_scrollHeadInner select.dt-filter-" + field }, testingData[index]);
+                I.executeScript(({field}) => {
+                    $("div.dataTables_scrollHeadInner select.dt-filter-" + field).selectpicker('refresh');
+                }, {field});
+                I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + field });
+                DT.waitForLoader();
+            } else {
+                DT.filter(field, testingData[index]);
+            }
             I.see(testingData[index]);
             DT.clearFilter(field);
         });
@@ -163,6 +203,9 @@ module.exports = {
 
         requiredFields.forEach((field, index) => {
             I.say("getting testingData["+index+"]="+ testingData[index] +" type="+options.columnTypes[field]);
+
+            let fieldType = options.columnTypes[field];
+            if ("datetime" === fieldType || "date" === fieldType || "select" === fieldType) return;
 
             if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, testingData[index]+CHANGE_TEXT);
             else DTE.appendField(field, CHANGE_TEXT);
@@ -191,6 +234,60 @@ module.exports = {
         I.say("Testing editSearchSteps: "+(typeof options.editSearchSteps));
         if (typeof options.editSearchSteps == "function") {
             options.editSearchSteps(I, options, DT, DTE);
+        }
+
+        /* Testovanie - vyhladavanie zaznamu v inej domene */
+        I.say("Testovanie - vyhladavanie zaznamu v inej domene");
+        if (true !== options.skipSwitchDomain){
+            previousSelectedDomain = await I.grabTextFrom('div.js-domain-toggler div.bootstrap-select button');
+            previousSelectedDomain = previousSelectedDomain.trim();
+
+            const firstRowId = await I.grabTextFrom('.datatable-column-width');
+
+            I.click({css: container+"td.dt-select-td"});
+            I.click({css: container+"button.buttons-edit"});
+            DTE.waitForEditor(options.id);
+            const dataTableName = options.dataTable;
+            const newUrl = await I.executeScript(({dataTableName, firstRowId}) => {
+                return WJ.urlAddPath(window[dataTableName].DATA.url, "/"+firstRowId);
+            }, {dataTableName, firstRowId});
+            I.clickCss(".btn-close-editor")
+
+            Document.switchDomain(switchDomainName);
+            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+
+            const itsThereIfFoundByName = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
+
+            DT.filter(requiredFields[0], '');
+            DT.filter(options.columns[0].name, firstRowId);
+
+            const itsThereIfFoundById = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
+
+            await I.executeScript((newUrl) =>
+                $.get(newUrl).done((json)=>{$(".dataTables_scrollBody").text(JSON.stringify(json))}), newUrl
+            );
+
+            const response = await I.grabTextFrom(".dataTables_scrollBody");
+            I.say("Response: "+response);
+
+            I.say("Go back to previous domain");
+            Document.switchDomain(previousSelectedDomain);
+
+            I.assertNotContain(response, `${testingData[0]}${CHANGE_TEXT}`, 'Error I found value in REST API call from domain');
+
+            if(itsThereIfFoundByName > 0) {
+                let errorMsg = "Error I found value from domain by name " + previousSelectedDomain + " inside domain " + switchDomainName + ": " + requiredFields[0] + " - " + `${testingData[0]}${CHANGE_TEXT}`;
+                I.assertEqual("", errorMsg);
+            }
+
+            if(itsThereIfFoundById > 0) {
+                let errorMsg = "Error I found value from domain by id " + previousSelectedDomain + " inside domain " + switchDomainName + ": " + requiredFields[0] + " - " + `${testingData[0]}${CHANGE_TEXT}`;
+                I.assertEqual("", errorMsg);
+            }
+
+            I.say("We must again filter out our record - state before we switched domains");
+            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
         }
 
         /* Testovanie - custom beforeDelete funkcia */

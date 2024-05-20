@@ -47,7 +47,7 @@ Vykonanie **môže** odstrániť obaľovací ```div``` element. Správanie je na
 
 Použitie ```data-iwcm-remove``` zjednodušene z pohľadu HTML kódu vykonáva pri nastavení ```true``` volanie ```element[0].outerHTML=data``` (čiže nahradí sa aj tag na ktorom je to nastavené), inak vykoná ```element.html(data)```, čiže nahradí vnútro tag-u.
 
-**Zároveň odporúčame** využiť vlastnosť značky ```data-iwcm-write```, ktorá **odstraňuje telo** ```div``` značky. Môžete tak **efektívne prototypovať na úrovni html bez spustenia šablóny vo WebJETe**:
+**Zároveň odporúčame** využiť vlastnosť značky ```data-iwcm-write```, ktorá **odstraňuje telo**, ```div``` značky. Môžete tak **efektívne prototypovať na úrovni html bez spustenia šablóny vo WebJETe**:
 
 ```html
 <article data-iwcm-write="doc_data">

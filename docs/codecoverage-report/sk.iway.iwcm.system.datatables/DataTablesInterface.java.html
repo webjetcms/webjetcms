@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTablesInterface.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatables</a> &gt; <span class="el_source">DataTablesInterface.java</span></div><h1>DataTablesInterface.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatables;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ *  DataTablesInterface.java
+ *  Interface class that allows communication with the DataTables Editor.
+ *  For example of implementation see package sk.iway.iwcm.components.enumerations
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s (c) 2001-2018
+ * author       $Author: mhruby $
+ * version      $Revision: 1.0 $
+ * created      Date: 27.03.2018 12:00:00
+ * modified     $Date: 27.03.2018 12:0:00 $
+ */
+
+
+public interface DataTablesInterface {
+
+    /**
+     * Perform select all
+     * @return List&lt;Object&gt;
+     */
+    List&lt;Object&gt; list(HttpServletRequest request);
+
+    /**
+     * Perform insert/update/delete.
+     * @param parsedRequest parsed input map that contains input form fields
+     * @return list with inserted/edited object. If input is invalid return null.
+     */
+    List&lt;Object&gt; save(HttpServletRequest request, Map&lt;Integer,Map&lt;String, String&gt;&gt; parsedRequest);
+
+    /**
+     * Getter for input errors.
+     * @return List of DataTablesFieldError
+     */
+    List&lt;DataTablesFieldError&gt; getFieldErrors();
+
+    String getError();
+
+    boolean canSave(Identity user);
+
+    /**
+     * Hashtabulka uploadnutych suborov, key je unikatny nazov (idecko) suboru, value je URL uploadnuteho suboru
+     * @return
+     */
+    default Hashtable&lt;String, String&gt; getFiles()
+    {
+<span class="nc" id="L68">        return null;</span>
+    }
+
+    /**
+     * Default adresar pre upload suborov
+     * @return
+     */
+    default String getUploadDir()
+    {
+<span class="nc" id="L77">        return &quot;/images/protected/_upload_temp&quot;;</span>
+    }
+
+    /**
+     * Overenie, ci je dany FileItem mozne uploadnut (kontrola typu, velkosti, ...)
+     * @param item
+     * @return
+     */
+<span class="nc" id="L85">    default boolean canUpload(FileItem item) { return true; }</span>
+
+    /**
+     * Default implementacia uploadu
+     * @param request
+     */
+    default boolean upload(HttpServletRequest request)
+    {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L94">        Map&lt;String, FileItem&gt; files = (Map&lt;String,FileItem&gt;)request.getAttribute(&quot;MultipartWrapper.files&quot;);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        for (Map.Entry&lt;String, FileItem&gt; entry : files.entrySet())</span>
+        {
+            //String name = entry.getKey();
+<span class="nc" id="L98">            FileItem item = entry.getValue();</span>
+
+<span class="nc" id="L100">            String randomName = RandomStringUtils.random(10, true, true);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (canUpload(item))</span>
+            {
+<span class="nc" id="L103">                String ext = FileTools.getFileExtension(item.getName());</span>
+<span class="nc" id="L104">                String fileUrl = getUploadDir()+&quot;/&quot;+randomName+&quot;.&quot;+ext;</span>
+<span class="nc" id="L105">                File dir = new File(Tools.getRealPath(getUploadDir()));</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                if (dir.exists()==false) dir.mkdirs();</span>
+<span class="nc" id="L107">                File f = new File(Tools.getRealPath(fileUrl));</span>
+
+<span class="nc" id="L109">                FileOutputStream fos = null;</span>
+                //item.getInputStream()
+                try
+                {
+<span class="nc" id="L113">                    f.createNewFile();</span>
+<span class="nc" id="L114">                    fos = new FileOutputStream(f);</span>
+<span class="nc" id="L115">                    IOUtils.write(IOUtils.toByteArray(item.getInputStream()), fos);</span>
+
+<span class="nc" id="L117">                    getFiles().put(randomName, fileUrl);</span>
+
+<span class="nc" id="L119">                    return true;</span>
+<span class="nc" id="L120">                } catch (IOException e)</span>
+                {
+<span class="nc" id="L122">                    sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                    if (fos!=null)</span>
+                    {
+<span class="nc" id="L125">                        try { fos.close(); } catch (IOException e1) { sk.iway.iwcm.Logger.error(e1); }</span>
+                    }
+                }
+            }
+<span class="nc" id="L129">        }</span>
+
+        //zmaz z tempu stare subory
+<span class="nc bnc" id="L132" title="All 4 branches missed.">        if (getUploadDir().contains(&quot;temp&quot;) || getUploadDir().contains(&quot;tmp&quot;))</span>
+        {
+<span class="nc" id="L134">            IwcmFile tempDir = new IwcmFile(Tools.getRealPath(getUploadDir()));</span>
+<span class="nc" id="L135">            FileTools.deleteDirTree(tempDir, 8 * 60 * 60 * 1000L);</span>
+        }
+<span class="nc" id="L137">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

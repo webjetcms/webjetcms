@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsSelfController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsSelfController.java</span></div><h1>UserDetailsSelfController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+/**
+ * Controller to edit user details for current user without useredit perms (show only limited fields)
+ */
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/user-self&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.isAdmin()&quot;)
+public class UserDetailsSelfController extends DatatableRestControllerV2&lt;UserDetailsSelfEntity, Long&gt; {
+
+    private final UserDetailsService userDetailsService;
+    private final UserDetailsSelfRepository userDetailsSelfRepository;
+
+    @Autowired
+    public UserDetailsSelfController(UserDetailsSelfRepository userDetailsSelfRepository, UserDetailsService userDetailsService) {
+<span class="fc" id="L39">        super(userDetailsSelfRepository);</span>
+<span class="fc" id="L40">        this.userDetailsSelfRepository = userDetailsSelfRepository;</span>
+<span class="fc" id="L41">        this.userDetailsService = userDetailsService;</span>
+<span class="fc" id="L42">    }</span>
+
+    @Override
+    public Page&lt;UserDetailsSelfEntity&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L47">        List&lt;UserDetailsSelfEntity&gt; all = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L48">        UserDetailsSelfEntity self = userDetailsSelfRepository.getById(Long.valueOf(getUser().getUserId()));</span>
+<span class="fc" id="L49">        all.add(self);</span>
+
+<span class="fc" id="L51">        DatatablePageImpl&lt;UserDetailsSelfEntity&gt; page = new DatatablePageImpl&lt;&gt;(all);</span>
+
+<span class="fc" id="L53">        return page;</span>
+    }
+
+    @Override
+	public UserDetailsSelfEntity insertItem(UserDetailsSelfEntity entity) {
+<span class="nc" id="L58">		throwPermsDenied();</span>
+<span class="nc" id="L59">        return null;</span>
+	}
+
+    @Override
+	public UserDetailsSelfEntity editItem(UserDetailsSelfEntity entity, long id) {
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (id != getUser().getUserId()) {</span>
+<span class="nc" id="L65">            throwPermsDenied();</span>
+        }
+<span class="fc" id="L67">        UserDetailsSelfEntity saved = super.editItem(entity, id);</span>
+<span class="fc" id="L68">        UserDetailsService.savePassword(entity.getPassword(), entity.getId().intValue());</span>
+<span class="fc" id="L69">        return saved;</span>
+	}
+
+    @Override
+    public UserDetailsSelfEntity getOneItem(long id) {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (id != getUser().getUserId()) throwPermsDenied();</span>
+
+<span class="fc" id="L76">        UserDetailsSelfEntity one = super.getOneItem(id);</span>
+
+        //nastav heslo na Unchanged, aby presla validacia
+<span class="fc" id="L79">        one.setPassword(UserTools.PASS_UNCHANGED);</span>
+
+<span class="fc" id="L81">        return one;</span>
+    }
+
+    @Override
+    public void afterSave(UserDetailsSelfEntity entity, UserDetailsSelfEntity saved) {
+        //update current user if editing self
+<span class="fc" id="L87">        userDetailsService.updateSelf(saved, getUser(), getRequest());</span>
+<span class="fc" id="L88">    }</span>
+
+    @SuppressWarnings(&quot;all&quot;)
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, UserDetailsSelfEntity&gt; target, Identity user, Errors errors, Long id, UserDetailsSelfEntity entity) {
+
+<span class="fc" id="L94">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L96">        userDetailsService.validatePassword(entity, false, true, prop, errors);</span>
+
+        //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(entity.getEmail()) &amp;&amp; Tools.isEmail(entity.getEmail())==false) {</span>
+<span class="nc" id="L100">            errors.rejectValue(&quot;errorField.email&quot;, null, prop.getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
+        }
+
+<span class="fc" id="L103">    }</span>
+
+    private void throwPermsDenied() {
+<span class="nc" id="L106">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L107">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

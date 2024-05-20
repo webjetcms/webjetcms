@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CronTask.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cron</a> &gt; <span class="el_source">CronTask.java</span></div><h1>CronTask.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cron;
+
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+import javax.validation.constraints.NotBlank;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+
+/**
+ * CronTask.java
+ * &lt;p&gt;
+ * Encapsulates a cron task details in a java bean fashion
+ *
+ * @author $Author: marosurbanec $
+ * @version $Revision: 1.3 $
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2010
+ * @created Date: 9.7.2010 15:52:55
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+public class CronTask {
+	@DataTableColumn(
+			inputType = {DataTableColumnType.ID},
+			title = &quot;[[#{components.cron_task.id}]]&quot;
+	)
+	private Long id;
+
+<span class="fc" id="L32">	@DataTableColumn(</span>
+			inputType = {DataTableColumnType.OPEN_EDITOR},
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.task_name}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String taskName = &quot;&quot;;
+
+<span class="fc" id="L44">	@NotBlank</span>
+	@DataTableColumn(
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.task}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String task = &quot;&quot;;
+
+<span class="fc" id="L56">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.param}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							attr = @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+					)
+			}
+	)
+	private String params = &quot;&quot;;
+
+<span class="fc" id="L68">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.year}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String years = &quot;*&quot;;
+
+<span class="fc" id="L79">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.day_in_month}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String daysOfMonth = &quot;*&quot;;
+
+<span class="fc" id="L90">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.day_in_week}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String daysOfWeek = &quot;*&quot;;
+
+<span class="fc" id="L101">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.month}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String months = &quot;*&quot;;
+
+<span class="fc" id="L112">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.hour}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String hours = &quot;*&quot;;
+
+<span class="fc" id="L123">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.minute}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;
+					)
+			}
+	)
+	private String minutes = &quot;0&quot;;
+
+<span class="fc" id="L134">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text-wrap&quot;,
+			title = &quot;[[#{components.cron_task.second}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							attr = @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+					)
+			}
+	)
+	private String seconds = &quot;0&quot;;
+
+<span class="fc" id="L146">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-boolean-true&quot;,
+			title = &quot;[[#{components.cron_task.after_start}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;checkbox&quot;
+					)
+			}
+	)
+	private boolean runAtStartup = false;
+
+<span class="fc" id="L157">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-boolean-true&quot;,
+			title = &quot;[[#{components.cron_task.allow}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;checkbox&quot;
+					)
+			}
+	)
+	private boolean enableTask = true;
+
+<span class="fc" id="L168">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-boolean-true&quot;,
+			title = &quot;[[#{components.cron_task.audit}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;checkbox&quot;
+					)
+			}
+	)
+	private boolean audit = true;
+<span class="fc" id="L178">	private boolean businessDays = false;</span>
+
+<span class="fc" id="L180">	@DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;[[#{admin.crontab.cluster_node}]]&quot;)</span>
+	private String clusterNode = &quot;all&quot;;
+
+<span class="fc" id="L183">	public CronTask() {</span>
+<span class="fc" id="L184">	}</span>
+
+	public String receiveCronPattern() {
+<span class="fc" id="L187">		String dayOfWeek = this.daysOfWeek;</span>
+		/* jeeff: businessDays uz nepouzivame (GUI nepodporuje)
+		if (&quot;*&quot;.equals(dayOfWeek) &amp;&amp; businessDays)
+			dayOfWeek = &quot;1-5&quot;;
+		*/
+
+<span class="fc" id="L193">		StringBuilder cronPattern = new StringBuilder();</span>
+<span class="fc" id="L194">		cronPattern.append(seconds).append(' ').</span>
+<span class="fc" id="L195">				append(minutes).append(' ').</span>
+<span class="fc" id="L196">				append(hours).append(' ').</span>
+<span class="fc" id="L197">				append(daysOfMonth).append(' ').</span>
+<span class="fc" id="L198">				append(months).append(' ').</span>
+<span class="fc" id="L199">				append(dayOfWeek).append(' ').</span>
+<span class="fc" id="L200">				append(years);</span>
+<span class="fc" id="L201">		return cronPattern.toString();</span>
+	}
+
+	public Class&lt;?&gt; receiveClazz() throws ClassNotFoundException {
+<span class="fc" id="L205">		return Class.forName(task);</span>
+	}
+
+	public String[] receiveArgs() {
+<span class="fc bfc" id="L209" title="All 2 branches covered.">		if (isEmpty(params))</span>
+<span class="fc" id="L210">			return new String[]{};</span>
+<span class="fc" id="L211">		return params.split(&quot;\\|&quot;);</span>
+	}
+
+	public String getTaskName() {
+<span class="fc" id="L215">		return taskName;</span>
+	}
+
+	public void setTaskName(String taskName) {
+<span class="fc" id="L219">		this.taskName = taskName;</span>
+<span class="fc" id="L220">	}</span>
+
+	public String getSeconds() {
+<span class="fc" id="L223">		return seconds;</span>
+	}
+
+	public void setSeconds(String seconds) {
+<span class="fc" id="L227">		this.seconds = seconds;</span>
+<span class="fc" id="L228">	}</span>
+
+	public String getMinutes() {
+<span class="fc" id="L231">		return minutes;</span>
+	}
+
+	public void setMinutes(String minutes) {
+<span class="fc" id="L235">		this.minutes = minutes;</span>
+<span class="fc" id="L236">	}</span>
+
+	public String getHours() {
+<span class="fc" id="L239">		return hours;</span>
+	}
+
+	public void setHours(String hours) {
+<span class="fc" id="L243">		this.hours = hours;</span>
+<span class="fc" id="L244">	}</span>
+
+	public String getMonths() {
+<span class="fc" id="L247">		return months;</span>
+	}
+
+	public void setMonths(String months) {
+<span class="fc" id="L251">		this.months = months;</span>
+<span class="fc" id="L252">	}</span>
+
+	public String getYears() {
+<span class="fc" id="L255">		return years;</span>
+	}
+
+	public void setYears(String years) {
+<span class="fc" id="L259">		this.years = years;</span>
+<span class="fc" id="L260">	}</span>
+
+	public String getDaysOfMonth() {
+<span class="fc" id="L263">		return daysOfMonth;</span>
+	}
+
+	public void setDaysOfMonth(String daysOfMonth) {
+<span class="fc" id="L267">		this.daysOfMonth = daysOfMonth;</span>
+<span class="fc" id="L268">	}</span>
+
+	public String getDaysOfWeek() {
+<span class="fc" id="L271">		return daysOfWeek;</span>
+	}
+
+	public void setDaysOfWeek(String daysOfWeek) {
+<span class="fc" id="L275">		this.daysOfWeek = daysOfWeek;</span>
+<span class="fc" id="L276">	}</span>
+
+	public String getTask() {
+<span class="fc" id="L279">		return task;</span>
+	}
+
+	public void setTask(String task) {
+<span class="fc" id="L283">		this.task = task;</span>
+<span class="fc" id="L284">	}</span>
+
+	public String getParams() {
+<span class="fc" id="L287">		return params;</span>
+	}
+
+	public void setParams(String params) {
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		this.params = params == null ? &quot;&quot; : params;</span>
+<span class="fc" id="L292">	}</span>
+
+	public boolean isBusinessDays() {
+<span class="fc" id="L295">		return businessDays;</span>
+	}
+
+	public void setBusinessDays(boolean businessDays) {
+<span class="fc" id="L299">		this.businessDays = businessDays;</span>
+<span class="fc" id="L300">	}</span>
+
+	public String getClusterNode() {
+<span class="fc" id="L303">		return clusterNode;</span>
+	}
+
+	public void setClusterNode(String clusterNode) {
+<span class="fc" id="L307">		this.clusterNode = clusterNode;</span>
+<span class="fc" id="L308">	}</span>
+
+	public Long getId() {
+<span class="fc" id="L311">		return id;</span>
+	}
+
+	public void setId(Long id) {
+<span class="fc" id="L315">		this.id = id;</span>
+<span class="fc" id="L316">	}</span>
+
+	@Override
+	public String toString() {
+<span class="nc" id="L320">		return String.format(&quot;%s that runs every %s, audit task: &quot; + getAudit(), getTask(), receiveCronPattern());</span>
+	}
+
+	public void setAudit(boolean log) {
+<span class="fc" id="L324">		this.audit = log;</span>
+<span class="fc" id="L325">	}</span>
+
+	public boolean getAudit() {
+<span class="fc" id="L328">		return audit;</span>
+	}
+
+	public boolean isRunAtStartup() {
+<span class="fc" id="L332">		return runAtStartup;</span>
+	}
+
+	public void setRunAtStartup(boolean runAtStartup) {
+<span class="fc" id="L336">		this.runAtStartup = runAtStartup;</span>
+<span class="fc" id="L337">	}</span>
+
+	public boolean isEnableTask() {
+<span class="fc" id="L340">		return enableTask;</span>
+	}
+
+	public void setEnableTask(boolean enableTask) {
+<span class="fc" id="L344">		this.enableTask = enableTask;</span>
+<span class="fc" id="L345">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

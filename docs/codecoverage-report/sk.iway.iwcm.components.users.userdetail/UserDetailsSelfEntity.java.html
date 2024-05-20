@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsSelfEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsSelfEntity.java</span></div><h1>UserDetailsSelfEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ * Entity to edit user details for current user without useredit perms (show only limited fields)
+ */
+@Entity
+@Table(name = &quot;users&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_EDIT)
+<span class="fc" id="L25">public class UserDetailsSelfEntity extends UserDetailsBasic {</span>
+
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.email}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;useredit.access&quot;)
+                }
+            )
+        },
+        sortAfter = &quot;photo&quot;
+    )
+    private String email;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

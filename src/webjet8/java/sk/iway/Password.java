@@ -1,13 +1,11 @@
 package sk.iway;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.users.PasswordsHistoryDB;
-import xjava.security.IllegalBlockSizeException;
 
 import javax.servlet.http.HttpSession;
 import java.io.ByteArrayOutputStream;
@@ -31,8 +29,6 @@ public class Password
    //kluc sifry
    private static final Random rand = new Random();
 
-   xjava.security.Cipher alg;
-
    /**
     *  Constructor for the Password object
     *
@@ -40,9 +36,7 @@ public class Password
     */
    public Password() throws Exception
    {
-      java.security.Security.addProvider(new cryptix.provider.Cryptix());
-      //alg = xjava.security.Cipher.getInstance("Rijndael", "Cryptix");
-      alg = xjava.security.Cipher.getInstance(new cryptix.provider.cipher.Rijndael(), null, null);
+		//originaly there was instance of RijndaelCipher
    }
 
    /**
@@ -54,31 +48,16 @@ public class Password
     */
    public String encrypt(String password) throws Exception
    {
-   	try {
-   			String pw = password;
-			//dlzka encryptovaneho stringu musi byt nasobok 16
-			if (pw.length() % 16 > 0) {
-				int len = ((pw.length() / 16) + 1) * 16;
-				pw = pw + "                                 ";
-				if (pw.length() > len) {
-					pw = pw.substring(0, len);
-				}
+		String pw = password;
+		//dlzka encryptovaneho stringu musi byt nasobok 16
+		if (pw.length() % 16 > 0) {
+			int len = ((pw.length() / 16) + 1) * 16;
+			pw = pw + "                                 ";
+			if (pw.length() > len) {
+				pw = pw.substring(0, len);
 			}
-			byte[] ect;
-			//byte[] dct;
-			//String a;
-			//String b;
-
-			String to_crypt = fromByteArray(pw.getBytes());
-
-			RawSecretKey key = new RawSecretKey("Rijndael", Hex.fromString(getKey()));
-
-			alg.initEncrypt(key);
-			ect = alg.crypt(Hex.fromString(to_crypt));
-			//a = Hex.toString(ect);
-
-			return (fromByteArray(ect));
-		} catch (IllegalBlockSizeException ex) { return ""; }
+		}
+		return Rijndael.encrypt(pw, getKey());
    }
 
 
@@ -91,26 +70,7 @@ public class Password
     */
    public String decrypt(String password) throws Exception
    {
-      if (password == null)
-      {
-         return ("");
-      }
-      if (password.length() < 10)
-      {
-         return (password);
-      }
-
-      byte[] pass = toByteArray(password);
-      byte[] dct;
-      //String a;
-      String b;
-
-      RawSecretKey key = new RawSecretKey("Rijndael", Hex.fromString(getKey()));
-
-      alg.initDecrypt(key);
-      dct = alg.crypt(pass);
-      b = Hex.toString(dct);
-      return (new String(toByteArray(b)).trim());
+      return Rijndael.decrypt(password, getKey());
    }
 
    /**

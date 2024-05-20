@@ -346,7 +346,7 @@ public class UrlRedirectDB
 		{
 			db_conn = DBPool.getConnection();
 			String query = "SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date <= ? OR publish_date IS NULL ORDER BY publish_date DESC, insert_date DESC";
-			if(Constants.DB_TYPE == Constants.DB_ORACLE) {
+			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
 				query = "SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date <= ? OR publish_date IS NULL ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST";
 			}
 			ps = db_conn.prepareStatement(query);
@@ -412,7 +412,7 @@ public class UrlRedirectDB
 		{
 			db_conn = DBPool.getConnection();
 			String query = "SELECT url_redirect_id FROM url_redirect WHERE publish_date >= ? ORDER BY publish_date DESC, insert_date DESC";
-			if(Constants.DB_TYPE == Constants.DB_ORACLE) {
+			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
 				query = "SELECT url_redirect_id FROM url_redirect WHERE publish_date >= ? ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST";
 			}
 			ps = db_conn.prepareStatement(query);
@@ -512,7 +512,7 @@ public class UrlRedirectDB
 			}
 
 			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);
-            if(Constants.DB_TYPE == Constants.DB_ORACLE) {
+            if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
                 query.addOrdering(new ExpressionBuilder().get("publishDate").descending().nullsLast());
                 query.addOrdering(new ExpressionBuilder().get("insertDate").descending().nullsLast());
             } else {

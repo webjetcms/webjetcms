@@ -18,7 +18,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 </script>
 
 <div class="row title">
-    <h1 class="page-title"><i class="fa icon-pie-chart"></i><iwcm:text key="menu.stat"/><i class="fa fa-angle-right"></i><iwcm:text key="stat_menu.heat_map"/></h1>
+    <h1 class="page-title"><i class="fa icon-pie-chart"></i><iwcm:text key="menu.stat"/><i class="ti ti-chevron-right"></i><iwcm:text key="stat_menu.heat_map"/></h1>
 </div>
 
 <div id="waitDiv" style="text-align:center; color: red;">

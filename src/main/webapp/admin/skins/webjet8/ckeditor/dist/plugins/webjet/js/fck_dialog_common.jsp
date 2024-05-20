@@ -3,7 +3,7 @@
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/common.js", null, request, response);
 %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 
 /*
  * FCKeditor - The text editor for internet

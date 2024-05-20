@@ -25,11 +25,24 @@ body:not(.page-builder) .form-control {
 }
 
 body:not(.page-builder) div.input-group span.input-group-btn .btn {
-    border: 1px solid #0063FB;
+    border: 1px solid #e5e5e5;
+    height: 100%;
+    border-top-right-radius: 6px !important;
+    border-bottom-right-radius: 6px !important;
+    vertical-align: middle;
+    padding-top: 8px;
+    background-color: white;
+    color: #13151B !important;
+    border-left-width: 0px;
 }
-div.date-picker span.input-group-btn .btn {
-    /* admin_bots.jsp calendar button */
-    border-width: 0px !important;
+body:not(.page-builder) div.input-group span.input-group-btn .btn:has(i.ti) {
+    /* file_archiv_upload.jsp */
+    padding-top: 0px;
+    border: 1px solid #ddd;
+    border-left-width: 0px;
+}
+body:not(.page-builder) div.input-group span.input-group-btn .btn i.ti {
+    color: #13151B !important;
 }
 
 /* header */
@@ -44,6 +57,10 @@ body, .page-header.navbar {
 
 div.header-inner {
     color: #13151b !important;
+}
+i.ti, .page-header.navbar .top-menu .navbar-nav > li.dropdown > .dropdown-toggle > i {
+    font-size: 1.1rem;
+    vertical-align: middle;
 }
 a.navbar-brand {
     width: 220px;
@@ -98,9 +115,6 @@ a.navbar-brand img {
 .page-header .navbar-nav li.dropdown .dropdown-toggle i {
     color: #13151b !important;
 }
-.page-header.navbar .top-menu .navbar-nav > li.dropdown > .dropdown-toggle > i {
-    font-size: 14px;
-}
 .page-header .top-menu .dropdown-quick-sidebar-toggler > .dropdown-toggle {
     padding-top: 12px !important;
     padding-right: 4px !important;
@@ -115,9 +129,6 @@ a.navbar-brand img {
 .page-header.navbar .top-menu .navbar-nav > li.dropdown.helper {
     margin-right: 67px;
     margin-top: 3px;
-}
-.page-header.navbar .top-menu .navbar-nav > li.dropdown i {
-    font-size: 14px;
 }
 .page-header.navbar .top-menu .navbar-nav > li.dropdown.helper i {
     padding-right: 4px;
@@ -195,8 +206,10 @@ div.page-content div.row.title {
 .row.title h1.page-title i {
     display: none;
 }
-.row.title h1.page-title i.fa-angle-right {
+.row.title h1.page-title i.ti-chevron-right {
     display: inline-block;
+    margin-left: 4px;
+    margin-right: 6px;
 }
 
 /* bootstrap stylovanie */
@@ -505,12 +518,11 @@ div.row.title.title-hidden .page-title {
 
 .md-main-menu__item__link i:first-child {
     left: 15px;
-    font-size: 15px
+    font-size: 1.3rem;
 }
 
-.md-main-menu__item__link i.fa-chevron-down {
+.md-main-menu__item__link i.ti-chevron-down {
     right: 15px;
-    font-size: 10px;
     transition: transform .5s ease
 }
 
@@ -574,7 +586,7 @@ div.row.title.title-hidden .page-title {
     background-color: #fff
 }
 
-.md-main-menu .md-main-menu__item--open i.fa-chevron-down {
+.md-main-menu .md-main-menu__item--open i.ti-chevron-down {
     transform: rotate(-180deg) translateY(50%)
 }
 
@@ -675,7 +687,7 @@ div.row.title.title-hidden .page-title {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 19px;
+    font-size: 22px;
     color: #c2c6d2;
     transition: all .3s ease
 }
@@ -1016,4 +1028,9 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
 .tab-pane .tab-page .row {
     margin-right: 0px;
     margin-left: 0px;
+}
+
+#componentsWindowTableMainDiv div.input-group span.input-group-btn span.btn:has(i.ti) {
+    /* editor_component media/gallery */
+    padding-top: 8px;
 }

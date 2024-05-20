@@ -22,6 +22,8 @@ public class SessionDetails
    private String loggedUserName = null;
    private int loggedUserId = -1;
    private boolean admin = false;
+   private int domainId;
+   private String domainName;
 
 	public String getRemoteAddr()
 	{
@@ -95,4 +97,21 @@ public class SessionDetails
 	{
 		this.admin = admin;
 	}
+	public int getDomainId()
+	{
+		return domainId;
+	}
+	public void setDomainId(int domainId)
+	{
+		this.domainId = domainId;
+	}
+	public String getDomainName()
+	{
+		return domainName;
+	}
+	public void setDomainName(String domainName)
+	{
+		this.domainName = domainName;
+	}
+
 }

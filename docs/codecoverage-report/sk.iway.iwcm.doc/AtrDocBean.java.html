@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtrDocBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">AtrDocBean.java</span></div><h1>AtrDocBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+
+/**
+ *  Rozsiruje DocDetails o zoznam atributov, pouziva sa pri tabulkovom vypise atributov pre viacero dokumentov. Nechcel
+ * som to davat priamo do DocDetails, aby tam zbytocne nevysel ArrayList s atributami, ktory naviac zvycajne bude null.
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Piatok, 2003, oktďż˝ber 24
+ *@modified     $Date: 2003/12/01 08:27:43 $
+ */
+<span class="fc" id="L24">public class AtrDocBean extends DocDetails</span>
+{
+   private List&lt;AtrBean&gt; atrList;
+
+   public List&lt;AtrBean&gt; getAtrList()
+   {
+<span class="fc bfc" id="L30" title="All 2 branches covered.">      if (atrList == null)</span>
+      {
+<span class="fc" id="L32">         atrList = new ArrayList&lt;&gt;();</span>
+      }
+<span class="fc" id="L34">      return atrList;</span>
+   }
+   public void addAtr(AtrBean atr)
+   {
+<span class="fc" id="L38">      getAtrList().add(atr);</span>
+<span class="fc" id="L39">   }</span>
+
+   /**
+    * Rozparsuje meno parametra, ktory je vo formate atrs_TYP_MENO, kde TYP je
+    * sposob vyhodnotenia (SS-substring, EQ-equal, LT-less than,GT-greater than)
+    * @param param
+    * @return
+    */
+   private String[] parseParam(String param)
+   {
+<span class="fc" id="L49">      String[] ret = null;</span>
+<span class="fc" id="L50">      StringTokenizer st = new StringTokenizer(param, &quot;_&quot;);</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">      if (st.countTokens()&gt;2)</span>
+      {
+<span class="fc" id="L53">         ret = new String[2];</span>
+         //atrs_
+<span class="fc" id="L55">         st.nextToken();</span>
+         //typ
+<span class="fc" id="L57">         ret[0] = st.nextToken();</span>
+         //meno
+<span class="fc" id="L59">         ret[1] = st.nextToken();</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">         while (st.hasMoreTokens())</span>
+         {
+<span class="nc" id="L62">         	ret[1] = ret[1] + &quot;_&quot; + st.nextToken();</span>
+         }
+      }
+<span class="fc" id="L65">      return(ret);</span>
+   }
+
+   /**
+    * vrati true, ak je treba tento riadok vymazat (nevyhovuje podmienke)
+    * @param param
+    * @param paramValue
+    * @return
+    */
+   public boolean mustRemove(String param, String paramValue)
+   {
+<span class="nc" id="L76">   	String[] paramValues = new String[1];</span>
+<span class="nc" id="L77">   	paramValues[0] = paramValue;</span>
+<span class="nc" id="L78">   	return mustRemove(param, paramValues);</span>
+   }
+
+   public boolean mustRemove(String param, String[] paramValues)
+   {
+      //rozparsuj param na hodnoty
+<span class="fc" id="L84">      String[] apv = parseParam(param);</span>
+      int i;
+<span class="fc bfc" id="L86" title="All 2 branches covered.">      for (i=0; i&lt;paramValues.length; i++)</span>
+      {
+<span class="fc" id="L88">	      paramValues[i] = DB.internationalToEnglish(paramValues[i]).toLowerCase();</span>
+	      // z nejakeho dovodu sa zle prenasa + v URL, takze nahradime za medzeru
+<span class="fc" id="L90">	      paramValues[i] = paramValues[i].replace('+', ' ');</span>
+      }
+
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">      if (apv != null)</span>
+      {
+<span class="fc" id="L95">         String type = apv[0].toUpperCase();</span>
+<span class="fc" id="L96">         String name = DocTools.removeChars(DB.internationalToEnglish(apv[1])).replace('-', '_');</span>
+         String atrValue;
+         double iAtrValue;
+         double iParamValue;
+<span class="fc bfc" id="L100" title="All 2 branches covered.">         for (AtrBean atrBean : atrList)</span>
+         {
+<span class="fc" id="L102">         	String atrName = DocTools.removeChars(DB.internationalToEnglish(atrBean.getAtrName())).replace('-', '_');</span>
+<span class="fc" id="L103">            Logger.debug(this,&quot;porovnavam: &quot;+atrName+&quot;=&quot;+DB.internationalToEnglish(atrBean.getValue()).toLowerCase()+&quot; vs &quot;+name + &quot;=&quot;+paramValues[0]+&quot; type=&quot;+type);</span>
+
+<span class="pc bpc" id="L105" title="1 of 4 branches missed.">            if (atrName.equalsIgnoreCase(name) || name.equals(Integer.toString(atrBean.getAtrId())))</span>
+            {
+<span class="fc" id="L107">            	atrValue = DB.internationalToEnglish(atrBean.getValue()).toLowerCase();</span>
+            	//z nejakeho dovodu sa zle prenasa + v URL, takze nahradime za medzeru
+<span class="fc" id="L109">            	atrValue = atrValue.replace('+', ' ');</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">               if (&quot;SS&quot;.equals(type))</span>
+               {
+                  //v tabulke sa musi nachadzat substring
+<span class="fc bfc" id="L113" title="All 2 branches covered.">               	for (i=0; i&lt;paramValues.length; i++)</span>
+                  {
+<span class="fc bfc" id="L115" title="All 2 branches covered.">	                  if (atrValue.indexOf(paramValues[i])!=-1)</span>
+	                  {
+	                     //Logger.println(this,&quot;MUST REMOVE: &quot;+atrValue+&quot; &quot;+paramValue);
+<span class="fc" id="L118">	                     return false;</span>
+	                  }
+                  }
+<span class="fc" id="L121">               	return true;</span>
+               }
+<span class="fc bfc" id="L123" title="All 2 branches covered.">               else if (&quot;EQ&quot;.equals(type))</span>
+               {
+<span class="fc bfc" id="L125" title="All 2 branches covered.">               	for (i=0; i&lt;paramValues.length; i++)</span>
+                  {
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">               		if (Tools.isEmpty(paramValues[i]))</span>
+            			{
+<span class="nc bnc" id="L129" title="All 2 branches missed.">               			if (paramValues.length==1) return(false);</span>
+               			continue;
+            			}
+	                  //equal - porovnanie
+<span class="fc bfc" id="L133" title="All 2 branches covered.">	                  if (atrValue.equalsIgnoreCase(paramValues[i]))</span>
+	                  {
+	                     //Logger.println(this,&quot;MUST REMOVE: &quot;+atrValue+&quot; &quot;+paramValue);
+<span class="fc" id="L136">	                     return(false);</span>
+	                  }
+                  }
+<span class="fc" id="L139">               	return true;</span>
+               }
+<span class="fc bfc" id="L141" title="All 2 branches covered.">               else if (&quot;LT&quot;.equals(type))</span>
+               {
+                  //menej ako
+<span class="fc" id="L144">                  iAtrValue = atrBean.getValueNumber();</span>
+                  try
+                  {
+<span class="fc" id="L147">                     iParamValue = Double.parseDouble(paramValues[0].replace(',', '.'));</span>
+                     //zachovavam len to co je mensie rovne ako hodnota
+                     //teda vyhadzujem to co je vacsie
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                     if (iAtrValue &gt; iParamValue)</span>
+                     {
+                        //Logger.println(this,&quot;MUST REMOVE: &quot;+atrValue+&quot; &quot;+paramValue);
+<span class="fc" id="L153">                        return(true);</span>
+                     }
+                  }
+<span class="nc" id="L156">                  catch (Exception ex)</span>
+                  {
+
+<span class="pc" id="L159">                  }</span>
+               }
+<span class="fc bfc" id="L161" title="All 2 branches covered.">               else if (&quot;GT&quot;.equals(type))</span>
+               {
+                  //viac ako
+<span class="fc" id="L164">                  iAtrValue = atrBean.getValueNumber();</span>
+                  try
+                  {
+<span class="fc" id="L167">                     iParamValue = Double.parseDouble(paramValues[0].replace(',', '.'));</span>
+                     //zachovavam len to co je vacsie rovne ako hodnota
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                     if (iAtrValue &lt; iParamValue)</span>
+                     {
+                        //Logger.println(this,&quot;MUST REMOVE: &quot;+atrValue+&quot; &quot;+paramValue);
+<span class="fc" id="L172">                        return(true);</span>
+                     }
+                  }
+<span class="nc" id="L175">                  catch (Exception ex)</span>
+                  {
+
+<span class="pc" id="L178">                  }</span>
+               }
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">               else if (&quot;GTLT&quot;.equals(type))</span>
+               {
+                  //interval (10-20)
+<span class="fc" id="L183">                  iAtrValue = atrBean.getValueNumber();</span>
+                  try
+                  {
+<span class="fc" id="L186">                  	String paramValue = paramValues[0].replace(',', '.');</span>
+<span class="fc" id="L187">                  	i = paramValue.indexOf('|');</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">                     if (i==-1) i = paramValue.indexOf(':');</span>
+
+<span class="fc" id="L190">                     iParamValue = Double.parseDouble(paramValue.substring(0, i));</span>
+<span class="fc" id="L191">                     double iParamValue2 = Double.parseDouble(paramValue.substring(i+1));</span>
+                     //zachovavam len to co je vacsie ako hodnota
+<span class="pc bpc" id="L193" title="1 of 4 branches missed.">                     if (iAtrValue &lt; iParamValue || iAtrValue &gt; iParamValue2)</span>
+                     {
+                        //Logger.println(this,&quot;MUST REMOVE: &quot;+atrValue+&quot; &quot;+paramValue);
+<span class="fc" id="L196">                        return(true);</span>
+                     }
+                  }
+<span class="nc" id="L199">                  catch (Exception ex)</span>
+                  {
+
+<span class="fc" id="L202">                  }</span>
+               }
+            }
+<span class="fc" id="L205">         }</span>
+      }
+
+      //iteruj po atributoch a najdi atribut s danym menom
+
+<span class="fc" id="L210">      return(false);</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

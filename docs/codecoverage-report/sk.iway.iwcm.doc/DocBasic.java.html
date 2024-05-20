@@ -1,0 +1,2457 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocBasic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocBasic.java</span></div><h1>DocBasic.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.StringTokenizer;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.commons.beanutils.BeanUtils;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.BasketDBTools;
+import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  Informacie o dokumente z databazy, tabulka documents
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.16 $
+ *@created      $Date: 2004/02/16 16:44:23 $
+ *@modified     $Date: 2004/02/16 16:44:23 $
+ */
+
+@MappedSuperclass
+public class DocBasic implements DocGroupInterface, Serializable
+{
+<span class="fc" id="L53">	@Column(name = &quot;group_id&quot;)</span>
+	private int groupId = 0;
+
+	@Column(name = &quot;title&quot;)
+	@Size(max = 255)
+	@DataTableColumn(
+			inputType = DataTableColumnType.OPEN_EDITOR,
+			title = &quot;editor.title&quot;,
+			tab = &quot;basic&quot;,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-validation&quot;, value = &quot;true&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-escape-slash&quot;, value = &quot;true&quot;)
+					})
+			}
+	)
+	@NotBlank
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String title;
+
+	@Column(name = &quot;navbar&quot;)
+	@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title = &quot;webpages.editor.titleForMenu&quot;,
+			tab = &quot;basic&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-validation&quot;, value = &quot;true&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-escape-slash&quot;, value = &quot;true&quot;)
+					})
+			}
+	)
+	@NotBlank
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String navbar;
+
+<span class="fc" id="L91">	@Column(name = &quot;virtual_path&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title = &quot;editor.virtual_path&quot;,
+			tab = &quot;basic&quot;,
+			visible = false,
+			className = &quot;DTE_Field_Has_Checkbox&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String virtualPath = &quot;&quot;;
+
+	@Column(name = &quot;editor_virtual_path &quot;)
+	@Size(max = 255)
+	@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title = &quot;editor.virtual_path&quot;,
+			tab = &quot;basic&quot;,
+			hidden = true,
+			visible = false,
+			className = &quot;DTE_Field_Has_Checkbox&quot;
+	)
+	private String editorVirtualPath;
+
+<span class="fc" id="L114">	@Column(name = &quot;generate_url_from_title&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.BOOLEAN,
+			title = &quot;editor.generate_url_from_title&quot;,
+			tab = &quot;basic&quot;,
+			hidden = true,
+			className = &quot;DTE_Field_Has_Checkbox&quot;
+	)
+	private boolean generateUrlFromTitle = true;
+
+<span class="fc" id="L124">	@Column(name = &quot;url_inherit_group&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.BOOLEAN,
+			title = &quot;editor.url_inherit_group&quot;,
+			tab = &quot;basic&quot;,
+			hidden = true,
+			className = &quot;DTE_Field_No_Margin_Top&quot;
+	)
+	private boolean urlInheritGroup = false;
+
+<span class="fc" id="L134">	@Column(name = &quot;sort_priority&quot;)</span>
+	@DataTableColumn(
+		inputType = DataTableColumnType.NUMBER,
+		title = &quot;editor.sort_order&quot;,
+		tab = &quot;menu&quot;,
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				message = &quot;editor.sort_order_help&quot;,
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+				}
+			)
+		}
+	)
+	private int sortPriority = 0;
+
+<span class="fc" id="L151">	@Column(name = &quot;external_link&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title = &quot;editor.external_link&quot;,
+			tab = &quot;basic&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+						label = &quot;editor.external_link.label&quot;,
+						message = &quot;editor.external_link_help&quot;,
+						attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.external_link&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+						}
+					)
+			}
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String externalLink = &quot;&quot;;
+
+<span class="fc" id="L171">	@Column(name = &quot;available&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title=&quot;editor.available_enabled&quot;, tab=&quot;basic&quot;,
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;editor.available_enabled_label&quot;, value = &quot;true&quot;)
+				},
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.properties&quot;)
+				}
+			)
+		}
+	)
+	private boolean available = false;
+
+<span class="fc" id="L187">	@Column(name = &quot;searchable&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title=&quot;editor.searchable_enabled&quot;, tab=&quot;basic&quot;,
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;editor.searchable_enabled_label&quot;, value = &quot;true&quot;)
+				}
+			)
+		}
+	)
+	private boolean searchable = false;
+
+<span class="fc" id="L200">	@Column(name = &quot;cacheable&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title=&quot;editor.cache&quot;, tab=&quot;basic&quot;,
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;editor.cache_label&quot;, value = &quot;true&quot;)
+				},
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+				}
+			)
+		}
+	)
+	private boolean cacheable = false;
+
+	@Column(name = &quot;temp_id&quot;)
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.template&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/templates/temps-list/?tempId={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int tempId;
+
+<span class="fc" id="L232">	@Column(name = &quot;header_doc_id&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.header&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuWebpages&quot;)
+					})
+			}
+	)
+	private int headerDocId = -1;
+
+<span class="fc" id="L247">	@Column(name = &quot;footer_doc_id&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.footer&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int footerDocId = -1;
+
+<span class="fc" id="L263">	@Column(name = &quot;menu_doc_id&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.menu&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int menuDocId = -1;
+
+<span class="fc" id="L278">	@Column(name = &quot;right_menu_doc_id&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.right_menu&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int rightMenuDocId = -1;
+
+	@DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;editor.perex.group&quot;,
+        tab = &quot;perex&quot;,
+		visible = false,
+        sortAfter = &quot;perexImage&quot;,
+		orderable = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+                }
+            )
+        }
+    )
+	@Column(name = &quot;perex_group&quot;)
+	@Convert(converter = CommaSeparatedIntegersConverter.class)
+	private Integer[] perexGroups;
+
+<span class="fc" id="L313">	@Column(name = &quot;date_created&quot;)</span>
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title=&quot;webstranky.nadpis.posledna_zmena&quot;,
+		visible = true, hiddenEditor = true, sortAfter = &quot;authorName&quot;
+	)
+	private Date dateCreated = null;
+
+<span class="fc" id="L320">	@Column(name = &quot;password_protected&quot;)</span>
+	private String passwordProtected = &quot;&quot;;
+
+	//ak je nastavene na true tak po skonceni publikacie sa dokument zneplatni
+<span class="fc" id="L324">	@Column(name = &quot;disable_after_end&quot;)</span>
+	private boolean disableAfterEnd = false;
+
+	//ak je nastavene na true tak bude publikovane v buducnosti (kopiruje atribut publicable ale po publikovani nezmeni stav)
+<span class="fc" id="L328">	@Column(name = &quot;publish_after_start&quot;)</span>
+	private boolean publishAfterStart = false;
+
+<span class="fc" id="L331">	@Transient</span>
+	private boolean lazyLoaded = false;
+
+<span class="fc" id="L334">	@Column(name = &quot;require_ssl&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN, title=&quot;editor.requireSsl&quot;, tab=&quot;access&quot;,
+		visible = false, sortAfter = &quot;cacheable&quot;
+	)
+	private boolean requireSsl = false;
+
+	//Old FieldsFromAtoE aka firstFields
+<span class="fc" id="L341">	@Column(name = &quot;field_a&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_a&quot;,
+	tab = &quot;fields&quot;, visible = false, sortAfter = &quot;perexGroups&quot;)
+	private String fieldA = &quot;&quot;;
+
+<span class="fc" id="L346">	@Column(name = &quot;field_b&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_b&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldA&quot;)
+	private String fieldB = &quot;&quot;;
+
+<span class="fc" id="L351">	@Column(name = &quot;field_c&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_c&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldB&quot;)
+	private String fieldC = &quot;&quot;;
+
+<span class="fc" id="L356">	@Column(name = &quot;field_d&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_d&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldC&quot;)
+	private String fieldD = &quot;&quot;;
+
+<span class="fc" id="L361">	@Column(name = &quot;field_e&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_e&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldD&quot;)
+	private String fieldE = &quot;&quot;;
+
+	//Old FieldsFromFtoT aka fields
+<span class="fc" id="L367">	@Column(name = &quot;field_f&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_f&quot;,
+	tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldE&quot;)
+	private String fieldF = &quot;&quot;;
+
+<span class="fc" id="L372">	@Column(name = &quot;field_g&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_g&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldF&quot;)
+	private String fieldG = &quot;&quot;;
+
+<span class="fc" id="L377">	@Column(name = &quot;field_h&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_h&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldG&quot;)
+	private String fieldH = &quot;&quot;;
+
+<span class="fc" id="L382">	@Column(name = &quot;field_i&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_i&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldH&quot;)
+	private String fieldI = &quot;&quot;;
+
+<span class="fc" id="L387">	@Column(name = &quot;field_j&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_j&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldI&quot;)
+	private String fieldJ = &quot;&quot;;
+
+<span class="fc" id="L392">	@Column(name = &quot;field_k&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_k&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldJ&quot;)
+	private String fieldK = &quot;&quot;;
+
+<span class="fc" id="L397">	@Column(name = &quot;field_l&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_l&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldK&quot;)
+	private String fieldL = &quot;&quot;;
+
+<span class="fc" id="L402">	@Column(name = &quot;field_m&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_m&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldL&quot;)
+	private String fieldM = &quot;&quot;;
+
+<span class="fc" id="L407">	@Column(name = &quot;field_n&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_n&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldM&quot;)
+	private String fieldN = &quot;&quot;;
+
+<span class="fc" id="L412">	@Column(name = &quot;field_o&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_o&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldN&quot;)
+	private String fieldO = &quot;&quot;;
+
+<span class="fc" id="L417">	@Column(name = &quot;field_p&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_p&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldO&quot;)
+	private String fieldP = &quot;&quot;;
+
+<span class="fc" id="L422">	@Column(name = &quot;field_q&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_q&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldP&quot;)
+	private String fieldQ = &quot;&quot;;
+
+<span class="fc" id="L427">	@Column(name = &quot;field_r&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_r&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldQ&quot;)
+	private String fieldR = &quot;&quot;;
+
+<span class="fc" id="L432">	@Column(name = &quot;field_s&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_s&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldR&quot;)
+	private String fieldS = &quot;&quot;;
+
+<span class="fc" id="L437">	@Column(name = &quot;field_t&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.field_t&quot;,
+		tab = &quot;fields&quot;, visible = false, sortAfter = &quot;fieldS&quot;)
+	private String fieldT = &quot;&quot;;
+
+	//Doplnene volne polia - ticket 54205 - prva cast
+<span class="fc" id="L443">	@Column(name = &quot;temp_field_a_docid&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;temp_edit.object_a&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int tempFieldADocId = -1;
+
+<span class="fc" id="L458">	@Column(name = &quot;temp_field_b_docid&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;temp_edit.object_b&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int tempFieldBDocId = -1;
+
+<span class="fc" id="L473">	@Column(name = &quot;temp_field_c_docid&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;temp_edit.object_c&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int tempFieldCDocId = -1;
+
+<span class="fc" id="L488">	@Column(name = &quot;temp_field_d_docid&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;temp_edit.object_d&quot;,
+			tab = &quot;template&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-url&quot;, value = &quot;/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&amp;docid={id}&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-edit-perms&quot;, value = &quot;menuTemplates&quot;)
+					})
+			}
+	)
+	private int tempFieldDDocId = -1;
+
+<span class="fc" id="L504">	@Column(name = &quot;show_in_menu&quot;)</span>
+	@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title = &quot;editor.menu_type_menu&quot;,
+			tab = &quot;menu&quot;,
+			visible = false,
+			editor = {
+				@DataTableColumnEditor(
+					attr = {
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.menu_type_notlogged&quot;)
+					},
+					options = {
+						@DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+						@DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+					},
+					message=&quot;editor.menu_type_menu.tooltip-webpage&quot;
+				)
+			}
+	)
+	private boolean showInMenu = false;
+
+	//Doplnene volne polia - ticket 54205 - druha cast
+	@Column(name = &quot;show_in_navbar&quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.SELECT,
+            title = &quot;editor.menu_type_navbar&quot;,
+            tab = &quot;menu&quot;,
+            visible = false,
+            editor = {
+                @DataTableColumnEditor(
+                    options = {
+						@DataTableColumnEditorAttr(key = &quot;editor.navbar.same_as_menu&quot;, value = &quot;null&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+                    }
+                )
+            }
+    )
+    private Boolean showInNavbar;
+
+	@Column(name = &quot;show_in_sitemap&quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.SELECT,
+            title = &quot;editor.menu_type_site_map&quot;,
+            tab = &quot;menu&quot;,
+            visible = false,
+            editor = {
+                @DataTableColumnEditor(
+                    options = {
+                        @DataTableColumnEditorAttr(key = &quot;editor.navbar.same_as_menu&quot;, value = &quot;null&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+                    },
+					message = &quot;editor.menu_type_site_map.tooltip-webpage&quot;
+                )
+            }
+    )
+    private Boolean showInSitemap;
+
+	@Column(name = &quot;logged_show_in_menu&quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.SELECT,
+            title = &quot;editor.menu_type_menu&quot;,
+            tab = &quot;menu&quot;,
+            visible = false,
+            editor = {
+                @DataTableColumnEditor(
+                    attr = {
+                        @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.menu_type_logged&quot;)
+                    },
+                    options = {
+						@DataTableColumnEditorAttr(key = &quot;groupedit.menu_type_same_as_normal&quot;, value = &quot;null&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+                    },
+					message=&quot;editor.menu_type_menu.tooltip-webpage&quot;
+                )
+            }
+    )
+    private Boolean loggedShowInMenu;
+
+	@Column(name = &quot;logged_show_in_navbar&quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.SELECT,
+            title = &quot;editor.menu_type_navbar&quot;,
+            tab = &quot;menu&quot;,
+            visible = false,
+            editor = {
+                @DataTableColumnEditor(
+                    options = {
+                        @DataTableColumnEditorAttr(key = &quot;groupedit.menu_type_same_as_normal&quot;, value = &quot;null&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+                    }
+                )
+            }
+    )
+    private Boolean loggedShowInNavbar;
+
+	@Column(name = &quot;logged_show_in_sitemap &quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.SELECT,
+            title = &quot;editor.menu_type_site_map&quot;,
+            tab = &quot;menu&quot;,
+            visible = false,
+            editor = {
+                @DataTableColumnEditor(
+                    options = {
+                        @DataTableColumnEditorAttr(key = &quot;groupedit.menu_type_same_as_normal&quot;, value = &quot;null&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_show&quot;, value = &quot;true&quot;),
+                        @DataTableColumnEditorAttr(key = &quot;editor.menu_hide&quot;, value = &quot;false&quot;)
+                    },
+					message = &quot;editor.menu_type_site_map.tooltip-webpage&quot;
+                )
+            }
+    )
+    private Boolean loggedShowInSitemap;
+
+
+	//Old DocumentAdvancedFields aka advancedFields
+<span class="fc" id="L624">	@Column(name = &quot;html_head&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title=&quot;editor.tab.html_header&quot;,
+	tab = &quot;template&quot;, visible = false, sortAfter = &quot;tempFieldDDocId&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String htmlHead = &quot;&quot;;
+
+	@Column(name = &quot;publish_start&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title=&quot;editor.dateStart&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;editorFields.emails&quot;, className = &quot;DTE_Field_Has_Checkbox&quot;
+	)
+	private Date publishStartDate;
+
+	@Column(name = &quot;publish_end&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title=&quot;editor.dateEnd&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;editorFields.publishAfterStart&quot;, className = &quot;DTE_Field_Has_Checkbox&quot;
+	)
+	private Date publishEndDate;
+
+	@Column(name = &quot;event_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title=&quot;editor.eventDate&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;editorFields.disableAfterEnd&quot;,
+		editor = {
+			@DataTableColumnEditor(attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+			})
+		}
+	)
+	private Date eventDateDate;
+
+<span class="fc" id="L657">	@Column(name = &quot;html_data&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = &quot;wrap&quot;, title=&quot;editor.tab.perex&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;eventDateDate&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String htmlData = &quot;&quot;;
+
+<span class="fc" id="L664">	@Column(name = &quot;perex_place&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;editor.perex.place&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;htmlData&quot;
+	)
+	private String perexPlace = &quot;&quot;;
+
+<span class="fc" id="L670">	@Column(name = &quot;perex_image&quot;)</span>
+	@DataTableColumn(inputType = DataTableColumnType.ELFINDER, title=&quot;editor.perex.image&quot;,
+		tab = &quot;perex&quot;, visible = false, sortAfter = &quot;perexPlace&quot;,
+		className = &quot;image&quot;,
+		editor = {
+			@DataTableColumnEditor(attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+			})
+		},
+		renderFormat = &quot;dt-format-image&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String perexImage = &quot;&quot;;
+
+<span class="fc" id="L684">	@Transient</span>
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;groupslist.approve.authorName&quot;,
+		visible = true, hiddenEditor = true, sortAfter = &quot;title&quot;, orderable = false, filter = true
+	)
+	private String authorName = &quot;&quot;;
+
+	@Transient
+	private String docLink;
+
+	@Column(name = &quot;data&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.WYSIWYG, title=&quot;components.news.template_html&quot;,
+		hidden = true, tab=&quot;content&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String data;
+
+	@Column(name = &quot;data_asc&quot;)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String dataAsc;
+
+	@Column(name = &quot;author_id&quot;)
+	private int authorId;
+
+	@Transient
+	private String tempName;
+
+	@Transient
+	private String publishEndString;
+
+	@Transient
+	private String publishEndTimeString;
+
+	@Transient
+	private String publishStartString;
+
+	@Transient
+	private String publishStartStringExtra;
+
+	@Transient
+	private String publishStartTimeString;
+
+	@Transient
+	private String syncDefaultForGroupId;
+
+	@Transient
+	private String syncRemotePath;
+
+<span class="fc" id="L731">	@Column(name = &quot;logon_page_doc_id&quot;)</span>
+	private int logonPageDocId = 0;
+
+	@Column(name = &quot;sync_id&quot;)
+	private int syncId;
+
+	@Column(name = &quot;sync_status&quot;)
+	private int syncStatus;
+
+	@Column(name = &quot;forum_count&quot;, updatable = false)
+	private int forumCount;
+
+	//Must be change from Transient to Column, because we need save this method
+	// @Size(max = 255)
+	@Column(name = &quot;file_name&quot;)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String fileName;
+
+	@Transient
+	private String authorEmail;
+
+	@Transient
+	private String authorPhoto;
+
+<span class="fc" id="L755">	@Column(name = &quot;views_total&quot;, updatable = false)</span>
+	private int viewsTotal = 0;
+
+<span class="fc" id="L758">	@Transient</span>
+	@DataTableColumnNested
+	private transient DocEditorFields editorFields = null;
+
+<span class="fc" id="L762">	public DocBasic(){</span>
+		//konstruktor
+<span class="fc" id="L764">	}</span>
+
+	//============ Veci pre shop ==================
+
+	@JsonIgnore
+	public double getPrice()
+	{
+<span class="fc" id="L771">		return getPrice(null);</span>
+	}
+
+	public double getPrice(HttpServletRequest request)
+	{
+<span class="fc" id="L776">		String str = &quot;0&quot;;</span>
+<span class="fc" id="L777">		String productType = &quot;&quot;;</span>
+		try
+		{
+<span class="fc" id="L780">			str = BeanUtils.getProperty(this, Constants.getString(&quot;basketPriceField&quot;));</span>
+<span class="fc" id="L781">			productType = BeanUtils.getProperty(this, Constants.getString(&quot;basketProductTypeField&quot;));</span>
+		}
+<span class="nc" id="L783">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L785">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L786">		}</span>
+<span class="pc bpc" id="L787" title="3 of 4 branches missed.">		if(Tools.isNotEmpty(str) &amp;&amp; Character.isLetter(str.trim().charAt(0)))</span>
+<span class="nc" id="L788">			str = getPriceStringByCategory(str.trim().charAt(0),productType);</span>
+<span class="fc" id="L789">		return parse(str,request);</span>
+	}
+
+	/**
+	 * ziska cenu ako string z {@link Constants} na zaklade kluca basketPrice+productType+priceCategory ie. basketPriceObalkaC a pod.
+	 * @param priceCategory pismenko definujuce cenovu kategoriu, bude konvertnute na uppercase
+	 * @param productType typ produktu, ak su rozne cenove kategorie pre rozne typy produktov
+	 * @return cenu ako string
+	 */
+	private String getPriceStringByCategory(char priceCategory, String productType)
+	{
+<span class="nc" id="L800">		String constKey = &quot;basketPrice&quot;;</span>
+<span class="nc bnc" id="L801" title="All 2 branches missed.">		if(Tools.isNotEmpty(productType))</span>
+<span class="nc" id="L802">			constKey += DB.internationalToEnglish(productType.replaceAll(&quot;\\s&quot;, &quot;&quot;).replaceAll(&quot;[-+.^:,]&quot;,&quot;&quot;));</span>
+<span class="nc" id="L803">		constKey += Character.toUpperCase(priceCategory);</span>
+<span class="nc" id="L804">		return Constants.getString(constKey);</span>
+	}
+
+	/**
+	 * Vrati cenu &quot;dokumentu&quot; v mene, ktora sa vyhodnoti na zaklade requestu.
+	 *
+	 * @param request
+	 * @return double cena v danej mene
+	 */
+	public double getLocalPrice(HttpServletRequest request)
+	{
+<span class="nc" id="L815">		return getLocalPrice( request, BasketDBTools.getDisplayCurrency(request) );</span>
+	}
+
+	@JsonIgnore
+	public String getCurrency()
+	{
+<span class="fc" id="L821">		String itemCurrency = &quot;skk&quot;;</span>
+		try
+		{
+<span class="fc" id="L824">			itemCurrency = BeanUtils.getProperty(this, Constants.getString(&quot;basketCurrencyField&quot;));</span>
+<span class="pc bpc" id="L825" title="1 of 2 branches missed.">			if (Tools.isEmpty(itemCurrency))</span>
+<span class="fc" id="L826">				itemCurrency = Constants.getString(&quot;basketProductCurrency&quot;);</span>
+			//ak sme stale nic nezistili, ideme na zaloznu moznost...skk
+<span class="pc bpc" id="L828" title="1 of 2 branches missed.">			if (Tools.isEmpty(itemCurrency))</span>
+<span class="nc" id="L829">				itemCurrency = &quot;skk&quot;;</span>
+		}
+<span class="nc" id="L831">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L833">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L834">		}</span>
+<span class="fc" id="L835">		return itemCurrency.toLowerCase();</span>
+	}
+
+	/**
+	 * Prepocita zadanu cenu z meny vedenej u vyrobku na menu zadanu ako paramater.
+	 * Mena sa zadava v jej medzinarodnom kodovom oznaceni. Najpouzivanejsie meny
+	 * slovenska koruna - skk , ceska - czk, euro - eur, britska libra - gbp, americky dolar - usd.
+	 * AK VYROBOK MOZE MAT VIAC CIEN, zalezajucich od skupiny, v ktorej sa
+	 * pouzivatel nachadza, POUZITE METODU getLocalPrice()
+	 *
+	 * @param basePrice - cena, ktoru chceme prepocitat
+	 * @param userCurrency - kodove oznacenie meny, v ktorej chceme dostat vysledok
+	 * @return double Cena vo vyslednej mene
+	 */
+	public double calculateLocalPrice(double basePrice, String userCurrency)
+	{
+<span class="nc" id="L851">		String itemCurrency = getCurrency();</span>
+<span class="nc" id="L852">		userCurrency = userCurrency.toLowerCase();</span>
+		// samotny prepocet mien
+<span class="nc bnc" id="L854" title="All 2 branches missed.">		if (!itemCurrency.equalsIgnoreCase(userCurrency))</span>
+		{
+<span class="nc" id="L856">			String constantName = &quot;kurz_&quot; + itemCurrency + &quot;_&quot; + userCurrency;</span>
+			double rate;
+			// nasli sme bezny kurz
+<span class="nc bnc" id="L859" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName)))</span>
+			{
+<span class="nc" id="L861">				rate = Double.valueOf(Constants.getString(constantName));</span>
+<span class="nc" id="L862">				return rate * basePrice;</span>
+			}
+			// nevyslo, skusime opacnu konverziu
+<span class="nc" id="L865">			constantName = &quot;kurz_&quot; + userCurrency + &quot;_&quot; + itemCurrency;</span>
+			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
+			// 1/kurz
+<span class="nc bnc" id="L868" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName)))</span>
+			{
+<span class="nc" id="L870">				rate = Double.valueOf(Constants.getString(constantName));</span>
+<span class="nc" id="L871">				return (1.0 / rate) * basePrice;</span>
+			}
+		}
+		// nedopracovali sme sa k vysledku, vraciame povodnu cenu
+<span class="nc" id="L875">		return basePrice;</span>
+	}
+
+	/**
+	 * Vrati cenu &quot;dokumentu&quot; v zadanej mene. Ak je dokument vedeny v
+	 * databaze pod inou menou, cena sa prepocita, ak existuje vzajomny kurz.
+	 *
+	 * Ak nepozna menu, ktora bola zadana, vrati sa cena zapisana v databaze nehladiac
+	 * na menu, v akej je zapisana.
+	 *
+	 * @param request
+	 * @param userCurrency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
+	 * @return double cena
+	 */
+	public double getLocalPrice(HttpServletRequest request, String userCurrency)
+	{
+		// ziskame si beznu cenu vyrobku, este nevieme, v akej mene
+<span class="nc" id="L892">		double itemPrice = getPrice(request);</span>
+<span class="nc" id="L893">		return calculateLocalPrice(itemPrice, userCurrency);</span>
+	}
+
+	/**
+	 * Vypocita cenu aj s DPH v defaultnej mene pouzivatela.
+	 * @param request
+	 * @return double cena
+	 */
+	public double getLocalPriceVat(HttpServletRequest request)
+	{
+<span class="nc" id="L903">		double localPrice = getLocalPrice(request);</span>
+<span class="nc" id="L904">		return (getVat() / 100.0 + 1.0) * localPrice;</span>
+	}
+
+	/**
+	 * Vypocita cenu aj s DPH v zadanej mene
+	 * @param request
+	 * @param currency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
+	 * @return double cena
+	 */
+	public double getLocalPriceVat(HttpServletRequest request, String currency)
+	{
+<span class="nc" id="L915">		double localPrice = getLocalPrice(request, currency);</span>
+<span class="nc" id="L916">		return (getVat() / 100.0 + 1.0) * localPrice;</span>
+	}
+
+	@JsonIgnore
+	public double getVat()
+	{
+<span class="fc" id="L922">		String str = &quot;0&quot;;</span>
+		try
+		{
+<span class="fc" id="L925">			str = BeanUtils.getProperty(this, Constants.getString(&quot;basketVatField&quot;));</span>
+		}
+<span class="nc" id="L927">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L929">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L930">		}</span>
+<span class="pc bpc" id="L931" title="3 of 4 branches missed.">		if(Constants.getInt(&quot;basketVatPercentage&quot;) &gt; 0 &amp;&amp; Tools.getDoubleValue(str, 0) == 0d)</span>
+<span class="nc" id="L932">			return Constants.getInt(&quot;basketVatPercentage&quot;);</span>
+<span class="fc" id="L933">		return(Tools.getDoubleValue(str, 0));</span>
+	}
+
+	@JsonIgnore
+	public double getPriceVat()
+	{
+<span class="fc" id="L939">		double vat = getVat();</span>
+<span class="fc" id="L940">		vat = (vat / 100) + 1;</span>
+
+<span class="fc" id="L942">		return(getPrice() * vat);</span>
+	}
+
+	@JsonIgnore
+	public double getPriceVat(HttpServletRequest request)
+	{
+<span class="nc" id="L948">		double vat = getVat();</span>
+<span class="nc" id="L949">		vat = (vat / 100) + 1;</span>
+
+<span class="nc" id="L951">		return(getPrice(request) * vat);</span>
+	}
+
+	@JsonIgnore
+	public int getQuantity()
+	{
+<span class="fc" id="L957">		 String str = &quot;0&quot;;</span>
+		 try
+		 {
+<span class="fc" id="L960">			  str = BeanUtils.getProperty(this, Constants.getString(&quot;basketQuantityField&quot;));</span>
+		 }
+<span class="nc" id="L962">		 catch (Exception ex)</span>
+		 {
+<span class="nc" id="L964">			 Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L965">		 }</span>
+<span class="fc" id="L966">		 return(Tools.getIntValue(str, 0));</span>
+	}
+	//============ Veci pre shop koniec ===========
+
+	public Long getId()
+	{
+<span class="nc" id="L972">		return null;</span>
+	}
+
+	public void setId(Long id)
+	{
+		//MUST IMPLEMENT
+<span class="nc" id="L978">	}</span>
+
+	/**
+	 * id dokumentu
+	 * @return
+	 */
+	public int getDocId()
+	{
+<span class="nc" id="L986">		return 0; //NOSONAR</span>
+	}
+
+	public void setDocId(int newDocId)
+	{
+		//MUST IMPLEMENT
+<span class="nc" id="L992">	}</span>
+
+	/**
+	 * last save date as timestamp
+	 * @return
+	 */
+	public long getDateCreated()
+	{
+<span class="fc bfc" id="L1000" title="All 2 branches covered.">		if (dateCreated == null) return 0;</span>
+<span class="fc" id="L1001">		return dateCreated.getTime();</span>
+	}
+
+	public void setPublishStart(long newPublishStart)
+	{
+<span class="fc bfc" id="L1006" title="All 2 branches covered.">		if (newPublishStart == 0) return;</span>
+<span class="fc" id="L1007">		this.publishStartDate = new Date(newPublishStart);</span>
+<span class="fc" id="L1008">		setPublishStartString(Tools.formatDate(publishStartDate));</span>
+<span class="fc" id="L1009">		setPublishStartTimeString(Tools.formatTime(publishStartDate));</span>
+<span class="fc" id="L1010">	}</span>
+
+	public void setPublishEnd(long newPublishEnd)
+	{
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">		if (newPublishEnd == 0) return;</span>
+<span class="fc" id="L1015">		this.publishEndDate = new Date(newPublishEnd);</span>
+<span class="fc" id="L1016">		setPublishEndString(Tools.formatDate(publishEndDate));</span>
+<span class="fc" id="L1017">		setPublishEndTimeString(Tools.formatTime(publishEndDate));</span>
+<span class="fc" id="L1018">	}</span>
+
+	/**
+	 * meno autora dokumentu
+	 * @return
+	 */
+	public String getAuthorName()
+	{
+<span class="pc bpc" id="L1026" title="1 of 2 branches missed.">		if (shouldLazyLoadAuthorInformation())</span>
+<span class="nc" id="L1027">			loadAuthorInformation();</span>
+<span class="fc" id="L1028">		String name = this.authorName;</span>
+
+<span class="pc bpc" id="L1030" title="1 of 2 branches missed.">		if (name == null) return &quot;&quot;;</span>
+<span class="fc" id="L1031">		return name;</span>
+	}
+
+    /**
+     * Vrati fotku pouzivatela, alebo defaultPhoto ak nema ziadnu zadanu
+     * @param defaultPhoto
+     * @return
+     */
+    public String getAuthorPhoto(String defaultPhoto)
+    {
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">        if (shouldLazyLoadAuthorInformation())</span>
+<span class="nc" id="L1042">            loadAuthorInformation();</span>
+<span class="nc" id="L1043">        String photo = this.authorPhoto;</span>
+
+<span class="nc bnc" id="L1045" title="All 2 branches missed.">        if(Tools.isEmpty(photo)) return defaultPhoto;</span>
+<span class="nc" id="L1046">        return GalleryDB.getImagePathOriginal(photo);</span>
+    }
+
+	private boolean shouldLazyLoadAuthorInformation()
+	{
+<span class="pc bpc" id="L1051" title="3 of 4 branches missed.">		return Constants.getBoolean(&quot;docAuthorLazyLoad&quot;) &amp;&amp; !lazyLoaded;</span>
+	}
+
+	private void loadAuthorInformation()
+	{
+<span class="nc" id="L1056">		UserDetails user = UsersDB.getUser(getAuthorId());</span>
+<span class="nc bnc" id="L1057" title="All 2 branches missed.">		if (user != null)</span>
+		{
+<span class="nc" id="L1059">			this.authorEmail = user.getEmail();</span>
+<span class="nc" id="L1060">			this.authorName = user.getFullName();</span>
+<span class="nc" id="L1061">			this.authorPhoto = user.getPhoto();</span>
+		}
+<span class="nc" id="L1063">		lazyLoaded = true;</span>
+<span class="nc" id="L1064">	}</span>
+
+	// /**
+	//  * prehladavatelne
+	//  * @return
+	//  */
+	// public boolean isSearchable()
+	// {
+	// 	return searchable;
+	// }
+
+	public boolean isAvailable()
+	{
+<span class="fc" id="L1077">		return available;</span>
+	}
+
+	/**
+	 * cachovat
+	 * @return
+	 */
+	public boolean isCacheable()
+	{
+<span class="fc" id="L1086">		return cacheable;</span>
+	}
+
+	/**
+	 * titulok
+	 * @return
+	 */
+	public String getTitle()
+	{
+<span class="pc bpc" id="L1095" title="2 of 4 branches missed.">		if (title==null || title.length()==0)</span>
+		{
+<span class="nc" id="L1097">			title = &quot;no name&quot;;</span>
+		}
+<span class="fc" id="L1099">		return title;</span>
+	}
+
+	/**
+	 * titulok v menu
+	 * @return
+	 */
+	public String getNavbar()
+	{
+<span class="pc bpc" id="L1108" title="1 of 4 branches missed.">		if (navbar == null || navbar.length() &lt; 1)</span>
+		{
+<span class="fc" id="L1110">			return (title);</span>
+		}
+		else
+		{
+<span class="fc" id="L1114">			return (navbar);</span>
+		}
+	}
+
+	/**
+	 * formated last save date
+	 * @return
+	 */
+	@JsonIgnore
+	public String getDateCreatedString()
+	{
+<span class="pc bpc" id="L1125" title="1 of 4 branches missed.">		if (dateCreated != null &amp;&amp; dateCreated.getTime()&gt;0)</span>
+		{
+<span class="fc" id="L1127">			return(Tools.formatDate(dateCreated));</span>
+		}
+<span class="fc" id="L1129">		return &quot;&quot;;</span>
+	}
+
+	@JsonIgnore
+	public String getLastUpdateDate()
+	{
+<span class="fc" id="L1135">		return getDateCreatedString();</span>
+	}
+
+	/**
+	 * formated last save time
+	 * @return
+	 */
+	@JsonIgnore
+	public String getTimeCreatedString()
+	{
+<span class="pc bpc" id="L1145" title="1 of 4 branches missed.">		if (dateCreated != null &amp;&amp; dateCreated.getTime()&gt;0)</span>
+		{
+<span class="fc" id="L1147">			return(Tools.formatTime(dateCreated));</span>
+		}
+<span class="fc" id="L1149">		return(&quot;&quot;);</span>
+	}
+
+	@JsonIgnore
+	public String getLastUpdateTime()
+	{
+<span class="fc" id="L1155">		return getTimeCreatedString();</span>
+	}
+
+	public void setPasswordProtected(String passwordProtected)
+	{
+<span class="fc bfc" id="L1160" title="All 4 branches covered.">		if (Tools.isEmpty(passwordProtected) || &quot;,&quot;.equals(passwordProtected))</span>
+		{
+<span class="fc" id="L1162">			this.passwordProtected = null;</span>
+		}
+<span class="fc" id="L1164">		else this.passwordProtected = passwordProtected;</span>
+<span class="fc" id="L1165">	}</span>
+
+	public boolean isInUserGroup(int userGroupId)
+	{
+<span class="nc bnc" id="L1169" title="All 2 branches missed.">		if (Tools.isEmpty(passwordProtected)) return(false);</span>
+<span class="nc" id="L1170">		StringTokenizer st = new StringTokenizer(passwordProtected, &quot;,&quot;);</span>
+<span class="nc bnc" id="L1171" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L1173">			int ugid = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">			if (ugid == userGroupId) return(true);</span>
+<span class="nc" id="L1175">		}</span>
+<span class="nc" id="L1176">		return(false);</span>
+	}
+
+
+	/**
+	 * to iste, ako htmlData
+	 * @return
+	 */
+	@JsonIgnore
+	public String getPerex()
+	{
+<span class="fc" id="L1187">		return getHtmlData();</span>
+	}
+
+	@JsonIgnore
+	public String getPerexPre()
+	{
+<span class="fc" id="L1193">		String perexPre = getHtmlData();</span>
+<span class="pc bpc" id="L1194" title="2 of 6 branches missed.">		if (perexPre != null &amp;&amp; (perexPre.indexOf('&lt;')==-1 &amp;&amp; perexPre.indexOf('&gt;')==-1))</span>
+		{
+<span class="fc" id="L1196">			return(sk.iway.iwcm.Tools.replace(perexPre, &quot;\n&quot;, &quot;\n&lt;br/&gt;&quot;));</span>
+		}
+		else
+		{
+<span class="fc" id="L1200">			return(perexPre);</span>
+		}
+	}
+
+	public String getDocLink()
+	{
+<span class="fc" id="L1206">		String link = this.docLink;</span>
+<span class="fc bfc" id="L1207" title="All 2 branches covered.">		if (link==null)</span>
+		{
+<span class="fc" id="L1209">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1210">			link = docDB.getDocLink(getDocId(), getExternalLink(), null);</span>
+			//docLink = &quot;/showdoc.do?docid=&quot;+docId;
+		}
+		//odstan zapis s * na konci (nieco/*)
+<span class="fc bfc" id="L1214" title="All 2 branches covered.">		if (link.indexOf('*')!=-1)</span>
+		{
+<span class="fc" id="L1216">			link = Tools.replace(link, &quot;*&quot;, &quot;&quot;);</span>
+		}
+<span class="fc" id="L1218">		return link;</span>
+	}
+
+	@JsonIgnore
+	public String getPerexImageSmall()
+	{
+<span class="fc" id="L1224">		String ret = GalleryToolsForCore.getImagePathSmall(getPerexImage());</span>
+
+<span class="pc bpc" id="L1226" title="1 of 2 branches missed.">		if(ret == null) return &quot;&quot;;</span>
+<span class="fc" id="L1227">		return ret;</span>
+	}
+
+	@JsonIgnore
+	public String getPerexImageNormal()
+	{
+<span class="fc" id="L1233">		String ret = GalleryToolsForCore.getImagePathNormal(getPerexImage());</span>
+
+<span class="pc bpc" id="L1235" title="1 of 2 branches missed.">		if(ret == null) return &quot;&quot;;</span>
+<span class="fc" id="L1236">		return ret;</span>
+	}
+
+	@JsonIgnore
+	public String getPerexImageOriginal()
+	{
+<span class="fc" id="L1242">		String ret = GalleryToolsForCore.getImagePathOriginal(getPerexImage());</span>
+
+<span class="pc bpc" id="L1244" title="1 of 2 branches missed.">		if(ret == null) return &quot;&quot;;</span>
+<span class="fc" id="L1245">		return ret;</span>
+	}
+
+	/**
+	 * Vrati true ak sa stranka nachadza v zadanej perex skupine
+	 * @param perexGroupId
+	 * @return
+	 */
+	public boolean isInPerexGroup(int perexGroupId)
+	{
+<span class="nc bnc" id="L1255" title="All 4 branches missed.">		if (perexGroups == null || perexGroups.length&lt;1) return false;</span>
+
+<span class="nc bnc" id="L1257" title="All 2 branches missed.">		for (int i=0; i&lt;perexGroups.length; i++)</span>
+		{
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">			if (perexGroups[i].intValue()==perexGroupId) return(true);</span>
+		}
+<span class="nc" id="L1261">		return(false);</span>
+	}
+
+	/**
+	 * Vrati true ak sa stranka nachadza v zadanej perex skupine
+	 * @param perexGroupName
+	 * @return
+	 */
+	public boolean hasPerexGroup(String perexGroupName)
+	{
+<span class="nc" id="L1271">		String perexGroupNames = getPerexGroupString();</span>
+<span class="nc bnc" id="L1272" title="All 2 branches missed.">		if(perexGroupNames == null)</span>
+		{
+<span class="nc" id="L1274">			return false;</span>
+		}
+<span class="nc bnc" id="L1276" title="All 2 branches missed.">		return perexGroupNames.indexOf(perexGroupName) &gt;= 0;</span>
+	}
+
+	/**
+	 * Vrati NAZVY (nie ID) perex skupin ako String oddeleny ciarkami	 *
+	 */
+	@JsonIgnore
+	public String getPerexGroupString()
+	{
+<span class="fc" id="L1285">		StringBuilder ret=null;</span>
+<span class="fc" id="L1286">		DocDB docDB = DocDB.getInstance();</span>
+		try
+		{
+<span class="fc bfc" id="L1289" title="All 4 branches covered.">			if (perexGroups!=null &amp;&amp; perexGroups.length&gt;0)</span>
+			{
+<span class="fc" id="L1291">				int size = perexGroups.length;</span>
+				int i;
+<span class="fc bfc" id="L1293" title="All 2 branches covered.">				for (i=0; i&lt;size; i++)</span>
+				{
+<span class="fc" id="L1295">					String name = docDB.convertPerexGroupIdToName(perexGroups[i].intValue());</span>
+<span class="pc bpc" id="L1296" title="1 of 2 branches missed.">					if (Tools.isEmpty(name)) continue;</span>
+<span class="fc bfc" id="L1297" title="All 2 branches covered.">					if (ret==null) ret = new StringBuilder(name);</span>
+<span class="fc" id="L1298">					else ret.append(&quot;,&quot;).append(name);</span>
+				}
+			}
+		}
+<span class="nc" id="L1302">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1304">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L1305">		}</span>
+
+<span class="fc bfc" id="L1307" title="All 2 branches covered.">		if(ret == null) return &quot;&quot;;</span>
+<span class="fc" id="L1308">		return(ret.toString());</span>
+	}
+
+	/**
+	 * Vrati ID perex skupin ako String oddeleny ciarkami
+	 * @return
+	 */
+	@JsonIgnore
+	public String getPerexGroupIdsString()
+	{
+<span class="fc" id="L1318">		return getPerexGroupIdsString(false);</span>
+	}
+
+	/**
+	 * Vrati ID perex skupin ako String oddeleny ciarkami
+	 * @param addStartEndComma - ak je true na zaciatok a koniec prida ciarku (ak nie je zoznam prazdny), je to tak kvoli DB vyhladavaniu cez LIKE %,cislo,%
+	 * @return
+	 */
+	public String getPerexGroupIdsString(boolean addStartEndComma)
+	{
+<span class="fc" id="L1328">		StringBuilder ret=null;</span>
+		try
+		{
+<span class="fc bfc" id="L1331" title="All 4 branches covered.">			if (perexGroups!=null &amp;&amp; perexGroups.length&gt;0)</span>
+			{
+<span class="fc" id="L1333">				int size = perexGroups.length;</span>
+				int i;
+<span class="fc bfc" id="L1335" title="All 2 branches covered.">				for (i=0; i&lt;size; i++)</span>
+				{
+<span class="fc bfc" id="L1337" title="All 2 branches covered.">					if (ret==null)</span>
+					{
+<span class="pc bpc" id="L1339" title="1 of 2 branches missed.">						if (addStartEndComma) ret = new StringBuilder(&quot;,&quot;+perexGroups[i].intValue());</span>
+<span class="fc" id="L1340">						else ret = new StringBuilder(&quot;&quot;+perexGroups[i].intValue());</span>
+					}
+<span class="fc" id="L1342">					else ret.append(&quot;,&quot;).append(perexGroups[i].intValue());</span>
+				}
+			}
+		}
+<span class="nc" id="L1346">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1348">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L1349">		}</span>
+
+<span class="pc bpc" id="L1351" title="2 of 6 branches missed.">		if (ret!=null &amp;&amp; Tools.isNotEmpty(ret) &amp;&amp; addStartEndComma) ret.append(&quot;,&quot;);</span>
+
+<span class="fc bfc" id="L1353" title="All 2 branches covered.">		if(ret == null) return &quot;&quot;;</span>
+<span class="fc" id="L1354">		return(ret.toString());</span>
+	}
+
+	@JsonIgnore
+	/**
+	 * Vrati NAZVY (nie ID) perex skupin ako pole
+	 * @return
+	 */
+	public String[] getPerexGroupNames()
+	{
+<span class="fc bfc" id="L1364" title="All 2 branches covered.">	    if (perexGroups==null) return new String[0];</span>
+
+<span class="fc" id="L1366">		int size = perexGroups.length;</span>
+<span class="fc" id="L1367">		String[] perexGroupNames = new String[size];</span>
+		int i;
+<span class="fc" id="L1369">		DocDB docDB = DocDB.getInstance();</span>
+<span class="pc bpc" id="L1370" title="1 of 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
+		{
+<span class="nc" id="L1372">			perexGroupNames[i]=docDB.convertPerexGroupIdToName(perexGroups[i].intValue());</span>
+<span class="nc bnc" id="L1373" title="All 2 branches missed.">			if (perexGroupNames[i] == null) perexGroupNames[i] = &quot;&quot;+perexGroups[i].intValue();</span>
+		}
+<span class="fc" id="L1375">		return perexGroupNames;</span>
+	}
+	/**
+	 * Nastavy perex skupiny podla retazca oddeleneho ciarkami, ktory odsahuje ID (nie NAZOV)
+	 * @param perexGroupIdsString
+	 */
+	public void setPerexGroupString(String perexGroupIdsString)
+	{
+<span class="fc bfc" id="L1383" title="All 2 branches covered.">		if (perexGroupIdsString == null)</span>
+		{
+<span class="fc" id="L1385">			perexGroups = new Integer[0];</span>
+<span class="fc" id="L1386">			return;</span>
+		}
+<span class="fc" id="L1388">		StringTokenizer st = new StringTokenizer(perexGroupIdsString, &quot;,&quot;);</span>
+		try
+		{
+<span class="fc" id="L1391">			perexGroups = new Integer[st.countTokens()];</span>
+<span class="fc" id="L1392">			int i=0;</span>
+<span class="fc bfc" id="L1393" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L1395">				perexGroups[i++] = Tools.getIntValue(st.nextToken().trim(), 0);</span>
+			}
+		}
+<span class="nc" id="L1398">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1400">			Logger.error(DocBasic.class, ex);</span>
+<span class="fc" id="L1401">		}</span>
+<span class="fc" id="L1402">	}</span>
+	/**
+	 * zobrazit v menu
+	 * @return
+	 */
+	public boolean isShowInMenu()
+	{
+<span class="fc" id="L1409">		return showInMenu;</span>
+	}
+
+	public void setEventDate(long eventDate)
+	{
+<span class="fc bfc" id="L1414" title="All 2 branches covered.">		if (eventDate == 0) return;</span>
+<span class="fc" id="L1415">		this.eventDateDate = new Date(eventDate);</span>
+<span class="fc" id="L1416">		setEventDateString(Tools.formatDate(eventDateDate));</span>
+<span class="fc" id="L1417">		setEventTimeString(Tools.formatTime(eventDateDate));</span>
+<span class="fc" id="L1418">	}</span>
+
+	/**
+	 * email autora dokumentu
+	 */
+	public String getAuthorEmail()
+	{
+<span class="pc bpc" id="L1425" title="1 of 2 branches missed.">		if (shouldLazyLoadAuthorInformation())</span>
+<span class="nc" id="L1426">			loadAuthorInformation();</span>
+<span class="fc" id="L1427">		String email = this.authorEmail;</span>
+<span class="fc bfc" id="L1428" title="All 2 branches covered.">		if (email == null) return &quot;&quot;;</span>
+<span class="fc" id="L1429">		return email;</span>
+	}
+
+	@JsonIgnore
+	public int getSyncId()
+	{
+<span class="fc" id="L1435">		return this.syncId;</span>
+	}
+
+	@JsonIgnore
+	public void setSyncId(int syncId)
+	{
+<span class="fc bfc" id="L1441" title="All 2 branches covered.">		if (syncId == 0) return;</span>
+<span class="fc" id="L1442">		this.syncId = syncId;</span>
+<span class="fc" id="L1443">	}</span>
+
+	@JsonIgnore
+	public int getSyncStatus()
+	{
+<span class="fc" id="L1448">		return this.syncStatus;</span>
+	}
+
+	@JsonIgnore
+	public void setSyncStatus(int syncStatus)
+	{
+<span class="fc bfc" id="L1454" title="All 2 branches covered.">		if (syncStatus == 0) return;</span>
+<span class="fc" id="L1455">		this.syncStatus = syncStatus;</span>
+<span class="fc" id="L1456">	}</span>
+
+	public void setLogonPageDocId(int logonPageDocId)
+	{
+<span class="fc bfc" id="L1460" title="All 2 branches covered.">		if (logonPageDocId == 0) return;</span>
+<span class="fc" id="L1461">		this.logonPageDocId = logonPageDocId;</span>
+<span class="fc" id="L1462">	}</span>
+
+	@JsonIgnore
+	public int getForumCount()
+	{
+<span class="fc" id="L1467">		return this.forumCount;</span>
+	}
+
+	@JsonIgnore
+	public void setForumCount(int forumCount)
+	{
+<span class="fc bfc" id="L1473" title="All 2 branches covered.">		if (forumCount == 0) return;</span>
+<span class="fc" id="L1474">		this.forumCount = forumCount;</span>
+<span class="fc" id="L1475">	}</span>
+
+	/**
+	 * Zistenie ci stranku mozeme povazovat za novu, zmenenu alebo nemodifikovanu
+	 *
+	 * nova je taka, ktora nema historiu starsiu ako zadany pocet dni
+	 * zmenena je taka, kde doslo za zadany pocet dni k zmene
+	 *
+	 * @param docId - id stranky
+	 * @param minDaysNotChanged - pocet dni, pocas ktorych nesmelo dojst k zmene
+	 * @param maxDaysTestChanged - maximalny pocet dni, ktore sa testuju na zmenu (ak v tomto rozsahu nie je ziadna zmena, je dokument bezo zmeny)
+	 * @return 0=bez zmeny, 1=nova, 2=zmenena
+	 */
+	@JsonIgnore
+	public int getPageNewChangedStatus()
+	{
+<span class="fc" id="L1491">		return(DocDB.getPageNewChangedStatus(getDocId(), 1, 7));</span>
+	}
+	@JsonIgnore
+	public int getPageNewChangedStatus(int minDaysNotChanged, int maxDaysTestChanged)
+	{
+<span class="nc" id="L1496">		return(DocDB.getPageNewChangedStatus(getDocId(), minDaysNotChanged, maxDaysTestChanged));</span>
+	}
+
+	public static double parse(String str, HttpServletRequest request)
+	{
+<span class="pc bpc" id="L1501" title="1 of 2 branches missed.">		if (str == null)</span>
+<span class="nc" id="L1502">			return -1;</span>
+<span class="fc" id="L1503">		double min = 0;</span>
+<span class="fc" id="L1504">		double firstUserGroupPrice = 0;</span>
+<span class="fc" id="L1505">		String[] tokens = str.split(&quot;\\;&quot;);</span>
+<span class="fc" id="L1506">		double[] prices = new double[tokens.length];</span>
+<span class="fc" id="L1507">		Identity user = null;</span>
+<span class="pc bpc" id="L1508" title="1 of 2 branches missed.">		if (request != null) user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L1509" title="1 of 2 branches missed.">		if (user != null)</span>
+		{
+<span class="nc bnc" id="L1511" title="All 6 branches missed.">			if (Constants.getBoolean(&quot;basketDiscountEnabled&quot;) || tokens != null &amp;&amp; tokens.length &gt;= 1)</span>
+			{
+<span class="nc" id="L1513">				min = Tools.getDoubleValue(tokens[0], -1);</span>
+<span class="nc" id="L1514">				prices[0] = Tools.getDoubleValue(tokens[0].substring(tokens[0].indexOf(':') + 1, tokens[0].length()), -1);</span>
+<span class="nc" id="L1515">				int i = 0;</span>
+<span class="nc bnc" id="L1516" title="All 2 branches missed.">				for (String s : tokens)</span>
+				{
+<span class="nc bnc" id="L1518" title="All 2 branches missed.">					if (i == 0)</span>
+					{
+<span class="nc" id="L1520">						i++;</span>
+<span class="nc" id="L1521">						continue;</span>
+					}
+<span class="nc bnc" id="L1523" title="All 2 branches missed.">					if (s.indexOf(':') != -1)</span>
+					{
+<span class="nc bnc" id="L1525" title="All 2 branches missed.">						if (user.isInUserGroup(Tools.getIntValue(s.substring(0, s.indexOf(':')), -1)))</span>
+						{
+<span class="nc" id="L1527">							prices[i] = Tools.getDoubleValue(s.substring(s.indexOf(':') + 1, s.length()), -1);</span>
+<span class="nc bnc" id="L1528" title="All 2 branches missed.">							if (firstUserGroupPrice==0) firstUserGroupPrice = prices[i];</span>
+						}
+						else
+						{
+<span class="nc" id="L1532">							prices[i] = -1;</span>
+						}
+					}
+<span class="nc" id="L1535">					i++;</span>
+				}
+
+<span class="nc bnc" id="L1538" title="All 4 branches missed.">				if (firstUserGroupPrice &gt; 0 &amp;&amp; Constants.getBoolean(&quot;basketUseFirstUserGroupPrice&quot;)) {</span>
+<span class="nc" id="L1539">					min = firstUserGroupPrice;</span>
+				}
+				else {
+<span class="nc bnc" id="L1542" title="All 2 branches missed.">					for (double p : prices)//najde najnizsiu cenu</span>
+					{
+<span class="nc bnc" id="L1544" title="All 4 branches missed.">						if (min &gt;= p &amp;&amp; p != -1)</span>
+						{
+<span class="nc" id="L1546">							min = p;</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L1550" title="All 2 branches missed.">				if (user.getFieldE() != null)//aplikuje zlavu</span>
+				{
+<span class="nc" id="L1552">					double zlava = Tools.getDoubleValue(user.getFieldE(), 0);</span>
+<span class="nc" id="L1553">					min = (min / 100f) * (100f - zlava);</span>
+				}
+<span class="nc" id="L1555">			}</span>
+		}
+		else
+		{
+<span class="pc bpc" id="L1559" title="2 of 4 branches missed.">			if (tokens != null &amp;&amp; tokens.length &gt;= 1)</span>
+			{
+<span class="fc" id="L1561">				min = Tools.getDoubleValue(tokens[0], 0);</span>
+			}
+		}
+<span class="fc" id="L1564">		return min;</span>
+	}
+
+	public static Comparator&lt;DocDetails&gt; getTitleComparator()
+	{
+<span class="nc" id="L1569">		Comparator&lt;DocDetails&gt; titleComparator = new Comparator&lt;DocDetails&gt;(){</span>
+			@Override
+			public int compare(DocDetails doc1, DocDetails doc2)
+			{
+<span class="nc bnc" id="L1573" title="All 2 branches missed.">				if (doc1 == null)</span>
+<span class="nc" id="L1574">					return -1;</span>
+<span class="nc bnc" id="L1575" title="All 2 branches missed.">				if (doc2 == null)</span>
+<span class="nc" id="L1576">					return 1;</span>
+<span class="nc" id="L1577">				return doc1.getTitle().compareTo(doc2.getTitle());</span>
+			}
+		};
+<span class="nc" id="L1580">		return titleComparator;</span>
+	}
+
+	public boolean isDisableAfterEnd()
+	{
+<span class="fc" id="L1585">		return disableAfterEnd;</span>
+	}
+
+	public static DocDetails getById(int docId)
+	{
+<span class="nc" id="L1590">		return DocDB.getInstance().getDoc(docId);</span>
+	}
+
+	@JsonIgnore
+	public GroupDetails getGroup()
+	{
+<span class="fc" id="L1596">		return GroupsDB.getInstance().getGroup(groupId);</span>
+	}
+
+	@JsonIgnore
+	public int getViewsTotal()
+	{
+<span class="fc" id="L1602">		return this.viewsTotal;</span>
+	}
+
+	@JsonIgnore
+	public void setViewsTotal(int viewsTotal)
+	{
+<span class="fc bfc" id="L1608" title="All 2 branches covered.">		if (viewsTotal == 0) return;</span>
+<span class="fc" id="L1609">		this.viewsTotal = viewsTotal;</span>
+<span class="fc" id="L1610">	}</span>
+
+	 /**
+	  * datum konania
+	  * @return
+	  */
+	 @JsonIgnore
+	 public String getEventDateString()
+	 {
+<span class="fc" id="L1619">	 	return Tools.formatDate(eventDateDate);</span>
+	 }
+
+	 /**
+	  * cas konania
+	  * @return
+	  */
+	  @JsonIgnore
+	 public String getEventTimeString()
+	 {
+<span class="fc" id="L1629">	 	return Tools.formatTime(eventDateDate);</span>
+	 }
+
+	 @JsonIgnore
+	 public String getPublishEndString()
+	 {
+<span class="fc bfc" id="L1635" title="All 2 branches covered.">		if(this.publishEndString == null) return &quot;&quot;;</span>
+<span class="fc" id="L1636">	 	else return this.publishEndString;</span>
+	 }
+
+	 @JsonIgnore
+	 public String getPublishEndTimeString()
+	 {
+<span class="fc bfc" id="L1642" title="All 2 branches covered.">		if(this.publishEndTimeString == null) return &quot;&quot;;</span>
+<span class="fc" id="L1643">	 	else return this.publishEndTimeString;</span>
+	 }
+
+	 @JsonIgnore
+	 public String getPublishStartString()
+	 {
+<span class="fc bfc" id="L1649" title="All 2 branches covered.">		if(this.publishStartString == null) return &quot;&quot;;</span>
+<span class="fc" id="L1650">	 	else return this.publishStartString;</span>
+	 }
+
+	 @JsonIgnore
+	 public String getPublishStartStringExtra()
+	 {
+<span class="fc bfc" id="L1656" title="All 2 branches covered.">		if(this.publishStartStringExtra == null) return &quot;&quot;;</span>
+<span class="fc" id="L1657">	 	else return this.publishStartStringExtra;</span>
+	 }
+
+	 @JsonIgnore
+	 public String getPublishStartTimeString()
+	 {
+<span class="fc bfc" id="L1663" title="All 2 branches covered.">		if(this.publishStartTimeString == null) return &quot;&quot;;</span>
+<span class="fc" id="L1664">	 	else return this.publishStartTimeString;</span>
+	 }
+
+	 @JsonIgnore
+	 public String getSyncDefaultForGroupId()
+	 {
+<span class="pc bpc" id="L1670" title="1 of 2 branches missed.">		if(this.syncDefaultForGroupId == null) return &quot;&quot;;</span>
+<span class="nc" id="L1671">	 	else return this.syncDefaultForGroupId;</span>
+	 }
+
+	@JsonIgnore
+	public String getSyncRemotePath()
+	{
+<span class="pc bpc" id="L1677" title="1 of 2 branches missed.">		if(this.syncRemotePath == null) return &quot;&quot;;</span>
+<span class="nc" id="L1678">		return this.syncRemotePath;</span>
+	}
+
+	public boolean isRequireSsl()
+	{
+<span class="fc" id="L1683">		return requireSsl;</span>
+	}
+
+	public void setRequireSsl(boolean requireSsl)
+	{
+<span class="fc" id="L1688">		this.requireSsl = requireSsl;</span>
+<span class="fc" id="L1689">	}</span>
+
+	public DocEditorFields getEditorFields() {
+<span class="fc" id="L1692">		return editorFields;</span>
+	}
+
+	public void setEditorFields(DocEditorFields editorFields) {
+<span class="fc" id="L1696">		this.editorFields = editorFields;</span>
+<span class="fc" id="L1697">	}</span>
+
+	/**
+	 * Vrati cestu spojenu s GroupDetails.getFullPath, pouziva sa vo WJ9 Datatable
+	 * @return
+	 */
+<span class="fc" id="L1703">	@Transient</span>
+	@DataTableColumn(
+		inputType = DataTableColumnType.TEXT,
+		title = &quot;sync.path&quot;,
+		hiddenEditor = true,
+		visible = false,
+		orderable = false
+	)
+	private String fullPath = null;
+
+	public String getFullPath() {
+<span class="fc bfc" id="L1714" title="All 2 branches covered.">		if (fullPath == null) {</span>
+			//ak nie je fullPath nastavene vygeneruj cestu podla priecinka
+<span class="fc" id="L1716">			GroupDetails grp = GroupsDB.getInstance().getGroup(getGroupId());</span>
+<span class="fc bfc" id="L1717" title="All 2 branches covered.">			if (grp != null) return grp.getFullPath()+&quot;/&quot;+getTitle();</span>
+<span class="fc" id="L1718">			return &quot;/&quot;+getTitle();</span>
+		}
+<span class="fc" id="L1720">		return fullPath;</span>
+	}
+
+	public void setFullPath(String fullPath)
+	{
+<span class="fc" id="L1725">		this.fullPath = fullPath;</span>
+<span class="fc" id="L1726">	}</span>
+
+	/**
+	 * @deprecated Pouzivajte verziu ktora vrati Integer
+	 */
+	@JsonIgnore
+	@Deprecated
+	public String[] getPerexGroup() {
+<span class="fc" id="L1734">		return Tools.getTokens(getPerexGroupIdsString(), &quot;,&quot;);</span>
+	}
+
+	public void setPerexGroup(String[] perexGroup) {
+<span class="fc" id="L1738">		StringBuilder groups = new StringBuilder();</span>
+
+<span class="fc bfc" id="L1740" title="All 2 branches covered.">		for(String pG : perexGroup) {</span>
+<span class="fc" id="L1741">			groups.append(pG).append(&quot;,&quot;);</span>
+		}
+
+<span class="fc" id="L1744">		setPerexGroupString(groups.toString());</span>
+<span class="fc" id="L1745">	}</span>
+
+	public Integer[] getPerexGroups() {
+<span class="fc" id="L1748">		return this.perexGroups;</span>
+	}
+
+	public void setPerexGroups(Integer[] perexGroups) {
+		//perexGroups[0]==null vrati DT pri zvoleni ziadnej polozky
+<span class="fc bfc" id="L1753" title="All 8 branches covered.">		if (perexGroups == null || perexGroups.length&lt;1 || (perexGroups.length==1 &amp;&amp; perexGroups[0]==null )) this.perexGroups = new Integer[0];</span>
+<span class="fc" id="L1754">		else this.perexGroups = perexGroups;</span>
+<span class="fc" id="L1755">	}</span>
+
+	// !!! - Pridane gettery/settery z Integer na int kvoli spatnej kompatibilite
+	public int getGroupId() {
+<span class="fc" id="L1759">		return groupId;</span>
+	}
+
+	public void setGroupId(int groupId) {
+<span class="fc" id="L1763">		this.groupId = groupId;</span>
+<span class="fc" id="L1764">	}</span>
+
+	public int getAuthorId() {
+
+<span class="fc" id="L1768">		return authorId;</span>
+	}
+
+	public void setAuthorId(int newAuthorId)
+	{
+<span class="fc bfc" id="L1773" title="All 2 branches covered.">		if (newAuthorId == 0) return;</span>
+<span class="fc" id="L1774">		this.authorId = newAuthorId;</span>
+<span class="fc" id="L1775">	}</span>
+
+	public int getTempId() {
+<span class="fc" id="L1778">		return tempId;</span>
+	}
+
+	public void setTempId(int tempId) {
+<span class="fc" id="L1782">		this.tempId = tempId;</span>
+<span class="fc" id="L1783">	}</span>
+
+	public int getSortPriority() {
+<span class="fc" id="L1786">		return sortPriority;</span>
+	}
+
+	public void setSortPriority(int sortPriority) {
+<span class="fc" id="L1790">		this.sortPriority = sortPriority;</span>
+<span class="fc" id="L1791">	}</span>
+
+	public int getHeaderDocId() {
+<span class="fc" id="L1794">		return headerDocId;</span>
+	}
+
+	public void setHeaderDocId(int headerDocId)
+	{
+<span class="fc" id="L1799">		this.headerDocId = headerDocId;</span>
+<span class="fc" id="L1800">	}</span>
+
+	public int getFooterDocId() {
+<span class="fc" id="L1803">		return footerDocId;</span>
+	}
+
+	public void setFooterDocId(int footerDocId)
+	{
+<span class="fc" id="L1808">		this.footerDocId = footerDocId;</span>
+<span class="fc" id="L1809">	}</span>
+
+	public int getMenuDocId() {
+<span class="fc" id="L1812">		return menuDocId;</span>
+	}
+
+	public void setMenuDocId(int menuDocId)
+	{
+<span class="fc" id="L1817">		this.menuDocId = menuDocId;</span>
+<span class="fc" id="L1818">	}</span>
+
+	public int getRightMenuDocId() {
+<span class="fc" id="L1821">		return this.rightMenuDocId;</span>
+	}
+
+	public void setRightMenuDocId(int rightMenuDocId)
+	{
+<span class="fc" id="L1826">		this.rightMenuDocId = rightMenuDocId;</span>
+<span class="fc" id="L1827">	}</span>
+
+	// !!! Vygenerovane geetry/settery pretoze pomocou lomboku sa neprenesu na childa
+	public void setTitle(String title) {
+<span class="pc bpc" id="L1831" title="1 of 2 branches missed.">		if (isEmpty(title)) return;</span>
+<span class="fc" id="L1832">		this.title = title;</span>
+<span class="fc" id="L1833">	}</span>
+
+	public void setNavbar(String navbar) {
+<span class="fc bfc" id="L1836" title="All 2 branches covered.">		if (isEmpty(navbar)) return;</span>
+<span class="fc" id="L1837">		this.navbar = navbar;</span>
+<span class="fc" id="L1838">	}</span>
+
+	public String getVirtualPath() {
+<span class="pc bpc" id="L1841" title="1 of 2 branches missed.">		if(virtualPath == null) return &quot;&quot;;</span>
+<span class="fc" id="L1842">		return virtualPath;</span>
+	}
+
+	public void setVirtualPath(String virtualPath) {
+<span class="pc bpc" id="L1846" title="1 of 2 branches missed.">		if (virtualPath == null) return;</span>
+<span class="fc" id="L1847">		this.virtualPath = virtualPath;</span>
+<span class="fc" id="L1848">	}</span>
+
+	public String getExternalLink() {
+<span class="fc bfc" id="L1851" title="All 2 branches covered.">		if(externalLink == null) return &quot;&quot;;</span>
+<span class="fc" id="L1852">		return externalLink;</span>
+	}
+
+	public void setExternalLink(String externalLink) {
+<span class="fc bfc" id="L1856" title="All 2 branches covered.">		if (isEmpty(externalLink)) return;</span>
+<span class="fc" id="L1857">		this.externalLink = externalLink;</span>
+<span class="fc" id="L1858">	}</span>
+
+	public void setAvailable(boolean available) {
+<span class="fc" id="L1861">		this.available = available;</span>
+<span class="fc" id="L1862">	}</span>
+
+	public boolean isSearchable() {
+<span class="fc" id="L1865">		return searchable;</span>
+	}
+
+	public void setSearchable(boolean searchable) {
+<span class="fc" id="L1869">		this.searchable = searchable;</span>
+<span class="fc" id="L1870">	}</span>
+
+	public void setCacheable(boolean cacheable) {
+<span class="fc" id="L1873">		this.cacheable = cacheable;</span>
+<span class="fc" id="L1874">	}</span>
+
+	public String getPasswordProtected() {
+<span class="fc bfc" id="L1877" title="All 2 branches covered.">		if(passwordProtected == null) return &quot;&quot;;</span>
+<span class="fc" id="L1878">		return passwordProtected;</span>
+	}
+
+	public void setDisableAfterEnd(boolean disableAfterEnd) {
+<span class="fc" id="L1882">		this.disableAfterEnd = disableAfterEnd;</span>
+<span class="fc" id="L1883">	}</span>
+
+	public boolean isPublishAfterStart() {
+<span class="fc" id="L1886">		return publishAfterStart;</span>
+	}
+
+	public void setPublishAfterStart(boolean publishAfterStart) {
+<span class="fc" id="L1890">		this.publishAfterStart = publishAfterStart;</span>
+<span class="fc" id="L1891">	}</span>
+
+	public boolean isLazyLoaded() {
+<span class="fc" id="L1894">		return lazyLoaded;</span>
+	}
+
+	public void setLazyLoaded(boolean lazyLoaded) {
+<span class="fc" id="L1898">		this.lazyLoaded = lazyLoaded;</span>
+<span class="fc" id="L1899">	}</span>
+
+	public String getFieldA() {
+<span class="fc bfc" id="L1902" title="All 2 branches covered.">		if(fieldA == null) return &quot;&quot;;</span>
+<span class="fc" id="L1903">		return fieldA;</span>
+	}
+
+	public void setFieldA(String fieldA) {
+<span class="fc bfc" id="L1907" title="All 2 branches covered.">		if (isEmpty(fieldA)) return;</span>
+<span class="fc" id="L1908">		this.fieldA = fieldA;</span>
+<span class="fc" id="L1909">	}</span>
+
+	public String getFieldB() {
+<span class="fc bfc" id="L1912" title="All 2 branches covered.">		if(fieldB == null) return &quot;&quot;;</span>
+<span class="fc" id="L1913">		return fieldB;</span>
+	}
+
+	public void setFieldB(String fieldB) {
+<span class="fc bfc" id="L1917" title="All 2 branches covered.">		if (isEmpty(fieldB)) return;</span>
+<span class="fc" id="L1918">		this.fieldB = fieldB;</span>
+<span class="fc" id="L1919">	}</span>
+
+	public String getFieldC() {
+<span class="fc bfc" id="L1922" title="All 2 branches covered.">		if(fieldC == null) return &quot;&quot;;</span>
+<span class="fc" id="L1923">		return fieldC;</span>
+	}
+
+	public void setFieldC(String fieldC) {
+<span class="pc bpc" id="L1927" title="1 of 2 branches missed.">		if (isEmpty(fieldC)) return;</span>
+<span class="nc" id="L1928">		this.fieldC = fieldC;</span>
+<span class="nc" id="L1929">	}</span>
+
+	public String getFieldD() {
+<span class="fc bfc" id="L1932" title="All 2 branches covered.">		if(fieldD == null) return &quot;&quot;;</span>
+<span class="fc" id="L1933">		return fieldD;</span>
+	}
+
+	public void setFieldD(String fieldD) {
+<span class="fc bfc" id="L1937" title="All 2 branches covered.">		if (isEmpty(fieldD)) return;</span>
+<span class="fc" id="L1938">		this.fieldD = fieldD;</span>
+<span class="fc" id="L1939">	}</span>
+
+	public String getFieldE() {
+<span class="fc bfc" id="L1942" title="All 2 branches covered.">		if(fieldE == null) return &quot;&quot;;</span>
+<span class="fc" id="L1943">		return fieldE;</span>
+	}
+
+	public void setFieldE(String fieldE) {
+<span class="fc bfc" id="L1947" title="All 2 branches covered.">		if (isEmpty(fieldE)) return;</span>
+<span class="fc" id="L1948">		this.fieldE = fieldE;</span>
+<span class="fc" id="L1949">	}</span>
+
+	public String getFieldF() {
+<span class="fc bfc" id="L1952" title="All 2 branches covered.">		if(fieldF == null) return &quot;&quot;;</span>
+<span class="fc" id="L1953">		return fieldF;</span>
+	}
+
+	public void setFieldF(String fieldF) {
+<span class="fc bfc" id="L1957" title="All 2 branches covered.">		if (isEmpty(fieldF)) return;</span>
+<span class="fc" id="L1958">		this.fieldF = fieldF;</span>
+<span class="fc" id="L1959">	}</span>
+
+	public String getFieldG() {
+<span class="fc bfc" id="L1962" title="All 2 branches covered.">		if(fieldG == null) return &quot;&quot;;</span>
+<span class="fc" id="L1963">		return fieldG;</span>
+	}
+
+	public void setFieldG(String fieldG) {
+<span class="fc bfc" id="L1967" title="All 2 branches covered.">		if (isEmpty(fieldG)) return;</span>
+<span class="fc" id="L1968">		this.fieldG = fieldG;</span>
+<span class="fc" id="L1969">	}</span>
+
+	public String getFieldH() {
+<span class="fc bfc" id="L1972" title="All 2 branches covered.">		if(fieldH == null) return &quot;&quot;;</span>
+<span class="fc" id="L1973">		return fieldH;</span>
+	}
+
+	public void setFieldH(String fieldH) {
+<span class="fc bfc" id="L1977" title="All 2 branches covered.">		if (isEmpty(fieldH)) return;</span>
+<span class="fc" id="L1978">		this.fieldH = fieldH;</span>
+<span class="fc" id="L1979">	}</span>
+
+	public String getFieldI() {
+<span class="fc bfc" id="L1982" title="All 2 branches covered.">		if(fieldI == null) return &quot;&quot;;</span>
+<span class="fc" id="L1983">		return fieldI;</span>
+	}
+
+	public void setFieldI(String fieldI) {
+<span class="fc bfc" id="L1987" title="All 2 branches covered.">		if (isEmpty(fieldI)) return;</span>
+<span class="fc" id="L1988">		this.fieldI = fieldI;</span>
+<span class="fc" id="L1989">	}</span>
+
+	public String getFieldJ() {
+<span class="fc bfc" id="L1992" title="All 2 branches covered.">		if(fieldJ == null) return &quot;&quot;;</span>
+<span class="fc" id="L1993">		return fieldJ;</span>
+	}
+
+	public void setFieldJ(String fieldJ) {
+<span class="fc bfc" id="L1997" title="All 2 branches covered.">		if (isEmpty(fieldJ)) return;</span>
+<span class="fc" id="L1998">		this.fieldJ = fieldJ;</span>
+<span class="fc" id="L1999">	}</span>
+
+	public String getFieldK() {
+<span class="fc bfc" id="L2002" title="All 2 branches covered.">		if(fieldK == null) return &quot;&quot;;</span>
+<span class="fc" id="L2003">		return fieldK;</span>
+	}
+
+	public void setFieldK(String fieldK) {
+<span class="fc bfc" id="L2007" title="All 2 branches covered.">		if (isEmpty(fieldK)) return;</span>
+<span class="fc" id="L2008">		this.fieldK = fieldK;</span>
+<span class="fc" id="L2009">	}</span>
+
+	public String getFieldL() {
+<span class="fc bfc" id="L2012" title="All 2 branches covered.">		if(fieldL == null) return &quot;&quot;;</span>
+<span class="fc" id="L2013">		return fieldL;</span>
+	}
+
+	public void setFieldL(String fieldL) {
+<span class="fc bfc" id="L2017" title="All 2 branches covered.">		if (isEmpty(fieldL)) return;</span>
+<span class="fc" id="L2018">		this.fieldL = fieldL;</span>
+<span class="fc" id="L2019">	}</span>
+
+	public String getFieldM() {
+<span class="fc bfc" id="L2022" title="All 2 branches covered.">		if(fieldM == null) return &quot;&quot;;</span>
+<span class="fc" id="L2023">		return fieldM;</span>
+	}
+
+	public void setFieldM(String fieldM) {
+<span class="fc bfc" id="L2027" title="All 2 branches covered.">		if (isEmpty(fieldM)) return;</span>
+<span class="fc" id="L2028">		this.fieldM = fieldM;</span>
+<span class="fc" id="L2029">	}</span>
+
+	public String getFieldN() {
+<span class="fc bfc" id="L2032" title="All 2 branches covered.">		if(fieldN == null) return &quot;&quot;;</span>
+<span class="fc" id="L2033">		return fieldN;</span>
+	}
+
+	public void setFieldN(String fieldN) {
+<span class="pc bpc" id="L2037" title="1 of 2 branches missed.">		if (isEmpty(fieldN)) return;</span>
+<span class="nc" id="L2038">		this.fieldN = fieldN;</span>
+<span class="nc" id="L2039">	}</span>
+
+	public String getFieldO() {
+<span class="fc bfc" id="L2042" title="All 2 branches covered.">		if(fieldO == null) return &quot;&quot;;</span>
+<span class="fc" id="L2043">		return fieldO;</span>
+	}
+
+	public void setFieldO(String fieldO) {
+<span class="pc bpc" id="L2047" title="1 of 2 branches missed.">		if (isEmpty(fieldO)) return;</span>
+<span class="nc" id="L2048">		this.fieldO = fieldO;</span>
+<span class="nc" id="L2049">	}</span>
+
+	public String getFieldP() {
+<span class="fc bfc" id="L2052" title="All 2 branches covered.">		if(fieldP == null) return &quot;&quot;;</span>
+<span class="fc" id="L2053">		return fieldP;</span>
+	}
+
+	public void setFieldP(String fieldP) {
+<span class="pc bpc" id="L2057" title="1 of 2 branches missed.">		if (isEmpty(fieldP)) return;</span>
+<span class="nc" id="L2058">		this.fieldP = fieldP;</span>
+<span class="nc" id="L2059">	}</span>
+
+	public String getFieldQ() {
+<span class="fc bfc" id="L2062" title="All 2 branches covered.">		if(fieldQ == null) return &quot;&quot;;</span>
+<span class="fc" id="L2063">		return fieldQ;</span>
+	}
+
+	public void setFieldQ(String fieldQ) {
+<span class="fc bfc" id="L2067" title="All 2 branches covered.">		if (isEmpty(fieldQ)) return;</span>
+<span class="fc" id="L2068">		this.fieldQ = fieldQ;</span>
+<span class="fc" id="L2069">	}</span>
+
+	public String getFieldR() {
+<span class="fc bfc" id="L2072" title="All 2 branches covered.">		if(fieldR == null) return &quot;&quot;;</span>
+<span class="fc" id="L2073">		return fieldR;</span>
+	}
+
+	public void setFieldR(String fieldR) {
+<span class="pc bpc" id="L2077" title="1 of 2 branches missed.">		if (isEmpty(fieldR)) return;</span>
+<span class="nc" id="L2078">		this.fieldR = fieldR;</span>
+<span class="nc" id="L2079">	}</span>
+
+	public String getFieldS() {
+<span class="fc bfc" id="L2082" title="All 2 branches covered.">		if(fieldS == null) return &quot;&quot;;</span>
+<span class="fc" id="L2083">		return fieldS;</span>
+	}
+
+	public void setFieldS(String fieldS) {
+<span class="pc bpc" id="L2087" title="1 of 2 branches missed.">		if (isEmpty(fieldS)) return;</span>
+<span class="nc" id="L2088">		this.fieldS = fieldS;</span>
+<span class="nc" id="L2089">	}</span>
+
+	public String getFieldT() {
+<span class="pc bpc" id="L2092" title="1 of 2 branches missed.">		if(fieldT == null) return &quot;&quot;;</span>
+<span class="fc" id="L2093">		return fieldT;</span>
+	}
+
+	public void setFieldT(String fieldT) {
+<span class="fc bfc" id="L2097" title="All 2 branches covered.">		if (isEmpty(fieldT)) return;</span>
+<span class="fc" id="L2098">		this.fieldT = fieldT;</span>
+<span class="fc" id="L2099">	}</span>
+
+	public String getHtmlHead() {
+<span class="fc bfc" id="L2102" title="All 2 branches covered.">		if(htmlHead == null) return &quot;&quot;;</span>
+<span class="fc" id="L2103">		return htmlHead;</span>
+	}
+
+	public void setHtmlHead(String htmlHead) {
+<span class="fc bfc" id="L2107" title="All 2 branches covered.">		if (isEmpty(htmlHead)) return;</span>
+<span class="fc" id="L2108">		this.htmlHead = htmlHead;</span>
+<span class="fc" id="L2109">	}</span>
+
+	public long getPublishStart() {
+<span class="fc bfc" id="L2112" title="All 2 branches covered.">		if (publishStartDate == null) return 0;</span>
+<span class="fc" id="L2113">		return publishStartDate.getTime();</span>
+	}
+
+	public long getPublishEnd() {
+<span class="fc bfc" id="L2117" title="All 2 branches covered.">		if (publishEndDate == null) return 0;</span>
+<span class="fc" id="L2118">		return publishEndDate.getTime();</span>
+	}
+
+	public long getEventDate() {
+<span class="fc bfc" id="L2122" title="All 2 branches covered.">		if (eventDateDate == null) return 0;</span>
+<span class="fc" id="L2123">		return eventDateDate.getTime();</span>
+	}
+
+	public String getHtmlData() {
+<span class="fc bfc" id="L2127" title="All 2 branches covered.">		if(htmlData == null) return &quot;&quot;;</span>
+<span class="fc" id="L2128">		return htmlData;</span>
+	}
+
+	public void setHtmlData(String htmlData) {
+<span class="fc bfc" id="L2132" title="All 2 branches covered.">		if (isEmpty(htmlData)) return;</span>
+<span class="fc" id="L2133">		this.htmlData = htmlData;</span>
+<span class="fc" id="L2134">	}</span>
+
+	public String getPerexPlace() {
+<span class="fc bfc" id="L2137" title="All 2 branches covered.">		if(perexPlace == null) return &quot;&quot;;</span>
+<span class="fc" id="L2138">		return perexPlace;</span>
+	}
+
+	public void setPerexPlace(String perexPlace) {
+<span class="fc bfc" id="L2142" title="All 2 branches covered.">		if (isEmpty(perexPlace)) return;</span>
+<span class="fc" id="L2143">		this.perexPlace = perexPlace;</span>
+<span class="fc" id="L2144">	}</span>
+
+	public String getPerexImage() {
+<span class="fc bfc" id="L2147" title="All 2 branches covered.">		if(perexImage == null) return &quot;&quot;;</span>
+<span class="fc" id="L2148">		return perexImage;</span>
+	}
+
+	public void setPerexImage(String perexImage) {
+<span class="fc bfc" id="L2152" title="All 2 branches covered.">		if (isEmpty(perexImage)) return;</span>
+<span class="fc" id="L2153">		this.perexImage = perexImage;</span>
+<span class="fc" id="L2154">	}</span>
+
+	public void setAuthorName(String authorName) {
+<span class="fc bfc" id="L2157" title="All 2 branches covered.">		if (isEmpty(authorName)) return;</span>
+<span class="fc" id="L2158">		this.authorName = authorName;</span>
+<span class="fc" id="L2159">	}</span>
+
+	public void setDocLink(String docLink) {
+<span class="fc bfc" id="L2162" title="All 2 branches covered.">		if (isEmpty(docLink)) return;</span>
+<span class="fc" id="L2163">		this.docLink = docLink;</span>
+<span class="fc" id="L2164">	}</span>
+
+	public String getData() {
+<span class="fc bfc" id="L2167" title="All 2 branches covered.">		if(data == null) return &quot;&quot;;</span>
+<span class="fc" id="L2168">		return data;</span>
+	}
+
+	public void setData(String data) {
+<span class="fc bfc" id="L2172" title="All 2 branches covered.">		if (isEmpty(data)) return;</span>
+<span class="fc" id="L2173">		this.data = data;</span>
+<span class="fc" id="L2174">	}</span>
+
+	public void setEventDateString(String eventDateString) {
+<span class="fc bfc" id="L2177" title="All 2 branches covered.">		if (Tools.isEmpty(eventDateString)) {</span>
+<span class="fc" id="L2178">			eventDateDate = null;</span>
+		}
+<span class="fc" id="L2180">		this.eventDateDate = new Date(DB.getTimestamp(eventDateString));</span>
+<span class="fc" id="L2181">	}</span>
+
+	public void setEventTimeString(String eventTimeString) {
+<span class="fc bfc" id="L2184" title="All 2 branches covered.">		if (Tools.isEmpty(eventTimeString)) return;</span>
+<span class="fc" id="L2185">		this.eventDateDate = new Date(DB.getTimestamp(getEventDateString(), eventTimeString));</span>
+<span class="fc" id="L2186">	}</span>
+
+	public String getTempName() {
+<span class="pc bpc" id="L2189" title="1 of 2 branches missed.">		if(tempName == null) return &quot;&quot;;</span>
+<span class="nc" id="L2190">		return tempName;</span>
+	}
+
+	public void setTempName(String tempName) {
+<span class="fc bfc" id="L2194" title="All 2 branches covered.">		if (isEmpty(tempName)) return;</span>
+<span class="fc" id="L2195">		this.tempName = tempName;</span>
+<span class="fc" id="L2196">	}</span>
+
+	public void setPublishEndString(String publishEndString) {
+<span class="fc bfc" id="L2199" title="All 2 branches covered.">		if (isEmpty(publishEndString)) return;</span>
+<span class="fc" id="L2200">		this.publishEndString = publishEndString;</span>
+<span class="fc" id="L2201">	}</span>
+
+	public void setPublishEndTimeString(String publishEndTimeString) {
+<span class="fc bfc" id="L2204" title="All 2 branches covered.">		if (isEmpty(publishEndTimeString)) return;</span>
+<span class="fc" id="L2205">		this.publishEndTimeString = publishEndTimeString;</span>
+<span class="fc" id="L2206">	}</span>
+
+	public void setPublishStartString(String publishStartString) {
+<span class="fc bfc" id="L2209" title="All 2 branches covered.">		if (isEmpty(publishStartString)) return;</span>
+<span class="fc" id="L2210">		this.publishStartString = publishStartString;</span>
+<span class="fc" id="L2211">	}</span>
+
+	public void setPublishStartStringExtra(String publishStartStringExtra) {
+<span class="fc bfc" id="L2214" title="All 2 branches covered.">		if (isEmpty(publishStartStringExtra)) return;</span>
+<span class="fc" id="L2215">		this.publishStartStringExtra = publishStartStringExtra;</span>
+<span class="fc" id="L2216">	}</span>
+
+	public void setPublishStartTimeString(String publishStartTimeString) {
+<span class="fc bfc" id="L2219" title="All 2 branches covered.">		if (isEmpty(publishStartTimeString)) return;</span>
+<span class="fc" id="L2220">		this.publishStartTimeString = publishStartTimeString;</span>
+<span class="fc" id="L2221">	}</span>
+
+	public void setSyncDefaultForGroupId(String syncDefaultForGroupId) {
+<span class="pc bpc" id="L2224" title="1 of 2 branches missed.">		if (isEmpty(syncDefaultForGroupId)) return;</span>
+<span class="nc" id="L2225">		this.syncDefaultForGroupId = syncDefaultForGroupId;</span>
+<span class="nc" id="L2226">	}</span>
+
+	public void setSyncRemotePath(String syncRemotePath) {
+<span class="pc bpc" id="L2229" title="1 of 2 branches missed.">		if (isEmpty(syncRemotePath)) return;</span>
+<span class="nc" id="L2230">		this.syncRemotePath = syncRemotePath;</span>
+<span class="nc" id="L2231">	}</span>
+
+	public int getLogonPageDocId() {
+<span class="fc" id="L2234">		return logonPageDocId;</span>
+	}
+
+	public String getFileName() {
+<span class="fc bfc" id="L2238" title="All 2 branches covered.">		if(fileName == null) return &quot;&quot;;</span>
+<span class="fc" id="L2239">		return fileName;</span>
+	}
+
+	public void setFileName(String fileName) {
+<span class="fc bfc" id="L2243" title="All 2 branches covered.">		if (isEmpty(fileName)) return;</span>
+<span class="fc" id="L2244">		this.fileName = fileName;</span>
+<span class="fc" id="L2245">	}</span>
+
+	public void setAuthorEmail(String authorEmail) {
+<span class="fc bfc" id="L2248" title="All 2 branches covered.">		if (isEmpty(authorEmail)) return;</span>
+<span class="fc" id="L2249">		this.authorEmail = authorEmail;</span>
+<span class="fc" id="L2250">	}</span>
+
+	public String getAuthorPhoto() {
+<span class="fc bfc" id="L2253" title="All 2 branches covered.">		if(authorPhoto == null) return &quot;&quot;;</span>
+<span class="fc" id="L2254">		return authorPhoto;</span>
+	}
+
+	public void setAuthorPhoto(String authorPhoto) {
+<span class="fc bfc" id="L2258" title="All 2 branches covered.">		if (isEmpty(authorPhoto)) return;</span>
+<span class="fc" id="L2259">		this.authorPhoto = authorPhoto;</span>
+<span class="fc" id="L2260">	}</span>
+
+	//Special date - long anotations
+	public void setDateCreated(long dateCreated)
+	{
+<span class="fc bfc" id="L2265" title="All 2 branches covered.">		if (dateCreated == 0) this.dateCreated = null;</span>
+<span class="fc" id="L2266">		else this.dateCreated = new Date(dateCreated);</span>
+<span class="fc" id="L2267">	}</span>
+
+	//special Date objekty
+	public Date getPublishStartDate() {
+<span class="fc" id="L2271">		return publishStartDate;</span>
+	}
+
+	public void setPublishStartDate(Date publishStartDate) {
+<span class="fc" id="L2275">		this.publishStartDate = publishStartDate;</span>
+<span class="fc" id="L2276">	}</span>
+
+	public Date getPublishEndDate() {
+<span class="fc" id="L2279">		return publishEndDate;</span>
+	}
+
+	public void setPublishEndDate(Date publishEndDate) {
+<span class="fc" id="L2283">		this.publishEndDate = publishEndDate;</span>
+<span class="fc" id="L2284">	}</span>
+
+	public Date getEventDateDate() {
+<span class="fc" id="L2287">		return eventDateDate;</span>
+	}
+
+	public void setEventDateDate(Date eventDateDate) {
+<span class="fc" id="L2291">		this.eventDateDate = eventDateDate;</span>
+<span class="fc" id="L2292">	}</span>
+
+	public String getDataAsc() {
+<span class="fc bfc" id="L2295" title="All 2 branches covered.">		if(dataAsc == null) return &quot;&quot;;</span>
+<span class="fc" id="L2296">		return dataAsc;</span>
+	}
+
+	public void setDataAsc(String dataAsc) {
+<span class="fc bfc" id="L2300" title="All 2 branches covered.">		if (isEmpty(dataAsc)) return;</span>
+<span class="fc" id="L2301">		this.dataAsc = dataAsc;</span>
+<span class="fc" id="L2302">	}</span>
+
+	public Boolean getUrlInheritGroup() {
+<span class="fc" id="L2305">		return urlInheritGroup;</span>
+	}
+
+	public void setUrlInheritGroup(Boolean urlInheritGroup) {
+<span class="fc" id="L2309">		this.urlInheritGroup = urlInheritGroup;</span>
+<span class="fc" id="L2310">	}</span>
+
+	public Boolean getGenerateUrlFromTitle() {
+<span class="fc" id="L2313">		return generateUrlFromTitle;</span>
+	}
+
+	public void setGenerateUrlFromTitle(Boolean generateUrlFromTitle) {
+<span class="fc" id="L2317">		this.generateUrlFromTitle = generateUrlFromTitle;</span>
+<span class="fc" id="L2318">	}</span>
+
+	public String getEditorVirtualPath() {
+<span class="fc" id="L2321">		return editorVirtualPath;</span>
+	}
+
+	public void setEditorVirtualPath(String editorVirtualPath) {
+<span class="fc" id="L2325">		this.editorVirtualPath = editorVirtualPath;</span>
+<span class="fc" id="L2326">	}</span>
+
+	//Doplnene volne polia - ticket 54205 - prav cast
+	public int getTempFieldADocId() {
+<span class="fc" id="L2330">		return tempFieldADocId;</span>
+	}
+
+	public void setTempFieldADocId(int tempFieldADocId) {
+<span class="fc" id="L2334">		this.tempFieldADocId = tempFieldADocId;</span>
+<span class="fc" id="L2335">	}</span>
+
+	public int getTempFieldBDocId() {
+<span class="fc" id="L2338">		return tempFieldBDocId;</span>
+	}
+
+	public void setTempFieldBDocId(int tempFieldBDocId) {
+<span class="fc" id="L2342">		this.tempFieldBDocId = tempFieldBDocId;</span>
+<span class="fc" id="L2343">	}</span>
+
+	public int getTempFieldCDocId() {
+<span class="fc" id="L2346">		return tempFieldCDocId;</span>
+	}
+
+	public void setTempFieldCDocId(int tempFieldCDocId) {
+<span class="fc" id="L2350">		this.tempFieldCDocId = tempFieldCDocId;</span>
+<span class="fc" id="L2351">	}</span>
+
+	public int getTempFieldDDocId() {
+<span class="fc" id="L2354">		return tempFieldDDocId;</span>
+	}
+
+	public void setTempFieldDDocId(int tempFieldDDocId) {
+<span class="fc" id="L2358">		this.tempFieldDDocId = tempFieldDDocId;</span>
+<span class="fc" id="L2359">	}</span>
+
+	//Doplnene volne polia - ticket 54205 - druha cast
+
+	//Not logged user
+	public void setShowInMenu(boolean showInMenu) {
+<span class="fc" id="L2365">		this.showInMenu = showInMenu;</span>
+<span class="fc" id="L2366">	}</span>
+
+	public Boolean getShowInNavbar() {
+<span class="fc" id="L2369">		return showInNavbar;</span>
+	}
+
+	public void setShowInNavbar(Boolean showInNavbar) {
+<span class="fc" id="L2373">		this.showInNavbar = showInNavbar;</span>
+<span class="fc" id="L2374">	}</span>
+
+	public Boolean getShowInSitemap() {
+<span class="fc" id="L2377">		return showInSitemap;</span>
+	}
+
+	public void setShowInSitemap(Boolean showInSitemap) {
+<span class="fc" id="L2381">		this.showInSitemap = showInSitemap;</span>
+<span class="fc" id="L2382">	}</span>
+
+	//Logged user
+	public Boolean getLoggedShowInMenu() {
+<span class="fc" id="L2386">		return loggedShowInMenu;</span>
+	}
+
+	public void setLoggedShowInMenu(Boolean loggedShowInMenu) {
+<span class="fc" id="L2390">		this.loggedShowInMenu = loggedShowInMenu;</span>
+<span class="fc" id="L2391">	}</span>
+
+	public Boolean getLoggedShowInNavbar() {
+<span class="fc" id="L2394">		return loggedShowInNavbar;</span>
+	}
+
+	public void setLoggedShowInNavbar(Boolean loggedShowInNavbar) {
+<span class="fc" id="L2398">		this.loggedShowInNavbar = loggedShowInNavbar;</span>
+<span class="fc" id="L2399">	}</span>
+
+	public Boolean getLoggedShowInSitemap() {
+<span class="fc" id="L2402">		return loggedShowInSitemap;</span>
+	}
+
+	public void setLoggedShowInSitemap(Boolean loggedShowInSitemap) {
+<span class="fc" id="L2406">		this.loggedShowInSitemap = loggedShowInSitemap;</span>
+<span class="fc" id="L2407">	}</span>
+
+	/**
+	 * Vrati true, ak sa polozka ma zobrazit v menu (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param request
+	 * @return
+	 */
+	public boolean isShowInMenu(HttpServletRequest request) {
+<span class="fc" id="L2415">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L2416" title="1 of 4 branches missed.">		if(user == null || loggedShowInMenu == null){</span>
+<span class="fc" id="L2417">			return showInMenu;</span>
+		}
+<span class="nc" id="L2419">		return loggedShowInMenu;</span>
+	}
+
+	/**
+	 * Vrati true, ak sa polozka ma zobrazit v navigacnej liste (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param request
+	 * @return
+	 */
+	public boolean isShowInNavbar(HttpServletRequest request) {
+<span class="fc" id="L2428">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L2429" title="All 4 branches covered.">		if(user == null || loggedShowInNavbar==null) {</span>
+<span class="fc bfc" id="L2430" title="All 2 branches covered.">			if(showInNavbar == null) return isShowInMenu();</span>
+<span class="fc" id="L2431">			return showInNavbar;</span>
+		}
+
+<span class="fc" id="L2434">		return loggedShowInNavbar;</span>
+	}
+
+	/**
+	 * Vrati true, ak sa polozka ma zobrazit v mape stranok (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param request
+	 * @return
+	 */
+	public boolean isShowInSitemap(HttpServletRequest request) {
+<span class="fc" id="L2443">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L2444" title="1 of 4 branches missed.">		if(user == null || loggedShowInSitemap==null) {</span>
+<span class="fc bfc" id="L2445" title="All 2 branches covered.">			if(showInSitemap == null) return showInMenu;</span>
+<span class="fc" id="L2446">			return showInSitemap;</span>
+		}
+
+<span class="fc" id="L2449">		return loggedShowInSitemap;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L2454">		return getFullPath()+&quot;, ID =&gt; &quot;+getDocId();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

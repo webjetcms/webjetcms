@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HTMLTree.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cvu.html</a> &gt; <span class="el_source">HTMLTree.java</span></div><h1>HTMLTree.java</h1><pre class="source lang-java linenums">/*
+ * HTML Parser
+ * Copyright (C) 1997 David McNicol
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * file COPYING for more details.
+ */
+
+package cvu.html;
+
+import java.util.Enumeration;
+
+/**
+ * This class stores an HTML file in tree format. It can be constructed
+ * from an HTMLTokenizer or a file name, in which case it will create its
+ * own tokenizer. &lt;p&gt;
+ * Once the HTML file has been parsed a number of search operations can
+ * be performed. The nature of the searches are described below, but some
+ * of their uses are highlighted here: &lt;p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;Subtree - Finding all of the FORM elements within a BODY element.
+ * &lt;li&gt;Sibling - Finding all the LI elements within the same UL element.
+ * &lt;li&gt;All - Finding every occurence of the A element.
+ * &lt;/ul&gt;
+ * There is also a context search, which performs a subtree search on the
+ * specified element's parent. This can be thought of as a combination
+ * between as sibling search and a subtree search.
+ * @see HTMLTokenizer
+ * @author &lt;a href=&quot;http://www.strath.ac.uk/~ras97108/&quot;&gt;David McNicol&lt;/a&gt;
+ */
+@SuppressWarnings({&quot;rawtypes&quot;})
+public class HTMLTree {
+
+	private HTMLNode root; // The root of the HTML tree.
+
+	/**
+	 * Constructs a new HTMLTree using the tokens from the
+	 * specified Enumeration.
+	 */
+<span class="nc" id="L47">	public HTMLTree (Enumeration e) {</span>
+
+		// Create the root element from the enumeration of tokens.
+<span class="nc" id="L50">		root = new HTMLNode(null, null, e);</span>
+<span class="nc" id="L51">	}</span>
+
+	/**
+	 * Constructs a new HTMLTree using the tokens from the
+	 * specified HTMLTokenizer.
+	 * @param ht the source of the HTML tokens.
+	 */
+<span class="nc" id="L58">	public HTMLTree (HTMLTokenizer ht) {</span>
+
+		// Create the root element from the tokens.
+<span class="nc" id="L61">		root = new HTMLNode(null, null, ht.getTokens());</span>
+<span class="nc" id="L62">	}</span>
+
+	/**
+	 * Constructs a new HTMLTree from the specified HTML file.
+	 * @param filename the name of the HTML file.
+	 */
+<span class="nc" id="L68">	public HTMLTree (String filename) {</span>
+
+		// Tokenize the HTML file.
+<span class="nc" id="L71">		HTMLTokenizer ht = new HTMLTokenizer(filename);</span>
+
+		// Create the root element from the tokens.
+<span class="nc" id="L74">		root = new HTMLNode(null, null, ht.getTokens());</span>
+<span class="nc" id="L75">	}</span>
+
+	/**
+	 * Finds the first element with the specified name in the specified
+	 * subtree.
+	 * @param name the name of the element to search for.
+	 * @param tree the subtree to search.
+	 */
+	public HTMLNode findInSubtree (String name, HTMLNode tree) {
+<span class="nc" id="L84">		return find(name, tree, null, true, false);</span>
+	}
+
+	/**
+	 * Finds the next element after the specified one in the subtree.
+	 * If the previous element is not in the subtree then nothing will
+	 * be found.
+	 * @param tree the subtree to search.
+	 * @param prev a previously found element.
+	 */
+	public HTMLNode findNextInSubtree (HTMLNode tree,
+	  HTMLNode prev) {
+
+		// Return nothing if there is no previous element.
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if (prev == null) return null;</span>
+
+		// Search the subtree for the next element with the same name.
+<span class="nc" id="L101">		return find(prev.getName(), tree, prev, true, false);</span>
+	}
+
+	/**
+	 * Finds the first element with the specified name in the entire
+	 * tree.
+	 * @param name the name of the element to search for.
+	 */
+	public HTMLNode findInAll (String name) {
+<span class="nc" id="L110">		return find(name, root, null, true, false);</span>
+	}
+
+	/**
+	 * Finds the next element with the same name as the one specified
+	 * in the entire tree.
+	 * @param prev the previously found element.
+	 */
+	public HTMLNode findNextInAll (HTMLNode prev) {
+
+		// Return nothing if there is no previous element.
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (prev == null) return null;</span>
+
+		// Search for the next element in the entire tree.
+<span class="nc" id="L124">		return find(prev.getName(), prev.getParent(), prev, true, true);</span>
+	}
+
+	/**
+	 * Find the first element with the specified name in the specified
+	 * element's context (that is, the elements parent's subtree).
+	 * @param name the name of the element to search for.
+	 * @param el the element whose context is to be searched.
+	 */
+	public HTMLNode findInContext (String name, HTMLNode el) {
+
+		// Return nothing if the arguments are invalid.
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (el == null) return null;</span>
+
+		// Search the elements parent's subtree.
+<span class="nc" id="L139">		return find(name, el.getParent(), null, true, false);</span>
+	}
+
+	/**
+	 * Find the next element with the same name as the specified one
+	 * in the first element's context (that is, the first elements
+	 * parent's subtree).
+	 * If the previous element is not in the subtree then nothing
+	 * will be found.
+	 * @param el the element whose context is to be searched.
+	 * @param the previously found element.
+	 */
+	public HTMLNode findNextInContext (HTMLNode el,
+	  HTMLNode prev) {
+
+		// Return nothing if the arguments are invalid.
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (el == null) return null;</span>
+
+		// Search the elements parent's subtree.
+<span class="nc" id="L158">		return find(el.getName(), el.getParent(), prev, true, false);</span>
+	}
+
+	/**
+	 * Finds the next element with the same name as the specified
+	 * one amongst that elements siblings (that is, the elements
+	 * parent's children).
+	 * @param el the element whose siblings are to be searched.
+	 */
+	public HTMLNode findSibling (HTMLNode el) {
+
+		// Return nothing if the element is invalid.
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (el == null) return null;</span>
+
+		// Search for a sibling in the elements parent's subtree.
+<span class="nc" id="L173">		return find(el.getName(), el.getParent(), el, false, false);</span>
+	}
+
+	/**
+	 * Prints a string representation of the HTMLTree.
+	 */
+	@Override
+	public String toString () {
+<span class="nc" id="L181">		return &quot;HTMLTree[&quot; + root + &quot;]&quot;;</span>
+	}
+
+	/**
+	 * Generic find method which searches for a string in the given
+	 * tree's children. However, the search will not start until the
+	 * start element has been passed. The tree's grandchildren will
+	 * be searched recursively if the &lt;code&gt;recursive&lt;/code&gt; argument
+	 * is true. The whole tree after the element will be searched
+	 * if the &lt;code&gt;searchParent&lt;/code&gt; argument is true. In this
+	 * case the method will recurse back towards the root element.
+	 */
+	private HTMLNode find (String name, HTMLNode tree,
+	  HTMLNode start, boolean recursive, boolean searchParent) {
+
+		Enumeration children; // The immediate children of the subtree.
+		Object next;	      // The next object from the enumeration.
+		boolean searching;    // True if we are actively searching.
+		HTMLNode child;    // One of the subtree's children.
+		HTMLNode found;    // Result of a subtree search.
+
+		// Return nothing if the arguments are invalid.
+<span class="nc bnc" id="L203" title="All 4 branches missed.">		if (name == null || tree == null) return null;</span>
+
+		// Check if we should delay the search until we find the
+		// specified start element.
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		searching = (start == null);</span>
+
+		// Get the subtree's children.
+<span class="nc" id="L210">		children = tree.getChildren();</span>
+
+		// Return nothing if the subtree has no children.
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		if (children == null) return null;</span>
+
+		// Loop through the subtree's children.
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		while (children.hasMoreElements()) {</span>
+
+			// Get the next child from the enumeration.
+<span class="nc" id="L219">			next = children.nextElement();</span>
+
+			// Check if this child is an HTMLNode.
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (! (next instanceof HTMLNode)) continue;</span>
+
+			// Cast the child into type HTMLNode.
+<span class="nc" id="L225">			child = (HTMLNode) next;</span>
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (searching) {</span>
+
+				// Check if we have found the element.
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if (name.equalsIgnoreCase(child.getName()))</span>
+<span class="nc" id="L231">					return child;</span>
+
+				// Check if we should search grandchildren.
+<span class="nc bnc" id="L234" title="All 2 branches missed.">				if (recursive) {</span>
+
+					// Search the child's subtree.
+<span class="nc" id="L237">					found = find(name, child, null, true,</span>
+					  false);
+
+					// Return the element if we found one.
+<span class="nc bnc" id="L241" title="All 2 branches missed.">					if (found != null) return found;</span>
+				}
+			} else {
+
+				// Check if this element is the start element.
+<span class="nc bnc" id="L246" title="All 2 branches missed.">				if (child == start) searching = true;</span>
+			}
+		}
+
+		// Check if we should search the subtree's parent tree.
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (searchParent) {</span>
+
+<span class="nc" id="L253">			HTMLNode parent = tree.getParent();</span>
+
+			// Check if the subtree has a parent.
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (parent == null) return null;</span>
+
+			// Otherwise search it, starting after the subtree.
+<span class="nc" id="L259">			return find(name, parent, tree, true, true);</span>
+		}
+
+<span class="nc" id="L262">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -26,15 +26,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.struts.util.ResponseUtils;
-import org.mcavallo.opencloud.Tag;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.seo.SeoManager;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -431,6 +432,20 @@ public class StatDB extends DB
 	 */
 	public static String getRootGroupWhere(String column, int rootGroupId)
 	{
+		if (InitServlet.isTypeCloud())
+		{
+            if (rootGroupId<1)
+			{
+                rootGroupId = CloudToolsForCore.getDomainId();
+            } else {
+                GroupDetails group = GroupsDB.getInstance().getGroup(rootGroupId);
+                if (group==null || group.getDomainName().equals(CloudToolsForCore.getDomainName())==false)
+				{
+                    rootGroupId = CloudToolsForCore.getDomainId();
+                }
+            }
+        }
+
 		if (rootGroupId < 1)
 		{
 			return("");
@@ -647,10 +662,10 @@ public class StatDB extends DB
 		cal.setFirstDayOfWeek(Calendar.MONDAY);
 		int year = cal.get(Calendar.YEAR);
 		int week = cal.get(Calendar.WEEK_OF_YEAR);
-		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week};
+		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, CloudToolsForCore.getDomainId()};
 
-		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=?";
-		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, count) VALUES (?, ?, ?, ?, 1)";
+		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=? AND domain_id=?";
+		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, domain_id, count) VALUES (?, ?, ?, ?, ?, 1)";
 
 		StatWriteBuffer.addUpdateInsertPair(update, insert, "stat_error", params);
 	}
@@ -1274,7 +1289,7 @@ public class StatDB extends DB
 		params.add(new Timestamp(getCurrentTime(mustAnonymize)));
 		params.add(docDB.getBasicDocDetails(docId, true).getGroupId());
 		params.add(docDB.getBasicDocDetails(lastDocId, true).getGroupId());
-		if (browser == null || mustAnonymize)
+		if (browser == null)
 		{
 			params.add(0);
 			params.add(0);
@@ -1377,7 +1392,7 @@ public class StatDB extends DB
 	 *
 	 * @throws IllegalArgumentException when maxTags or daysFrom are negative or zero, or searchUrlBase is null
 	 */
-	public static Collection<Tag> getSearchCloudTags(int maxTags, int daysFrom, String searchUrlBase) throws IllegalArgumentException
+	public static Collection<Column> getSearchCloudTags(int maxTags, int daysFrom, String searchUrlBase) throws IllegalArgumentException
 	{
 		if(maxTags < 1)
 		{
@@ -1392,7 +1407,7 @@ public class StatDB extends DB
 			throw new IllegalArgumentException("searchUrlBase must not be null");
 		}
 
-		Collection<Tag> tags = Collections.emptyList();
+		Collection<Column> tags = Collections.emptyList();
 
 		Calendar to = Calendar.getInstance();
 		Calendar from = Calendar.getInstance();
@@ -1405,7 +1420,11 @@ public class StatDB extends DB
 			tags = new ArrayList<>(map.size());
 			for(Map.Entry<String, Number> entry : map.entrySet())
 			{
-				tags.add(new Tag(entry.getKey(),searchUrlBase+entry.getKey(),entry.getValue().doubleValue()));
+				Column col = new Column();
+				col.setColumn1(entry.getKey());
+				col.setColumn2(searchUrlBase+entry.getKey());
+				col.setDoubleColumn1(entry.getValue().doubleValue());
+				tags.add(col);
 			}
 		}
 

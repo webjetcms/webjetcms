@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FieldsFromFtoT.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">FieldsFromFtoT.java</span></div><h1>FieldsFromFtoT.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+/**
+ *  FieldsFromFtoT.java
+ *  
+ *  Internal part of {@link DocDetails} class. Fields were moved here in order to reduce memory
+ *  consumption of {@link DocDetails}. Custom fields were split in 2 parts, A-E and F-T. This class
+ *  stores fields F-T, fields that are rarely used at all.
+ *  
+ *  The reasoning behind this class's creation is that even though {@link DocDetails} had
+ *  all of those fields empty, they nevertheless consumed memory, 4 or 8 bytes per field.
+ *  15 x 4 bytes = 60 bytes of wasted space per DocDetails instance. Those fields were outsourced here,
+ *  so that only a 4 byte pointer is a part of {@link DocDetails}. In great majority of cases,
+ *  this link is pointing to &lt;code&gt;null&lt;/code&gt;, consuming 4 bytes instead of 60. On rare occassions,
+ *  when any of the fields is not empty, {@link DocDetails} memory consumption suffers a 4 byte overhead.
+ *  
+ *  An instance of this class exists if and only if at least one of the fields is not empty.
+ *  
+ *  @see FieldsFromAtoE the remaining fields
+ *  @see DocumentAdvancedFields another outsourced memory saving class
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 1.4.2011 16:22:54
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L30">class FieldsFromFtoT</span>
+{
+<span class="nc" id="L32">	String fieldF = &quot;&quot;;</span>
+<span class="nc" id="L33">	String fieldG = &quot;&quot;;</span>
+<span class="nc" id="L34">	String fieldH = &quot;&quot;;</span>
+<span class="nc" id="L35">	String fieldI = &quot;&quot;;</span>
+<span class="nc" id="L36">	String fieldJ = &quot;&quot;;</span>
+<span class="nc" id="L37">	String fieldK = &quot;&quot;;</span>
+<span class="nc" id="L38">	String fieldL = &quot;&quot;;</span>
+<span class="nc" id="L39">	String fieldM = &quot;&quot;;</span>
+<span class="nc" id="L40">	String fieldN = &quot;&quot;;</span>
+<span class="nc" id="L41">	String fieldO = &quot;&quot;;</span>
+<span class="nc" id="L42">	String fieldP = &quot;&quot;;</span>
+<span class="nc" id="L43">	String fieldQ = &quot;&quot;;</span>
+<span class="nc" id="L44">	String fieldR = &quot;&quot;;</span>
+<span class="nc" id="L45">	String fieldS = &quot;&quot;;</span>
+<span class="nc" id="L46">	String fieldT = &quot;&quot;;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

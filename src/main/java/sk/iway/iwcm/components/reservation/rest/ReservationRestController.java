@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -50,7 +51,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
     private final ReservationRepository reservationRepository;
     private final ReservationObjectRepository ror;
     private final ReservationObjectTimesRepository rotr;
-    private final String sessionAtributeName = "reservationDeletePasswords";
+    private static final String SESSION_ATRIBUTE_NAME = "reservationDeletePasswords";
 
     @Autowired
     public ReservationRestController(ReservationRepository reservationRepository, ReservationObjectRepository ror, ReservationObjectTimesRepository rotr) {
@@ -82,7 +83,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             entity = new ReservationEntity();
             processFromEntity(entity, ProcessItemAction.CREATE);
         } else {
-            entity = reservationRepository.getById(id);
+            entity = reservationRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
             processFromEntity(entity, ProcessItemAction.EDIT);
         }
 
@@ -105,7 +106,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             //Check if reservation object ID is set
             if(entity.getReservationObjectId() != null) {
                 //Get reservation obejct
-                ReservationObjectEntity reservationObject = ror.getById(entity.getReservationObjectId().longValue());
+                ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId().longValue(), CloudToolsForCore.getDomainId()).orElse(null);
 
                 //Get reservation object times values
                 List<ReservationObjectTimesEntity> reservationObjectTimes = rotr.findAllByObjectIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId());
@@ -125,7 +126,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
     public ReservationObjectEntity getReservationObject(@PathVariable Integer objectId) {
         if(objectId != null) {
             //Get reservation object
-            ReservationObjectEntity reservationObject = ror.getById(objectId.longValue());
+            ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId.longValue(), CloudToolsForCore.getDomainId()).orElse(null);
 
             //Get reservation object times values
             List<ReservationObjectTimesEntity> reservationObjectTimes = rotr.findAllByObjectIdAndDomainId(reservationObject.getId().intValue(), CloudToolsForCore.getDomainId());
@@ -170,7 +171,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             return prop.getText("html_area.insert_image.error_occured");
 
         //Get reservation object
-        ReservationObjectEntity reservationObject = ror.getById(objectId.longValue());
+        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId.longValue(), CloudToolsForCore.getDomainId()).orElse(null);
 
         //Get reservation object times values
         List<ReservationObjectTimesEntity> reservationObjectTimes = rotr.findAllByObjectIdAndDomainId(objectId.intValue(), CloudToolsForCore.getDomainId());
@@ -221,7 +222,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
         //We are doing new delete process so clean passwords from sessio
         if(action.equals("prepareVerify")) {
-            getRequest().getSession().removeAttribute(sessionAtributeName);
+            getRequest().getSession().removeAttribute(SESSION_ATRIBUTE_NAME);
             return true;
         }
 
@@ -231,11 +232,11 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             if(customData != null && !customData.isEmpty()) {
                 try {
                     @SuppressWarnings("unchecked")
-                    Map<Integer, String> deletePasswords = (Map<Integer, String>)getRequest().getSession().getAttribute(sessionAtributeName);
+                    Map<Integer, String> deletePasswords = (Map<Integer, String>)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);
                     if(deletePasswords == null) deletePasswords = new HashMap<>();
                     JSONObject jsonObject = new JSONObject(customData);
                     deletePasswords.put((Integer)jsonObject.get("reservationObjectId"), (String)jsonObject.get("password"));
-                    getRequest().getSession().setAttribute(sessionAtributeName, deletePasswords);
+                    getRequest().getSession().setAttribute(SESSION_ATRIBUTE_NAME, deletePasswords);
                 } catch (Exception err){
                     addNotify(new NotifyBean(getProp().getText("reservation.reservations.password_for_delete.error_title"), getProp().getText("html_area.insert_image.error_occured"), NotifyType.ERROR, 15000));
                     return true;
@@ -250,7 +251,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             return true;
         }
 
-        ReservationObjectEntity reservationObject = ror.getById(entity.getReservationObjectId().longValue());
+        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId().longValue(), CloudToolsForCore.getDomainId()).orElse(null);
         String objectAccepterEmail = reservationObject.getEmailAccepter();
 
         //Check if reservation needs acceptation
@@ -407,16 +408,15 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
         //Check if reservation obejct need password
         if(Boolean.TRUE.equals(entity.getEditorFields().getNeedPasswordToDelete())) {
             Prop prop = getProp();
-            ReservationObjectEntity reservationObejct = null;
-            reservationObejct = ror.findByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId());
+            Optional<ReservationObjectEntity> optReservationObejct = ror.findFirstByIdAndDomainId(entity.getReservationObjectId().longValue(), CloudToolsForCore.getDomainId());
 
-            if(reservationObejct == null) {
+            if(!optReservationObejct.isPresent()) {
                 addNotify(new NotifyBean(prop.getText("reservation.reservations.password_for_delete.error_title"), getProp().getText("reservation.reservations.password_for_delete.error_entity_not_found"), NotifyType.ERROR, 15000));
                 return false;
             }
 
             @SuppressWarnings("unchecked")
-            Map<Integer, String> deletePasswords = (Map<Integer, String>)getRequest().getSession().getAttribute(sessionAtributeName);
+            Map<Integer, String> deletePasswords = (Map<Integer, String>)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);
 
             String password = deletePasswords.get(entity.getReservationObjectId());
 
@@ -426,9 +426,9 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             }
 
             //Verify password
-            if(reservationObejct.checkPasswordAndHashEquality(password, reservationObejct.getPassword())) reservationRepository.delete(entity);
+            if(optReservationObejct.get().checkPasswordAndHashEquality(password, optReservationObejct.get().getPassword())) reservationRepository.delete(entity);
             else {
-                String errorText = prop.getText("reservation.reservations.password_for_delete.error_bad_password_1") + " <b>" + reservationObejct.getName() + " </b> ";
+                String errorText = prop.getText("reservation.reservations.password_for_delete.error_bad_password_1") + " <b>" + optReservationObejct.get().getName() + " </b> ";
                 errorText += prop.getText("reservation.reservations.password_for_delete.error_bad_password_2") + " <b>" + id + " </b> ";
                 errorText += prop.getText("reservation.reservations.password_for_delete.error_bad_password_3");
                 addNotify(new NotifyBean(prop.getText("reservation.reservations.password_for_delete.error_title"), errorText, NotifyType.ERROR, 15000));

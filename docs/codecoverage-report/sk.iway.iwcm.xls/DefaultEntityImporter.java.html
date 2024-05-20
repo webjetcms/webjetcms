@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultEntityImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.xls</a> &gt; <span class="el_source">DefaultEntityImporter.java</span></div><h1>DefaultEntityImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.xls;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+@SuppressWarnings({&quot;rawtypes&quot;})
+public class DefaultEntityImporter extends ExcelImportJXL
+{
+
+	private Field[] fields;
+<span class="nc" id="L31">	private Class&lt;ActiveRecord&gt; entityClass = null;</span>
+
+	@SuppressWarnings({&quot;unchecked&quot;})
+	public DefaultEntityImporter(InputStream in, HttpServletRequest request, PrintWriter out, Class entityClass)
+	{
+<span class="nc" id="L36">		super(in, request, out);</span>
+<span class="nc" id="L37">		this.entityClass = entityClass;</span>
+<span class="nc" id="L38">		fields = this.entityClass.getDeclaredFields();</span>
+
+<span class="nc" id="L40">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L41">		em.getTransaction().begin();</span>
+<span class="nc" id="L42">		Query q = em.createQuery(&quot;DELETE FROM &quot;+entityClass.getSimpleName());</span>
+<span class="nc" id="L43">		q.executeUpdate();</span>
+<span class="nc" id="L44">		em.getTransaction().commit();</span>
+<span class="nc" id="L45">	}</span>
+
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc" id="L50">		print(&quot;Setting object '&quot;+entityClass.getSimpleName()+&quot;' : &quot;);</span>
+<span class="nc" id="L51">		ActiveRecord bean = entityClass.getDeclaredConstructor().newInstance();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		for (Field f : fields)</span>
+		{
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			if (f.isAnnotationPresent(XLSColumn.class))</span>
+			{
+<span class="nc" id="L56">				XLSColumn annotation = f.getAnnotation(XLSColumn.class);</span>
+
+<span class="nc" id="L58">				String name = annotation.name();</span>
+<span class="nc" id="L59">				Class&lt;?&gt; fieldType = annotation.type().getType();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (Tools.isEmpty(name)) name = f.getName();</span>
+<span class="nc" id="L61">				Object value = null;</span>
+<span class="nc bnc" id="L62" title="All 6 branches missed.">				switch (annotation.type()) {</span>
+					case INT:
+<span class="nc" id="L64">						Integer iVal = getIntValue(row, formatHeaderName(name));</span>
+<span class="nc" id="L65">						value = iVal;</span>
+
+<span class="nc" id="L67">						break;</span>
+					case DOUBLE:
+<span class="nc" id="L69">						Double dVal = getDouble(row, formatHeaderName(name));</span>
+<span class="nc" id="L70">						value = dVal;</span>
+<span class="nc" id="L71">						break;</span>
+					case BOOLEAN:
+<span class="nc" id="L73">						Boolean bVal = getBooleanValue(row, formatHeaderName(name));</span>
+<span class="nc" id="L74">						value = bVal;</span>
+<span class="nc" id="L75">						break;</span>
+					case DATE:
+<span class="nc" id="L77">						Date dateVal = null;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">						if (Tools.isNotEmpty(annotation.datePattern()))</span>
+						{
+<span class="nc" id="L80">							dateVal = Tools.getDateFromString(getValue(row, formatHeaderName(name)), annotation.datePattern());</span>
+<span class="nc" id="L81">							value = dateVal;</span>
+						}
+						else
+						{
+<span class="nc" id="L85">							dateVal = getDateValue(row, formatHeaderName(name));</span>
+<span class="nc" id="L86">							value = dateVal;</span>
+						}
+<span class="nc" id="L88">						break;</span>
+					case CUSTOM:
+<span class="nc bnc" id="L90" title="All 2 branches missed.">						if (annotation.columnResolver().getSimpleName().equals(&quot;ColumnResolver&quot;)) throw new Exception(&quot;Column resolver not defined for field '&quot;+f.getName()+&quot;'.&quot;); //NOSONAR</span>
+<span class="nc" id="L91">						fieldType = annotation.columnType();</span>
+<span class="nc" id="L92">						ColumnResolver resolver = (ColumnResolver)annotation.columnResolver().getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L93">						value = resolver.resolveColumn(row, name);</span>
+<span class="nc" id="L94">						break;</span>
+					default:
+						// default read String
+<span class="nc" id="L97">						String sVal = getValue(row, formatHeaderName(name));</span>
+<span class="nc" id="L98">						value = sVal;</span>
+						break;
+
+				}
+<span class="nc" id="L102">				print(name+&quot; = &quot;+value+&quot;, &quot;);</span>
+<span class="nc" id="L103">				set(f, fieldType, bean, value);</span>
+			}
+		}
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (!bean.save()) printlnError(&quot;Error saving object.&quot;);</span>
+<span class="nc" id="L108">		else println(&quot;Saving success.&quot;);</span>
+<span class="nc" id="L109">	}</span>
+
+	/**
+	 * setne atribut do objektu, zavolanim defaultneho settera
+	 * @param field
+	 * @param type
+	 * @param target
+	 * @param value
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private static void set(Field field, Class&lt;?&gt; type, Object target, Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+
+<span class="nc" id="L126">		String setterName = &quot;set&quot; + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);</span>
+<span class="nc" id="L127">		Method setter = null;</span>
+		try
+		{
+<span class="nc" id="L130">			setter = target.getClass().getDeclaredMethod(setterName, type);</span>
+		}
+<span class="nc" id="L132">		catch (Exception e)</span>
+		{
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (OBJECT_TO_PRIMITIVE.containsKey(type))</span>
+			{
+				try
+				{
+<span class="nc" id="L139">					setter = target.getClass().getDeclaredMethod(setterName, OBJECT_TO_PRIMITIVE.get(type));</span>
+				}
+<span class="nc" id="L141">				catch (Exception e2)</span>
+				{
+<span class="nc" id="L143">					Logger.debug(DefaultEntityImporter.class, &quot;Getter not found&quot;);</span>
+<span class="nc" id="L144">				}</span>
+			}
+<span class="nc" id="L146">		}</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (setter!=null) setter.invoke(target, value);</span>
+<span class="nc" id="L148">	}</span>
+
+	private static final Map&lt;Class,Class&gt; OBJECT_TO_PRIMITIVE;
+	static {
+<span class="nc" id="L152">		OBJECT_TO_PRIMITIVE = new HashMap&lt;Class, Class&gt;(); //NOSONAR</span>
+<span class="nc" id="L153">		OBJECT_TO_PRIMITIVE.put(Integer.class, Integer.TYPE);</span>
+<span class="nc" id="L154">		OBJECT_TO_PRIMITIVE.put(Double.class, Double.TYPE);</span>
+<span class="nc" id="L155">		OBJECT_TO_PRIMITIVE.put(Long.class, Long.TYPE);</span>
+<span class="nc" id="L156">		OBJECT_TO_PRIMITIVE.put(Boolean.class, Boolean.TYPE);</span>
+<span class="nc" id="L157">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

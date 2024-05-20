@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrowseAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.filebrowser</a> &gt; <span class="el_source">BrowseAction.java</span></div><h1>BrowseAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.filebrowser;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
+
+
+/**
+ *  Zobrazenie adresara suborov (podobne ako Total Commander)
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.9 $
+ *@created      Piatok, 2003, december 26
+ *@modified     $Date: 2004/02/20 21:38:21 $
+ */
+public class BrowseAction
+{
+<span class="nc" id="L36">	protected BrowseAction() {</span>
+		//utility class
+<span class="nc" id="L38">	}</span>
+
+	/**
+	 *
+	 * @deprecated - user version with request parameter
+	 */
+	@Deprecated
+	public static void fillLists(String root, List&lt;FileDirBean&gt; dirL, List&lt;FileDirBean&gt; fileL, String webRoot, boolean onlySafeFiles) {
+<span class="nc" id="L46">		fillLists(root, dirL, fileL, webRoot, onlySafeFiles, null);</span>
+<span class="nc" id="L47">	}</span>
+
+	/**
+	 *  naplni dirList a fileList
+	 *
+	 *@param  root
+	 *@param  dirL     Description of the Parameter
+	 *@param  fileL    Description of the Parameter
+	 *@param  webRoot  Description of the Parameter
+	 *@param  filter   Description of the Parameter
+	 *@param  onlySafeFiles - ak je true, listuju sa len bezpecne subory (teda nie CVS adresare a podobne)
+	 */
+	public static void fillLists(String root, List&lt;FileDirBean&gt; dirL, List&lt;FileDirBean&gt; fileL, String webRoot, boolean onlySafeFiles, HttpServletRequest request)
+	{
+<span class="nc" id="L61">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L62">		fillLists(parseRoot(root, Tools.getRealPath(&quot;/&quot;)), dirL, fileL, onlySafeFiles, true, user, request);</span>
+<span class="nc" id="L63">	}</span>
+
+	/**
+	 * Upravena privatna metoda, ktora uz pracuje s URL adresou a nie cestou na disku
+	 * @param rootUrl
+	 * @param dirL
+	 * @param fileL
+	 * @param onlySafeFiles
+	 * @param user
+	 */
+	private static void fillLists(String rootUrl, List&lt;FileDirBean&gt; dirL, List&lt;FileDirBean&gt; fileL, boolean onlySafeFiles, boolean addParentDirLink, Identity user, HttpServletRequest request)
+	{
+<span class="fc" id="L75">		IwcmFile[] arrayfile = null;</span>
+
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(rootUrl)) rootUrl = &quot;/&quot;;</span>
+
+		//Logger.debug(BrowseAction.class, &quot;fillLists, rootUrl=&quot;+rootUrl);
+		//Logger.debug(BrowseAction.class, &quot;fillLists, realPath=&quot;+Tools.getRealPath(rootUrl));
+
+<span class="fc" id="L82">		IwcmFile actFile = new IwcmFile(Tools.getRealPath(rootUrl));</span>
+
+		//Logger.debug(BrowseAction.class, &quot;fillLists, actFile=&quot;+actFile.getAbsolutePath()+&quot; exists=&quot;+actFile.exists()+&quot; dir=&quot;+actFile.isDirectory()+&quot; read=&quot;+actFile.canRead());
+
+		FileDirBean fdb;
+<span class="fc" id="L87">		String image = &quot;&quot;;</span>
+		String ext;
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">		if (actFile.exists())</span>
+		{
+<span class="fc" id="L92">			arrayfile = actFile.listFiles();</span>
+
+			//Logger.debug(BrowseAction.class, &quot;arrayfileLen=&quot;+arrayfile.length);
+
+			try
+			{
+				//usortuj to podla abecedy
+<span class="fc" id="L99">				Arrays.sort(arrayfile,</span>
+					new Comparator&lt;IwcmFile&gt;()
+<span class="fc" id="L101">					{</span>
+					@Override
+						public int compare(IwcmFile f1, IwcmFile f2)
+						{
+<span class="fc" id="L105">							return (f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase()));</span>
+						}
+					});
+			}
+<span class="nc" id="L109">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L111">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L112">			}</span>
+
+			//Logger.println(this,&quot;newRoot: &quot;+newRoot);
+
+			// zoznam suborov
+<span class="pc bpc" id="L117" title="2 of 6 branches missed.">			if (addParentDirLink &amp;&amp; Tools.isNotEmpty(rootUrl) &amp;&amp; rootUrl.trim().length()&gt;1)</span>
+			{
+<span class="fc" id="L119">				fdb = new FileDirBean();</span>
+<span class="fc" id="L120">				fdb.setName(&quot;..&quot;);</span>
+<span class="fc" id="L121">				fdb.setPath(goBack(rootUrl));</span>
+<span class="fc" id="L122">				image = &quot;/components/_common/mime/folderback.gif&quot;;</span>
+<span class="fc" id="L123">				fdb.setIcon(image);</span>
+<span class="fc" id="L124">				dirL.add(fdb);</span>
+			}
+
+<span class="fc" id="L127">			boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean(&quot;fbrowserShowOnlyWritableFolders&quot;);</span>
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">			for (int i = 0; i &lt; arrayfile.length; i++)</span>
+			{
+				//Logger.debug(BrowseAction.class, &quot;arrayfile[&quot;+i+&quot;].path=&quot;+arrayfile[i].getAbsolutePath()+&quot; read=&quot;+arrayfile[i].canRead()+&quot; dir=&quot;+arrayfile[i].isDirectory());
+
+<span class="pc bpc" id="L133" title="5 of 6 branches missed.">				if (user!=null &amp;&amp; fbrowserShowOnlyWritableFolders &amp;&amp; user.isFolderWritable(rootUrl+&quot;/&quot;+arrayfile[i].getName())==false)</span>
+				{
+					//Logger.debug(BrowseAction.class, &quot;continue, not writable path=&quot;+rootUrl+&quot;/&quot;+arrayfile[i].getName());
+<span class="nc" id="L136">					continue;</span>
+				}
+
+<span class="fc bfc" id="L139" title="All 2 branches covered.">				if (arrayfile[i].isDirectory())</span>
+				{
+<span class="fc" id="L141">					fdb = new FileDirBean();</span>
+<span class="fc" id="L142">					fdb.setName(arrayfile[i].getName());</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">					if (rootUrl.equals(&quot;/&quot;))</span>
+					{
+<span class="nc" id="L145">						fdb.setPath(&quot;/&quot; + fdb.getName());</span>
+					}
+					else
+					{
+<span class="fc" id="L149">						fdb.setPath(rootUrl + &quot;/&quot; + fdb.getName());</span>
+					}
+					//c:/projekty/webjet
+<span class="fc" id="L152">					image = &quot;/components/_common/mime/folder.gif&quot;;</span>
+
+					//	testni ci je password protected
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">					if (PathFilter.isPasswordProtected(fdb.getPath(), request)!=null)</span>
+					{
+<span class="nc" id="L157">						image = &quot;/components/_common/mime/folder_protected.gif&quot;;</span>
+					}
+
+<span class="fc" id="L160">					fdb.setIcon(image);</span>
+
+<span class="pc bpc" id="L162" title="3 of 6 branches missed.">					if (FileBrowserTools.hasForbiddenSymbol(fdb.getName()) == false &amp;&amp; fdb.getName().startsWith(&quot;._&quot;)==false &amp;&amp; fdb.getName().equals(&quot;.DS_Store&quot;)==false)</span>
+					{
+<span class="fc" id="L164">						dirL.add(fdb);</span>
+					}
+				}
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">				else if (arrayfile[i].isFile())</span>
+				{
+<span class="fc" id="L169">					fdb = new FileDirBean();</span>
+<span class="fc" id="L170">					fdb.setName(arrayfile[i].getName());</span>
+<span class="fc" id="L171">					fdb.setPath(rootUrl);</span>
+					try
+					{
+<span class="fc" id="L174">						ext = arrayfile[i].getName().substring(arrayfile[i].getName().lastIndexOf('.') + 1, arrayfile[i].getName().length()).toLowerCase();</span>
+<span class="fc" id="L175">						ext = ext.trim().toLowerCase();</span>
+<span class="fc" id="L176">						IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;));</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">						if (f.exists())</span>
+						{
+<span class="fc" id="L179">							image = &quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;;</span>
+						}
+						else
+						{
+<span class="nc" id="L183">							image = &quot;/components/_common/mime/default.gif&quot;;</span>
+						}
+					}
+<span class="nc" id="L186">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L188">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L189">					}</span>
+<span class="fc" id="L190">					fdb.setIcon(image);</span>
+<span class="fc" id="L191">					fdb.setLastModified(arrayfile[i].lastModified());</span>
+<span class="fc" id="L192">					fdb.setLength(arrayfile[i].length());</span>
+
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">					if (FileBrowserTools.hasForbiddenSymbol(fdb.getName()) == false)</span>
+					{
+<span class="fc" id="L196">						fileL.add(fdb);</span>
+					}
+				}
+			}
+<span class="fc" id="L200">		}</span>
+		else
+		{
+<span class="nc" id="L203">			Logger.println(BrowseAction.class,&quot;directory &quot; + rootUrl + &quot; neexistuje&quot;);</span>
+		}
+
+<span class="fc" id="L206">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  oldRoot  Description of the Parameter
+	 *@param  webRoot  Description of the Parameter
+	 *@return          Description of the Return Value
+	 */
+	private static String parseRoot(String oldRoot, String webRoot)
+	{
+<span class="nc" id="L217">		String newRoot = &quot;/&quot;;</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		if (oldRoot.startsWith(webRoot))</span>
+		{
+			try
+			{
+<span class="nc" id="L222">				newRoot = oldRoot.substring(webRoot.length());</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (!newRoot.startsWith(&quot;/&quot;))</span>
+				{
+<span class="nc" id="L225">					newRoot = &quot;/&quot; + newRoot;</span>
+				}
+<span class="nc" id="L227">				newRoot = newRoot.replace('\\', '/');</span>
+			}
+<span class="nc" id="L229">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L231">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L232">			}</span>
+
+		}
+		else
+		{
+			//ak by sa to nezacinalo na cestu k adresaru, je to nejaky hack
+			//takze to ignorujeme...
+		}
+<span class="nc" id="L240">		return newRoot;</span>
+	}
+
+	/**
+	 *  vyjde o adresar vyssie
+	 *
+	 *@param  newR  ceta
+	 *@return       ceta o uroven vyssie
+	 */
+	private static String goBack(String newR)
+	{
+<span class="fc" id="L251">		String back = &quot;&quot;;</span>
+<span class="fc" id="L252">		int index1 = newR.lastIndexOf(File.separatorChar);</span>
+<span class="fc" id="L253">		int index2 = newR.lastIndexOf('/');</span>
+<span class="fc" id="L254">		int index = -1;</span>
+
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">		if (index1 &gt; index2)</span>
+		{
+<span class="nc" id="L258">			index = index1;</span>
+		}
+		else
+		{
+<span class="fc" id="L262">			index = index2;</span>
+
+		}
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">		if (index &lt; 0)</span>
+		{
+<span class="nc" id="L267">			return newR;</span>
+		}
+
+<span class="fc" id="L270">		back = newR.substring(0, index);</span>
+<span class="fc" id="L271">		return back;</span>
+	}
+
+	/**
+	 * Kontrola, ci v nazve suboru nie je zakazany symbol
+	 * @param name
+	 * @return
+	 * @deprecated - use FileBrowserTools.hasForbiddenSymbol
+	 */
+	@Deprecated
+	public static boolean hasForbiddenSymbol(String name)
+	{
+<span class="fc" id="L283">		return FileBrowserTools.hasForbiddenSymbol(name);</span>
+	}
+
+	/**
+	 * Metoda vrati zoznam adresarov a suborov v zadanom adresari, umoznuje browsovanie po uroven adresara rootDir
+	 * @param request
+	 * @param dirList
+	 * @param fileList
+	 * @param rootDir
+	 */
+	public static void browseDir(HttpServletRequest request, List&lt;FileDirBean&gt; dirList, List&lt;FileDirBean&gt; fileList, String rootDir)
+	{
+<span class="fc" id="L295">		String actualDir = &quot;&quot;;</span>
+<span class="fc" id="L296">		String webroot = Tools.getRealPath(&quot;/&quot;);</span>
+
+<span class="fc" id="L298">		Identity user = UsersDB.getCurrentUser(request);</span>
+
+		try
+		{
+<span class="pc bpc" id="L302" title="2 of 4 branches missed.">			if (rootDir.length() &gt; 1 &amp;&amp; rootDir.endsWith(&quot;/&quot;))	rootDir = rootDir.substring(0, rootDir.length()-1);</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">			if (!rootDir.startsWith(&quot;/&quot;))	rootDir = &quot;/&quot;+rootDir;</span>
+
+			//Logger.println(this,&quot;webroot: &quot;+webroot);
+<span class="pc bpc" id="L306" title="5 of 6 branches missed.">			if (Tools.getRealPath(rootDir).startsWith(webroot) || (Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)) &amp;&amp; Tools.getRealPath(rootDir).startsWith(FilePathTools.getDomainBaseFolder())))</span>
+			{
+<span class="fc bfc" id="L308" title="All 2 branches covered.">				if (Tools.isNotEmpty(request.getParameter(&quot;actualDir&quot;)))</span>
+				{
+<span class="fc" id="L310">					actualDir = request.getParameter(&quot;actualDir&quot;);</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">					if (!actualDir.startsWith(&quot;/&quot;))	actualDir = &quot;/&quot;+actualDir;</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">					if (actualDir.endsWith(&quot;/&quot;))	actualDir = actualDir.substring(0, actualDir.length() - 1);</span>
+
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">					if (Tools.isEmpty(actualDir)) actualDir = rootDir;</span>
+
+					//kontrola zakazanych znakov v adrese
+<span class="fc bfc" id="L317" title="All 2 branches covered.">					if (FileBrowserTools.hasForbiddenSymbol(actualDir.toLowerCase()))</span>
+					{
+<span class="fc" id="L319">						actualDir = rootDir;</span>
+<span class="fc" id="L320">						Logger.println(BrowseAction.class,&quot;POZOR! V URL JE NEPOVOLENY ZNAK! -&gt; &quot;+actualDir);</span>
+					}
+<span class="pc bpc" id="L322" title="2 of 4 branches missed.">					if (actualDir.startsWith(&quot;/admin&quot;) || actualDir.startsWith(&quot;/components&quot;) ||</span>
+<span class="pc bpc" id="L323" title="2 of 4 branches missed.">						 actualDir.startsWith(&quot;/templates&quot;) || actualDir.startsWith(&quot;/WEB-INF&quot;))</span>
+					{
+<span class="nc" id="L325">						actualDir = rootDir;</span>
+					}
+
+<span class="fc bfc" id="L328" title="All 2 branches covered.">					if (actualDir.startsWith(rootDir)==false) actualDir = rootDir;</span>
+
+<span class="fc" id="L330">					request.setAttribute(&quot;correctDir&quot;, actualDir);</span>
+
+					//actualRoot = Tools.getRealPath(&quot;/&quot;);
+
+<span class="fc bfc" id="L334" title="All 2 branches covered.">					BrowseAction.fillLists(actualDir, dirList, fileList, true, !actualDir.equals(rootDir) , null, request);</span>
+
+					//nastavenie cesty do session pre inline editaciu komponent
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">					if (user != null) request.getSession().setAttribute(&quot;fbrowse.lastDir&quot;, actualDir);</span>
+				}
+				else
+				{
+<span class="fc" id="L341">					request.setAttribute(&quot;correctDir&quot;, rootDir);</span>
+<span class="fc" id="L342">					BrowseAction.fillLists(rootDir, dirList, fileList, true, false, null, request);</span>
+
+					//nastavenie cesty do session pre inline editaciu komponent
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">					if (user != null) request.getSession().setAttribute(&quot;fbrowse.lastDir&quot;, rootDir);</span>
+				}
+			}
+		}
+<span class="nc" id="L349">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L351">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L352">		}</span>
+
+<span class="fc" id="L354">	}</span>
+
+	/**
+	 * Vrati do JSP stranky linku na adresar, alebo linku na prihlasenie (ak je to
+	 * zaheslovany adresar a user nie je prihlaseny). See site_browser.jsp
+	 * @param pageDocId
+	 * @param dir
+	 * @param req
+	 * @return
+	 */
+	public static String getDirLink(int pageDocId, FileDirBean dir, HttpServletRequest req)
+	{
+<span class="fc" id="L366">		String ret = &quot;/showdoc.do?docid=&quot;+pageDocId+&quot;&amp;amp;actualDir=&quot;+dir.getPath();</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">		if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_HTML) ret = PathFilter.getOrigPath(req)+&quot;?actualDir=&quot;+dir.getPath();</span>
+
+<span class="fc" id="L369">		String logonLink = getLogonLink(dir.getPath(), req);</span>
+
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">		if (logonLink != null)</span>
+		{
+<span class="nc" id="L373">			return(logonLink);</span>
+		}
+
+<span class="fc" id="L376">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati linku na logon dialog, alebo null, ak je mozne cestu zobrazit.
+	 * See site_browser.jsp
+	 * @param dir
+	 * @param req
+	 * @return
+	 */
+	public static String getLogonLink(String dir, HttpServletRequest req)
+	{
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">		if (dir == null)</span>
+		{
+<span class="nc" id="L390">			return(null);</span>
+		}
+<span class="fc" id="L392">		Identity user = (Identity)req.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L393">		EditForm ef = PathFilter.isPasswordProtected(dir, req);</span>
+<span class="pc bpc" id="L394" title="3 of 4 branches missed.">		if (ef != null &amp;&amp; ef.isAccessibleFor(user)==false)</span>
+		{
+<span class="nc" id="L396">			boolean isAccesible = false;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (user != null)</span>
+			{
+				//otestuj, ci je user v skupine pre tento adresar
+				int i;
+<span class="nc" id="L401">				int size = ef.getPasswordProtected().length;</span>
+<span class="nc bnc" id="L402" title="All 2 branches missed.">				for (i=0; i&lt;size; i++)</span>
+				{
+<span class="nc bnc" id="L404" title="All 2 branches missed.">					if (user.isInUserGroup(ef.getPasswordProtected()[i]))</span>
+					{
+<span class="nc" id="L406">						isAccesible = true;</span>
+<span class="nc" id="L407">						break;</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L412" title="All 2 branches missed.">			if (!isAccesible)</span>
+			{
+<span class="nc bnc" id="L414" title="All 2 branches missed.">				if (ef.getLogonDocId()&gt;0)</span>
+				{
+<span class="nc" id="L416">					return(&quot;/showdoc.do?docid=&quot;+ef.getLogonDocId()+&quot;&amp;dontUpdateLastDocId=true&quot;);</span>
+				}
+				else
+				{
+<span class="nc" id="L420">					return(&quot;/components/user/logon.jsp?permsDenied=true&quot;);</span>
+				}
+			}
+		}
+<span class="fc" id="L424">		return(null);</span>
+	}
+
+	/**
+	 * Vrati zoznam suborov z daneho korenoveho adresara rekurzivne v podadresaroch
+	 * @param request
+	 * @param rootDir root dir
+	 * @return List {@link FileDirBean}-ov
+	 */
+	public static List&lt;FileDirBean&gt; searchForFilesRecurse(HttpServletRequest request, String rootDir){
+<span class="nc" id="L434">		List&lt;FileDirBean&gt; allFilesList = new ArrayList&lt;&gt;(100);</span>
+<span class="nc" id="L435">		List&lt;FileDirBean&gt; fileList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L436">		List&lt;FileDirBean&gt; dirList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L437">		BrowseAction.browseDir(request, dirList, fileList, rootDir);</span>
+<span class="nc" id="L438">		allFilesList.addAll(fileList);</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">		for(FileDirBean dir : dirList){</span>
+<span class="nc" id="L440">			allFilesList.addAll(searchForFilesRecurse(request,dir.getPath()));</span>
+<span class="nc" id="L441">		}</span>
+
+<span class="nc" id="L443">		Collections.sort(allFilesList,new Comparator&lt;FileDirBean&gt;()</span>
+<span class="nc" id="L444">		{</span>
+			@Override
+				public int compare(FileDirBean f1, FileDirBean f2)
+				{
+<span class="nc" id="L448">					return (f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase()));</span>
+				}
+		});
+<span class="nc" id="L451">		return allFilesList;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

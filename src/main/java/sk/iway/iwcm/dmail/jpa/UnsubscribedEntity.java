@@ -2,11 +2,21 @@ package sk.iway.iwcm.dmail.jpa;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -26,6 +36,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL_BLACKLIST)
 public class UnsubscribedEntity extends ActiveRecordRepository {
+
+    //Set entity domain id
+	@PrePersist
+	public void prePersist() {
+		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+	}
 
     @Id
     @Column(name = "emails_unsubscribed_id")
@@ -57,6 +73,10 @@ public class UnsubscribedEntity extends ActiveRecordRepository {
         })
     )
 	private Date createDate;
+
+    @Column(name = "domain_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer domainId;
 
     public void setId(Long id) {
         this.id = id;

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatWriteBuffer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatWriteBuffer.java</span></div><h1>StatWriteBuffer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Map.Entry;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+
+/**
+ *  StatWriteBuffer.java
+ *
+ *  Acts as a synchronized buffer for Stat* inserts. Made this way in order to avoid
+ *  database congestion caused by every user's HTTP request filling the database.
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 6.7.2010 18:35:44
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L32">public class StatWriteBuffer</span>
+{
+	//guards access to buffer
+<span class="fc" id="L35">	private static final Lock lock = new ReentrantLock();</span>
+<span class="fc" id="L36">	private static Map&lt;UpdateInsertSqlPair, List&lt;Object[]&gt;&gt; buffer = new HashMap&lt;&gt;();</span>
+	//needed to construct a table from SQLException
+<span class="fc" id="L38">	private static Map&lt;UpdateInsertSqlPair, String&gt; sqlToTable = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L39">	private static int pendingCounter = 0;</span>
+<span class="fc" id="L40">	private static Random random = new Random();</span>
+
+	/**
+	 * Adds an SQL statement into a buffer queue.
+	 *
+	 * @param sql SQL statement pushed into prepareStatement allocation
+	 * @param table Base table name used for table creation if SQL fails. For inserting into stat_error_2010_07, pass &quot;stat_error&quot; as a parameter
+	 * @param parameters Pushed into prepareStatement setObject calls
+	 */
+	public static void add(String sql, String table, Object...parameters)
+	{
+<span class="fc" id="L51">		UpdateInsertSqlPair insertOnly = new UpdateInsertSqlPair(null, sql);</span>
+<span class="fc" id="L52">		Logger.debug(StatWriteBuffer.class, String.format(&quot;Appending to buffer: %s &quot;, sql));</span>
+<span class="fc" id="L53">		appendToBuffer(insertOnly, table, parameters);</span>
+<span class="fc" id="L54">	}</span>
+
+	/**
+	 * Serves as a facade for a re-occuring pattern in stat tables:
+	 * &lt;code&gt;
+	 * 	int rowsTouched = executeUpdate();
+	 * 	//insert new values into database in case there are none
+	 * 	if (rowsTouched == 0)
+	 * 		executeInsert();
+	 * &lt;/code&gt;
+	 *
+	 * Acts in a same way as add method
+	 *
+	 * &lt;b&gt;NOTE: insert and update must share the same number of parameters for this method to work correctly&lt;/b&gt;
+	 *
+	 * @param SEE add(String, String, Object...)
+	 */
+	public static void addUpdateInsertPair(String update, String insert, String table, Object...parameters)
+	{
+<span class="fc" id="L73">		UpdateInsertSqlPair sql = new UpdateInsertSqlPair(update, insert);</span>
+<span class="fc" id="L74">		Logger.debug(StatWriteBuffer.class, String.format(&quot;Appending to buffer: %s &quot;, sql.toString()));</span>
+<span class="fc" id="L75">		appendToBuffer(sql, table, parameters);</span>
+<span class="fc" id="L76">	}</span>
+
+	private static void appendToBuffer(UpdateInsertSqlPair sql, String table, Object... parameters)
+	{
+<span class="fc" id="L80">		lock.lock();</span>
+		try
+		{
+<span class="fc" id="L83">			List&lt;Object[]&gt; statements = buffer.get(sql);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">			if (statements == null)</span>
+<span class="fc" id="L85">				statements = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L86">			statements.add(parameters);</span>
+<span class="fc" id="L87">			sqlToTable.put(sql, table);</span>
+<span class="fc" id="L88">			buffer.put(sql, statements);</span>
+<span class="fc" id="L89">			pendingCounter++;</span>
+		}
+		finally
+		{
+<span class="fc" id="L93">			lock.unlock();</span>
+		}
+<span class="fc" id="L95">	}</span>
+
+
+	private static Map&lt;UpdateInsertSqlPair, List&lt;Object[]&gt;&gt; releaseBuffer()
+	{
+<span class="fc" id="L100">		lock.lock();</span>
+<span class="fc" id="L101">		Map&lt;UpdateInsertSqlPair, List&lt;Object[]&gt;&gt; oldBuffer = buffer;</span>
+<span class="fc" id="L102">		buffer = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L103">		pendingCounter = 0;</span>
+<span class="fc" id="L104">		return oldBuffer;</span>
+	}
+
+	public static int size()
+	{
+<span class="nc" id="L109">		return pendingCounter;</span>
+	}
+
+
+	/**
+	 * Sweeps the buffer and flushes its contents into database.
+	 * Launched by a background cron task.
+	 */
+	public static void main(String[] args)
+	{
+		try{
+			//sk.iway.iwcm.Logger.debug(StatWriteBuffer.class, &quot;About to flush statistics buffer&quot;);
+<span class="fc" id="L121">			int statements = flushBuffer();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">			if (statements &gt; 0)</span>
+			{
+<span class="fc" id="L124">				sk.iway.iwcm.Logger.debug(StatWriteBuffer.class, String.format(&quot;Flushing stats done: %d statements executed&quot;, statements));</span>
+			}
+		}
+<span class="nc" id="L127">		catch (Exception e) {</span>
+<span class="nc" id="L128">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L129">		}</span>
+<span class="fc" id="L130">	}</span>
+
+	/**
+	 * Flushes statistics data to database, effectively re-using previously
+	 * prepared SQL statements for better performance.
+	 *
+	 * @return number of SQL statements executed
+	 */
+	private static int flushBuffer()
+	{
+		//v clustri dochadza ku konfliktom ked sa zapis spusti z cronu naraz, spravime nahodny sleep
+		try
+		{
+<span class="fc" id="L143">			long rndSleep = random.nextInt(10000);</span>
+<span class="fc" id="L144">			Logger.println(StatWriteBuffer.class, &quot;sleep for: &quot;+rndSleep+&quot; ms&quot;);</span>
+<span class="fc" id="L145">			Thread.sleep(rndSleep);</span>
+		}
+<span class="pc" id="L147">		catch (InterruptedException e){sk.iway.iwcm.Logger.error(e);}</span>
+
+<span class="fc" id="L149">		int flushCounter = 0;</span>
+<span class="fc" id="L150">		Map&lt;UpdateInsertSqlPair, List&lt;Object[]&gt;&gt; oldBuffer = releaseBuffer();</span>
+<span class="fc" id="L151">		Map&lt;UpdateInsertSqlPair, String&gt; oldMapping = releaseSqlToTableMapping();</span>
+<span class="fc" id="L152">		lock.unlock();</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">		for (Entry&lt;UpdateInsertSqlPair, List&lt;Object[]&gt;&gt; entry : oldBuffer.entrySet())</span>
+		{
+			//if the first attempt fails, the reason liess probably in a non-existing table
+			//In that case, the method attempts to create the table from received SQL Exception
+<span class="fc" id="L157">			boolean success = batchSave(entry.getKey(), entry.getValue(), oldMapping);</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">			if (!success)</span>
+<span class="nc" id="L159">				batchSave(entry.getKey(), entry.getValue(), oldMapping);</span>
+<span class="fc" id="L160">			flushCounter += entry.getValue().size();</span>
+<span class="fc" id="L161">		}</span>
+<span class="fc" id="L162">		return flushCounter;</span>
+	}
+
+	private static Map&lt;UpdateInsertSqlPair, String&gt; releaseSqlToTableMapping()
+	{
+<span class="fc" id="L167">		Map&lt;UpdateInsertSqlPair, String&gt; sqlToTableName = sqlToTable;</span>
+<span class="fc" id="L168">		sqlToTable = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L169">		return sqlToTableName;</span>
+	}
+
+	private static boolean batchSave(UpdateInsertSqlPair sql, List&lt;Object[]&gt; statements, Map&lt;UpdateInsertSqlPair, String&gt; oldMapping)
+	{
+<span class="fc" id="L174">		Logger.debug(StatWriteBuffer.class, String.format(&quot;About to flush: %s&quot;, sql.toString()));</span>
+<span class="fc" id="L175">		Connection db_conn = null;</span>
+<span class="fc" id="L176">		PreparedStatement ps = null;</span>
+<span class="fc" id="L177">		PreparedStatement psFollowing = null;</span>
+		try
+		{
+<span class="fc" id="L180">			db_conn = DBPool.getConnection();</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">			boolean isPair = sql.firstSql != null;</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">			ps = db_conn.prepareStatement(isPair ? sql.firstSql : sql.followingSql);</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">			psFollowing = isPair ? db_conn.prepareStatement(sql.followingSql) :null;</span>
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">			for (Object[] params : statements)</span>
+			{
+<span class="fc" id="L187">				setParams(params, ps);</span>
+<span class="fc" id="L188">				int rowsTouched = ps.executeUpdate();</span>
+<span class="fc bfc" id="L189" title="All 4 branches covered.">				if (isPair &amp;&amp; rowsTouched == 0)</span>
+				{
+<span class="fc" id="L191">					setParams(params, psFollowing);</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">					if (psFollowing!=null) psFollowing.execute();</span>
+				}
+<span class="fc" id="L194">			}</span>
+
+<span class="fc" id="L196">			ps.close();</span>
+<span class="fc" id="L197">			ps = null;</span>
+<span class="fc" id="L198">			db_conn.close();</span>
+<span class="fc" id="L199">			db_conn = null;</span>
+<span class="fc" id="L200">			return true;</span>
+		}
+<span class="nc" id="L202">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L204">			boolean created = StatNewDB.createStatTablesFromError(ex.getMessage(), null, oldMapping.get(sql));</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (created==false) {</span>
+<span class="nc" id="L206">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+<span class="nc" id="L208">			return false;</span>
+		}
+		finally{
+			try{
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">				if (db_conn != null)	db_conn.close();</span>
+			}
+<span class="pc" id="L215">			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}</span>
+		}
+	}
+
+	private static void setParams(Object[] params, PreparedStatement ps) throws SQLException
+	{
+<span class="fc" id="L221">		int parameterIndex = 1;</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">		for (Object param : params)</span>
+		{
+<span class="fc" id="L224">			ps.setObject(parameterIndex++, param);</span>
+		}
+<span class="fc" id="L226">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

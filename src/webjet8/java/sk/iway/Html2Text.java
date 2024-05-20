@@ -1,9 +1,14 @@
 package sk.iway;
 
-import net.htmlparser.jericho.Source;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 /**
- *  Konvertuje HTML kod do cisteho textu
+ * Converts HTML to plain text
  *
  *@Title        magma-web
  *@Company      Interway s.r.o. (www.interway.sk)
@@ -15,16 +20,44 @@ import net.htmlparser.jericho.Source;
  */
 public class Html2Text
 {
+	private Document doc;
+
+	public Html2Text(String html) {
+		//utility class
+		doc = Jsoup.parse(html);
+	}
 
 	/**
-	 *  Description of the Method
-	 *
-	 *@param  html_text  Description of the Parameter
-	 *@return            Description of the Return Value
+	 * Converts HTML to plain text
+	 * @param html
+	 * @return
 	 */
-	public static String html2text(String html_text)
+	public static String html2text(String html)
 	{
-		if (html_text == null) return("");
-		return new Source(html_text).getTextExtractor().toString();
+		if (html == null) return("");
+		return new Html2Text(html).getText();
+	}
+
+	/**
+	 * Returns plain text from HTML
+	 * @return
+	 */
+	public String getText() {
+		return doc.text();
+	}
+
+	/**
+	 * Returns List of texts in HTML by selector (eg h1,h2)
+	 * @param jsoup
+	 * @param selector
+	 * @return
+	 */
+	public List<String> getTextByElement(String selector) {
+		Elements tags = doc.select(selector);
+		List<String> texts = new ArrayList<>();
+		for (String text : tags.eachText()) {
+			texts.add(text);
+		}
+		return texts;
 	}
 }

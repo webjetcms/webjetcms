@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsListener.java</span></div><h1>UserDetailsListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+
+import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.admin.layout.MenuService;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+/**
+ * Vygeneruje data do modelu pre zobrazenie zoznamu pouzivatelov
+ */
+@Component
+<span class="fc" id="L19">public class UserDetailsListener {</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='users' &amp;&amp; event.source.subpage=='user-list'&quot;)
+    protected void setInitalData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+        try {
+<span class="fc" id="L24">            setInitialDataImpl(event.getSource().getModel());</span>
+<span class="nc" id="L25">        } catch (Exception ex) {</span>
+<span class="nc" id="L26">            Logger.error(UserDetailsListener.class, ex);</span>
+<span class="fc" id="L27">        }</span>
+<span class="fc" id="L28">    }</span>
+
+    protected static void setInitialDataImpl(ModelMap model) throws JsonProcessingException {
+<span class="fc" id="L31">        model.addAttribute(&quot;jstreePerms&quot;, JsonTools.objectToJSON(MenuService.getAllPermissions()));</span>
+<span class="fc" id="L32">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

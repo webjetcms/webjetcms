@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogonUserDetailsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">LogonUserDetailsRestController.java</span></div><h1>LogonUserDetailsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatTableDB;
+import sk.iway.iwcm.stat.jpa.LogonUserDetailsDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/logon-user-details&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat&amp;menuUsers')&quot;)
+@Datatable
+public class LogonUserDetailsRestController extends DatatableRestControllerV2&lt;LogonUserDetailsDTO, Long&gt; {
+    private static final int MAX_ROWS = 100;
+
+    @Autowired
+    public LogonUserDetailsRestController() {
+<span class="fc" id="L37">        super(null);</span>
+<span class="fc" id="L38">    }</span>
+
+    @Override
+    public void beforeSave(LogonUserDetailsDTO entity) {
+<span class="nc" id="L42">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L43">    }</span>
+
+    @Override
+    public Page&lt;LogonUserDetailsDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="nc" id="L48">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="nc" id="L49">        int userId = Tools.getIntValue(getRequest().getParameter(&quot;userId&quot;), -1);</span>
+
+<span class="nc" id="L51">	    List&lt;Column&gt; columns = StatTableDB.getUsrlogonDetails(MAX_ROWS, userId, filter.getDateFrom(), filter.getDateTo());</span>
+<span class="nc" id="L52">        DatatablePageImpl&lt;LogonUserDetailsDTO&gt; page = new DatatablePageImpl&lt;&gt;(convertColumnsIntoItems(columns));</span>
+<span class="nc" id="L53">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;LogonUserDetailsDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, LogonUserDetailsDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L59">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+<span class="fc" id="L60">        int userId = Tools.getIntValue(getRequest().getParameter(&quot;userId&quot;), -1);</span>
+
+<span class="fc" id="L62">        Logger.debug(getClass(), &quot;filter=&quot;+filter);</span>
+
+<span class="fc" id="L64">	    List&lt;Column&gt; columns = StatTableDB.getUsrlogonDetails(MAX_ROWS, userId, filter.getDateFrom(), filter.getDateTo());</span>
+<span class="fc" id="L65">        DatatablePageImpl&lt;LogonUserDetailsDTO&gt; page = new DatatablePageImpl&lt;&gt;(convertColumnsIntoItems(columns));</span>
+<span class="fc" id="L66">        return page;</span>
+    }
+
+    private List&lt;LogonUserDetailsDTO&gt; convertColumnsIntoItems(List&lt;Column&gt; columns) {
+<span class="fc" id="L70">        List&lt;LogonUserDetailsDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L72">        int order = 1;</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L74">            LogonUserDetailsDTO item = new LogonUserDetailsDTO();</span>
+<span class="fc" id="L75">            item.setOrder(order);</span>
+<span class="fc" id="L76">            item.setDayDate(column.getDateColumn1());</span>
+<span class="fc" id="L77">            item.setLogonMinutes(column.getIntColumn2());</span>
+<span class="fc" id="L78">            item.setHostName(column.getColumn3());</span>
+<span class="fc" id="L79">            items.add(item);</span>
+<span class="fc" id="L80">            order++;</span>
+<span class="fc" id="L81">        }</span>
+<span class="fc" id="L82">        return items;</span>
+    }
+
+    @RequestMapping(value=&quot;/user-name&quot;, params={&quot;userId&quot;}, produces = &quot;text/plain;charset=UTF-8&quot;)
+    @ResponseBody
+    public String getUserName(@RequestParam(&quot;userId&quot;) int userId) {
+
+<span class="fc" id="L89">        UserDetails user = UsersDB.getUser(userId);</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (user != null) return user.getFullName();</span>
+<span class="nc" id="L91">        else return &quot;User &quot;+userId;</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

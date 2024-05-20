@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.mapper</a> &gt; <span class="el_source">EnumerationMapper.java</span></div><h1>EnumerationMapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.mapper;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.factory.Mappers;
+
+import sk.iway.iwcm.components.enumerations.dto.EnumerationDataDto;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+
+/**
+ * Date: 09.04.2018
+ * Time: 14:59
+ * Project: webjet8
+ * Company: InterWay a. s. (www.interway.sk)
+ * Copyright: InterWay a. s. (c) 2001-2018
+ *
+ * @author mpijak
+ */
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface EnumerationMapper {
+<span class="nc" id="L23">    EnumerationMapper INSTANCE = Mappers.getMapper( EnumerationMapper.class );</span>
+
+    EnumerationDataDto toEnumerationDataDto(EnumerationDataBean enumerationDataBean);
+    List&lt;EnumerationDataDto&gt; toEnumerationDataDtos(List&lt;EnumerationDataBean&gt; enumerationDataBeans);
+
+    EnumerationDataBean toEnumerationDataBean(EnumerationDataDto enumerationDataDto);
+    List&lt;EnumerationDataBean&gt; toEnumerationDataBeans(List&lt;EnumerationDataDto&gt; enumerationDataDtos);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

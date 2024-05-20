@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InitFreemarkerServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">InitFreemarkerServlet.java</span></div><h1>InitFreemarkerServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.IOException;
+import java.util.Locale;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import freemarker.ext.servlet.FreemarkerServlet;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateModelException;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Date: 12.02.2018
+ * Time: 7:45
+ * Project: webjet8
+ * Company: InterWay a. s. (www.interway.sk)
+ * Copyright: InterWay a. s. (c) 2001-2018
+ *
+ * @author mpijak
+ */
+<span class="nc" id="L24">public class InitFreemarkerServlet extends FreemarkerServlet {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    /* Vo freemarker templatach .ftl netreba deklarovat PageParams ani lang
+    * ${pageParams.getValue(&quot;nazovParametra&quot;, &quot;default&quot;)
+    * ${lng}
+    *
+    * Ostatne global parametre sa daju definovat v metodach createConfiguration a preprocessRequest
+    */
+    @Override
+    protected Configuration createConfiguration() {
+<span class="nc" id="L36">        Configuration config = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);</span>
+<span class="nc" id="L37">        config.setDefaultEncoding(&quot;windows-1250&quot;);</span>
+<span class="nc" id="L38">        config.setEncoding(Locale.getDefault(), &quot;windows-1250&quot;);</span>
+//        config.setSetting();
+
+        try {
+<span class="nc" id="L42">            config.setSharedVariable(&quot;Tools&quot;, new Tools());</span>
+//            config.setSharedVariable(&quot;iwcm&quot;, t.get(&quot;/WEB-INF/iwcm.tld&quot;);
+<span class="nc" id="L44">        } catch (TemplateModelException e) {</span>
+<span class="nc" id="L45">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L46">        }</span>
+<span class="nc" id="L47">        return config;</span>
+    }
+
+    /* Tu definovat globalne premenne ktore chceme ziskat pri spracovani requestu */
+    @Override
+    protected boolean preprocessRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+<span class="nc" id="L53">        Configuration config = this.getConfiguration();</span>
+        //String queryStringParams = this.getQueryStringParams(request);
+<span class="nc" id="L55">        String queryString = (String) request.getAttribute(&quot;path_filter_query_string&quot;);</span>
+
+        try {
+<span class="nc" id="L58">            config.setSharedVariable(&quot;WebjetHelpers&quot;, new FreemarkerHelpers(request));</span>
+<span class="nc" id="L59">            config.setSharedVariable(&quot;pageParams&quot;, new PageParams(request));</span>
+<span class="nc" id="L60">            config.setSharedVariable(&quot;queryString&quot;, queryString);</span>
+<span class="nc" id="L61">            config.setSharedVariable(&quot;lng&quot;, PageLng.getUserLng(request));</span>
+<span class="nc" id="L62">            config.setSharedVariable(&quot;origPath&quot;, PathFilter.getOrigPath(request));</span>
+<span class="nc" id="L63">            config.setSharedVariable(&quot;currentUser&quot;, UsersDB.getCurrentUser(request));</span>
+<span class="nc" id="L64">        } catch (TemplateModelException e) {</span>
+<span class="nc" id="L65">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L66">        }</span>
+<span class="nc" id="L67">        return false;</span>
+    }
+
+    /*private String getQueryStringParams(HttpServletRequest request) {
+        StringBuilder queryStringParams = new StringBuilder();
+        Map&lt;String, String[]&gt; params = request.getParameterMap();
+
+        Iterator&lt;Map.Entry&lt;String, String[]&gt;&gt; it = params.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry&lt;String, String[]&gt; entry = it.next();
+            String queryParamName = entry.getKey();
+            String[] queryParamValues = entry.getValue();
+            for (int i = 0; i &lt; queryParamValues.length; i++) {
+                String qpv = queryParamValues[i];
+                queryStringParams
+                        .append(queryParamName)
+                        .append(&quot;=&quot;)
+                        .append(qpv);
+                if (i == 0) {
+                    break;
+                    // TODO: vyriesit multiple parameter value pre nazov parametra?
+                }
+                if (i+1 &lt; queryParamValues.length) {
+                    queryStringParams.append(&quot;&amp;&quot;);
+                }
+            }
+            if (it.hasNext()) {
+                queryStringParams.append(&quot;&amp;&quot;);
+            }
+        }
+        return queryStringParams.toString();
+    }*/
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -2555,7 +2555,7 @@
                     '<div class="'+this.tag.style_label+'">'+label+'</div>'+
                     '<div class="input-group">'+
                         '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="input-group-addon btn" style="min-width: 40px; background-color: #41ff9a;" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"><i class="fas fa-image" style="font-size: 18px !important; color: #42485c;"></i></span>'+
+                        '<span class="input-group-addon" style="min-width: 34px; background-color: #304866;background-size:26px;background-repeat:no-repeat;background-position:center;background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
                     '</div>'+
                 '</div>';
 

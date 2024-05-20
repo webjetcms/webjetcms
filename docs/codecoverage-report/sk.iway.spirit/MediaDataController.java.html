@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaDataController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.spirit</a> &gt; <span class="el_source">MediaDataController.java</span></div><h1>MediaDataController.java</h1><pre class="source lang-java linenums">package sk.iway.spirit;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONException;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatables.DataTablesFieldError;
+import sk.iway.iwcm.system.datatables.DataTablesInterface;
+import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaGroupBean;
+
+/**
+ *  MediaDataController.java
+ *
+ *  Class EnumerationDataController is used for working with DataTables
+ *
+ *
+ *@author       $Author: lzl $
+ *@version      $Revision: 1.0 $
+ */
+
+<span class="nc" id="L34">public class MediaDataController implements DataTablesInterface {</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    private class MediumForReturn implements Serializable{
+        private static final long serialVersionUID = 1L;
+
+        private int id;
+        private int order;
+        private String title;
+        private String thumbLink;
+        private String group;
+<span class="nc" id="L45">        private String groupsArray = &quot;&quot;;</span>
+<span class="nc" id="L46">        private String link_url = &quot;&quot;;</span>
+<span class="nc" id="L47">        private String link_exist = &quot;&quot;;</span>
+
+        public int getId() {
+<span class="nc" id="L50">            return id;</span>
+        }
+
+        public void setId(int id) {
+<span class="nc" id="L54">            this.id = id;</span>
+<span class="nc" id="L55">        }</span>
+
+        public int getOrder() {
+<span class="nc" id="L58">            return order;</span>
+        }
+
+        public void setOrder(int order) {
+<span class="nc" id="L62">            this.order = order;</span>
+<span class="nc" id="L63">        }</span>
+
+        public String getTitle() {
+<span class="nc" id="L66">            return title;</span>
+        }
+
+        public void setTitle(String title) {
+<span class="nc" id="L70">            this.title = title;</span>
+<span class="nc" id="L71">        }</span>
+
+        public String getThumbLink() {
+<span class="nc" id="L74">            return thumbLink;</span>
+        }
+
+        public void setThumbLink(String thumbLink) {
+<span class="nc" id="L78">            this.thumbLink = thumbLink;</span>
+<span class="nc" id="L79">        }</span>
+
+        public String getGroup() {
+<span class="nc" id="L82">            return group;</span>
+        }
+
+        public void setGroup(String group) {
+<span class="nc" id="L86">            this.group = group;</span>
+<span class="nc" id="L87">        }</span>
+
+        public String getGroupsArray() {
+<span class="nc" id="L90">            return groupsArray;</span>
+        }
+
+        public void setGroupsArray(String groupsArray) {
+<span class="nc" id="L94">            this.groupsArray = groupsArray;</span>
+<span class="nc" id="L95">        }</span>
+
+        public String getLink_url() {
+<span class="nc" id="L98">            return link_url;</span>
+        }
+
+        public void setLink_url(String link_url) {
+<span class="nc" id="L102">            this.link_url = link_url;</span>
+<span class="nc" id="L103">        }</span>
+
+        public String getLink_exist() {
+<span class="nc" id="L106">            return link_exist;</span>
+        }
+
+        public void setLink_exist(String link_exist) {
+<span class="nc" id="L110">            this.link_exist = link_exist;</span>
+<span class="nc" id="L111">        }</span>
+
+        private  MediumForReturn(Media data)  throws JSONException
+<span class="nc" id="L114">        {</span>
+<span class="nc" id="L115">            this.id = data.getMediaId();</span>
+<span class="nc" id="L116">            this.order = data.getMediaSortOrder();</span>
+<span class="nc" id="L117">            this.title = DB.filterHtml(data.getMediaTitleSk());</span>
+<span class="nc" id="L118">            this.thumbLink = DB.filterHtml(data.getMediaThumbLink());</span>
+<span class="nc" id="L119">            this.group = data.getGroupsToString();</span>
+<span class="nc" id="L120">            this.link_url = DB.filterHtml(data.getMediaLink());</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">            this.link_exist = (MediaDB.isExists(data) &amp;&amp; Tools.isNotEmpty(data.getMediaLink()))?&quot;true&quot;: &quot;false&quot;;</span>
+<span class="nc" id="L122">        }</span>
+    }
+
+<span class="nc" id="L125">    private List&lt;DataTablesFieldError&gt; fieldErrors = new ArrayList&lt;&gt;();</span>
+
+
+    @Override
+    public List&lt;Object&gt; list(HttpServletRequest request) {
+<span class="nc" id="L130">        return null;</span>
+    }
+
+    @Override
+    public List&lt;Object&gt; save(HttpServletRequest request, Map&lt;Integer, Map&lt;String, String&gt;&gt; parsedRequest)
+    {
+<span class="nc" id="L136">        List&lt;Object&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L137">        boolean order = false;</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if(parsedRequest.size() &gt; 1) order = true;</span>
+
+<span class="nc" id="L140">        int userId = -1;</span>
+<span class="nc" id="L141">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        if (rb != null)</span>
+        {
+<span class="nc" id="L144">            userId = rb.getUserId();</span>
+        }
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        for (Map.Entry&lt;Integer, Map&lt;String, String&gt;&gt; entry : parsedRequest.entrySet())</span>
+        {
+<span class="nc" id="L149">            int mediaIdFromMap = entry.getKey();</span>
+
+<span class="nc" id="L151">            System.out.println(entry.getKey() + &quot;/&quot; + entry.getValue());</span>
+<span class="nc" id="L152">            Map&lt;String,String&gt;  parsedMap = entry.getValue();</span>
+            Media data;
+
+<span class="nc bnc" id="L155" title="All 4 branches missed.">            switch(parsedMap.get(&quot;action&quot;)) {</span>
+                case &quot;create&quot;:
+<span class="nc" id="L157">                    int mediaId =Tools.getIntValue(parsedMap.get(&quot;id&quot;),-1);</span>
+<span class="nc" id="L158">                    int mediaFkId =  Tools.getIntValue(parsedMap.get(&quot;mediaFkId&quot;), -1);</span>
+<span class="nc" id="L159">                    int mediaSortOrder = 0;</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                    if(mediaFkId != -1)</span>
+                    {
+<span class="nc" id="L163">                        mediaSortOrder = MediaDB.getLastOrder(mediaFkId, &quot;documents&quot;);</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L167">                        mediaSortOrder = MediaDB.getLastOrder(userId, &quot;documents_temp&quot;);</span>
+                    }
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                    if(mediaId ==-1){ // create</span>
+<span class="nc" id="L171">                        data = new Media();</span>
+<span class="nc" id="L172">                        parsedMap.put(&quot;order&quot;, (mediaSortOrder+10)+&quot;&quot;); // editor vracia defaultne pri create order = 0, preto to prepisujem</span>
+<span class="nc" id="L173">                        data.setMediaFkId(mediaFkId);</span>
+<span class="nc" id="L174">                        data.setMediaFkTableName(&quot;documents&quot;);</span>
+
+                    }else{ // duplicate
+<span class="nc" id="L177">                        data = MediaDB.getMedia(Tools.getIntValue(parsedMap.get(&quot;id&quot;),-1));</span>
+<span class="nc" id="L178">                        data = MediaDB.duplicateMedia(data.getMediaId());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                        if(data == null) break;</span>
+                    }
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    if(mediaFkId == -1)</span>
+                    {
+                        //stranka este nie je ulozena
+<span class="nc" id="L185">                        data.setMediaFkId(userId);</span>
+<span class="nc" id="L186">                        data.setMediaFkTableName(&quot;documents_temp&quot;);</span>
+                    }
+
+<span class="nc" id="L189">                    data = fillDataFromRequest(data, parsedMap, false);</span>
+<span class="nc" id="L190">                    data.setMediaId(-1);</span>
+<span class="nc" id="L191">                    data.setLastUpdate(new Date(Tools.getNow()));</span>
+<span class="nc" id="L192">                    data.save();</span>
+                    try {
+<span class="nc" id="L194">                        ret.add(new MediumForReturn(data));</span>
+<span class="nc" id="L195">                    } catch (JSONException e) {</span>
+<span class="nc" id="L196">                        sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L197">                    }</span>
+<span class="nc" id="L198">                    break;</span>
+                case &quot;edit&quot;:
+<span class="nc" id="L200">                    data = MediaDB.getMedia(Tools.getIntValue(mediaIdFromMap,-1));</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                    if(data !=null){</span>
+<span class="nc" id="L202">                        data = fillDataFromRequest(data, parsedMap, order);</span>
+<span class="nc" id="L203">                        data.setLastUpdate(new Date(Tools.getNow()));</span>
+<span class="nc" id="L204">                        data.save();</span>
+                        try {
+<span class="nc" id="L206">                            ret.add(new MediumForReturn(data));</span>
+<span class="nc" id="L207">                        } catch (JSONException e) {</span>
+<span class="nc" id="L208">                            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L209">                        }</span>
+                    }
+                    break;
+                case &quot;remove&quot;:
+<span class="nc" id="L213">                    mediaId = Tools.getIntValue(parsedMap.get(&quot;id&quot;), -1);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                    if(mediaId &gt; -1){</span>
+<span class="nc" id="L215">                        new MediaDB().deleteByIds(mediaId);</span>
+                    }
+                    break;
+                default:
+                    //System.out.println(&quot;!!!!!Action not found!!!!&quot;);
+                    break;
+            }
+
+<span class="nc" id="L223">        }</span>
+
+
+
+
+<span class="nc" id="L228">        return ret;</span>
+    }
+
+    @Override
+    public String getError() {
+<span class="nc" id="L233">        return null;</span>
+    }
+
+
+    /**
+     * Getter for form input errors.
+     * @return List of DataTablesFieldError
+     */
+    @Override
+    public List&lt;DataTablesFieldError&gt; getFieldErrors() {
+<span class="nc" id="L243">        return fieldErrors;</span>
+    }
+
+    @Override
+    public boolean canSave(Identity user) {
+        //TODO: nejako lepsie kontrolovat pravo, napr. ci mozem editovat danu stranku
+<span class="nc bnc" id="L249" title="All 4 branches missed.">        return !(user==null || !user.isAdmin());</span>
+    }
+
+    private Media fillDataFromRequest(Media data,Map&lt;String, String&gt; parsedRequest, boolean checkEmpty ){
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if(data != null) {</span>
+<span class="nc" id="L254">            int order = Tools.getIntValue(parsedRequest.get(&quot;order&quot;), 0);</span>
+<span class="nc" id="L255">            String title = parsedRequest.get(&quot;title&quot;);</span>
+<span class="nc" id="L256">            String link_url = parsedRequest.get(&quot;link_url&quot;);</span>
+<span class="nc" id="L257">            String thumbLink = parsedRequest.get(&quot;thumbLink&quot;);</span>
+<span class="nc" id="L258">            String groupsInput = parsedRequest.get(&quot;groups&quot;);</span>
+<span class="nc" id="L259">            data.setMediaSortOrder(order);</span>
+
+<span class="nc" id="L261">            String[] groupsIntputArray = groupsInput.split(&quot;,&quot;);</span>
+
+            // naplnim grupy
+<span class="nc" id="L264">            List&lt;MediaGroupBean&gt; mediaGroups = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            for (String g : groupsIntputArray) {</span>
+<span class="nc" id="L266">                MediaGroupBean mediaGroup = MediaDB.getGroup(Tools.getIntValue(g, -1));</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">                if (mediaGroup != null) mediaGroups.add(mediaGroup);</span>
+            }
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            if(checkEmpty) {</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">                if (mediaGroups.size() &gt; 0) data.setGroups(mediaGroups);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">                if (Tools.isNotEmpty(title)) data.setMediaTitleSk(title);</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                if (Tools.isNotEmpty(link_url)) data.setMediaLink(link_url);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">                if (Tools.isNotEmpty(thumbLink)) data.setMediaThumbLink(thumbLink);</span>
+            }else{
+<span class="nc" id="L275">                data.setGroups(mediaGroups);</span>
+<span class="nc" id="L276">                data.setMediaTitleSk(title);</span>
+<span class="nc" id="L277">                data.setMediaLink(link_url);</span>
+<span class="nc" id="L278">                data.setMediaThumbLink(thumbLink);</span>
+            }
+
+<span class="nc" id="L281">            String mediaGroupsNames = mediaGroups.stream().map( n -&gt; n.getMediaGroupName() )</span>
+<span class="nc" id="L282">                    .collect( Collectors.joining( &quot;, &quot; ) );</span>
+<span class="nc" id="L283">            data.setMediaGroup(mediaGroupsNames);</span>
+        }
+<span class="nc" id="L285">        return data;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

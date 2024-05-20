@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetComponentResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component</a> &gt; <span class="el_source">WebjetComponentResolver.java</span></div><h1>WebjetComponentResolver.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.WebjetComponentInterface;
+import sk.iway.iwcm.editor.rest.ComponentsRestController;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.annotations.DefaultHandler;
+
+
+@Component
+public class WebjetComponentResolver {
+
+    // handluje metodu z triedy, vklada do argumentov hodnoty a vykona navratovy typ, hodnotu vrati v response
+    private final WebjetRequestMappingHandlerAdapter handlerAdapter;
+
+    private final WebjetViewResolver viewResolver;
+
+    @Autowired
+<span class="fc" id="L36">    public WebjetComponentResolver(WebjetRequestMappingHandlerAdapter handlerAdapter, WebjetViewResolver viewResolver) {</span>
+<span class="fc" id="L37">        this.handlerAdapter = handlerAdapter;</span>
+<span class="fc" id="L38">        this.viewResolver = viewResolver;</span>
+<span class="fc" id="L39">    }</span>
+
+    // renderuje html kod z triedy a page params
+    public String render(HttpServletRequest request, HttpServletResponse response, WebjetComponentInterface component, PageParams pageParams) throws Exception {
+        try {
+            // naplnenie page params do triedy komponenty
+<span class="fc" id="L45">            ComponentsRestController.setParametersToBean(component, pageParams);</span>
+
+            // inicializacna metoda pre potreby komponenty
+<span class="fc" id="L48">            component.init();</span>
+<span class="fc" id="L49">            component.init(request, response);</span>
+
+            // mock response, aby bolo mozne vybrat content
+<span class="fc" id="L52">            MockHttpServletResponse mockResponse = new MockHttpServletResponse();</span>
+
+            // vygeneruje html kod komponenty do responsu
+<span class="fc" id="L55">            handleRequest(request, component, mockResponse, pageParams);</span>
+
+            // ak response obsahuje redirect, tak ho odosleme a vratime prazdny retazec
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(mockResponse.getRedirectedUrl())) {</span>
+<span class="nc" id="L59">                Logger.debug(WebjetComponentResolver.class,</span>
+<span class="nc" id="L60">                        String.format(</span>
+                                &quot;Redirect from component %s to URL: %s&quot;,
+<span class="nc" id="L62">                                component.getClass().getSimpleName(),</span>
+<span class="nc" id="L63">                                mockResponse.getRedirectedUrl()</span>
+                        )
+                );
+<span class="nc" id="L66">                response.sendRedirect(mockResponse.getRedirectedUrl());</span>
+<span class="nc" id="L67">                return &quot;&quot;;</span>
+            }
+
+            // ziska content responsu
+<span class="fc" id="L71">            return mockResponse.getContentAsString();</span>
+<span class="nc" id="L72">        } catch (IOException e) {</span>
+<span class="nc" id="L73">            sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L76">        return &quot;&quot;;</span>
+    }
+
+    // vykona kod z metody komponenty ktora je anotovana @Render
+    void handleRequest(HttpServletRequest request, WebjetComponentInterface component, HttpServletResponse response, PageParams pageParams) throws Exception {
+
+        // vyhlada metodu s anotaciou @Render
+<span class="fc" id="L83">        Method method = findHandlerMethod(request, component, pageParams);</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (method == null) {</span>
+<span class="nc" id="L85">            response.getWriter().println(Prop.getInstance(request).getText(&quot;writetag.error_not_exists&quot;, null, null, component.getClass().getSimpleName()));</span>
+<span class="nc" id="L86">            return;</span>
+        }
+<span class="fc" id="L88">        HandlerMethod handlerMethod = new HandlerMethod(component, method);</span>
+
+        try {
+            // ziska ModelAndView z akejkolvek navratovej hodnoty metody
+<span class="fc" id="L92">            ModelAndView mv = handlerAdapter.handle(request, response, handlerMethod);</span>
+<span class="fc" id="L93">            WebjetDispatcherServlet dispatcherServlet = new WebjetDispatcherServlet();</span>
+
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(component.getViewFolder())) {</span>
+<span class="nc" id="L96">                viewResolver.setViewFolder(component.getViewFolder());</span>
+            }
+
+<span class="fc" id="L99">            mv.addObject(&quot;request&quot;, request);</span>
+<span class="fc" id="L100">            mv.addObject(&quot;session&quot;, request.getSession());</span>
+
+            // nastavi html kod komponenty do responsu
+<span class="fc" id="L103">            dispatcherServlet.render(mv, viewResolver, request, response);</span>
+        }
+<span class="nc" id="L105">        catch (AccessDeniedException ex) {</span>
+<span class="nc" id="L106">            response.getWriter().println(ex.getMessage());</span>
+<span class="fc" id="L107">        }</span>
+<span class="fc" id="L108">    }</span>
+
+    // vyhlada prislusnu metodu v triede
+    Method findHandlerMethod(HttpServletRequest request, WebjetComponentInterface bean, PageParams pageParams) {
+        @SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L113">        Class c = bean.getClass();</span>
+
+<span class="pc bpc" id="L115" title="2 of 4 branches missed.">        if (c != null &amp;&amp; c.getSimpleName().contains(&quot;EnhancerBySpring&quot;)) {</span>
+<span class="fc" id="L116">            c = ClassUtils.getUserClass(c);</span>
+        }
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (c==null) return null;</span>
+
+<span class="fc" id="L120">        Method[] methods = c.getMethods();</span>
+<span class="fc" id="L121">        Set&lt;String&gt; parameterNames = request.getParameterMap().keySet();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if(!parameterNames.isEmpty()) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            for (int i = 0; i &lt; methods.length; i++) {</span>
+<span class="fc" id="L124">                Method method = methods[i];</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                if (parameterNames.contains(method.getName())) {</span>
+<span class="fc" id="L126">                    return method;</span>
+                }
+            }
+        }
+
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (pageParams != null) {</span>
+<span class="fc" id="L132">            String defaultHandler = pageParams.getValue(&quot;defaultHandler&quot;, null);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(defaultHandler)) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                for( int i = 0; i &lt; methods.length; i++ ) {</span>
+<span class="nc" id="L135">                    Method method = methods[i];</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    if (defaultHandler.equals(method.getName())) {</span>
+<span class="nc" id="L137">                        return method;</span>
+                    }
+                }
+            }
+        }
+
+        // hladanie metody s anotaciou @DefaultHandler
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        for( int i = 0; i &lt; methods.length; i++ ) {</span>
+<span class="fc" id="L145">            Method method = methods[i];</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (method.isAnnotationPresent(DefaultHandler.class)) {</span>
+<span class="fc" id="L147">                return method;</span>
+            }
+        }
+
+        // ak nenajde anotovanu metodu hlada metodu s nazvom render
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        for( int i = 0; i &lt; methods.length; i++ ) {</span>
+<span class="nc" id="L153">            Method method = methods[i];</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            if(method.getName().equals(&quot;render&quot;)) {</span>
+<span class="nc" id="L155">                return method;</span>
+            }
+        }
+
+<span class="nc" id="L159">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

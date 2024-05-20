@@ -279,7 +279,7 @@
                         if (section.find('> .ge-tools-drawer').length) {
                             return;
                         }
-                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="fa fa-cog"></div>').prependTo(section);
+                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="ti ti-settings"></div>').prependTo(section);
                         var drawer = $('<div class="ge-tools-drawer-inner" />').appendTo(drawerOuter);
                         <%--var drawerPlusSection = $('<div class="ge-tools-drawerPlusSection ge-tools-drawerPlusSection-bottom wj-ge-tools-colored wj-ge-tools-green" />').prependTo(section);--%>
                         <%--var drawerPlusSection_top = $('<div class="ge-tools-drawerPlusSection ge-tools-drawerPlusSection-top wj-ge-tools-colored wj-ge-tools-green" />').prependTo(section);--%>
@@ -365,7 +365,7 @@
                         if( isEmpty(container) ) container.addClass('ge-emptyElement');
                         if (container.find('> .ge-tools-drawer').length) { return; }
 
-                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="fa fa-cog"></div>').prependTo(container);
+                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="ti ti-settings"></div>').prependTo(container);
                         var drawer = $('<div class="ge-tools-drawer-inner" />').appendTo(drawerOuter);
                         createToolsName(drawer,'<iwcm:text key="grideditor.container" />');
 
@@ -449,7 +449,7 @@
                         if( isEmpty(row) ) row.addClass('ge-emptyElement');
                         if (row.find('> .ge-tools-drawer').length) { return; }
 
-                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="fa fa-cog"></div>').prependTo(row);
+                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="ti ti-settings"></div>').prependTo(row);
                         var drawer = $('<div class="ge-tools-drawer-inner" />').appendTo(drawerOuter);
                         var drawerPlusColumn = $('<div class="ge-tools-drawerPlusColumn ge-tools-drawerPlusColumn-row wj-ge-tools-colored wj-ge-tools-green"/>').prependTo(row);
 
@@ -521,7 +521,7 @@
 
                         var drawerPlusColumnLeft = $('<div class="ge-tools-drawerPlusColumn ge-drawerPlusColumn-left wj-ge-tools-colored wj-ge-tools-green"/>').prependTo(col);
                         var drawerPlusColumnRight = $('<div class="ge-tools-drawerPlusColumn ge-drawerPlusColumn-right wj-ge-tools-colored wj-ge-tools-green"/>').prependTo(col);
-                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="fa fa-cog"></div>').prependTo(col);
+                        var drawerOuter = $('<div class="ge-tools-drawer"><i class="ti ti-settings"></div>').prependTo(col);
                         var drawer = $('<div class="ge-tools-drawer-inner" />').appendTo(drawerOuter);
 
                         createToolsName(drawer,'<iwcm:text key="grideditor.column" />');
@@ -1132,7 +1132,7 @@
 
                     <%--//inicializuj sidebar--%>
                     <%--var content = $('<div class="wj-ge-content"></div>')--%>
-                        <%--.append($('<span class="close-sidebar"><i class="fa fa-times" aria-hidden="true"></i></span>')--%>
+                        <%--.append($('<span class="close-sidebar"><i class="ti ti-x" aria-hidden="true"></i></span>')--%>
                             <%--.click(function(){--%>
                                 <%--hideSideBar();--%>
                             <%--})--%>

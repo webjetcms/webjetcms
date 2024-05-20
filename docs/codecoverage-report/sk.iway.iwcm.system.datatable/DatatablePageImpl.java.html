@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatablePageImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatablePageImpl.java</span></div><h1>DatatablePageImpl.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import sk.iway.iwcm.Tools;
+
+public class DatatablePageImpl&lt;T&gt; extends PageImpl&lt;T&gt; {
+
+    private static final long serialVersionUID = 1L;
+
+<span class="fc" id="L17">    private Map&lt;String, List&lt;OptionDto&gt;&gt; options = null; //NOSONAR</span>
+
+    private List&lt;NotifyBean&gt; notify;
+
+    public DatatablePageImpl(List&lt;T&gt; content) {
+<span class="fc" id="L22">        super(content);</span>
+<span class="fc" id="L23">    }</span>
+
+    public DatatablePageImpl(Page&lt;T&gt; page) {
+<span class="fc" id="L26">        super(page.getContent(), page.getPageable(), page.getTotalElements());</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (page instanceof DatatablePageImpl) {</span>
+            //ak uz je to PageImpl tak prenes options, mozno uz su nejake nastavene
+<span class="fc" id="L29">            DatatablePageImpl&lt;T&gt; pageImpl = (DatatablePageImpl&lt;T&gt;)page;</span>
+<span class="fc" id="L30">            this.options = pageImpl.options;</span>
+        }
+<span class="fc" id="L32">    }</span>
+
+    private List&lt;OptionDto&gt; getFieldOptions(String field) {
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (options == null) {</span>
+<span class="fc" id="L36">            options = new Hashtable&lt;&gt;();</span>
+        }
+<span class="fc" id="L38">        List&lt;OptionDto&gt; fieldOptions = options.get(field);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (fieldOptions == null) {</span>
+<span class="fc" id="L40">            fieldOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L41">            options.put(field, fieldOptions);</span>
+        }
+<span class="fc" id="L43">        return fieldOptions;</span>
+    }
+
+    /**
+     * Add to output OptionDto value
+     * @param field - name od DT field
+     * @param label - value (text) that will be shown
+     * @param value - value that will be used on BE
+     */
+    public void addDefaultOption(String field, String label, String value) {
+<span class="fc" id="L53">        addOption(field, label, value, null);</span>
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Prida do vystupu OptionDto
+     * @param field - meno DT fieldu
+     * @param label
+     * @param value
+     */
+    public void addOption(String field, String label, String value, Object original) {
+<span class="fc" id="L63">        List&lt;OptionDto&gt; fieldOptions = getFieldOptions(field);</span>
+<span class="fc" id="L64">        fieldOptions.add(new OptionDto(label, value, original));</span>
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Prida do vystupu OptionDto skonvertovane so zadaneho listu objektov
+     * @param field - meno DT fieldu
+     * @param options - list objektov ktore pridavame
+     * @param labelProperty - nazov label property v options liste
+     * @param valueProperty - nazov value property v options liste
+     */
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    public void addOptions(String field, List options, String labelProperty, String valueProperty, boolean includeOriginalObject) {
+<span class="fc" id="L76">        List&lt;OptionDto&gt; fieldOptions = getFieldOptions(field);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (Object o : options) {</span>
+<span class="fc" id="L78">            BeanWrapperImpl bw = new BeanWrapperImpl(o);</span>
+
+            String label;
+            String value;
+
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">            if(Tools.isEmpty(labelProperty) &amp;&amp; Tools.isEmpty(valueProperty)) {</span>
+<span class="fc" id="L84">                label = (String)o;</span>
+<span class="fc" id="L85">                value = (String)o;</span>
+            } else {
+<span class="fc" id="L87">                label = String.valueOf(bw.getPropertyValue(labelProperty));</span>
+<span class="fc" id="L88">                value = String.valueOf(bw.getPropertyValue(valueProperty));</span>
+            }
+
+            Object original;
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (includeOriginalObject) original = o;</span>
+<span class="fc" id="L93">            else original = null;</span>
+<span class="fc" id="L94">            fieldOptions.add(new OptionDto(label, value, original));</span>
+<span class="fc" id="L95">        }</span>
+<span class="fc" id="L96">    }</span>
+
+    public void addOptions(String field, List&lt;String&gt; options) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for(String option : options)</span>
+<span class="nc" id="L100">            addOption(field, option, option, null);</span>
+<span class="nc" id="L101">    }</span>
+
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getOptions() {
+<span class="fc" id="L104">        return options;</span>
+    }
+
+    public List&lt;NotifyBean&gt; getNotify() {
+<span class="fc" id="L108">        return notify;</span>
+    }
+
+    public void setNotify(List&lt;NotifyBean&gt; notify) {
+<span class="fc" id="L112">        this.notify = notify;</span>
+<span class="fc" id="L113">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

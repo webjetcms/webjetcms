@@ -76,7 +76,7 @@ var datatables_globalConfig = {
     buttons: [
         {
             extend: 'colvis',
-            text: '<i class="fa fa-columns" aria-hidden="true"></i> <iwcm:text key="datatables.columns"/>',
+            text: '<i class="ti ti-layout-columns" aria-hidden="true"></i> <iwcm:text key="datatables.columns"/>',
             collectionLayout: 'fixed  two-column table-buttons-collections-style',
             columnText: function ( dt, idx, title ) {
                 return title;
@@ -85,12 +85,12 @@ var datatables_globalConfig = {
         },
         {
             extend: 'pageLength',
-            text: '<i class="fa fa-bars" aria-hidden="true"></i> <iwcm:text key="datatables.paging"/>',
+            text: '<i class="ti ti-menu-2" aria-hidden="true"></i> <iwcm:text key="datatables.paging"/>',
             collectionLayout: 'fixed table-buttons-collections-style'
         },
         {
             extend: 'collection',
-            text: '<i class="fa fa-share-square-o" aria-hidden="true"></i> <iwcm:text key="datatables.export"/>',
+            text: '<i class="ti ti-share-2" aria-hidden="true"></i> <iwcm:text key="datatables.export"/>',
             collectionLayout: 'fixed table-buttons-collections-style',
             buttons: [
                 {
@@ -164,7 +164,7 @@ var datatables_globalConfig = {
 
     fn_createRowController: function(id){
         var tools = '<div class="row-two-block not-checkbox"><div class="row-two-block-numbers">'+id+'</div><div class="row-two-block-tools" style="width:14px;">';
-        tools += '<div class="btn-group"><a class="show-doc-controller" href="javascript:;" ><i class="fa fa-cog"></i></a>';
+        tools += '<div class="btn-group"><a class="show-doc-controller" href="javascript:;" ><i class="ti ti-settings"></i></a>';
         tools += '</div></div></div>';
         return tools;
     }, //fn_createRowController
@@ -187,7 +187,7 @@ var datatables_globalConfig = {
 
             var html = '<div class="table-title '+sortingClass + emptyClass +'">' + settings.aoColumns[column].title + '</div><div class="table-input">';
 
-            html += '<a href="javascript:;" style="display:none;" class="table-clear-search-input"><i class="fa fa-times" aria-hidden="true"></i></a>';
+            html += '<a href="javascript:;" style="display:none;" class="table-clear-search-input"><i class="ti ti-x" aria-hidden="true"></i></a>';
 
             if (settings.aoColumns[column].searchType == "input") {
                 html += '<input type="text" class="form-control form-filter">';

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CheckLogonTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">CheckLogonTag.java</span></div><h1>CheckLogonTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.TagSupport;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+
+/**
+ *  Kontrola ci je prihlaseny pouzivatel (admin)
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      $Date: 2010/01/20 11:15:08 $
+ */
+<span class="fc" id="L23">public final class CheckLogonTag extends TagSupport</span>
+{
+	private static final long serialVersionUID = 6045363530295540861L;
+
+	/**
+    *  The key of the session-scope bean we look for.
+    */
+<span class="fc" id="L30">   private String name = Constants.USER_KEY;</span>
+
+   /**
+    *  The page to which we should forward for the user to log on.
+    */
+<span class="fc" id="L35">   private String page = &quot;/admin/logon.jsp&quot;;</span>
+<span class="fc" id="L36">   private boolean admin = false;</span>
+
+   //tu je mozne zadat zoznam pristupovych prav ktore sa maju kontrolovat ako menuWebpages|menuFbrowser|cmp_map
+<span class="fc" id="L39">   private String perms = null;</span>
+
+   /**
+    *  Return the bean name.
+    *
+    *@return    The name value
+    */
+   public String getName()
+   {
+<span class="nc" id="L48">      return (this.name);</span>
+   }
+
+
+   /**
+    *  Set the bean name.
+    *
+    *@param  name  The new bean name
+    */
+   public void setName(String name)
+   {
+<span class="nc" id="L59">      this.name = name;</span>
+<span class="nc" id="L60">   }</span>
+
+
+   /**
+    *  Return the forward page.
+    *
+    *@return    The page value
+    */
+   public String getPage()
+   {
+<span class="nc" id="L70">      return (this.page);</span>
+   }
+
+
+   /**
+    *  Set the forward page.
+    *
+    *@param  page  The new forward page
+    */
+   public void setPage(String page)
+   {
+<span class="nc" id="L81">      this.page = page;</span>
+<span class="nc" id="L82">   }</span>
+
+
+   // ------------------------------------------------------- Public Methods
+
+   /**
+    *  Defer our checking until the end of this tag is encountered.
+    *
+    *@return                   Description of the Return Value
+    *@exception  JspException  if a JSP exception has occurred
+    */
+   @Override
+   public int doStartTag() throws JspException
+   {
+<span class="fc" id="L96">      return (SKIP_BODY);</span>
+   }
+
+
+   /**
+    *  Perform our logged-in user check by looking for the existence of a
+    *  session scope bean under the specified name. If this bean is not present,
+    *  control is forwarded to the specified logon page.
+    *
+    *@return                   Description of the Return Value
+    *@exception  JspException  if a JSP exception has occurred
+    */
+   @Override
+   @SuppressWarnings(&quot;unused&quot;)
+   public int doEndTag() throws JspException
+   {
+      // Is there a valid user logged on?
+<span class="fc" id="L113">      boolean valid = false;</span>
+<span class="fc" id="L114">      HttpSession session = pageContext.getSession();</span>
+<span class="fc" id="L115">      Identity user = (Identity) session.getAttribute(name);</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">      if ((session != null) &amp;&amp; (user != null))</span>
+      {
+         //Logger.error(this,&quot;Session nie je null&quot;);
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">         if (user.isValid())</span>
+         {
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (admin == true)</span>
+            {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">               if (user.isAdmin())</span>
+               {
+<span class="fc" id="L125">                  valid = true;</span>
+               }
+            }
+            else
+            {
+<span class="fc" id="L130">               valid = true;</span>
+            }
+         }
+      }
+
+      //Logger.error(this,&quot;valid=&quot;+valid+&quot; name=&quot;+name);
+
+      // Forward control based on the results
+<span class="fc bfc" id="L138" title="All 2 branches covered.">      if (valid)</span>
+      {
+         //user je prihlaseny
+<span class="fc bfc" id="L141" title="All 2 branches covered.">         if (Tools.isNotEmpty(perms))</span>
+         {
+<span class="fc" id="L143">            boolean isAnyEnabled = false;</span>
+<span class="fc" id="L144">            String persmArr[] = Tools.getTokens(perms, &quot;|&quot;, true);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            for (String perm : persmArr)</span>
+            {
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">               if (MenuTag.isEnabledPerms(perms, user))</span>
+               {
+<span class="fc" id="L149">                  isAnyEnabled = true;</span>
+<span class="fc" id="L150">                  break;</span>
+               }
+            }
+
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">            if (isAnyEnabled == false)</span>
+            {
+               try
+               {
+                  //user nema pravo na modul, presmeruj ho na /admin/ (ak sa este da)
+<span class="nc" id="L159">                  HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();</span>
+<span class="nc" id="L160">                  response.sendRedirect(&quot;/admin/403.jsp&quot;);</span>
+               }
+<span class="nc" id="L162">               catch (Exception e)</span>
+               {
+
+<span class="nc" id="L165">               }</span>
+<span class="nc" id="L166">               return SKIP_PAGE;</span>
+            }
+         }
+
+<span class="fc" id="L170">         return (EVAL_PAGE);</span>
+      }
+      else
+      {
+         try
+         {
+<span class="fc" id="L176">         	String domainController = AuthenticationFilter.getDomainController();</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(domainController))</span>
+				{
+<span class="nc" id="L179">					HttpServletResponse response = (HttpServletResponse)pageContext.getResponse();</span>
+<span class="nc" id="L180">					response.sendRedirect(&quot;/ntlm/logon.do?admin=true&quot;);</span>
+<span class="nc" id="L181">					return (SKIP_PAGE);</span>
+				}
+				else
+				{
+<span class="fc" id="L185">					pageContext.forward(page);</span>
+				}
+         }
+<span class="nc" id="L188">         catch (Exception e)</span>
+         {
+<span class="nc" id="L190">            throw new JspException(e.toString());</span>
+<span class="fc" id="L191">         }</span>
+<span class="fc" id="L192">         return (SKIP_PAGE);</span>
+      }
+   }
+
+
+   /**
+    *  Release any acquired resources.
+    */
+   @Override
+   public void release()
+   {
+<span class="fc" id="L203">      super.release();</span>
+<span class="fc" id="L204">      this.name = Constants.USER_KEY;</span>
+<span class="fc" id="L205">      this.page = &quot;/logon.jsp&quot;;</span>
+<span class="fc" id="L206">      this.admin = false;</span>
+<span class="fc" id="L207">      this.perms = null;</span>
+<span class="fc" id="L208">   }</span>
+
+   /**
+    *  Sets the admin attribute of the CheckLogonTag object
+    *
+    *@param  admin  The new admin value
+    */
+   public void setAdmin(boolean admin)
+   {
+<span class="fc" id="L217">      this.admin = admin;</span>
+<span class="fc" id="L218">   }</span>
+
+   /**
+    *  Gets the admin attribute of the CheckLogonTag object
+    *
+    *@return    The admin value
+    */
+   public boolean isAdmin()
+   {
+<span class="nc" id="L227">      return admin;</span>
+   }
+
+   public String getPerms()
+   {
+<span class="nc" id="L232">      return perms;</span>
+   }
+
+   public void setPerms(String perms)
+   {
+<span class="fc" id="L237">      this.perms = perms;</span>
+<span class="fc" id="L238">   }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

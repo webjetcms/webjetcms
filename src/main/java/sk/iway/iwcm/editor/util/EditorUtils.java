@@ -292,6 +292,7 @@ public class EditorUtils {
             }
         }
 
+		dataAsc = Tools.replace(dataAsc, "&nbsp;", "      ");
         dataAsc = Tools.replaceStrings(dataAsc, "searchIndexReplaceStrings", false);
 
         return dataAsc;

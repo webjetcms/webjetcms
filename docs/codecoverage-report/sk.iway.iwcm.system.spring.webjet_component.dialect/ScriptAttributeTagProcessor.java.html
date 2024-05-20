@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScriptAttributeTagProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component.dialect</a> &gt; <span class="el_source">ScriptAttributeTagProcessor.java</span></div><h1>ScriptAttributeTagProcessor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component.dialect;
+
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.model.IAttribute;
+import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.processor.element.IElementTagStructureHandler;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.insertScript.InsertScriptBean;
+import sk.iway.iwcm.components.insertScript.InsertScriptDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Trieda CombineAttributeTagProcessor pre iwcm tag s nazvom script
+ * Tag &lt;div data-iwcm-script=&quot;&quot;/&gt; sluzi na vlozenie skriptov
+ */
+public class ScriptAttributeTagProcessor extends AbstractIwcmAttributeTagProcessor {
+    private static final String ATTR_NAME = &quot;script&quot;;
+    private static final int PRECEDENCE = 10002;
+
+    public ScriptAttributeTagProcessor(final String dialectPrefix) {
+<span class="fc" id="L28">        super(dialectPrefix, ATTR_NAME, PRECEDENCE);</span>
+<span class="fc" id="L29">    }</span>
+
+    /**
+     * Metoda pre nahradenie tagu obsahom
+     */
+    @Override
+    protected void processTag(ITemplateContext context, IProcessableElementTag tag, String attributeValue, IElementTagStructureHandler structureHandler, HttpServletRequest request) {
+<span class="fc" id="L36">        StringBuilder outPut = new StringBuilder();</span>
+
+<span class="fc" id="L38">        int docId = Tools.getDocId(request);</span>
+<span class="fc" id="L39">        DocDetails docDetails = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        int groupId = docDetails != null ? docDetails.getGroupId() : -1;</span>
+<span class="pc bpc" id="L41" title="2 of 4 branches missed.">        if(Tools.isEmpty(attributeValue) || groupId &lt; 0) {</span>
+<span class="nc" id="L42">            Logger.debug(ScriptAttributeTagProcessor.class, &quot;Attribute {} value is null or cannot find group for page id {}&quot;, attributeValue, docId);</span>
+<span class="nc" id="L43">            structureHandler.removeElement();</span>
+<span class="nc" id="L44">            return;</span>
+        }
+
+<span class="fc" id="L47">        Date now = new Date(Tools.getNow());</span>
+<span class="fc" id="L48">        List&lt;InsertScriptBean&gt; listInsertScript = InsertScriptDB.getInstance().filter(null, &quot;^&quot;+attributeValue+&quot;$&quot;, null, docId, groupId, now, now);</span>
+
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (Tools.isEmpty(listInsertScript)) {</span>
+<span class="fc" id="L51">            Logger.debug(ScriptAttributeTagProcessor.class, &quot;listInsertScript for postition {} is empty of parent groups list for group id {} is empty&quot;, attributeValue, groupId);</span>
+<span class="fc" id="L52">            structureHandler.removeElement();</span>
+<span class="fc" id="L53">            return;</span>
+        }
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        for (InsertScriptBean isb : listInsertScript) {</span>
+<span class="fc" id="L57">            Logger.debug(ScriptAttributeTagProcessor.class,&quot;listInsertScript.size(): {}&quot;, listInsertScript.size());</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if (!Tools.canSetCookie(isb.getCookieClass(), request.getCookies())) {</span>
+                //Logger.debug(this,&quot;continue: &quot;+listInsertScript.get(i).getCookieClass());
+<span class="nc" id="L60">                continue;</span>
+            }
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (outPut.length()&gt;0) outPut.append(&quot;\n&quot;);</span>
+<span class="fc" id="L63">            outPut.append(isb.getScriptBody());</span>
+<span class="fc" id="L64">        }</span>
+
+        //ak ma tag atribut data-iwcm-remove=&quot;tag&quot; tak robime replace celeho tagu, inak robime len setBody
+<span class="fc" id="L67">        IAttribute removeAttr = tag.getAttribute(&quot;data-iwcm-remove&quot;);</span>
+<span class="fc" id="L68">        boolean replace = true;</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (removeAttr != null) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (&quot;false&quot;.equals(removeAttr.getValue())) replace=false;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            else if (&quot;true&quot;.equals(removeAttr.getValue())) {</span>
+                //uz je defaultne nastavene
+                //replace=true;
+            }
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            else if (&quot;tag&quot;.equals(removeAttr.getValue())==false) replace=false;</span>
+        } else {
+            //pre doc_ atributy remove defaultne nerobime
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            if (attributeValue.startsWith(&quot;doc_&quot;)) replace = false;</span>
+        }
+
+<span class="fc" id="L81">        structureHandler.removeAttribute(&quot;data-iwcm-remove&quot;);</span>
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (replace) {</span>
+<span class="fc" id="L84">            structureHandler.replaceWith(outPut.toString(), false);</span>
+        } else {
+<span class="nc" id="L86">            structureHandler.setBody(outPut.toString(), false);</span>
+        }
+<span class="fc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

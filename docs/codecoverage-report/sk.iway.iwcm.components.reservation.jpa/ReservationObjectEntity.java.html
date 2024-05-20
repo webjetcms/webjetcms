@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationObjectEntity.java</span></div><h1>ReservationObjectEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import com.drew.lang.annotations.NotNull;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+
+@Entity
+@Table(name = &quot;reservation_object&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION_OBJECT)
+<span class="fc" id="L43">public class ReservationObjectEntity implements Serializable {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_reservation_object&quot;)
+    @Column(name = &quot;reservation_object_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.reservation.admin_addObject.name&quot;,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 100)
+    @NotBlank
+    private String name;
+
+    @Column(name = &quot;max_reservations&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.reservation.admin_addObject.max_pocet_rezeracii&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    @Min(value = 1)
+    private Integer maxReservations;
+
+    @Column(name = &quot;cancel_time_befor&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_object.cancel_time_before&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    private Integer cancelTimeBefor;
+
+    @Column(name = &quot;reservation_for_all_day&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.reservation.admin_addObject.reservation_for_all_day&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    private Boolean reservationForAllDay;
+
+    @Column(name = &quot;price_for_day&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_object.price_for_day&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    private Double priceForDay;
+
+    @Column(name = &quot;time_unit&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_object.time_unit&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    private Integer timeUnit;
+
+    @Column(name = &quot;price_for_hour&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.reservation.admin_addObject.price_for_hour&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    private Double priceForHour;
+
+    @Column(name = &quot;photo_link&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title=&quot;components.reservation.admin_addObject.photo_link&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 255)
+    private String photoLink;
+
+    @Column(name = &quot;description&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.reservation.admin_addObject.description&quot;,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 2000)
+    @NotBlank
+    private String description;
+
+    @Column(name = &quot;reservation_time_from&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.reservation.admin_addObject.kedy_mozne_rezervovat&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                }
+            )
+        }
+    )
+    @Convert(converter = DefaultTimeValueConverter.class)
+    private Date reservationTimeFrom;
+
+    @Column(name = &quot;reservation_time_to&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;basic&quot;
+    )
+    @Convert(converter = DefaultTimeValueConverter.class)
+    private Date reservationTimeTo;
+
+    @Column(name = &quot;must_accepted&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.reservation.admin_addObject.accept&quot;,
+        tab = &quot;advanced&quot;
+    )
+    private Boolean mustAccepted;
+
+    @Column(name = &quot;email_accepter&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.reservation.admin_addObject.email&quot;,
+        tab = &quot;advanced&quot;
+    )
+    @Size(max = 150)
+    private String emailAccepter;
+
+    @Column(name = &quot;passwd&quot;)
+    private String password;
+
+    @Column(name = &quot;domain_id&quot;)
+    @NotNull
+    private Integer domainId;
+
+    //Used in cases when we need included reservationObjectTimes values in variable
+    //Key (Integer) is day of week 1,2 ... 7
+    //Value (String) is combination timeFrom + &quot;-&quot; + timeTo
+    @Transient
+    private HashMap&lt;Integer, String&gt; objectTimesInfo;
+
+<span class="fc" id="L194">    @Transient</span>
+    @DataTableColumnNested
+	private ReservationObjectEditorFields editorFields = null;
+
+<span class="fc" id="L198">    @Transient</span>
+    private List&lt;ReservationObjectTimesEntity&gt; reservationObjectTimesEntities = null;
+
+    public void setPassword(String password) {
+<span class="fc" id="L202">        this.password = getHashPassword(password);</span>
+<span class="fc" id="L203">    }</span>
+
+    private String getHashPassword(String passwd) {
+<span class="fc" id="L206">        String hashPasswd = &quot;&quot;;</span>
+		try {
+<span class="pc bpc" id="L208" title="1 of 4 branches missed.">            if(passwd == null || passwd.isEmpty()) return &quot;&quot;;</span>
+<span class="fc" id="L209">			MessageDigest md5 = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="fc" id="L210">			md5.update(passwd.getBytes());</span>
+<span class="fc" id="L211">			BigInteger hash = new BigInteger(1, md5.digest());</span>
+<span class="fc" id="L212">			hashPasswd = hash.toString(16);</span>
+		}
+<span class="nc" id="L214">		catch (NoSuchAlgorithmException nsae) {</span>
+<span class="nc" id="L215">			Logger.error(nsae);</span>
+<span class="fc" id="L216">		}</span>
+<span class="fc" id="L217">        return hashPasswd;</span>
+    }
+
+    public boolean checkPasswordAndHashEquality(String passwd, String passwdHash) {
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        return getHashPassword(passwd).equals(passwdHash) ? true : false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

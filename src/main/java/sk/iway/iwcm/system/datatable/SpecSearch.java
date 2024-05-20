@@ -9,6 +9,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.LayoutBean;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -161,7 +162,7 @@ public class SpecSearch<T> {
 			append = "";
 		}
 
-		List<Integer> userIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ?", prepend+valueClean+append);
+		List<Integer> userIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ? OR email "+operator+" ?", prepend+valueClean+append, prepend+valueClean+append);
 		if (userIds.size()>0) predicates.add(root.get(jpaProperty).in(userIds));
 		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
 	}
@@ -237,6 +238,12 @@ public class SpecSearch<T> {
 		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
 	}
 
+	public void addSpecSearchIdInForeignTableInteger(int paramValue, String foreignTableName, String foreignTableId, String foreignColumnName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder) {
+		List<Integer> ids = (new SimpleQuery()).forListInteger("SELECT DISTINCT "+foreignTableId+" FROM "+foreignTableName+" WHERE "+foreignColumnName+" = ?", paramValue);
+		if (ids.size()>0) predicates.add(root.get(jpaProperty).in(ids));
+		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
+	}
+
 	/**
 	 * Search by DocDetails.fullPath value, simulated by concating file_name/title in table documents
 	 * @param paramValue
@@ -263,7 +270,7 @@ public class SpecSearch<T> {
 			append = "";
 		}
 
-		List<Integer> docIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT doc_id FROM documents WHERE CONCAT(CONCAT(file_name, '/'), title) "+operator+" ?", prepend+valueClean+append);
+		List<Integer> docIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT doc_id FROM documents WHERE "+DB.fixAiCiCol("CONCAT(CONCAT(file_name, '/'), title)")+" "+operator+" ?", prepend+DB.fixAiCiValue(valueClean)+append);
 
 		//if it's number add it as direct docid
 		int paramDocId = Tools.getIntValue(paramValue, -1);

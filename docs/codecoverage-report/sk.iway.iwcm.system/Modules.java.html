@@ -1,0 +1,1378 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Modules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">Modules.java</span></div><h1>Modules.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.IwayProperties;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ *  Modules.java - konfiguracia a povolenie modulov (globalne pre cely server)
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.69 $
+ *@created      $Date: 2010/02/09 08:26:37 $
+ *@modified     $Date: 2010/02/09 08:26:37 $
+ */
+public class Modules
+{
+	public static final String CONTEXT_KEY = &quot;sk.iway.iwcm.system.Modules&quot;;
+
+	private static Map&lt;String, String&gt; modVersions;
+
+	private List&lt;ModuleInfo&gt; modules; //NOSONAR
+
+	static {
+<span class="fc" id="L49">		modVersions = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L50">	}</span>
+
+	public static Modules getInstance()
+	{
+<span class="fc" id="L54">		return(getInstance(null, false));</span>
+	}
+
+	public static Modules getInstance(String enableList, boolean forceRefresh)
+	{
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (forceRefresh == false)</span>
+		{
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">			if (Constants.getServletContext().getAttribute(CONTEXT_KEY) != null)</span>
+			{
+<span class="fc" id="L63">				Modules modules = (Modules)Constants.getServletContext().getAttribute(CONTEXT_KEY);</span>
+
+<span class="fc" id="L65">				return (modules);</span>
+			}
+		}
+<span class="fc" id="L68">		return (new Modules(enableList));</span>
+	}
+
+	/**
+	 * Skratka pismen je:
+	 * B = basic
+	 * P = professional
+	 * E = enterprise
+	 * C = cestovka
+	 * I = intranet
+	 * D = dmail
+	 * M = cloud (multi)
+	 * O = open source
+	 * @param enableList
+	 */
+	private Modules(String enableList)
+<span class="fc" id="L84">	{</span>
+<span class="fc" id="L85">		modVersions.put(&quot;cmp__common&quot;, &quot;BPECIDMO;c49&quot;);</span>
+<span class="fc" id="L86">		modVersions.put(&quot;cmp_webjet9&quot;, &quot;BPECIDMO;c47&quot;);</span>
+
+		//apps
+<span class="fc" id="L89">		modVersions.put(&quot;cmp_app-disqus&quot;, &quot;BPECIDMO;d01&quot;);</span>
+<span class="fc" id="L90">		modVersions.put(&quot;cmp_app-facebook_comments&quot;, &quot;BPECIDMO;d02&quot;);</span>
+<span class="fc" id="L91">		modVersions.put(&quot;cmp_app-facebook_like&quot;, &quot;BPECIDMO;d03&quot;);</span>
+<span class="fc" id="L92">		modVersions.put(&quot;cmp_app-facebook_like_box&quot;, &quot;BPECIDMO;d04&quot;);</span>
+<span class="fc" id="L93">		modVersions.put(&quot;cmp_app-docsembed&quot;, &quot;BPECIDMO;d05&quot;);</span>
+<span class="fc" id="L94">		modVersions.put(&quot;cmp_app-htmlembed&quot;, &quot;BPECIDMO;d06&quot;);</span>
+<span class="fc" id="L95">		modVersions.put(&quot;cmp_app-smartsupp&quot;, &quot;BPECIDMO;d07&quot;);</span>
+<span class="fc" id="L96">		modVersions.put(&quot;cmp_app-social_icon&quot;, &quot;BPECIDMO;d08&quot;);</span>
+<span class="fc" id="L97">		modVersions.put(&quot;cmp_app-weather&quot;, &quot;BPECIDM;d09&quot;);</span>
+<span class="fc" id="L98">		modVersions.put(&quot;cmp_app-date&quot;, &quot;BPECIDMO;d10&quot;);</span>
+<span class="fc" id="L99">		modVersions.put(&quot;cmp_app-vyhladavanie&quot;, &quot;BPECIDMO;d11&quot;);</span>
+<span class="fc" id="L100">		modVersions.put(&quot;cmp_app-slit_slider&quot;, &quot;BPECIDM;d12&quot;);</span>
+<span class="fc" id="L101">		modVersions.put(&quot;cmp_app-impress_slideshow&quot;, &quot;BPECIDM;d13&quot;);</span>
+<span class="fc" id="L102">		modVersions.put(&quot;cmp_app-testimonials&quot;, &quot;BPECIDM;d14&quot;);</span>
+<span class="fc" id="L103">		modVersions.put(&quot;cmp_app-cookiebar&quot;, &quot;BPECIDMO;d15&quot;);</span>
+
+		//standard moduly
+<span class="fc" id="L106">		modVersions.put(&quot;cmp_abtesting&quot;, &quot;E;7c9&quot;); //WebJET AB Testovanie</span>
+<span class="fc" id="L107">		modVersions.put(&quot;cmp_adminlog&quot;, &quot;BPEICDMO;c5a&quot;); //WebJET adminlog - 1990</span>
+<span class="fc" id="L108">		modVersions.put(&quot;cmp_adresar&quot;, &quot;I;ec1&quot;); //WebJET adresar - 1990</span>
+<span class="fc" id="L109">		modVersions.put(&quot;cmp_attributes&quot;, &quot;E;1c9&quot;); //WebJET Attributes - 9990</span>
+<span class="fc" id="L110">		modVersions.put(&quot;cmp_auction&quot;, &quot;EI;1b2&quot;); //WebJET Aukcie - 1990</span>
+<span class="fc" id="L111">		modVersions.put(&quot;cmp_banner&quot;, &quot;EC;26d&quot;); //WebJET Banner Manager - 5900</span>
+<span class="fc" id="L112">		modVersions.put(&quot;cmp_basket&quot;, &quot;ECMI;943&quot;); //WebJET Shopping Basket - 3900</span>
+<span class="fc" id="L113">		modVersions.put(&quot;cmp_bazar&quot;, &quot;PEI;bf5&quot;); //WebJET Bazzar - 3900</span>
+<span class="fc" id="L114">		modVersions.put(&quot;cmp_blog&quot;, &quot;EIM;3cd&quot;); //WebJET Blog - 4900</span>
+<span class="fc" id="L115">		modVersions.put(&quot;cmp_calendar&quot;, &quot;PECIM;3a1&quot;); //WebJET Event Manager - 6990</span>
+<span class="fc" id="L116">		modVersions.put(&quot;cmp_carousel_slider&quot;, &quot;PECIM;15a&quot;); //WebJET Event Manager - 6990</span>
+<span class="fc" id="L117">		modVersions.put(&quot;cmp_catalog&quot;, &quot;PE;427&quot;); //WebJET Catalog - 9900</span>
+<span class="fc" id="L118">		modVersions.put(&quot;cmp_cestovka&quot;, &quot;C;d1c&quot;); //WebJET Cestovna Agentura - 9900</span>
+<span class="fc" id="L119">		modVersions.put(&quot;cmp_clone_structure&quot;, &quot;PEI;9bc&quot;);</span>
+<span class="fc" id="L120">		modVersions.put(&quot;cmp_content-block&quot;, &quot;PEI;361&quot;);</span>
+<span class="fc" id="L121">		modVersions.put(&quot;cmp_counter&quot;, &quot;PEIM;671&quot;); //WebJET Counter - 990 Sk</span>
+<span class="fc" id="L122">		modVersions.put(&quot;cmp_crontab&quot;, &quot;ECDIM;a01&quot;); //WebJET Crontab - 4900</span>
+<span class="fc" id="L123">		modVersions.put(&quot;cmp_crypto&quot;, &quot;PECDIM;2c9&quot;); //WebJET Crypto - 499 eur</span>
+<span class="fc" id="L124">		modVersions.put(&quot;cmp_data_deleting&quot;, &quot;BPECDI;775&quot;); //WebJET Data Deleting</span>
+<span class="fc" id="L125">		modVersions.put(&quot;cmp_date&quot;, &quot;BPECDIMO;775&quot;); //WebJET Date - 900</span>
+<span class="fc" id="L126">		modVersions.put(&quot;cmp_db_browser&quot;, &quot;EI;f1e&quot;); //WebJET DB Browser - 6900</span>
+<span class="fc" id="L127">		modVersions.put(&quot;cmp_dictionary&quot;, &quot;EI;c4a&quot;); //WebJET Dictionary - 1900</span>
+<span class="fc" id="L128">		modVersions.put(&quot;cmp_dmail&quot;, &quot;EDI;617&quot;); //WebJET Distribution List - 14990</span>
+<span class="fc" id="L129">		modVersions.put(&quot;cmp_docman&quot;, &quot;I;26f&quot;); //WebJET Document Management - 4900</span>
+<span class="fc" id="L130">		modVersions.put(&quot;cmp_elfinder&quot;, &quot;E;c2e&quot;);</span>
+<span class="fc" id="L131">		modVersions.put(&quot;cmp_emoticon&quot;, &quot;BPECIDMO;777&quot;);</span>
+<span class="fc" id="L132">		modVersions.put(&quot;cmp_enumerations&quot;, &quot;PECID;3f8&quot;);</span>
+<span class="fc" id="L133">		modVersions.put(&quot;cmp_export&quot;, &quot;PEIM;4f6&quot;);</span>
+<span class="fc" id="L134">		modVersions.put(&quot;cmp_fileatr&quot;, &quot;EI;823&quot;);</span>
+<span class="fc" id="L135">		modVersions.put(&quot;cmp_file_archiv&quot;, &quot;EI;dc1&quot;); //archiv suborov</span>
+<span class="fc" id="L136">		modVersions.put(&quot;cmp_form&quot;, &quot;PECIM;9ac&quot;); //WebJET Interactive Form - 1990 Sk</span>
+<span class="fc" id="L137">		modVersions.put(&quot;cmp_formsimple&quot;, &quot;PECIM;6e3&quot;); //WebJET FormSimple</span>
+<span class="fc" id="L138">		modVersions.put(&quot;cmp_forum&quot;, &quot;PECIM;a51&quot;); //WebJET Forum &amp; Message Board - 3990</span>
+<span class="fc" id="L139">		modVersions.put(&quot;cmp_gallery&quot;, &quot;PECIDMO;b36&quot;); //WebJET Photo Gallery - 4990</span>
+<span class="fc" id="L140">		modVersions.put(&quot;cmp_gdpr&quot;, &quot;BPEIDM;7c2&quot;);</span>
+<span class="fc" id="L141">		modVersions.put(&quot;cmp_graph&quot;, &quot;PEI;16d&quot;); //WebJET Graph - 4990</span>
+<span class="fc" id="L142">        modVersions.put(&quot;cmp_grideditor&quot;, &quot;BPECIDMO;27f&quot;); //WebJET grideditor</span>
+<span class="fc" id="L143">		modVersions.put(&quot;cmp_htmlbox&quot;, &quot;BPECIDMO;ccc&quot;); //WebJET HTMLBox - v cene</span>
+<span class="fc" id="L144">		modVersions.put(&quot;cmp_helpdesk&quot;, &quot;I;9b5&quot;);</span>
+<span class="fc" id="L145">		modVersions.put(&quot;cmp_intranet&quot;, &quot;I;9b6&quot;);</span>
+<span class="fc" id="L146">		modVersions.put(&quot;cmp_inventory&quot;, &quot;I;a86&quot;);</span>
+<span class="fc" id="L147">        modVersions.put(&quot;cmp_inzercia&quot;, &quot;I;471&quot;);</span>
+<span class="fc" id="L148">		modVersions.put(&quot;cmp_kanban&quot;, &quot;I;9ba&quot;);</span>
+<span class="fc" id="L149">		modVersions.put(&quot;cmp_chat&quot;, &quot;ECI;5a0&quot;); //WebJET Chat - 3990</span>
+<span class="fc" id="L150">		modVersions.put(&quot;cmp_imagefont&quot;, &quot;PED;27c&quot;); //WebJET Imagefont - 1900</span>
+<span class="fc" id="L151">		modVersions.put(&quot;cmp_import_web_pages&quot;, &quot;PEDI;53c&quot;); //WebJET Import Web Pages - 1900</span>
+<span class="fc" id="L152">		modVersions.put(&quot;cmp_insert_script&quot;, &quot;PEIM;6a2&quot;);</span>
+<span class="fc" id="L153">		modVersions.put(&quot;cmp_inquiry&quot;, &quot;PECIMO;d97&quot;); //WebJET Inquiry - 2900</span>
+<span class="fc" id="L154">		modVersions.put(&quot;cmp_inquirysimple&quot;, &quot;BPECIMO;2e9&quot;); //WebJET InquirySimple</span>
+<span class="fc" id="L155">		modVersions.put(&quot;cmp_json_editor&quot;, &quot;BPECIDMO;7a2&quot;);</span>
+<span class="fc" id="L156">		modVersions.put(&quot;cmp_kurzy&quot;, &quot;PECI;e6c&quot;); //WebJET Exchange Rates - 450</span>
+<span class="fc" id="L157">		modVersions.put(&quot;cmp_lms&quot;, &quot;I;c85&quot;);</span>
+<span class="fc" id="L158">		modVersions.put(&quot;cmp_mail&quot;, &quot;I;c81&quot;);</span>
+<span class="fc" id="L159">		modVersions.put(&quot;cmp_mcalendar&quot;, &quot;I;c82&quot;);</span>
+<span class="fc" id="L160">		modVersions.put(&quot;cmp_map&quot;, &quot;BPECIM;ac4&quot;); //WebJET Map (Google) - 0</span>
+<span class="fc" id="L161">		modVersions.put(&quot;cmp_magzilla&quot;, &quot;I;2fe&quot;); //WebJET Help Desk - 4900</span>
+<span class="fc" id="L162">		modVersions.put(&quot;cmp_media&quot;, &quot;PECIDM;a82&quot;); //WebJET Media - 1990</span>
+<span class="fc" id="L163">		modVersions.put(&quot;cmp_menu&quot;, &quot;BPECIDMO;f1c&quot;); //WebJET News &amp; Press Releases - 1990</span>
+<span class="fc" id="L164">		modVersions.put(&quot;cmp_messages&quot;, &quot;BPECID;4e2&quot;); //WebJET Messages</span>
+<span class="fc" id="L165">		modVersions.put(&quot;cmp_news&quot;, &quot;BPECIDMO;f5c&quot;); //WebJET News &amp; Press Releases - 1990</span>
+<span class="fc" id="L166">		modVersions.put(&quot;cmp_organization&quot;, &quot;I;ae3&quot;);</span>
+<span class="fc" id="L167">		modVersions.put(&quot;cmp_page_reactions&quot;, &quot;EI;af2&quot;);</span>
+<span class="fc" id="L168">        modVersions.put(&quot;cmp_page_update_info&quot;, &quot;EI;c52&quot;); //-------WebJET Page Update Info - 1990</span>
+<span class="fc" id="L169">		modVersions.put(&quot;cmp_pocasie&quot;, &quot;PECI;7c8&quot;); //WebJET pocasie - 1990</span>
+<span class="fc" id="L170">		modVersions.put(&quot;cmp_popup&quot;, &quot;BPECI;111&quot;); //WebJET Popup - v cene</span>
+<span class="fc" id="L171">		modVersions.put(&quot;cmp_profesia&quot;, &quot;PEI;d4d&quot;); //WebJET Profesia - 1990</span>
+<span class="fc" id="L172">		modVersions.put(&quot;cmp_proxy&quot;, &quot;ECI;52c&quot;); //WebJET Proxy - 2990</span>
+<span class="fc" id="L173">		modVersions.put(&quot;cmp_projects_microsite&quot;, &quot;I;46f&quot;);</span>
+<span class="fc" id="L174">		modVersions.put(&quot;cmp_qa&quot;, &quot;PECIMO;2c8&quot;);  //WebJET Questions &amp; Answers - 1990</span>
+<span class="fc" id="L175">		modVersions.put(&quot;cmp_quiz&quot;, &quot;EI;9c6&quot;);</span>
+<span class="fc" id="L176">		modVersions.put(&quot;cmp_rating&quot;, &quot;ECI;3dd&quot;); //WebJET Rating - 900</span>
+<span class="fc" id="L177">		modVersions.put(&quot;cmp_redirects&quot;, &quot;BPECIDMO;7c1&quot;); //WebJET Redirects</span>
+<span class="fc" id="L178">		modVersions.put(&quot;cmp_related-pages&quot;, &quot;ECI;4c1&quot;); //WebJET Related Pages - 1900</span>
+<span class="fc" id="L179">		modVersions.put(&quot;cmp_reservation&quot;, &quot;EIM;fa2&quot;); //WebJET Reservations - 2900</span>
+<span class="fc" id="L180">		modVersions.put(&quot;cmp_response-header&quot;, &quot;PEIM;74c&quot;);</span>
+<span class="fc" id="L181">		modVersions.put(&quot;cmp_restaurant_menu&quot;, &quot;PEIM;6c8&quot;);</span>
+<span class="fc" id="L182">		modVersions.put(&quot;cmp_rss&quot;, &quot;PECIMO;5f0&quot;); //WebJET RSS Export</span>
+<span class="fc" id="L183">		modVersions.put(&quot;cmp_search&quot;, &quot;PECIM;60c&quot;); //WebJET Search - 1990 Sk</span>
+<span class="fc" id="L184">		modVersions.put(&quot;cmp_send_link&quot;, &quot;PECI;842&quot;); //WebJET Send Link - 1490 Sk</span>
+<span class="fc" id="L185">		modVersions.put(&quot;cmp_seo&quot;, &quot;E;eb1&quot;); //WebJET SEO - 2490 Sk</span>
+<span class="fc" id="L186">		modVersions.put(&quot;cmp_server_monitoring&quot;, &quot;PECIM;aea&quot;); //WebJET Send Link - 1490 Sk</span>
+<span class="fc" id="L187">		modVersions.put(&quot;cmp_sharepoint&quot;, &quot;I;c84&quot;);</span>
+<span class="fc" id="L188">		modVersions.put(&quot;cmp_sharing_icons&quot;, &quot;PECMO;15c&quot;); //WebJET Sharing Icons</span>
+<span class="fc" id="L189">		modVersions.put(&quot;cmp_site_browser&quot;, &quot;EI;92f&quot;); //WebJET Site Browser - 900</span>
+<span class="fc" id="L190">		modVersions.put(&quot;cmp_sitemap&quot;, &quot;BPECIM;701&quot;);	 //WebJET Sitemap	- 1990 Sk</span>
+<span class="fc" id="L191">		modVersions.put(&quot;cmp_slider&quot;, &quot;PEIM;8a6&quot;);</span>
+<span class="fc" id="L192">		modVersions.put(&quot;cmp_sms&quot;, &quot;EI;8cf&quot;); //WebJET SMS Sender - 2900</span>
+<span class="fc" id="L193">		modVersions.put(&quot;cmp_stat&quot;, &quot;PECIM;f49&quot;); //WebJET Statistics - 9990 Sk</span>
+<span class="fc" id="L194">		modVersions.put(&quot;cmp_structuremirroring&quot;, &quot;E;a42&quot;); //WebJET structuremirroring</span>
+<span class="fc" id="L195">		modVersions.put(&quot;cmp_sync&quot;, &quot;PEI;ce2&quot;); //WebJET SyncDir - 2990</span>
+<span class="fc" id="L196">		modVersions.put(&quot;cmp_tips&quot;, &quot;PECI;9d5&quot;); //WebJET Tips - 900</span>
+<span class="fc" id="L197">		modVersions.put(&quot;cmp_tooltip&quot;, &quot;E;371&quot;); //WebJET Tooltip - 900</span>
+<span class="fc" id="L198">		modVersions.put(&quot;cmp_user&quot;, &quot;PECDIO;ac6&quot;);</span>
+<span class="fc" id="L199">		modVersions.put(&quot;cmp_uschovna&quot;, &quot;I;557&quot;);</span>
+<span class="fc" id="L200">		modVersions.put(&quot;cmp_video&quot;, &quot;PEIMO;821&quot;); //Video</span>
+<span class="fc" id="L201">		modVersions.put(&quot;cmp_wiki&quot;, &quot;EI;1c4&quot;); //Wiki</span>
+<span class="fc" id="L202">		modVersions.put(&quot;cmp_xml&quot;, &quot;PEI;bf0&quot;);</span>
+<span class="fc" id="L203">		modVersions.put(&quot;cmp_captcha&quot;, &quot;PECI;a3c&quot;); //zoznam slov pre captchu</span>
+
+<span class="fc" id="L205">		modVersions.put(&quot;menuUsers&quot;, &quot;PECDIO;f20&quot;); //WebJET Multi-User Access - 2990 Sk, WebJET Protected Section-4990</span>
+<span class="fc" id="L206">		modVersions.put(&quot;menuSync&quot;, &quot;PEI;f36&quot;); //WebJET Synchronization - 12900</span>
+<span class="fc" id="L207">		modVersions.put(&quot;imageEditor&quot;, &quot;PECDIMO;f47&quot;); //WebJET Image Editor - 4900</span>
+
+<span class="fc" id="L209">		modVersions.put(&quot;fileIndexer&quot;, &quot;EI;c21&quot;); //WebJET Extended Search - 14900</span>
+
+<span class="fc" id="L211">		modVersions.put(&quot;multiDomain&quot;, &quot;EM;f17&quot;); //WebJET Multi Domain - 30%ceny webjetu</span>
+
+		//standardne moduly
+<span class="fc" id="L214">		modVersions.put(&quot;menu.users&quot;, &quot;PECDIO;c01&quot;); //standardny modul Pouzivatelia</span>
+<span class="fc" id="L215">		modVersions.put(&quot;menu.fbrowser&quot;, &quot;BPECDIM;c02&quot;); //standardny modul Subory</span>
+<span class="fc" id="L216">		modVersions.put(&quot;menu.templates&quot;, &quot;BPECDIO;c03&quot;); //standardny modul Sablony</span>
+
+
+		//WebJET Active Directory Access - 24.900
+
+		try
+		{
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(enableList))</span>
+			{
+				String key;
+				String modName;
+				String modPerms;
+<span class="nc" id="L228">				int failsafe = 0;</span>
+<span class="nc bnc" id="L229" title="All 4 branches missed.">				while (enableList.length() &gt; 2 &amp;&amp; failsafe &lt; 50)</span>
+				{
+<span class="nc" id="L231">					key = enableList.substring(0, 3);</span>
+<span class="nc" id="L232">					enableList = enableList.substring(3);</span>
+<span class="nc" id="L233">					failsafe++;</span>
+
+					//preiteruj moduly a povol
+<span class="nc bnc" id="L236" title="All 2 branches missed.">					for (Map.Entry&lt;String, String&gt; entry : modVersions.entrySet())</span>
+					{
+<span class="nc" id="L238">						modName = entry.getKey();</span>
+<span class="nc" id="L239">						modPerms = entry.getValue();</span>
+
+						//Logger.println(this,&quot;--&gt; testujem: &quot; + key + &quot; &quot; + modName + &quot; &quot; + modPerms);
+
+<span class="nc bnc" id="L243" title="All 4 branches missed.">						if (modPerms!=null &amp;&amp; modPerms.endsWith(&quot;;&quot;+key))</span>
+						{
+							//povol modul
+							//Logger.println(this,&quot;--&gt; povolujem: &quot; + modName);
+<span class="nc" id="L247">							modVersions.put(modName, &quot;BPEDCIDMO;&quot;+key);</span>
+<span class="nc" id="L248">							break;</span>
+						}
+<span class="nc" id="L250">					}</span>
+				}
+			}
+		}
+<span class="nc" id="L254">		catch (Exception ex1)</span>
+		{
+<span class="nc" id="L256">			Logger.error(Modules.class, ex1);</span>
+<span class="fc" id="L257">		}</span>
+
+<span class="fc" id="L259">		modules = new ArrayList&lt;&gt;();</span>
+
+		try
+		{
+			//natiahni komponenty
+<span class="fc" id="L264">			IwcmFile[] components = (new IwcmFile(Tools.getRealPath(&quot;/components&quot;))).listFiles();</span>
+<span class="fc" id="L265">			IwcmFile[] apps = (new IwcmFile(Tools.getRealPath(&quot;/apps&quot;))).listFiles();</span>
+
+<span class="fc" id="L267">			List&lt;IwcmFile&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L268">			files.addAll(Arrays.asList(components));</span>
+<span class="pc bpc" id="L269" title="2 of 4 branches missed.">			if (apps != null &amp;&amp; apps.length&gt;0) files.addAll(Arrays.asList(apps));</span>
+
+			ModuleInfo m;
+			String wjPerms;
+			IwcmFile propFile;
+			IwayProperties prop;
+			String sTmp;
+			//Logger.debug(Modules.class, &quot;components.size=&quot;+size);
+<span class="fc bfc" id="L277" title="All 2 branches covered.">			for (IwcmFile file : files)</span>
+			{
+<span class="fc" id="L279">				String baseDir = &quot;/components/&quot;;</span>
+<span class="fc" id="L280">				String propertiesPrefix = &quot;components.&quot;;</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">				if (file.getAbsolutePath().contains(File.separatorChar+&quot;apps&quot;+File.separatorChar)) {</span>
+<span class="fc" id="L282">					baseDir = &quot;/apps/&quot;;</span>
+<span class="fc" id="L283">					propertiesPrefix = &quot;apps.&quot;;</span>
+				}
+
+				//Logger.debug(Modules.class, &quot;components[&quot;+i+&quot;]=&quot;+components[i].getAbsolutePath()+&quot; isDir=&quot;+components[i].isDirectory());
+<span class="fc bfc" id="L287" title="All 2 branches covered.">				if (file.isDirectory())</span>
+				{
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">					if (&quot;CVS&quot;.equals(file.getName()))</span>
+		         {
+<span class="nc" id="L291">		            continue;</span>
+		         }
+
+<span class="fc bfc" id="L294" title="All 2 branches covered.">					for (int j=0; j&lt;30; j++)</span>
+					{
+<span class="fc" id="L296">		         	m = new ModuleInfo();</span>
+<span class="fc" id="L297">						m.setNameKey(propertiesPrefix+file.getName()+&quot;.title&quot;);</span>
+<span class="fc" id="L298">						m.setItemKey(&quot;cmp_&quot;+file.getName());</span>
+<span class="fc" id="L299">						m.setPath(baseDir+file.getName());</span>
+<span class="fc" id="L300">						m.setUserItem(false);</span>
+<span class="fc" id="L301">						wjPerms = modVersions.get(m.getItemKey());</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">						if (wjPerms == null) wjPerms = &quot;BPECIDMO&quot;;</span>
+<span class="fc" id="L303">						m.setWjVersions(wjPerms);</span>
+
+<span class="fc" id="L305">						String fileName = &quot;modinfo.properties&quot;;</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">						if (j&gt;0) fileName = &quot;modinfo&quot;+j+&quot;.properties&quot;;</span>
+
+<span class="fc" id="L308">						propFile = new IwcmFile(Tools.getRealPath(baseDir+file.getName()+&quot;/&quot;+fileName));</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">						if (propFile.exists())</span>
+						{
+							//Logger.debug(Modules.class, &quot;Loading: &quot;+baseDir+file.getName()+&quot;/&quot;+fileName);
+
+							//nahraj prop subor a nastav hodnoty
+<span class="fc" id="L314">							prop = new IwayProperties(&quot;iso-8859-1&quot;);</span>
+<span class="fc" id="L315">							prop.load(propFile);</span>
+
+							//Logger.debug(Modules.class, &quot;size: &quot;+prop.entrySet().size());
+<span class="fc bfc" id="L318" title="All 2 branches covered.">							if (prop.entrySet().size() &lt; 2)</span>
+							{
+								//nepodari sa resetnut stream, skusme ako utf-8
+<span class="fc" id="L321">								prop = new IwayProperties(&quot;utf-8&quot;);</span>
+<span class="fc" id="L322">								prop.load(propFile);</span>
+							}
+
+<span class="fc" id="L325">							sTmp = prop.getProperty(&quot;userItem&quot;);</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">							if (&quot;true&quot;.equals(sTmp))</span>
+							{
+<span class="fc" id="L328">								m.setUserItem(true);</span>
+							}
+<span class="fc" id="L330">							sTmp = prop.getProperty(&quot;leftMenuLink&quot;);</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">							if (Tools.isNotEmpty(sTmp))</span>
+							{
+<span class="fc" id="L333">								m.setLeftMenuLink(sTmp.trim());</span>
+<span class="fc" id="L334">								m.setShowInLeftMenu(true);</span>
+							}
+<span class="fc" id="L336">							sTmp = prop.getProperty(&quot;leftMenuNameKey&quot;);</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">							if (Tools.isNotEmpty(sTmp))</span>
+							{
+<span class="fc" id="L339">								m.setLeftMenuNameKey(sTmp.trim());</span>
+							}
+<span class="fc" id="L341">							sTmp = prop.getProperty(&quot;itemKey&quot;);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">							if (Tools.isNotEmpty(sTmp))</span>
+							{
+<span class="fc" id="L344">								m.setItemKey(sTmp.trim());</span>
+							}
+<span class="fc" id="L346">							sTmp = prop.getProperty(&quot;menuOrder&quot;);</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">							if (Tools.isNotEmpty(sTmp))</span>
+							{
+<span class="fc" id="L349">								m.setMenuOrder(Tools.getIntValue(sTmp, 0));</span>
+							}
+<span class="fc" id="L351">							sTmp = prop.getProperty(&quot;defaultDisabled&quot;);</span>
+<span class="fc bfc" id="L352" title="All 4 branches covered.">							if (sTmp!=null &amp;&amp; &quot;true&quot;.equals(sTmp.trim()))</span>
+							{
+<span class="fc" id="L354">								m.setDefaultDisabled(true);</span>
+							}
+<span class="fc" id="L356">							sTmp = prop.getProperty(&quot;requireConstantsKey&quot;);</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">							if (Tools.isNotEmpty(sTmp))</span>
+							{
+<span class="nc" id="L359">								m.setRequireConstantsKey(sTmp.trim());</span>
+							}
+<span class="fc" id="L361">							sTmp = prop.getProperty(&quot;showSubcategories&quot;);</span>
+<span class="fc bfc" id="L362" title="All 4 branches covered.">							if (sTmp!=null &amp;&amp; &quot;true&quot;.equals(sTmp.trim()))</span>
+							{
+<span class="fc" id="L364">								m.setShowSubCategories(true);</span>
+							}
+<span class="fc" id="L366">							sTmp = prop.getProperty(&quot;hideSubmenu&quot;);</span>
+<span class="fc bfc" id="L367" title="All 4 branches covered.">							if (sTmp!=null &amp;&amp; &quot;true&quot;.equals(sTmp.trim()))</span>
+							{
+<span class="fc" id="L369">								m.setHideSubmenu(true);</span>
+							}
+
+<span class="fc" id="L372">							sTmp = prop.getProperty(&quot;installName&quot;);</span>
+							//installName moze byt zapisane ako vubweb,vubintra
+<span class="pc bpc" id="L374" title="3 of 4 branches missed.">							if (Tools.isNotEmpty(sTmp) &amp;&amp; (&quot;,&quot;+sTmp.trim()+&quot;,&quot;).indexOf(&quot;,&quot;+Constants.getInstallName()+&quot;,&quot;)==-1)</span>
+							{
+								//tento modul je custom, preskakujem
+<span class="nc" id="L377">								continue;</span>
+							}
+
+<span class="fc" id="L380">							sTmp = prop.getProperty(&quot;isCustom&quot;);</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">							if (Tools.isEmpty(sTmp)) sTmp = prop.getProperty(&quot;custom&quot;);</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">							if (&quot;true&quot;.equals(sTmp))</span>
+							{
+<span class="fc" id="L384">								m.setCustom(true);</span>
+							}
+
+<span class="fc" id="L387">							sTmp = prop.getProperty(&quot;group&quot;);</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">							if (Tools.isEmpty(sTmp)) sTmp = &quot;components&quot;;</span>
+<span class="fc" id="L389">							m.setGroup(sTmp.trim());</span>
+
+<span class="fc" id="L391">							sTmp = prop.getProperty(&quot;icon&quot;);</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">							if (Tools.isEmpty(sTmp)) sTmp = &quot;&quot;;</span>
+<span class="fc" id="L393">							m.setMenuIcon(sTmp.trim());</span>
+
+<span class="fc" id="L395">							sTmp = prop.getProperty(&quot;domainName&quot;);</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">							if (Tools.isEmpty(sTmp)) sTmp = &quot;&quot;;</span>
+<span class="fc" id="L397">							m.setDomainName(sTmp.trim());</span>
+
+							//nacitaj submenus
+<span class="fc bfc" id="L400" title="All 2 branches covered.">							for (int s=1; s&lt;25; s++)</span>
+							{
+<span class="fc" id="L402">								String nameKey = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;NameKey&quot;);</span>
+<span class="fc" id="L403">								String link = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;Link&quot;);</span>
+<span class="pc bpc" id="L404" title="1 of 4 branches missed.">								if (Tools.isNotEmpty(nameKey) &amp;&amp; Tools.isNotEmpty(link))</span>
+								{
+<span class="fc" id="L406">									ModuleInfo subModule = new ModuleInfo();</span>
+
+<span class="fc" id="L408">									subModule.setPath(baseDir+file.getName());</span>
+<span class="fc" id="L409">									subModule.setWjVersions(wjPerms);</span>
+
+<span class="fc" id="L411">									subModule.setNameKey(nameKey);</span>
+<span class="fc" id="L412">									subModule.setLeftMenuLink(link);</span>
+
+<span class="fc" id="L414">									sTmp = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;UserItem&quot;);</span>
+<span class="fc bfc" id="L415" title="All 4 branches covered.">									if (sTmp!=null &amp;&amp; &quot;true&quot;.equals(sTmp.trim())) subModule.setUserItem(true);</span>
+<span class="fc" id="L416">									else subModule.setUserItem(false);</span>
+
+<span class="fc" id="L418">									sTmp = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;ItemKey&quot;);</span>
+<span class="fc bfc" id="L419" title="All 2 branches covered.">									if (Tools.isNotEmpty(sTmp)) subModule.setItemKey(sTmp.trim());</span>
+
+<span class="fc" id="L421">									sTmp = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;DefaultDisabled&quot;);</span>
+<span class="fc bfc" id="L422" title="All 4 branches covered.">									if (&quot;true&quot;.equals(sTmp) || m.isDefaultDisabled()) subModule.setDefaultDisabled(true);</span>
+
+<span class="fc" id="L424">									sTmp = prop.getProperty(&quot;leftSubmenu&quot;+s+&quot;Icon&quot;);</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">									if (Tools.isNotEmpty(sTmp)) subModule.setMenuIcon(sTmp.trim());</span>
+
+<span class="fc" id="L427">									setAvailable(subModule);</span>
+<span class="fc" id="L428">									m.addSubmenu(subModule);</span>
+								}
+							}
+
+							//nacitaj subcomponents
+<span class="fc bfc" id="L433" title="All 2 branches covered.">							for (int s=1; s&lt;15; s++)</span>
+							{
+<span class="fc" id="L435">								String nameKey = prop.getProperty(&quot;component&quot;+s+&quot;NameKey&quot;);</span>
+<span class="fc" id="L436">								String link =    prop.getProperty(&quot;component&quot;+s+&quot;Link&quot;);</span>
+<span class="fc" id="L437">								String icon =    prop.getProperty(&quot;component&quot;+s+&quot;Icon&quot;);</span>
+<span class="pc bpc" id="L438" title="3 of 4 branches missed.">								if (Tools.isNotEmpty(nameKey) &amp;&amp; Tools.isNotEmpty(link))</span>
+								{
+<span class="nc bnc" id="L440" title="All 2 branches missed.">									if (Tools.isNotEmpty(icon)) icon = icon.trim();</span>
+
+<span class="nc" id="L442">									LabelValueDetails lvd = new LabelValueDetails();</span>
+<span class="nc" id="L443">									lvd.setLabel(nameKey.trim());</span>
+<span class="nc" id="L444">									lvd.setValue(link.trim());</span>
+<span class="nc" id="L445">									lvd.setValue2(icon);</span>
+
+<span class="nc" id="L447">									m.addComponent(lvd);</span>
+								}
+							}
+						}
+
+						//Logger.println(this,&quot;HASH: &quot; + m.getItemKey().hashCode());
+<span class="fc bfc" id="L453" title="All 4 branches covered.">						if (j==0 || propFile.exists()) loadModule(m);</span>
+					}
+				}
+<span class="fc" id="L456">			}</span>
+		}
+<span class="nc" id="L458">		catch (Exception e)</span>
+		{
+<span class="nc" id="L460">			Logger.error(Modules.class, e);</span>
+<span class="fc" id="L461">		}</span>
+
+<span class="fc" id="L463">		ModuleInfo welcome = new ModuleInfo(&quot;welcome.left_menu&quot;, &quot;welcome&quot;, &quot;/admin/v9/dist/views/dashboard/overview.html&quot;, null, false, true, &quot;/admin/&quot;, &quot;BPECDIMO&quot;, 5).setGroup(&quot;welcome&quot;).setMenuIcon(&quot;home&quot;);</span>
+<span class="fc" id="L464">		loadModule(welcome);</span>
+
+<span class="fc" id="L466">		ModuleInfo webSites = new ModuleInfo(&quot;menu.web_sites&quot;, &quot;menuWebpages&quot;, &quot;/admin/v9/dist/views/webpages/web-pages-list.html&quot;, null, true, true, &quot;/admin/webpages/&quot;, &quot;BPECDIMO&quot;, 10);</span>
+<span class="fc" id="L467">		webSites.setGroup(&quot;website&quot;);</span>
+<span class="fc" id="L468">		webSites.setMenuIcon(&quot;docs&quot;);</span>
+		ModuleInfo sub;
+
+<span class="fc" id="L471">		sub = new ModuleInfo();</span>
+<span class="fc" id="L472">		sub.setNameKey(&quot;user.miniEditMenu&quot;);</span>
+<span class="fc" id="L473">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L474">		sub.setWjVersions(&quot;BPECDIO&quot;);</span>
+<span class="fc" id="L475">		sub.setUserItem(true);</span>
+<span class="fc" id="L476">		sub.setItemKey(&quot;editorMiniEdit&quot;);</span>
+<span class="fc" id="L477">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L478">		setAvailable(sub);</span>
+<span class="fc" id="L479">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L481">		sub = new ModuleInfo();</span>
+<span class="fc" id="L482">		sub.setNameKey(&quot;components.user.perms.addPage&quot;);</span>
+<span class="fc" id="L483">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L484">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L485">		sub.setUserItem(true);</span>
+<span class="fc" id="L486">		sub.setItemKey(&quot;addPage&quot;);</span>
+<span class="fc" id="L487">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L488">		setAvailable(sub);</span>
+<span class="fc" id="L489">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L491">		sub = new ModuleInfo();</span>
+<span class="fc" id="L492">		sub.setNameKey(&quot;components.user.perms.pageSave&quot;);</span>
+<span class="fc" id="L493">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L494">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L495">		sub.setUserItem(true);</span>
+<span class="fc" id="L496">		sub.setItemKey(&quot;pageSave&quot;);</span>
+<span class="fc" id="L497">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L498">		setAvailable(sub);</span>
+<span class="fc" id="L499">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L501">		sub = new ModuleInfo();</span>
+<span class="fc" id="L502">		sub.setNameKey(&quot;components.user.perms.pageSaveAs&quot;);</span>
+<span class="fc" id="L503">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L504">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L505">		sub.setUserItem(true);</span>
+<span class="fc" id="L506">		sub.setItemKey(&quot;pageSaveAs&quot;);</span>
+<span class="fc" id="L507">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L508">		setAvailable(sub);</span>
+<span class="fc" id="L509">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L511">		sub = new ModuleInfo();</span>
+<span class="fc" id="L512">		sub.setNameKey(&quot;components.user.perms.deletePage&quot;);</span>
+<span class="fc" id="L513">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L514">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L515">		sub.setUserItem(true);</span>
+<span class="fc" id="L516">		sub.setItemKey(&quot;deletePage&quot;);</span>
+<span class="fc" id="L517">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L518">		setAvailable(sub);</span>
+<span class="fc" id="L519">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L521">		sub = new ModuleInfo();</span>
+<span class="fc" id="L522">		sub.setNameKey(&quot;components.user.perms.editDir&quot;);</span>
+<span class="fc" id="L523">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L524">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L525">		sub.setUserItem(true);</span>
+<span class="fc" id="L526">		sub.setItemKey(&quot;editDir&quot;);</span>
+<span class="fc" id="L527">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L528">		setAvailable(sub);</span>
+<span class="fc" id="L529">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L531">		sub = new ModuleInfo();</span>
+<span class="fc" id="L532">		sub.setNameKey(&quot;components.user.perms.addSubdir&quot;);</span>
+<span class="fc" id="L533">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L534">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L535">		sub.setUserItem(true);</span>
+<span class="fc" id="L536">		sub.setItemKey(&quot;addSubdir&quot;);</span>
+<span class="fc" id="L537">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L538">		setAvailable(sub);</span>
+<span class="fc" id="L539">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L541">		sub = new ModuleInfo();</span>
+<span class="fc" id="L542">		sub.setNameKey(&quot;components.user.perms.deleteDir&quot;);</span>
+<span class="fc" id="L543">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L544">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L545">		sub.setUserItem(true);</span>
+<span class="fc" id="L546">		sub.setItemKey(&quot;deleteDir&quot;);</span>
+<span class="fc" id="L547">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L548">		setAvailable(sub);</span>
+<span class="fc" id="L549">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L551">		sub = new ModuleInfo();</span>
+<span class="fc" id="L552">		sub.setNameKey(&quot;components.user.perms.editPerexGroups&quot;);</span>
+<span class="fc" id="L553">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L554">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L555">		sub.setUserItem(true);</span>
+<span class="fc" id="L556">		sub.setItemKey(&quot;editor_edit_perex&quot;);</span>
+<span class="fc" id="L557">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L558">		setAvailable(sub);</span>
+<span class="fc" id="L559">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L561">		sub = new ModuleInfo();</span>
+<span class="fc" id="L562">		sub.setNameKey(&quot;components.user.perms.editMediaGroups&quot;);</span>
+<span class="fc" id="L563">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L564">		sub.setWjVersions(&quot;BPECI&quot;);</span>
+<span class="fc" id="L565">		sub.setUserItem(true);</span>
+<span class="fc" id="L566">		sub.setItemKey(&quot;editor_edit_media_group&quot;);</span>
+<span class="fc" id="L567">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L568">		setAvailable(sub);</span>
+<span class="fc" id="L569">		webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L571">      sub = new ModuleInfo();</span>
+<span class="fc" id="L572">      sub.setNameKey(&quot;groupedit.showHiddenFolders&quot;);</span>
+<span class="fc" id="L573">      sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L574">      sub.setWjVersions(&quot;PECDIMO&quot;);</span>
+<span class="fc" id="L575">      sub.setUserItem(true);</span>
+<span class="fc" id="L576">      sub.setItemKey(&quot;editor_show_hidden_folders&quot;);</span>
+<span class="fc" id="L577">      sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L578">      setAvailable(sub);</span>
+<span class="fc" id="L579">      webSites.addSubmenu(sub);</span>
+
+<span class="fc" id="L581">      loadModule(webSites);</span>
+
+<span class="fc" id="L583">		sub = new ModuleInfo();</span>
+<span class="fc" id="L584">		sub.setNameKey(&quot;components.user.perms.unlimitedUpload&quot;);</span>
+<span class="fc" id="L585">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L586">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L587">		sub.setUserItem(true);</span>
+<span class="fc" id="L588">		sub.setItemKey(&quot;editor_unlimited_upload&quot;);</span>
+<span class="fc" id="L589">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L590">		sub.setGroup(&quot;files&quot;);</span>
+<span class="fc" id="L591">		setAvailable(sub);</span>
+<span class="fc" id="L592">		loadModule(sub);</span>
+
+		//sablony
+<span class="fc" id="L595">		ModuleInfo templates = new ModuleInfo(&quot;menu.templates&quot;, &quot;menuTemplates&quot;, &quot;/admin/v9/dist/views/templates/temps-list.html&quot;, null, true, true, &quot;/admin/v9/templates/temps-list/&quot;, modVersions.get(&quot;menu.templates&quot;), 20).setGroup(&quot;templates&quot;).setMenuIcon(&quot;grid&quot;);</span>
+
+
+<span class="fc" id="L598">		sub = new ModuleInfo();</span>
+<span class="fc" id="L599">		sub.setNameKey(&quot;admin.temp_list.zoznam_sablon&quot;);</span>
+<span class="fc" id="L600">		sub.setPath(&quot;/admin/v9/dist/views/templates/temps-list.html&quot;);</span>
+<span class="fc" id="L601">		sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));</span>
+<span class="fc" id="L602">		sub.setItemKey(&quot;menuTemplates&quot;);</span>
+<span class="fc" id="L603">		sub.setUserItem(false);</span>
+<span class="fc" id="L604">		sub.setGroup(&quot;templates&quot;);</span>
+<span class="fc" id="L605">		setAvailable(sub);</span>
+<span class="fc" id="L606">		templates.addSubmenu(sub);</span>
+
+<span class="fc" id="L608">        sub = new ModuleInfo();</span>
+<span class="fc" id="L609">        sub.setNameKey(&quot;admin.temp_group_list.title&quot;);</span>
+<span class="fc" id="L610">        sub.setPath(&quot;/admin/v9/dist/views/templates/temps-groups-list.html&quot;);</span>
+<span class="fc" id="L611">        sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));</span>
+<span class="fc" id="L612">        sub.setItemKey(&quot;menuTemplatesGroup&quot;);</span>
+<span class="fc" id="L613">        sub.setUserItem(true);</span>
+<span class="fc" id="L614">        sub.setGroup(&quot;templates&quot;);</span>
+<span class="fc" id="L615">        setAvailable(sub);</span>
+<span class="fc" id="L616">        templates.addSubmenu(sub);</span>
+
+		/*
+		sub = new ModuleInfo();
+		sub.setNameKey(&quot;temps_list.newTemplate&quot;);
+		sub.setPath(&quot;javascript:openPopupDialogFromLeftMenu('/admin/listtemps.do?tempid=-1');&quot;);
+		sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));
+		sub.setUserItem(false);
+		setAvailable(sub);
+		templates.addSubmenu(sub);
+
+		sub = new ModuleInfo();
+		sub.setNameKey(&quot;admin.temp_merge.merge_stranok&quot;);
+		sub.setPath(&quot;javascript:openPopupDialogFromLeftMenu('/admin/listtemps.do?merge=1');&quot;);
+		sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));
+		sub.setUserItem(false);
+		setAvailable(sub);
+		templates.addSubmenu(sub);
+
+		sub = new ModuleInfo();
+		sub.setNameKey(&quot;admin.temps_page_uses.pouzitie_stranok&quot;);
+		sub.setPath(&quot;/admin/temps_page_uses.jsp&quot;);
+		sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));
+		sub.setUserItem(false);
+		setAvailable(sub);
+		templates.addSubmenu(sub);*/
+
+<span class="fc" id="L643">		loadModule(templates);</span>
+
+		//pouzivatelia
+<span class="fc" id="L646">		ModuleInfo users = new ModuleInfo(&quot;menu.users&quot;, &quot;menuUsers&quot;, &quot;/components/user&quot;, null, true, true, &quot;/admin/v9/users/user-list/&quot;, modVersions.get(&quot;menu.users&quot;), 30);</span>
+<span class="fc" id="L647">		users.setGroup(&quot;users&quot;);</span>
+<span class="fc" id="L648">		users.setLeftMenuNameKey(&quot;users.list&quot;);</span>
+<span class="fc" id="L649">		loadModule(users);</span>
+
+		//toto je tu kvoli menu, aby sa vypisala moznost Zoznam pouzivatelov
+		/*
+		sub = new ModuleInfo().setGroup(&quot;users&quot;).setMenuOrder(10);
+		sub.setNameKey(&quot;users.list&quot;);
+		sub.setItemKey(&quot;users.list&quot;);
+		sub.setPath(&quot;/admin/listusers.do&quot;);
+		sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));
+		sub.setUserItem(false);
+		sub.setShowInLeftMenu(true);
+		setAvailable(sub);
+		*/
+
+		//sub.addSubmenu(&quot;users.list&quot;, &quot;/admin/listusers.do&quot;);
+		//sub.addSubmenu(&quot;users.newUser&quot;, &quot;javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=-1');&quot;);
+		//sub.addSubmenu(&quot;users.importFromFile&quot;, &quot;javascript:openPopupDialogFromLeftMenu('/admin/listusers.do?import=true');&quot;);
+		//loadModule(sub);
+
+<span class="pc bpc" id="L668" title="1 of 2 branches missed.">		if (InitServlet.isTypeCloud()==false)</span>
+		{
+<span class="fc" id="L670">			sub = new ModuleInfo().setMenuOrder(10);</span>
+<span class="fc" id="L671">			sub.setNameKey(&quot;users.edit_admins&quot;);</span>
+<span class="fc" id="L672">			sub.setItemKey(&quot;users.edit_admins&quot;);</span>
+<span class="fc" id="L673">			sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L674">			sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));</span>
+<span class="fc" id="L675">			sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L676">			sub.setUserItem(true);</span>
+<span class="fc" id="L677">			sub.setShowInLeftMenu(false);</span>
+
+<span class="fc" id="L679">			setAvailable(sub);</span>
+<span class="fc" id="L680">			users.addSubmenu(sub);</span>
+
+<span class="fc" id="L682">			sub = new ModuleInfo().setMenuOrder(20);</span>
+<span class="fc" id="L683">			sub.setNameKey(&quot;users.edit_public_users&quot;);</span>
+<span class="fc" id="L684">			sub.setItemKey(&quot;users.edit_public_users&quot;);</span>
+<span class="fc" id="L685">			sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L686">			sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));</span>
+<span class="fc" id="L687">			sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L688">			sub.setUserItem(true);</span>
+<span class="fc" id="L689">			sub.setShowInLeftMenu(false);</span>
+
+<span class="fc" id="L691">			setAvailable(sub);</span>
+<span class="fc" id="L692">			users.addSubmenu(sub);</span>
+
+<span class="fc" id="L694">			sub = new ModuleInfo().setGroup(&quot;users&quot;).setMenuOrder(30);</span>
+<span class="fc" id="L695">			sub.setNameKey(&quot;user.admin.editUserGroups&quot;);</span>
+<span class="fc" id="L696">			sub.setItemKey(&quot;user.admin.userGroups&quot;);</span>
+<span class="fc" id="L697">			sub.setPath(&quot;/admin/listusers.do?groups=true&quot;);</span>
+<span class="fc" id="L698">			sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));</span>
+<span class="fc" id="L699">			sub.setUserItem(true);</span>
+<span class="fc" id="L700">			sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L701">			sub.setGroup(&quot;users&quot;);</span>
+
+<span class="fc" id="L703">			setAvailable(sub);</span>
+<span class="fc" id="L704">			loadModule(sub);</span>
+
+<span class="fc" id="L706">			sub = new ModuleInfo().setGroup(&quot;users&quot;).setMenuOrder(31);</span>
+<span class="fc" id="L707">			sub.setNameKey(&quot;users.edit_perm_groups&quot;);</span>
+<span class="fc" id="L708">			sub.setItemKey(&quot;users.perm_groups&quot;);</span>
+<span class="fc" id="L709">			sub.setPath(&quot;/admin/v9/dist/views/users/permission-groups.html&quot;);</span>
+<span class="fc" id="L710">			sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));</span>
+<span class="fc" id="L711">			sub.setUserItem(true);</span>
+<span class="fc" id="L712">			sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L713">			sub.setGroup(&quot;users&quot;);</span>
+
+<span class="fc" id="L715">			setAvailable(sub);</span>
+<span class="fc" id="L716">			loadModule(sub);</span>
+
+
+
+<span class="fc" id="L720">			sub = new ModuleInfo().setMenuOrder(60);</span>
+<span class="fc" id="L721">			sub.setNameKey(&quot;users.welcomeShowLoggedAdmins&quot;);</span>
+<span class="fc" id="L722">			sub.setItemKey(&quot;welcomeShowLoggedAdmins&quot;);</span>
+<span class="fc" id="L723">			sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L724">			sub.setWjVersions(modVersions.get(&quot;menu.users&quot;));</span>
+<span class="fc" id="L725">			sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L726">			sub.setUserItem(true);</span>
+<span class="fc" id="L727">			sub.setShowInLeftMenu(false);</span>
+<span class="fc" id="L728">			sub.setGroup(&quot;welcome&quot;);</span>
+
+<span class="fc" id="L730">			setAvailable(sub);</span>
+<span class="fc" id="L731">			loadModule(sub);</span>
+		}
+
+<span class="fc" id="L734">		ModuleInfo files = new ModuleInfo(&quot;menu.fbrowser&quot;, &quot;menuFbrowser&quot;, &quot;/admin/elFinder/index.jsp&quot;, null, true, true, &quot;/admin/elFinder/&quot;, modVersions.get(&quot;menu.fbrowser&quot;), 45).setGroup(&quot;files&quot;).setMenuIcon(&quot;folder&quot;);</span>
+
+<span class="fc" id="L736">		sub = new ModuleInfo();</span>
+<span class="fc" id="L737">		sub.setNameKey(&quot;menu.fbrowser.deleteDirectory&quot;);</span>
+<span class="fc" id="L738">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L739">		sub.setWjVersions(modVersions.get(&quot;menu.fbrowser&quot;));</span>
+<span class="fc" id="L740">		sub.setUserItem(true);</span>
+<span class="fc" id="L741">		sub.setItemKey(&quot;fbrowser_delete_directory&quot;);</span>
+<span class="fc" id="L742">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L743">		setAvailable(sub);</span>
+<span class="fc" id="L744">		files.addSubmenu(sub);</span>
+
+<span class="fc" id="L746">		loadModule(files);</span>
+
+
+
+		// Konfiguracia
+<span class="fc" id="L751">		sub = new ModuleInfo().setMenuOrder(7000);</span>
+<span class="fc" id="L752">		sub.setLeftMenuNameKey(&quot;webjet.left_conf.konfiguracia&quot;);</span>
+<span class="fc" id="L753">		sub.setNameKey(&quot;menu.config.rights.menu_config&quot;);</span>
+<span class="fc" id="L754">		sub.setPath(&quot;/admin/v9/dist/views/settings/configuration.html&quot;);</span>
+<span class="fc" id="L755">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L756">		sub.setUserItem(true);</span>
+<span class="fc" id="L757">		sub.setItemKey(&quot;menuConfig&quot;);</span>
+<span class="fc" id="L758">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L759">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L760">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L761">		sub.setMenuIcon(&quot;wrench&quot;);</span>
+<span class="fc" id="L762">		loadModule(sub);</span>
+
+<span class="fc" id="L764">		sub = new ModuleInfo().setMenuOrder(7001);</span>
+<span class="fc" id="L765">		sub.setNameKey(&quot;admin.conf.showAllvariables&quot;);</span>
+<span class="fc" id="L766">		sub.setItemKey(&quot;conf.show_all_variables&quot;);</span>
+<span class="fc" id="L767">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L768">		sub.setWjVersions(&quot;BPECDIMO&quot;);</span>
+<span class="fc" id="L769">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L770">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L771">		sub.setUserItem(true);</span>
+<span class="fc" id="L772">		sub.setShowInLeftMenu(false);</span>
+<span class="fc" id="L773">		loadModule(sub);</span>
+
+		// Aktualizacia WebJETu
+<span class="fc" id="L776">		sub = new ModuleInfo().setMenuOrder(7300);</span>
+<span class="fc" id="L777">		sub.setLeftMenuNameKey(&quot;admin.conf_editor.update_system&quot;);</span>
+<span class="fc" id="L778">		sub.setNameKey(&quot;menu.config.rights.modUpdate&quot;);</span>
+<span class="fc" id="L779">		sub.setPath(&quot;/admin/v9/settings/update/&quot;);</span>
+<span class="fc" id="L780">		sub.setWjVersions(&quot;BPECDIM&quot;);</span>
+<span class="fc" id="L781">		sub.setUserItem(true);</span>
+<span class="fc" id="L782">		sub.setItemKey(&quot;modUpdate&quot;);</span>
+<span class="fc" id="L783">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L784">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L785">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L786">		sub.setMenuIcon(&quot;refresh&quot;);</span>
+<span class="fc" id="L787">		loadModule(sub);</span>
+
+		// Editacia textov
+<span class="fc" id="L790">		sub = new ModuleInfo().setMenuOrder(7020);</span>
+<span class="fc" id="L791">		sub.setLeftMenuNameKey(&quot;admin.conf_editor.edit_text&quot;);</span>
+<span class="fc" id="L792">		sub.setNameKey(&quot;menu.config.rights.edit_text&quot;);</span>
+<span class="fc" id="L793">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L794">		sub.setWjVersions(&quot;BPECDIM&quot;);</span>
+<span class="fc" id="L795">		sub.setUserItem(true);</span>
+<span class="fc" id="L796">		sub.setItemKey(&quot;edit_text&quot;);</span>
+<span class="fc" id="L797">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L798">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L799">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L800">		sub.setMenuIcon(&quot;speech&quot;);</span>
+<span class="fc" id="L801">		setAvailable(sub);</span>
+<span class="fc" id="L802">		sub.addSubmenu(&quot;groupslist.search.title&quot;, &quot;/admin/v9/dist/views/settings/translation-keys.html&quot;);</span>
+		//sub.addSubmenu(&quot;admin.conf_editor.pridat_zaznam&quot;, &quot;javascript:openPopupDialogFromLeftMenu('/admin/prop_edit.jsp?key=&amp;lng=&quot;+Constants.getString(&quot;defaultLanguage&quot;)+&quot;&amp;value=');&quot;);
+<span class="fc" id="L804">		sub.addSubmenu(&quot;admin.conf_editor.export-import&quot;, &quot;/admin/prop_export-import.jsp&quot;);</span>
+<span class="fc" id="L805">		sub.addSubmenu(&quot;admin.conf_editor.missing&quot;, &quot;/admin/prop_missing.jsp&quot;);</span>
+<span class="fc" id="L806">		loadModule(sub);</span>
+
+<span class="fc" id="L808">		sub = new ModuleInfo().setMenuOrder(7021);</span>
+<span class="fc" id="L809">		sub.setNameKey(&quot;admin.prop.showAllTexts&quot;);</span>
+<span class="fc" id="L810">		sub.setItemKey(&quot;prop.show_all_texts&quot;);</span>
+<span class="fc" id="L811">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L812">		sub.setWjVersions(&quot;BPECDIM&quot;);</span>
+<span class="fc" id="L813">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L814">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L815">		sub.setUserItem(true);</span>
+<span class="fc" id="L816">		sub.setShowInLeftMenu(false);</span>
+<span class="fc" id="L817">		loadModule(sub);</span>
+
+		// Export do HTML
+<span class="fc" id="L820">		sub = new ModuleInfo().setMenuOrder(7100);</span>
+<span class="fc" id="L821">		sub.setLeftMenuNameKey(&quot;admin.offline.dialogTitle&quot;);</span>
+<span class="fc" id="L822">		sub.setNameKey(&quot;menu.config.rights.export_offline&quot;);</span>
+<span class="fc" id="L823">		sub.setPath(&quot;javascript:openPopupDialogFromLeftMenu('/admin/offline.jsp');&quot;);</span>
+<span class="fc" id="L824">		sub.setWjVersions(&quot;BPECI&quot;);</span>
+<span class="fc" id="L825">		sub.setUserItem(true);</span>
+<span class="fc" id="L826">		sub.setItemKey(&quot;export_offline&quot;);</span>
+<span class="fc" id="L827">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L828">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L829">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L830">		sub.setMenuIcon(&quot;disc&quot;);</span>
+<span class="fc" id="L831">		loadModule(sub);</span>
+
+		// Restartovat
+<span class="fc" id="L834">		sub = new ModuleInfo().setMenuOrder(7310);</span>
+<span class="fc" id="L835">		sub.setLeftMenuNameKey(&quot;admin.conf_editor.restart&quot;);</span>
+<span class="fc" id="L836">		sub.setNameKey(&quot;menu.config.rights.modRestart&quot;);</span>
+<span class="fc" id="L837">		sub.setPath(&quot;javascript:confirmRestart()&quot;);</span>
+<span class="fc" id="L838">		sub.setWjVersions(&quot;BPECDIM&quot;);</span>
+<span class="fc" id="L839">		sub.setUserItem(true);</span>
+<span class="fc" id="L840">		sub.setItemKey(&quot;modRestart&quot;);</span>
+<span class="fc" id="L841">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L842">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L843">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L844">		sub.setMenuIcon(&quot;refresh&quot;);</span>
+<span class="fc" id="L845">		loadModule(sub);</span>
+
+<span class="fc" id="L847">		sub = new ModuleInfo().setMenuOrder(7320);</span>
+<span class="fc" id="L848">		sub.setLeftMenuNameKey(&quot;components.user.perms.replaceAll&quot;);</span>
+<span class="fc" id="L849">		sub.setNameKey(&quot;components.user.perms.replaceAll&quot;);</span>
+<span class="fc" id="L850">		sub.setPath(&quot;/admin/replaceall.jsp&quot;);</span>
+<span class="fc" id="L851">		sub.setWjVersions(&quot;PEDI&quot;);</span>
+<span class="fc" id="L852">		sub.setUserItem(true);</span>
+<span class="fc" id="L853">		sub.setItemKey(&quot;replaceAll&quot;);</span>
+<span class="fc" id="L854">		sub.setDefaultDisabled(true);</span>
+<span class="fc" id="L855">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L856">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L857">		loadModule(sub);</span>
+
+		// Vytvorit ZIP archiv
+<span class="fc" id="L860">		sub = new ModuleInfo().setMenuOrder(7120);</span>
+<span class="fc" id="L861">		sub.setLeftMenuNameKey(&quot;admin.make_zip_archive&quot;);</span>
+<span class="fc" id="L862">		sub.setNameKey(&quot;menu.config.rights.make_zip_archive&quot;);</span>
+<span class="fc" id="L863">		sub.setPath(&quot;javascript:openPopupDialogFromLeftMenu('/admin/archive.jsp');&quot;);</span>
+<span class="fc" id="L864">		sub.setWjVersions(&quot;BPECI&quot;);</span>
+<span class="fc" id="L865">		sub.setUserItem(true);</span>
+<span class="fc" id="L866">		sub.setItemKey(&quot;make_zip_archive&quot;);</span>
+<span class="fc" id="L867">		sub.setDefaultDisabled(false);</span>
+<span class="fc" id="L868">		sub.setGroup(&quot;config&quot;);</span>
+<span class="fc" id="L869">		sub.setShowInLeftMenu(true);</span>
+<span class="fc" id="L870">		sub.setMenuIcon(&quot;size-actual&quot;);</span>
+<span class="fc" id="L871">		loadModule(sub);</span>
+
+<span class="fc" id="L873">		sub = new ModuleInfo(&quot;image_editor.title&quot;, &quot;imageEditor&quot;, &quot;/admin/v9/dist/views/apps/image-editor.html&quot;, null, true, false, null, modVersions.get(&quot;imageEditor&quot;), 50);</span>
+<span class="fc" id="L874">		sub.setGroup(&quot;website&quot;);</span>
+<span class="fc" id="L875">		loadModule(sub);</span>
+
+<span class="fc" id="L877">		loadModule(new ModuleInfo(&quot;fbrowse.fileIndexer&quot;, &quot;fileIndexer&quot;, &quot;/admin/fbrowser_dirprop.jsp&quot;, null, false, false, null, modVersions.get(&quot;fileIndexer&quot;), 330));</span>
+
+<span class="fc" id="L879">		loadModule(new ModuleInfo(&quot;multiDomain&quot;, &quot;multiDomain&quot;, &quot;/admin/v9/dist/views/webpages/web-pages-list.html&quot;, &quot;multiDomainEnabled&quot;, false, false, null, modVersions.get(&quot;multiDomain&quot;), 9999));</span>
+
+		//natiahni moduly z databazy
+<span class="fc" id="L882">		Connection db_conn = null;</span>
+<span class="fc" id="L883">		PreparedStatement ps = null;</span>
+<span class="fc" id="L884">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L887">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L888">			ps = db_conn.prepareStatement(&quot;SELECT * FROM &quot;+ConfDB.MODULES_TABLE_NAME+&quot; ORDER BY module_id&quot;);</span>
+<span class="fc" id="L889">			rs = ps.executeQuery();</span>
+			ModuleInfo mi;
+<span class="pc bpc" id="L891" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L893">				mi = new ModuleInfo(DB.getDbString(rs, &quot;name_key&quot;), DB.getDbString(rs, &quot;item_key&quot;), DB.getDbString(rs, &quot;path&quot;), null, true, true, null, &quot;BPECDIO&quot;, rs.getInt(&quot;menu_order&quot;));</span>
+<span class="nc" id="L894">				mi.setFromDatabase(true);</span>
+				//kontrola, ci uz taky modul neexistuje
+<span class="nc bnc" id="L896" title="All 2 branches missed.">				if (isModule(mi.getItemKey())==false)</span>
+				{
+<span class="nc" id="L898">					loadModule(mi);</span>
+				}
+			}
+<span class="fc" id="L901">			rs.close();</span>
+<span class="fc" id="L902">			ps.close();</span>
+<span class="fc" id="L903">			rs = null;</span>
+<span class="fc" id="L904">			ps = null;</span>
+		}
+<span class="nc" id="L906">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L908">			Logger.error(Modules.class, ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L914" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L915">					db_conn.close();</span>
+<span class="pc bpc" id="L916" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L917">					rs.close();</span>
+<span class="pc bpc" id="L918" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L919">					ps.close();</span>
+			}
+<span class="nc" id="L921">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L923">				Logger.error(Modules.class, ex2);</span>
+<span class="fc" id="L924">			}</span>
+		}
+
+		//usortuj ich
+		//skonvertuj array list na pole
+		int i;
+<span class="fc" id="L930">		int size = modules.size();</span>
+<span class="fc" id="L931">		ModuleInfo[] modArray = new ModuleInfo[size];</span>
+<span class="fc bfc" id="L932" title="All 2 branches covered.">		for (i=0; i&lt;size; i++)</span>
+		{
+<span class="fc" id="L934">			modArray[i] = modules.get(i);</span>
+		}
+
+<span class="fc" id="L937">		Arrays.sort(modArray,</span>
+			new Comparator&lt;ModuleInfo&gt;()
+<span class="fc" id="L939">			{</span>
+				@Override
+				public int compare(ModuleInfo m1, ModuleInfo m2)
+				{
+<span class="fc" id="L943">					int order = m1.getMenuOrder() - m2.getMenuOrder();</span>
+<span class="fc bfc" id="L944" title="All 2 branches covered.">					if (order == 0)</span>
+					{
+<span class="fc" id="L946">					   order = m1.getNameKey().compareTo(m2.getNameKey());</span>
+					}
+<span class="fc" id="L948">					return (order);</span>
+				}
+			}
+		);
+		//skonvertuj na array
+<span class="fc" id="L953">		modules = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L954">		modules.addAll(Arrays.asList(modArray));</span>
+
+<span class="fc" id="L956">		Constants.getServletContext().removeAttribute(CONTEXT_KEY);</span>
+<span class="fc" id="L957">		Constants.getServletContext().setAttribute(CONTEXT_KEY, this);</span>
+<span class="fc" id="L958">	}</span>
+
+	/**
+	 * Skontroluje, ci je modul dostupny a prida ho do zoznamu
+	 * @param mi
+	 */
+	private void loadModule(ModuleInfo mi)
+	{
+		//preiteruj a pripadne zmaz ak uz existuje
+<span class="fc bfc" id="L967" title="All 2 branches covered.">		for (ModuleInfo mi2 : modules)</span>
+		{
+<span class="fc bfc" id="L969" title="All 2 branches covered.">			if (mi2.getItemKey().equals(mi.getItemKey()))</span>
+			{
+				//leftMenuLink je NULL ale getter vrati path, to je dodatocna kontrola
+<span class="pc bpc" id="L972" title="1 of 4 branches missed.">				if (mi.getPath().startsWith(&quot;/apps&quot;) &amp;&amp; mi.getLeftMenuLink().equals(mi.getPath())) {</span>
+					//toto je autoload /apps adresara, modul uz je definovany z components, pouzijeme ten, tento novy ignorujme
+					//deje sa, ked nove aplikacie vo WJ9 su v /apps adresari, ktory sa tiez inicializuje
+<span class="fc" id="L975">					return;</span>
+				}
+
+				//to co je z webjet9 adresara ma vyssiu prioritu, zachovame
+<span class="pc bpc" id="L979" title="1 of 2 branches missed.">				if (mi2.getPath().startsWith(&quot;/components/webjet9&quot;)) {</span>
+<span class="fc" id="L980">					return;</span>
+				}
+
+<span class="nc" id="L983">				Logger.debug(Modules.class, &quot;Removing module: &quot; + mi2.getItemKey()+&quot; &quot;+mi2.getPath());</span>
+<span class="nc" id="L984">				modules.remove(mi2);</span>
+<span class="nc" id="L985">				break;</span>
+			}
+<span class="fc" id="L987">		}</span>
+
+<span class="fc" id="L989">		setAvailable(mi);</span>
+<span class="fc" id="L990">		modules.add(mi);</span>
+<span class="fc" id="L991">	}</span>
+
+	/**
+	 * Skontroluje, ci pozadovany subor je dostupny, pripadne skontroluje platnost konstanty
+	 * @param mi
+	 */
+	private void setAvailable(ModuleInfo mi)
+	{
+<span class="pc bpc" id="L999" title="1 of 4 branches missed.">		if (Tools.isEmpty(mi.getPath()) || Tools.isEmpty(mi.getItemKey())) return;</span>
+
+		//System.out.println(&quot;setAvailable, mi.path=&quot;+mi.getPath()+&quot; isFile=&quot;+FileTools.isFile(mi.getPath()));
+		//System.out.println(&quot;setAvailable, real=&quot;+ Tools.getRealPath(mi.getPath()));
+
+<span class="fc" id="L1004">		mi.setAvailable(false);</span>
+<span class="pc bpc" id="L1005" title="2 of 10 branches missed.">		if ((FileTools.exists(mi.getPath())) || mi.getLeftMenuLink().startsWith(&quot;javascript:&quot;) || mi.getPath().startsWith(&quot;javascript:&quot;) || mi.getPath().indexOf(&quot;.do&quot;)!=-1 || mi.getPath().endsWith(&quot;/&quot;))</span>
+		{
+<span class="fc bfc" id="L1007" title="All 2 branches covered.">			if (mi.getRequireConstantsKey()!=null)</span>
+			{
+<span class="pc bpc" id="L1009" title="2 of 4 branches missed.">				if (Tools.isNotEmpty(Constants.getString(mi.getRequireConstantsKey())) &amp;&amp; &quot;false&quot;.equals(Constants.getString(mi.getRequireConstantsKey()))==false)</span>
+				{
+<span class="fc" id="L1011">					mi.setAvailable(true);</span>
+				}
+			}
+			else
+			{
+<span class="fc" id="L1016">				mi.setAvailable(true);</span>
+			}
+		}
+<span class="fc bfc" id="L1019" title="All 2 branches covered.">		if (mi.isAvailable())</span>
+		{
+<span class="fc" id="L1021">			Logger.println(this,&quot;Loading module: &quot; + mi.getItemKey());</span>
+		}
+		else
+		{
+<span class="fc" id="L1025">			Logger.println(this,&quot;Unloading module: &quot;+mi.getItemKey()+&quot; mi.path=&quot;+mi.getPath()+&quot; const=&quot;+mi.getRequireConstantsKey());</span>
+		}
+<span class="fc" id="L1027">	}</span>
+
+	/**
+	 * Vrati zoznam vsetkych modulov
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getModules()
+	{
+<span class="fc" id="L1035">		return(modules);</span>
+	}
+
+	/**
+	 * Vrati zoznam modulov, ktore su zakazane
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getDisabledModules()
+	{
+<span class="nc" id="L1044">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="nc bnc" id="L1048" title="All 2 branches missed.">			if (mi.isAvailable() == false)</span>
+			{
+<span class="nc" id="L1050">				ret.add(mi);</span>
+			}
+<span class="nc" id="L1052">		}</span>
+
+<span class="nc" id="L1054">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati zoznam dostupnych modulov
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getAvailableModules()
+	{
+<span class="fc" id="L1063">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L1065" title="All 2 branches covered.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="fc bfc" id="L1067" title="All 2 branches covered.">			if (mi.isAvailable())</span>
+			{
+<span class="fc" id="L1069">				ret.add(mi);</span>
+			}
+<span class="fc" id="L1071">		}</span>
+
+<span class="fc" id="L1073">		return(ret);</span>
+	}
+
+	/**
+	 * Otestuje, ci zadany modul je dostupny (vseobecne pre cely server)
+	 * @param itemKey
+	 * @return
+	 */
+	public boolean isAvailable(String itemKey)
+	{
+<span class="fc bfc" id="L1083" title="All 2 branches covered.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="fc bfc" id="L1085" title="All 2 branches covered.">			if (mi.getItemKey().equals(itemKey))</span>
+			{
+<span class="fc" id="L1087">				return(mi.isAvailable());</span>
+			}
+			//skontroluj submenus
+<span class="pc bpc" id="L1090" title="1 of 4 branches missed.">			if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
+			{
+<span class="fc bfc" id="L1092" title="All 2 branches covered.">				for (ModuleInfo subMi : mi.getSubmenus())</span>
+				{
+<span class="fc bfc" id="L1094" title="All 4 branches covered.">					if (subMi.getItemKey()!=null &amp;&amp; subMi.getItemKey().equals(itemKey))</span>
+					{
+<span class="fc" id="L1096">						return(subMi.isAvailable());</span>
+					}
+<span class="fc" id="L1098">				}</span>
+			}
+<span class="fc" id="L1100">		}</span>
+		//vratim true, ak je to nazov modulu, ktory fyzicky nie je modul (neexistuje)
+		//ako napr. editorMiniEdit
+<span class="fc bfc" id="L1103" title="All 2 branches covered.">		if (itemKey.startsWith(&quot;cmp&quot;)) return(false);</span>
+<span class="fc" id="L1104">		return(true);</span>
+	}
+
+	/**
+	 * Skontroluje, ci zadany modul existuje
+	 * @param itemKey
+	 * @return
+	 */
+	public boolean isModule(String itemKey)
+	{
+<span class="nc bnc" id="L1114" title="All 2 branches missed.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="nc bnc" id="L1116" title="All 2 branches missed.">			if (mi.getItemKey().equals(itemKey))</span>
+			{
+<span class="nc" id="L1118">				return(true);</span>
+			}
+			//skontroluj submenus
+<span class="nc bnc" id="L1121" title="All 4 branches missed.">			if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
+			{
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">				for (ModuleInfo subMi : mi.getSubmenus())</span>
+				{
+<span class="nc bnc" id="L1125" title="All 4 branches missed.">					if (subMi.getItemKey()!=null &amp;&amp; subMi.getItemKey().equals(itemKey))</span>
+					{
+<span class="nc" id="L1127">						return true;</span>
+					}
+<span class="nc" id="L1129">				}</span>
+			}
+<span class="nc" id="L1131">		}</span>
+<span class="nc" id="L1132">		return(false);</span>
+	}
+
+	/**
+	 * Vrati true ak pre zadany modul sa maju v nastaveni pouzivatela zobrazovat sub kategorie
+	 * @param itemKey
+	 * @return
+	 */
+	public boolean isShowSubCategories(String itemKey)
+	{
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="nc bnc" id="L1144" title="All 2 branches missed.">			if (mi.getItemKey().equals(itemKey))</span>
+			{
+<span class="nc" id="L1146">				return(mi.isShowSubCategories());</span>
+			}
+<span class="nc" id="L1148">		}</span>
+<span class="nc" id="L1149">		return(false);</span>
+	}
+
+	/**
+	 * Nastavi zakazane moduly pouzivatelovi
+	 * @param user
+	 */
+	public void disableModules(Identity user)
+	{
+<span class="fc bfc" id="L1158" title="All 2 branches covered.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="fc bfc" id="L1160" title="All 2 branches covered.">			if (mi.isAvailable() == false)</span>
+			{
+				//Logger.debug(Modules.class, &quot;disabling1: &quot;+mi.getItemKey());
+<span class="fc" id="L1163">				user.addDisabledItem(mi.getItemKey());</span>
+			}
+			//skontroluj submenus
+<span class="pc bpc" id="L1166" title="1 of 4 branches missed.">			if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
+			{
+<span class="fc bfc" id="L1168" title="All 2 branches covered.">				for (ModuleInfo subMi : mi.getSubmenus())</span>
+				{
+<span class="pc bpc" id="L1170" title="1 of 4 branches missed.">					if (subMi.getItemKey()!=null &amp;&amp; subMi.isAvailable() == false)</span>
+					{
+						//Logger.debug(Modules.class, &quot;disabling2: &quot;+mi.getItemKey());
+<span class="nc" id="L1173">						user.addDisabledItem(subMi.getItemKey());</span>
+					}
+<span class="fc" id="L1175">				}</span>
+			}
+<span class="fc" id="L1177">		}</span>
+<span class="fc" id="L1178">	}</span>
+
+	/**
+	 * Vrati zoznam modulov pre useredit.jsp
+	 * @param prop
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getUserEditItems(Prop prop)
+	{
+<span class="fc" id="L1187">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+		ModuleInfo miUser;
+<span class="fc bfc" id="L1189" title="All 2 branches covered.">		for (ModuleInfo mi : modules)</span>
+		{
+<span class="fc bfc" id="L1191" title="All 2 branches covered.">			if (mi.isAvailable())</span>
+			{
+<span class="pc bpc" id="L1193" title="1 of 4 branches missed.">                if (mi.isUserItem() &amp;&amp; mi.getItemKey().length()&gt;2) {</span>
+<span class="fc" id="L1194">                    miUser = new ModuleInfo(prop.getText(mi.getNameKey()), mi.getItemKey(), mi.getPath(), mi.getRequireConstantsKey(), true, mi.isShowInLeftMenu(), mi.getLeftMenuLink(), &quot;BPECDIO&quot;, mi.getMenuOrder());</span>
+<span class="fc" id="L1195">                    miUser.setLeftMenuNameKey(mi.getLeftMenuNameKey());</span>
+<span class="fc" id="L1196">                    miUser.setLeftMenuNameKey(prop.getText(miUser.getLeftMenuNameKey()));</span>
+<span class="fc" id="L1197">                    miUser.setRootModule(mi.getItemKey());</span>
+<span class="fc" id="L1198">                    miUser.setGroup(mi.getGroup());</span>
+<span class="fc" id="L1199">                    ret.add(miUser);</span>
+                }
+
+				//pridaj submenus
+<span class="pc bpc" id="L1203" title="1 of 4 branches missed.">				if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
+				{
+<span class="fc bfc" id="L1205" title="All 2 branches covered.">					for (ModuleInfo subMi : mi.getSubmenus())</span>
+					{
+<span class="pc bpc" id="L1207" title="2 of 8 branches missed.">						if (subMi.isAvailable() &amp;&amp; subMi.isUserItem() &amp;&amp; subMi.getItemKey()!=null &amp;&amp; subMi.getItemKey().length()&gt;2)</span>
+						{
+							//Logger.debug(Modules.class, &quot;Pridavam submenu &quot; + subMi.getLeftMenuNameKey());
+<span class="fc" id="L1210">							miUser = new ModuleInfo(prop.getText(subMi.getNameKey()), subMi.getItemKey(), subMi.getPath(), subMi.getRequireConstantsKey(), true, subMi.isShowInLeftMenu(), subMi.getLeftMenuLink(), &quot;BPECDIO&quot;, subMi.getMenuOrder());</span>
+<span class="fc" id="L1211">							miUser.setLeftMenuNameKey(subMi.getLeftMenuNameKey());</span>
+<span class="fc" id="L1212">							miUser.setLeftMenuNameKey(prop.getText(mi.getLeftMenuNameKey()) + &quot; - &quot; + prop.getText(miUser.getLeftMenuNameKey()));</span>
+<span class="fc" id="L1213">							miUser.setRootModule(mi.getItemKey());</span>
+<span class="fc" id="L1214">							miUser.setGroup(mi.getGroup());</span>
+<span class="fc" id="L1215">							ret.add(miUser);</span>
+						}
+<span class="fc" id="L1217">					}</span>
+				}
+			}
+<span class="fc" id="L1220">		}</span>
+<span class="fc" id="L1221">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati zoradeny zoznam modulov pre useredit.jsp podla optGroups
+	 * @param prop
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getUserEditItemsSorted(Prop prop) {
+<span class="nc" id="L1230">		String[] optGroups = {&quot;welcome&quot;, &quot;website&quot;, &quot;components&quot;, &quot;templates&quot;, &quot;files&quot;, &quot;users&quot;, &quot;config&quot;};</span>
+
+<span class="nc" id="L1232">		Map&lt;String, HashMap&lt;String, ModuleInfo&gt;&gt; orderedOptGroups = new LinkedHashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">		for (String str : optGroups) {</span>
+<span class="nc" id="L1235">			orderedOptGroups.put(str, new HashMap&lt;&gt;());</span>
+		}
+
+<span class="nc bnc" id="L1238" title="All 2 branches missed.">		for (ModuleInfo moduleInfo : Modules.getInstance().getUserEditItems(prop)) {</span>
+<span class="nc bnc" id="L1239" title="All 2 branches missed.">			if (orderedOptGroups.get(moduleInfo.getGroup()) == null) {</span>
+<span class="nc" id="L1240">				continue;</span>
+			}
+<span class="nc" id="L1242">			orderedOptGroups.get(moduleInfo.getGroup()).put(moduleInfo.getItemKey(), moduleInfo);</span>
+<span class="nc" id="L1243">		}</span>
+
+<span class="nc" id="L1245">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1247" title="All 2 branches missed.">		for (Map.Entry&lt;String, HashMap&lt;String, ModuleInfo&gt;&gt; entry : orderedOptGroups.entrySet()){</span>
+<span class="nc" id="L1248">			ret.addAll(entry.getValue().values());</span>
+<span class="nc" id="L1249">		}</span>
+<span class="nc" id="L1250">		return ret;</span>
+	}
+
+	/**
+	 * Ziska zoznam poloziek menu pre usera
+	 * @param user
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getUserMenuItems(Identity user)
+	{
+<span class="fc" id="L1260">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1261" title="All 2 branches covered.">		for (ModuleInfo mi : modules)</span>
+		{
+			//Logger.debug(this,&quot;checking: &quot; + mi.getItemKey() + &quot;a=&quot; + mi.isAvailable() + &quot; m=&quot; + mi.isShowInLeftMenu() + &quot; u=&quot; + user.isDisabledItem(mi.getItemKey()));
+<span class="pc bpc" id="L1264" title="1 of 6 branches missed.">			if (mi.isAvailable() &amp;&amp; (mi.isFromDatabase() || mi.isShowInLeftMenu()))</span>
+			{
+				//musis overit aj submenu polozky
+<span class="pc bpc" id="L1267" title="1 of 6 branches missed.">				if (user.isDisabledItem(mi.getItemKey()) &amp;&amp; (mi.getSubmenus(user)==null || mi.getSubmenus(user).size()&lt;1))</span>
+				{
+<span class="fc" id="L1269">					continue;</span>
+				}
+
+				//Logger.debug(this,&quot;Pridavam: &quot; + mi.getItemKey());
+<span class="fc" id="L1273">				ret.add(mi);</span>
+			}
+<span class="fc" id="L1275">		}</span>
+<span class="fc" id="L1276">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati zoznam vsetkych modulov, pouziva licencny server pri generovani licencie
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getItems()
+	{
+<span class="nc" id="L1285">		List&lt;ModuleInfo&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L1287">		Map&lt;String, ModuleInfo&gt; modulesTable = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L1288" title="All 2 branches missed.">		for (ModuleInfo m : modules)</span>
+		{
+<span class="nc" id="L1290">			modulesTable.put(m.getItemKey().toLowerCase(), m);</span>
+<span class="nc" id="L1291">		}</span>
+
+		//	preiteruj moduly a povol
+		String modName;
+		String modPerms;
+		int index;
+<span class="nc bnc" id="L1297" title="All 2 branches missed.">		for (Map.Entry&lt;String, String&gt; entry : modVersions.entrySet())</span>
+		{
+<span class="nc" id="L1299">			modName = entry.getKey();</span>
+<span class="nc" id="L1300">			modPerms = entry.getValue();</span>
+
+<span class="nc" id="L1302">			ModuleInfo mi = new ModuleInfo();</span>
+<span class="nc" id="L1303">			mi.setWjVersions(modPerms);</span>
+
+			//Logger.println(this,&quot;--&gt; testujem: &quot; + key + &quot; &quot; + modName + &quot; &quot; + modPerms);
+<span class="nc" id="L1306">			index = modPerms.indexOf(';');</span>
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L1309">				mi.setNameKey(&quot;webjet_&quot;+modName);</span>
+<span class="nc" id="L1310">				mi.setItemKey(modPerms.substring(index+1));</span>
+
+<span class="nc" id="L1312">				mi.setWjVersions(modPerms.substring(0, index));</span>
+
+<span class="nc" id="L1314">				mi.setUserItem(false);</span>
+
+<span class="nc" id="L1316">				ModuleInfo m = modulesTable.get(modName.toLowerCase());</span>
+<span class="nc bnc" id="L1317" title="All 2 branches missed.">				if (m == null) m = modulesTable.get(Tools.replace(modName.toLowerCase(), &quot;cmp_&quot;, &quot;menu&quot;));</span>
+<span class="nc bnc" id="L1318" title="All 2 branches missed.">				if (m != null)</span>
+				{
+<span class="nc" id="L1320">					mi.setUserItem(m.isUserItem());</span>
+<span class="nc" id="L1321">					mi.setGroup(m.getGroup());</span>
+				}
+
+<span class="nc" id="L1324">				ret.add(mi);</span>
+			}
+<span class="nc" id="L1326">		}</span>
+<span class="nc" id="L1327">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati zoznam submenu modulu podla prav daneho pouzivatela
+	 * @param mi
+	 * @param user
+	 * @return
+	 */
+	public static List&lt;ModuleInfo&gt; getSubmenus(ModuleInfo mi, Identity user)
+	{
+<span class="fc" id="L1338">		List&lt;ModuleInfo&gt; userSubItems = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1340" title="1 of 4 branches missed.">		if (mi.getSubmenus()==null || mi.getSubmenus().size()&lt;1) return userSubItems;</span>
+
+<span class="fc bfc" id="L1342" title="All 2 branches covered.">		for (ModuleInfo subMi : mi.getSubmenus())</span>
+		{
+<span class="pc bpc" id="L1344" title="2 of 8 branches missed.">			if (Tools.isEmpty(subMi.getLeftMenuLink()) || &quot;javascript:&quot;.equals(subMi.getLeftMenuLink()) || &quot;javascript:void();&quot;.equals(subMi.getLeftMenuLink()) || &quot;javascript:void()&quot;.equals(subMi.getLeftMenuLink())) continue;</span>
+
+			//pridam ak to nema itemKey, alebo ak ma pravo na dany itemKey
+<span class="fc" id="L1347">			String subItemKey = subMi.getItemKey();</span>
+<span class="fc bfc" id="L1348" title="All 2 branches covered.">			if (Tools.isEmpty(subItemKey)) subItemKey = mi.getItemKey();</span>
+<span class="fc bfc" id="L1349" title="All 2 branches covered.">			if (user.isDisabledItem(subItemKey)==false)</span>
+			{
+<span class="fc" id="L1351">				userSubItems.add(subMi);</span>
+			}
+<span class="fc" id="L1353">		}</span>
+<span class="fc" id="L1354">		return userSubItems;</span>
+	}
+
+	/**
+	 * Odfiltruje zoznam modulov podla aktualnej domeny (nastavuje sa v modinfo.properties do atributu domainName)
+	 * @param modules
+	 * @param domain
+	 * @return
+	 */
+	public static List&lt;ModuleInfo&gt; filterDomain(List&lt;ModuleInfo&gt; modules, String domain)
+	{
+<span class="pc bpc" id="L1365" title="1 of 2 branches missed.">		if (domain == null) return modules;</span>
+
+<span class="fc" id="L1367">		domain = domain.toLowerCase();</span>
+<span class="fc" id="L1368">		List&lt;ModuleInfo&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1369" title="All 2 branches covered.">		for (ModuleInfo module : modules)</span>
+		{
+<span class="pc bpc" id="L1371" title="3 of 4 branches missed.">			if (Tools.isNotEmpty(module.getDomainName()) &amp;&amp; module.getDomainName().contains(domain)==false) continue;</span>
+
+<span class="fc" id="L1373">			filtered.add(module);</span>
+<span class="fc" id="L1374">		}</span>
+<span class="fc" id="L1375">		return filtered;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

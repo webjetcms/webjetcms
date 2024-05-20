@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthorizeUserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users</a> &gt; <span class="el_source">AuthorizeUserService.java</span></div><h1>AuthorizeUserService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users;
+
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.RegUserAction;
+import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.PasswordsHistoryBean;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+@Service
+<span class="fc" id="L29">public class AuthorizeUserService {</span>
+
+	/**
+	 * Authorize user and send him a email about authorization status. If wanted, generate new password for user.
+	 *
+	 * @param userToApprove entity of user to approve
+	 * @param approver entity of user who is approving
+	 * @param generatePassword true - generate new password for user or do nothing
+	 * @param request - request
+	 * @return true - authorization successful or return false
+	 */
+	public static boolean authUser(UserDetailsEntity userToApprove, Identity approver, boolean generatePassword, HttpServletRequest request) {
+<span class="fc" id="L41">		boolean emailSend = false;</span>
+<span class="fc" id="L42">		String password = null;</span>
+
+		//Adminlog
+<span class="fc" id="L45">		Adminlog.add(Adminlog.TYPE_USER_AUTHORIZE, &quot;Authorize user :&quot;</span>
+<span class="fc" id="L46">			+ &quot;id= &quot; + userToApprove.getId()</span>
+<span class="fc" id="L47">			+ &quot; login &quot; + userToApprove.getLogin()</span>
+<span class="fc" id="L48">			+ &quot; name= &quot; + userToApprove.getFullName(), -1, -1);</span>
+
+		//
+<span class="pc bpc" id="L51" title="3 of 4 branches missed.">		if (generatePassword || Constants.getBoolean(&quot;authorizeRegeneratePassword&quot;)</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">				|| userToApprove.getFieldE().startsWith(RegUserAction.REQUIRE_AUTHORIZATION_AFTER_VERIFICATION)) {</span>
+
+			//Generate new password
+<span class="fc" id="L55">			password = Password.generateStringHash(8);</span>
+
+			//Send approve email, with new Password (NOT hashed)
+<span class="fc" id="L58">			emailSend = sendInfoEmail(userToApprove, password, approver, request);</span>
+
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">			if(!emailSend) return false;</span>
+
+			//NOW hash password
+			try {
+<span class="fc" id="L64">                String salt = &quot;&quot;;</span>
+<span class="fc" id="L65">                String hash = &quot;&quot;;</span>
+<span class="fc" id="L66">                sk.iway.Password pass = new sk.iway.Password();</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;passwordUseHash&quot;)) {</span>
+<span class="fc" id="L68">                    salt = PasswordSecurity.generateSalt();</span>
+<span class="fc" id="L69">                    hash = PasswordSecurity.calculateHash(password, salt);</span>
+                } else {
+<span class="nc" id="L71">                    hash = pass.encrypt(password);</span>
+                }
+
+<span class="fc" id="L74">                PasswordsHistoryBean.insertAndSaveNew(userToApprove.getId().intValue(), hash, salt);</span>
+
+                //Save updated user, password / hash / fieldE
+<span class="fc" id="L77">                (new SimpleQuery()).execute(&quot;UPDATE users SET password=?, password_salt=?, authorized=?, field_e=? WHERE user_id=?&quot;, hash, salt, true, &quot;&quot;, userToApprove.getId());</span>
+
+                //Add auditlog about password chnage
+<span class="fc" id="L80">                Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userToApprove.getId().intValue(), &quot;SaveUserAction - user (&quot; + userToApprove.getLogin() + &quot;) successfully changed password&quot;, -1, -1);</span>
+<span class="nc" id="L81">            } catch (Exception ex) {</span>
+<span class="nc" id="L82">                Logger.error(AuthorizeUserService.class, ex);</span>
+<span class="nc" id="L83">				return false;</span>
+<span class="fc" id="L84">            }</span>
+		} else {
+			//Send approve email, without password
+<span class="nc" id="L87">			emailSend = sendInfoEmail(userToApprove, password, approver, request);</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if(!emailSend) return false;</span>
+
+			//Update user approvement status
+<span class="nc" id="L92">			String sql = &quot;UPDATE users SET authorized=? WHERE user_id=?&quot;+UsersDB.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L93">			(new SimpleQuery()).execute(sql, true, userToApprove.getId());</span>
+		}
+
+<span class="fc" id="L96">		return true;</span>
+	}
+
+	/**
+	 * Send email about auth status with new generated password
+	 * @param userToApprove - user that was approved
+	 * @param password - approveed user new generated password
+	 * @param approveByUser - who is approver
+	 * @param request - request
+	 * @return
+	 */
+	public static boolean sendInfoEmail(UserDetailsEntity userToApprove, String password, Identity approveByUser, HttpServletRequest request) {
+<span class="fc" id="L108">		boolean emailSend = false;</span>
+
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">		if(userToApprove == null || approveByUser == null) return false;</span>
+
+		try {
+<span class="fc" id="L113">			Logger.debug(AuthorizeUserService.class, &quot;sendInfoemail, userDetailsEntity: &quot; + userToApprove);</span>
+
+			//	skus ziskat ugd pre dane ppids
+<span class="fc" id="L116">			UserGroupDetails userGroupDetails = null;</span>
+<span class="fc" id="L117">			UserGroupDetails userGroupDetails2 = null;</span>
+			try {
+<span class="fc" id="L119">				StringTokenizer st = new StringTokenizer(userToApprove.getUserGroupsIds(), &quot;,&quot;);</span>
+				int ppid;
+<span class="fc" id="L121">				UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
+<span class="pc bpc" id="L122" title="1 of 4 branches missed.">				while (st.hasMoreTokens() &amp;&amp; userGroupDetails == null) {</span>
+<span class="fc" id="L123">					ppid = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">					if (ppid &gt; 0) {</span>
+<span class="fc" id="L125">						userGroupDetails2 = ugDB.getUserGroup(ppid);</span>
+<span class="pc bpc" id="L126" title="2 of 4 branches missed.">						if (userGroupDetails2!=null &amp;&amp; userGroupDetails2.getEmailDocId() &gt; 0) {</span>
+							//ak ma grupa zadany emailDocId, pouzi
+<span class="nc" id="L128">							userGroupDetails = userGroupDetails2;</span>
+<span class="nc" id="L129">							break;</span>
+						}
+					}
+				}
+<span class="pc" id="L133">			} catch (Exception e) { sk.iway.iwcm.Logger.error(e); }</span>
+
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">			if (Tools.isEmail(userToApprove.getEmail())) {</span>
+<span class="fc" id="L136">				String url = Tools.getBaseHref(request);</span>
+<span class="fc" id="L137">				Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+<span class="fc" id="L139">				String subject = Constants.getString(&quot;approveEmailSubject&quot;);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">				if (Tools.isEmpty(subject))</span>
+<span class="fc" id="L141">					subject = prop.getText(&quot;iwcm.users.authorize_action.pristup_do_neverejnej_casti&quot;, url);</span>
+
+<span class="fc" id="L143">				String body = Constants.getString(&quot;approveEmailText&quot;);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">				if (Tools.isEmpty(body)) {</span>
+
+<span class="fc" id="L146">					body = prop.getText(&quot;iwcm.users.authorize_action.vasa_ziadost&quot;)+&quot;\n&quot;;</span>
+<span class="fc" id="L147">					body += prop.getText(&quot;iwcm.users.authorize_action.pre_pristup_pouzite&quot;)+&quot;\n\n&quot;;</span>
+<span class="fc" id="L148">					body += &quot;   &quot; + prop.getText(&quot;iwcm.users.authorize_action.prihlasovacie_meno&quot;) + &quot;: &quot; + userToApprove.getLogin() + &quot;\n&quot;;</span>
+
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">					if (!Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+<span class="nc" id="L151">						body += &quot;   &quot;+prop.getText(&quot;iwcm.users.authorize_action.heslo&quot;)+&quot;: &quot; + userToApprove.getPassword() + &quot;\n&quot;;</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">					else if(Tools.isNotEmpty(password))</span>
+<span class="fc" id="L153">						body += &quot;   &quot;+prop.getText(&quot;iwcm.users.authorize_action.heslo&quot;)+&quot;: &quot; + password + &quot;\n&quot;;</span>
+
+<span class="fc" id="L155">					body += &quot;\n\n\n&quot; + url;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				} else if (body.startsWith(&quot;docid=&quot;)) {</span>
+<span class="nc" id="L157">					int docid = Integer.parseInt(body.substring(6));</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">					if(userGroupDetails == null)</span>
+<span class="nc" id="L159">						userGroupDetails = new UserGroupDetails();</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">					if(userGroupDetails.getEmailDocId() &lt; 1)</span>
+<span class="nc" id="L162">						userGroupDetails.setEmailDocId(docid);</span>
+				}
+
+<span class="pc bpc" id="L165" title="3 of 4 branches missed.">				if (userGroupDetails != null &amp;&amp; userGroupDetails.getEmailDocId() &gt; 0) {</span>
+					try {
+<span class="nc" id="L167">						DocDB docDB = DocDB.getInstance(); //servlet.getServletContext(), false, DBPool.getDBName(request));</span>
+<span class="nc" id="L168">						DocDetails docDetails = docDB.getDoc(userGroupDetails.getEmailDocId());</span>
+<span class="nc" id="L169">						body = docDetails.getData();</span>
+<span class="nc" id="L170">						subject = docDetails.getTitle();</span>
+<span class="nc" id="L171">					} catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+				}
+
+<span class="pc bpc" id="L174" title="2 of 4 branches missed.">				if (Tools.isEmpty(body) || body.length() &lt; 10) return false;</span>
+
+				//	replacni !BR! za \n
+<span class="fc" id="L177">				body = Tools.replace(body, &quot;!BR!&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L178">				body = Tools.replace(body, &quot;!LOGIN_NAME!&quot;, userToApprove.getLogin());</span>
+<span class="fc" id="L179">				body = Tools.replace(body, &quot;!LOGGED_USER_LOGIN!&quot;, userToApprove.getLogin());</span>
+
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">				if(!Constants.getBoolean(&quot;passwordUseHash&quot;)) {</span>
+<span class="nc" id="L182">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, userToApprove.getPassword());</span>
+<span class="nc" id="L183">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, userToApprove.getPassword());</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">				} else if(Tools.isNotEmpty(password)) {</span>
+<span class="fc" id="L185">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, password);</span>
+<span class="fc" id="L186">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, password);</span>
+				}
+
+				/* Vyuzite v SIAF - do textu emailu sa doplni tel. cislo &quot;admina&quot; ktory spravil import - kedze adminov je viac, vzdy chcu konkretne t.c. */
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">				if (approveByUser != null) {</span>
+<span class="fc" id="L191">                    body = Tools.replace(body, &quot;!TASKED_USER_PHONE!&quot;, approveByUser.getPhone());</span>
+<span class="fc" id="L192">                    body = Tools.replace(body, &quot;!TASKED_USER_EMAIL!&quot;, approveByUser.getEmailAddress());</span>
+                }
+				/*	***  */
+
+<span class="fc" id="L196">				body = Tools.replace(body, &quot;!TITLE!&quot;, userToApprove.getTitle());</span>
+<span class="fc" id="L197">				body = Tools.replace(body, &quot;!NAME!&quot;, userToApprove.getFullName());</span>
+<span class="fc" id="L198">				body = Tools.replace(body, &quot;!name!&quot;, userToApprove.getFullName());</span>
+<span class="fc" id="L199">				body = Tools.replace(body, &quot;!FIRST_NAME!&quot;, userToApprove.getFirstName());</span>
+<span class="fc" id="L200">				body = Tools.replace(body, &quot;!LAST_NAME!&quot;, userToApprove.getLastName());</span>
+
+				//uprav relativne cesty
+<span class="fc" id="L203">				body = SendMail.createAbsolutePath(body, request);</span>
+
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">				if (body.length() &gt; 10)</span>
+<span class="fc" id="L206">					emailSend = SendMail.send(approveByUser.getFullName(), approveByUser.getEmail(), userToApprove.getEmail(), subject, body);</span>
+
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">				if (!emailSend)</span>
+<span class="nc" id="L209">					request.setAttribute(&quot;emailSendFail&quot;, &quot;true&quot;);</span>
+				else {
+<span class="fc" id="L211">					request.setAttribute(&quot;from&quot;, approveByUser.getFullName()+&quot;&lt;&quot;+approveByUser.getEmail()+&quot;&gt;&quot;);</span>
+<span class="fc" id="L212">					request.setAttribute(&quot;to&quot;, userToApprove.getEmail());</span>
+<span class="fc" id="L213">					request.setAttribute(&quot;subject&quot;, subject);</span>
+<span class="fc" id="L214">					body = Tools.replace(body, &quot;\n&quot;, &quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L215">					request.setAttribute(&quot;body&quot;, body);</span>
+				}
+			}
+<span class="nc" id="L218">		} catch (Exception ex) {</span>
+<span class="nc" id="L219">			emailSend = false;</span>
+<span class="nc" id="L220">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L221">		}</span>
+
+<span class="fc" id="L223">		return(emailSend);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

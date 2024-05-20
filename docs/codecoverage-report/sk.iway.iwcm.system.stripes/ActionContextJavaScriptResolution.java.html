@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActionContextJavaScriptResolution.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.stripes</a> &gt; <span class="el_source">ActionContextJavaScriptResolution.java</span></div><h1>ActionContextJavaScriptResolution.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.stripes;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.Message;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.ajax.JavaScriptBuilder;
+import net.sourceforge.stripes.validation.ValidationError;
+import net.sourceforge.stripes.validation.ValidationErrors;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.RegUserAction;
+
+/**
+ *  ActionContextJavaScriptResolution.java
+ *  &lt;p&gt;Resolution that will convert a Java object web to a web of JavaScript objects and arrays, and
+ * stream the JavaScript back to the client.  The output of this resolution can be evaluated in
+ * JavaScript using the eval() function, and will return a reference to the top level JavaScript
+ * object.  For more information see {@link JavaScriptBuilder}&lt;/p&gt;
+ *
+ * &lt;p&gt;Resolution builds up result from the object of current ActionBean context returning simple
+ * containing involved validation errors if they occur.&lt;/p&gt;
+ *
+ * source: http://blog.novoj.net/2008/01/25/running-ajax-with-jquery-in-stripes-framework/
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 3.2.2008 15:21:35
+ *@modified     $Date: 2008/07/29 14:42:14 $
+ */
+public class ActionContextJavaScriptResolution implements Resolution
+{
+	private JavaScriptBuilder builder;
+
+	/**
+	 * Constructs a new JavaScriptResolution that will convert the supplied object to JavaScript.
+	 *
+	 * @param actionBean
+	 */
+	public ActionContextJavaScriptResolution(ActionBean actionBean)
+<span class="fc" id="L53">	{</span>
+<span class="fc" id="L54">		ActionBeanContext ctx = actionBean.getContext();</span>
+		Object result;
+<span class="fc" id="L56">		HttpServletRequest request = ctx.getRequest();</span>
+<span class="fc" id="L57">		ValidationErrors validationErrors = ctx.getValidationErrors();</span>
+<span class="fc" id="L58">		int userId = -1;</span>
+
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">		if(actionBean instanceof RegUserAction &amp;&amp; ((RegUserAction)actionBean).getUsr() != null)</span>
+<span class="fc" id="L61">			userId = ((RegUserAction)actionBean).getUsr().getUserId();</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">		if (!validationErrors.isEmpty())</span>
+		{
+<span class="fc" id="L65">			result = new AjaxPostFormResult(validationErrors, composeErrorsHtml(validationErrors, request), userId);</span>
+
+<span class="fc" id="L67">			((AjaxPostFormResult)result).updateCsrfToken(request);</span>
+		}
+		else
+		{
+<span class="fc" id="L71">			result = new AjaxPostFormResult(composeMessagesHtml(ctx.getMessages(), request), composeErrorsHtml(ctx.getMessages(),</span>
+						request), userId);
+
+<span class="fc" id="L74">			((AjaxPostFormResult)result).updateCsrfToken(request);</span>
+		}
+<span class="fc" id="L76">		this.builder = new JavaScriptBuilder(result);</span>
+<span class="fc" id="L77">	}</span>
+
+	/**
+	 * Converts the object passed in to JavaScript and streams it back to the client.
+	 */
+	@Override
+	public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception
+	{
+		//response.setContentType(&quot;text/javascript; charset=&quot;+response.getCharacterEncoding());
+
+<span class="fc" id="L87">		sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/javascript&quot;);</span>
+
+<span class="fc" id="L89">		String ajaxRedirectCode = (String)request.getAttribute(&quot;ajaxRedirectCode&quot;);</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(ajaxRedirectCode))</span>
+		{
+<span class="nc" id="L92">			response.getWriter().println(ajaxRedirectCode);</span>
+		}
+
+<span class="fc" id="L95">		this.builder.build(response.getWriter());</span>
+
+<span class="fc" id="L97">		response.flushBuffer();</span>
+<span class="fc" id="L98">	}</span>
+
+	/**
+	 * Compose HTML snippet with messages based on standard properties enveloping used by Stripes
+	 * &lt;html:messages/&gt; tag.
+	 * @param messages
+	 * @param request
+	 * @return
+	 */
+	private String composeMessagesHtml(List&lt;Message&gt; messages, ServletRequest request)
+	{
+<span class="fc" id="L109">		String[] properties = getStandardMessageProperties(request);</span>
+<span class="fc" id="L110">		return composeResult(request, messages, properties, new MessageFilter()</span>
+<span class="fc" id="L111">		{</span>
+			@Override
+			public boolean includeMessage(Message message)
+			{
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">				return !(message instanceof ValidationError);</span>
+			}
+		});
+	}
+
+	/**
+	 * Compose HTML snippet with messages based on standard properties enveloping used by Stripes
+	 * &lt;html:errors/&gt; tag.
+	 * @param messages
+	 * @param request
+	 * @return
+	 */
+	private String composeErrorsHtml(List&lt;Message&gt; messages, ServletRequest request)
+	{
+<span class="fc" id="L129">		String[] properties = getStandardErrorProperties(request);</span>
+<span class="fc" id="L130">		return composeResult(request, messages, properties, new MessageFilter()</span>
+<span class="fc" id="L131">		{</span>
+			@Override
+			public boolean includeMessage(Message message)
+			{
+<span class="fc" id="L135">				return (message instanceof ValidationError);</span>
+			}
+		});
+	}
+
+	/**
+	 * Compose HTML snippet with messages based on standard properties enveloping used by Stripes
+	 * &lt;html:messages/&gt; tag.
+	 * @param errors
+	 * @param request
+	 * @return
+	 */
+	public String composeErrorsHtml(ValidationErrors errors, ServletRequest request)
+	{
+<span class="fc" id="L149">		String[] properties = getStandardErrorProperties(request);</span>
+
+<span class="pc bpc" id="L151" title="2 of 6 branches missed.">		if (errors != null &amp;&amp; errors.size()==1 &amp;&amp; errors.get(&quot;notSendMessage&quot;)!=null)</span>
+		{
+<span class="fc" id="L153">			properties = getNotSendErrorProperties(request);</span>
+		}
+
+<span class="fc" id="L156">		List&lt;Message&gt; messages = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">		if (errors != null) {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">			for (List&lt;ValidationError&gt; validationErrors : errors.values())</span>
+			{
+<span class="fc" id="L160">				messages.addAll(validationErrors);</span>
+<span class="fc" id="L161">			}</span>
+		}
+<span class="fc" id="L163">		return composeResult(request, messages, properties, new MessageFilter()</span>
+<span class="fc" id="L164">		{</span>
+			@Override
+			public boolean includeMessage(Message message)
+			{
+<span class="fc" id="L168">				return true;</span>
+			}
+		});
+	}
+
+	/**
+	 * Returns standard message Stripes properties in array.
+	 * @param request
+	 * @return
+	 */
+	private String[] getStandardMessageProperties(ServletRequest request)
+	{
+<span class="fc" id="L180">		Prop prop = Prop.getInstance(PageLng.getUserLng((HttpServletRequest) request));</span>
+		//ResourceBundle bundle = StripesFilterIway.getConfiguration().getLocalizationBundleFactory().getErrorMessageBundle(locale);
+<span class="fc" id="L182">		return new String[]{prop.getText(&quot;stripes.messages.header&quot;), prop.getText(&quot;stripes.messages.footer&quot;),</span>
+<span class="fc" id="L183">					prop.getText(&quot;stripes.messages.beforeMessage&quot;), prop.getText(&quot;stripes.messages.afterMessage&quot;)};</span>
+	}
+
+	/**
+	 * Returns standard message Stripes properties in array.
+	 * @param request
+	 * @return
+	 */
+	private String[] getStandardErrorProperties(ServletRequest request)
+	{
+		//Locale locale = request.getLocale();
+		//ResourceBundle bundle = StripesFilterIway.getConfiguration().getLocalizationBundleFactory().getErrorMessageBundle(locale);
+
+<span class="fc" id="L196">		Prop prop = Prop.getInstance(PageLng.getUserLng((HttpServletRequest) request));</span>
+
+<span class="fc" id="L198">		return new String[]{prop.getText(&quot;stripes.ajax.errors.header&quot;), prop.getText(&quot;stripes.ajax.errors.footer&quot;),</span>
+<span class="fc" id="L199">					prop.getText(&quot;stripes.ajax.errors.beforeError&quot;), prop.getText(&quot;stripes.ajax.errors.afterError&quot;)};</span>
+	}
+
+	private String[] getNotSendErrorProperties(ServletRequest request)
+	{
+		//Locale locale = request.getLocale();
+		//ResourceBundle bundle = StripesFilterIway.getConfiguration().getLocalizationBundleFactory().getErrorMessageBundle(locale);
+
+<span class="fc" id="L207">		Prop prop = Prop.getInstance(PageLng.getUserLng((HttpServletRequest) request));</span>
+
+<span class="fc" id="L209">		return new String[]{prop.getText(&quot;stripes.ajax.errors.header_not_send&quot;), prop.getText(&quot;stripes.ajax.errors.footer_not_send&quot;),</span>
+<span class="fc" id="L210">					prop.getText(&quot;stripes.ajax.errors.beforeError_not_send&quot;), prop.getText(&quot;stripes.ajax.errors.afterError_not_send&quot;)};</span>
+	}
+
+	/**
+	 * Renders HTML snippet result containing all messages conforming to MessageFilter implementation
+	 * enveloped by properties strings.
+	 * @param request
+	 * @param messages
+	 * @param properties
+	 * @param messageFilter
+	 * @return
+	 */
+	private String composeResult(ServletRequest request, List&lt;Message&gt; messages, String[] properties, MessageFilter messageFilter)
+	{
+<span class="fc" id="L224">		boolean hasMessages = false;</span>
+<span class="fc" id="L225">		StringBuilder result = new StringBuilder(properties[0]);</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">		for (Message message : messages)</span>
+		{
+<span class="fc bfc" id="L228" title="All 2 branches covered.">			if (messageFilter.includeMessage(message))</span>
+			{
+<span class="fc" id="L230">				hasMessages = true;</span>
+<span class="fc" id="L231">				result.append(properties[2]).append(message.getMessage(request.getLocale())).append(properties[3]);</span>
+			}
+<span class="fc" id="L233">		}</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">		if (hasMessages)</span>
+		{
+<span class="fc" id="L236">			result.append(properties[1]);</span>
+<span class="fc" id="L237">			Logger.debug(ActionContextJavaScriptResolution.class, &quot;composeResult:&quot;+result.toString());</span>
+<span class="fc" id="L238">			return result.toString();</span>
+		}
+		else
+		{
+<span class="fc" id="L242">			Logger.debug(ActionContextJavaScriptResolution.class, &quot;composeResult: null&quot;);</span>
+<span class="fc" id="L243">			return null;</span>
+		}
+	}
+
+	/**
+	 * Interface used to filter messages going to output.
+	 */
+	private interface MessageFilter
+	{
+		/**
+		 * Returns true or false if message should render in output.
+		 * @param message
+		 * @return
+		 */
+		boolean includeMessage(Message message);
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

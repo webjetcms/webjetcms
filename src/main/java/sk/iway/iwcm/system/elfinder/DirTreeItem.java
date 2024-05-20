@@ -25,7 +25,7 @@ public class DirTreeItem extends JsTreeItem {
         setText(f.getName());
         setVirtualPath(f.getVirtualPath());
 
-        setIcon("fa fa-folder");
+        setIcon("ti ti-folder");
         setState(new JsTreeItemState());
 
         setType(JsTreeItemType.DIR);

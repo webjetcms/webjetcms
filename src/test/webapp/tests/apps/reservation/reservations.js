@@ -391,3 +391,31 @@ function setReservationTime(I, timeFrom, timeTo) {
     I.fillField("#DTE_Field_editorFields-reservationTimeTo", timeTo);
     I.pressKey('Enter');
 }
+
+Scenario('Domain test', ({I, DT, DTE, Document}) => {
+    I.amOnPage("/apps/reservation/admin/");
+    DT.filter("editorFields.selectedReservation", "TestDomain_webjet9_object");
+    I.see("TestDomain_webjet9_object");
+    DT.filter("editorFields.selectedReservation", "TestDomain_test23_object");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("reservationDataTable");
+    I.waitForElement("div.DTE_Field_Name_reservationObjectId");
+    I.click( locate("div.DTE_Field_Name_reservationObjectId").find("button.dropdown-toggle") );
+    I.waitForElement("div.dropdown-menu.show");
+    I.fillField(locate("div.dropdown-menu.show").find("input"), "TestDomain_test23_object");
+    I.see("No results matched \"TestDomain_test23_object\"");
+    I.pressKey('Escape');
+    DTE.cancel();
+
+    Document.switchDomain("test23.tau27.iway.sk");
+    DT.filter("editorFields.selectedReservation", "TestDomain_webjet9_object");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DT.filter("editorFields.selectedReservation", "TestDomain_test23_object");
+    I.see("TestDomain_test23_object");
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});

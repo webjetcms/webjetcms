@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Logger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Logger.java</span></div><h1>Logger.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import org.eclipse.persistence.internal.jpa.EJBQueryImpl;
+import org.eclipse.persistence.queries.DatabaseQuery;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.slf4j.helpers.Util;
+
+import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ *  Logger.java - logger pre vypis vsetkeho mozneho
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 23.10.2005 22:02:57
+ *@modified     $Date: 2010/02/09 08:28:56 $
+ */
+@SuppressWarnings(&quot;java:S1845&quot;)
+public class Logger
+{
+<span class="fc" id="L34">	public static final Level OFF = Level.OFF;</span>
+<span class="fc" id="L35">	public static final Level ERROR = Level.ERROR;</span>
+<span class="fc" id="L36">	public static final Level WARN = Level.WARN;</span>
+<span class="fc" id="L37">	public static final Level INFO = Level.INFO;</span>
+<span class="fc" id="L38">	public static final Level DEBUG = Level.DEBUG;</span>
+<span class="fc" id="L39">	public static final Level TRACE = Level.TRACE;</span>
+<span class="fc" id="L40">	public static final Level ALL = Level.ALL;</span>
+
+<span class="fc" id="L42">	private static String installName = &quot;webjet&quot;;</span>
+
+<span class="nc" id="L44">	protected Logger() {</span>
+		//utility class
+<span class="nc" id="L46">	}</span>
+
+	public static void println(Class&lt;?&gt; c, String message)
+	{
+<span class="fc" id="L50">		info(c, message);</span>
+<span class="fc" id="L51">	}</span>
+
+	/**
+	 * @deprecated - use info
+	 */
+	@Deprecated
+	//uz sa neda pouzit, log4j print nepodporuje, je potrebne pouzit println
+	public static void print(Class&lt;?&gt; c, String message)
+	{
+<span class="nc" id="L60">		info(c, message);</span>
+<span class="nc" id="L61">	}</span>
+
+	/*
+	public static void printBeforeInitialization(Class&lt;?&gt; c, String message)
+	{
+
+		HashMap&lt;String, String&gt; map = new HashMap&lt;&gt;();
+
+		map.put(&quot;%X{installName}&quot;, getInstallName());
+		if (c!=null) map.put(&quot;%c&quot;, Constants.getBoolean(&quot;logShowClassName&quot;) ? c.getName() : &quot;&quot;);
+		else map.put(&quot;%c&quot;, &quot;&quot;);
+		map.put(&quot;%p&quot;, LogManager.getRootLogger().getLevel().toString());
+		map.put(&quot;%X{userId}&quot;, String.valueOf(getUserId()));
+		map.put(&quot;%m&quot;, message);
+		map.put(&quot;%n&quot;, &quot;\n&quot;);
+		map.put(&quot;%d{&quot; + getDateTimeFormat() + &quot;}&quot;, LocalDateTime.now().format(DateTimeFormatter.ofPattern(getDateTimeFormat())));
+
+		String result = &quot;[%X{installName}][%c][%p][%X{userId}] %d{&quot; + getDateTimeFormat() + &quot;} - %m%n&quot;;
+
+		for (Map.Entry&lt;String, String&gt; entry : map.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+
+			result = Tools.replace(result, key, value);
+		}
+
+		System.out.print(&quot;[Logger.print]&quot; + result);
+	}*/
+
+	public static String getDateTimeFormat() {
+<span class="nc" id="L91">		return &quot;yyyy-MM-dd HH:mm:ss,SSS&quot;;</span>
+	}
+
+	public static void println(Object o, String message)
+	{
+<span class="fc" id="L96">		info(o, message);</span>
+<span class="fc" id="L97">	}</span>
+
+	/**
+	 * @deprecated - use info
+	 */
+	@Deprecated
+	//uz sa neda pouzit, log4j print nepodporuje, je potrebne pouzit println
+	public static void print(Object o, String message)
+	{
+<span class="nc" id="L106">		info(o, message);</span>
+<span class="nc" id="L107">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	//nahradene metodou error
+	public static void printlnError(Object o, Exception e)
+	{
+<span class="nc" id="L116">		error(o, e.getMessage());</span>
+<span class="nc" id="L117">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	//nahradene metodou error
+	public static void printlnError(Object o, String message)
+	{
+<span class="nc" id="L126">		error(o, message);</span>
+<span class="nc" id="L127">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	//uz sa neda pouzit, log4j print nepodporuje, je potrebne pouzit println
+	public static void printError(Object o, String message)
+	{
+<span class="nc" id="L136">		error(o, message);</span>
+<span class="nc" id="L137">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	//je potrebne pouzit error
+	public static void printlnError(Class&lt;?&gt; c, String message)
+	{
+<span class="nc" id="L146">		error(c, message);</span>
+<span class="nc" id="L147">	}</span>
+
+	public static void printf(Class&lt;?&gt; source, String format, Object...args)
+	{
+<span class="fc" id="L151">		info(source, String.format(format, args));</span>
+<span class="fc" id="L152">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	//je potrebne pouzit error
+	public static void printError(Class&lt;?&gt; c, String message)
+	{
+<span class="nc" id="L161">		error(c, message);</span>
+<span class="nc" id="L162">	}</span>
+
+	public static void printfError(Class&lt;?&gt; source, String format, Object...args)
+	{
+<span class="nc" id="L166">		error(source, String.format(format, args));</span>
+<span class="nc" id="L167">	}</span>
+
+	public static boolean isLevel(Level level) {
+<span class="fc" id="L170">		return getLevel(null).isGreaterOrEqual(level);</span>
+	}
+
+	public static Level getLevel(String className) {
+<span class="fc" id="L174">		org.slf4j.Logger logger = getLogger(className);</span>
+
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">		if (logger.isTraceEnabled()</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				&amp;&amp; logger.isDebugEnabled()</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">				&amp;&amp; logger.isInfoEnabled()</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				&amp;&amp; logger.isWarnEnabled()</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				&amp;&amp; logger.isErrorEnabled()) {</span>
+<span class="nc" id="L181">			return Level.ALL;</span>
+		}
+
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		if (logger.isTraceEnabled()) {</span>
+<span class="nc" id="L185">			return Level.TRACE;</span>
+		}
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		if (logger.isDebugEnabled()) {</span>
+<span class="fc" id="L188">			return Level.DEBUG;</span>
+		}
+<span class="fc bfc" id="L190" title="All 2 branches covered.">		if (logger.isInfoEnabled()) {</span>
+<span class="fc" id="L191">			return Level.INFO;</span>
+		}
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">		if (logger.isWarnEnabled()) {</span>
+<span class="nc" id="L194">			return Level.WARN;</span>
+		}
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">		if (logger.isErrorEnabled()) {</span>
+<span class="fc" id="L197">			return Level.ERROR;</span>
+		}
+<span class="nc" id="L199">		return Level.OFF;</span>
+	}
+
+	public static int getLogLevel()
+	{
+<span class="nc" id="L204">		return getLevel(null).toInt();</span>
+	}
+
+	public static void setWJLogLevel(String level)
+	{
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (&quot;normal&quot;.equals(level))</span>
+		{
+<span class="nc" id="L211">			setLevel(Constants.getString(&quot;logWebjetPackages&quot;), Level.INFO);</span>
+		}
+		else // if (&quot;normal&quot;.equals(level))
+		{
+<span class="fc" id="L215">			setLevel(Constants.getString(&quot;logWebjetPackages&quot;), Level.toLevel(level));</span>
+		}
+<span class="fc" id="L217">	}</span>
+
+	public static void setWJLogLevel(Level level)
+	{
+<span class="fc" id="L221">		setLevel(Constants.getString(&quot;logWebjetPackages&quot;), level);</span>
+<span class="fc" id="L222">	}</span>
+
+	public static void setWJLogLevels(Map&lt;String, Level&gt; levels) {
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">		if (levels == null) {</span>
+<span class="nc" id="L226">			return;</span>
+		}
+
+<span class="fc bfc" id="L229" title="All 2 branches covered.">		for (Map.Entry&lt;String, Level&gt; levelEntry : levels.entrySet()) {</span>
+		    try {
+<span class="fc" id="L231">                Logger.setLevel(levelEntry.getKey(), levelEntry.getValue());</span>
+<span class="fc" id="L232">                Logger.debug(Logger.class, String.format(&quot;setWJLogLevels - package: %s, level: %s&quot;, levelEntry.getKey(), levelEntry.getValue()));</span>
+            }
+<span class="nc" id="L234">            catch (Exception e) {</span>
+<span class="nc" id="L235">                Logger.debug(Logger.class, String.format(&quot;setWJLogLevels - Nepodarilo sa nastavit WJlogLevel pre package: %s, level: %s&quot;, levelEntry.getKey(), levelEntry.getValue()));</span>
+<span class="nc" id="L236">		        sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L237">            }</span>
+<span class="fc" id="L238">		}</span>
+<span class="fc" id="L239">	}</span>
+
+	public static Map&lt;String, Level&gt; getLogLevelsMap(String logLevels) {
+<span class="fc" id="L242">		Map&lt;String, Level&gt; result = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(logLevels)) {</span>
+<span class="fc" id="L244">			List&lt;String&gt; logLevelsList = Tools.getStringListValue(Tools.getTokens(logLevels, &quot;\n&quot;));</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">			for (String logLevel : logLevelsList) {</span>
+<span class="fc" id="L246">				String[] tokens = Tools.getTokens(logLevel, &quot;=&quot;, true);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">				if (tokens.length == 2) {</span>
+<span class="fc" id="L248">					result.put(tokens[0], Level.toLevel(tokens[1]));</span>
+<span class="fc" id="L249">                    Logger.debug(Logger.class, String.format(&quot;getLogLevelsMap - package: %s, level: %s&quot;, tokens[0], tokens[1]));</span>
+				}
+				else {
+<span class="nc" id="L252">					Logger.debug(Logger.class, String.format(&quot;getLogLevelsMap - Nepodarilo sa vyparsovat package a level zo stringu: %s&quot;, logLevel));</span>
+				}
+<span class="fc" id="L254">			}</span>
+
+		}
+
+<span class="fc" id="L258">		return result;</span>
+	}
+
+	/**
+	 * Nastavi uroven logovania pre zadane packs (ciarkou oddeleny zoznam packagov)
+	 * @param packs sk.iway,cz.webactive,com.mypackage
+	 * @param level log4jlevel
+	 */
+	public static void setLevel(String packs, Level level) {
+		try {
+<span class="fc" id="L268">			String[] packArr = Tools.getTokens(packs, &quot;,&quot;);</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">			for (String pack : packArr)</span>
+			{
+<span class="fc" id="L271">				ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) getLogger(pack);</span>
+<span class="fc" id="L272">				logger.setLevel(level);</span>
+			}
+		}
+<span class="nc" id="L275">		catch (Exception e) {</span>
+<span class="nc" id="L276">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L277">		}</span>
+<span class="fc" id="L278">	}</span>
+
+	public static void setLevel(Level level) {
+		try {
+<span class="fc" id="L282">			ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME); //NOSONAR</span>
+<span class="fc" id="L283">			LoggerContext lc = root.getLoggerContext();</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">			for (ch.qos.logback.classic.Logger log : lc.getLoggerList()) {</span>
+<span class="fc" id="L285">				log.setLevel(level);</span>
+<span class="fc" id="L286">			}</span>
+		}
+<span class="nc" id="L288">		catch (Exception e) {</span>
+<span class="nc" id="L289">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L290">		}</span>
+<span class="fc" id="L291">	}</span>
+
+	private static org.slf4j.Logger getLogger(Class&lt;?&gt; className) {
+		org.slf4j.Logger logger;
+<span class="fc bfc" id="L295" title="All 2 branches covered.">		if (className == null) {</span>
+<span class="fc" id="L296">			logger = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME); //NOSONAR</span>
+		}
+		else {
+<span class="fc" id="L299">			logger = LoggerFactory.getLogger(className);</span>
+		}
+
+<span class="fc" id="L302">		setMDC();</span>
+
+<span class="fc" id="L304">		return logger;</span>
+	}
+
+	private static org.slf4j.Logger getLogger(Object o)
+	{
+<span class="fc" id="L309">		String className = &quot;sk.iway.iwcm.Logger&quot;;</span>
+
+<span class="fc" id="L311">		String str = getObjectClassName(o);</span>
+<span class="fc bfc" id="L312" title="All 4 branches covered.">		if (str!=null &amp;&amp; looksLikeClassName(str))</span>
+		{
+			//ak to vyzera ako fqdn, pouzijeme to ako className
+<span class="fc" id="L315">			className = str;</span>
+		}
+
+<span class="fc" id="L318">		org.slf4j.Logger logger = LoggerFactory.getLogger(className);</span>
+<span class="fc" id="L319">		setMDC();</span>
+
+<span class="fc" id="L321">		return logger;</span>
+	}
+
+	private static String appendObjectName(Object o, String message)
+	{
+<span class="fc" id="L326">		String str = getObjectClassName(o);</span>
+<span class="pc bpc" id="L327" title="2 of 4 branches missed.">		if (str==null || looksLikeClassName(str)==false)</span>
+		{
+			//pridame do message aj str, aby sa nam vypisalo meno JSP suboru alebo co to vlastne je
+<span class="nc" id="L330">			return str+&quot;: &quot;+message;</span>
+		}
+<span class="fc" id="L332">		return message;</span>
+	}
+
+	private static String getObjectClassName(Object o) {
+<span class="fc bfc" id="L336" title="All 2 branches covered.">		if (o == null) {</span>
+<span class="fc" id="L337">			return null;</span>
+		}
+
+<span class="fc bfc" id="L340" title="All 2 branches covered.">		if (o instanceof String) {</span>
+			//str moze byt vo formate sk.iway.iwcm.Tools.class alebo aj /components/pokus.jsp
+<span class="fc" id="L342">			return  (String) o;</span>
+		}
+
+<span class="fc" id="L345">		return o.getClass().getName();</span>
+	}
+
+	private static boolean looksLikeClassName(String str)
+	{
+<span class="pc bpc" id="L350" title="3 of 8 branches missed.">		if (str.startsWith(&quot;sk.iway&quot;) || str.startsWith(&quot;org.&quot;) || str.startsWith(&quot;net.&quot;) || str.startsWith(&quot;com.&quot;))</span>
+		{
+<span class="fc" id="L352">			return true;</span>
+		}
+<span class="fc" id="L354">		return false;</span>
+	}
+
+	private static void setMDC() {
+<span class="fc" id="L358">		int userId = getUserId();</span>
+<span class="fc" id="L359">		String installName = getInstallName();</span>
+
+<span class="fc" id="L361">		MDC.put(&quot;userId&quot;, &quot;&quot; + userId);</span>
+<span class="fc" id="L362">		MDC.put(&quot;installName&quot;, installName);</span>
+<span class="fc" id="L363">		MDC.put(&quot;node&quot;, Constants.getString(&quot;clusterMyNodeName&quot;));</span>
+<span class="fc" id="L364">		MDC.put(&quot;nodeType&quot;, Constants.getString(&quot;clusterMyNodeType&quot;));</span>
+<span class="fc" id="L365">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">		if (rb != null) {</span>
+<span class="fc" id="L367">			String uri = rb.getUrl();</span>
+<span class="pc bpc" id="L368" title="1 of 4 branches missed.">			if (Tools.isNotEmpty(rb.getQueryString()) &amp;&amp; rb.getUrl().equals(&quot;/admin/logon.do&quot;)==false) uri += &quot;?&quot;+rb.getQueryString();</span>
+<span class="fc" id="L369">			MDC.put(&quot;URI&quot;, uri);</span>
+<span class="fc" id="L370">			MDC.put(&quot;Domain&quot;, rb.getDomain());</span>
+<span class="fc" id="L371">			MDC.put(&quot;User-Agent&quot;, rb.getUserAgent());</span>
+<span class="fc" id="L372">			MDC.put(&quot;IP&quot;, rb.getRemoteIP());</span>
+<span class="fc" id="L373">			MDC.put(&quot;Host&quot;, rb.getRemoteHost());</span>
+		}
+<span class="fc" id="L375">	}</span>
+
+	private static int getUserId() {
+<span class="fc" id="L378">		int userId = 0;</span>
+<span class="fc" id="L379">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L380" title="All 4 branches covered.">		if (rb != null &amp;&amp; rb.getUserId() &gt; 0) {</span>
+<span class="fc" id="L381">			userId = rb.getUserId();</span>
+		}
+
+<span class="fc" id="L384">		return userId;</span>
+	}
+
+	public static void setInstallName(String installName) {
+<span class="fc" id="L388">		Logger.installName = installName;</span>
+<span class="fc" id="L389">	}</span>
+
+	public static String getInstallName()
+	{
+<span class="fc" id="L393">		String logInstallName = Constants.getString(&quot;logInstallName&quot;);</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(logInstallName)) return logInstallName;</span>
+
+<span class="fc" id="L396">		return Logger.installName;</span>
+	}
+
+	public static void info(String message) {
+<span class="nc" id="L400">		Class&lt;?&gt; c = Util.getCallingClass();</span>
+<span class="nc" id="L401">		info(c, message);</span>
+<span class="nc" id="L402">	}</span>
+
+	public static void info(Class&lt;?&gt; c, String message)
+	{
+<span class="fc" id="L406">		getLogger(c).info(message);</span>
+<span class="fc" id="L407">	}</span>
+	public static void info(Class&lt;?&gt; c, String message, Object... params)
+	{
+<span class="nc" id="L410">		getLogger(c).info(message, params);</span>
+<span class="nc" id="L411">	}</span>
+
+	public static void info(Object o, String message)
+	{
+<span class="fc" id="L415">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">		if (l.isInfoEnabled()) l.info(appendObjectName(o, message));</span>
+<span class="fc" id="L417">	}</span>
+	public static void info(Object o, String message, Object... params)
+	{
+<span class="nc" id="L420">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">		if (l.isInfoEnabled()) l.info(appendObjectName(o, message), params);</span>
+<span class="nc" id="L422">	}</span>
+
+	public static void debug(String message) {
+<span class="nc" id="L425">		Class&lt;?&gt; c = Util.getCallingClass();</span>
+<span class="nc" id="L426">		debug(c, message);</span>
+<span class="nc" id="L427">	}</span>
+
+	public static void debug(Class&lt;?&gt; c, String message)
+	{
+<span class="fc" id="L431">		getLogger(c).debug(message);</span>
+<span class="fc" id="L432">	}</span>
+	public static void debug(Class&lt;?&gt; c, String message, Object... params)
+	{
+<span class="fc" id="L435">		getLogger(c).debug(message, params);</span>
+<span class="fc" id="L436">	}</span>
+
+	//Tato metoda sa vola typicky s name ako String, ale nejde to spravit inak kedze druha je Class&lt;&gt; a to nevie kompiler spravit
+   	public static void debug(Object o, String message)
+	{
+<span class="fc" id="L441">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="fc bfc" id="L442" title="All 2 branches covered.">		if (l.isDebugEnabled()) l.debug(appendObjectName(o, message));</span>
+<span class="fc" id="L443">	}</span>
+	public static void debug(Object o, String message, Object... params)
+	{
+<span class="nc" id="L446">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		if (l.isDebugEnabled()) l.debug(appendObjectName(o, message), params);</span>
+<span class="nc" id="L448">	}</span>
+
+	public static void warn(String message) {
+<span class="nc" id="L451">		Class&lt;?&gt; c = Util.getCallingClass();</span>
+<span class="nc" id="L452">		warn(c, message);</span>
+<span class="nc" id="L453">	}</span>
+
+	public static void warn(Class&lt;?&gt; c, String message) {
+<span class="nc" id="L456">		getLogger(c).warn(message);</span>
+<span class="nc" id="L457">	}</span>
+	public static void warn(Class&lt;?&gt; c, String message, Object... params) {
+<span class="nc" id="L459">		getLogger(c).warn(message);</span>
+<span class="nc" id="L460">	}</span>
+
+	public static void warn(Object o, String message){
+<span class="fc" id="L463">		getLogger(o).warn(message);</span>
+<span class="fc" id="L464">	}</span>
+	public static void warn(Object o, String message, Object... params){
+<span class="nc" id="L466">		getLogger(o).warn(message);</span>
+<span class="nc" id="L467">	}</span>
+
+	public static void error(Class&lt;?&gt; c, String message)
+	{
+<span class="fc" id="L471">		getLogger(c).error(message);</span>
+<span class="fc" id="L472">	}</span>
+	public static void error(Class&lt;?&gt; c, String message, Object... params)
+	{
+<span class="nc" id="L475">		getLogger(c).error(message, params);</span>
+<span class="nc" id="L476">	}</span>
+
+	public static void error(Throwable t) {
+<span class="nc" id="L479">		Class&lt;?&gt; c = Util.getCallingClass();</span>
+<span class="nc" id="L480">		getLogger(c).error(t.getMessage(), t);</span>
+<span class="nc" id="L481">	}</span>
+
+	public static void error(Exception e) {
+<span class="fc" id="L484">		Class&lt;?&gt; c = Util.getCallingClass();</span>
+<span class="fc" id="L485">		error(c, e);</span>
+<span class="fc" id="L486">	}</span>
+
+	public static void error(Class&lt;?&gt; c, Exception e)
+	{
+<span class="fc" id="L490">		getLogger(c).error(e.getMessage(), e);</span>
+<span class="fc" id="L491">	}</span>
+	public static void error(Class&lt;?&gt; c, Exception e, String message, Object... params)
+	{
+<span class="nc" id="L494">		getLogger(c).error(message, e, params);</span>
+<span class="nc" id="L495">	}</span>
+
+	public static void error(Class&lt;?&gt; c, String message, Throwable t) {
+<span class="nc" id="L498">		getLogger(c).error(message, t);</span>
+<span class="nc" id="L499">	}</span>
+	public static void error(Class&lt;?&gt; c, String message, Throwable t, Object... params) {
+<span class="nc" id="L501">		getLogger(c).error(message, t, params);</span>
+<span class="nc" id="L502">	}</span>
+
+	public static void error(Object o, String message)
+	{
+<span class="fc" id="L506">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="pc bpc" id="L507" title="1 of 2 branches missed.">		if (l.isErrorEnabled()) l.error(appendObjectName(o, message));</span>
+<span class="fc" id="L508">	}</span>
+	public static void error(Object o, String message, Object... params)
+	{
+<span class="nc" id="L511">		org.slf4j.Logger l = getLogger(o);</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">		if (l.isErrorEnabled()) l.error(appendObjectName(o, message), params);</span>
+<span class="nc" id="L513">	}</span>
+
+	/**
+	 * @deprecated - use error
+	 */
+	@Deprecated
+	public static void fatal(Class&lt;?&gt; c, String message) {
+<span class="nc" id="L520">		getLogger(c).error(message);</span>
+<span class="nc" id="L521">	}</span>
+
+	public static void printfDebug(Class&lt;?&gt; source, String format, Object...args)
+	{
+<span class="nc" id="L525">		debug(source, String.format(format, args));</span>
+<span class="nc" id="L526">	}</span>
+
+	public static void debugMemInfo()
+	{
+<span class="pc bpc" id="L530" title="1 of 2 branches missed.">		if(!isLevel(Level.DEBUG)) {</span>
+<span class="nc" id="L531">			return;</span>
+		}
+
+<span class="fc" id="L534">		Runtime rt = Runtime.getRuntime();</span>
+<span class="fc" id="L535">	   	long free = rt.freeMemory();</span>
+<span class="fc" id="L536">	   	long total = rt.totalMemory();</span>
+<span class="fc" id="L537">	   	long used = total - free;</span>
+<span class="fc" id="L538">	   	Logger.debug(InitServlet.class, &quot;MEM: F=&quot;+(free/1024/1024)+&quot; T=&quot; + (total/1024/1024) + &quot; U=&quot;+(used/1024/1024));</span>
+<span class="fc" id="L539">	}</span>
+
+	/**
+	 * Vypise do logu vsetky hodnoty HTTP parametrov
+	 * @param request
+	 */
+	public static void debugAllParameters(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L547" title="All 2 branches missed.">		if(!isLevel(Level.DEBUG)) {</span>
+<span class="nc" id="L548">			return;</span>
+		}
+
+		try
+		{
+<span class="nc" id="L553">			Enumeration&lt;String&gt; e = request.getParameterNames();</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">			while (e.hasMoreElements())</span>
+			{
+<span class="nc" id="L556">				String name = e.nextElement();</span>
+<span class="nc" id="L557">				String[] values = request.getParameterValues(name);</span>
+<span class="nc bnc" id="L558" title="All 2 branches missed.">				for (String value : values)</span>
+				{
+<span class="nc" id="L560">					Logger.debug(Logger.class, &quot;debugAllParameters: name=&quot;+name+&quot; value=&quot;+value);</span>
+				}
+<span class="nc" id="L562">			}</span>
+		}
+<span class="nc" id="L564">		catch (Exception e)</span>
+		{
+<span class="nc" id="L566">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L567">		}</span>
+<span class="nc" id="L568">	}</span>
+
+	/**
+	 * Vypise do logu vsetky HTTP hlavicky
+	 * @param request
+	 */
+	public static void debugAllHeaders(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L576" title="All 2 branches missed.">		if(!isLevel(Level.DEBUG)) {</span>
+<span class="nc" id="L577">			return;</span>
+		}
+
+		try
+		{
+<span class="nc" id="L582">			Enumeration&lt;String&gt; e = request.getHeaderNames();</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">			while (e.hasMoreElements())</span>
+			{
+<span class="nc" id="L585">				String name = e.nextElement();</span>
+<span class="nc" id="L586">				Enumeration&lt;String&gt; h = request.getHeaders(name);</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">				while (h.hasMoreElements())</span>
+				{
+<span class="nc" id="L589">					String value = h.nextElement();</span>
+<span class="nc" id="L590">					Logger.debug(Logger.class, &quot;debugAllHeaders: name=&quot;+name+&quot; value=&quot;+value);</span>
+<span class="nc" id="L591">				}</span>
+<span class="nc" id="L592">			}</span>
+		}
+<span class="nc" id="L594">		catch (Exception e)</span>
+		{
+<span class="nc" id="L596">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L597">		}</span>
+<span class="nc" id="L598">	}</span>
+
+	/**
+	 * Zaloguje do debugu SQL query z JPA
+	 * @param info
+	 * @param query
+	 */
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	public static void debugQuery(String info, Query query)
+	{
+<span class="nc bnc" id="L608" title="All 2 branches missed.">		if(!isLevel(Level.DEBUG)) {</span>
+<span class="nc" id="L609">			return;</span>
+		}
+
+		try
+		{
+<span class="nc" id="L614">			DatabaseQuery databaseQuery = ((EJBQueryImpl) query).getDatabaseQuery();</span>
+<span class="nc" id="L615">			String sqlString = databaseQuery.getSQLString();</span>
+<span class="nc" id="L616">			Logger.debug(DatabaseQuery.class, info + &quot;:\n&quot; + sqlString);</span>
+		}
+<span class="nc" id="L618">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L620">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L621">		}</span>
+<span class="nc" id="L622">	}</span>
+
+	public static String getStackTrace(Exception ex)
+	{
+<span class="nc" id="L626">		StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L627">		ex.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L629">		return sw.toString();</span>
+	}
+
+	public static void debug(Map&lt;String, List&lt;String&gt;&gt; requestProperties) {
+<span class="nc" id="L633">		System.out.println(&quot;RequestProperties:&quot;); //NOSONAR</span>
+<span class="nc bnc" id="L634" title="All 2 branches missed.">		for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : requestProperties.entrySet())</span>
+<span class="nc" id="L635">			System.out.println(&quot;Key = &quot; + entry.getKey() + &quot;, Value = &quot; + entry.getValue()); //NOSONAR</span>
+<span class="nc" id="L636">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

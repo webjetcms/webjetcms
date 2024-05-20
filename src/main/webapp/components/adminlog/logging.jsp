@@ -19,7 +19,7 @@
 <%@ include file="/admin/layout_top.jsp" %>
 
 <div class="row title">
-    <h1 class="page-title"><i class="fa icon-list"></i><iwcm:text key="components.adminlog.adminlog"/><i class="fa fa-angle-right"></i><iwcm:text key="components.adminlog.logging"/></h1>
+    <h1 class="page-title"><i class="fa icon-list"></i><iwcm:text key="components.adminlog.adminlog"/><i class="ti ti-chevron-right"></i><iwcm:text key="components.adminlog.logging"/></h1>
 </div>
 
 <form method="post" action="/admin/adminlog/logging">

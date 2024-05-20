@@ -27,8 +27,8 @@ Scenario('Zoznamu web stranok + overenie stranky s docId 4', ({ I, DT }) => {
     I.fillField({css: "input.dt-filter-title"}, "Úvodná stránka");
     I.pressKey('Enter', "input.dt-filter-name");
 
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-edit");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-edit");
     DT.waitForLoader();
 });
 
@@ -49,18 +49,18 @@ Scenario('Vyhladavanie v poliach @singlethread', ({ I, DT }) => {
     //Zobraz všetky stĺpce
     var container = "#datatableInit_wrapper";
 
-    I.click(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-settings");
     I.wait(1);
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForElement(locate("button").withText("Zobraziť všetky"));
     I.click(locate("button").withText("Zobraziť všetky"));
     I.wait(5);
-    I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
+    I.forceClick({css: "button.btn.colvis-postfix.btn-primary.dt-close-modal"});
 
     DT.waitForLoader();
 
     //Kôs adresár lebo má veľa web stránok kde môžem testovať filtre
-    I.click("#pills-trash-tab");
+    I.clickCss("#pills-trash-tab");
     I.wait(5);
     DT.waitForLoader();
 
@@ -133,7 +133,7 @@ Scenario('Vyhladavanie v poliach @singlethread', ({ I, DT }) => {
 
     I.click(locate('button').withAttr({ title: 'Zobrazenie stĺpcov' }));
     I.wait(2);
-    I.forceClick("#datatableInit_wrapper button.buttons-colvisRestore");
+    I.forceClick({css: "#datatableInit_wrapper button.buttons-colvisRestore"});
     I.wait(5);
     DT.waitForLoader();
 });
@@ -217,17 +217,17 @@ Scenario('Overenie funkcionalit stranok na frontende', ({ I }) => {
 Scenario('Overenie chyby nastavenia zaporneho groupId', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
-    I.click("#pills-changes-tab");
+    I.clickCss("#pills-changes-tab");
     DT.waitForLoader();
     DT.filter("title", "page-2021-02-23-134924-937");
 
     I.see("page-2021-02-23-134924-937", "table.datatableInit tbody");
 
-    I.click("#pills-pages-tab");
+    I.clickCss("#pills-pages-tab");
 
     I.dontSee("page-2021-02-23-134924-937", "table.datatableInit tbody");
 
-    I.forceClick({ css: '#dtRecursiveSwitch' });
+    I.forceClick({css: '#dtRecursiveSwitch'});
     DT.waitForLoader();
 
     I.dontSeeElement("div.toast-title");
@@ -246,10 +246,10 @@ Scenario('Pole typu select-editable', ({ I, DT, DTE }) => {
 
     I.click("Test zmeny sablony cez vnorenu editaciu");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     I.wait(2);
 
-    I.click("div.DTE_Field_Name_tempId button.btn-edit");
+    I.clickCss("div.DTE_Field_Name_tempId button.btn-edit");
 
     I.waitForElement("#modalIframe");
     I.wait(4);
@@ -263,7 +263,7 @@ Scenario('Pole typu select-editable', ({ I, DT, DTE }) => {
 
     I.switchTo();
     I.wait(2);
-    I.click("#modalIframe div.modal-footer button.btn-primary");
+    I.clickCss("#modalIframe div.modal-footer button.btn-primary");
     I.wait(5);
 
     I.see(newTempName, "div.DTE_Field_Name_tempId div.filter-option div.filter-option-inner-inner");

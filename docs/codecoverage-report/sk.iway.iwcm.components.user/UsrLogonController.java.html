@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsrLogonController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.user</a> &gt; <span class="el_source">UsrLogonController.java</span></div><h1>UsrLogonController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.user;
+
+import java.util.Enumeration;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.filebrowser.EditForm;
+import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Logon on standard webpage to private section,
+ * page should have included /components/user/logon.jsp
+ */
+@Controller
+<span class="fc" id="L32">public class UsrLogonController extends WebjetComponentAbstract {</span>
+
+    @GetMapping(&quot;/usrlogon.struts&quot;)
+    public String usrlogonShowForm(HttpServletRequest request) {
+<span class="nc" id="L36">        return SpringUrlMapping.getCustomPath(&quot;/components/user/logon&quot;, request);</span>
+    }
+
+    @PostMapping(&quot;/usrlogon.struts&quot;)
+    @ResponseBody
+    public void usrlogon(@RequestParam(required = false) String username, @RequestParam(required = false) String password, @RequestParam(required = false) Integer docId, HttpServletRequest request, HttpServletResponse response) {
+
+<span class="fc" id="L43">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L44">        String afterLogonRedirect = (String)session.getAttribute(&quot;afterLogonRedirect&quot;);</span>
+<span class="fc" id="L45">        int origDocId = Tools.getIntValue(request.getParameter(&quot;origDocId&quot;), -1);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (origDocId&gt;0) docId = origDocId;</span>
+
+<span class="fc" id="L48">        List&lt;String&gt; errors = LogonTools.logonUserWithAllChecks(request, username, password);</span>
+        try {
+<span class="fc" id="L50">            Identity user = UsersDB.getCurrentUser(request);</span>
+
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">            if (errors.isEmpty() &amp;&amp; user != null) {</span>
+
+<span class="fc" id="L54">                PathFilter.setNginxProxyMode(request, response);</span>
+
+                //zavola triedu/metodu z konstanty. (robene kvoli plussport, kde sa namiesto session pouzila cookie)
+<span class="fc" id="L57">		        LogonTools.afterLogon(user, request, response);</span>
+
+
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                if (afterLogonRedirect!=null)</span>
+                {
+<span class="fc" id="L62">                    Logger.println(LogonTools.class, &quot;session ID=&quot;+request.getSession().getId());</span>
+
+<span class="fc" id="L64">                    request.setAttribute(&quot;afterLogonRedirect&quot;, afterLogonRedirect);</span>
+<span class="fc" id="L65">                    Logger.println(LogonTools.class, &quot;logon redirect url=&quot;+afterLogonRedirect);</span>
+
+<span class="fc" id="L67">                    Logger.println(this, &quot;form=&quot;+docId);</span>
+
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">                    if (afterLogonRedirect.startsWith(&quot;/files&quot;))</span>
+                    {
+                        //ak je to subor pre istotu znova skontroluj prava, aby sa to necyklilo
+<span class="fc" id="L72">                        EditForm ef = PathFilter.isPasswordProtected(afterLogonRedirect, request);</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">                        if (ef != null &amp;&amp; ef.isAccessibleFor(user)==false)</span>
+                        {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                            if (PathFilter.doFileForbiddenRedirect(ef, user, afterLogonRedirect, request, response)) return;</span>
+                        }
+                    }
+
+<span class="pc bpc" id="L79" title="3 of 4 branches missed.">                    if (afterLogonRedirect.startsWith(&quot;http&quot;) &amp;&amp; afterLogonRedirect.indexOf(&quot;/files/&quot;)==-1)</span>
+                    {
+<span class="nc" id="L81">                        response.sendRedirect(afterLogonRedirect);</span>
+<span class="nc" id="L82">                        return;</span>
+                    }
+
+<span class="fc" id="L85">                    request.getRequestDispatcher(&quot;/components/user/fileforward.jsp&quot;).forward(request, response);</span>
+<span class="fc" id="L86">                    return;</span>
+                }
+                else
+                {
+<span class="fc" id="L90">                    request.setAttribute(&quot;docid&quot;, Integer.toString(docId));</span>
+                }
+            }
+
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">            if (docId!=null &amp;&amp; docId.intValue()&gt;0) {</span>
+
+<span class="fc" id="L96">                StringBuilder url = new StringBuilder(&quot;/showdoc.do?docid=&quot;).append(docId.intValue());</span>
+<span class="fc" id="L97">                boolean useRedirect = false;</span>
+
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">                if (errors.isEmpty() &amp;&amp; user != null) {</span>
+<span class="fc" id="L100">                    String succesUrl = request.getParameter(&quot;successUrl&quot;);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">                    if (request.getAttribute(&quot;successUrl&quot;)!=null){</span>
+<span class="nc" id="L102">                        succesUrl = request.getAttribute(&quot;successUrl&quot;).toString();</span>
+                    }
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    if (Tools.isNotEmpty(succesUrl))</span>
+                    {
+<span class="nc" id="L106">                        url = new StringBuilder(succesUrl);</span>
+                        //we must redirect, because we are allready in Struts action and the mapping to docid will not work
+<span class="nc" id="L108">                        useRedirect = true;</span>
+                    }
+
+                    //skus najst redirect podla user skupiny
+<span class="fc" id="L112">                    StringTokenizer st = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
+                    int groupId;
+                    String tmpRedir;
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    while (st.hasMoreTokens())</span>
+                    {
+<span class="fc" id="L117">                        groupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="fc" id="L118">                        tmpRedir = request.getParameter(&quot;afterLogonRedirectGroup_&quot;+groupId);</span>
+<span class="pc bpc" id="L119" title="2 of 4 branches missed.">                        if (groupId &gt; 0 &amp;&amp; Tools.isNotEmpty(tmpRedir))</span>
+                        {
+<span class="nc" id="L121">                            url = new StringBuilder(tmpRedir);</span>
+<span class="nc" id="L122">                            break;</span>
+                        }
+                    }
+                }
+
+<span class="fc" id="L127">				Enumeration&lt;String&gt; parameters = request.getParameterNames();</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">				while (parameters.hasMoreElements())</span>
+				{
+<span class="fc" id="L130">					String name = parameters.nextElement();</span>
+<span class="fc bfc" id="L131" title="All 6 branches covered.">                    if (&quot;docid&quot;.equals(name) || &quot;docId&quot;.equals(name) || &quot;username&quot;.equals(name) ||</span>
+<span class="fc bfc" id="L132" title="All 4 branches covered.">                        &quot;password&quot;.equals(name) || &quot;doShowdocAction&quot;.equals(name) ||</span>
+<span class="pc bpc" id="L133" title="1 of 4 branches missed.">                        &quot;emailLogon&quot;.equals(name) || &quot;successUrl&quot;.equals(name) ||</span>
+<span class="pc bpc" id="L134" title="3 of 4 branches missed.">                        &quot;origDocId&quot;.equals(name) || &quot;tryNormalLogon&quot;.equals(name) ||</span>
+<span class="nc bnc" id="L135" title="All 4 branches missed.">                        &quot;newPassword&quot;.equals(name) || &quot;retypeNewPassword&quot;.equals(name) ||</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                        &quot;org.apache.struts.taglib.html.TOKEN&quot;.equals(name)) continue;</span>
+
+<span class="nc" id="L138">					String values[] = request.getParameterValues(name);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                    for (int i=0; i&lt;values.length; i++)</span>
+                    {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                        if (url.indexOf(&quot;?&quot;)==-1)</span>
+                        {
+<span class="nc" id="L143">                            url.append('?').append(Tools.URLEncode(name)).append('=').append(Tools.URLEncode(values[i]));</span>
+                        }
+                        else
+                        {
+<span class="nc" id="L147">                            url.append('&amp;').append(Tools.URLEncode(name)).append('=').append(Tools.URLEncode(values[i]));</span>
+                        }
+                    }
+<span class="nc" id="L150">				}</span>
+
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">                if (useRedirect) {</span>
+<span class="nc" id="L153">                    response.sendRedirect(url.toString());</span>
+                } else {
+<span class="fc" id="L155">                    request.getRequestDispatcher(url.toString()).forward(request, response);</span>
+                }
+<span class="fc" id="L157">                return;</span>
+            }
+
+<span class="fc" id="L160">            String origPath = PathFilter.getOrigPath(request);</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">            if (&quot;/usrlogon.do&quot;.equals(origPath)) {</span>
+<span class="fc" id="L162">                request.getRequestDispatcher(SpringUrlMapping.getCustomPath(&quot;/components/user/logon&quot;, request)+&quot;.jsp&quot;).forward(request, response);</span>
+<span class="fc" id="L163">                return;</span>
+            }
+<span class="nc" id="L165">            response.sendRedirect(origPath);</span>
+<span class="nc" id="L166">        } catch (Exception ex) {</span>
+<span class="nc" id="L167">            Logger.error(getClass(), ex);</span>
+<span class="nc" id="L168">        }</span>
+<span class="nc" id="L169">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

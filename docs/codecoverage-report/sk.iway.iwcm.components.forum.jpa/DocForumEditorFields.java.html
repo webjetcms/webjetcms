@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocForumEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forum.jpa</a> &gt; <span class="el_source">DocForumEditorFields.java</span></div><h1>DocForumEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forum.jpa;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Getter
+@Setter
+<span class="fc" id="L15">public class DocForumEditorFields extends BaseEditorFields {</span>
+
+    //Column for stutus icons
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;webpages.icons.title&quot;,
+        hiddenEditor = true, hidden = false, visible = true, sortAfter = &quot;id&quot;, className = &quot;allow-html&quot;, orderable = false
+    )
+    private String statusIcons;
+
+    public void fromDocForum(DocForumEntity entity, HttpServletRequest request, Prop prop) {
+<span class="fc" id="L24">        StringBuilder iconsHtml = new StringBuilder();</span>
+
+<span class="fc" id="L26">        String link = &quot;/showdoc.do?docid=&quot;+entity.getDocId();</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (entity.getDocDetails()!=null) link = entity.getDocDetails().getVirtualPath();</span>
+
+        //If entity is deleted or non active (marked as red)
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        if(entity.getDeleted()) addRowClass(&quot;is-not-public&quot;);</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">        else if(!entity.getConfirmed()) addRowClass(&quot;is-not-public&quot;);</span>
+
+        //If it's message board, add param so link wil open it
+<span class="pc bpc" id="L34" title="2 of 6 branches missed.">        if(entity.getId()!=null &amp;&amp; entity.getParentId()!=null &amp;&amp; entity.getParentId().intValue()&gt;0) link = Tools.addParameterToUrl(link, &quot;pId&quot;, String.valueOf(entity.getParentId()));</span>
+
+        //Icon to open page
+<span class="fc" id="L37">        iconsHtml.append(&quot;&lt;a href=\&quot;&quot; + link + &quot;\&quot; target=\&quot;_blank\&quot; class=\&quot;preview-page-link\&quot; title=\&quot;&quot; + prop.getText(&quot;history.showPage&quot;) + &quot;\&quot;&gt;&lt;i class=\&quot;far fa-eye\&quot;&gt;&lt;/i&gt;&lt;/a&gt; &quot;);</span>
+
+        //Add icon about confirm status
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if(entity.getConfirmed()) {</span>
+<span class="fc" id="L41">            iconsHtml.append(&quot;&lt;i class=\&quot;fa-regular fa-circle-check\&quot; style=\&quot;color: #00be9f;width: 1.25em;\&quot;&gt;&lt;/i&gt;&quot;);</span>
+        } else {
+<span class="nc" id="L43">            iconsHtml.append(&quot;&lt;i class=\&quot;fa-regular fa-circle-xmark\&quot; style=\&quot;color: #ff4b58;width: 1.25em;\&quot;&gt;&lt;/i&gt;&quot;);</span>
+        }
+
+        //Add icon about active status
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if(!entity.getActive()) </span>
+            //active = false in document_forum table, this one forum is locked
+<span class="nc" id="L49">            iconsHtml.append(&quot;&lt;i class=\&quot;fa-solid fa-lock\&quot; style=\&quot;color: #000000;width: 1.25em;\&quot;&gt;&lt;/i&gt;&quot;);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        else if(entity.getForumGroupEntity() != null)</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">                if(!entity.getForumGroupEntity().getActive())</span>
+                    //active = false in forum tabel, mean all forum's under specific DocId are locked
+                    //!! BEWARE, is whole forum group is locked (active = false), it doesn't necesary mean that forum is set as locked and can have active = true  
+<span class="nc" id="L54">                    iconsHtml.append(&quot;&lt;i class=\&quot;fa-solid fa-lock\&quot; style=\&quot;color: #000000;width: 1.25em;\&quot;&gt;&lt;/i&gt;&quot;);</span>
+
+        //If page is soft deleted, add icon to recover page
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if(entity.getDeleted()) {</span>
+<span class="fc" id="L58">            link = &quot;javascript:recoverForum(&quot; + entity.getId() + &quot;);&quot;;</span>
+<span class="fc" id="L59">            iconsHtml.append(&quot;&lt;a href=\&quot;&quot; + link + &quot;\&quot; title=\&quot;&quot; + prop.getText(&quot;components.banner.recover&quot;) + &quot;\&quot;&gt;&lt;i class=\&quot;fa-regular fa-trash-can-undo\&quot; style=\&quot;color: #fabd00;width: 1.25em;\&quot;&gt;&lt;/i&gt;&lt;/a&gt; &quot;);</span>
+        }
+
+<span class="fc" id="L62">        iconsHtml.append( getStatusIconsHtml() );</span>
+<span class="fc" id="L63">        statusIcons = iconsHtml.toString();</span>
+<span class="fc" id="L64">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

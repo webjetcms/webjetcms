@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ObjectFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather.met.no.generated</a> &gt; <span class="el_source">ObjectFactory.java</span></div><h1>ObjectFactory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather.met.no.generated;
+
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlElementDecl;
+import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.namespace.QName;
+
+
+/**
+ * This object contains factory methods for each 
+ * Java content interface and Java element interface 
+ * generated in the generated package. 
+ * &lt;p&gt;An ObjectFactory allows you to programatically 
+ * construct new instances of the Java representation 
+ * for XML content. The Java representation of XML 
+ * content can consist of schema derived interfaces 
+ * and classes representing the binding of schema 
+ * type definitions, element declarations and model 
+ * groups.  Factory methods for each of these are 
+ * provided in this class.
+ * 
+ */
+@XmlRegistry
+public class ObjectFactory {
+
+<span class="nc" id="L26">    private final static QName _LocationTypeMaxTemperature_QNAME = new QName(&quot;&quot;, &quot;maxTemperature&quot;);</span>
+<span class="nc" id="L27">    private final static QName _LocationTypeSymbol_QNAME = new QName(&quot;&quot;, &quot;symbol&quot;);</span>
+<span class="nc" id="L28">    private final static QName _LocationTypeHighestTemperature_QNAME = new QName(&quot;&quot;, &quot;highestTemperature&quot;);</span>
+<span class="nc" id="L29">    private final static QName _LocationTypeWindGust_QNAME = new QName(&quot;&quot;, &quot;windGust&quot;);</span>
+<span class="nc" id="L30">    private final static QName _LocationTypeCurrentDirection_QNAME = new QName(&quot;&quot;, &quot;currentDirection&quot;);</span>
+<span class="nc" id="L31">    private final static QName _LocationTypeStateOfTheSea_QNAME = new QName(&quot;&quot;, &quot;stateOfTheSea&quot;);</span>
+<span class="nc" id="L32">    private final static QName _LocationTypeMeanabsoluteerror_QNAME = new QName(&quot;&quot;, &quot;meanabsoluteerror&quot;);</span>
+<span class="nc" id="L33">    private final static QName _LocationTypeMaximumPrecipitation_QNAME = new QName(&quot;&quot;, &quot;maximumPrecipitation&quot;);</span>
+<span class="nc" id="L34">    private final static QName _LocationTypeTidalwater_QNAME = new QName(&quot;&quot;, &quot;tidalwater&quot;);</span>
+<span class="nc" id="L35">    private final static QName _LocationTypeWaveHeight_QNAME = new QName(&quot;&quot;, &quot;waveHeight&quot;);</span>
+<span class="nc" id="L36">    private final static QName _LocationTypePrecipitation_QNAME = new QName(&quot;&quot;, &quot;precipitation&quot;);</span>
+<span class="nc" id="L37">    private final static QName _LocationTypeScore_QNAME = new QName(&quot;&quot;, &quot;score&quot;);</span>
+<span class="nc" id="L38">    private final static QName _LocationTypeAreaMaxWindSpeed_QNAME = new QName(&quot;&quot;, &quot;areaMaxWindSpeed&quot;);</span>
+<span class="nc" id="L39">    private final static QName _LocationTypeSnowDepth_QNAME = new QName(&quot;&quot;, &quot;snowDepth&quot;);</span>
+<span class="nc" id="L40">    private final static QName _LocationTypeLowClouds_QNAME = new QName(&quot;&quot;, &quot;lowClouds&quot;);</span>
+<span class="nc" id="L41">    private final static QName _LocationTypeMinTemperature_QNAME = new QName(&quot;&quot;, &quot;minTemperature&quot;);</span>
+<span class="nc" id="L42">    private final static QName _LocationTypeBias_QNAME = new QName(&quot;&quot;, &quot;bias&quot;);</span>
+<span class="nc" id="L43">    private final static QName _LocationTypeTemperature_QNAME = new QName(&quot;&quot;, &quot;temperature&quot;);</span>
+<span class="nc" id="L44">    private final static QName _LocationTypeWeather_QNAME = new QName(&quot;&quot;, &quot;weather&quot;);</span>
+<span class="nc" id="L45">    private final static QName _LocationTypeHumidity_QNAME = new QName(&quot;&quot;, &quot;humidity&quot;);</span>
+<span class="nc" id="L46">    private final static QName _LocationTypeNumberofobservations_QNAME = new QName(&quot;&quot;, &quot;numberofobservations&quot;);</span>
+<span class="nc" id="L47">    private final static QName _LocationTypeWindDirection_QNAME = new QName(&quot;&quot;, &quot;windDirection&quot;);</span>
+<span class="nc" id="L48">    private final static QName _LocationTypeMaxTemperatureDay_QNAME = new QName(&quot;&quot;, &quot;maxTemperatureDay&quot;);</span>
+<span class="nc" id="L49">    private final static QName _LocationTypeWindSpeed_QNAME = new QName(&quot;&quot;, &quot;windSpeed&quot;);</span>
+<span class="nc" id="L50">    private final static QName _LocationTypeWavePeriod_QNAME = new QName(&quot;&quot;, &quot;wavePeriod&quot;);</span>
+<span class="nc" id="L51">    private final static QName _LocationTypeMinTemperatureNight_QNAME = new QName(&quot;&quot;, &quot;minTemperatureNight&quot;);</span>
+<span class="nc" id="L52">    private final static QName _LocationTypeUv_QNAME = new QName(&quot;&quot;, &quot;uv&quot;);</span>
+<span class="nc" id="L53">    private final static QName _LocationTypeHighClouds_QNAME = new QName(&quot;&quot;, &quot;highClouds&quot;);</span>
+<span class="nc" id="L54">    private final static QName _LocationTypeMaxTemperatureNight_QNAME = new QName(&quot;&quot;, &quot;maxTemperatureNight&quot;);</span>
+<span class="nc" id="L55">    private final static QName _LocationTypeWindProbability_QNAME = new QName(&quot;&quot;, &quot;windProbability&quot;);</span>
+<span class="nc" id="L56">    private final static QName _LocationTypeMaxWaveHeight_QNAME = new QName(&quot;&quot;, &quot;maxWaveHeight&quot;);</span>
+<span class="nc" id="L57">    private final static QName _LocationTypeSurfaceTemperature_QNAME = new QName(&quot;&quot;, &quot;surfaceTemperature&quot;);</span>
+<span class="nc" id="L58">    private final static QName _LocationTypePressure_QNAME = new QName(&quot;&quot;, &quot;pressure&quot;);</span>
+<span class="nc" id="L59">    private final static QName _LocationTypeCloudiness_QNAME = new QName(&quot;&quot;, &quot;cloudiness&quot;);</span>
+<span class="nc" id="L60">    private final static QName _LocationTypeWaveDirection_QNAME = new QName(&quot;&quot;, &quot;waveDirection&quot;);</span>
+<span class="nc" id="L61">    private final static QName _LocationTypeSymbolProbability_QNAME = new QName(&quot;&quot;, &quot;symbolProbability&quot;);</span>
+<span class="nc" id="L62">    private final static QName _LocationTypeTemperatureProbability_QNAME = new QName(&quot;&quot;, &quot;temperatureProbability&quot;);</span>
+<span class="nc" id="L63">    private final static QName _LocationTypeGroundCover_QNAME = new QName(&quot;&quot;, &quot;groundCover&quot;);</span>
+<span class="nc" id="L64">    private final static QName _LocationTypeMinTemperatureDay_QNAME = new QName(&quot;&quot;, &quot;minTemperatureDay&quot;);</span>
+<span class="nc" id="L65">    private final static QName _LocationTypeMaxWindSpeed_QNAME = new QName(&quot;&quot;, &quot;maxWindSpeed&quot;);</span>
+<span class="nc" id="L66">    private final static QName _LocationTypeForestFire_QNAME = new QName(&quot;&quot;, &quot;forest-fire&quot;);</span>
+<span class="nc" id="L67">    private final static QName _LocationTypeMediumClouds_QNAME = new QName(&quot;&quot;, &quot;mediumClouds&quot;);</span>
+<span class="nc" id="L68">    private final static QName _LocationTypeDewpointTemperature_QNAME = new QName(&quot;&quot;, &quot;dewpointTemperature&quot;);</span>
+<span class="nc" id="L69">    private final static QName _LocationTypeLowestTemperature_QNAME = new QName(&quot;&quot;, &quot;lowestTemperature&quot;);</span>
+<span class="nc" id="L70">    private final static QName _LocationTypeFog_QNAME = new QName(&quot;&quot;, &quot;fog&quot;);</span>
+
+    /**
+     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: generated
+     * 
+     */
+<span class="nc" id="L76">    public ObjectFactory() {</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * Create an instance of {@link LocationType }
+     * 
+     */
+    public LocationType createLocationType() {
+<span class="nc" id="L84">        return new LocationType();</span>
+    }
+
+    /**
+     * Create an instance of {@link Weatherdata }
+     * 
+     */
+    public Weatherdata createWeatherdata() {
+<span class="nc" id="L92">        return new Weatherdata();</span>
+    }
+
+    /**
+     * Create an instance of {@link MetaType }
+     * 
+     */
+    public MetaType createMetaType() {
+<span class="nc" id="L100">        return new MetaType();</span>
+    }
+
+    /**
+     * Create an instance of {@link ProductType }
+     * 
+     */
+    public ProductType createProductType() {
+<span class="nc" id="L108">        return new ProductType();</span>
+    }
+
+    /**
+     * Create an instance of {@link Uv }
+     * 
+     */
+    public Uv createUv() {
+<span class="nc" id="L116">        return new Uv();</span>
+    }
+
+    /**
+     * Create an instance of {@link TimeType }
+     * 
+     */
+    public TimeType createTimeType() {
+<span class="nc" id="L124">        return new TimeType();</span>
+    }
+
+    /**
+     * Create an instance of {@link ModelType }
+     * 
+     */
+    public ModelType createModelType() {
+<span class="nc" id="L132">        return new ModelType();</span>
+    }
+
+    /**
+     * Create an instance of {@link Cloudiness }
+     * 
+     */
+    public Cloudiness createCloudiness() {
+<span class="nc" id="L140">        return new Cloudiness();</span>
+    }
+
+    /**
+     * Create an instance of {@link Pressure }
+     * 
+     */
+    public Pressure createPressure() {
+<span class="nc" id="L148">        return new Pressure();</span>
+    }
+
+    /**
+     * Create an instance of {@link Tidalwater }
+     * 
+     */
+    public Tidalwater createTidalwater() {
+<span class="nc" id="L156">        return new Tidalwater();</span>
+    }
+
+    /**
+     * Create an instance of {@link Precipitation }
+     * 
+     */
+    public Precipitation createPrecipitation() {
+<span class="nc" id="L164">        return new Precipitation();</span>
+    }
+
+    /**
+     * Create an instance of {@link Score }
+     * 
+     */
+    public Score createScore() {
+<span class="nc" id="L172">        return new Score();</span>
+    }
+
+    /**
+     * Create an instance of {@link Groundcover }
+     * 
+     */
+    public Groundcover createGroundcover() {
+<span class="nc" id="L180">        return new Groundcover();</span>
+    }
+
+    /**
+     * Create an instance of {@link Temperature }
+     * 
+     */
+    public Temperature createTemperature() {
+<span class="nc" id="L188">        return new Temperature();</span>
+    }
+
+    /**
+     * Create an instance of {@link Windspeed }
+     * 
+     */
+    public Windspeed createWindspeed() {
+<span class="nc" id="L196">        return new Windspeed();</span>
+    }
+
+    /**
+     * Create an instance of {@link UnitValue }
+     * 
+     */
+    public UnitValue createUnitValue() {
+<span class="nc" id="L204">        return new UnitValue();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.WindDirection }
+     * 
+     */
+    public LocationType.WindDirection createLocationTypeWindDirection() {
+<span class="nc" id="L212">        return new LocationType.WindDirection();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.StateOfTheSea }
+     * 
+     */
+    public LocationType.StateOfTheSea createLocationTypeStateOfTheSea() {
+<span class="nc" id="L220">        return new LocationType.StateOfTheSea();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.SnowDepth }
+     * 
+     */
+    public LocationType.SnowDepth createLocationTypeSnowDepth() {
+<span class="nc" id="L228">        return new LocationType.SnowDepth();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.Weather }
+     * 
+     */
+    public LocationType.Weather createLocationTypeWeather() {
+<span class="nc" id="L236">        return new LocationType.Weather();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.Symbol }
+     * 
+     */
+    public LocationType.Symbol createLocationTypeSymbol() {
+<span class="nc" id="L244">        return new LocationType.Symbol();</span>
+    }
+
+    /**
+     * Create an instance of {@link LocationType.ForestFire }
+     * 
+     */
+    public LocationType.ForestFire createLocationTypeForestFire() {
+<span class="nc" id="L252">        return new LocationType.ForestFire();</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maxTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMaxTemperature(Temperature value) {
+<span class="nc" id="L261">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMaxTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.Symbol }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;symbol&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.Symbol&gt; createLocationTypeSymbol(LocationType.Symbol value) {
+<span class="nc" id="L270">        return new JAXBElement&lt;LocationType.Symbol&gt;(_LocationTypeSymbol_QNAME, LocationType.Symbol.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;highestTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeHighestTemperature(Temperature value) {
+<span class="nc" id="L279">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeHighestTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;windGust&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Windspeed&gt; createLocationTypeWindGust(Windspeed value) {
+<span class="nc" id="L288">        return new JAXBElement&lt;Windspeed&gt;(_LocationTypeWindGust_QNAME, Windspeed.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;currentDirection&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeCurrentDirection(UnitValue value) {
+<span class="nc" id="L297">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeCurrentDirection_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.StateOfTheSea }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;stateOfTheSea&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.StateOfTheSea&gt; createLocationTypeStateOfTheSea(LocationType.StateOfTheSea value) {
+<span class="nc" id="L306">        return new JAXBElement&lt;LocationType.StateOfTheSea&gt;(_LocationTypeStateOfTheSea_QNAME, LocationType.StateOfTheSea.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;meanabsoluteerror&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeMeanabsoluteerror(UnitValue value) {
+<span class="nc" id="L315">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeMeanabsoluteerror_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Precipitation }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maximumPrecipitation&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Precipitation&gt; createLocationTypeMaximumPrecipitation(Precipitation value) {
+<span class="nc" id="L324">        return new JAXBElement&lt;Precipitation&gt;(_LocationTypeMaximumPrecipitation_QNAME, Precipitation.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Tidalwater }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;tidalwater&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Tidalwater&gt; createLocationTypeTidalwater(Tidalwater value) {
+<span class="nc" id="L333">        return new JAXBElement&lt;Tidalwater&gt;(_LocationTypeTidalwater_QNAME, Tidalwater.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;waveHeight&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeWaveHeight(UnitValue value) {
+<span class="nc" id="L342">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeWaveHeight_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Precipitation }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;precipitation&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Precipitation&gt; createLocationTypePrecipitation(Precipitation value) {
+<span class="nc" id="L351">        return new JAXBElement&lt;Precipitation&gt;(_LocationTypePrecipitation_QNAME, Precipitation.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Score }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;score&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Score&gt; createLocationTypeScore(Score value) {
+<span class="nc" id="L360">        return new JAXBElement&lt;Score&gt;(_LocationTypeScore_QNAME, Score.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;areaMaxWindSpeed&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Windspeed&gt; createLocationTypeAreaMaxWindSpeed(Windspeed value) {
+<span class="nc" id="L369">        return new JAXBElement&lt;Windspeed&gt;(_LocationTypeAreaMaxWindSpeed_QNAME, Windspeed.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.SnowDepth }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;snowDepth&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.SnowDepth&gt; createLocationTypeSnowDepth(LocationType.SnowDepth value) {
+<span class="nc" id="L378">        return new JAXBElement&lt;LocationType.SnowDepth&gt;(_LocationTypeSnowDepth_QNAME, LocationType.SnowDepth.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;lowClouds&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Cloudiness&gt; createLocationTypeLowClouds(Cloudiness value) {
+<span class="nc" id="L387">        return new JAXBElement&lt;Cloudiness&gt;(_LocationTypeLowClouds_QNAME, Cloudiness.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;minTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMinTemperature(Temperature value) {
+<span class="nc" id="L396">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMinTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;bias&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeBias(UnitValue value) {
+<span class="nc" id="L405">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeBias_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;temperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeTemperature(Temperature value) {
+<span class="nc" id="L414">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.Weather }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;weather&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.Weather&gt; createLocationTypeWeather(LocationType.Weather value) {
+<span class="nc" id="L423">        return new JAXBElement&lt;LocationType.Weather&gt;(_LocationTypeWeather_QNAME, LocationType.Weather.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;humidity&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeHumidity(UnitValue value) {
+<span class="nc" id="L432">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeHumidity_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;numberofobservations&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeNumberofobservations(UnitValue value) {
+<span class="nc" id="L441">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeNumberofobservations_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.WindDirection }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;windDirection&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.WindDirection&gt; createLocationTypeWindDirection(LocationType.WindDirection value) {
+<span class="nc" id="L450">        return new JAXBElement&lt;LocationType.WindDirection&gt;(_LocationTypeWindDirection_QNAME, LocationType.WindDirection.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maxTemperatureDay&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMaxTemperatureDay(Temperature value) {
+<span class="nc" id="L459">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMaxTemperatureDay_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;windSpeed&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Windspeed&gt; createLocationTypeWindSpeed(Windspeed value) {
+<span class="nc" id="L468">        return new JAXBElement&lt;Windspeed&gt;(_LocationTypeWindSpeed_QNAME, Windspeed.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;wavePeriod&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeWavePeriod(UnitValue value) {
+<span class="nc" id="L477">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeWavePeriod_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;minTemperatureNight&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMinTemperatureNight(Temperature value) {
+<span class="nc" id="L486">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMinTemperatureNight_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Uv }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;uv&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Uv&gt; createLocationTypeUv(Uv value) {
+<span class="nc" id="L495">        return new JAXBElement&lt;Uv&gt;(_LocationTypeUv_QNAME, Uv.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;highClouds&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Cloudiness&gt; createLocationTypeHighClouds(Cloudiness value) {
+<span class="nc" id="L504">        return new JAXBElement&lt;Cloudiness&gt;(_LocationTypeHighClouds_QNAME, Cloudiness.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maxTemperatureNight&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMaxTemperatureNight(Temperature value) {
+<span class="nc" id="L513">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMaxTemperatureNight_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;windProbability&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeWindProbability(UnitValue value) {
+<span class="nc" id="L522">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeWindProbability_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maxWaveHeight&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeMaxWaveHeight(UnitValue value) {
+<span class="nc" id="L531">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeMaxWaveHeight_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;surfaceTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeSurfaceTemperature(UnitValue value) {
+<span class="nc" id="L540">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeSurfaceTemperature_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Pressure }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;pressure&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Pressure&gt; createLocationTypePressure(Pressure value) {
+<span class="nc" id="L549">        return new JAXBElement&lt;Pressure&gt;(_LocationTypePressure_QNAME, Pressure.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;cloudiness&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Cloudiness&gt; createLocationTypeCloudiness(Cloudiness value) {
+<span class="nc" id="L558">        return new JAXBElement&lt;Cloudiness&gt;(_LocationTypeCloudiness_QNAME, Cloudiness.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;waveDirection&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeWaveDirection(UnitValue value) {
+<span class="nc" id="L567">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeWaveDirection_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;symbolProbability&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeSymbolProbability(UnitValue value) {
+<span class="nc" id="L576">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeSymbolProbability_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;temperatureProbability&quot;, scope = LocationType.class)
+    public JAXBElement&lt;UnitValue&gt; createLocationTypeTemperatureProbability(UnitValue value) {
+<span class="nc" id="L585">        return new JAXBElement&lt;UnitValue&gt;(_LocationTypeTemperatureProbability_QNAME, UnitValue.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Groundcover }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;groundCover&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Groundcover&gt; createLocationTypeGroundCover(Groundcover value) {
+<span class="nc" id="L594">        return new JAXBElement&lt;Groundcover&gt;(_LocationTypeGroundCover_QNAME, Groundcover.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;minTemperatureDay&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeMinTemperatureDay(Temperature value) {
+<span class="nc" id="L603">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeMinTemperatureDay_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;maxWindSpeed&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Windspeed&gt; createLocationTypeMaxWindSpeed(Windspeed value) {
+<span class="nc" id="L612">        return new JAXBElement&lt;Windspeed&gt;(_LocationTypeMaxWindSpeed_QNAME, Windspeed.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link LocationType.ForestFire }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;forest-fire&quot;, scope = LocationType.class)
+    public JAXBElement&lt;LocationType.ForestFire&gt; createLocationTypeForestFire(LocationType.ForestFire value) {
+<span class="nc" id="L621">        return new JAXBElement&lt;LocationType.ForestFire&gt;(_LocationTypeForestFire_QNAME, LocationType.ForestFire.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;mediumClouds&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Cloudiness&gt; createLocationTypeMediumClouds(Cloudiness value) {
+<span class="nc" id="L630">        return new JAXBElement&lt;Cloudiness&gt;(_LocationTypeMediumClouds_QNAME, Cloudiness.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;dewpointTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeDewpointTemperature(Temperature value) {
+<span class="nc" id="L639">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeDewpointTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;lowestTemperature&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Temperature&gt; createLocationTypeLowestTemperature(Temperature value) {
+<span class="nc" id="L648">        return new JAXBElement&lt;Temperature&gt;(_LocationTypeLowestTemperature_QNAME, Temperature.class, LocationType.class, value);</span>
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}}
+     * 
+     */
+    @XmlElementDecl(namespace = &quot;&quot;, name = &quot;fog&quot;, scope = LocationType.class)
+    public JAXBElement&lt;Cloudiness&gt; createLocationTypeFog(Cloudiness value) {
+<span class="nc" id="L657">        return new JAXBElement&lt;Cloudiness&gt;(_LocationTypeFog_QNAME, Cloudiness.class, LocationType.class, value);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

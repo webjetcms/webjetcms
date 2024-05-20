@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseCriteria.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news.criteria</a> &gt; <span class="el_source">DatabaseCriteria.java</span></div><h1>DatabaseCriteria.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news.criteria;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.news.FieldEnum;
+
+/**
+ * Reprezentuje Kriteria nad databazou
+ * @author mbocko
+ *
+ */
+public class DatabaseCriteria implements Criteria
+{
+
+	public static final int ATRIBUTE_TYPE_STRING = 0;
+	public static final int ATRIBUTE_TYPE_INTEGER = 1;
+	public static final int ATRIBUTE_TYPE_BOOLEAN = 2;
+
+	private CriteriaType type;
+	private FieldEnum property;
+	private String atributeName;
+	private int atributeId;
+<span class="pc" id="L26">	private int atributeType = ATRIBUTE_TYPE_STRING;</span>
+	private Object value;
+<span class="pc" id="L28">	private boolean beforeWildcard = false;</span>
+<span class="pc" id="L29">	private boolean afterWildcard = false;</span>
+<span class="pc" id="L30">	private boolean atributeCriteria = false;</span>
+
+	public DatabaseCriteria(CriteriaType type, FieldEnum property, Object value, boolean atributeCriteria)
+<span class="fc" id="L33">	{</span>
+<span class="fc" id="L34">		this.type = type;</span>
+<span class="fc" id="L35">		this.property = property;</span>
+<span class="fc" id="L36">		this.value = value;</span>
+<span class="fc" id="L37">		this.atributeCriteria = atributeCriteria;</span>
+<span class="fc" id="L38">	}</span>
+	private DatabaseCriteria(CriteriaType type, String atributeName, Object value, int atributeType, boolean beforeWildcard, boolean afterWildcard)
+<span class="nc" id="L40">	{</span>
+<span class="nc" id="L41">		this.type = type;</span>
+<span class="nc" id="L42">		this.atributeName = atributeName;</span>
+<span class="nc" id="L43">		this.value = value;</span>
+<span class="nc" id="L44">		this.atributeCriteria = true;</span>
+<span class="nc" id="L45">		this.atributeType = atributeType;</span>
+<span class="nc" id="L46">	}</span>
+	private DatabaseCriteria(CriteriaType type, int atributeId, Object value, int atributeType, boolean beforeWildcard, boolean afterWildcard)
+<span class="nc" id="L48">	{</span>
+<span class="nc" id="L49">		this.type = type;</span>
+<span class="nc" id="L50">		this.atributeId = atributeId;</span>
+<span class="nc" id="L51">		this.value = value;</span>
+<span class="nc" id="L52">		this.atributeCriteria = true;</span>
+<span class="nc" id="L53">		this.atributeType = atributeType;</span>
+<span class="nc" id="L54">	}</span>
+
+	private DatabaseCriteria(CriteriaType type, FieldEnum property, Object value, boolean beforeWildcard, boolean afterWildcard)
+<span class="fc" id="L57">	{</span>
+<span class="fc" id="L58">		this.type = type;</span>
+<span class="fc" id="L59">		this.property = property;</span>
+<span class="fc" id="L60">		this.value = value;</span>
+<span class="fc" id="L61">		this.beforeWildcard = beforeWildcard;</span>
+<span class="fc" id="L62">		this.afterWildcard = afterWildcard;</span>
+<span class="fc" id="L63">	}</span>
+
+
+
+
+	public static DatabaseCriteria equal(FieldEnum property, Object value)
+	{
+<span class="fc" id="L70">		return new DatabaseCriteria(CriteriaType.EQUALS, property, value, false);</span>
+	}
+
+	public static DatabaseCriteria notEqual(FieldEnum property, Object value)
+	{
+<span class="fc" id="L75">		return new DatabaseCriteria(CriteriaType.NOT_EQUALS, property, value, false);</span>
+	}
+
+	public static DatabaseCriteria notEmptyText(FieldEnum property) {
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
+<span class="nc" id="L80">			return new DatabaseCriteria(CriteriaType.LENGTH_GREATER, property, 0, false);</span>
+		}
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL) {</span>
+<span class="nc" id="L84">			return new DatabaseCriteria(CriteriaType.DATALENGTH_GREATER, property, 0, false);</span>
+		}
+
+<span class="fc" id="L87">		return notEqual(property, &quot;&quot;);</span>
+	}
+
+	public static DatabaseCriteria less(FieldEnum property, Object value)
+	{
+<span class="nc" id="L92">		return new DatabaseCriteria(CriteriaType.LESS_THAN, property, value, false);</span>
+	}
+	public static DatabaseCriteria lessEqual(FieldEnum property, Object value)
+	{
+<span class="fc" id="L96">		return new DatabaseCriteria(CriteriaType.LESS_THAN_EQUAL, property, value, false);</span>
+	}
+	
+	public static DatabaseCriteria greater(FieldEnum property, Object value)
+	{
+<span class="nc" id="L101">		return new DatabaseCriteria(CriteriaType.GREATER_THAN, property, value, false);</span>
+	}
+	public static DatabaseCriteria greaterEqual(FieldEnum property, Object value)
+	{
+<span class="fc" id="L105">		return new DatabaseCriteria(CriteriaType.GREATER_THAN_EQUAL, property, value, false);</span>
+	}
+
+	public static DatabaseCriteria isNull(FieldEnum property)
+	{
+<span class="fc" id="L110">		return new DatabaseCriteria(CriteriaType.IS_NULL, property, null, false);</span>
+	}
+
+	public static DatabaseCriteria isNotNull(FieldEnum property)
+	{
+<span class="fc" id="L115">		return new DatabaseCriteria(CriteriaType.IS_NOT_NULL, property, null, false);</span>
+	}
+
+	public static DatabaseCriteria like(FieldEnum property, String value)
+	{
+<span class="nc" id="L120">		return new DatabaseCriteria(CriteriaType.LIKE, property, value, false);</span>
+	}
+
+	public static DatabaseCriteria endsWith(FieldEnum property, String value)
+	{
+<span class="fc" id="L125">		return new DatabaseCriteria(CriteriaType.LIKE, property, value, true, false);</span>
+	}
+
+	public static DatabaseCriteria startsWith(FieldEnum property, String value)
+	{
+<span class="fc" id="L130">		return new DatabaseCriteria(CriteriaType.LIKE, property, value, false, true);</span>
+	}
+
+	public static DatabaseCriteria contains(FieldEnum property, String value)
+	{
+<span class="fc" id="L135">		return new DatabaseCriteria(CriteriaType.LIKE, property, value, true, true);</span>
+	}
+	
+	public static DatabaseCriteria notContains(FieldEnum property, String value)
+	{
+<span class="nc" id="L140">		return new DatabaseCriteria(CriteriaType.NOT_LIKE, property, value, true, true);</span>
+	}
+
+	public static DatabaseCriteria in(FieldEnum property, Object...items)
+	{
+<span class="fc" id="L145">		List&lt;Object&gt; itemList = new LinkedList&lt;Object&gt;();</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">		if (items!=null)</span>
+		{
+<span class="fc bfc" id="L148" title="All 2 branches covered.">			for (Object o : items)</span>
+			{
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">				if (o instanceof Iterable)</span>
+				{
+					@SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L153">					Iterable iterableObject = (Iterable)o;</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">					for (Object oi : iterableObject)</span>
+					{
+<span class="fc" id="L156">						itemList.add(oi);</span>
+<span class="fc" id="L157">					}</span>
+<span class="fc" id="L158">				}</span>
+				else
+				{
+<span class="nc" id="L161">					itemList.add(o);</span>
+				}
+			}
+		}
+<span class="fc" id="L165">		return new DatabaseCriteria(CriteriaType.IN, property, itemList, false);</span>
+	}
+
+	public static DatabaseCriteria notIn(FieldEnum property, Object...items)
+	{
+<span class="fc" id="L170">		List&lt;Object&gt; itemList = new LinkedList&lt;Object&gt;();</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">		if (items!=null)</span>
+		{
+<span class="fc bfc" id="L173" title="All 2 branches covered.">			for (Object o : items)</span>
+			{
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">				if (o instanceof Iterable)</span>
+				{
+					@SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L178">					Iterable iterableObject = (Iterable)o;</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">					for (Object oi : iterableObject)</span>
+					{
+<span class="fc" id="L181">						itemList.add(oi);</span>
+<span class="fc" id="L182">					}</span>
+<span class="fc" id="L183">				}</span>
+				else
+				{
+<span class="nc" id="L186">					itemList.add(o);</span>
+				}
+			}
+		}
+<span class="fc" id="L190">		return new DatabaseCriteria(CriteriaType.NOT_IN, property, itemList, false);</span>
+	}
+
+	public static DatabaseCriteria not(DatabaseCriteria criteria)
+	{
+<span class="nc" id="L195">		return new DatabaseCriteria(CriteriaType.NOT, (FieldEnum)null, criteria, criteria.isAtributeCriteria());</span>
+	}
+
+	public static DatabaseCriteria isEmpty(FieldEnum property)
+	{
+<span class="fc" id="L200">		return or(isNull(property), equal(property, &quot;&quot;));</span>
+	}
+
+	public static DatabaseCriteria isNotEmpty(FieldEnum property)
+	{
+<span class="nc" id="L205">		return and(isNotNull(property), notEqual(property, &quot;&quot;));</span>
+	}
+
+	public static DatabaseCriteria isNotEmptyText(FieldEnum property)
+	{
+<span class="fc" id="L210">		return and(isNotNull(property), notEmptyText(property));</span>
+	}
+
+
+	/**
+	 * Kriteria ktore sa tykaju atributov. 
+	 * 
+	 * Atribut je mozne definovat bud podla nazvu alebo podla ID
+	 */
+<span class="nc" id="L219">	public static class Atribute</span>
+	{
+		public static DatabaseCriteria equal(String atributeName, String value)
+		{
+<span class="nc" id="L223">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeName, value, ATRIBUTE_TYPE_STRING, false, false);</span>
+		}
+		public static DatabaseCriteria equal(String atributeName, int value)
+		{
+<span class="nc" id="L227">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeName, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria equal(String atributeName, boolean value)
+		{
+<span class="nc" id="L231">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeName, value, ATRIBUTE_TYPE_BOOLEAN, false, false);</span>
+		}
+		public static DatabaseCriteria equal(int atributeId, String value)
+		{
+<span class="nc" id="L235">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeId, value, ATRIBUTE_TYPE_STRING, false, false);</span>
+		}
+		public static DatabaseCriteria equal(int atributeId, int value)
+		{
+<span class="nc" id="L239">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeId, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria equal(int atributeId, boolean value)
+		{
+<span class="nc" id="L243">			return new DatabaseCriteria(CriteriaType.EQUALS, atributeId, value, ATRIBUTE_TYPE_BOOLEAN, false, false);</span>
+		}
+		public static DatabaseCriteria greater(int atributeId, int value)
+		{
+<span class="nc" id="L247">			return new DatabaseCriteria(CriteriaType.GREATER_THAN, atributeId, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria greater(String atributeName, int value)
+		{
+<span class="nc" id="L251">			return new DatabaseCriteria(CriteriaType.GREATER_THAN, atributeName, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria less(int atributeId, int value)
+		{
+<span class="nc" id="L255">			return new DatabaseCriteria(CriteriaType.LESS_THAN, atributeId, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria less(String atributeName, int value)
+		{
+<span class="nc" id="L259">			return new DatabaseCriteria(CriteriaType.LESS_THAN, atributeName, value, ATRIBUTE_TYPE_INTEGER, false, false);</span>
+		}
+		public static DatabaseCriteria like(String atributeName, String value)
+		{
+<span class="nc" id="L263">			return new DatabaseCriteria(CriteriaType.LIKE, atributeName, value, ATRIBUTE_TYPE_STRING, false, false);</span>
+		}
+		public static DatabaseCriteria like(int atributeId, String value)
+		{
+<span class="nc" id="L267">			return new DatabaseCriteria(CriteriaType.LIKE, atributeId, value, ATRIBUTE_TYPE_STRING, false, false);</span>
+		}
+		public static DatabaseCriteria startsWith(String atributeName, String value)
+		{
+<span class="nc" id="L271">			return new DatabaseCriteria(CriteriaType.LIKE, atributeName, value, ATRIBUTE_TYPE_STRING, false, true);</span>
+		}
+		public static DatabaseCriteria startsWith(int atributeId, String value)
+		{
+<span class="nc" id="L275">			return new DatabaseCriteria(CriteriaType.LIKE, atributeId, value, ATRIBUTE_TYPE_STRING, false, true);</span>
+		}
+		public static DatabaseCriteria endsWith(String atributeName, String value)
+		{
+<span class="nc" id="L279">			return new DatabaseCriteria(CriteriaType.LIKE, atributeName, value, ATRIBUTE_TYPE_STRING, true, false);</span>
+		}
+		public static DatabaseCriteria endsWith(int atributeId, String value)
+		{
+<span class="nc" id="L283">			return new DatabaseCriteria(CriteriaType.LIKE, atributeId, value, ATRIBUTE_TYPE_STRING, true, false);</span>
+		}
+		public static DatabaseCriteria contains(String atributeName, String value)
+		{
+<span class="nc" id="L287">			return new DatabaseCriteria(CriteriaType.LIKE, atributeName, value, ATRIBUTE_TYPE_STRING, true, true);</span>
+		}
+		public static DatabaseCriteria contains(int atributeId, String value)
+		{
+<span class="nc" id="L291">			return new DatabaseCriteria(CriteriaType.LIKE, atributeId, value, ATRIBUTE_TYPE_STRING, true, true);</span>
+		}
+
+		//dorobit IN, NOT IN
+	}
+
+
+
+	public static DatabaseCriteria or(DatabaseCriteria...orCriterias)
+	{
+<span class="fc" id="L301">		List&lt;DatabaseCriteria&gt; orCriteriaList = new LinkedList&lt;DatabaseCriteria&gt;();</span>
+<span class="fc" id="L302">		boolean containsAtributeCriteria = false;</span>
+<span class="pc bpc" id="L303" title="2 of 4 branches missed.">		if (orCriterias !=null &amp;&amp; orCriterias.length&gt;0)</span>
+		{
+<span class="fc bfc" id="L305" title="All 2 branches covered.">			for (DatabaseCriteria c : orCriterias)</span>
+			{
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">				if (c.atributeCriteria) containsAtributeCriteria = true;</span>
+<span class="fc" id="L308">				orCriteriaList.add(c);</span>
+			}
+		}
+<span class="fc" id="L311">		return new DatabaseCriteria(CriteriaType.OR, (FieldEnum)null, orCriteriaList, containsAtributeCriteria);</span>
+	}
+
+	public static DatabaseCriteria and(DatabaseCriteria...andCriterias)
+	{
+<span class="fc" id="L316">		List&lt;DatabaseCriteria&gt; andCriteriaList = new LinkedList&lt;DatabaseCriteria&gt;();</span>
+<span class="fc" id="L317">		boolean containsAtributeCriteria = false;</span>
+<span class="pc bpc" id="L318" title="2 of 4 branches missed.">		if (andCriterias !=null &amp;&amp; andCriterias.length&gt;0)</span>
+		{
+<span class="fc bfc" id="L320" title="All 2 branches covered.">			for (DatabaseCriteria c : andCriterias)</span>
+			{
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">				if (c.atributeCriteria) containsAtributeCriteria = true;</span>
+<span class="fc" id="L323">				andCriteriaList.add(c);</span>
+			}
+		}
+<span class="fc" id="L326">		return new DatabaseCriteria(CriteriaType.AND, (FieldEnum)null, andCriteriaList, containsAtributeCriteria);</span>
+	}
+
+	/**
+	 * 
+	 * @param property
+	 * @param value
+	 * @return
+	 */
+	public static DatabaseCriteria tokenizedIds(FieldEnum property, int value)
+	{
+<span class="fc" id="L337">		return or(</span>
+<span class="fc" id="L338">				equal(property, String.valueOf(value)),</span>
+<span class="fc" id="L339">				startsWith(property, String.valueOf(value)+&quot;,&quot;),</span>
+<span class="fc" id="L340">				endsWith(property, &quot;,&quot;+String.valueOf(value)),</span>
+<span class="fc" id="L341">				contains(property, &quot;,&quot;+String.valueOf(value)+&quot;,&quot;)</span>
+				); 
+	}
+
+<span class="fc" id="L345">	public enum CriteriaType</span>
+	{
+
+<span class="fc" id="L348">		EQUALS(&quot;=&quot;), </span>
+<span class="fc" id="L349">		NOT_EQUALS(&quot;&lt;&gt;&quot;),</span>
+<span class="fc" id="L350">		LESS_THAN(&quot;&lt;&quot;), </span>
+<span class="fc" id="L351">		GREATER_THAN(&quot;&gt;&quot;),</span>
+<span class="fc" id="L352">		IS_NULL(&quot;IS NULL&quot;),</span>
+<span class="fc" id="L353">		IS_NOT_NULL(&quot;IS NOT NULL&quot;),</span>
+<span class="fc" id="L354">		LIKE(&quot;LIKE&quot;),</span>
+<span class="fc" id="L355">		NOT_LIKE(&quot;NOT LIKE&quot;),</span>
+<span class="fc" id="L356">		IN(&quot;&quot;),</span>
+<span class="fc" id="L357">		NOT_IN(&quot;&quot;),</span>
+<span class="fc" id="L358">		AND(&quot;&quot;),</span>
+<span class="fc" id="L359">		OR(&quot;&quot;),</span>
+<span class="fc" id="L360">		GREATER_THAN_EQUAL(&quot;&gt;=&quot;),</span>
+<span class="fc" id="L361">		LESS_THAN_EQUAL(&quot;&lt;=&quot;),</span>
+<span class="fc" id="L362">		NOT(&quot;NOT&quot;),</span>
+<span class="fc" id="L363">		DATALENGTH_EQUAL(&quot;=&quot;),</span>
+<span class="fc" id="L364">		DATALENGTH_GREATER(&quot;&gt;&quot;),</span>
+<span class="fc" id="L365">		IS_EMPTY(&quot;IS EMPTY&quot;),</span>
+<span class="fc" id="L366">		IS_NOT_EMPTY(&quot;IS NOT EMPTY&quot;),</span>
+<span class="fc" id="L367">		LENGTH_EQUAL(&quot;=&quot;),</span>
+<span class="fc" id="L368">		LENGTH_GREATER(&quot;&gt;&quot;);</span>
+
+		CriteriaType(String symbol)
+<span class="fc" id="L371">		{</span>
+<span class="fc" id="L372">			this.symbol = symbol;</span>
+<span class="fc" id="L373">		}</span>
+
+		private String symbol;
+
+		public String getSymbol()
+		{
+<span class="fc" id="L379">			return symbol;</span>
+		}
+
+	}
+
+	public CriteriaType getType()
+	{
+<span class="fc" id="L386">		return type;</span>
+	}
+
+	public FieldEnum getProperty()
+	{
+<span class="fc" id="L391">		return property;</span>
+	}
+
+	public Object getValue()
+	{
+<span class="fc" id="L396">		return value;</span>
+	}
+
+	public boolean isBeforeWildcard()
+	{
+<span class="fc" id="L401">		return beforeWildcard;</span>
+	}
+
+	public boolean isAfterWildcard()
+	{
+<span class="fc" id="L406">		return afterWildcard;</span>
+	}
+
+	public boolean isAtributeCriteria()
+	{
+<span class="fc" id="L411">		return atributeCriteria;</span>
+	}
+
+	public String getAtributeName()
+	{
+<span class="nc" id="L416">		return atributeName;</span>
+	}
+
+	/**
+	 * Umoznuje pridat dalsie kriteria ku kriteriam kde value je list kriterii (napr or alebo and)
+	 * @param crit
+	 * @return
+	 */
+	public DatabaseCriteria addCriteria(DatabaseCriteria crit)
+	{
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		if (this.getValue() instanceof List)</span>
+		{
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L429">			List&lt;DatabaseCriteria&gt; critList = (List&lt;DatabaseCriteria&gt;)this.getValue();</span>
+<span class="nc" id="L430">			critList.add(crit);</span>
+		}
+<span class="nc" id="L432">		return this;</span>
+	}
+
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L439">		return this.stringValue(0);</span>
+	}
+
+	public String stringValue(int intendation)
+	{
+<span class="nc" id="L444">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L445" title="All 4 branches missed.">		if (this.atributeCriteria &amp;&amp; Tools.isNotEmpty(atributeName))</span>
+		{
+<span class="nc" id="L447">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L449">			sb.append(&quot;ATR{&quot;);</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (Tools.isNotEmpty(atributeName))	sb.append(atributeName);</span>
+<span class="nc" id="L451">			else sb.append(&quot;ID(&quot;).append(atributeId).append(&quot;)&quot;);</span>
+<span class="nc" id="L452">			sb.append(&quot;} &quot;);</span>
+<span class="nc" id="L453">			sb.append(this.type.name());</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">			if (value!=null)</span>
+			{
+<span class="nc" id="L456">				sb.append(&quot; [\&quot;&quot;).append(String.valueOf(value)).append(&quot;\&quot;]&quot;);</span>
+			}
+		}
+<span class="nc bnc" id="L459" title="All 2 branches missed.">		else if (this.type == CriteriaType.AND)</span>
+		{
+<span class="nc" id="L461">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L463">			sb.append(&quot;AND [&quot;);</span>
+
+<span class="nc bnc" id="L465" title="All 4 branches missed.">			if (this.value !=null &amp;&amp; this.value instanceof List) </span>
+			{
+				@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L468">				List&lt;DatabaseCriteria&gt; critList = (List&lt;DatabaseCriteria&gt;)this.getValue();</span>
+<span class="nc" id="L469">				boolean addComma = false;</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">				for (DatabaseCriteria c : critList)</span>
+				{
+<span class="nc bnc" id="L472" title="All 2 branches missed.">					if (addComma) sb.append(&quot;,\n&quot;);</span>
+<span class="nc" id="L473">					addComma = true;</span>
+<span class="nc" id="L474">					sb.append(c.stringValue(intendation+1));</span>
+<span class="nc" id="L475">				}</span>
+			}
+
+<span class="nc" id="L478">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L480">			sb.append(&quot;]&quot;);</span>
+		}
+<span class="nc bnc" id="L482" title="All 2 branches missed.">		else if (this.type == CriteriaType.OR)</span>
+		{
+<span class="nc" id="L484">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L486">			sb.append(&quot;OR [&quot;);</span>
+
+<span class="nc bnc" id="L488" title="All 4 branches missed.">			if (this.value !=null &amp;&amp; this.value instanceof List) </span>
+			{
+				@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L491">				List&lt;DatabaseCriteria&gt; critList = (List&lt;DatabaseCriteria&gt;)this.getValue();</span>
+<span class="nc" id="L492">				boolean addComma = false;</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">				for (DatabaseCriteria c : critList)</span>
+				{
+<span class="nc bnc" id="L495" title="All 2 branches missed.">					if (addComma) sb.append(&quot;, &quot;);</span>
+<span class="nc" id="L496">					addComma = true;</span>
+<span class="nc" id="L497">					sb.append(c.stringValue(intendation+1));</span>
+<span class="nc" id="L498">				}</span>
+			}
+<span class="nc" id="L500">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L502">			sb.append(&quot;]&quot;);</span>
+		}
+		else
+		{
+
+
+<span class="nc" id="L508">			sb.append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">			for (int offset=0; offset&lt;=intendation; offset++) sb.append(&quot;    &quot;);</span>
+<span class="nc" id="L510">			sb.append(this.property.name());</span>
+<span class="nc" id="L511">			sb.append(&quot; &quot;);</span>
+<span class="nc" id="L512">			sb.append(this.type.name());</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">			if (value!=null)</span>
+			{
+<span class="nc" id="L515">				sb.append(&quot; [\&quot;&quot;).append(String.valueOf(value)).append(&quot;\&quot;]&quot;);</span>
+			}
+		}
+<span class="nc" id="L518">		return sb.toString();</span>
+	}
+	public int getAtributeId()
+	{
+<span class="nc" id="L522">		return atributeId;</span>
+	}
+	public int getAtributeType()
+	{
+<span class="nc" id="L526">		return atributeType;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

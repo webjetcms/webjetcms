@@ -92,3 +92,29 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
 
     I.dontSee(entityName);
 });
+
+Scenario('Domain test', ({I, DT, DTE, Document}) => {
+    I.amOnPage("/apps/calendar/admin/");
+    DT.filter("title", "DomainTest_Test23");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("calendarEventsDataTable");
+    I.click("#pills-dt-calendarEventsDataTable-advanced-tab");
+    I.waitForElement("div.DTE_Field_Name_typeId");
+    I.click( locate("div.DTE_Field_Name_typeId").find("button.dropdown-toggle") );
+    I.waitForElement("div.dropdown-menu.show");
+    I.fillField(locate("div.dropdown-menu.show").find("input"), "DomainTest_Test23_type");
+    I.see("No results matched \"DomainTest_Test23_type\"");
+    I.pressKey('Escape');
+    DTE.cancel();
+
+    Document.switchDomain("test23.tau27.iway.sk");
+    DT.filter("title", "DomainTest_Test23");
+    I.see("DomainTest_Test23");
+    DT.filter("title", "Deň zdravia");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});

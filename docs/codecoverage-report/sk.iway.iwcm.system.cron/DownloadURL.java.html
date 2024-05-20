@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DownloadURL.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cron</a> &gt; <span class="el_source">DownloadURL.java</span></div><h1>DownloadURL.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cron;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Date;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.helpers.MailHelper;
+
+/**
+ * DownloadURL.java - trieda, ktora sa spusta z crontabu a stahuje zadane
+ * URL
+ *
+ * @Title webjet
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2004
+ * @author $Author: jeeff $
+ * @version $Revision: 1.5 $
+ * @created Date: 15.10.2004 22:18:23
+ * @modified $Date: 2005/10/25 06:48:05 $
+ */
+<span class="nc" id="L24">public class DownloadURL</span>
+{
+	public static void main(String[] args)
+	{
+		try
+		{
+<span class="nc bnc" id="L30" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 0)</span>
+			{
+<span class="nc" id="L32">				String url = args[0];</span>
+<span class="nc" id="L33">				Date now = new Date();</span>
+<span class="nc" id="L34">				Logger.println(DownloadURL.class,now.toString());</span>
+<span class="nc" id="L35">				Logger.println(DownloadURL.class,&quot;downloading: &quot; + url);</span>
+				int i;
+<span class="nc bnc" id="L37" title="All 2 branches missed.">				for (i=0; i&lt;args.length; i++)</span>
+				{
+<span class="nc" id="L39">					Logger.println(DownloadURL.class,&quot;mam args: [&quot;+i+&quot;]=&quot;+args[i]);</span>
+				}
+<span class="nc" id="L41">				String data = Tools.downloadUrl(url);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">				if (data != null) data = data.trim();</span>
+<span class="nc" id="L43">				Logger.debug(DownloadURL.class, &quot;CRON VYSTUP: &quot;+data);</span>
+
+<span class="nc bnc" id="L45" title="All 10 branches missed.">				if (data!=null &amp;&amp; Tools.isNotEmpty(data) &amp;&amp; args.length&gt;=4 &amp;&amp; args[1].indexOf('@')!=-1 &amp;&amp; args[2].indexOf('@')!=-1)</span>
+				{
+<span class="nc" id="L47">					Logger.println(DownloadURL.class,&quot;mam data: &quot; + data.length());</span>
+					//treba to poslat mailom
+<span class="nc" id="L49">					new MailHelper().</span>
+<span class="nc" id="L50">						setFromEmail(args[1]).</span>
+<span class="nc" id="L51">						setFromName(args[1]).</span>
+<span class="nc" id="L52">						addRecipient(args[2]).</span>
+<span class="nc" id="L53">						setMessage(data).</span>
+<span class="nc" id="L54">						setBaseHref(args[0]).</span>
+<span class="nc" id="L55">						setSubject(args[3].replace('_', ' ')).</span>
+<span class="nc" id="L56">						send();</span>
+				}
+				// success
+				//Adminlog.add(Adminlog.TYPE_CRON, &quot;DownloadURL CRONJob complete, URL: &quot;+url, -1, -1);
+			}
+		}
+<span class="nc" id="L62">		catch (Exception e)</span>
+		{
+<span class="nc" id="L64">			StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L65">      	e.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L67">			Adminlog.add(Adminlog.TYPE_CRON, &quot;DownloadURL error:&quot;+e.getMessage()+&quot;\n&quot;+sw.toString(), -1, -1);</span>
+<span class="nc" id="L68">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L69">		}</span>
+<span class="nc" id="L70">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

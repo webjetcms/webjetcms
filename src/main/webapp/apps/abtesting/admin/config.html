@@ -1,0 +1,46 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/abtesting/config";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.configuration.model.ConfPrefixDto")})]*/ '';
+</script>
+
+<script type="text/javascript">
+    var abtestingConfDataTable;
+
+    WJ.breadcrumb({
+        id: "configValues",
+        tabs: [
+            {
+                url: '/apps/abtesting/admin/',
+                title: '[[#{components.abtesting.dialog_title}]]',
+                active: false
+            },
+            {
+                url: '/apps/abtesting/admin/config/',
+                title: '[[#{webjet.left_conf.konfiguracia}]]',
+                active: true
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        window.helpLink = "/redactor/apps/abtesting/README";
+        abtestingConfDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "abtestingConfDataTable"
+        });
+
+        abtestingConfDataTable.hideButton("create");
+        abtestingConfDataTable.hideButton("remove");
+        abtestingConfDataTable.hideButton("celledit");
+        abtestingConfDataTable.hideButton("import");
+        abtestingConfDataTable.hideButton("duplicate");
+
+        abtestingConfDataTable.EDITOR.on('open', function (e, mode, action) {
+            $("#DTE_Field_name").prop('disabled', true);
+        });
+    });
+</script>
+
+<table id="abtestingConfDataTable" class="datatableInit table"></table>

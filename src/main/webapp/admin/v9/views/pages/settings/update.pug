@@ -15,8 +15,8 @@ block content
         let bodyDivTemplate = '<div class="tab-pane fade REPLACE_CLASS" id="REPLACE_ID" role="tabpanel">REPLACE_CONTENT</div>';
         var versions = [];
         var actualVersion = "[(${actualVersion})]";
-        let succBadgeTemplate = '<span class="badge bg-success rounded-pill actual-version" title="Aktuálna verzia" data-toggle="tooltip"><i class="fas fa-check"></i></span>';
-        let uploadBadgeTemplate = '<span class="badge bg-warning rounded-pill" style="color: black;"><i class="far fa-download"></i></span>';
+        let succBadgeTemplate = '<span class="badge bg-success rounded-pill actual-version" title="Aktuálna verzia" data-toggle="tooltip"><i class="ti ti-check"></i></span>';
+        let uploadBadgeTemplate = '<span class="badge bg-warning rounded-pill" style="color: black;"><i class="ti ti-download"></i></span>';
         var selectedVersion;
 
         function showVersionContent(versionId) {
@@ -194,13 +194,13 @@ block content
 
     div.dt-header-row.clearfix.push-content-down
         div.dt-buttons
-            button#submitButton(class="btn btn-sm btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;")
+            button#submitButton(class="btn btn-sm with-text btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;")
                 span
-                    i.far.fa-cloud-download
+                    i.ti.ti-cloud-download
                     |  [[\#{update.doUpdate}]]
-            a(class="btn btn-sm btn-outline-secondary buttons-settings" data-th-href="'http://'+\#{welcome.info_url}" target="_blank")
+            a(class="btn btn-sm with-text btn-outline-secondary buttons-settings" data-th-href="'http://'+\#{welcome.info_url}" target="_blank")
                 span
-                    i.far.fa-link
+                    i.ti.ti-link
                     |  [[\#{update.contact_support}]]
         div.float-end
             div#updateUntilVersion(style="padding-top: 4px;")
@@ -217,7 +217,7 @@ block content
                 <div class="tab-pane fade" id="UPLOAD" role="tabpanel">
                     <p data-th-if="${importedFileNameSucc ne null}" class="alert alert-success">[[\#{settings.update.upload_file_succ_notif}]] <span data-th-text="${importedFileNameSucc}"></span> </p>
 
-                    <button data-th-if="${importedFileNameSucc ne null}" id="submitButtonSecond" class="btn btn-sm btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;"><span><i class="far fa-cloud-download"></i> [[\#{update.doUpdate}]] </span></button>
+                    <button data-th-if="${importedFileNameSucc ne null}" id="submitButtonSecond" class="btn btn-sm btn-success buttons-divider" type="button" onclick="doSubmit()" style="display:none;"><span><i class="ti ti-cloud-download"></i> [[\#{update.doUpdate}]] </span></button>
 
                     <p data-th-if="!${importedFileNameSucc ne null}" class="alert alert-info"> [[\#{settings.update.start_update_notif}]] </p>
 
@@ -233,7 +233,7 @@ block content
                         </div>
 
                         <div class="form-group mb-3">
-                            <label for="document" class="form-label"> <strong> Aktualizačný súbor </strong> </label>
+                            <label for="document" class="form-label"> <strong> [[\#{update.update_file}]] </strong> </label>
                             <input type="file" data-th-field="*{document}" id="document" class="form-control">
                         </div>
 

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProxyBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.proxy.jpa</a> &gt; <span class="el_source">ProxyBean.java</span></div><h1>ProxyBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.proxy.jpa;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;proxy&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PROXY_CREATE)
+<span class="fc" id="L28">public class ProxyBean extends ActiveRecordRepository {</span>
+
+    @Id
+    @Column(name = &quot;proxy_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_proxy&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+	private Long id;
+
+    /*TAB BASIC*/
+    @Column(name = &quot;name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.proxy.name&quot;,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 255)
+    @NotBlank
+    private String name;
+
+    @Column(name = &quot;local_url&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.proxy.localUrl&quot;,
+        tab = &quot;basic&quot;
+    )
+    @NotBlank
+	private String localUrl;
+
+    @Column(name = &quot;remote_server&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.remoteServer&quot;,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 255)
+    @NotBlank
+	private String remoteServer;
+
+    @Column(name = &quot;remote_url&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.remoteUrl&quot;,
+        tab = &quot;basic&quot;
+    )
+    @Size(max = 255)
+    @NotBlank
+	private String remoteUrl;
+
+    @Column(name = &quot;remote_port&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.proxy.remotePort&quot;,
+        tab = &quot;basic&quot;
+    )
+	private int remotePort;
+
+    @Column(name = &quot;encoding&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.encoding&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    @Size(max = 16)
+    @NotBlank
+    private String encoding;
+
+    @Column(name = &quot;proxy_method&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.proxy.proxyMethod&quot;,
+        tab = &quot;basic&quot;,
+        visible = false,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;ProxyByHttpClient4&quot;, value = &quot;ProxyByHttpClient4&quot;),
+					@DataTableColumnEditorAttr(key = &quot;ProxyBySocket&quot;, value = &quot;ProxyBySocket&quot;)
+				}
+			)
+		}
+    )
+    private String proxyMethod;
+
+    @Column(name = &quot;include_ext&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.includeExt&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+    private String includeExt;
+
+    @Column(name = &quot;crop_start&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.proxy.cropStart&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+	private String cropStart;
+
+    @Column(name = &quot;keep_crop_start&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.proxy.keepCropStart&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    private boolean keepCropStart;
+
+    @Column(name = &quot;crop_end&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.proxy.cropEnd&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+	private String cropEnd;
+
+    @Column(name = &quot;keep_crop_end&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.proxy.keepCropEnd&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    private boolean keepCropEnd;
+
+
+    /*TAB SECURITY*/
+    @Column(name = &quot;auth_method&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.proxy.authMethod&quot;,
+        tab = &quot;security&quot;,
+        visible = false,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;&quot;, value = &quot;&quot;),
+					@DataTableColumnEditorAttr(key = &quot;NTLM&quot;, value = &quot;ntlm&quot;),
+					@DataTableColumnEditorAttr(key = &quot;Basic&quot;, value = &quot;basic&quot;)
+				},
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.proxy.securityLogin&quot;)
+                }
+			)
+		}
+    )
+    @Size(max = 16)
+	private String authMethod;
+
+    @Column(name = &quot;auth_username&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.authUsername&quot;,
+        tab = &quot;security&quot;,
+        visible = false
+    )
+    @Size(max = 64)
+	private String authUsername;
+
+    @Column(name = &quot;auth_password&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.authPassword&quot;,
+        tab = &quot;security&quot;,
+        visible = false
+    )
+    @Size(max = 64)
+	private String authPassword;
+
+    @Column(name = &quot;auth_host&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.authHost&quot;,
+        tab = &quot;security&quot;,
+        visible = false
+    )
+    @Size(max = 64)
+	private String authHost;
+
+    @Column(name = &quot;auth_domain&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.authDomain&quot;,
+        tab = &quot;security&quot;,
+        visible = false
+    )
+    @Size(max = 64)
+	private String authDomain;
+
+    @Column(name = &quot;allowed_methods&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.proxy.allowedMethods&quot;,
+        tab = &quot;security&quot;,
+        visible = false
+    )
+    @Size(max = 64)
+	private String allowedMethods;
+
+	@Override
+    public Long getId() {
+<span class="fc" id="L236">        return id;</span>
+    }
+
+    @Override
+    public void setId(Long id) {
+<span class="fc" id="L241">        this.id = id;</span>
+<span class="fc" id="L242">    }</span>
+
+	public int getProxyId() {
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">		if(id == null) return 0;</span>
+<span class="fc" id="L246">		return id.intValue();</span>
+	}
+
+	public void setProxyId(int proxyId) {
+<span class="fc" id="L250">		this.id = Long.valueOf(proxyId);</span>
+<span class="fc" id="L251">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,74 @@
+<div class="sidebar-section">Manual for the editor</div>
+
+- [:point\_left: Back to Home](/?back)
+- Using the administration
+	- [Logging in and out](/redactor/admin/logon.md)
+	- [Main controls](/redactor/admin/README.md)
+	- [Home screen](/redactor/admin/welcome.md)
+- Datatables
+	- [Basics of working with data tables](/redactor/datatables/README.md)
+	- [Export and import](/redactor/datatables/export-import.md)
+- Website
+	- [Basic work](/redactor/webpages/README.md)
+	- [Editing a web page](/redactor/webpages/editor.md)
+	- [History](/redactor/webpages/history.md)
+	- [Recovering from the Recycle Bin](/redactor/webpages/recover.md)
+	- [Page Builder](/redactor/webpages/pagebuilder.md)
+	- [Check for links and empty pages](/redactor/webpages/linkcheck.md)
+	- [Import and export of web pages](/redactor/webpages/import-export.md)
+	- [Approval of changes](/redactor/webpages/approve/README.md)
+	- [Password protected pages](/redactor/zaheslovana-zona/README.md)
+	- [Cloning structure](/redactor/apps/clone-structure/README.md)
+	- [Page attributes](/redactor/webpages/doc-attributes/README.md)
+	- [Media](/redactor/webpages/media.md)
+	- [Tags](/redactor/webpages/perexgroups.md)
+- Applications
+	- [AB testing](/redactor/apps/abtesting/README.md)
+	- [Survey](/redactor/apps/inquiry/README.md)
+	- Banner system
+		- [List of banners](/redactor/apps/banner/README.md)
+		- [Banner statistics](/redactor/apps/banner/banner-stat/README.md)
+	- [Dialers](/redactor/apps/enumeration/README.md)
+	- [Export of data](/redactor/apps/export/README.md)
+	- [Form easily](/redactor/apps/formsimple/README.md)
+	- Forms
+		- [List of forms](/redactor/apps/form/README.md)
+		- [Regular expressions](/redactor/apps/form/regexps.md)
+	- Forum/Discussion
+		- [Application settings](/redactor/apps/forum/README.md)
+		- [List of discussions](/redactor/apps/forum/forum-list.md)
+	- [Gallery](/redactor/apps/gallery/README.md)
+	- GDPR
+		- [Cookies manager](/redactor/apps/gdpr/cookiesmanger.md)
+		- [Managing regular expressions](/redactor/apps/gdpr/regexps.md)
+		- [Search](/redactor/apps/gdpr/search.md)
+		- [Data deletion](/redactor/apps/gdpr/data-deleting.md)
+		- [Google Tag Manager integration](/redactor/apps/gdpr/gtm.md)
+	- Bulk e-mail
+		- [Campaigns](/redactor/apps/dmail/campaings/README.md)
+		- [Login form](/redactor/apps/dmail/form/README.md)
+		- [Domain limits](/redactor/apps/dmail/domain-limits/README.md)
+		- [Unsubscribed emails](/redactor/apps/dmail/unsubscribed/README.md)
+		- [How sending emails works](/redactor/apps/dmail/campaings/how-sender-works.md)
+	- [Rating/Rating](/redactor/apps/rating/README.md)
+	- Calendar of events
+		- [List of events](/redactor/apps/calendar/README.md)
+		- [Configure event types](/redactor/apps/calendar/calendar-types/README.md)
+	- [Site Map](/redactor/apps/sitemap/README.md)
+	- [Menu (navigation)](/redactor/apps/menu/README.md)
+	- [Navigation bar](/redactor/apps/navbar/README.md)
+	- [News](/redactor/apps/news/README.md)
+	- [Questions and answers](/redactor/apps/qa/README.md)
+	- Restaurant menu
+		- [Restaurant menu](/redactor/apps/restaurant-menu/README.md)
+		- [Dishes](/redactor/apps/restaurant-menu/meals.md)
+		- [Creating menus](/redactor/apps/restaurant-menu/menu.md)
+	- [Proxy](/redactor/apps/proxy/README.md)
+	- Reservations
+		- [List of reservations](/redactor/apps/reservation/reservations/README.md)
+		- [List of reservation objects](/redactor/apps/reservation/reservation-objects/README.md)
+	- [SEO](/redactor/apps/seo/README.md)
+	- [Statistics](/redactor/apps/stat/README.md)
+	- [Tooltip](/redactor/apps/tooltip/README.md)
+	- [View files](/redactor/apps/site-browser/README.md)
+	- [Mirroring the structure](/redactor/apps/docmirroring/README.md)

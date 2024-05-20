@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormFileRestriction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form</a> &gt; <span class="el_source">FormFileRestriction.java</span></div><h1>FormFileRestriction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.gallery.ImageInfo;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.upload.UploadedFile;
+
+/**
+ *  FormFileRestriction.java
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 24.7.2009 12:46:12
+ *@modified     $Date: 2009/07/24 13:28:29 $
+ */
+<span class="nc" id="L20">public class FormFileRestriction</span>
+{
+	String formName;
+	
+	String allowedExtensions;
+	
+	int maxSizeInKilobytes;
+	
+	int pictureWidth;
+	
+	int pictureHeight;
+	
+	public boolean isSentFileValid(UploadedFile file)
+	{
+<span class="nc" id="L34">		boolean isValid = true;</span>
+<span class="nc" id="L35">		isValid &amp;= isBelowMaxSize(file.getFileSize());</span>
+<span class="nc" id="L36">		isValid &amp;= hasAllowedExtension(file.getFileName());</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">		if (isItAPicture(file.getFileName()))</span>
+		{
+<span class="nc" id="L39">			isValid &amp;= hasNeededWidthAndHeight(file);</span>
+		}
+<span class="nc" id="L41">		return isValid;</span>
+	}
+
+	public boolean isSentFileValid(IwcmFile file)
+	{
+<span class="nc" id="L46">		boolean isValid = true;</span>
+<span class="nc" id="L47">		isValid &amp;= isBelowMaxSize(file.length());</span>
+<span class="nc" id="L48">		isValid &amp;= hasAllowedExtension(file.getName());</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (isItAPicture(file.getName()))</span>
+		{
+<span class="nc" id="L51">			isValid &amp;= hasNeededWidthAndHeight(file);</span>
+		}
+<span class="nc" id="L53">		return isValid;</span>
+	}
+
+	private boolean isBelowMaxSize(long fileSize)
+	{		
+<span class="nc bnc" id="L58" title="All 4 branches missed.">		return maxSizeInKilobytes &lt;= 0 || (fileSize/1024) &lt;= maxSizeInKilobytes;</span>
+	}
+
+	private boolean hasAllowedExtension(String fileName)
+	{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (Tools.isEmpty(allowedExtensions))</span>
+<span class="nc" id="L64">			return true;</span>
+
+<span class="nc" id="L66">		fileName = fileName.toLowerCase();</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		for (String extension : allowedExtensions.toLowerCase().split(&quot;,&quot;))</span>
+		{
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (fileName.endsWith(extension.trim()))</span>
+<span class="nc" id="L71">				return true;</span>
+		}
+		
+<span class="nc" id="L74">		return false;</span>
+	}
+
+	private boolean isItAPicture(String fileName)
+	{
+<span class="nc" id="L79">		fileName = fileName.toLowerCase();</span>
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (String extension : FileTools.pictureExtensions)</span>
+		{
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (fileName.endsWith(extension))</span>
+<span class="nc" id="L84">				return true;</span>
+<span class="nc" id="L85">		}</span>
+<span class="nc" id="L86">		return false;</span>
+	}
+	
+
+	private boolean hasNeededWidthAndHeight(UploadedFile file)
+	{
+		try
+		{
+<span class="nc" id="L94">			ImageInfo imageInformation = new ImageInfo(file);</span>
+<span class="nc bnc" id="L95" title="All 6 branches missed.">			return (pictureHeight &lt;= 0 || imageInformation.getHeight() &lt;= pictureHeight) </span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				&amp;&amp; (pictureWidth &lt;= 0 || imageInformation.getWidth() &lt;= pictureWidth);</span>
+		}
+<span class="nc" id="L98">		catch (Exception e)</span>
+		{
+<span class="nc" id="L100">			return false;</span>
+		}
+	}
+
+	private boolean hasNeededWidthAndHeight(IwcmFile file)
+	{
+		try
+		{
+<span class="nc" id="L108">			ImageInfo imageInformation = new ImageInfo(file);</span>
+<span class="nc bnc" id="L109" title="All 6 branches missed.">			return (pictureHeight &lt;= 0 || imageInformation.getHeight() &lt;= pictureHeight)</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">						&amp;&amp; (pictureWidth &lt;= 0 || imageInformation.getWidth() &lt;= pictureWidth);</span>
+		}
+<span class="nc" id="L112">		catch (Exception e)</span>
+		{
+<span class="nc" id="L114">			return false;</span>
+		}
+	}
+	
+	
+	public String getFormName()
+	{
+<span class="nc" id="L121">		return this.formName;</span>
+	}
+
+	public FormFileRestriction setFormName(String formName)
+	{
+<span class="nc" id="L126">		this.formName = formName;</span>
+<span class="nc" id="L127">		return this;</span>
+	}
+
+	public String getAllowedExtensions()
+	{
+<span class="nc" id="L132">		return this.allowedExtensions;</span>
+	}
+
+	public FormFileRestriction setAllowedExtensions(String allowedExtensions)
+	{
+<span class="nc" id="L137">		this.allowedExtensions = allowedExtensions;</span>
+<span class="nc" id="L138">		return this;</span>
+	}
+
+	public int getMaxSizeInKilobytes()
+	{
+<span class="nc" id="L143">		return this.maxSizeInKilobytes;</span>
+	}
+
+	public FormFileRestriction setMaxSizeInKilobytes(int maxSizeInKilobytes)
+	{
+<span class="nc" id="L148">		this.maxSizeInKilobytes = maxSizeInKilobytes;</span>
+<span class="nc" id="L149">		return this;</span>
+	}
+
+	public int getPictureWidth()
+	{
+<span class="nc" id="L154">		return this.pictureWidth;</span>
+	}
+
+	public FormFileRestriction setPictureWidth(int pictureWidth)
+	{
+<span class="nc" id="L159">		this.pictureWidth = pictureWidth;</span>
+<span class="nc" id="L160">		return this;</span>
+	}
+
+	public int getPictureHeight()
+	{
+<span class="nc" id="L165">		return this.pictureHeight;</span>
+	}
+
+	public FormFileRestriction setPictureHeight(int pictureHeight)
+	{
+<span class="nc" id="L170">		this.pictureHeight = pictureHeight;</span>
+<span class="nc" id="L171">		return this;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

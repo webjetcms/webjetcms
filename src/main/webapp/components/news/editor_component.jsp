@@ -5,7 +5,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<iwcm:checkLogon admin="true" perms="cmp_news"/>
+<iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
 <%@page import="org.apache.struts.util.ResponseUtils"%>
 <%

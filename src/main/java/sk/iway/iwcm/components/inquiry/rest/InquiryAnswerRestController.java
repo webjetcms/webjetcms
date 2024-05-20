@@ -57,7 +57,7 @@ public class InquiryAnswerRestController extends DatatableRestControllerV2<Inqui
             } else entity.setQuestionId(questionId);
 
             return entity;
-        } else return inquiryAnswerRepository.getById(id);
+        } else return inquiryAnswerRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
     }
 
     @Override

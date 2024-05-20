@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner.model</a> &gt; <span class="el_source">BannerBean.java</span></div><h1>BannerBean.java</h1><pre class="source lang-java linenums">
+package sk.iway.iwcm.components.banner.model;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.banner.BannerDB;
+import sk.iway.iwcm.components.banner.BannerEditorFields;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+
+@Entity
+@Table(name = &quot;banner_banners&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_BANNER_UPDATE)
+<span class="fc" id="L48">public class BannerBean extends ActiveRecordRepository implements Serializable {</span>
+
+	@JsonIgnore
+    private static final long serialVersionUID = -1L;
+
+	@PrePersist
+    public void prePersist() {
+<span class="pc bpc" id="L55" title="3 of 6 branches missed.">		if (id != null &amp;&amp; (id.intValue()==0 || id.intValue()==-1)) {</span>
+<span class="nc" id="L56">			id = null;</span>
+		}
+<span class="fc" id="L58">    }</span>
+
+    @Id
+	@Column(name = &quot;banner_id&quot;)
+	@GeneratedValue(generator = &quot;WJGen_banner_banners&quot;)
+	@TableGenerator(name = &quot;WJGen_banner_banners&quot;, pkColumnValue = &quot;banner_banners&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, renderFormat = &quot;dt-format-selector&quot;)
+	private Long id;
+
+		//Field is invisible and used only for need of CHARTS
+		@Transient
+		@DataTableColumn(
+			inputType = DataTableColumnType.DATE,
+			title=&quot;editor.date&quot;,
+			visible = false,
+			hiddenEditor = true
+		)
+		private Date dayDate;
+
+		//Field is invisible and use only in bannner-stat
+		@Transient
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			visible = false,
+			hiddenEditor = true,
+			title=&quot;[[#{components.banner.name}]]&quot;,
+			renderFormatLinkTemplate = &quot;javascript:redirect({{id}});&quot;
+		)
+		private String nameLink;
+
+	/*TAB MAIN*/
+    @Column(name = &quot;name&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;[[#{components.banner.name}]]&quot;,
+		tab = &quot;main&quot;
+    )
+	private String name;
+
+	@Column(name = &quot;banner_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.banner.banner_type}]]&quot;,
+		tab = &quot;main&quot;,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.banner.picture&quot;, value = &quot;1&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.banner.html&quot;, value = &quot;3&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.banner.content_banner&quot;, value = &quot;4&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.video.title&quot;, value = &quot;5&quot;)
+				}
+			)
+		}
+    )
+	private Integer bannerType;
+
+    @Column(name = &quot;banner_group&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{components.banner.group}]]&quot;,
+		tab = &quot;main&quot;,
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/banner/autocomplete&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-min-length&quot;, value = &quot;1&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+				}
+			)
+		}
+    )
+	private String bannerGroup;
+
+<span class="fc" id="L134">	@Column(name = &quot;active&quot;)</span>
+	@DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;[[#{components.banner.active}]]&quot;,
+		visible = false,
+		tab = &quot;main&quot;
+    )
+<span class="fc" id="L141">	private Boolean active = true;</span>
+
+    @Column(name = &quot;priority&quot;)
+	@NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;[[#{components.banner.priority}]]&quot;,
+		tab = &quot;main&quot;
+    )
+	private Integer priority;
+
+	/*TAB ADVANCED*/
+		/* IMAGE BANNER */
+		@Column(name = &quot;banner_location&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.address}]]&quot;,
+			visible = false,
+			tab = &quot;advanced&quot;,
+			className = &quot;image banner-type banner-type-1 banner-type-4 banner-type-5&quot;,
+			renderFormat = &quot;dt-format-image&quot;
+		)
+		private String bannerLocation;
+
+		@Column(name = &quot;banner_redirect&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.redirect_link}]]&quot;,
+			visible = false,
+			tab = &quot;advanced&quot;,
+			className = &quot;banner-type banner-type-1 banner-type-3 banner-type-4 banner-type-5&quot;,
+			renderFormat = &quot;dt-format-link&quot;
+		)
+		private String bannerRedirect;
+
+		@Column(name = &quot;target&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title=&quot;[[#{components.banner.target}]]&quot;,
+			visible = false,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					options = {
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._self&quot;, value = &quot;_self&quot;),
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._blank&quot;, value = &quot;_blank&quot;),
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._top&quot;, value = &quot;_top&quot;),
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._parent&quot;, value = &quot;_parent&quot;)
+					}
+				)
+			},
+			className = &quot;banner-type banner-type-1 banner-type-5&quot;
+		)
+		private String target;
+
+
+		/*HTML BANNER columns*/
+		@Column(name = &quot;html_code&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXTAREA,
+			title=&quot;[[#{components.banner.html}]]&quot;,
+			className = &quot;banner-type banner-type-3&quot;,
+			tab = &quot;advanced&quot;,
+			visible = false
+		)
+		@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+		private String htmlCode;
+
+
+		/*CONTENT BANNER*/
+		@Column(name = &quot;image_link&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.imageLink}]]&quot;,
+			visible = false,
+			className = &quot;image banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			renderFormat = &quot;dt-format-image&quot;
+		)
+		private String imageLink;
+
+		@Column(name = &quot;image_link_mobile&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.imageLinkMobile}]]&quot;,
+			visible = false,
+			className = &quot;image banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			renderFormat = &quot;dt-format-image&quot;
+		)
+		private String imageLinkMobile;
+
+		@Column(name = &quot;primary_header&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title=&quot;[[#{components.banner.primaryHeader}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;
+		)
+		private String primaryHeader;
+
+		@Column(name = &quot;secondary_header&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title=&quot;[[#{components.banner.secondaryHeader}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;
+		)
+		private String secondaryHeader;
+
+		@Column(name = &quot;description_text&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.QUILL,
+			title=&quot;[[#{components.banner.descriptionText}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;
+		)
+		@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+		private String descriptionText;
+
+		//Primary link
+		@Column(name = &quot;primary_link_title&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title=&quot;[[#{components.banner.link.title}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					attr = {
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.banner.primaryLink}]]&quot;)
+					}
+				)
+			}
+		)
+		private String primaryLinkTitle;
+
+		@Column(name = &quot;primary_link_url&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.link.url}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			renderFormat = &quot;dt-format-link&quot;
+		)
+		private String primaryLinkUrl;
+
+		@Column(name = &quot;primary_link_target&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title=&quot;[[#{components.banner.link.openOption}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					options = {
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._self&quot;, value = &quot;_self&quot;),
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._blank&quot;, value = &quot;_blank&quot;)
+					}
+				)
+			}
+		)
+		private String primaryLinkTarget;
+
+		//Secundary link
+		@Column(name = &quot;secondary_link_title&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title=&quot;[[#{components.banner.link.title}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					attr = {
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.banner.secondaryLink}]]&quot;)
+					}
+				)
+			}
+		)
+		private String secondaryLinkTitle;
+
+		@Column(name = &quot;secondary_link_url&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.ELFINDER,
+			title=&quot;[[#{components.banner.link.url}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			renderFormat = &quot;dt-format-link&quot;
+		)
+		private String secondaryLinkUrl;
+
+		@Column(name = &quot;secondary_link_target&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.SELECT,
+			title=&quot;[[#{components.banner.link.openOption}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					options = {
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._self&quot;, value = &quot;_self&quot;),
+						@DataTableColumnEditorAttr(key = &quot;components.banner.editor._blank&quot;, value = &quot;_blank&quot;)
+					}
+				)
+			}
+		)
+		private String secondaryLinkTarget;
+
+		//Campaign parameter
+		@Column(name = &quot;campaign_title&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.TEXT,
+			title=&quot;[[#{components.banner.campaignTitle}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;,
+			editor = {
+				@DataTableColumnEditor(
+					attr = {
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+						@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.banner.campaign.heading}]]&quot;)
+					}
+				)
+			}
+		)
+		private String campaignTitle;
+
+		@Column(name = &quot;only_with_campaign&quot;)
+		@DataTableColumn(
+			inputType = DataTableColumnType.CHECKBOX,
+			title=&quot;[[#{components.banner.onlyWithCampaign}]]&quot;,
+			visible = false,
+			className = &quot;banner-type banner-type-4&quot;,
+			tab = &quot;advanced&quot;
+		)
+		private Boolean onlyWithCampaign;
+
+	/*TAB restrictions*/
+	@Column(name = &quot;date_from&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;[[#{components.banner.dateFrom}]]&quot;,
+		visible = false,
+		tab = &quot;restrictions&quot;
+    )
+	private Date dateFrom;
+
+	@Column(name = &quot;date_to&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;[[#{components.banner.dateTo}]]&quot;,
+		visible = false,
+		tab = &quot;restrictions&quot;
+    )
+	private Date dateTo;
+
+	@Column(name = &quot;max_views&quot;)
+	@NotNull
+	@DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;[[#{components.banner.max_views}]]&quot;,
+		visible = false,
+		tab = &quot;restrictions&quot;
+    )
+	private Integer maxViews;
+
+    @Column(name = &quot;stat_views&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DISABLED,
+        title=&quot;[[#{components.banner.stat_views.new}]]&quot;,
+		tab = &quot;restrictions&quot;,
+		className = &quot;hideOnCreate&quot;
+    )
+	private Integer statViews;
+
+	@Column(name = &quot;max_clicks&quot;)
+	@NotNull
+	@DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;[[#{components.banner.max_clicks}]]&quot;,
+		visible = false,
+		tab = &quot;restrictions&quot;
+    )
+	private Integer maxClicks;
+
+    @Column(name = &quot;stat_clicks&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DISABLED,
+        title=&quot;[[#{components.banner.stat_clicks.new}]]&quot;,
+		tab = &quot;restrictions&quot;,
+		className = &quot;hideOnCreate&quot;
+    )
+	private Integer statClicks;
+
+    @Column(name = &quot;client_id&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.banner.klient}]]&quot;,
+		visible = false,
+		tab = &quot;restrictions&quot;
+    )
+	private Integer clientId;
+
+	@Column(name = &quot;field_a&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_a&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldA;
+
+	@Column(name = &quot;field_b&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_b&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldB;
+
+	@Column(name = &quot;field_c&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_c&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldC;
+
+	@Column(name = &quot;field_d&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_d&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldD;
+
+	@Column(name = &quot;field_e&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_e&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldE;
+
+	@Column(name = &quot;field_f&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.banner.field_f&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldF;
+
+	/*UNUSED*/
+	@Column(name = &quot;click_tag&quot;)
+	private String clickTag;
+
+	@Column(name = &quot;frame_rate&quot;)
+	private Integer frameRate;
+
+	@Column(name = &quot;height&quot;)
+	private Integer height;
+
+	@Column(name = &quot;stat_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date statDate;
+
+	@Column(name = &quot;width&quot;)
+	private Integer width;
+
+	@Column(name = &quot;domain_id&quot;)
+	private int domainId;
+
+	@Column(name = &quot;visitor_cookie_group&quot;)
+	private String visitorCookieGroup;
+
+<span class="fc" id="L534">	@DataTableColumnNested</span>
+	@Transient
+	private transient BannerEditorFields editorFields = null;
+
+	@JsonManagedReference(value=&quot;bannerBeanDoc&quot;)
+    @OneToMany(mappedBy=&quot;bannerBeanDoc&quot;, fetch=FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval=true)
+	@DataTableColumn(inputType=DataTableColumnType.JSON, tab=&quot;restrictions&quot;, title=&quot;components.insert_script.choose_pages&quot;, className=&quot;dt-tree-page-array&quot;,
+		editor = { @DataTableColumnEditor( attr = {
+			@DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addPage&quot;)
+		} )}
+	)
+    List&lt;BannerWebDocBean&gt; docIds;
+
+	@JsonManagedReference(value=&quot;bannerBeanGr&quot;)
+    @OneToMany(mappedBy=&quot;bannerBeanGr&quot;, fetch=FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval=true)
+	@DataTableColumn(inputType=DataTableColumnType.JSON, tab=&quot;restrictions&quot;, title=&quot;grouptree.title&quot;, className=&quot;dt-tree-group-array&quot;,
+		editor = { @DataTableColumnEditor( attr = {
+			@DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addGroup&quot;)
+		} )}
+	)
+    List&lt;BannerWebGroupBean&gt; groupIds;
+
+	@Override
+	public Long getId() {
+<span class="fc" id="L558">		return id;</span>
+	}
+	@Override
+	public void setId(Long id) {
+<span class="fc" id="L562">		this.id = id;</span>
+<span class="fc" id="L563">	}</span>
+	public int getBannerId()
+    {
+<span class="fc bfc" id="L566" title="All 2 branches covered.">        if (id==null) return 0;</span>
+<span class="fc" id="L567">        return getId().intValue();</span>
+    }
+    public void setBannerId(int bannerId)
+    {
+<span class="fc" id="L571">        setId(Long.valueOf(bannerId));</span>
+<span class="fc" id="L572">    }</span>
+	public boolean isAvailable() {
+<span class="fc" id="L574">		return BannerDB.isBannerActive(this);</span>
+	}
+
+	public List&lt;BannerWebDocBean&gt; getDocIds() {
+<span class="fc" id="L578">        return docIds;</span>
+    }
+
+    public void setDocIds(List&lt;BannerWebDocBean&gt; docIds) {
+<span class="fc" id="L582">        this.docIds = docIds;</span>
+<span class="fc" id="L583">    }</span>
+
+	public List&lt;BannerWebGroupBean&gt; getGroupIds() {
+<span class="fc" id="L586">        return groupIds;</span>
+    }
+
+    public void setGroupIds(List&lt;BannerWebGroupBean&gt; groupIds) {
+<span class="fc" id="L590">        this.groupIds = groupIds;</span>
+<span class="fc" id="L591">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

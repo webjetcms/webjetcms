@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.rest</a> &gt; <span class="el_source">TranslationKeyController.java</span></div><h1>TranslationKeyController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.rest;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEditorFields;
+import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
+import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.utils.Pair;
+
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/v9/settings/translation-keys&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('edit_text')&quot;)
+public class TranslationKeyController extends DatatableRestControllerV2&lt;TranslationKeyEntity, Long&gt; {
+
+    private TranslationKeyService translationKeyService;
+
+    @Autowired
+    public TranslationKeyController(TranslationKeyService translationKeyService) {
+<span class="fc" id="L40">        super(translationKeyService.getTranslationKeyRepository());</span>
+        //Logger.debug(TranslationKeyController.class, &quot;TranslationKeyController.constructor v2, service=&quot;+translationKeyService);
+<span class="fc" id="L42">        this.translationKeyService = translationKeyService;</span>
+<span class="fc" id="L43">    }</span>
+
+    @Override
+    public Page&lt;TranslationKeyEntity&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L47">        DatatablePageImpl&lt;TranslationKeyEntity&gt; page = new DatatablePageImpl&lt;&gt;(translationKeyService.getTranslationKeys(getRequest(), pageable));</span>
+<span class="fc" id="L48">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L49">        return page;</span>
+    }
+
+    @Override
+    public TranslationKeyEntity insertItem(TranslationKeyEntity translationKeyEntity) {
+<span class="fc" id="L54">        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportMode(), getImportedColumns());</span>
+<span class="fc" id="L55">        setForceReload(true);</span>
+<span class="fc" id="L56">        return saved;</span>
+    }
+
+    @Override
+    public TranslationKeyEntity editItem(TranslationKeyEntity translationKeyEntity, long id) {
+<span class="fc" id="L61">        TranslationKeyEntity saved = translationKeyService.createOrEditTranslationKey(getUser(), translationKeyEntity, isImporting(), getImportMode(), getImportedColumns());</span>
+<span class="fc" id="L62">        setForceReload(true);</span>
+<span class="fc" id="L63">        return saved;</span>
+    }
+
+    @Override
+    public boolean deleteItem(TranslationKeyEntity entity, long id) {
+<span class="fc" id="L68">        Map&lt;String, String&gt; languageFieldCombination = translationKeyService.getLanguageFieldCombination();</span>
+<span class="fc" id="L69">        TranslationKeyRepository repo = translationKeyService.getTranslationKeyRepository();</span>
+<span class="fc" id="L70">        String key = entity.getKey();</span>
+<span class="fc" id="L71">        List&lt;String&gt; cantBeDelete = new ArrayList&lt;&gt;();</span>
+
+        //Get value from custom-fields
+        //Every lng have alphabet combination that says in which field is this lng value
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        for(Map.Entry&lt;String, String&gt; entry : languageFieldCombination.entrySet()) {</span>
+<span class="fc" id="L76">            String lng = entry.getKey();</span>
+
+            //Now check if this key+lng combination is in DB
+<span class="fc" id="L79">            TranslationKeyEntity fromDB = repo.findByKeyAndLng(key, lng);</span>
+
+            //If value for this key value combination exist but not in DB,
+            // we cant delete this translation, because its value from file
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if(fromDB == null) {</span>
+<span class="fc" id="L84">                Prop lngProp = Prop.getInstance(lng);</span>
+<span class="fc" id="L85">                String translation = lngProp.getTextProp(key);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                if (translation!=null) {</span>
+                    //key exists ONLY on properties file, notify that it can't be deleted from DB
+<span class="fc" id="L88">                    cantBeDelete.add(lng.toUpperCase());</span>
+                }
+                continue;
+            }
+<span class="fc" id="L92">            translationKeyService.delete(getUser(), key, lng);</span>
+<span class="fc" id="L93">        }</span>
+
+        //Check if same values cant be deleted, if yes show notification
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if(cantBeDelete.isEmpty()==false) {</span>
+<span class="fc" id="L97">            String notifyMsg = getProp().getText(&quot;components.translation_key.deletePropFile.desc&quot;, String.join(&quot;,&quot;, cantBeDelete));</span>
+            //Show notification
+<span class="fc" id="L99">            addNotify(new NotifyBean(getProp().getText(&quot;components.translation_key.deletePropFile.title&quot;), notifyMsg, NotifyType.INFO, 10000));</span>
+        }
+
+<span class="fc" id="L102">        setForceReload(true);</span>
+<span class="fc" id="L103">        Prop.getInstance(true);</span>
+<span class="fc" id="L104">        return true;</span>
+    }
+
+    @Override
+    public Page&lt;TranslationKeyEntity&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, TranslationKeyEntity search) {
+<span class="fc" id="L109">        String sortKey = null;</span>
+<span class="fc" id="L110">        String sortValue = null;</span>
+<span class="fc" id="L111">        Map&lt;String, String&gt; searchMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; paramsEntry : params.entrySet()) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (translationKeyService.checkSearchParam(paramsEntry.getKey())) {</span>
+<span class="fc" id="L115">                String key = getCleanKey(paramsEntry.getKey());</span>
+<span class="fc" id="L116">                String value = paramsEntry.getValue(); //getCleanValue(paramsEntry.getValue());</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">                if (&quot;updateDate&quot;.equals(key)) {</span>
+<span class="fc" id="L118">                    value = paramsEntry.getValue();</span>
+                }
+<span class="fc" id="L120">                searchMap.put(key, value);</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            } else if (translationKeyService.checkSortParam(paramsEntry.getKey())) {</span>
+<span class="fc" id="L122">                String[] sortParams = paramsEntry.getValue().split(&quot;,&quot;);</span>
+<span class="fc" id="L123">                sortKey = sortParams[0];</span>
+<span class="fc" id="L124">                sortValue = sortParams[1];</span>
+            }
+<span class="fc" id="L126">        }</span>
+
+<span class="fc" id="L128">        Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortKey, sortValue);</span>
+<span class="fc" id="L129">        Page&lt;TranslationKeyEntity&gt; filtered = translationKeyService.getFilteredTranslationKeys(searchMap, sortPair, pageable, getRequest());</span>
+<span class="fc" id="L130">        processFromEntity(filtered, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L131">        return filtered;</span>
+    }
+
+    @Override
+    public boolean processAction(TranslationKeyEntity entity, String action) {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (&quot;reload&quot;.equals(action)) {</span>
+<span class="nc" id="L137">            Prop.getInstance(true);</span>
+<span class="nc" id="L138">            setForceReload(true);</span>
+<span class="nc" id="L139">            return true;</span>
+        }
+<span class="nc" id="L141">        return false;</span>
+    }
+
+    @Override
+    public TranslationKeyEntity processFromEntity(TranslationKeyEntity entity, ProcessItemAction action) {
+<span class="pc bpc" id="L146" title="2 of 4 branches missed.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
+<span class="fc" id="L147">            TranslationKeyEditorFields tkef = new TranslationKeyEditorFields();</span>
+<span class="fc" id="L148">            tkef.from(translationKeyService.getLanguageFieldCombination(), action);</span>
+<span class="fc" id="L149">            entity.setEditorFields(tkef);</span>
+        }
+<span class="fc" id="L151">        return entity;</span>
+    }
+
+    @Override
+    public void afterImportChunk(int chunk, int totalChunks) {
+<span class="nc" id="L156">        Logger.debug(getClass(), &quot;afterImportChunk, chunk=&quot;+chunk+&quot; totalChunks=&quot;+totalChunks);</span>
+<span class="nc" id="L157">        Adminlog.add(Adminlog.TYPE_PROP_UPDATE, &quot;Importing keys, chunk=&quot;+(chunk+1)+&quot;/&quot;+totalChunks, -1, -1);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (chunk+1&gt;=totalChunks) Prop.getInstance(true);</span>
+<span class="nc" id="L159">    }</span>
+
+    @Override
+    public List&lt;TranslationKeyEntity&gt; findItemBy(String propertyName, TranslationKeyEntity original)
+            throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+
+        //always return empty list, because test for existence is done in TranslationKeyService for every lng column
+<span class="nc" id="L166">        List&lt;TranslationKeyEntity&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L167">        return list;</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

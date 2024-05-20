@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationService.java</span></div><h1>ReservationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.reservation.jpa.ReservationEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+
+@Service
+<span class="fc" id="L26">public class ReservationService {</span>
+
+    /**
+     * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
+     * Check this validation requirements :
+     * 1. Reservation time from is &lt; reservation time to (interval must have 1 minute at least)
+     * 2. Reservation time interval is &gt;= minimal reservation time (in minutes) set in reservation object
+     * 3. If reservation range reservationTimeFrom-reservationTimeTo fits inside of reservationObject range reservationTimeFrom-reservationTimeTo
+     *    (check it separetly for every day in date range dateFrom-DateTo because reservation object range can be different for every day in week)
+     * @param reservation reservation to check
+     * @param reservationObejct reservation object that we trying reservate
+     * @param reservationObjectTimes reservation obejct times list
+     * @return If any of this validations are violated, text key with belonging error message is returned.
+     *         Otherwise return null;
+     */
+    public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject,
+        List&lt;ReservationObjectTimesEntity&gt; reservationObjectTimes) {
+
+        //Compute day range (how many days we want reservate)
+<span class="fc" id="L45">        long diffD = reservation.getDateTo().getTime() - reservation.getDateFrom().getTime();</span>
+<span class="fc" id="L46">        long reservationDaysRange = TimeUnit.DAYS.convert(diffD, TimeUnit.MILLISECONDS) + 1;</span>
+
+        //In case that date range is &gt;= than 7, we must check every dayOfWeek
+<span class="fc" id="L49">        boolean checkEveryDayOfWeek = false;</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if(reservationDaysRange &gt;= 7) checkEveryDayOfWeek = true;</span>
+
+        //Get days of week during our reservation
+<span class="fc" id="L53">        List&lt;Integer&gt; daysOfWeek = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if(checkEveryDayOfWeek) {</span>
+<span class="nc" id="L55">            daysOfWeek.add(1);</span>
+<span class="nc" id="L56">            daysOfWeek.add(2);</span>
+<span class="nc" id="L57">            daysOfWeek.add(3);</span>
+<span class="nc" id="L58">            daysOfWeek.add(4);</span>
+<span class="nc" id="L59">            daysOfWeek.add(5);</span>
+<span class="nc" id="L60">            daysOfWeek.add(6);</span>
+<span class="nc" id="L61">            daysOfWeek.add(7);</span>
+        } else { //Compute day o week
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            for(int i = 0; i &lt; reservationDaysRange; i++) {</span>
+                //We need day of week (but stupid Calendar start from Sunday = 1, Monday = 2 ... Saturday = 7 )
+<span class="fc" id="L65">                Calendar cld = Calendar.getInstance();</span>
+<span class="fc" id="L66">                cld.setTime(reservation.getDateFrom());</span>
+                //We adding days because we need loop date range and get dayOfWeek for every of them
+<span class="fc" id="L68">                cld.add(Calendar.DAY_OF_MONTH, i);</span>
+<span class="fc" id="L69">                int dayOfweek = cld.get(Calendar.DAY_OF_WEEK);</span>
+                //Format day of week to our standart where Monday = 1, Tuesday = 2 ... Sunday = 7
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);</span>
+<span class="fc" id="L72">                daysOfWeek.add(dayOfweek);</span>
+            }
+        }
+
+        //Validate reservation time values (if we want compare times, date values must have set yyyy-mm-dd at same value &quot;2000-01-01&quot;)
+<span class="fc" id="L77">        Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());</span>
+<span class="fc" id="L78">        Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());</span>
+
+        //Validate time range if have correct values from-to
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if(reservationTimeFrom.getTime() &gt;= reservationTimeTo.getTime()) return &quot;reservation.reservations.time_range_in_bad_order.js&quot;;</span>
+
+        //Validate if time range is big enough (because reservation object has set a minimum time range set)
+        //Only if reservation object cant be reservate only for whole day
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if(!reservationObject.getReservationForAllDay()) {</span>
+<span class="fc" id="L86">            long diffT = reservationTimeTo.getTime() - reservationTimeFrom.getTime();</span>
+<span class="fc" id="L87">            long reservationTimesRange = TimeUnit.MILLISECONDS.toMinutes(diffT);</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if(reservationTimesRange &lt; reservationObject.getTimeUnit()) return &quot;reservation.reservations.time_range_to_short.js&quot;;</span>
+        }
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for(Integer dayOfWeek : daysOfWeek) {</span>
+            //First set default reservation object times range
+<span class="fc" id="L93">            Date objectTimeFrom = reservationObject.getReservationTimeFrom();</span>
+<span class="fc" id="L94">            Date objectTimeTo = reservationObject.getReservationTimeTo();</span>
+
+            //Loop reservationObjectTimes and check if our dayOfWeek have special reservation time
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            for(ReservationObjectTimesEntity objectTime : reservationObjectTimes) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                if(objectTime.getDay() == dayOfWeek) {</span>
+<span class="fc" id="L99">                    objectTimeFrom = objectTime.getTimeFrom();</span>
+<span class="fc" id="L100">                    objectTimeTo = objectTime.getTimeTo();</span>
+<span class="fc" id="L101">                    break;</span>
+                }
+<span class="fc" id="L103">            }</span>
+
+            //Now we have reservation object time range for specific day of week
+            //We must check if &quot;reservation&quot; time range is inside &quot;reservation object&quot; time range
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if((objectTimeFrom.getTime() &lt;= reservationTimeFrom.getTime())</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">            &amp;&amp; (objectTimeTo.getTime() &gt;= reservationTimeTo.getTime())) {</span>
+                //&quot;reservation&quot; time range IS inside &quot;reservation object&quot; time range
+<span class="fc" id="L110">                continue;</span>
+            } else {
+                //&quot;reservation&quot; time range IS NOT inside &quot;reservation object&quot; time range
+<span class="fc" id="L113">                return &quot;reservation.reservations.time_range_validity_error.js&quot;;</span>
+            }
+        }
+
+        //No problem found so return null
+<span class="fc" id="L118">        return null;</span>
+    }
+
+    /**
+     * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
+     * Check this validation requirements :
+     * 1. Reservation date from is &lt;= than reservation date to (if from = to reservation is for 1 day)
+     * 2. Reservation date from/to arent in past
+     * 3. Reservation overlaping validity, reservation can overlap with other reservations BUT max number of overlaps is set
+     *    by reservation object (we ccount ONLY already approved reservations)
+     * @param reservation reservation to check
+     * @param reservationObejct reservation object that we trying reservate
+     * @param rr reservation repository (needed in proces of validation)
+     * @return If any of this validations are violated, text key with belonging error message is returned.
+     *         Otherwise return null;
+     */
+    public String checkReservationOverlapingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObejct, ReservationRepository rr) {
+
+<span class="fc" id="L136">        Date reservationDateFrom = setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0);</span>
+<span class="fc" id="L137">        Date reservationDateTo = setTimeOfDate(reservation.getDateTo(), 0, 0, 0, 0);</span>
+
+        //Validate date range
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if(reservationDateTo.before(reservationDateFrom)) return &quot;reservation.reservations.date_range_in_bad_order.js&quot;;</span>
+
+        //Reservation date from/to allready includes set time
+        //Validate date time range (if part or whole range is in past)
+<span class="fc" id="L144">        Date now = new Date();</span>
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">        if(reservation.getDateFrom().before(now) || reservation.getDateTo().before(now))</span>
+<span class="fc" id="L146">            return &quot;reservation.reservations.range_in_past.js&quot;;</span>
+
+        //Need set dateTo to edge of date (because we want all reservations, from whole day)
+<span class="fc" id="L149">        reservationDateTo = setTimeOfDate(reservation.getDateTo(), 23, 59, 59, 0);</span>
+
+        //Potentially overlaping reservations, days are overlaping BUT time does not have overlap
+        // !! We are finding only ACCEPTED reservations
+        //We dont count reservations is they are rejected or still waiting for acceptance
+<span class="fc" id="L154">        List&lt;ReservationEntity&gt; potentiallyOverlappingReservations =</span>
+<span class="fc" id="L155">            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObejct.getId().intValue(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom);</span>
+
+        //When we do EDIT on reservation, we must remove this reservation from list
+<span class="fc" id="L158">        Long reservationId = reservation.getId();</span>
+<span class="pc bpc" id="L159" title="3 of 6 branches missed.">        if(reservationId != null &amp;&amp; reservationId &gt; 0 &amp;&amp; potentiallyOverlappingReservations != null)</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            potentiallyOverlappingReservations.removeIf(item -&gt; item.getId() == reservationId);</span>
+
+        //Now check if even time interval overlaps
+<span class="fc" id="L163">        List&lt;ReservationEntity&gt; overlappingReservations = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L165" title="1 of 4 branches missed.">        if(potentiallyOverlappingReservations != null &amp;&amp; potentiallyOverlappingReservations.size() &gt; 0) {</span>
+            //Get reservation time in correct format (if we want compare times, date values must have set yyyy-mm-dd at same value &quot;2000-01-01&quot;)
+<span class="fc" id="L167">            Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());</span>
+<span class="fc" id="L168">            Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());</span>
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            for(ReservationEntity overlapReservation : potentiallyOverlappingReservations) {</span>
+                //Need to convert date to same format where date is set to 2000-01-01 and time is untouched
+                //This way we can compare times (time saved in DB allready has this format)
+<span class="fc" id="L173">                Date overlapFrom = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateFrom());</span>
+<span class="fc" id="L174">                Date overlapTo = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateTo());</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                if(checkOverlap(reservationTimeFrom, reservationTimeTo, overlapFrom, overlapTo, true))</span>
+<span class="fc" id="L177">                    overlappingReservations.add(overlapReservation);</span>
+<span class="fc" id="L178">            }</span>
+        }
+
+        /*
+         * Now we know that all reservations in List &quot;overlapReservation&quot; are overlaping with our new reservation, but
+         * we still must figure out if they are overlaping each other. Reason is we need compute max number of overlaps
+         * in same time. Reason is because every &quot;reservationObject&quot; has it own set max number of reservations in same time.
+        */
+
+<span class="fc" id="L187">        int maxOverlapCount = 0;</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        for(int i = 0; i &lt; overlappingReservations.size(); i++) {</span>
+<span class="fc" id="L189">            int overlapCount = 0;</span>
+<span class="fc" id="L190">            ReservationEntity re1 = overlappingReservations.get(i);</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">            for(int j = 0; j &lt; overlappingReservations.size(); j++) {</span>
+                //Do not compare with same entity
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                if(i == j) continue;</span>
+
+<span class="fc" id="L196">                ReservationEntity re2 = overlappingReservations.get(j);</span>
+
+<span class="fc bfc" id="L198" title="All 2 branches covered.">                if(checkOverlap(re1.getDateFrom(), re1.getDateTo(), re2.getDateFrom(), re2.getDateTo(), true))</span>
+<span class="fc" id="L199">                    overlapCount++;</span>
+            }
+
+            //Save max overlap count
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            maxOverlapCount = maxOverlapCount &gt; overlapCount ? maxOverlapCount : overlapCount;</span>
+        }
+
+        //+1 because 1 overlap means that there are 2 reservation in same time (2 overlaps means 3 reservation in same time etc)
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if(overlappingReservations.size() &gt; 0) maxOverlapCount++;</span>
+
+        //+1 because we want add new reservation (+1 our new reservation)
+        //Validate if still can add our reservation (due to number limitation)
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        if((maxOverlapCount + 1) &gt; reservationObejct.getMaxReservations())</span>
+<span class="fc" id="L212">            return &quot;reservation.reservations.max_reservations_error.js&quot;;</span>
+
+        //No problem found so return null
+<span class="fc" id="L215">        return null;</span>
+    }
+
+    /**
+     * Prepare reservation to validation. First check if needed values arent null. Then set reservation date based on input value &quot;isReservationForAllDay&quot;.
+     * If isReservationForAllDay is true, date is same but hh:mm:ss:ms are set to 0 (because reservation upon reservation object for whole day cant set other time then default).
+     * If isReservationForAllDay is false, date is set as combination of date from reservation and time from reservationEditorFields.
+     * @param reservation
+     * @param isReservationForAllDay
+     */
+    public void  prepareReservationToValidation(ReservationEntity reservation, Boolean isReservationForAllDay) {
+        //Check of values
+<span class="pc bpc" id="L227" title="3 of 6 branches missed.">        if(reservation.getDateFrom() == null || reservation.getDateTo() == null || reservation.getEditorFields() == null)</span>
+<span class="nc" id="L228">            throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
+
+        //If reservation object is set for all day (it means we do not select reservation time)
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if(isReservationForAllDay) {</span>
+            //In case of &quot;for all day&quot;, use only date range and time params set to 0
+<span class="nc" id="L233">            reservation.setDateFrom(setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0));</span>
+<span class="nc" id="L234">            reservation.setDateTo(setTimeOfDate(reservation.getDateTo(), 0, 0, 0, 0));</span>
+        } else {
+            //Check of values
+<span class="pc bpc" id="L237" title="2 of 4 branches missed.">            if(reservation.getEditorFields().getReservationTimeFrom() == null || reservation.getEditorFields().getReservationTimeTo() == null)</span>
+<span class="nc" id="L238">                throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
+
+            //If reservation ISNT for all day, set reservation date as combination of selected date and time
+<span class="fc" id="L241">            Date dateTimeFrom = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateFrom(), reservation.getEditorFields().getReservationTimeFrom());</span>
+<span class="fc" id="L242">            Date dateTimeTo = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateTo(), reservation.getEditorFields().getReservationTimeTo());</span>
+
+<span class="fc" id="L244">            reservation.setDateFrom(dateTimeFrom);</span>
+<span class="fc" id="L245">            reservation.setDateTo(dateTimeTo);</span>
+        }
+<span class="fc" id="L247">    }</span>
+
+    /**
+     * Get reservation object &quot;email accepter&quot; and send send mail to notify accpter about new waiting reservation for thi reservation object.
+     * Email inludes link to this reservation wating for approve.
+     * @param reservation
+     * @param reservationObject
+     */
+    public void sendAcceptationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, HttpServletRequest request) {
+<span class="nc bnc" id="L256" title="All 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
+        //Validate recipient email
+<span class="nc" id="L258">        String recipientEmail = reservationObject.getEmailAccepter();</span>
+        try {
+<span class="nc" id="L260">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
+<span class="nc" id="L261">            emailAddr.validate();</span>
+<span class="nc" id="L262">        } catch (AddressException ex) {</span>
+<span class="nc" id="L263">            return;</span>
+<span class="nc" id="L264">        }</span>
+
+<span class="nc" id="L266">        Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L267">		String senderName = notNull(reservation.getName()) + &quot; &quot; + notNull(reservation.getSurname());</span>
+<span class="nc" id="L268">		String senderEmail = notNull(reservation.getEmail());</span>
+<span class="nc" id="L269">		String reservationObjectName = notNull(reservationObject.getName());</span>
+<span class="nc" id="L270">		String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
+<span class="nc" id="L271">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
+<span class="nc" id="L272">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
+<span class="nc" id="L273">		String timeTo = Tools.formatTime(reservation.getDateTo());</span>
+<span class="nc" id="L274">		String subject = prop.getText(&quot;components.reservation.mail.title&quot;) + senderName + &quot; - &quot; + reservationObjectName;</span>
+<span class="nc" id="L275">		String phoneNumber = notNull(reservation.getPhoneNumber());</span>
+
+<span class="nc" id="L277">        String message = &quot;&quot;;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if(reservationObject.getReservationForAllDay()) {</span>
+<span class="nc" id="L279">            message = prop.getText(&quot;components.reservation.mail.greeting&quot;) + &quot;&lt;br /&gt;&lt;br /&gt;&quot; + senderName</span>
+<span class="nc" id="L280">                + &quot; (&quot; + prop.getText(&quot;user.phone&quot;) + &quot; )&quot; + phoneNumber + &quot; &quot;</span>
+<span class="nc" id="L281">                + prop.getText(&quot;components.reservation.mail.next&quot;) + &quot; &lt;b&gt;&quot; + reservationObjectName + &quot;&lt;/b&gt; &quot;</span>
+<span class="nc" id="L282">                + prop.getText(&quot;reservation.reservations.email_for_all_day&quot;) + &quot; &quot;</span>
+<span class="nc" id="L283">                + prop.getText(&quot;reservation.reservations.email_date_from&quot;) + &quot; &quot; + dateFrom + &quot; &quot;</span>
+<span class="nc" id="L284">                + prop.getText(&quot;reservation.reservations.email_date_to&quot;) + &quot; &quot; + dateTo + &quot; &quot;</span>
+<span class="nc" id="L285">                + prop.getText(&quot;components.reservation.mail.next4&quot;) + &quot;&lt;br/&gt; &quot; + reservation.getPurpose() + &quot; &lt;br /&gt;&lt;br /&gt;&quot;</span>
+<span class="nc" id="L286">                + prop.getText(&quot;components.reservation.mail.next5&quot;) + &quot;&lt;a href=\&quot;&quot;+Tools.getBaseHref(request)+&quot;/apps/reservation/admin&amp;id=&quot; + reservation.getId() + &quot;\&quot;&gt;&quot;</span>
+<span class="nc" id="L287">                + prop.getText(&quot;components.reservation.mail.accept&quot;) + &quot;&lt;/a&gt;&quot;;</span>
+        } else {
+<span class="nc" id="L289">            message = prop.getText(&quot;components.reservation.mail.greeting&quot;) + &quot;&lt;br /&gt;&lt;br /&gt;&quot; + senderName</span>
+<span class="nc" id="L290">                + &quot; (&quot; + prop.getText(&quot;user.phone&quot;) + &quot; )&quot; + phoneNumber + &quot; &quot;</span>
+<span class="nc" id="L291">                + prop.getText(&quot;components.reservation.mail.next&quot;) + &quot; &lt;b&gt;&quot; + reservationObjectName + &quot;&lt;/b&gt; &quot;</span>
+<span class="nc" id="L292">                + prop.getText(&quot;reservation.reservations.email_date_from&quot;) + &quot; &quot; + dateFrom + &quot; &quot;</span>
+<span class="nc" id="L293">                + prop.getText(&quot;reservation.reservations.email_date_to&quot;) + &quot; &quot; + dateTo + &quot; &quot;</span>
+<span class="nc" id="L294">                + prop.getText(&quot;components.reservation.mail.next2&quot;) + &quot; &quot; + timeFrom + &quot; &quot;</span>
+<span class="nc" id="L295">                + prop.getText(&quot;components.reservation.mail.next3&quot;) + &quot; &quot; + timeTo + &quot; &quot;</span>
+<span class="nc" id="L296">                + prop.getText(&quot;components.reservation.mail.next4&quot;) + &quot;&lt;br/&gt; &quot; + reservation.getPurpose() + &quot; &lt;br /&gt;&lt;br /&gt;&quot;</span>
+<span class="nc" id="L297">                + prop.getText(&quot;components.reservation.mail.next5&quot;) + &quot;&lt;a href=\&quot;&quot;+Tools.getBaseHref(request)+&quot;/apps/reservation/admin&amp;id=&quot; + reservation.getId() + &quot;\&quot;&gt;&quot;</span>
+<span class="nc" id="L298">                + prop.getText(&quot;components.reservation.mail.accept&quot;) + &quot;&lt;/a&gt;&quot;;</span>
+        }
+
+<span class="nc" id="L301">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message, null);</span>
+<span class="nc" id="L302">    }</span>
+
+    /**
+     * Send confirmation email to email adress set in reservation. Email subject and text is based on reservation &quot;accepted&quot; value where :
+     * (true, resevation was accepted),
+     * (false, reservation was rejected),
+     * (null, reservation status was reset and reservation is waiting for approve)
+     * @param reservation approved reservation
+     * @param reservationObject reservation object that reservation is trying reservate
+     * @param request HttpServletRequest instance
+     * @param loggedUserName full name of actualy logged user who change reservation accepted status
+     */
+    public void sendConfirmationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, HttpServletRequest request, String loggedUserName) {
+<span class="nc bnc" id="L315" title="All 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
+        //Validate recipient email
+<span class="nc" id="L317">        String recipientEmail = reservation.getEmail();</span>
+        try {
+<span class="nc" id="L319">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
+<span class="nc" id="L320">            emailAddr.validate();</span>
+<span class="nc" id="L321">        } catch (AddressException ex) {</span>
+<span class="nc" id="L322">            return;</span>
+<span class="nc" id="L323">        }</span>
+
+<span class="nc" id="L325">        Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L326">        String recipientName = notNull(reservation.getName() + &quot; &quot; + reservation.getSurname());</span>
+<span class="nc" id="L327">        String reservationObjectName = notNull(reservationObject.getName());</span>
+<span class="nc" id="L328">		String senderName = notNull(reservation.getName() + reservation.getSurname());</span>
+<span class="nc" id="L329">		String senderEmail = &quot;no-reply@&quot;+Tools.getBaseHref(request).replace(&quot;https://&quot;, &quot;&quot;).replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;www.&quot;, &quot;&quot;);</span>
+<span class="nc" id="L330">        String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
+<span class="nc" id="L331">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
+<span class="nc" id="L332">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
+<span class="nc" id="L333">        String timeTo = Tools.formatTime(reservation.getDateTo());</span>
+<span class="nc" id="L334">		String subject = &quot;&quot;;</span>
+<span class="nc" id="L335">        String status = &quot;&quot;;</span>
+<span class="nc" id="L336">        String endOfEmail = &quot;.&quot;;</span>
+<span class="nc" id="L337">        Boolean approved = reservation.getAccepted();</span>
+
+<span class="nc bnc" id="L339" title="All 2 branches missed.">        if(approved == null) {</span>
+<span class="nc" id="L340">            subject = prop.getText(&quot;reservation.reservations.email_subject_reset&quot;);</span>
+<span class="nc" id="L341">            status = prop.getText(&quot;reservation.reservations.email_was_reset&quot;);</span>
+<span class="nc" id="L342">            endOfEmail = prop.getText(&quot;reservation.reservations.reset_end_of_email&quot;);</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        } else if(approved == true) {</span>
+<span class="nc" id="L344">            subject = prop.getText(&quot;reservation.reservations.email_subject_accepted&quot;);</span>
+<span class="nc" id="L345">            status = prop.getText(&quot;reservation.reservations.email_was_accepted&quot;);</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">        } else if(approved == false) {</span>
+<span class="nc" id="L347">            subject =  prop.getText(&quot;reservation.reservations.email_subject_rejected&quot;);</span>
+<span class="nc" id="L348">            status = prop.getText(&quot;reservation.reservations.email_was_rejected&quot;);</span>
+        }
+
+<span class="nc" id="L351">        String message = &quot;&quot;;</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if(reservationObject.getReservationForAllDay()) {</span>
+<span class="nc" id="L353">            message = prop.getText(&quot;reservation.reservations.email_greeting&quot;) + &quot; &quot; + recipientName + &quot;,&lt;br&gt;&lt;br&gt;&quot;</span>
+<span class="nc" id="L354">                + prop.getText(&quot;reservation.reservations.email_your_reservation&quot;) + &quot; &lt;b&gt;&quot; + reservationObjectName + &quot;&lt;/b&gt; &quot;</span>
+<span class="nc" id="L355">                + prop.getText(&quot;reservation.reservations.email_for_all_day&quot;) + &quot; &quot;</span>
+<span class="nc" id="L356">                + prop.getText(&quot;reservation.reservations.email_date_from&quot;) + &quot; &quot; + dateFrom + &quot; &quot;</span>
+<span class="nc" id="L357">                + prop.getText(&quot;reservation.reservations.email_date_to&quot;) + &quot; &quot; + dateTo + &quot; &quot;;</span>
+        } else {
+<span class="nc" id="L359">            message = prop.getText(&quot;reservation.reservations.email_greeting&quot;) + &quot; &quot; + recipientName + &quot;,&lt;br&gt;&lt;br&gt;&quot;</span>
+<span class="nc" id="L360">                + prop.getText(&quot;reservation.reservations.email_your_reservation&quot;) + &quot; &lt;b&gt;&quot; + reservationObjectName + &quot;&lt;/b&gt; &quot;</span>
+<span class="nc" id="L361">                + prop.getText(&quot;reservation.reservations.email_date_from&quot;) + &quot; &quot; + dateFrom + &quot; &quot;</span>
+<span class="nc" id="L362">                + prop.getText(&quot;reservation.reservations.email_date_to&quot;) + &quot; &quot; + dateTo + &quot; &quot;</span>
+<span class="nc" id="L363">                + prop.getText(&quot;components.reservation.mail.next2&quot;) + &quot; &quot; + timeFrom + &quot; &quot;</span>
+<span class="nc" id="L364">                + prop.getText(&quot;components.reservation.mail.next3&quot;) + &quot; &quot; + timeTo + &quot; &quot;;</span>
+        }
+
+<span class="nc" id="L367">        message += &quot;&lt;b&gt;&quot; + status + &quot;&lt;b/&gt; : &quot; + loggedUserName + &quot; &quot; + endOfEmail;</span>
+
+<span class="nc" id="L369">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message, null);</span>
+<span class="nc" id="L370">	}</span>
+
+    /**
+     * Take input date and set his time part hh:mm:ss:ms using input params. If input date is null, null will be returned.
+     * @param date input date to be edit
+     * @param hours number of hours we want to set into date
+     * @param minutes number of minutes we want to set into date
+     * @param seconds number of seconds we want to set into date
+     * @param milliseconds number of milliseconds we want to set into date
+     * @return date where date part is same as input but time part is set based on input params
+     */
+    private Date setTimeOfDate(Date date, int hours, int minutes, int seconds, int milliseconds) {
+<span class="pc bpc" id="L382" title="1 of 2 branches missed.">        if(date == null) return null;</span>
+<span class="fc" id="L383">        Calendar newDate = Calendar.getInstance();</span>
+<span class="fc" id="L384">        newDate.setTime(date);</span>
+<span class="fc" id="L385">        newDate.set(Calendar.HOUR_OF_DAY, hours);</span>
+<span class="fc" id="L386">        newDate.set(Calendar.MINUTE, minutes);</span>
+<span class="fc" id="L387">        newDate.set(Calendar.SECOND, seconds);</span>
+<span class="fc" id="L388">        newDate.set(Calendar.MILLISECOND, milliseconds);</span>
+<span class="fc" id="L389">        return newDate.getTime();</span>
+    }
+
+    //Now validate if date range s1-e1 and range s2-e2 overlaps
+    //Formula ((s1 &lt;= e2) &amp;&amp; (s2 &lt;= e1)) , if true, then two dates are overlaping
+
+    /**
+     * Validate if inteval s1-e1 and interval s2-e2 are overlaping using logical formula.
+     * Used formula ((s1 &lt;= e2) &amp;&amp; (s2 &lt;= e1)), return true if they are overlaping.
+     * Intervals are overlaping even if one start when second ends (08:00-09:00 and 09:00-10:00).
+     * IF function is used to compare date values (intervals) representing TIME we want all the values to share same yyyy-mm-dd part and for this reason
+     * with input param &quot;prepareDates&quot; set to true, every date part of value will be set to 2000-01-01, so we can compare times.
+     * @param s1 date value representing START of FIRST interval
+     * @param e1 date value representing END of FIRST interval
+     * @param s2 date value representing START of SECOND interval
+     * @param e2 date value representing END of SECOND interval
+     * @param prepareDates if true set date part of intervals to 2000-01-01, false/null - do nothing
+     * @return true - if interval are overlaping, otherwise false
+     */
+    public Boolean checkOverlap(Date s1, Date e1, Date s2, Date e2, Boolean prepareDates) {
+<span class="pc bpc" id="L409" title="2 of 4 branches missed.">        if(prepareDates != null &amp;&amp; prepareDates != false) {</span>
+<span class="fc" id="L410">            s1 = DefaultTimeValueConverter.getValidTimeValue(s1);</span>
+<span class="fc" id="L411">            e1 = DefaultTimeValueConverter.getValidTimeValue(e1);</span>
+<span class="fc" id="L412">            s2 = DefaultTimeValueConverter.getValidTimeValue(s2);</span>
+<span class="fc" id="L413">            e2 = DefaultTimeValueConverter.getValidTimeValue(e2);</span>
+        }
+
+<span class="fc bfc" id="L416" title="All 4 branches covered.">        if((s1.getTime() &lt;= e2.getTime()) &amp;&amp; (s2.getTime() &lt;= e1.getTime())) return true;</span>
+<span class="fc" id="L417">        return false;</span>
+    }
+
+    /**
+     * Check if input string is null and if yes return empty string. Otherwise return original string.
+     * @param s input string to check
+     * @return not null string
+     */
+    private String notNull(String s) {
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		if (s == null) return &quot;&quot;;</span>
+<span class="nc" id="L427">		return s;</span>
+	}
+
+    /**
+     * Custom function to throw new RuntimeException with message.
+     * @param errorTextKey translate key of error message
+     */
+    public void throwError(String errorTextKey) {
+<span class="fc" id="L435">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L436">        String message = prop.getText(errorTextKey);</span>
+<span class="fc" id="L437">        throw new RuntimeException(message);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

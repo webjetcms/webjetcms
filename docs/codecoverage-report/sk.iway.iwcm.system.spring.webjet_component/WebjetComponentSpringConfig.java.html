@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetComponentSpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component</a> &gt; <span class="el_source">WebjetComponentSpringConfig.java</span></div><h1>WebjetComponentSpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.Validator;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.view.JstlView;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerView;
+import org.thymeleaf.spring5.SpringTemplateEngine;
+import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.system.spring.webjet_component.dialect.IwcmDialect;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Configuration
+@EnableWebMvc
+public class WebjetComponentSpringConfig {
+
+    final
+    ApplicationContext context;
+
+<span class="fc" id="L30">    public WebjetComponentSpringConfig(ApplicationContext context) {</span>
+<span class="fc" id="L31">        this.context = context;</span>
+<span class="fc" id="L32">    }</span>
+
+    // nastavenie message source pre validator
+    @Bean
+    public Validator mvcValidator() {
+<span class="fc" id="L37">        LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();</span>
+
+<span class="fc" id="L39">        validatorFactoryBean.setMessageInterpolator(new WebjetResourceBundleMessageInterpolator());</span>
+
+<span class="fc" id="L41">        return validatorFactoryBean;</span>
+    }
+
+    @Bean
+    public WebjetViewResolver viewResolver() {
+
+<span class="fc" id="L47">        List&lt;ViewResolver&gt; resolvers = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L49">        WebjetInternalResourceViewResolver view = new WebjetInternalResourceViewResolver();</span>
+<span class="fc" id="L50">        view.setViewClass(JstlView.class);</span>
+<span class="fc" id="L51">        view.setSuffix(&quot;.jsp&quot;);</span>
+<span class="fc" id="L52">        view.setOrder(1);</span>
+<span class="fc" id="L53">        view.setApplicationContext(context);</span>
+
+<span class="fc" id="L55">        resolvers.add(view);</span>
+
+<span class="fc" id="L57">        WebjetFreeMarkerViewResolver view2 = new WebjetFreeMarkerViewResolver();</span>
+<span class="fc" id="L58">        view2.setViewClass(FreeMarkerView.class);</span>
+<span class="fc" id="L59">        view2.setCache(true);</span>
+<span class="fc" id="L60">        view2.setOrder(2);</span>
+<span class="fc" id="L61">        view2.setSuffix(&quot;.ftl&quot;);</span>
+<span class="fc" id="L62">        view2.setContentType(&quot;text/html;charset=windows-1250&quot;);</span>
+<span class="fc" id="L63">        view2.setApplicationContext(context);</span>
+
+<span class="fc" id="L65">        resolvers.add(view2);</span>
+<span class="fc" id="L66">        resolvers.add(thymeleafViewResolver());</span>
+
+<span class="fc" id="L68">        WebjetViewResolver resolver = new WebjetViewResolver();</span>
+<span class="fc" id="L69">        resolver.setViewResolvers(resolvers);</span>
+<span class="fc" id="L70">        resolver.setApplicationContext(context);</span>
+<span class="fc" id="L71">        return resolver;</span>
+    }
+
+    /* THYMELEAF KONFIGURACIA, namapovana na / s vyhladavanim .html suborov */
+    @Bean
+    public MessageSource messageSource() {
+<span class="fc" id="L77">        Logger.debug(WebjetComponentParser.class, &quot;Spring: messageSource&quot;);</span>
+<span class="fc" id="L78">        WebjetMessageSource source = new WebjetMessageSource();</span>
+<span class="fc" id="L79">        return source;</span>
+    }
+
+    @Bean
+    public SpringTemplateEngine templateEngine() {
+<span class="fc" id="L84">        Logger.debug(WebjetComponentParser.class, &quot;thymeleaf: templateEngine&quot;);</span>
+
+<span class="fc" id="L86">        SpringTemplateEngine templateEngine = new SpringTemplateEngine();</span>
+<span class="fc" id="L87">        templateEngine.setEnableSpringELCompiler(true);</span>
+<span class="fc" id="L88">        templateEngine.addDialect(new IwcmDialect());</span>
+<span class="fc" id="L89">        templateEngine.setTemplateResolver(thymeleafTemplateResolver());</span>
+<span class="fc" id="L90">        return templateEngine;</span>
+    }
+
+    @Bean
+    public SpringResourceTemplateResolver thymeleafTemplateResolver() {
+<span class="fc" id="L95">        Logger.debug(WebjetComponentParser.class, &quot;thymeleaf: thymeleafTemplateResolver&quot;);</span>
+
+<span class="fc" id="L97">        SpringResourceTemplateResolver templateResolver</span>
+          = new SpringResourceTemplateResolver();
+<span class="fc" id="L99">        templateResolver.setPrefix(&quot;/&quot;);</span>
+<span class="fc" id="L100">        templateResolver.setSuffix(&quot;.html&quot;);</span>
+<span class="fc" id="L101">        templateResolver.setTemplateMode(&quot;HTML5&quot;);</span>
+<span class="fc" id="L102">        templateResolver.setOrder(0);</span>
+<span class="fc" id="L103">        templateResolver.setCacheable(false);</span>
+<span class="fc" id="L104">        templateResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L105">        return templateResolver;</span>
+    }
+
+    @Bean
+    public ThymeleafViewResolver thymeleafViewResolver() {
+
+<span class="fc" id="L111">        Logger.debug(WebjetComponentParser.class, &quot;thymeleaf: thymeleafViewResolver&quot;);</span>
+
+<span class="fc" id="L113">        ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();</span>
+<span class="fc" id="L114">        viewResolver.setTemplateEngine(templateEngine());</span>
+<span class="fc" id="L115">        viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L116">        return viewResolver;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

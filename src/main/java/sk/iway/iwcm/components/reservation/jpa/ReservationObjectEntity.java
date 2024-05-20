@@ -21,8 +21,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import com.drew.lang.annotations.NotNull;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
@@ -182,7 +180,6 @@ public class ReservationObjectEntity implements Serializable {
     private String password;
 
     @Column(name = "domain_id")
-    @NotNull
     private Integer domainId;
 
     //Used in cases when we need included reservationObjectTimes values in variable

@@ -10,6 +10,7 @@ block content
     )
 
     script.
+        window.helpLink = "/sysadmin/audit/README";
         var auditTable;
         window.domReady.add(function () {
             var url = "/admin/rest/audit/log";
@@ -19,7 +20,7 @@ block content
                 { id: 'main', title: '[[\#{editor.tab.basic_info}]]' }
             ];
 
-            var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.AuditLogEntity")})];
+            var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.AuditLogEntity")})];
             //console.log(columns);
 
             var order = [];

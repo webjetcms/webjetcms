@@ -10,7 +10,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/datetime.tld" prefix="dt" %>
+
 <%@ include file="layout_top.jsp" %>
 <%!
 public void regenerateUrl(int rootGroupId, Identity user, JspWriter out, HttpServletRequest request, Prop prop) throws IOException

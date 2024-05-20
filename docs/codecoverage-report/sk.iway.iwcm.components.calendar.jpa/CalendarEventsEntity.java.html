@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarEventsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.calendar.jpa</a> &gt; <span class="el_source">CalendarEventsEntity.java</span></div><h1>CalendarEventsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.calendar.jpa;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.Table;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;calendar&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CALENDAR_CREATE)
+public class CalendarEventsEntity extends CalendarEventsBasic {
+
+<span class="fc" id="L25">    public CalendarEventsEntity(){</span>
+        //konstruktor
+<span class="fc" id="L27">    }</span>
+
+    @Column(name = &quot;lng&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;calendar_edit.language&quot;,
+        hidden = true,
+        tab = &quot;basic&quot;,
+        sortAfter = &quot;title&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;temp.slovak&quot;, value = &quot;sk&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;temp.english&quot;, value = &quot;en&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;temp.czech&quot;, value = &quot;cz&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;temp.deutsch&quot;, value = &quot;de&quot;)
+                }
+            )
+        }
+    )
+    @Size(max = 3)
+    private String lng;
+
+    @Column(name = &quot;time_range&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;calendar_edit.time_range&quot;,
+        tab = &quot;basic&quot;,
+        hidden = true,
+        sortAfter = &quot;dateTo&quot;
+    )
+    private String timeRange;
+
+    @Column(name = &quot;city&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;calendar_edit.city&quot;,
+        hidden = true,
+        tab=&quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String city;
+
+    @Column(name = &quot;address&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;calendar_edit.address&quot;,
+        hidden = true,
+        tab=&quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String address;
+
+    @Column(name = &quot;info_1&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;calendar_events.field_a&quot;,
+        hidden = true,
+        tab=&quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String fieldA;
+
+    @Column(name = &quot;info_2&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;calendar_events.field_b&quot;,
+        hidden = true,
+        tab=&quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String fieldB;
+
+    @Column(name = &quot;info_3&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;calendar_events.field_c&quot;,
+        hidden = true,
+        tab = &quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String fieldC;
+
+    @Column(name = &quot;info_4&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;calendar_events.field_d&quot;,
+        hidden = true,
+        tab = &quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String fieldD;
+
+    @Column(name = &quot;info_5&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;calendar_events.field_e&quot;,
+        hidden = true,
+        tab = &quot;advanced&quot;
+    )
+    @Size(max = 255)
+    private String fieldE;
+
+    @Column(name = &quot;description&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.WYSIWYG,
+        title = &quot;calendar_edit.description&quot;,
+        tab = &quot;description&quot;,
+        hidden = true
+    )
+    private String description;
+
+    @Column(name = &quot;notify_hours_before&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;calendar_edit.notify_hours_before&quot;,
+        tab = &quot;notification&quot;,
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(message = &quot;calendar_edit.notify_hours_before_note&quot;)
+        }
+    )
+    private Integer notifyHoursBefore;
+
+    @Column(name = &quot;notify_emails&quot;)
+    private String notifyEmails;
+
+    @Column(name = &quot;notify_sender&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;notification&quot;,
+        title = &quot;calendar_edit.notify_sender&quot;,
+        hidden = true
+    )
+    @Size(max = 255)
+    private String notifySender;
+
+    @Column(name = &quot;notify_introtext&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;calendar_edit.notify_introtext&quot;,
+        tab = &quot;notification&quot;,
+        hidden = true
+    )
+    private String notifyIntrotext;
+
+    @Column(name = &quot;notify_sendsms&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN,
+        title=&quot;calendar_edit.notify_sendsms&quot;,
+        tab = &quot;notification&quot;,
+        hidden = true
+    )
+    private Boolean notifySendsms;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

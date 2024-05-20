@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfImportAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ConfImportAction.java</span></div><h1>ConfImportAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.File;
+
+import net.sourceforge.stripes.action.FileBean;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.HandlesEvent;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+
+/**
+ *	ConfImportAction.java
+ * Upload xml suboru pre import konfiguracie a pre import suboro pre file archiv
+ *
+ *@Title			webjet7
+ *@Company		Interway s.r.o. (www.interway.sk)
+ *@Copyright 	Interway s.r.o. (c) 2001-2013
+ *@author		$Author: jeeff $(prau)
+ *@version		Revision: 1.3  13.11.2013
+ *@created		Date: 13.11.2013 16:22:33
+ *@modified   	Date: 13.11.2013 16:22:33
+ */
+<span class="nc" id="L28">public class ConfImportAction extends WebJETActionBean// pouziva sa aj pre upload file archivu</span>
+{
+
+<span class="nc" id="L31">		FileBean xmlFile = null;</span>
+
+		@HandlesEvent(&quot;xmlFile&quot;)
+		public Resolution saveFile()
+		{
+<span class="nc" id="L36">			Identity user = getCurrentUser();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">			if(user == null)</span>
+<span class="nc" id="L38">				return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">			if(uploadFile(user))</span>
+            {
+<span class="nc" id="L42">                getRequest().setAttribute(&quot;successful&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L43">                getRequest().setAttribute(&quot;file_name&quot;, &quot;&quot; + xmlFile.getFileName());</span>
+            }
+
+<span class="nc" id="L46">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+
+		private boolean uploadFile(Identity usr)
+		{
+<span class="nc bnc" id="L51" title="All 6 branches missed.">			if (usr != null &amp;&amp; usr.isAdmin() &amp;&amp; xmlFile != null)</span>
+			{
+				try
+				{
+<span class="nc" id="L55">					String fileName = xmlFile.getFileName().toLowerCase();</span>
+<span class="nc bnc" id="L56" title="All 4 branches missed.">					if(fileName.endsWith(&quot;.xml&quot;) || fileName.endsWith(&quot;.zip&quot;))</span>
+					{
+						//IwcmFile fileXml = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/tmp/&quot;+fileName));
+<span class="nc" id="L59">                        String path = &quot;/WEB-INF/tmp/&quot;; //NOSONAR</span>
+                       // String attributeWritePath = null;
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                        if(getRequest().getAttribute(&quot;writePath&quot;) != null)</span>
+                        {
+<span class="nc" id="L64">                            path = (String) getRequest().getAttribute(&quot;writePath&quot;);</span>
+
+//                            if (Tools.isNotEmpty(attributeWritePath) &amp;&amp; attributeWritePath.startsWith(&quot;/archiv/&quot;))
+//                                path = attributeWritePath;
+                        }
+
+<span class="nc" id="L70">                        IwcmFile fileXml = new IwcmFile(Tools.getRealPath(path+fileName));</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">						if(fileXml.getParentFile().exists() == false)</span>
+<span class="nc" id="L72">							fileXml.mkdirs();</span>
+
+<span class="nc" id="L74">						File f = new File(Tools.getRealPath(path+fileName));</span>
+<span class="nc" id="L75">						Logger.debug(ConfImportAction.class, &quot;Saving xmlFile to:&quot;+f.getAbsolutePath());</span>
+<span class="nc" id="L76">						IwcmFsDB.writeFiletoDest(xmlFile.getInputStream(),f,(int)xmlFile.getSize());</span>
+<span class="nc" id="L77">						return true;</span>
+					}
+					else
+<span class="nc" id="L80">						Logger.debug(this, &quot;uploadFileProcedure, file= &quot;+xmlFile.getFileName()+&quot; has bad extension.&quot;);</span>
+<span class="nc" id="L81">					return false;</span>
+				}
+<span class="nc" id="L83">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L85">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L86">					return false;</span>
+				}
+			}
+			else
+<span class="nc" id="L90">				return false;</span>
+		}
+
+		public FileBean getXmlFile()
+		{
+<span class="nc" id="L95">			return xmlFile;</span>
+		}
+
+		public void setXmlFile(FileBean xmlFile)
+		{
+<span class="nc" id="L100">			this.xmlFile = xmlFile;</span>
+<span class="nc" id="L101">		}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -126,10 +126,8 @@ Scenario('reservation object times test', async ({I, DataTables, DTE}) => {
     const fromA = await I.grabValueFrom("#DTE_Field_editorFields-reservationTimeFromA");
     const toA = await I.grabValueFrom("#DTE_Field_editorFields-reservationTimeToA");
 
-    if(fromA != dateValueFromA || toA != dateValueToA) {
-        //TODO add legit error
-        I.error("KOKOS");
-    }
+    I.assertEqual(fromA, dateValueFromA);
+    I.assertEqual(toA, dateValueToA);
 
     I.seeElement("#DTE_Field_editorFields-reservationTimeFromC");
     I.seeElement("#DTE_Field_editorFields-reservationTimeToC");
@@ -137,10 +135,8 @@ Scenario('reservation object times test', async ({I, DataTables, DTE}) => {
     const fromC = await I.grabValueFrom("#DTE_Field_editorFields-reservationTimeFromC");
     const toC = await I.grabValueFrom("#DTE_Field_editorFields-reservationTimeToC");
 
-    if(fromC != dateValueFromC || toC != dateValueToC) {
-        //TODO add legit error
-        I.error("KOKOS");
-    }
+    I.assertEqual(fromC, dateValueFromC);
+    I.assertEqual(toC, dateValueToC);
 
     //Close and delete reservation object
     I.click("div.DTE_Header button.btn-close-editor");
@@ -148,4 +144,22 @@ Scenario('reservation object times test', async ({I, DataTables, DTE}) => {
     I.click("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('Domain test', ({I, DT, Document}) => {
+    I.amOnPage("/apps/reservation/admin/reservation-objects/");
+    DT.filter("name", "TestDomain_webjet9_object");
+    I.see("TestDomain_webjet9_object");
+    DT.filter("name", "TestDomain_test23_object");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+    Document.switchDomain("test23.tau27.iway.sk");
+    DT.filter("name", "TestDomain_webjet9_object");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DT.filter("name", "TestDomain_test23_object");
+    I.see("TestDomain_test23_object");
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
 });

@@ -6,7 +6,6 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
-%><%@ taglib uri="/WEB-INF/datetime.tld" prefix="dt"
 %><%
 Prop prop = Prop.getInstance(request);
 String brandSuffix = InitServlet.getBrandSuffix();

@@ -45,26 +45,34 @@ Scenario('Bug zatvorenia okna po zruseni nested dialogu', ({ I, DTE }) => {
 });
 
 Scenario('Bug oznacenia vsetkych riadkov', ({ I }) => {
+    //
+    I.say("serverSide=false")
     I.amOnPage("/admin/v9/settings/configuration/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("11 riadkov označených", "div.dataTables_info");
+    I.see("12 riadkov označených", "div.dataTables_info");
 
+    //
+    I.say("serverSide=true")
+    I.amOnPage("/admin/v9/settings/redirect/");
+
+    I.clickCss("button.buttons-select-all");
+    I.see("12 riadkov označených", "div.dataTables_info");
 });
 
 
 Scenario('Zobrazenie tlacidiel maximalizovat a zatvorit', ({ I }) => {
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=1");
 
-    I.seeElement("div.DTE_Header_Content i.fa-window-maximize");
-    I.dontSeeElement("div.DTE_Header_Content i.fa-window-minimize");
+    I.seeElement("div.DTE_Header_Content i.ti-arrows-maximize");
+    I.dontSeeElement("div.DTE_Header_Content i.ti-arrows-minimize");
     I.seeElement("div.DTE_Header button.btn-close-editor");
     I.dontSeeElement("#datatableInit_modal div.modal-fullscreen");
 
-    I.forceClickCss("div.DTE_Header_Content i.fa-window-maximize");
+    I.forceClickCss("div.DTE_Header_Content i.ti-arrows-maximize");
 
-    I.dontSeeElement("div.DTE_Header_Content i.fa-window-maximize");
-    I.seeElement("div.DTE_Header_Content i.fa-window-minimize");
+    I.dontSeeElement("div.DTE_Header_Content i.ti-arrows-maximize");
+    I.seeElement("div.DTE_Header_Content i.ti-arrows-minimize");
     I.seeElement("div.DTE_Header button.btn-close-editor");
     I.seeElement("#datatableInit_modal div.modal-fullscreen");
 
@@ -75,7 +83,7 @@ Scenario('Zobrazenie tlacidiel maximalizovat a zatvorit', ({ I }) => {
 
 Scenario('Maximalizovat - zrusene pre zmazanie zaznamu', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=1");
-    I.forceClickCss("div.DTE_Header_Content i.fa-window-maximize");
+    I.forceClickCss("div.DTE_Header_Content i.ti-arrows-maximize");
     I.seeElement("#datatableInit_modal div.modal-fullscreen");
 
     I.clickCss("div.DTE_Header button.btn-close-editor");
@@ -100,12 +108,12 @@ Scenario('Maximalizovat - zrusene pre zmazanie zaznamu', ({ I, DT, DTE }) => {
 Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
 
-    I.see("Záznamy 1 až 11 z");
+    I.see("Záznamy 1 až 12 z");
 
     I.resizeWindow(1280, 900);
     I.refreshPage();
 
-    I.see("Záznamy 1 až 14 z");
+    I.see("Záznamy 1 až 15 z");
 });
 
 Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
@@ -210,12 +218,12 @@ Scenario('drag drop okna editora', async ({ I, DTE, Browser }) => {
     }
 
     I.say("Maximalizujem a overim, ze je vystredene");
-    I.forceClickCss("div.DTED.show div.DTE_Header_Content i.fa-window-maximize");
+    I.forceClickCss("div.DTED.show div.DTE_Header_Content i.ti-arrows-maximize");
     value = await I.grabCssPropertyFrom('div.DTED.show div.modal-content', 'left');
     I.assertEqual(value, "0px");
 
     I.say("Minimalizujem a overim, ze je vystredene");
-    I.forceClickCss("div.DTED.show div.DTE_Header_Content i.fa-window-minimize");
+    I.forceClickCss("div.DTED.show div.DTE_Header_Content i.ti-arrows-minimize");
     value = await I.grabCssPropertyFrom('div.DTED.show div.modal-content', 'left');
     I.assertEqual(value, "0px");
 });
@@ -259,23 +267,23 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.clickCss('.btn.buttons-collection.dropdown-toggle.buttons-page-length');
     I.waitForVisible("div.dt-button-collection");
 
-    I.click("Automaticky (11)");
+    I.click("Automaticky (12)");
     I.click("Uložiť");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 11 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 12 z", "div.dt-footer-row");
 
     //
     I.say("reloadni v auto rezime");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 11 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 12 z", "div.dt-footer-row");
 
     //
     I.say("zvacsi okno a over, ze auto rezim funguje");
     I.resizeWindow(1280, 1000);
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 16 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 18 z", "div.dt-footer-row");
 });
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {

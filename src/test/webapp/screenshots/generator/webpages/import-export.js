@@ -14,13 +14,20 @@ Before(({ login }) => {
 Scenario('Screens', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59160");
     Document.screenshotElement("button.buttons-import-export", "/redactor/webpages/import-export-button.png");
+    let confLng = I.getConfLng();
 
     I.amOnPage("/components/import_web_pages/import_pages.jsp?groupId=59160");
     Document.screenshot("/redactor/webpages/import-export-window.png");
 
     I.checkOption("#type5");
     I.click("#btnOk");
-    I.waitForElement( locate("h2").withText("Hotovo"), 60 );
+
+    if("sk" === confLng) {
+        I.waitForElement( locate("h2").withText("Hotovo"), 60 );
+    } else if("en" === confLng) {
+        I.waitForElement( locate("h2").withText("Done"), 60 );
+    }
+
     Document.screenshot("/redactor/webpages/exported-window.png");
 
     I.amOnPage("/components/import_web_pages/import_pages.jsp?groupId=59160");
@@ -43,7 +50,13 @@ Scenario('Screens', ({ I, DT, Document }) => {
     I.waitForElement(excelFileInput);
     I.attachFile(excelFileInput, excelFileLocation);
     I.click("#btnOk");
-    I.waitForText("Import dokončený");
+
+    if("sk" === confLng) {
+        I.waitForText("Import dokončený", 120);
+    } else if("en" === confLng) {
+        I.waitForText("Import done", 120);
+    }
+
     Document.screenshot("/redactor/webpages/imported-excel-window.png");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59160");
 
@@ -53,5 +66,10 @@ Scenario('Screens', ({ I, DT, Document }) => {
     I.click(delete_folder_button);
     DT.waitForLoader();
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
-    I.click('Zmazať');
+
+    if("sk" === confLng) {
+        I.click('Zmazať');
+    } else if("en" === confLng) {
+        I.click('Delete');
+    }
 });

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportWeather.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather</a> &gt; <span class="el_source">ImportWeather.java</span></div><h1>ImportWeather.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.weather.met.no.generated.LocationType;
+import sk.iway.iwcm.components.weather.met.no.generated.Temperature;
+import sk.iway.iwcm.components.weather.met.no.generated.TimeType;
+import sk.iway.iwcm.components.weather.met.no.generated.Weatherdata;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.util.*;
+
+/**
+ * ImportWeather.java
+ *
+ * Class ImportWeather is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * @author      $Author: mhruby $
+ * @version     $Revision: 1.0 $
+ * created      2.8.2018 10:50
+ * modified     2.8.2018 10:50
+ */
+
+<span class="nc" id="L34">public class ImportWeather {</span>
+
+<span class="nc" id="L36">    private Map&lt;Date,HourForecastBean&gt; hourForecastBeanMap = new LinkedHashMap&lt;&gt;();</span>
+
+    /**
+     * Nacita pocasie z api.met.no.
+     * V XMLku su udaje o hodinovej a sesthodinovej predpovedi pocasia.
+     * Pracujem iba s udajmi pre sesthodinovu predpoved kazdy den o 12:00 a 18:00 z ktorych ukladam max a min teplotu.
+     *
+     */
+    public List&lt;DayForecastBean&gt; readWeather(BigDecimal lat, BigDecimal lon) {
+<span class="nc" id="L45">        List&lt;DayForecastBean&gt; sorted = null;</span>
+        try {
+<span class="nc" id="L47">                String source = Tools.downloadUrl(Tools.addParameterToUrlNoAmp(Tools.addParameterToUrlNoAmp(Constants.getString(&quot;weatherSourceApi&quot;), &quot;lat&quot;, String.valueOf(lat)), &quot;lon&quot;, String.valueOf(lon)));</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            if (null == source) {</span>
+<span class="nc" id="L49">                throw new FileNotFoundException(&quot;Nepodarilo sa nacitat xml na adrese &quot;);</span>
+            }
+<span class="nc" id="L51">            JAXBContext jaxbContext = JAXBContext.newInstance(Weatherdata.class);</span>
+<span class="nc" id="L52">            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();</span>
+<span class="nc" id="L53">            Weatherdata weatherdata = (Weatherdata) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(source.getBytes(&quot;UTF-8&quot;)));</span>
+<span class="nc" id="L54">            sorted = this.mapForecast(weatherdata.getProduct().get(0).getTime());</span>
+<span class="nc" id="L55">        } catch (Exception e) {</span>
+<span class="nc" id="L56">            Logger.println(ImportWeather.class, &quot;CHYBA pri stahovani&quot;);</span>
+<span class="nc" id="L57">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L58">        }</span>
+<span class="nc" id="L59">        return sorted;</span>
+    }
+
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    public List&lt;DayForecastBean&gt; mapForecast(List&lt;TimeType&gt; timeTypeList) {
+<span class="nc" id="L64">        Map&lt;Date,DayForecastBean&gt; dayForecastBeanMap = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L65">        Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        for (TimeType timeType : timeTypeList) {</span>
+            // start kontrola ci ma vlastne zmysel tento zaznam dako spracovavat
+<span class="nc" id="L68">            Calendar dateFrom = Calendar.getInstance();</span>
+<span class="nc" id="L69">            dateFrom.setTime(timeType.getFrom().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+<span class="nc" id="L70">            Calendar dateTo = Calendar.getInstance();</span>
+<span class="nc" id="L71">            dateTo.setTime(timeType.getTo().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (dateFrom.get(Calendar.HOUR) % 2 != 0)</span>
+<span class="nc" id="L74">                continue;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            if ((this.calculateHours(dateFrom.getTime(),dateTo.getTime())/24) &gt; 1) {</span>
+                //ak predpoved na pozajtra alebo viac tak zober 6-hodinovu predpoved ktora uz obsahuje symbol a min/max templotu
+<span class="nc bnc" id="L77" title="All 4 branches missed.">                if (dateFrom.get(Calendar.HOUR) % 6 != 0 || dateFrom.get(Calendar.HOUR) == 0)</span>
+<span class="nc" id="L78">                    continue;</span>
+            } else {
+                //ak predpoved je z dneska/zajtrajska zober 2-hodinovu predpoved (obsahuje symbol) ktoru neskor spojis s presnou predpovedou na urcitu hodinu (obsahuje teplotu)
+<span class="nc" id="L81">                int diferenceInHours = this.calculateHours(dateFrom.getTime(), dateTo.getTime());</span>
+<span class="nc bnc" id="L82" title="All 6 branches missed.">                if (diferenceInHours != 2 &amp;&amp; diferenceInHours != 0 &amp;&amp; diferenceInHours != 6) {</span>
+<span class="nc" id="L83">                    continue;</span>
+                }
+            }
+            // end kontrola
+
+<span class="nc" id="L88">            Calendar midNight = Calendar.getInstance();</span>
+<span class="nc" id="L89">            midNight.setTime(timeType.getTo().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+<span class="nc" id="L90">            midNight.set(Calendar.HOUR_OF_DAY, midNight.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="nc" id="L91">            midNight.set(Calendar.MINUTE, midNight.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L92">            midNight.set(Calendar.SECOND, midNight.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L93">            midNight.set(Calendar.MILLISECOND, midNight.getActualMinimum(Calendar.MILLISECOND));</span>
+
+<span class="nc" id="L95">            DayForecastBean dayForecastBean = dayForecastBeanMap.get(midNight.getTime());</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            if (dayForecastBean == null) {</span>
+<span class="nc" id="L97">                dayForecastBean = new DayForecastBean();</span>
+<span class="nc" id="L98">                dayForecastBean.setDate(midNight.getTime());</span>
+            }
+
+<span class="nc" id="L101">            HourForecastBean hourForecastBean = this.hourForecastBeanMap.get(timeType.getTo().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+
+<span class="nc" id="L103">            boolean add = false;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (hourForecastBean == null) {</span>
+<span class="nc" id="L105">                add = true;</span>
+<span class="nc" id="L106">                hourForecastBean = new HourForecastBean();</span>
+<span class="nc" id="L107">                hourForecastBean.setDateFrom(timeType.getFrom().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+<span class="nc" id="L108">                hourForecastBean.setDateTo(timeType.getTo().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime());</span>
+            }
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (JAXBElement jaxbElemtimeTypeElement : timeType.getLocation().get(0).getGroundCoverAndPressureAndMaximumPrecipitation()) {</span>
+<span class="nc bnc" id="L112" title="All 5 branches missed.">                switch(jaxbElemtimeTypeElement.getName().getLocalPart()) {</span>
+                    case &quot;minTemperature&quot; :
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                        if (jaxbElemtimeTypeElement.getValue() instanceof Temperature) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                            if (dayForecastBean.getMinTemperature() &gt; (int)Math.round(((Temperature) jaxbElemtimeTypeElement.getValue()).getValue().doubleValue()) )</span>
+<span class="nc" id="L116">                                dayForecastBean.setMinTemperature((int)Math.round(((Temperature) jaxbElemtimeTypeElement.getValue()).getValue().doubleValue()));</span>
+                        }
+                        break;
+                    case &quot;maxTemperature&quot; :
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                        if (jaxbElemtimeTypeElement.getValue() instanceof Temperature)</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                            if (dayForecastBean.getMaxTemperature() &lt; (int)Math.round(((Temperature) jaxbElemtimeTypeElement.getValue()).getValue().doubleValue()))</span>
+<span class="nc" id="L122">                                dayForecastBean.setMaxTemperature((int)Math.round(((Temperature) jaxbElemtimeTypeElement.getValue()).getValue().doubleValue()));</span>
+                        break;
+                    case &quot;symbol&quot; :
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                        if (jaxbElemtimeTypeElement.getValue() instanceof LocationType.Symbol) {</span>
+<span class="nc" id="L126">                            String symbol = ((LocationType.Symbol) jaxbElemtimeTypeElement.getValue()).getId();</span>
+<span class="nc" id="L127">                            int symbolId = ((LocationType.Symbol) jaxbElemtimeTypeElement.getValue()).getNumber().intValue();</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">                            if (dateFrom.get(Calendar.HOUR_OF_DAY) == 12 &amp;&amp; dateTo.get(Calendar.HOUR_OF_DAY) == 18) {</span>
+<span class="nc" id="L129">                                dayForecastBean.setSymbol(symbol);</span>
+<span class="nc" id="L130">                                dayForecastBean.setSymbolId(symbolId);</span>
+                            }
+<span class="nc" id="L132">                            hourForecastBean.setSymbol(symbol);</span>
+<span class="nc" id="L133">                            hourForecastBean.setSymbolId(symbolId);</span>
+<span class="nc" id="L134">                        }</span>
+                        break;
+                    case &quot;temperature&quot; :
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                        if (jaxbElemtimeTypeElement.getValue() instanceof Temperature)</span>
+<span class="nc" id="L138">                            hourForecastBean.setTemperature((int)Math.round(((Temperature) jaxbElemtimeTypeElement.getValue()).getValue().doubleValue()));</span>
+                    default:
+                        break;
+                }
+<span class="nc" id="L142">            }</span>
+<span class="nc bnc" id="L143" title="All 4 branches missed.">            if (hourForecastBean.getTemperature() != null || hourForecastBean.getSymbol() != null) {</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">                if (add &amp;&amp; (this.calculateHours(today.getTime(), dateTo.getTime())) &lt; 32)</span>
+<span class="nc" id="L145">                    this.hourForecastBeanMap.put(timeType.getTo().toGregorianCalendar(new GregorianCalendar().getTimeZone(), null, null).getTime(),hourForecastBean);</span>
+<span class="nc" id="L146">                dayForecastBeanMap.put(midNight.getTime(),dayForecastBean);</span>
+            }
+<span class="nc" id="L148">        }</span>
+<span class="nc" id="L149">        return new ArrayList&lt;&gt;(dayForecastBeanMap.values());</span>
+    }
+
+    public int calculateHours(Date from, Date to)
+    {
+<span class="nc" id="L154">        return (int) (to.getTime() - from.getTime()) / (1000 * 60 * 60);</span>
+    }
+
+    public List&lt;HourForecastBean&gt; getHourForecastBeanList() {
+<span class="nc" id="L158">        return  new ArrayList&lt;&gt;(this.hourForecastBeanMap.values());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

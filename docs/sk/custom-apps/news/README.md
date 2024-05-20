@@ -96,7 +96,8 @@ Ak nepotrebujete meniť hodnotu ID priečinka, môžete samozrejme odstrániť A
                         url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
                         columns: webpageColumns,
                         id: "newsDataTable",
-                        order: order
+                        order: order,
+                        newPageTitleKey: "apps.news.newsTitle.js", //optional, title of new page
                     });
                     newsDataTable = wpdInstance.createDatatable();
                 });
@@ -133,3 +134,5 @@ Ak nepotrebujete meniť hodnotu ID priečinka, môžete samozrejme odstrániť A
 
 <table id="newsDataTable" class="datatableInit table"></table>
 ```
+
+Ak používateľ nemá priamo prístup k web stránkam je potrebné pridať ešte vaše právo aplikácie do konf. premennej `webpagesFunctionsPerms`, ktorá obsahuje zoznam práv, ktoré získavajú právo na prácu s web stránkami. Jedná sa aj o funkcie pre vloženie obrázku a podobne.

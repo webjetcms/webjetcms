@@ -20,13 +20,22 @@
                 "lowerCase": false
             },
             "previewLimit": 50,
-            "server": "oracle81.dev.iway.local",
+            "server": "oracle.local",
             "port": 1521,
             "driver": "Oracle",
             "name": "WEBJET2022_WEB",
-            "database": "pdb19c.dev.iway.local",
+            "database": "pdb19c.dev",
             "username": "WEBJET2022_WEB",
-            "password": "p1Sk0tov4tOrt4"
+            "password": "************"
+        },
+        {
+            "previewLimit": 50,
+            "server": "postgresql.local",
+            "port": 10082,
+            "driver": "PostgreSQL",
+            "name": "pgsql-cms",
+            "database": "postgres",
+            "username": "postgres"
         }
     ],
     "cSpell.language": "en,sk,en-US",
@@ -36,5 +45,6 @@
         "iwcm",
         "Servlet",
         "WebJET"
-    ]
+    ],
+    "gitPrefix.pattern": ".*/(\\d+)-.*",
 }

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClusterRefresher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cluster</a> &gt; <span class="el_source">ClusterRefresher.java</span></div><h1>ClusterRefresher.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cluster;
+
+import java.lang.reflect.Method;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.tags.CombineTag;
+
+
+/**
+ *  ClusterRefresher.java
+ *  objekt pravidelne kontrolujuci databazu clustra pre obnovu dat
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.5 $
+ *@created      Date: 17.11.2008 16:50:16
+ *@modified     $Date: 2010/01/11 08:15:01 $
+ */
+public class ClusterRefresher extends TimerTask
+{
+	private Timer timer;
+	public static final String THREAD_NAME = &quot;ClusterRefresherThread&quot;;
+
+	//pouzivane v rezime auto na identifikaciu poslednej hodnoty z DB tabulky ktoru mame precitanu
+<span class="fc" id="L46">	private static int lastExecutedAutoId = -1;</span>
+
+	/**
+	 * Konstruktor, ak je nastavene clusterNames tak inicializuje Timer task
+	 */
+	public ClusterRefresher()
+<span class="fc" id="L52">	{</span>
+<span class="fc" id="L53">		String clusterNames = Constants.getString(&quot;clusterNames&quot;);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">		if (Tools.isEmpty(clusterNames)) return;</span>
+<span class="fc" id="L55">		String clusterMyNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (&quot;auto&quot;.equals(Constants.getString(&quot;clusterNames&quot;)))</span>
+		{
+			//inicializuj aktualne poslednu hodnotu z DB tabulky pre auto aktualizaciu nodov
+<span class="fc" id="L60">			setLastExecutedAutoId(new SimpleQuery().forInt(&quot;SELECT MAX(cluster_refresh_id) FROM cluster_refresher WHERE (node_name=? OR node_name=?) &quot;, &quot;auto&quot;, clusterMyNodeName));</span>
+		}
+
+<span class="fc" id="L63">		timer = new Timer(true);</span>
+<span class="fc" id="L64">		timer.schedule(this, 5000, Constants.getInt(&quot;clusterRefreshTimeout&quot;));</span>
+<span class="fc" id="L65">	}</span>
+
+	/**
+	 * Kontrola aktualizacii objektov
+	 */
+	@Override
+	public void run()
+	{
+		try
+		{
+<span class="fc" id="L75">			String clusterMyNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (Tools.isEmpty(clusterMyNodeName)) return;</span>
+
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">			if (&quot;auto&quot;.equals(Constants.getString(&quot;clusterNames&quot;)))</span>
+			{
+<span class="fc" id="L80">				readFromAutoMode(clusterMyNodeName);</span>
+			}
+			else
+			{
+<span class="nc" id="L84">				readFromDB(clusterMyNodeName);</span>
+			}
+
+			try
+			{
+<span class="fc" id="L89">				JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">				if(em != null)</span>
+				{
+<span class="fc" id="L92">					em.getEntityManagerFactory().getCache().evictAll();</span>
+				}
+			}
+<span class="nc" id="L95">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L97">				Adminlog.add(Adminlog.TYPE_CRON, &quot;ClusterRefresher.run ERROR JPA &quot; + ex.getMessage()+&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L98">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L99">			}</span>
+
+			//zmaz stare zaznamy nebeziacich nodov
+<span class="fc" id="L102">			cleanOldStatusAllNodes();</span>
+		}
+<span class="nc" id="L104">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L106">			Adminlog.add(Adminlog.TYPE_CRON, &quot;ClusterRefresher.run ERROR &quot; + ex.getMessage()+&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L107">			Logger.error(ClusterRefresher.class, ex);</span>
+<span class="fc" id="L108">		}</span>
+<span class="fc" id="L109">	}</span>
+
+	/**
+	 * Precitanie zaznamov z DB pre moj node (ak mame presne zadane mena nodov)
+	 * @param clusterMyNodeName
+	 */
+	private void readFromDB(String clusterMyNodeName)
+	{
+		try
+		{
+<span class="nc" id="L119">			List&lt;String&gt; updateClassNames = new SimpleQuery().forListString(&quot;SELECT class_name FROM cluster_refresher WHERE node_name=? ORDER BY cluster_refresh_id ASC&quot;, clusterMyNodeName);</span>
+
+<span class="nc" id="L121">			Thread.currentThread().setName(THREAD_NAME);</span>
+<span class="nc" id="L122">			Set&lt;String&gt; allreadyExecuted = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for (String className : updateClassNames)</span>
+			{
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if (allreadyExecuted.contains(className)) continue;</span>
+
+<span class="nc" id="L127">				refreshObject(clusterMyNodeName, className);</span>
+<span class="nc" id="L128">				allreadyExecuted.add(className);</span>
+<span class="nc" id="L129">			}</span>
+		}
+<span class="nc" id="L131">		catch (IllegalStateException ex)</span>
+		{
+<span class="nc" id="L133">			Adminlog.add(Adminlog.TYPE_CRON, &quot;ClusterRefresher.run ERROR 1&quot; + ex.getMessage()+&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L134">			Logger.error(ClusterRefresher.class, ex);</span>
+		}
+<span class="nc" id="L136">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L138">			Adminlog.add(Adminlog.TYPE_CRON, &quot;ClusterRefresher.run ERROR 2&quot; + ex.getMessage()+&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L139">			Logger.error(ClusterRefresher.class, ex);</span>
+<span class="nc" id="L140">		}</span>
+<span class="nc" id="L141">	}</span>
+
+	/**
+	 * Precitanie zaznamov z DB ak mame rezim auto, cize kazdy nod si sam pamata co ma aktualizovat (cita len nove zaznamy z DB)
+	 * @param clusterMyNodeName
+	 */
+	private void readFromAutoMode(String clusterMyNodeName)
+	{
+		try
+		{
+			//we need myNodeName to read monitoring refresher data
+<span class="fc" id="L152">			int actualMax = new SimpleQuery().forInt(&quot;SELECT MAX(cluster_refresh_id) FROM cluster_refresher WHERE (node_name=? OR node_name=?) AND cluster_refresh_id&gt;?&quot;, &quot;auto&quot;, clusterMyNodeName, getLastExecutedAutoId());</span>
+<span class="pc bpc" id="L153" title="1 of 4 branches missed.">			if (actualMax &gt; 0 &amp;&amp; getLastExecutedAutoId()&gt;0)</span>
+			{
+<span class="fc" id="L155">				List&lt;String&gt; updateClassNames = new SimpleQuery().forListString(&quot;SELECT class_name FROM cluster_refresher WHERE (node_name=? OR node_name=?)  AND cluster_refresh_id&gt;? AND cluster_refresh_id&lt;=? ORDER BY cluster_refresh_id ASC&quot;, &quot;auto&quot;, clusterMyNodeName, getLastExecutedAutoId(), actualMax);</span>
+
+<span class="fc" id="L157">				Thread.currentThread().setName(THREAD_NAME);</span>
+<span class="fc" id="L158">				Set&lt;String&gt; allreadyExecuted = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">				for (String className : updateClassNames)</span>
+				{
+<span class="fc bfc" id="L161" title="All 2 branches covered.">					if (allreadyExecuted.contains(className)) continue;</span>
+
+<span class="fc" id="L163">					refreshObject(clusterMyNodeName, className);</span>
+<span class="fc" id="L164">					allreadyExecuted.add(className);</span>
+<span class="fc" id="L165">				}</span>
+
+<span class="fc" id="L167">				Logger.debug(ClusterRefresher.class, &quot;readFromAutoMode, actualMax=&quot;+actualMax+&quot; lastExecutedAutoId=&quot;+getLastExecutedAutoId());</span>
+			}
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">			if (actualMax &gt; 0) setLastExecutedAutoId(actualMax);</span>
+		}
+<span class="nc" id="L172">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L174">			Adminlog.add(Adminlog.TYPE_CRON, &quot;ClusterRefresher.run ERROR &quot; + ex.getMessage()+&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L175">			Logger.error(ClusterRefresher.class, ex);</span>
+<span class="fc" id="L176">		}</span>
+<span class="fc" id="L177">	}</span>
+
+	/**
+	 * Vykona refresh DB objektu volanim getInstance(true)
+	 * @param nodeName
+	 * @param className
+	 */
+	private void refreshObject(String nodeName, String className)
+	{
+		try
+		{
+<span class="fc" id="L188">			Logger.debug(ClusterRefresher.class, &quot;invoking: &quot; + className);</span>
+
+<span class="fc" id="L190">			long now = Tools.getNow();</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">			if (className.startsWith(&quot;sk.iway.iwcm.doc.DocDB-&quot;))</span>
+			{
+				//je to ciastkovy update DocDB, musime zavolat
+<span class="fc" id="L195">				int docId = Tools.getIntValue(className.substring(className.indexOf('-')+1), -1);</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">				if (docId &gt; 0)</span>
+				{
+<span class="fc" id="L198">					DocDB.getInstance().updateInternalCaches(docId);</span>
+				}
+<span class="fc" id="L200">			}</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">         	else if (className.startsWith(&quot;sk.iway.iwcm.system.ConfDB-&quot;))</span>
+			{
+				//je to ciastkovy update ConfDB
+<span class="fc" id="L204">				String name = className.substring(className.indexOf('-')+1);</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(name))</span>
+				{
+<span class="fc" id="L207">                    ConfDB.refreshVariable(name);</span>
+				}
+<span class="fc" id="L209">			}</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">         	else if (className.startsWith(&quot;sk.iway.iwcm.Cache-&quot;))</span>
+			{
+				//je to ciastkovy update Cache
+<span class="fc" id="L213">				String name = className.substring(className.indexOf('-')+1);</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(name))</span>
+				{
+<span class="fc bfc" id="L216" title="All 2 branches covered.">					if (&quot;delAll&quot;.equals(name)) {</span>
+<span class="fc" id="L217">						Cache.getInstance().clearAll();</span>
+<span class="fc" id="L218">						DB.resetHtmlAllowedFields();</span>
+					}
+<span class="fc" id="L220">					else Cache.getInstance().removeObject(name, false);</span>
+				}
+<span class="fc" id="L222">			}</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">			else if (className.startsWith(&quot;sk.iway.iwcm.Cache:startsWithName-&quot;))</span>
+			{
+				//je to ciastkovy update Cache
+<span class="fc" id="L226">				String name = className.substring(className.indexOf('-')+1);</span>
+<span class="fc" id="L227">				Cache.getInstance().removeObjectStartsWithName(name, false);</span>
+<span class="fc" id="L228">			}</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">			else if (className.startsWith(&quot;sk.iway.iwcm.tags.CombineTag-&quot;))</span>
+			{
+				//aktualizacia timestampu
+<span class="fc" id="L232">				long timestamp = Tools.getLongValue(className.substring(className.indexOf('-')+1), Tools.getNow());</span>
+				//zmen version tag
+<span class="fc" id="L234">				CombineTag.setVersion(timestamp);</span>
+<span class="fc" id="L235">			}</span>
+			else
+			{
+<span class="fc" id="L238">				String classNameFixed = className;</span>
+<span class="fc" id="L239">				String methodName = &quot;getInstance&quot;;</span>
+<span class="fc" id="L240">				Class&lt;?&gt;[] parameterTypes = new Class[] {boolean.class};</span>
+<span class="fc" id="L241">				Object[] arguments = new Object[] {true};</span>
+
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">				if (className.contains(&quot;-&quot;))</span>
+				{
+					//je to ciastkovy update objektu, na to mame speci metodu g
+<span class="nc" id="L246">					classNameFixed = className.substring(0, className.indexOf('-'));</span>
+<span class="nc" id="L247">					long id = Tools.getLongValue(className.substring(className.indexOf('-')+1), 1);</span>
+<span class="nc" id="L248">					methodName = &quot;refresh&quot;;</span>
+<span class="nc" id="L249">					parameterTypes = new Class[] {long.class};</span>
+<span class="nc" id="L250">					arguments = new Object[] {id};</span>
+				}
+
+<span class="fc" id="L253">				Class&lt;?&gt; c = Class.forName(classNameFixed);</span>
+<span class="fc" id="L254">				Method m = c.getMethod(methodName, parameterTypes);</span>
+
+<span class="fc" id="L256">				now = Tools.getNow();</span>
+<span class="fc" id="L257">				m.invoke(c, arguments);</span>
+
+<span class="fc" id="L259">				Cache.getInstance().removeObjectStartsWithName(classNameFixed, false);</span>
+			}
+
+<span class="fc" id="L262">			cleanClassStatus(nodeName, className, now);</span>
+		}
+<span class="nc" id="L264">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L266">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Error invoking &quot;+className+&quot; error: &quot; + ex.getMessage()  +&quot;\n\n&quot;+ExceptionUtils.getStackFrames(ex), -1, -1);</span>
+<span class="nc" id="L267">			Logger.error(ClusterRefresher.class, ex);</span>
+<span class="fc" id="L268">		}</span>
+<span class="fc" id="L269">	}</span>
+
+	/**
+	 * Po spravnom refreshe databazy vymaze zaznam z DB
+	 * @param nodeName
+	 * @param className
+	 * @param now - datum vykonania refreshu
+	 */
+	private void cleanClassStatus(String nodeName, String className, long now)
+	{
+<span class="fc" id="L279">		new SimpleQuery().execute(&quot;DELETE FROM cluster_refresher WHERE node_name=? AND class_name=? AND refresh_time&lt;=?&quot;,</span>
+				nodeName, className, new Timestamp(now));
+<span class="fc" id="L281">	}</span>
+
+	/**
+	 * Zmaze stare zaznamy (starsie ako 5 hodin) ktore sa kopia kvoli nebeziacim nodom (napr. pasive, alebo aktualne vypnutym) aby sa nenafukovala DB
+	 */
+	private void cleanOldStatusAllNodes()
+	{
+<span class="fc" id="L288">		Calendar cal = Calendar.getInstance();</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">		if (&quot;auto&quot;.equals(Constants.getString(&quot;clusterNames&quot;)))</span>
+		{
+			//v auto mode ponechavame udalosti len za poslednych 30 minut (nema zmysel viac)
+<span class="fc" id="L292">			cal.add(Calendar.MINUTE, -30);</span>
+		}
+		else
+		{
+<span class="nc" id="L296">			cal.add(Calendar.MINUTE, -5*60);</span>
+		}
+
+<span class="fc" id="L299">		new SimpleQuery().execute(&quot;DELETE FROM cluster_refresher WHERE refresh_time&lt;=?&quot;, new Timestamp(cal.getTimeInMillis()));</span>
+
+		//zmas aj stare konf. premenne statXXX
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">		if (&quot;auto&quot;.equals(Constants.getString(&quot;clusterNames&quot;))) {</span>
+<span class="fc" id="L303">			new SimpleQuery().execute(&quot;DELETE FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; WHERE name like ? AND date_changed&lt;=?&quot;, &quot;statDistinctUsers-%&quot;, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="fc" id="L304">			new SimpleQuery().execute(&quot;DELETE FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; WHERE name like ? AND date_changed&lt;=?&quot;, &quot;statSessions-%&quot;, new Timestamp(cal.getTimeInMillis()));</span>
+		}
+<span class="fc" id="L306">	}</span>
+
+	public void cancelTask()
+	{
+<span class="fc" id="L310">		Logger.println(ClusterRefresher.class, &quot;destroying cluster refresher&quot;);</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">		if (timer != null) timer.cancel();</span>
+<span class="fc" id="L312">		this.cancel();</span>
+<span class="fc" id="L313">	}</span>
+
+	private static int getLastExecutedAutoId() {
+<span class="fc" id="L316">		return lastExecutedAutoId;</span>
+	}
+
+	private static void setLastExecutedAutoId(int lastExecutedAutoId) {
+<span class="fc" id="L320">		ClusterRefresher.lastExecutedAutoId = lastExecutedAutoId;</span>
+<span class="fc" id="L321">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -194,7 +194,7 @@ public class UploadService {
         if (FileIndexer.isFileIndexerConfigured())
         {
             List<ResultBean> indexedFiles = new ArrayList<>();
-            FileIndexer.indexFile(dir + "/" + fileName, indexedFiles, request);
+            FileIndexerTools.indexFile(dir + "/" + fileName, indexedFiles, request);
         }
 
         UploadFileAction.reflectionLoader(request, user, dir + "/" + fileName);

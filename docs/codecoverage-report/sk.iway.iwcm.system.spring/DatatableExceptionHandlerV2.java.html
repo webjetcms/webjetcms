@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatableExceptionHandlerV2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">DatatableExceptionHandlerV2.java</span></div><h1>DatatableExceptionHandlerV2.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableFieldError;
+import sk.iway.iwcm.system.datatable.DatatableResponse;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Title        webjet8
+ * Company      Interway a. s. (www.interway.sk)
+ * Copyright    Interway a. s. (c) 2001-2019
+ * @author       tmarcinkova $
+ * @created      2019/05/10 11:05
+ *
+ *  Tato trieda spracuje vynimku a vrati response pre DataTable Editor
+ *  	- stara sa len o vynimky z tried, ktore maju anotaciu '@Datatable'
+ *
+ */
+@ControllerAdvice(annotations = {Datatable.class})
+<span class="fc" id="L45">public class DatatableExceptionHandlerV2</span>
+{
+	@ResponseBody
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity&lt;DatatableResponse&lt;Object&gt;&gt; handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+<span class="fc" id="L50">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
+
+<span class="fc" id="L52">		List&lt;FieldError&gt; fieldErrors = ex.getBindingResult().getFieldErrors();</span>
+<span class="fc" id="L53">		List&lt;ObjectError&gt; globalErrors = ex.getBindingResult().getGlobalErrors();</span>
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">		if (!fieldErrors.isEmpty()) {</span>
+<span class="fc" id="L56">			response.setFieldErrors(fieldErrors.stream().map(e -&gt; new DatatableFieldError(getField(e.getField()), e.getDefaultMessage())).collect(Collectors.toList()));</span>
+		}
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">		if (!globalErrors.isEmpty()) {</span>
+<span class="fc" id="L60">			response.setError(globalErrors.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(&quot;, &quot;)));</span>
+		}
+
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if (Tools.isEmpty(response.getError())) {</span>
+			//vyhod este globalnu error hlasku, aby sa zobrazila aj pri tlacitkach a user si preklikal taby na konkretne chyby
+<span class="nc" id="L65">			response.setError(Prop.getInstance().getText(&quot;datatable.error.fieldErrorMessage&quot;));</span>
+		}
+
+<span class="fc" id="L68">		return ResponseEntity.ok(response);</span>
+	}
+
+	private String getField(String str) {
+<span class="fc" id="L72">		String result = str;</span>
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">		if (str.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L75">			result = str.substring(str.indexOf(&quot;.&quot;) + 1);</span>
+		}
+
+<span class="fc" id="L78">		return result;</span>
+	}
+
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity&lt;DatatableResponse&lt;Object&gt;&gt; handleException(ConstraintViolationException ex) {
+<span class="fc" id="L83">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
+<span class="fc" id="L84">		List&lt;DatatableFieldError&gt; errorsList = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L86" title="2 of 4 branches missed.">		if (ex.getConstraintViolations()!=null &amp;&amp; ex.getConstraintViolations().isEmpty()==false) {</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">			for (ConstraintViolation&lt;?&gt; violation : ex.getConstraintViolations()) {</span>
+<span class="fc" id="L88">				String propertyName = violation.getPropertyPath().toString();</span>
+<span class="fc" id="L89">				int dot = propertyName.indexOf(&quot;.&quot;);</span>
+				//toto potrebujeme kvoli @Valid anotacii na nested properties, ktore su konvertovane, priklad je GroupsApproveEntity.group kde nam hadze chybu na group.navbarName ale DT ma definovany len field group
+<span class="pc bpc" id="L91" title="3 of 4 branches missed.">				if (dot &gt; 0 &amp;&amp; propertyName.startsWith(&quot;editorFields&quot;)==false) propertyName = propertyName.substring(0, dot);</span>
+
+<span class="fc" id="L93">				errorsList.add(new DatatableFieldError(propertyName, getErrorMessage(violation)));</span>
+<span class="fc" id="L94">			}</span>
+<span class="fc" id="L95">			response.setFieldErrors(errorsList);</span>
+		} else {
+<span class="nc" id="L97">			response.setError(ex.getMessage());</span>
+<span class="nc" id="L98">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
+		}
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		if (DatatableRestControllerV2.getLastImportedRow()!=null) {</span>
+<span class="nc" id="L102">			StringBuilder errors = new StringBuilder(&quot;&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (response.getFieldErrors()!=null) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				for (DatatableFieldError error : response.getFieldErrors()) {</span>
+<span class="nc" id="L105">					errors.append(&quot;\n&quot;).append(error.getName()).append(&quot; - &quot;).append(error.getStatus());</span>
+<span class="nc" id="L106">				}</span>
+			}
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (Tools.isEmpty(response.getError())) {</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				if (errors.length()&lt;1) errors.append(Prop.getInstance().getText(&quot;datatable.error.fieldErrorMessage&quot;));</span>
+<span class="nc" id="L110">				response.setError(Prop.getInstance().getText(&quot;datatable.error.importRow&quot;, String.valueOf(DatatableRestControllerV2.getLastImportedRow().intValue()+1), errors.toString()));</span>
+			} else {
+<span class="nc" id="L112">				response.setError(Prop.getInstance().getText(&quot;datatable.error.importRow&quot;, String.valueOf(DatatableRestControllerV2.getLastImportedRow().intValue()+1), response.getError()));</span>
+			}
+		}
+
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">		if (Tools.isEmpty(response.getError())) {</span>
+			//vyhod este globalnu error hlasku, aby sa zobrazila aj pri tlacitkach a user si preklikal taby na konkretne chyby
+<span class="fc" id="L118">			response.setError(Prop.getInstance().getText(&quot;datatable.error.fieldErrorMessage&quot;));</span>
+		}
+
+<span class="fc" id="L121">		return new ResponseEntity&lt;&gt;(response, null, HttpStatus.OK);</span>
+	}
+
+	@ExceptionHandler(TransactionSystemException.class)
+	public ResponseEntity&lt;DatatableResponse&lt;Object&gt;&gt; handleException(TransactionSystemException ex) {
+<span class="nc" id="L126">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
+<span class="nc" id="L127">		List&lt;DatatableFieldError&gt; errorsList = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L129">		Throwable t = ex.getCause();</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		while ((t != null) &amp;&amp; !(t instanceof ConstraintViolationException)) {</span>
+<span class="nc" id="L131">			t = t.getCause();</span>
+		}
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (t instanceof ConstraintViolationException) {</span>
+			// Here you're sure you have a ConstraintViolationException, you can handle it
+<span class="nc" id="L135">			Set&lt;ConstraintViolation&lt;?&gt;&gt; violations = ((ConstraintViolationException) t).getConstraintViolations();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (!violations.isEmpty()) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">					for (ConstraintViolation&lt;?&gt; violation : violations) {</span>
+<span class="nc" id="L138">						errorsList.add(new DatatableFieldError(violation.getPropertyPath().toString(), getErrorMessage(violation)));</span>
+<span class="nc" id="L139">					}</span>
+			}
+
+<span class="nc" id="L142">			response.setFieldErrors(errorsList);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		} else if (ex instanceof TransactionSystemException) {</span>
+<span class="nc" id="L144">			String err = ex.getMessage();</span>
+			try {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (err != null) {</span>
+<span class="nc" id="L147">					int start = err.indexOf(&quot;Duplicate entry&quot;);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (start &gt; 0) {</span>
+<span class="nc" id="L149">						int end = err.indexOf(&quot;Error Code&quot;, start);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">						if (end &gt; start) err = err.substring(start, end).trim();</span>
+					}
+				}
+<span class="nc" id="L153">			} catch (Exception e) {</span>
+				//failsafe
+<span class="nc" id="L155">			}</span>
+<span class="nc" id="L156">			response.setError(err);</span>
+<span class="nc" id="L157">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
+<span class="nc" id="L158">		} else {</span>
+<span class="nc" id="L159">			response.setError(ex.getMessage());</span>
+<span class="nc" id="L160">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
+		}
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (Tools.isEmpty(response.getError())) {</span>
+			//vyhod este globalnu error hlasku, aby sa zobrazila aj pri tlacitkach a user si preklikal taby na konkretne chyby
+<span class="nc" id="L165">			response.setError(Prop.getInstance().getText(&quot;datatable.error.fieldErrorMessage&quot;));</span>
+		}
+
+<span class="nc" id="L168">		return new ResponseEntity&lt;&gt;(response, null, HttpStatus.OK);</span>
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity&lt;DatatableResponse&lt;Object&gt;&gt; handleException(Exception ex) {
+<span class="fc" id="L173">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
+<span class="fc" id="L174">		String message = null;</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">		if (ex instanceof ResponseStatusException) {</span>
+<span class="nc" id="L176">			ResponseStatusException ex2 = (ResponseStatusException)ex;</span>
+<span class="nc" id="L177">			message = ex2.getReason();</span>
+		}
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">		if (Tools.isEmpty(message)) message = ex.getMessage();</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">		if (Tools.isEmpty(message)) message = Prop.getInstance().getText(&quot;datatable.error.unknown&quot;);</span>
+
+<span class="pc bpc" id="L182" title="2 of 4 branches missed.">		if (message!=null &amp;&amp; message.contains(&quot;DatabaseException&quot;)) {</span>
+<span class="nc" id="L183">			int i = message.indexOf(&quot;Call:&quot;);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (i &gt; 0) {</span>
+<span class="nc" id="L185">				Adminlog.add(Adminlog.TYPE_SQLERROR, message, -1, -1);</span>
+<span class="nc" id="L186">				message = message.substring(0, i).trim();</span>
+			}
+		}
+<span class="pc bpc" id="L189" title="2 of 4 branches missed.">		if (message != null &amp;&amp; message.contains(&quot;JSON parse error&quot;)) {</span>
+<span class="nc" id="L190">			int i = message.indexOf(&quot;, problem:&quot;);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (i &gt; 0) {</span>
+<span class="nc" id="L192">				Adminlog.add(Adminlog.TYPE_JSPERROR, message, -1, -1);</span>
+<span class="nc" id="L193">				message = message.substring(0, i).trim();</span>
+			}
+		}
+
+<span class="fc" id="L197">		response.setError(message);</span>
+<span class="fc" id="L198">		Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
+<span class="fc" id="L199">		return new ResponseEntity&lt;&gt;(response, null, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * Pokusi sa ziskat text chyby z WJ prekladov
+	 * @param violation
+	 * @return
+	 */
+	private String getErrorMessage(ConstraintViolation&lt;?&gt; violation) {
+
+		//{javax.validation.constraints.NotBlank.message}
+<span class="fc" id="L210">		String key = violation.getMessageTemplate();</span>
+<span class="pc bpc" id="L211" title="2 of 4 branches missed.">		if (key != null &amp;&amp; key.length()&gt;3) {</span>
+<span class="pc bpc" id="L212" title="3 of 6 branches missed.">			if (key.startsWith(&quot;{&quot;) &amp;&amp; key.endsWith(&quot;}&quot;) &amp;&amp; key.length()&gt;3) key = key.substring(1, key.length()-1);</span>
+
+<span class="fc" id="L214">			Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L215">			String message = prop.getText(key);</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">			if (key.equals(message)==false) {</span>
+				//skus dohladat atributy a nahradit ich
+				try {
+<span class="pc bpc" id="L219" title="2 of 4 branches missed.">					if (violation.getConstraintDescriptor()!=null &amp;&amp; violation.getConstraintDescriptor().getAttributes()!=null) {</span>
+<span class="fc" id="L220">						Map&lt;String, Object&gt; attributes = violation.getConstraintDescriptor().getAttributes();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">						for (Map.Entry&lt;String, Object&gt; entry : attributes.entrySet()) {</span>
+<span class="fc" id="L222">							String expression = &quot;{&quot;+entry.getKey()+&quot;}&quot;;</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">							if (message.contains(expression)) {</span>
+<span class="nc" id="L224">								message = Tools.replace(message, expression, String.valueOf(attributes.get(entry.getKey())));</span>
+							}
+<span class="fc" id="L226">						}</span>
+					}
+<span class="fc" id="L228">					String validatedValue = String.valueOf(violation.getInvalidValue());</span>
+<span class="fc" id="L229">					message = Tools.replace(message, &quot;${validatedValue}&quot;, validatedValue);</span>
+
+<span class="nc" id="L231">				} catch (Exception ex) {</span>
+					//failsafe
+<span class="fc" id="L233">				}</span>
+
+<span class="fc" id="L235">				return message;</span>
+			}
+		}
+
+<span class="nc" id="L239">		return violation.getMessage();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

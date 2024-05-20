@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainLimitBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">DomainLimitBean.java</span></div><h1>DomainLimitBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ *  DomainLimitBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2013
+ *@author       $Author: jeeff mhalas $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 24.7.2013 14:39:18
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;domain_limits&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL_DOMAINLIMITS )
+<span class="fc" id="L39">public class DomainLimitBean extends ActiveRecord implements Serializable</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = -5776093287890776273L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_domain_limits&quot;)
+	@TableGenerator(name=&quot;WJGen_domain_limits&quot;,pkColumnValue=&quot;domain_limit_id&quot;)
+	@Column(name=&quot;domain_limit_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, renderFormat = &quot;dt-format-selector&quot;)
+	private int id;
+
+	@Column(name=&quot;domain&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.dmail.domainlimits.domain&quot;
+    )
+	private String domain;
+
+<span class="fc" id="L61">    @Column(name=&quot;active&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.dmail.domainlimits.active&quot;
+    )
+	private boolean active = true;
+
+<span class="fc" id="L68">	@Column(name=&quot;limit_size&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.dmail.domainlimits.limit&quot;,
+		editor = { @DataTableColumnEditor( attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+        } )}
+    )
+	private int limit = 10;
+
+<span class="fc" id="L78">	@Column(name=&quot;time_unit&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.dmail.domainlimits.timeUnit&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;NANOSECONDS&quot;, value = &quot;NANOSECONDS&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;MICROSECONDS&quot;, value = &quot;MICROSECONDS&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;MILLISECONDS&quot;, value = &quot;MILLISECONDS&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;SECONDS&quot;, value = &quot;SECONDS&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;MINUTES&quot;, value = &quot;MINUTES&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;HOURS&quot;, value = &quot;HOURS&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;DAYS&quot;, value = &quot;DAYS&quot;)
+                }
+            )
+        }
+    )
+	private String timeUnit = &quot;MINUTES&quot;;
+
+	//minDelay in millis
+<span class="fc" id="L99">	@Column(name=&quot;min_delay&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.dmail.domainlimits.minDelay&quot;,
+		editor = { @DataTableColumnEditor( attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+        } )}
+    )
+	private int minDelay = 5000;
+
+<span class="fc" id="L109">    @Column(name=&quot;delay_active&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.dmail.domainlimits.delayActive&quot;
+    )
+	private boolean delayActive = true;
+
+	@Transient
+	private transient BaseEditorFields editorFields;
+
+	public boolean isDelayActive()
+	{
+<span class="fc" id="L121">		return delayActive;</span>
+	}
+
+	public void setDelayActive(boolean delayActive)
+	{
+<span class="fc" id="L126">		this.delayActive = delayActive;</span>
+<span class="fc" id="L127">	}</span>
+
+	public int getMinDelay()
+	{
+<span class="fc" id="L131">		return minDelay;</span>
+	}
+
+	public void setMinDelay(int minDelay)
+	{
+<span class="fc" id="L136">		this.minDelay = minDelay;</span>
+<span class="fc" id="L137">	}</span>
+
+	public TimeUnit getTimeUnit()
+	{
+<span class="fc" id="L141">		return TimeUnit.valueOf(timeUnit);</span>
+	}
+
+	public void setTimeUnit(TimeUnit unit)
+	{
+<span class="fc" id="L146">		this.timeUnit = unit.name();</span>
+<span class="fc" id="L147">	}</span>
+
+	public int getDomainLimitId()
+	{
+<span class="fc" id="L151">		return id;</span>
+	}
+
+	public void setDomainLimitId(int domainLimitId)
+	{
+<span class="fc" id="L156">		this.id = domainLimitId;</span>
+<span class="fc" id="L157">	}</span>
+
+	public String getDomain()
+	{
+<span class="fc" id="L161">		return domain;</span>
+	}
+
+	public void setDomain(String domain)
+	{
+<span class="fc" id="L166">		this.domain = domain;</span>
+<span class="fc" id="L167">	}</span>
+
+	public int getLimit()
+	{
+<span class="fc" id="L171">		return limit;</span>
+	}
+
+	public void setLimit(int limit)
+	{
+<span class="fc" id="L176">		this.limit = limit;</span>
+<span class="fc" id="L177">	}</span>
+
+	public boolean isActive()
+	{
+<span class="fc" id="L181">		return active;</span>
+	}
+
+	public void setActive(boolean active)
+	{
+<span class="fc" id="L186">		this.active = active;</span>
+<span class="fc" id="L187">	}</span>
+
+	@Override
+	public int getId()
+	{
+<span class="fc" id="L192">		return getDomainLimitId();</span>
+	}
+
+	@Override
+	public void setId(int id)
+	{
+<span class="fc" id="L198">		setDomainLimitId(id);</span>
+<span class="fc" id="L199">	}</span>
+
+	@Override
+	public boolean save()
+	{
+<span class="fc" id="L204">		boolean ret = super.save();</span>
+<span class="fc" id="L205">		DomainThrottle.getInstance().refresh();</span>
+<span class="fc" id="L206">		DomainLimitsDB.getInstance(true);</span>
+<span class="fc" id="L207">		return ret;</span>
+	}
+
+	@Override
+	public boolean delete()
+	{
+<span class="fc" id="L213">		boolean ret = super.delete();</span>
+<span class="fc" id="L214">		DomainThrottle.getInstance().refresh();</span>
+<span class="fc" id="L215">		DomainLimitsDB.getInstance(true);</span>
+<span class="fc" id="L216">		return ret;</span>
+	}
+
+	public BaseEditorFields getEditorFields() {
+<span class="fc" id="L220">		return editorFields;</span>
+	}
+
+	public void setEditorFields(BaseEditorFields editorFields) {
+<span class="fc" id="L224">		this.editorFields = editorFields;</span>
+<span class="fc" id="L225">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

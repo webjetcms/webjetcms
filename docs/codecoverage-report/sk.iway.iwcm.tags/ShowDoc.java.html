@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShowDoc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">ShowDoc.java</span></div><h1>ShowDoc.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.DynamicAttributes;
+import javax.servlet.jsp.tagext.TagSupport;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+
+/**
+ *  tag pre vypis pozadovaneho dokument (parameter docId) POZOR: nezapisuje
+ *  statistiku
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      $Date: 2010/01/20 11:15:08 $
+ *@modified     $Date: 2010/01/20 11:15:08 $
+ */
+<span class="nc" id="L30">public class ShowDoc extends TagSupport implements DynamicAttributes</span>
+{
+	private static final long serialVersionUID = 2652530779542928047L;
+
+	private int docId;
+<span class="nc" id="L35">	private int menuDocId = -1;</span>
+
+<span class="nc" id="L37">	private Map&lt;String,Object&gt; dynamicAttrs = new HashMap&lt;String,Object&gt;();</span>
+
+	@Override
+	public void setDynamicAttribute(String uri, String localName, Object value) throws JspException
+	{
+<span class="nc" id="L42">		dynamicAttrs.put(localName.toLowerCase(), value);</span>
+<span class="nc" id="L43">	}</span>
+
+	@Override
+	public void release()
+	{
+<span class="nc" id="L48">		super.release();</span>
+<span class="nc" id="L49">		docId = -1;</span>
+<span class="nc" id="L50">		menuDocId = -1;</span>
+<span class="nc" id="L51">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@return                   Description of the Return Value
+	 *@exception  JspException  Description of the Exception
+	 */
+	@Override
+	public final int doEndTag() throws JspException
+	{
+		try
+		{
+			//get requested document
+<span class="nc" id="L65">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L66">			DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (doc != null)</span>
+			{
+<span class="nc" id="L69">				HttpSession session = pageContext.getSession();</span>
+<span class="nc" id="L70">				Identity user = null;</span>
+				try
+				{
+					//ziskaj meno lognuteho usera
+<span class="nc bnc" id="L74" title="All 2 branches missed.">					if (session.getAttribute(Constants.USER_KEY) != null)</span>
+					{
+<span class="nc" id="L76">						user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+					}
+				}
+<span class="nc" id="L79">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L81">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L82">				}</span>
+
+				// ------------ HEADER
+<span class="nc" id="L85">				String text = doc.getData();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (text != null)</span>
+				{
+<span class="nc bnc" id="L88" title="All 2 branches missed.">					if (menuDocId &lt; 1)</span>
+					{
+<span class="nc" id="L90">						menuDocId = docId;</span>
+					}
+					try
+					{
+<span class="nc" id="L94">						text = sk.iway.iwcm.doc.ShowDoc.updateCodes(user, text, menuDocId, (HttpServletRequest)pageContext.getRequest(), pageContext.getServletContext());</span>
+					}
+<span class="nc" id="L96">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L98">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L99">					}</span>
+				}
+
+				// nahradim zastupne symboly
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				if (dynamicAttrs!=null)</span>
+				{
+<span class="nc bnc" id="L105" title="All 2 branches missed.">					for (String key : dynamicAttrs.keySet())</span>
+					{
+<span class="nc bnc" id="L107" title="All 2 branches missed.">						if (key.startsWith(&quot;replace-&quot;))</span>
+						{
+<span class="nc" id="L109">							String replaceKey = key.substring(key.indexOf(&quot;replace-&quot;)+&quot;replace-&quot;.length());</span>
+<span class="nc" id="L110">							text = Tools.replace(text, &quot;{&quot;+replaceKey+&quot;}&quot;, String.valueOf(dynamicAttrs.get(key)));</span>
+<span class="nc" id="L111">							text = Tools.replace(text, &quot;{&quot;+replaceKey.toUpperCase()+&quot;}&quot;, String.valueOf(dynamicAttrs.get(key)));</span>
+						}
+<span class="nc" id="L113">					}</span>
+				}
+
+				//pageContext.getOut().write((String) pageContext.getRequest().getAttribute(&quot;doc_header&quot;));
+<span class="nc" id="L117">				WriteTag.writeText(text ,pageContext, &quot;unknown&quot;);</span>
+			}
+		}
+<span class="nc" id="L120">		catch (Exception e)</span>
+		{
+<span class="nc" id="L122">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L123">		}</span>
+<span class="nc" id="L124">		return EVAL_PAGE;</span>
+	}
+
+	/**
+	 *  Sets the docId attribute of the ShowDoc object
+	 *
+	 *@param  newDocId  The new docId value
+	 */
+	public void setDocId(int newDocId)
+	{
+<span class="nc" id="L134">		docId = newDocId;</span>
+<span class="nc" id="L135">		menuDocId = newDocId;</span>
+<span class="nc" id="L136">	}</span>
+
+	/**
+	 *  Gets the docId attribute of the ShowDoc object
+	 *
+	 *@return    The docId value
+	 */
+	public int getDocId()
+	{
+<span class="nc" id="L145">		return docId;</span>
+	}
+	public int getMenuDocId()
+	{
+<span class="nc" id="L149">		return menuDocId;</span>
+	}
+	public void setMenuDocId(int menuDocId)
+	{
+<span class="nc" id="L153">		this.menuDocId = menuDocId;</span>
+<span class="nc" id="L154">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContentBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.export</a> &gt; <span class="el_source">ContentBuilder.java</span></div><h1>ContentBuilder.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.export;
+
+import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.gallery.GalleryBean;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.gallery.GalleryDimension;
+import sk.iway.iwcm.inquiry.AnswerForm;
+import sk.iway.iwcm.inquiry.InquiryBean;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ * Callback objekt na pridavanie liniek zo stranok.
+ * Jednotlive exportery mu povedia, ze treba pridat linku,
+ * on si pamata kam a pre ktoru stranku. 
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 11.6.2012 9:37:24
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class ContentBuilder
+{
+
+	// napriklad: !INCLUDE(/components/xxx/yyy.jsp, param1=value1, param2=value2)!
+<span class="nc" id="L45">	final static Pattern COMPONENT = Pattern.compile(&quot;!INCLUDE\\((.*?)\\)!&quot;);</span>
+
+	// HTML atributy obsahujuce URL
+	// Zdroj: http://www.w3.org/TR/2012/WD-html5-20120329/section-index.html#attributes-1
+<span class="nc" id="L49">	final static Pattern[] HTML_ATTRIBUTES = {</span>
+<span class="nc" id="L50">		attribute(&quot;action&quot;,     &quot;form&quot;),</span>
+<span class="nc" id="L51">		attribute(&quot;cite&quot;,       &quot;blockquote&quot;, &quot;del&quot;, &quot;ins&quot;, &quot;q&quot;),</span>
+<span class="nc" id="L52">		attribute(&quot;data&quot;,       &quot;object&quot;),</span>
+<span class="nc" id="L53">		attribute(&quot;formaction&quot;, &quot;button&quot;, &quot;input&quot;),</span>
+<span class="nc" id="L54">		attribute(&quot;href&quot;,       &quot;a&quot;, &quot;area&quot;, &quot;base&quot;, &quot;link&quot;),</span>
+<span class="nc" id="L55">		attribute(&quot;icon&quot;,       &quot;command&quot;),</span>
+<span class="nc" id="L56">		attribute(&quot;manifest&quot;,   &quot;html&quot;),</span>
+<span class="nc" id="L57">		attribute(&quot;poster&quot;,     &quot;video&quot;),</span>
+<span class="nc" id="L58">		attribute(&quot;src&quot;,        &quot;audio&quot;, &quot;embed&quot;, &quot;iframe&quot;, &quot;img&quot;, &quot;input&quot;, &quot;script&quot;, &quot;source&quot;, &quot;track&quot;, &quot;video&quot;),</span>
+	};
+
+	// HTML prvok STYLE
+<span class="nc" id="L62">	final static Pattern STYLE = Pattern.compile(&quot;&lt;style(\\s[^&gt;]*)&gt;(.*?)&lt;/style&gt;&quot;, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);</span>
+
+	// Flash video SWF ma subor zakodovany v parametri.
+<span class="nc" id="L65">	final static Pattern HTML_PARAM_VALUE = attribute(&quot;value&quot;, &quot;param&quot;);</span>
+	final static String FLASH_PRELOAD = &quot;/components/_common/preload.swf?path=&quot;;
+
+	private final Content content;
+
+	private final String baseHref;
+
+	private final HttpServletRequest request;
+
+<span class="nc" id="L74">	private Integer docId = null;</span>
+
+	/**
+	 * Vytvori callback objekt na pridavanie suborov z danej stranky do daneho kontentu.
+	 * 
+	 * @param content  objekt, do ktoreho zapisujeme subory urcene na export
+	 */
+	public ContentBuilder(Content content, HttpServletRequest request)
+<span class="nc" id="L82">	{</span>
+<span class="nc" id="L83">		this.content = content;</span>
+<span class="nc" id="L84">		this.baseHref = Tools.getBaseHref(request);</span>
+<span class="nc" id="L85">		this.request = request;</span>
+<span class="nc" id="L86">	}</span>
+
+	/**
+	 * Nastavi dokument, pre ktory exportujeme veci.
+	 * Treba volat pred exportom obsahu stranky, a potom pre istotu zase nastavit null.
+	 * &lt;pre&gt;
+	 * callback.setDoc(doc);
+	 * callback.add... // linky, beany
+	 * callback.setDoc(null);
+	 * &lt;/pre&gt;
+	 * 
+	 * @param doc
+	 */
+	public void setDoc(DocDetails doc)
+	{
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		docId = (null == doc) ? null : Integer.valueOf(doc.getDocId());</span>
+<span class="nc" id="L102">	}</span>
+
+	private void checkDoc()
+	{
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (null == docId)</span>
+		{
+<span class="nc" id="L108">			throw new IllegalStateException(&quot;ContentBuilder.setDoc must be called first&quot;);</span>
+		}
+<span class="nc" id="L110">	}</span>
+
+	public void addBanner(BannerBean banner)
+	{
+<span class="nc" id="L114">		checkDoc();</span>
+<span class="nc" id="L115">		List&lt;BannerBean&gt; banners = content.getBanners();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (BannerBean b : banners)</span>
+		{
+<span class="nc bnc" id="L118" title="All 4 branches missed.">			if (Tools.areSame(banner.getBannerGroup(), b.getBannerGroup()) &amp;&amp; Tools.areSame(banner.getName(), b.getName()))</span>
+			{
+<span class="nc" id="L120">				return;  // rovnaka skupina aj nazov = rovnaky banner</span>
+			}
+<span class="nc" id="L122">		}</span>
+<span class="nc" id="L123">		banners.add(banner);</span>
+<span class="nc" id="L124">	}</span>
+
+	public void addInquiry(InquiryBean inquiry)
+	{
+<span class="nc" id="L128">		checkDoc();</span>
+
+<span class="nc" id="L130">		List&lt;AnswerForm&gt; answers = inquiry.getAnswers();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (answers.isEmpty()) return;  // bez odpovedi nevieme zistit skupinu :(</span>
+<span class="nc" id="L132">		List&lt;InquiryBean&gt; inquiries = content.getInquiries();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		for (InquiryBean i : inquiries)</span>
+		{
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (Tools.areSame(inquiry.getQuestion(), i.getQuestion()))</span>
+			{
+<span class="nc" id="L137">				List&lt;AnswerForm&gt; a = i.getAnswers();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if (Tools.areSame(answers.get(0).getGroup(), a.get(0).getGroup()))</span>
+				{
+<span class="nc" id="L140">					return;  // rovnaka skupina aj otazka = rovnaka anketa</span>
+				}
+			}
+<span class="nc" id="L143">		}</span>
+<span class="nc" id="L144">		inquiries.add(inquiry);</span>
+<span class="nc" id="L145">	}</span>
+
+	/**
+	 * Prida obrazok z galerie.
+	 * Kedze GalleryBean obsahuje iba popis v jednom jazyku, ako parameter dame vsetky preklady.
+	 * 
+	 * @param translations  mapa GalleryBean pre jednotlive jazyky
+	 */
+	public void addGalleryImage(Map&lt;String, GalleryBean&gt; translations)
+	{
+<span class="nc" id="L155">		checkDoc();</span>
+
+<span class="nc" id="L157">		GalleryBean i = translations.values().iterator().next();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (null == i) return;  // prazdna mapa</span>
+
+<span class="nc" id="L160">		List&lt;Map&lt;String, GalleryBean&gt;&gt; galleryImages = content.getGalleryImages();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		for (Map&lt;String, GalleryBean&gt; image : galleryImages)</span>
+		{
+<span class="nc" id="L163">			GalleryBean img = image.values().iterator().next();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (Tools.areSame(img.getImageUrl(), i.getImageUrl()))</span>
+			{
+<span class="nc" id="L166">				return;  // rovnake URL = rovnaky obrazok</span>
+			}
+<span class="nc" id="L168">		}</span>
+<span class="nc" id="L169">		galleryImages.add(translations);</span>
+<span class="nc" id="L170">	}</span>
+
+	/**
+	 * Prida adresar z galerie.
+	 * 
+	 * @param dimension
+	 */
+	public void addGalleryInfo(GalleryDimension dimension, Dimension dim, Dimension dimNormal)
+	{
+<span class="nc" id="L179">		checkDoc();</span>
+
+<span class="nc" id="L181">		List&lt;Content.GalleryInfo&gt; galleryInfos = content.getGalleryInfos();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		for (Content.GalleryInfo info : galleryInfos)</span>
+		{
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (Tools.areSame(info.getInfo().getGalleryPath(), dimension.getGalleryPath()))</span>
+			{
+<span class="nc" id="L186">				return;  // rovnake URL = rovnaky adresar</span>
+			}
+<span class="nc" id="L188">		}</span>
+<span class="nc" id="L189">		Content.GalleryInfo info = new Content.GalleryInfo();</span>
+<span class="nc" id="L190">		info.setInfo(dimension);</span>
+<span class="nc" id="L191">		info.setDim(dim);</span>
+<span class="nc" id="L192">		info.setDimNormal(dimNormal);</span>
+<span class="nc" id="L193">		galleryInfos.add(info);</span>
+<span class="nc" id="L194">	}</span>
+	
+	// TODO: prida veci vnutri elementu STYLE, alebo linkovane cez STYLE SRC=...
+	public void addCss(String data)
+	{
+		//...
+<span class="nc" id="L200">	}</span>
+
+	/**
+	 * Prida vsetko, co je v danom HTML kode; cize vyberie linky z tela stranky.
+	 */
+	public void addHtml(String data)
+	{
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (null == data) return;</span>
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for (Pattern pattern : HTML_ATTRIBUTES)</span>
+		{
+<span class="nc" id="L211">			Matcher m = pattern.matcher(data);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">			while (m.find())</span>
+			{
+<span class="nc" id="L214">				addLink(m.group(2));</span>
+			}
+		}
+
+<span class="nc" id="L218">		Matcher m = COMPONENT.matcher(data);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		while (m.find())</span>
+		{
+<span class="nc" id="L221">			ComponentExporter exporter = new DefaultComponentExporterResolver().forInclude(m.group(1));</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (null != exporter)</span>
+			{
+<span class="nc" id="L224">				exporter.export(this);</span>
+			}
+<span class="nc" id="L226">		}</span>
+
+<span class="nc" id="L228">		m = HTML_PARAM_VALUE.matcher(data);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		while (m.find())</span>
+		{
+<span class="nc" id="L231">			String value = m.group(2);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (value.startsWith(FLASH_PRELOAD))</span>
+			{
+<span class="nc" id="L234">				addLink(value.substring(FLASH_PRELOAD.length()));</span>
+			}
+<span class="nc" id="L236">		}</span>
+
+<span class="nc" id="L238">	}</span>
+
+	/**
+	 * Prida linku, ak vyhovuje danym pravidlam.
+	 * Nie vsetko, co vyzera ako linka, je naozaj linka, moze to byt napriklad Javascript alebo e-mail.
+	 * Linky mimo servera ignorujeme.
+	 * 
+	 * @param link  potencialna linka v HTML, napriklad obsah atributu A HREF
+	 */
+	public void addLink(String link)
+	{
+<span class="nc" id="L249">		checkDoc();</span>
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (null == link) return;</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		if (link.contains(&quot;..&quot;)) return;  // security</span>
+
+		// zrusime vsetko co nezacina &quot;/&quot; alebo &quot;http://$NAS_SERVER/&quot;
+<span class="nc" id="L256">		String virtualPath = null;</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (link.startsWith(&quot;/&quot;))</span>
+		{
+<span class="nc" id="L259">			virtualPath = link;</span>
+		}
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		else if (link.startsWith(baseHref))</span>
+		{
+<span class="nc" id="L263">			virtualPath = link.substring(baseHref.length());</span>
+		}
+<span class="nc bnc" id="L265" title="All 2 branches missed.">		if (null == virtualPath) return;</span>
+
+		// zrusime anchor &quot;#&quot;
+<span class="nc" id="L268">		int pos = virtualPath.indexOf('#');</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (0 &lt;= pos)</span>
+		{
+<span class="nc" id="L271">			virtualPath = virtualPath.substring(0, pos);</span>
+		}
+		//zrusime ?v=timestamp
+<span class="nc" id="L274">		pos = virtualPath.indexOf(&quot;?v=&quot;);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (0 &lt;= pos)</span>
+		{
+<span class="nc" id="L277">			virtualPath = virtualPath.substring(0, pos);</span>
+		}
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (Tools.isEmpty(virtualPath)) return;</span>
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (&quot;/&quot;.equals(virtualPath)) return;</span>
+		
+<span class="nc" id="L284">		String realPath = Tools.getRealPath(virtualPath);</span>
+<span class="nc" id="L285">		IwcmFile file = new IwcmFile(realPath);</span>
+<span class="nc bnc" id="L286" title="All 4 branches missed.">		if (!file.exists() || file.isDirectory()) return;  // stranka alebo zla linka</span>
+
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (GalleryDB.isGalleryFolder(virtualPath))</span>
+		{
+<span class="nc" id="L290">			addDocFile(GalleryToolsForCore.getImagePathSmall(virtualPath));</span>
+<span class="nc" id="L291">			addDocFile(GalleryToolsForCore.getImagePathNormal(virtualPath));</span>
+<span class="nc" id="L292">			addDocFile(GalleryToolsForCore.getImagePathOriginal(virtualPath));</span>
+		}
+		else
+		{
+<span class="nc" id="L296">			addDocFile(virtualPath);</span>
+		}
+		
+		//ak pridavam odkaz na video subor treba pridat aj jpg nahlad
+<span class="nc bnc" id="L300" title="All 4 branches missed.">		if (link.endsWith(&quot;.mp4&quot;) || link.endsWith(&quot;.flv&quot;))</span>
+		{
+			//otestuj a pridaj odkaz na nahladovy obrazok
+<span class="nc" id="L303">			String jpgUrl = link.substring(0, link.lastIndexOf(&quot;.&quot;))+&quot;.jpg&quot;;</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (FileTools.isFile(jpgUrl))</span>
+			{
+<span class="nc" id="L306">				Logger.debug(DocExporter.class, &quot;Adding media jpg: &quot;+jpgUrl);</span>
+<span class="nc" id="L307">				addLink(jpgUrl);</span>
+			}
+		}
+<span class="nc" id="L310">	}</span>
+
+	// prida subor do &quot;docFiles&quot;
+	private void addDocFile(String virtualPath)
+	{
+<span class="nc" id="L315">		Map&lt;Integer, Collection&lt;String&gt;&gt; docFiles = content.getDocFiles();</span>
+<span class="nc" id="L316">		Collection&lt;String&gt; thisDocFiles = docFiles.get(docId);</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		if (null == thisDocFiles)</span>
+		{
+<span class="nc" id="L319">			thisDocFiles = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L320">			docFiles.put(docId, thisDocFiles);</span>
+		}
+<span class="nc" id="L322">		thisDocFiles.add(virtualPath);</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (!content.containsFile(virtualPath))</span>
+		{
+<span class="nc" id="L325">			addFile(virtualPath);</span>
+		}
+<span class="nc" id="L327">	}</span>
+
+	// prida subor do &quot;files&quot;
+	private void addFile(String virtualPath)
+	{
+<span class="nc" id="L332">		List&lt;Content.File&gt; files = content.getFiles();</span>
+<span class="nc" id="L333">		int number = files.size();</span>
+<span class="nc" id="L334">		Content.File file = new Content.File();</span>
+<span class="nc" id="L335">		file.setVirtualPath(virtualPath);</span>
+<span class="nc" id="L336">		file.setZipPath(zipEntryName(number, virtualPath));</span>
+<span class="nc" id="L337">		files.add(file);</span>
+<span class="nc" id="L338">	}</span>
+
+	public HttpServletRequest getRequest()
+	{
+<span class="nc" id="L342">		return request;</span>
+	}
+
+	/**
+	 * Vymysli novy nazov pre subor, podobny na stary, ale jedinecny.
+	 * @param number       jedinecne cislo
+	 * @param virtualPath  virtualna cesta k povodnemu suboru
+	 * @return
+	 */
+	static String zipEntryName(int number, String virtualPath)
+	{
+<span class="nc" id="L353">		int pos = virtualPath.lastIndexOf('/');</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		String filename = (0 &lt;= pos) ? virtualPath.substring(pos + 1) : virtualPath;</span>
+<span class="nc" id="L355">		return String.format(&quot;%04d_%s&quot;, Integer.valueOf(number), filename);</span>
+	}
+
+	/**
+	 * Vytvori regular expression pre dany HTML atribut.
+	 * 
+	 * @param attribute  atribut
+	 * @param element    zoznam elementov, v ktorych sa atribut moze vyskytovat (prazdny ak v lubovolnom)
+	 * @return
+	 */
+	private static Pattern attribute(String attribute, String... element)
+	{
+<span class="nc bnc" id="L367" title="All 2 branches missed.">		String elementRegex = (0 == element.length) ? &quot;\\w+&quot; : StringUtils.join(element, &quot;|&quot;);</span>
+<span class="nc" id="L368">		String regex = &quot;&lt;(&quot; + elementRegex + &quot;)\\s[^&gt;]*\\b&quot; + attribute + &quot;=[\&quot;']([^\&quot;']*)[\&quot;'][^&gt;]*&gt;&quot;;</span>
+<span class="nc" id="L369">		return Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

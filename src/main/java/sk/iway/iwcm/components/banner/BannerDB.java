@@ -1426,13 +1426,6 @@ public class BannerDB
 				sql.append("SELECT banner_id, ").append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(", SUM(views) AS views ")
 				.append("FROM banner_stat_views_day ").append("WHERE insert_date >= ? AND insert_date <= ? AND banner_id IN ( ");
 
-				if (Constants.DB_TYPE == Constants.DB_ORACLE)
-				{
-					sql.delete(0, sql.length());
-					sql.append("SELECT banner_id, ").append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(", SUM(views) AS views ")
-					.append("FROM banner_stat_views_day ").append("WHERE insert_date >= ? AND insert_date <= ? AND banner_id IN ( ");
-				}
-
 				for(int i=0; i<topBanners.length; i++)
 				{
 					if (i > 0)
@@ -1446,24 +1439,8 @@ public class BannerDB
 				}
 				sql.append(") AND domain_id = ? ");
 
-				if (Constants.DB_TYPE == Constants.DB_MSSQL)
-				{
-					sql.append("GROUP BY banner_id, ").append(StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE));
-				}
-				else
-				{
-					if (Constants.DB_TYPE == Constants.DB_ORACLE)
-					{
-						String fieldName = FIELD_INSERT_DATE;
-						sql.append("GROUP BY banner_id,TO_CHAR(").append(fieldName).append(", 'DD') , TO_CHAR(").append(fieldName)
-						.append(", 'MM') , TO_CHAR(").append(fieldName).append(", 'YYYY')");
-					}
-					else
-					{
-					sql.append("GROUP BY banner_id, vt_day, vt_month, vt_year ");
-					}
+				sql.append("GROUP BY banner_id, ").append(StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE));
 
-				}
 				//-netreba sql += "ORDER BY vt_year, vt_month, vt_day";
 
 				Logger.debug(BannerDB.class, "sql:"+sql);

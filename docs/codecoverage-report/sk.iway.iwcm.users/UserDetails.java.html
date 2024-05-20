@@ -1,0 +1,1175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">UserDetails.java</span></div><h1>UserDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.ForumTools;
+import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.io.IwcmFile;
+
+import javax.servlet.http.HttpServletRequest;
+
+import java.io.Serializable;
+import java.sql.ResultSet;
+import java.util.*;
+
+/**
+ *  Drzi info o pouzivatelovi (z tabulky users)
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      $Date: 2004/03/08 14:53:59 $
+ */
+public class UserDetails implements Serializable
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 680672045576197626L;
+
+<span class="pc" id="L35">	protected int userId = -1;</span>
+<span class="pc" id="L36">	protected String login = &quot;&quot;;</span>
+<span class="pc" id="L37">	protected boolean admin = false;</span>
+
+<span class="pc" id="L39">	protected String company = &quot;&quot;;</span>
+<span class="pc" id="L40">	protected String adress = &quot;&quot;;</span>
+<span class="pc" id="L41">	protected String email = &quot;&quot;;</span>
+<span class="pc" id="L42">	protected String country = &quot;&quot;;</span>
+<span class="pc" id="L43">	protected String phone = &quot;&quot;;</span>
+<span class="pc" id="L44">	protected String zipCode = &quot;&quot;;</span>
+	protected boolean authorized;
+	protected String userGroupsIds;
+<span class="pc" id="L47">	protected String userGroupsNames=&quot;&quot;;</span>
+<span class="pc" id="L48">	protected String city = &quot;&quot;;</span>
+<span class="pc" id="L49">	protected String password = &quot;&quot;;</span>
+<span class="pc" id="L50">	protected String oldPassword = &quot;&quot;;</span>
+<span class="pc" id="L51">	protected String lastLogon = &quot;&quot;;</span>
+<span class="pc" id="L52">	protected Date lastLogonAsDate = new Date();</span>
+<span class="pc" id="L53">	protected String title = &quot;&quot;;</span>
+<span class="pc" id="L54">	protected String firstName = &quot;&quot;;</span>
+<span class="pc" id="L55">	protected String lastName = &quot;&quot;;</span>
+<span class="pc" id="L56">	protected String fieldA = &quot;&quot;;</span>
+<span class="pc" id="L57">	protected String fieldB = &quot;&quot;;</span>
+<span class="pc" id="L58">	protected String fieldC = &quot;&quot;;</span>
+<span class="pc" id="L59">	protected String fieldD = &quot;&quot;;</span>
+<span class="pc" id="L60">	protected String fieldE = &quot;&quot;;</span>
+	protected long regDate;
+	protected String dateOfBirth;
+<span class="pc" id="L63">	protected String photo = &quot;&quot;;</span>
+<span class="pc" id="L64">	protected String signature = &quot;&quot;;</span>
+<span class="pc" id="L65">	protected boolean sexMale = true;</span>
+	protected int forumRank;
+	protected int ratingRank;
+	protected String editableGroups;
+	protected String editablePages;
+	protected String writableFolders;
+<span class="pc" id="L71">	protected transient UserGroupVerify userGroupVerify = null;</span>
+   // datumy kedy je platne prihlasenie
+	protected String allowLoginStart;
+	protected String allowLoginEnd;
+<span class="pc" id="L75">	protected boolean allowDateLogin = true;</span>
+<span class="pc" id="L76">	protected String fax = &quot;&quot;;</span>
+<span class="pc" id="L77">	protected String deliveryFirstName = &quot;&quot;;</span>
+<span class="pc" id="L78">	protected String deliveryLastName = &quot;&quot;;</span>
+<span class="pc" id="L79">	protected String deliveryCompany = &quot;&quot;;</span>
+<span class="pc" id="L80">	protected String deliveryAdress = &quot;&quot;;</span>
+<span class="pc" id="L81">	protected String deliveryCity = &quot;&quot;;</span>
+<span class="pc" id="L82">	protected String deliveryPsc = &quot;&quot;;</span>
+<span class="pc" id="L83">	protected String deliveryCountry = &quot;&quot;;</span>
+<span class="pc" id="L84">	protected String deliveryPhone = &quot;&quot;;</span>
+<span class="pc" id="L85">	protected String position=&quot;&quot;;</span>
+<span class="pc" id="L86">	protected int parentId=0;</span>
+	protected String salt;
+	protected String mobileDevice;
+
+<span class="pc" id="L90">	protected transient Map&lt;String, SettingsBean&gt; settings = null;</span>
+<span class="pc" id="L91">	protected transient Map&lt;String, SettingsAdminBean&gt; adminSettings = null;</span>
+
+	//toto je specialita pre VUB kedy sa merguju nastavenia s default userom a chceme zamedzit zbytocnemu ukladaniu do DB
+	//viz IawsDB
+<span class="pc" id="L95">	protected boolean settingsDontSave = false;</span>
+
+	/**
+     * Prazdny konstruktor
+    */
+	public UserDetails()
+<span class="fc" id="L101">	{</span>
+
+<span class="fc" id="L103">	}</span>
+
+	public UserDetails(ResultSet rs) throws Exception
+<span class="fc" id="L106">	{</span>
+<span class="fc" id="L107">		UsersDB.fillUserDetails(this, rs);</span>
+<span class="fc" id="L108">	}</span>
+
+	/**
+     * Konstruktor z HTTP requestu
+    */
+	public UserDetails(HttpServletRequest request)
+<span class="nc" id="L114">	{</span>
+<span class="nc" id="L115">		userId = Tools.getIntValue(request.getParameter(&quot;userId&quot;), -1);</span>
+<span class="nc" id="L116">		login = request.getParameter(&quot;login&quot;);</span>
+
+<span class="nc" id="L118">		company = request.getParameter(&quot;company&quot;);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (request.getParameter(&quot;adress&quot;)!=null)</span>
+		{
+<span class="nc" id="L121">			adress = request.getParameter(&quot;adress&quot;);</span>
+		}
+		else
+		{
+<span class="nc" id="L125">			adress = request.getParameter(&quot;address&quot;);</span>
+		}
+<span class="nc" id="L127">		email = request.getParameter(&quot;email&quot;);</span>
+<span class="nc" id="L128">		country = request.getParameter(&quot;country&quot;);</span>
+<span class="nc" id="L129">		phone = request.getParameter(&quot;phone&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (request.getParameter(&quot;PSC&quot;)!=null)</span>
+		{
+<span class="nc" id="L132">			zipCode = request.getParameter(&quot;PSC&quot;);</span>
+		}
+		else
+		{
+<span class="nc" id="L136">			zipCode = request.getParameter(&quot;psc&quot;);</span>
+		}
+<span class="nc" id="L138">		city = request.getParameter(&quot;city&quot;);</span>
+<span class="nc" id="L139">		password = request.getParameter(&quot;password&quot;);</span>
+
+<span class="nc" id="L141">		title = request.getParameter(&quot;title&quot;);</span>
+<span class="nc" id="L142">		firstName = request.getParameter(&quot;firstName&quot;);</span>
+<span class="nc" id="L143">		lastName = request.getParameter(&quot;lastName&quot;);</span>
+
+<span class="nc" id="L145">		fieldA = request.getParameter(&quot;fieldA&quot;);</span>
+<span class="nc" id="L146">		fieldB = request.getParameter(&quot;fieldB&quot;);</span>
+<span class="nc" id="L147">		fieldC = request.getParameter(&quot;fieldC&quot;);</span>
+<span class="nc" id="L148">		fieldD = request.getParameter(&quot;fieldD&quot;);</span>
+<span class="nc" id="L149">		fieldE = request.getParameter(&quot;fieldE&quot;);</span>
+
+<span class="nc" id="L151">		dateOfBirth = request.getParameter(&quot;dateOfBirth&quot;);</span>
+<span class="nc" id="L152">		photo = request.getParameter(&quot;photo&quot;);</span>
+<span class="nc" id="L153">		signature = request.getParameter(&quot;signature&quot;);</span>
+
+<span class="nc" id="L155">		fax = request.getParameter(&quot;fax&quot;);</span>
+<span class="nc" id="L156">		deliveryFirstName = request.getParameter(&quot;deliveryFirstName&quot;);</span>
+<span class="nc" id="L157">		deliveryLastName = request.getParameter(&quot;deliveryLastName&quot;);</span>
+<span class="nc" id="L158">		deliveryCompany = request.getParameter(&quot;deliveryCompany&quot;);</span>
+<span class="nc" id="L159">		deliveryAdress = request.getParameter(&quot;deliveryAdress&quot;);</span>
+<span class="nc" id="L160">		deliveryCity = request.getParameter(&quot;deliveryCity&quot;);</span>
+<span class="nc" id="L161">		deliveryPsc = request.getParameter(&quot;deliveryPsc&quot;);</span>
+<span class="nc" id="L162">		deliveryCountry = request.getParameter(&quot;deliveryCountry&quot;);</span>
+<span class="nc" id="L163">		deliveryPhone = request.getParameter(&quot;deliveryPhone&quot;);</span>
+
+<span class="nc" id="L165">		position = request.getParameter(&quot;position&quot;);</span>
+<span class="nc" id="L166">		parentId = Tools.getIntValue(request.getParameter(&quot;parentId&quot;), 0);</span>
+
+<span class="nc" id="L168">	}</span>
+
+	/**
+	 * Vrati true ak je pouzivatel v zadanej skupine
+	 * @param userGroupId
+	 * @return
+	 */
+	public boolean isInUserGroup(int userGroupId)
+	{
+<span class="fc" id="L177">		String test = &quot;,&quot;+getUserGroupsIds()+&quot;,&quot;;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">		if (test.indexOf(&quot;,&quot;+userGroupId+&quot;,&quot;)!=-1)</span>
+		{
+<span class="fc" id="L180">			return(true);</span>
+		}
+<span class="fc" id="L182">		return(false);</span>
+	}
+
+	/**
+	 * Vrati true ak je pouzivatel v zadanej skupine
+	 * @param userGroupName
+	 * @return
+	 */
+	public boolean isInUserGroup(String userGroupName)
+	{
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if ((&quot;,&quot;+getUserGroupsNames()+&quot;,&quot;).indexOf(&quot;,&quot;+userGroupName+&quot;,&quot;)!=-1) return true;</span>
+<span class="nc" id="L193">		return false;</span>
+	}
+
+	/**
+	 * Vrati custom nastavenia pouzivatela (z tabulky user_settings)
+	 * @return
+	 */
+    @JsonIgnore
+	public Map&lt;String, SettingsBean&gt; getSettings()
+	{
+<span class="fc bfc" id="L203" title="All 2 branches covered.">		if (settings == null) settings = UsersDB.getSettings(userId);</span>
+<span class="fc" id="L204">		return settings;</span>
+	}
+    @JsonIgnore
+	public Map&lt;String, SettingsBean&gt; getSettingsNotLoad()
+	{
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (settings == null) return new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L210">		return settings;</span>
+	}
+
+	public void clearSettings()
+	{
+<span class="nc" id="L215">		settings = null;</span>
+<span class="nc" id="L216">	}</span>
+
+	/**
+	 * Vrati custom nastavenia admin casti pouzivatela (z tabulky user_settings_admin) v mape, kde key je nazov nastavenia a value je objekt admin nastavenia SettingsAdminBean
+	 */
+	@JsonIgnore
+	public Map&lt;String, SettingsAdminBean&gt; getAdminSettings()
+	{
+<span class="fc bfc" id="L224" title="All 2 branches covered.">		if (adminSettings == null)</span>
+<span class="fc" id="L225">			adminSettings = SettingsAdminDB.getSettings(userId);</span>
+
+<span class="fc" id="L227">		return adminSettings;</span>
+	}
+
+	/**
+	 *  Gets the userId attribute of the UserDetails object
+	 *
+	 *@return    The userId value
+	 */
+	public int getUserId()
+	{
+<span class="fc" id="L237">		return userId;</span>
+	}
+
+	/**
+	 *  Sets the userId attribute of the UserDetails object
+	 *
+	 *@param  userId  The new userId value
+	 */
+	public void setUserId(int userId)
+	{
+<span class="fc" id="L247">		this.userId = userId;</span>
+<span class="fc" id="L248">	}</span>
+
+	/**
+	 *  Gets the fullName attribute of the UserDetails object
+	 *
+	 *@return    The fullName value
+	 */
+	@JsonIgnore
+	public String getFullName()
+	{
+<span class="fc" id="L258">		String ret = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L260" title="5 of 6 branches missed.">		if (Constants.getBoolean(&quot;fullNameIncludeTitle&quot;) &amp;&amp; title != null &amp;&amp; title.length()&gt;0)</span>
+		{
+<span class="nc" id="L262">			ret = title + &quot; &quot;;</span>
+		}
+<span class="pc bpc" id="L264" title="1 of 4 branches missed.">		if (firstName != null &amp;&amp; firstName.length()&gt;0)</span>
+		{
+<span class="fc" id="L266">			ret += firstName + &quot; &quot;;</span>
+		}
+<span class="pc bpc" id="L268" title="1 of 4 branches missed.">		if (lastName != null &amp;&amp; lastName.length()&gt;0)</span>
+		{
+<span class="fc" id="L270">			ret += lastName + &quot; &quot;;</span>
+		}
+
+<span class="fc" id="L273">		return(ret.trim());</span>
+	}
+
+	/**
+	 *  Gets the deliveryFullName attribute of the UserDetails object
+	 *
+	 *@return    The fullName value
+	 */
+	@JsonIgnore
+	public String getDeliveryFullName()
+	{
+<span class="fc" id="L284">		String ret = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L286" title="2 of 4 branches missed.">		if (deliveryFirstName != null &amp;&amp; deliveryFirstName.length()&gt;0)</span>
+		{
+<span class="nc" id="L288">			ret += deliveryFirstName + &quot; &quot;;</span>
+		}
+<span class="pc bpc" id="L290" title="2 of 4 branches missed.">		if (deliveryLastName != null &amp;&amp; deliveryLastName.length()&gt;0)</span>
+		{
+<span class="nc" id="L292">			ret += deliveryLastName;</span>
+		}
+
+<span class="fc" id="L295">		return(ret.trim());</span>
+	}
+
+	/**
+	 *  Sets the login attribute of the UserDetails object
+	 *
+	 *@param  login  The new login value
+	 */
+	public void setLogin(String login)
+	{
+<span class="fc" id="L305">		this.login = login;</span>
+<span class="fc" id="L306">	}</span>
+
+	/**
+	 *  Gets the login attribute of the UserDetails object
+	 *
+	 *@return    The login value
+	 */
+	public String getLogin()
+	{
+<span class="fc" id="L315">		return login;</span>
+	}
+
+	/**
+	 *  Sets the admin attribute of the UserDetails object
+	 *
+	 *@param  admin  The new admin value
+	 */
+	public void setAdmin(boolean admin)
+	{
+<span class="fc" id="L325">		this.admin = admin;</span>
+<span class="fc" id="L326">	}</span>
+
+	/**
+	 *  Gets the admin attribute of the UserDetails object
+	 *
+	 *@return    The admin value
+	 */
+	public boolean isAdmin()
+	{
+<span class="fc" id="L335">		return admin;</span>
+	}
+
+	/**
+	 *  Gets the adminString attribute of the UserDetails object
+	 *
+	 *@return    The adminString value
+	 */
+	@JsonIgnore
+	public String getAdminString()
+	{
+<span class="fc" id="L346">		String ret = &quot;Admin=&quot;;</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">		if (admin)</span>
+		{
+<span class="fc" id="L349">			ret = ret + &quot;&lt;b&gt;Áno&lt;/b&gt;&quot;;</span>
+		}
+		else
+		{
+<span class="nc" id="L353">			ret = ret + &quot;Nie&quot;;</span>
+		}
+<span class="fc" id="L355">		return (ret);</span>
+	}
+
+	/**
+	 *  Sets the company attribute of the UserDetails object
+	 *
+	 *@param  company  The new company value
+	 */
+	public void setCompany(String company)
+	{
+<span class="fc" id="L365">		this.company = company;</span>
+<span class="fc" id="L366">	}</span>
+
+	/**
+	 *  Gets the company attribute of the UserDetails object
+	 *
+	 *@return    The company value
+	 */
+	public String getCompany()
+	{
+<span class="fc" id="L375">		return company;</span>
+	}
+
+	/**
+	 *  Sets the adress attribute of the UserDetails object
+	 *
+	 *@param  adress  The new adress value
+	 */
+	public void setAdress(String adress)
+	{
+<span class="fc" id="L385">		this.adress = adress;</span>
+<span class="fc" id="L386">	}</span>
+
+	/**
+	 *  Gets the adress attribute of the UserDetails object
+	 *
+	 *@return    The adress value
+	 */
+	public String getAdress()
+	{
+<span class="fc" id="L395">		return adress;</span>
+	}
+
+	/**
+	 *  Sets the email attribute of the UserDetails object
+	 *
+	 *@param  email  The new email value
+	 */
+	public void setEmail(String email)
+	{
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">		if (email != null) email = email.toLowerCase();</span>
+<span class="fc" id="L406">		this.email = email;</span>
+<span class="fc" id="L407">	}</span>
+
+	/**
+	 *  Gets the email attribute of the UserDetails object
+	 *
+	 *@return    The email value
+	 */
+	public String getEmail()
+	{
+<span class="fc" id="L416">		return email;</span>
+	}
+
+	/**
+	 *  Sets the pSC attribute of the UserDetails object
+	 *
+	 *@param  PSC  The new pSC value
+	 */
+	public void setPSC(String PSC)
+	{
+<span class="fc" id="L426">		this.zipCode = PSC;</span>
+<span class="fc" id="L427">	}</span>
+
+	/**
+	 *  Gets the pSC attribute of the UserDetails object
+	 *
+	 *@return    The pSC value
+	 */
+	public String getPSC()
+	{
+<span class="fc" id="L436">		return zipCode;</span>
+	}
+
+	/**
+	 *  Sets the country attribute of the UserDetails object
+	 *
+	 *@param  country  The new country value
+	 */
+	public void setCountry(String country)
+	{
+<span class="fc" id="L446">		this.country = country;</span>
+<span class="fc" id="L447">	}</span>
+
+	/**
+	 *  Gets the country attribute of the UserDetails object
+	 *
+	 *@return    The country value
+	 */
+	public String getCountry()
+	{
+<span class="fc" id="L456">		return country;</span>
+	}
+
+	/**
+	 *  Sets the phone attribute of the UserDetails object
+	 *
+	 *@param  phone  The new phone value
+	 */
+	public void setPhone(String phone)
+	{
+<span class="fc" id="L466">		this.phone = phone;</span>
+<span class="fc" id="L467">	}</span>
+
+	/**
+	 *  Gets the phone attribute of the UserDetails object
+	 *
+	 *@return    The phone value
+	 */
+	public String getPhone()
+	{
+<span class="fc" id="L476">		return phone;</span>
+	}
+
+	/**
+	 *  Sets the authorized attribute of the UserDetails object
+	 *
+	 *@param  authorized  The new authorized value
+	 */
+	public void setAuthorized(boolean authorized)
+	{
+<span class="fc" id="L486">		this.authorized = authorized;</span>
+<span class="fc" id="L487">	}</span>
+
+	/**
+	 *  Gets the authorized attribute of the UserDetails object
+	 *
+	 *@return    The authorized value
+	 */
+	public boolean isAuthorized()
+	{
+<span class="fc" id="L496">		return authorized;</span>
+	}
+	public void setUserGroupsIds(String ugi)
+	{
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">		if (ugi==null) this.userGroupsIds=&quot;&quot;;</span>
+<span class="fc" id="L501">		else this.userGroupsIds = ugi;</span>
+<span class="fc" id="L502">	}</span>
+	public String getUserGroupsIds()
+	{
+<span class="fc bfc" id="L505" title="All 2 branches covered.">		if (userGroupsIds==null) return &quot;&quot;;</span>
+<span class="fc" id="L506">		return userGroupsIds;</span>
+	}
+	public void setUserGroupsNames(String userGroupsNames)
+	{
+<span class="fc" id="L510">		this.userGroupsNames = userGroupsNames;</span>
+<span class="fc" id="L511">	}</span>
+	public String getUserGroupsNames()
+	{
+<span class="fc" id="L514">		return userGroupsNames;</span>
+	}
+	public void setCity(String city)
+	{
+<span class="fc" id="L518">		this.city = city;</span>
+<span class="fc" id="L519">	}</span>
+	public String getCity()
+	{
+<span class="fc" id="L522">		return city;</span>
+	}
+	public String getPassword()
+	{
+<span class="fc" id="L526">		return password;</span>
+	}
+	public void setPassword(String password)
+	{
+<span class="fc" id="L530">		this.password = password;</span>
+<span class="fc" id="L531">	}</span>
+
+	public void setPasswordPlain(String password)
+	{
+<span class="pc bpc" id="L535" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;passwordUseHash&quot;)){</span>
+<span class="fc" id="L536">			this.salt = PasswordSecurity.generateSalt();</span>
+<span class="fc" id="L537">			this.password = PasswordSecurity.calculateHash(password, this.salt);</span>
+		}
+		else
+<span class="nc" id="L540">			this.password = password;</span>
+<span class="fc" id="L541">	}</span>
+
+	public void setLastLogon(String lastLogon)
+	{
+<span class="fc" id="L545">		this.lastLogon = lastLogon;</span>
+<span class="fc" id="L546">	}</span>
+	public void setLastLogonAsDate(Date lastLogonAsDate)
+	{
+<span class="fc bfc" id="L549" title="All 2 branches covered.">		this.lastLogonAsDate = lastLogonAsDate == null ? null : (Date) lastLogonAsDate.clone();</span>
+<span class="fc" id="L550">	}</span>
+	public String getLastLogon()
+	{
+<span class="fc" id="L553">		return lastLogon;</span>
+	}
+	public Date getLastLogonAsDate()
+	{
+<span class="fc bfc" id="L557" title="All 2 branches covered.">		return lastLogonAsDate == null ? null : (Date) lastLogonAsDate.clone();</span>
+	}
+	public String getTitle()
+	{
+<span class="fc" id="L561">		return title;</span>
+	}
+	public void setTitle(String title)
+	{
+<span class="fc" id="L565">		this.title = title;</span>
+<span class="fc" id="L566">	}</span>
+	public String getFirstName()
+	{
+<span class="fc" id="L569">		return firstName;</span>
+	}
+	public void setFirstName(String firstName)
+	{
+<span class="fc" id="L573">		this.firstName = firstName;</span>
+<span class="fc" id="L574">	}</span>
+	public String getLastName()
+	{
+<span class="fc" id="L577">		return lastName;</span>
+	}
+	public void setLastName(String lastName)
+	{
+<span class="fc" id="L581">		this.lastName = lastName;</span>
+<span class="fc" id="L582">	}</span>
+
+	public void splitFullName(String fullName)
+	{
+<span class="nc bnc" id="L586" title="All 2 branches missed.">		if (fullName == null)</span>
+		{
+<span class="nc" id="L588">			title = &quot;&quot;;</span>
+<span class="nc" id="L589">			firstName = &quot;&quot;;</span>
+<span class="nc" id="L590">			lastName = &quot;&quot;;</span>
+<span class="nc" id="L591">			return;</span>
+		}
+<span class="nc" id="L593">		StringTokenizer st = new StringTokenizer(fullName);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if (st.countTokens()&lt;2)</span>
+		{
+<span class="nc" id="L596">			this.setTitle(&quot;&quot;);</span>
+<span class="nc" id="L597">			this.setFirstName(&quot;&quot;);</span>
+<span class="nc" id="L598">			this.setLastName(fullName);</span>
+		}
+<span class="nc bnc" id="L600" title="All 2 branches missed.">		else if (st.countTokens()==2)</span>
+		{
+<span class="nc" id="L602">			this.setTitle(&quot;&quot;);</span>
+<span class="nc" id="L603">			this.setFirstName(st.nextToken());</span>
+<span class="nc" id="L604">			this.setLastName(st.nextToken());</span>
+		}
+<span class="nc bnc" id="L606" title="All 2 branches missed.">		else if (st.countTokens()&gt;2)</span>
+		{
+<span class="nc" id="L608">			this.setTitle(st.nextToken());</span>
+<span class="nc" id="L609">			this.setFirstName(st.nextToken());</span>
+<span class="nc" id="L610">			this.setLastName(st.nextToken());</span>
+<span class="nc bnc" id="L611" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L613">				this.setLastName(this.getLastName() + &quot; &quot; + st.nextToken());</span>
+			}
+		}
+<span class="nc" id="L616">	}</span>
+
+
+	public String getFieldA()
+	{
+<span class="fc" id="L621">		return fieldA;</span>
+	}
+	public void setFieldA(String fieldA)
+	{
+<span class="fc" id="L625">		this.fieldA = fieldA;</span>
+<span class="fc" id="L626">	}</span>
+	public String getFieldB()
+	{
+<span class="fc" id="L629">		return fieldB;</span>
+	}
+	public void setFieldB(String fieldB)
+	{
+<span class="fc" id="L633">		this.fieldB = fieldB;</span>
+<span class="fc" id="L634">	}</span>
+	public String getFieldC()
+	{
+<span class="fc" id="L637">		return fieldC;</span>
+	}
+	public void setFieldC(String fieldC)
+	{
+<span class="fc" id="L641">		this.fieldC = fieldC;</span>
+<span class="fc" id="L642">	}</span>
+	public String getFieldD()
+	{
+<span class="fc" id="L645">		return fieldD;</span>
+	}
+	public void setFieldD(String fieldD)
+	{
+<span class="fc" id="L649">		this.fieldD = fieldD;</span>
+<span class="fc" id="L650">	}</span>
+	public String getFieldE()
+	{
+<span class="fc" id="L653">		return fieldE;</span>
+	}
+	public void setFieldE(String fieldE)
+	{
+<span class="fc" id="L657">		this.fieldE = fieldE;</span>
+<span class="fc" id="L658">	}</span>
+
+
+
+	public long getRegDate()
+	{
+<span class="fc" id="L664">		return regDate;</span>
+	}
+
+	public void setRegDate(long regDate)
+	{
+<span class="fc" id="L669">		this.regDate = regDate;</span>
+<span class="fc" id="L670">	}</span>
+
+
+
+	public String getEmailAddress()
+	{
+<span class="fc" id="L676">		return email;</span>
+	}
+
+	public void setEmailAddress(String emailAddress)
+	{
+<span class="fc" id="L681">		this.email = emailAddress;</span>
+<span class="fc" id="L682">	}</span>
+	/**
+	 * @return Returns the dateOfBirth.
+	 */
+	public String getDateOfBirth()
+	{
+<span class="fc" id="L688">		return dateOfBirth;</span>
+	}
+	/**
+	 * @param dateOfBirth The dateOfBirth to set.
+	 */
+	public void setDateOfBirth(String dateOfBirth)
+	{
+<span class="fc" id="L695">		this.dateOfBirth = dateOfBirth;</span>
+<span class="fc" id="L696">	}</span>
+	/**
+	 * @return Returns the photo.
+	 */
+	public String getPhoto()
+	{
+<span class="fc" id="L702">		return photo;</span>
+	}
+    @JsonIgnore
+	public String getPhotoSmall()
+	{
+<span class="fc" id="L707">		return GalleryToolsForCore.getImagePathSmall(photo);</span>
+	}
+
+	@JsonIgnore
+	public String getPhotoNormal()
+	{
+<span class="fc" id="L713">		return GalleryToolsForCore.getImagePathNormal(photo);</span>
+	}
+
+    @JsonIgnore
+	public String getPhotoOriginal()
+	{
+<span class="fc" id="L719">		return GalleryToolsForCore.getImagePathOriginal(photo);</span>
+	}
+	/**
+	 * @param photo The photo to set.
+	 */
+	public void setPhoto(String photo)
+	{
+<span class="fc" id="L726">		this.photo = photo;</span>
+<span class="fc" id="L727">	}</span>
+
+	/**
+	 * @return Returns the sexMale.
+	 */
+	public boolean isSexMale()
+	{
+<span class="fc" id="L734">		return sexMale;</span>
+	}
+	/**
+	 * @param sexMale The sexMale to set.
+	 */
+	public void setSexMale(boolean sexMale)
+	{
+<span class="fc" id="L741">		this.sexMale = sexMale;</span>
+<span class="fc" id="L742">	}</span>
+	/**
+	 * @return Returns the signature.
+	 */
+	public String getSignature()
+	{
+<span class="fc" id="L748">		return signature;</span>
+	}
+	/**
+	 * Vrati signaturu ako HTML kod s replace znackami ([img]...)
+	 * @return
+	 */
+    @JsonIgnore
+	public String getSignatureReplaced()
+	{
+<span class="fc" id="L757">		return ForumTools.replaceSignatureCodes(this);</span>
+	}
+	/**
+	 * @param signature The signature to set.
+	 */
+	public void setSignature(String signature)
+	{
+<span class="fc" id="L764">		this.signature = signature;</span>
+<span class="fc" id="L765">	}</span>
+
+	public String getRegDateString()
+	{
+<span class="fc" id="L769">		String ret = &quot;&quot;;</span>
+<span class="fc bfc" id="L770" title="All 2 branches covered.">		if	(this.regDate &gt; 0)</span>
+<span class="fc" id="L771">			ret = Tools.formatDate(this.regDate);</span>
+
+<span class="fc" id="L773">		return ret;</span>
+	}
+	/**
+	 * @return Returns the forumRank.
+	 */
+    @JsonIgnore
+	public int getForumRank()
+	{
+<span class="fc" id="L781">		return forumRank;</span>
+	}
+	/**
+	 * @param forumRank The forumRank to set.
+	 */
+	public void setForumRank(int forumRank)
+	{
+<span class="fc" id="L788">		this.forumRank = forumRank;</span>
+<span class="fc" id="L789">	}</span>
+	/**
+	 * @return Returns the ratingRank.
+	 */
+    @JsonIgnore
+	public int getRatingRank()
+	{
+<span class="fc" id="L796">		return ratingRank;</span>
+	}
+	/**
+	 * @param ratingRank The ratingRank to set.
+	 */
+	public void setRatingRank(int ratingRank)
+	{
+<span class="fc" id="L803">		this.ratingRank = ratingRank;</span>
+<span class="fc" id="L804">	}</span>
+	/**
+	 * @return Returns the editableGroups.
+	 */
+	public String getEditableGroups()
+	{
+<span class="fc" id="L810">		return editableGroups;</span>
+	}
+	/**
+	 * @param editableGroups The editableGroups to set.
+	 */
+	public void setEditableGroups(String editableGroups)
+	{
+<span class="fc" id="L817">		this.editableGroups = editableGroups;</span>
+<span class="fc" id="L818">	}</span>
+	/**
+	 * @return Returns the editablePages.
+	 */
+	public String getEditablePages()
+	{
+<span class="fc" id="L824">		return editablePages;</span>
+	}
+	/**
+	 * @param editablePages The editablePages to set.
+	 */
+	public void setEditablePages(String editablePages)
+	{
+<span class="fc" id="L831">		this.editablePages = editablePages;</span>
+<span class="fc" id="L832">	}</span>
+	/**
+	 * @return Returns the writableFolders.
+	 */
+    @JsonIgnore
+	public String getWritableFolders()
+	{
+<span class="fc bfc" id="L839" title="All 2 branches covered.">		if (writableFolders==null) return null;</span>
+<span class="fc" id="L840">		return writableFolders.replace(' ', '\n');</span>
+	}
+
+	public List&lt;IwcmFile&gt; getWritableFoldersList()
+	{
+<span class="fc" id="L845">		List&lt;IwcmFile&gt; writableFoldersList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L846">		String writableFoldersString = getWritableFolders().trim();</span>
+<span class="fc bfc" id="L847" title="All 2 branches covered.">		for (String folder : writableFoldersString.split(&quot;\n&quot;)) {</span>
+<span class="fc" id="L848">			folder = folder.trim();</span>
+<span class="pc bpc" id="L849" title="1 of 2 branches missed.">			if (Tools.isEmpty(folder)) {</span>
+<span class="fc" id="L850">				continue;</span>
+			}
+<span class="nc" id="L852">			writableFoldersList.add(IwcmFile.fromVirtualPath(folder));</span>
+		}
+<span class="fc" id="L854">		return writableFoldersList;</span>
+	}
+
+	/**
+	 * @param writableFolders The writableFolders to set.
+	 */
+	public void setWritableFolders(String writableFolders)
+	{
+<span class="pc bpc" id="L862" title="1 of 2 branches missed.">		if (writableFolders!=null) this.writableFolders = writableFolders.replace(' ', '\n');</span>
+<span class="nc" id="L863">		else this.writableFolders = null;</span>
+<span class="fc" id="L864">	}</span>
+
+	public String getAllowLoginEnd()
+	{
+<span class="fc" id="L868">		return allowLoginEnd;</span>
+	}
+
+	public void setAllowLoginEnd(String allowLoginEnd)
+	{
+<span class="fc" id="L873">		this.allowLoginEnd = allowLoginEnd;</span>
+<span class="fc" id="L874">	}</span>
+
+	public String getAllowLoginStart()
+	{
+<span class="fc" id="L878">		return allowLoginStart;</span>
+	}
+
+	public void setAllowLoginStart(String allowLoginStart)
+	{
+<span class="fc" id="L883">		this.allowLoginStart = allowLoginStart;</span>
+<span class="fc" id="L884">	}</span>
+
+	/**
+	 * Pozor musi byt naplnene, nedetekuje samo!!!
+	 * @return
+	 */
+	public boolean isAllowDateLogin()
+	{
+<span class="fc" id="L892">		return allowDateLogin;</span>
+	}
+
+	public void setAllowDateLogin(boolean allowDateLogin)
+	{
+<span class="fc" id="L897">		this.allowDateLogin = allowDateLogin;</span>
+<span class="fc" id="L898">	}</span>
+
+	public void addToGroup(int groupId)
+	{
+<span class="fc" id="L902">		String ret = getUserGroupsIds();</span>
+<span class="fc bfc" id="L903" title="All 2 branches covered.">		if(!isInUserGroup(groupId)) {</span>
+<span class="fc" id="L904">			ret += &quot;,&quot;+groupId;</span>
+		}
+<span class="fc bfc" id="L906" title="All 2 branches covered.">		if(ret.startsWith(&quot;,&quot;)) ret = ret.substring(1);</span>
+<span class="fc" id="L907">		setUserGroupsIds(ret);</span>
+<span class="fc" id="L908">	}</span>
+	public void removeFromGroup(int groupId)
+	{
+<span class="nc bnc" id="L911" title="All 2 branches missed.">		if(isInUserGroup(groupId))</span>
+		{
+<span class="nc" id="L913">			String res=&quot;&quot;;</span>
+<span class="nc" id="L914">			StringTokenizer st = new StringTokenizer(getUserGroupsIds(),&quot;,&quot;);</span>
+<span class="nc" id="L915">			StringBuilder resBuf = new StringBuilder(res);</span>
+<span class="nc bnc" id="L916" title="All 2 branches missed.">			while(st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L918">				String group = st.nextToken();</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">				if(!group.equals(String.valueOf(groupId))) resBuf.append(group).append(',');</span>
+<span class="nc" id="L920">			}</span>
+<span class="nc" id="L921">			res = resBuf.toString();</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">			if(res.startsWith(&quot;,&quot;)) res = res.substring(1);</span>
+<span class="nc bnc" id="L923" title="All 2 branches missed.">			if(res.endsWith(&quot;,&quot;)) res = res.substring(0,res.length()-1);</span>
+<span class="nc bnc" id="L924" title="All 2 branches missed.">			if(Tools.isEmpty(res))</span>
+			{
+<span class="nc" id="L926">				setUserGroupsIds(null);</span>
+			}
+			else
+			{
+<span class="nc" id="L930">				setUserGroupsIds(res);</span>
+			}
+		}
+<span class="nc" id="L933">	}</span>
+
+    @JsonIgnore
+	public UserGroupVerify getUserGroupVerify() {
+<span class="nc bnc" id="L937" title="All 2 branches missed.">		if(userGroupVerify != null)</span>
+		{
+<span class="nc" id="L939">			return userGroupVerify;</span>
+		}
+		else
+		{
+<span class="nc" id="L943">			userGroupVerify = UsersDB.getUserGroupVerify(userId);</span>
+		}
+<span class="nc" id="L945">		return userGroupVerify;</span>
+	}
+
+	public String getDeliveryCity() {
+<span class="fc" id="L949">		return deliveryCity;</span>
+	}
+
+	public void setDeliveryCity(String deliveryCity) {
+<span class="fc" id="L953">		this.deliveryCity = deliveryCity;</span>
+<span class="fc" id="L954">	}</span>
+
+	public String getDeliveryCompany() {
+<span class="fc" id="L957">		return deliveryCompany;</span>
+	}
+
+	public void setDeliveryCompany(String deliveryCompany) {
+<span class="fc" id="L961">		this.deliveryCompany = deliveryCompany;</span>
+<span class="fc" id="L962">	}</span>
+
+	public String getDeliveryCountry() {
+<span class="fc" id="L965">		return deliveryCountry;</span>
+	}
+
+	public void setDeliveryCountry(String deliveryCountry) {
+<span class="fc" id="L969">		this.deliveryCountry = deliveryCountry;</span>
+<span class="fc" id="L970">	}</span>
+
+	public String getDeliveryFirstName() {
+<span class="fc" id="L973">		return deliveryFirstName;</span>
+	}
+
+	public void setDeliveryFirstName(String deliveryFirstName) {
+<span class="fc" id="L977">		this.deliveryFirstName = deliveryFirstName;</span>
+<span class="fc" id="L978">	}</span>
+
+	public String getDeliveryLastName() {
+<span class="fc" id="L981">		return deliveryLastName;</span>
+	}
+
+	public void setDeliveryLastName(String deliveryLastName) {
+<span class="fc" id="L985">		this.deliveryLastName = deliveryLastName;</span>
+<span class="fc" id="L986">	}</span>
+
+	public String getDeliveryPhone() {
+<span class="fc" id="L989">		return deliveryPhone;</span>
+	}
+
+	public void setDeliveryPhone(String deliveryPhone) {
+<span class="fc" id="L993">		this.deliveryPhone = deliveryPhone;</span>
+<span class="fc" id="L994">	}</span>
+
+	public String getDeliveryPsc() {
+<span class="fc" id="L997">		return deliveryPsc;</span>
+	}
+
+	public void setDeliveryPsc(String deliveryPsc) {
+<span class="fc" id="L1001">		this.deliveryPsc = deliveryPsc;</span>
+<span class="fc" id="L1002">	}</span>
+
+	public String getDeliveryAdress() {
+<span class="fc" id="L1005">		return deliveryAdress;</span>
+	}
+
+	public void setDeliveryAdress(String deliveryAdress) {
+<span class="fc" id="L1009">		this.deliveryAdress = deliveryAdress;</span>
+<span class="fc" id="L1010">	}</span>
+
+	public String getFax() {
+<span class="pc bpc" id="L1013" title="1 of 2 branches missed.">		if (Constants.getString(&quot;usersFaxList&quot;).startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="nc bnc" id="L1014" title="All 4 branches missed.">			if (Tools.isNotEmpty(fax) &amp;&amp; Tools.isNumeric(fax)) {</span>
+<span class="nc" id="L1015">				String pos = fax.trim();</span>
+<span class="nc" id="L1016">				String res = EnumerationDataDB.getString1(Tools.getIntValue(pos,-1));</span>
+<span class="nc" id="L1017">				return res;</span>
+			}
+		}
+<span class="fc" id="L1020">		return fax;</span>
+	}
+
+	public void setFax(String fax) {
+<span class="fc" id="L1024">		this.fax = fax;</span>
+<span class="fc" id="L1025">	}</span>
+
+	public void setFaxId(String faxId) {
+<span class="pc bpc" id="L1028" title="3 of 4 branches missed.">		if (Tools.isNumeric(faxId) &amp;&amp; Constants.getString(&quot;usersFaxList&quot;).startsWith(&quot;enumeration_&quot;))</span>
+<span class="nc" id="L1029">			this.fax = faxId;</span>
+<span class="fc" id="L1030">	}</span>
+
+	public String getFaxId() {
+<span class="fc" id="L1033">		return fax;</span>
+	}
+
+	public void setZip(String zip)
+	{
+<span class="fc" id="L1038">		this.zipCode = zip;</span>
+<span class="fc" id="L1039">	}</span>
+
+	public String getZip()
+	{
+<span class="fc" id="L1043">		return this.zipCode;</span>
+	}
+
+	public void setSettings(Map&lt;String, SettingsBean&gt; settings)
+	{
+<span class="fc" id="L1048">		this.settings = settings;</span>
+<span class="fc" id="L1049">	}</span>
+
+	public void setAdminSettings(Map&lt;String, SettingsAdminBean&gt; adminSettings)
+	{
+<span class="fc" id="L1053">		this.adminSettings = adminSettings;</span>
+<span class="fc" id="L1054">	}</span>
+
+	public boolean isSettingsDontSave()
+	{
+<span class="fc" id="L1058">		return settingsDontSave;</span>
+	}
+
+	public void setSettingsDontSave(boolean settingsDontSave)
+	{
+<span class="fc" id="L1063">		this.settingsDontSave = settingsDontSave;</span>
+<span class="fc" id="L1064">	}</span>
+
+	public String getPosition() {
+<span class="pc bpc" id="L1067" title="1 of 2 branches missed.">	    if (Constants.getString(&quot;usersPositionList&quot;).startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="nc bnc" id="L1068" title="All 4 branches missed.">            if (Tools.isNotEmpty(position) &amp;&amp; Tools.isNumeric(position)) {</span>
+<span class="nc" id="L1069">                String pos = position.trim();</span>
+<span class="nc" id="L1070">                String res = EnumerationDataDB.getString1(Tools.getIntValue(pos,-1));</span>
+<span class="nc" id="L1071">                return res;</span>
+            }
+        }
+<span class="fc" id="L1074">        return position;</span>
+	}
+
+	public String getPositionId() {
+<span class="fc" id="L1078">	    return position;</span>
+    }
+
+    public void setPositionId(String positionId) {
+<span class="pc bpc" id="L1082" title="3 of 4 branches missed.">		if (Tools.isNumeric(positionId) &amp;&amp; Constants.getString(&quot;usersPositionList&quot;).startsWith(&quot;enumeration_&quot;))</span>
+<span class="nc" id="L1083">			this.position = positionId;</span>
+<span class="fc" id="L1084">	}</span>
+
+	public void setPosition(String position) {
+<span class="pc bpc" id="L1087" title="1 of 2 branches missed.">        if (Constants.getString(&quot;usersPositionList&quot;).startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="nc bnc" id="L1088" title="All 4 branches missed.">            if (Tools.isNotEmpty(position) &amp;&amp; Tools.isNumeric(position) == false) {</span>
+<span class="nc" id="L1089">                String pos = position.trim();</span>
+<span class="nc" id="L1090">                int enumerationId = Tools.getIntValue(Constants.getString(&quot;usersPositionList&quot;).substring(Constants.getString(&quot;usersPositionList&quot;).indexOf(&quot;_&quot;) + 1), 0);</span>
+<span class="nc" id="L1091">                List&lt;EnumerationDataBean&gt; enumerationDataBeanList = EnumerationDataDB.getEnumerationDataBy(pos, enumerationId);</span>
+<span class="nc bnc" id="L1092" title="All 4 branches missed.">                if (enumerationDataBeanList != null &amp;&amp; enumerationDataBeanList.size() &gt; 0) {</span>
+<span class="nc" id="L1093">                    this.position = String.valueOf(enumerationDataBeanList.get(0).getId());</span>
+                } else {
+<span class="nc" id="L1095">                    this.position = position;</span>
+                }
+<span class="nc" id="L1097">                return;</span>
+            }
+        }
+<span class="fc" id="L1100">	    this.position = position;</span>
+<span class="fc" id="L1101">	}</span>
+
+	public int getParentId()
+	{
+<span class="fc" id="L1105">		return parentId;</span>
+	}
+
+	public void setParentId(int parentId)
+	{
+<span class="fc" id="L1110">		this.parentId = parentId;</span>
+<span class="fc" id="L1111">	}</span>
+
+	@JsonIgnore
+	public String getSalt()
+	{
+<span class="fc" id="L1116">		return salt;</span>
+	}
+
+	public void setSalt(String salt)
+	{
+<span class="fc" id="L1121">		this.salt = salt;</span>
+<span class="fc" id="L1122">	}</span>
+
+	@Override
+	public String toString()
+	{
+		// RHR -&gt; uprava na format JSON kvoli tomu ze sa vyuziva v inventory stripes
+<span class="fc" id="L1128">		StringBuilder toString = new StringBuilder();</span>
+<span class="fc" id="L1129">		toString.append(&quot;{&quot;);</span>
+<span class="fc" id="L1130">		toString.append(&quot; \&quot;UserDetails\&quot; : {&quot;);</span>
+<span class="fc" id="L1131">		toString.append(&quot;\&quot;userId\&quot; : \&quot;&quot; + getUserId() + &quot;\&quot;,&quot;);</span>
+<span class="fc" id="L1132">		toString.append(&quot;\&quot;fax\&quot; : \&quot;&quot; + getFax() + &quot;\&quot;,&quot;);</span>
+<span class="fc" id="L1133">		toString.append(&quot;\&quot;faxId\&quot; : \&quot;&quot; + getFaxId() + &quot;\&quot;,&quot;);</span>
+<span class="fc" id="L1134">		toString.append(&quot;\&quot;fullName\&quot; : \&quot;&quot; + getFullName() + &quot;\&quot;,&quot;);</span>
+<span class="fc" id="L1135">		toString.append(&quot;\&quot;isAdmin\&quot; : \&quot;&quot; + isAdmin() + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L1136">		toString.append(&quot;} &quot;);</span>
+<span class="fc" id="L1137">		toString.append(&quot;} &quot;);</span>
+<span class="fc" id="L1138">		return toString.toString();</span>
+	}
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L1143" title="All 4 branches missed.">        return obj instanceof UserDetails &amp;&amp; this.getUserId() == ((UserDetails) obj).getUserId();</span>
+    }
+
+    /**
+	 * Zisti, ci pouzivatel moze zapisovat subory do zadaneho adresara
+	 * @param folder
+	 * @return
+	 */
+	public boolean isFolderWritable(String folder)
+	{
+<span class="fc" id="L1153">		return UsersDB.isFolderWritable(getWritableFolders(), folder);</span>
+	}
+
+	@JsonIgnore
+	public String getMobileDevice()
+	{
+<span class="fc" id="L1159">		return mobileDevice;</span>
+	}
+
+	public void setMobileDevice(String mobileDevice)
+	{
+<span class="fc" id="L1164">		this.mobileDevice = mobileDevice;</span>
+<span class="fc" id="L1165">	}</span>
+
+	public String getOldPassword() {
+<span class="fc" id="L1168">		return oldPassword;</span>
+	}
+
+	public void setOldPassword(String oldPassword) {
+<span class="fc" id="L1172">		this.oldPassword = oldPassword;</span>
+<span class="fc" id="L1173">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

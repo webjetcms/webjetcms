@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilePathTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">FilePathTools.java</span></div><h1>FilePathTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.io.File;
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.form.FormMailAction;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ *  FilePathTools.java - trieda pre preklad ciest k statickym suborom Cloudu
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2013
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.2.2013 15:34:12
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L26">public class FilePathTools</span>
+{
+	private static String normalizeVirtualPath(String virtualPath)
+	{
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		if (Tools.isEmpty(virtualPath)) return &quot;/&quot;;</span>
+
+<span class="nc bnc" id="L32" title="All 2 branches missed.">		if (virtualPath.indexOf(&quot;//&quot;)!=-1) virtualPath = Tools.replace(virtualPath, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">		if (virtualPath.indexOf(&quot;\\&quot;)!=-1) virtualPath = Tools.replace(virtualPath, &quot;\\&quot;, &quot;/&quot;);</span>
+<span class="nc bnc" id="L34" title="All 4 branches missed.">		if (virtualPath.length()==0 || virtualPath.charAt(0)!='/') virtualPath ='/' + virtualPath;</span>
+
+<span class="nc" id="L36">		return virtualPath;</span>
+	}
+
+	/**
+	 * Pre zadanu virtual path vrati true ak sa jedna o cestu k externym suborom (/images, /files, /css, /jscripts)
+	 * @param virtualPath
+	 * @return
+	 */
+	public static boolean isExternalDir(String virtualPath)
+	{
+<span class="pc bpc" id="L46" title="1 of 4 branches missed.">		if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
+		{
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)))</span>
+			{
+<span class="nc" id="L50">				virtualPath = normalizeVirtualPath(virtualPath);</span>
+<span class="nc" id="L51">				String virtualPathLC = virtualPath.toLowerCase();</span>
+				//jeeff: toto som zrusil aby sme nemuseli pri uprave CSS menit X webov || virtualPathLC.startsWith(&quot;/css&quot;) || virtualPathLC.startsWith(&quot;/jscripts&quot;)
+<span class="nc bnc" id="L53" title="All 2 branches missed.">				if (virtualPathLC.startsWith(&quot;/images&quot;) ||</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">					 virtualPathLC.startsWith(&quot;/files&quot;) ||</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">					 virtualPathLC.startsWith(&quot;/shared&quot;) ||</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">					 virtualPath.startsWith(Constants.getString(&quot;thumbServletCacheDir&quot;)) ||</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">					 virtualPath.startsWith(FormMailAction.FORM_FILE_DIR) ||</span>
+					 //kvoli pentestom, tu mozu byt rozbalovane importy, mali by byt pre kazdy host separe (okrem cloudu, kde to nechceme)
+<span class="nc bnc" id="L59" title="All 4 branches missed.">					 (&quot;cloud&quot;.equals(Constants.getInstallName())==false &amp;&amp; virtualPathLC.startsWith(&quot;/web-inf/tmp/&quot;))</span>
+<span class="nc" id="L60">					) return true;</span>
+			}
+		}
+<span class="fc" id="L63">		return false;</span>
+	}
+
+	/**
+	 * Hellper pre ziskanie virtual path z realnej cesty, nepouzivat napriamo, len cez IwcmFsDB.getVirtualPath
+	 * @param realPath
+	 * @return
+	 */
+	public static String getVirtualPathHellper(String realPath)
+	{
+<span class="fc" id="L73">		String domainBaseFolder = getDomainBaseFolder();</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">		if (realPath.equals(domainBaseFolder))</span>
+		{
+<span class="nc" id="L76">			return &quot;/&quot;;</span>
+		}
+<span class="pc bpc" id="L78" title="1 of 4 branches missed.">		if (realPath.startsWith(domainBaseFolder)==false &amp;&amp; realPath.contains(File.separatorChar+&quot;shared&quot;))</span>
+		{
+			//ak realPath obsahuje shared, tak skusme pouzit shared folder
+<span class="fc" id="L81">			domainBaseFolder = getDomainBaseFolder(&quot;shared&quot;);</span>
+			//its shared domain base folder, e.g. .../static-files/shared/ (not .../static-files/sharer/shared) so virtualPath is root
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if (domainBaseFolder.equals(realPath)) return &quot;/&quot;;</span>
+		}
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (realPath.startsWith(domainBaseFolder))</span>
+		{
+<span class="nc" id="L87">			String virtualPath = realPath.substring(domainBaseFolder.length());</span>
+<span class="nc" id="L88">			virtualPath = virtualPath.replace('\\', '/');</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (isExternalDir(virtualPath))</span>
+			{
+<span class="nc" id="L91">				return virtualPath;</span>
+			}
+		}
+
+<span class="fc" id="L95">		return null;</span>
+	}
+
+	/**
+	 * Vrati meno adresara pre aktualnu domenu (bez celej cesty)
+	 * @return
+	 */
+	private static String getDomainFolderName(String domain)
+	{
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==false)</span>
+		{
+<span class="nc" id="L106">			return &quot;defaulthost&quot;;</span>
+		}
+
+<span class="fc" id="L109">		domain = domain.toLowerCase();</span>
+
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">		if (domain.startsWith(&quot;www.&quot;)) domain = domain.substring(4);</span>
+
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">		if (domain.length() &gt; 3 &amp;&amp; &quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+		{
+<span class="nc" id="L115">			domain = domain.charAt(0)+File.separator+domain.charAt(1)+File.separator+domain.charAt(2)+File.separator+domain;</span>
+		}
+
+<span class="fc" id="L118">		return domain;</span>
+	}
+
+	/**
+	 * Vrati cestu k adresaru pre aktualnu domenu
+	 * @return
+	 */
+	public static String getDomainBaseFolder()
+	{
+<span class="fc" id="L127">		return getDomainBaseFolder(CloudToolsForCore.getDomainName());</span>
+	}
+
+	/**
+	 * Vrati cestu k adresaru pre zadanu domenu
+	 * @param domain
+	 * @return
+	 */
+	public static String getDomainBaseFolder(String domain)
+	{
+<span class="fc" id="L137">		String cloudStaticFilesDir = Constants.getString(&quot;cloudStaticFilesDir&quot;);</span>
+<span class="fc" id="L138">		final String FILE_ROOT_MACRO = &quot;{FILE_ROOT}&quot;;</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">		if (cloudStaticFilesDir.startsWith(FILE_ROOT_MACRO)) {</span>
+<span class="nc" id="L140">			String root = Tools.getRealPath(&quot;/&quot;);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (root.endsWith(&quot;&quot;+File.separatorChar)==false) root = root+File.separatorChar;</span>
+
+<span class="nc" id="L143">			cloudStaticFilesDir = root + cloudStaticFilesDir.substring(FILE_ROOT_MACRO.length());</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (cloudStaticFilesDir.endsWith(&quot;&quot;+File.separatorChar)==false) cloudStaticFilesDir = cloudStaticFilesDir+File.separatorChar;</span>
+		}
+<span class="fc" id="L147">		return cloudStaticFilesDir+getDomainFolderName(domain);</span>
+	}
+
+	public static boolean writeFileOut(String path, HttpServletRequest req, HttpServletResponse res)
+	{
+		//pre cloud WebJET posielame inu cestu k suborom
+<span class="nc" id="L153">		IwcmFile f = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="nc" id="L154">		return writeFileOut(f, req, res);</span>
+	}
+
+	/**
+	 * Zapise dany subor na vystup vratane riesenia RANGE http hlavicky a odpovede
+	 * nastavi korektne aj content-type, riesi if-modified-since hlavicku
+	 * @param f
+	 * @param req
+	 * @param res
+	 * @return
+	 * @throws IOException
+	 */
+	public static boolean writeFileOut(IwcmFile f, HttpServletRequest req, HttpServletResponse res)
+	{
+<span class="pc bpc" id="L168" title="2 of 4 branches missed.">		if (f.exists() &amp;&amp; f.isFile())</span>
+		{
+<span class="pc bpc" id="L170" title="2 of 4 branches missed.">			if (f.getName().toLowerCase().endsWith(&quot;.jsp&quot;) || f.getName().toLowerCase().endsWith(&quot;.class&quot;))</span>
+			{
+				//toto nevieme, nerob nic
+			}
+			else
+			{
+					try
+					{
+<span class="fc" id="L178">						MultipartFileSender.fromFile(f)</span>
+<span class="fc" id="L179">						.with(req)</span>
+<span class="fc" id="L180">						.with(res)</span>
+<span class="fc" id="L181">						.serveResource();</span>
+
+<span class="fc" id="L183">						return true;</span>
+					}
+<span class="nc" id="L185">					catch (Exception ex)</span>
+					{
+<span class="nc bnc" id="L187" title="All 2 branches missed.">						if (ex.getMessage().contains(&quot;java.io.IOException: Broken pipe&quot;))</span>
+						{
+<span class="nc" id="L189">							System.err.println(ex.getMessage());</span>
+<span class="nc" id="L190">							return true;</span>
+						}
+<span class="nc" id="L192">						else sk.iway.iwcm.Logger.error(ex);</span>
+					}
+			}
+		}
+<span class="nc" id="L196">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

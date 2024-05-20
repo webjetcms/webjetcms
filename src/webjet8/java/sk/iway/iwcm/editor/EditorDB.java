@@ -48,6 +48,7 @@ import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.doc.XmlExport;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UrlRedirectDB;
@@ -169,8 +170,6 @@ public class EditorDB
 				doc.setGroupId(group_id);
 				doc.setData("<p>&nbsp;</p>");
 
-				//TODO: ak je to prva stranka v adresari, setni meno rovnake ako nazov adresara
-
 				doc.setTitle(prop.getText("editor.newDocumentName"));
 
 				doc.setSearchable(true);
@@ -267,7 +266,6 @@ public class EditorDB
 			{
 				request.setAttribute("err_msg", "Pozadovana stranka neexistuje 2");
 				return(null);
-				//TODO: osetri return (mapping.findForward("error"));
 			}
 			else
 			{
@@ -741,7 +739,7 @@ public class EditorDB
 					currentGroupId = group.getParentGroupId();
 
 
-					ps = db_conn.prepareStatement("SELECT a.*, u.title as u_title, u.first_name, u.last_name, u.email, u.user_id FROM groups_approve a,  users u WHERE a.user_id=u.user_id AND a.group_id=? AND u.is_admin=1 AND u.authorized=1");
+					ps = db_conn.prepareStatement("SELECT a.*, u.title as u_title, u.first_name, u.last_name, u.email, u.user_id FROM groups_approve a,  users u WHERE a.user_id=u.user_id AND a.group_id=? AND u.is_admin="+DB.getBooleanSql(true)+" AND u.authorized="+DB.getBooleanSql(true));
 					ps.setInt(1, group.getGroupId());
 					rs = ps.executeQuery();
 					//zoznam schvalovatelov
@@ -1090,7 +1088,7 @@ public class EditorDB
 			else
 			{
 				//premenovanie Groupy ak je stranka defaultna pre Grupu.
-				if(Constants.getBoolean("syncGroupAndWebpageTitle"))
+				if(GroupsService.canSyncTitle(my_form.getDocId(), my_form.getGroupId()))
 				{
 					DocDB.changeGroupTitle(my_form.getGroupId(), my_form.getDocId(), my_form.getTitle());
 				}
@@ -1179,9 +1177,9 @@ public class EditorDB
 					ps.setInt(9, user.getUserId());
 					ps.setInt(10, my_form.getGroupId());
 					ps.setInt(11, my_form.getTempId());
-					ps.setInt(12, my_form.isSearchable() ? 1 : 0);
-					ps.setInt(13, my_form.isAvailable() ? 1 : 0);
-					ps.setInt(14, my_form.isCacheable() ? 1 : 0);
+					ps.setBoolean(12, my_form.isSearchable());
+					ps.setBoolean(13, my_form.isAvailable());
+					ps.setBoolean(14, my_form.isCacheable());
 					ps.setInt(15, my_form.getSortPriority());
 
 					ps.setInt(16, my_form.getHeaderDocId());
@@ -1356,7 +1354,7 @@ public class EditorDB
 			{
 				if ((my_form.getPublicableToZero() > -1) && (my_form.isPublicable()))
 				{
-					ps = db_conn.prepareStatement("UPDATE documents_history SET publicable=0 WHERE history_id=?");
+					ps = db_conn.prepareStatement("UPDATE documents_history SET publicable="+DB.getBooleanSql(false)+" WHERE history_id=?");
 					ps.setInt(1, my_form.getPublicableToZero());
 					ps.execute();
 					ps.close();
@@ -2091,8 +2089,6 @@ public class EditorDB
 					{
 					}
 				}
-
-				//TODO: aktualizuj linky v suboroch (ak niekde su)
 
 				//	zapis presmerovanie
 				UrlRedirectDB.addRedirect(oldLinkURL, newVirtualPath, domain, 301);
@@ -2863,8 +2859,6 @@ public class EditorDB
 		{
 			try
 			{
-				//TODO: ulozenie do history! (+restore z history)
-
 				//najskor vymazeme
 				PreparedStatement ps = db_conn.prepareStatement("DELETE FROM doc_atr WHERE doc_id=?");
 				ps.setInt(1, docId);

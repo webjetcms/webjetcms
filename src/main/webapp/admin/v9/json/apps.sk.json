@@ -3,222 +3,222 @@
         {
             "name": "Aktualizácia WebJETu",
             "category": "REST backend + DT",
-            "icon": "far fa-cloud-download",
+            "icon": "ti ti-cloud-download",
             "link": "/admin/v9/settings/update/"
         },{
             "name": "Reštauračné menu",
             "category": "REST backend + DT",
-            "icon": "far fa-utensils",
+            "icon": "ti ti-tools-kitchen-2",
             "link": "/apps/restaurant-menu/admin/meals/"
         },
         {
             "name": "SEO",
             "category": "REST backend + DT + grafy",
-            "icon": "fab fa-searchengin",
+            "icon": "ti ti-seo",
             "link": "/apps/seo/admin/"
         },
         {
             "name": "Novinky",
             "category": "REST backend + DT",
-            "icon": "far fa-newspaper",
+            "icon": "ti ti-news",
             "link": "/apps/news/admin/"
         },
         {
             "name": "Diskusia",
             "category": "REST backend + DT",
-            "icon": "far fa-comments-alt",
+            "icon": "ti ti-messages",
             "link": "/apps/forum/admin/"
         },
         {
             "name": "Číselníky",
             "category": "REST backend + DT",
-            "icon": "far fa-th-list",
+            "icon": "ti ti-table",
             "link": "/apps/enumeration/admin/"
         },
         {
             "name": "Proxy",
             "category": "REST backend + DT",
-            "icon": "far fa-dungeon",
+            "icon": "ti ti-network",
             "link": "/apps/proxy/admin/"
         },
         {
             "name": "Anketa",
             "category": "REST backend + DT",
-            "icon": "far fa-poll",
+            "icon": "ti ti-user-question",
             "link": "/apps/inquiry/admin/"
         },
         {
             "name": "Atribúty stránky",
             "category": "Definovanie atribútov",
-            "icon": "far fa-file-invoice",
+            "icon": "ti ti-file-info",
             "link": "/admin/v9/webpages/attributes/"
         },
         {
             "name": "Kontrola odkazov",
             "category": "+prázdnych stránok",
-            "icon": "far fa-link-slash",
+            "icon": "ti ti-unlink",
             "link": "/admin/v9/webpages/web-pages-list/"
         },
         {
             "name": "Štatistika",
             "category": "REST backend + DT + amcharts",
-            "icon": "far fa-chart-bar",
+            "icon": "ti ti-device-analytics",
             "link": "/apps/stat/admin/"
         },
         {
             "name": "Rezervácie",
             "category": "REST backend + DT",
-            "icon": "far fa-calendar-check",
+            "icon": "ti ti-calendar-check",
             "link": "/apps/reservation/admin/"
         },
         {
             "name": "Kalendár udalostí/Zoznam a typy",
             "category": "REST backend + DT",
-            "icon": "far fa-calendar",
+            "icon": "ti ti-calendar-month",
             "link": "/apps/calendar/admin/"
         },
         {
             "name": "Hromadný e-mail/Kampane",
             "category": "REST backend + DT",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail",
             "link": "/apps/dmail/admin/"
         },
         {
             "name": "Formuláre/Regulárne výrazy",
             "category": "REST backend + DT",
-            "icon": "far fa-book",
+            "icon": "ti ti-forms",
             "link": "/apps/form/admin/regexps/"
         },
         {
             "name": "Hromadný email/Odhlásené e-maily",
             "category": "DT + REST",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail",
             "link": "/apps/dmail/admin/unsubscribed/"
         },
         {
             "name": "Bannerový systém",
             "category": "DT + REST",
-            "icon": "far fa-ad",
+            "icon": "ti ti-ad",
             "link": "/apps/banner/admin/"
         },
         {
             "name": "Hromadný email/Doménové limity",
             "category": "DT + REST",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail-exclamation",
             "link": "/apps/dmail/admin/domain-limits/"
         },
         {
             "name": "Export dát",
             "category": "DT + REST",
-            "icon": "far fa-cloud-download",
+            "icon": "ti ti-database-export",
             "link": "/apps/export-dat/admin/"
         },
         {
             "name": "Tooltip",
             "category": "DT + REST + cleditor",
-            "icon": "far fa-question-circle",
+            "icon": "ti ti-info-circle",
             "link": "/apps/tooltip/admin/"
         },
         {
             "name": "Otázky a odpovede",
             "category": "DT + REST + cleditor + filtrovanie HTML kódu",
-            "icon": "far fa-question-circle",
+            "icon": "ti ti-help",
             "link": "/apps/qa/admin/"
         },
         {
             "name": "GDPR",
             "category": "DT + REST + Vue výber adresára a stránky",
-            "icon": "far fa-shield-alt",
+            "icon": "ti ti-shield-half",
             "link": "/apps/gdpr/admin/"
         },
         {
             "name": "Používatelia",
             "category": "DT + REST + Vue výber adresára a stránky",
-            "icon": "far fa-user-friends",
+            "icon": "ti ti-users",
             "link": "/admin/v9/users/user-list"
         },
         {
             "name": "Značky (perex skupiny)",
             "category": "DT + REST + Vue výber adresára",
-            "icon": "far fa-hashtag",
+            "icon": "ti ti-tags",
             "link": "/admin/v9/webpages/perex/"
         },
         {
             "name": "Média a média skupiny",
             "category": "DT + REST + Vue výber adresára a stránky + elfinder",
-            "icon": "far fa-file-medical",
+            "icon": "ti ti-photo",
             "link": "/admin/v9/webpages/media/"
         },
         {
             "name": "Skripty",
             "category": "DT + REST + Vue výber adresára a stránky",
-            "icon": "far fa-file-code",
+            "icon": "ti ti-code",
             "link": "/admin/v9/apps/insert-script"
         },
         {
             "name": "Audit",
             "category": "Vyhľadávanie aj zoznam notifikácii",
-            "icon": "far fa-file-search",
+            "icon": "ti ti-shield-search",
             "link": "/admin/v9/apps/audit-search"
         },
         {
             "name": "Foto galéria",
             "category": "REST backend + taby v DT + custom tlacitka + image editor + vue.oblast zaujmu",
-            "icon": "far fa-photo-video",
+            "icon": "ti ti-library-photo",
             "link": "/admin/v9/apps/gallery"
         },
         {
             "name": "Formuláre",
             "category": "REST backend + DT + vue router",
-            "icon": "far fa-book",
+            "icon": "ti ti-forms",
             "link": "/apps/form/admin/"
         },
         {
             "name": "Konfigurácia",
             "category": "DT + REST",
-            "icon": "far fa-sliders-v-square",
+            "icon": "ti ti-adjustments",
             "link": "/admin/v9/settings/configuration"
         },
         {
             "name": "Automatizované úlohy",
             "category": "Úlohy na pozadí - DT + REST",
-            "icon": "far fa-repeat",
+            "icon": "ti ti-settings-automation",
             "link": "/admin/v9/settings/cronjob"
         },
         {
             "name": "Presmerovania + presmerovanie domén",
             "category": "DT + REST",
-            "icon": "far fa-file-upload",
+            "icon": "ti ti-arrow-autofit-up",
             "link": "/admin/v9/settings/redirect"
         },
         {
             "name": "Čistenie pamäte",
             "category": "Mazanie dát, cache objekty, audit + DT + REST",
-            "icon": "far fa-database",
+            "icon": "ti ti-database",
             "link": "/admin/v9/settings/database-delete"
         },
         {
             "name": "Prekladové kľúče",
             "category": "Editácia textov + DT + REST",
-            "icon": "far fa-key",
+            "icon": "ti ti-language",
             "link": "/admin/v9/settings/translation-keys"
         },
         {
             "name": "Monitorovanie servera",
             "category": "Zaznamenané hodnoty + CPU monitor + DT + REST + grafy + vue",
-            "icon": "far fa-chart-line",
+            "icon": "ti ti-device-heart-monitor",
             "link": "/admin/v9/settings/server-monitoring"
         },
         {
             "name": "Šablóny stránok",
             "category": "Skupiny šablón + DT + REST",
-            "icon": "far fa-window-maximize",
+            "icon": "ti ti-template",
             "link": "/admin/v9/templates/temps-list"
         },
         {
             "name": "Zoznam web stránok",
             "category": "Web stránky + jstree + DT + REST + ckeditor",
-            "icon": "far fa-file-alt",
+            "icon": "ti ti-layers-subtract",
             "link": "/admin/v9/webpages/web-pages-list"
         }
     ]

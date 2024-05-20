@@ -18,6 +18,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -193,12 +194,13 @@ public class DocMirroringServiceV9 {
                      if (autoTranslatorUserId>0) docToSave.setAuthorId(autoTranslatorUserId);
                      tranlateDoc(doc, docToSave, translator);
                      DocDB.saveDoc(docToSave, false);
-                     MirroringService.forceReloadTree();
 
-                     if(Constants.getBoolean("syncGroupAndWebpageTitle"))
+                     if(GroupsService.canSyncTitle(docToSave.getDocId(), mappedGroup.getGroupId()))
                      {
                         DocDB.changeGroupTitle(docToSave.getGroupId(), docToSave.getDocId(), docToSave.getTitle(), true);
                      }
+
+                     MirroringService.forceReloadTree();
                   }
                }
             }
@@ -343,7 +345,7 @@ public class DocMirroringServiceV9 {
       //vygeneruj zoznam prepinaca jazykov podla ROOT adresarov,
       //ak existuje v syncedDocs stranka pre dany adresar, tak sprav odkaz na nu
       //ak neexistuje (je vypnuta) tak sprav odkaz na hlavnu stranku z daneho root adresara
-      int rootIds[] = MirroringService.getRootIds(mirroringRootGroup.getGroupId());
+      int[] rootIds = MirroringService.getRootIds(mirroringRootGroup.getGroupId());
       for (int rootId : rootIds) {
          GroupDetails group = groupsDB.getGroup(rootId);
 

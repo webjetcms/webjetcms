@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">BannerImporter.java</span></div><h1>BannerImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.banner.BannerDB;
+import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.sync.export.Content;
+
+/**
+ * Import bannerov.
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.6.2012 11:08:12
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L24">public class BannerImporter</span>
+{
+
+	public static List&lt;ContentBannerBean&gt; getBanners(Content content)
+	{
+<span class="fc" id="L29">		List&lt;ContentBannerBean&gt; bannerBeans = new ArrayList&lt;ContentBannerBean&gt;();</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">		if (null == content) return bannerBeans;</span>
+
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">		for (Numbered&lt;BannerBean&gt; remoteBanner : Numbered.list(content.getBanners()))</span>
+		{
+<span class="nc" id="L34">			BannerBean localBanner = getLocalBanner(remoteBanner.item);</span>
+<span class="nc" id="L35">			bannerBeans.add(new ContentBannerBean(remoteBanner.number, remoteBanner.item, localBanner));</span>
+<span class="nc" id="L36">		}</span>
+<span class="fc" id="L37">		return bannerBeans;</span>
+	}
+
+	public static void importBanners(HttpServletRequest request, Content content)
+	{
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (null == content) return;</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		for (Numbered&lt;BannerBean&gt; banner : Numbered.list(content.getBanners()))</span>
+		{
+<span class="nc bnc" id="L45" title="All 4 branches missed.">			if (null != request.getParameter(&quot;banner_&quot; + banner.number) || request.getAttribute(&quot;syncAll&quot;)!=null)</span>
+			{
+<span class="nc" id="L47">				createLocalContentBanner(banner.item);</span>
+			}
+<span class="nc" id="L49">		}</span>
+<span class="fc" id="L50">	}</span>
+
+	/**
+	 * Vrati banner zodpovedajuci importovanemu (rovnaka skupina a meno), alebo null.
+	 * 
+	 * @param remoteBanner
+	 * @return
+	 */
+	private static BannerBean getLocalBanner(BannerBean remoteBanner)
+	{
+<span class="nc" id="L60">		List&lt;BannerBean&gt; localBanners = BannerDB.getBanners(remoteBanner.getBannerGroup(), null);  // rovnaka skupina</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (BannerBean localBanner : localBanners)</span>
+		{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			if (Tools.areSame(remoteBanner.getName(), localBanner.getName()))  // rovnake meno</span>
+			{
+<span class="nc" id="L65">				return localBanner;</span>
+			}
+<span class="nc" id="L67">		}</span>
+<span class="nc" id="L68">		return null;</span>
+	}
+
+	private static boolean createLocalContentBanner(BannerBean remoteBanner)
+	{
+<span class="nc" id="L73">		BannerBean localBanner = getLocalBanner(remoteBanner);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (null == localBanner)</span>
+		{
+<span class="nc" id="L76">			remoteBanner.setBannerId(-1);</span>
+<span class="nc" id="L77">			return BannerDB.saveBanner(remoteBanner, -1);</span>
+		}
+<span class="nc" id="L79">		int id = localBanner.getBannerId();</span>
+<span class="nc" id="L80">		remoteBanner.setBannerId(id);</span>
+<span class="nc" id="L81">		return BannerDB.saveBanner(remoteBanner, id);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

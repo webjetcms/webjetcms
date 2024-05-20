@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.jpa</a> &gt; <span class="el_source">QuizType.java</span></div><h1>QuizType.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.jpa;
+
+import sk.iway.iwcm.i18n.Prop;
+
+<span class="fc" id="L5">public enum QuizType {</span>
+<span class="fc" id="L6">    RIGHT_ANSWER,</span>
+<span class="fc" id="L7">    RATED_ANSWER;</span>
+
+    public String toString() {
+<span class="fc" id="L10">        String key = &quot;components.quiz.type.&quot; + name().toLowerCase();</span>
+<span class="fc" id="L11">        String result = key;</span>
+        try {
+<span class="fc" id="L13">            result = Prop.getInstance().getText(key);</span>
+<span class="pc" id="L14">        } catch (Exception ex) {}</span>
+<span class="pc bpc" id="L15" title="1 of 2 branches missed.">        return result.equals(key) ? name() : result;</span>
+    }
+
+    public static QuizType getQuizType(String quizType) {
+<span class="fc bfc" id="L19" title="All 4 branches covered.">        if(quizType != null &amp;&amp; &quot;1&quot;.equals(quizType))</span>
+<span class="fc" id="L20">            return QuizType.RATED_ANSWER;</span>
+
+<span class="fc" id="L22">        return QuizType.RIGHT_ANSWER;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

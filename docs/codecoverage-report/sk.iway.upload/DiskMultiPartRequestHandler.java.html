@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DiskMultiPartRequestHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.upload</a> &gt; <span class="el_source">DiskMultiPartRequestHandler.java</span></div><h1>DiskMultiPartRequestHandler.java</h1><pre class="source lang-java linenums">package sk.iway.upload;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
+import sk.iway.iwcm.IwcmRequest;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletException;
+
+
+/**
+ * Nahrada za org.apache.struts.upload.DiskMultipartRequestHandler, do konfigu
+ *  strutsu ho treba nastavit:
+ *  Do web.xml, do inicializacie action
+ *   &lt;init-param&gt;
+ *     &lt;param-name&gt;multipartClass&lt;/param-name&gt;
+ *     &lt;param-value&gt;sk.iway.upload.DiskMultiPartRequestHandler&lt;/param-value&gt;
+ *   &lt;/init-param&gt;
+ *
+ * Na to aby to fungovalo, treba do formularu doplnit volanie popup okna s
+ * progresom uploadu:
+ * &lt;form ... onsubmit=&quot;showUploadProgressBar()&quot;&gt;
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Sobota, 2003, október 25
+ *@modified     $Date: 2003/10/27 07:44:55 $
+ */
+<span class="nc" id="L48">public class DiskMultiPartRequestHandler</span>
+{
+
+   private List&lt;FileItem&gt; files;
+
+	/**
+    *  kopia triedy z originalneho balika, pouziva vsak nas MultipartIterator
+    *
+    *@param  request               Description of the Parameter
+    *@exception  ServletException  Description of the Exception
+    * @throws FileUploadException
+	 * @throws UnsupportedEncodingException
+    */
+   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException
+   {
+<span class="nc" id="L63">		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());</span>
+<span class="nc" id="L64">		files = upload.parseRequest(request);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, &quot;DiskMultiPartRequestHandler.handleRequest, files=&quot;+files.size());</span>
+
+<span class="nc" id="L67">		IwcmRequest wrapped = new IwcmRequest(request);</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (files != null)</span>
+		{
+<span class="nc" id="L71">			Map&lt;String, List&lt;String&gt;&gt; paramsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			for (FileItem item : files)</span>
+			{
+<span class="nc" id="L74">				DiskFileItem diskFile = ((DiskFileItem)item);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">				if (diskFile.isFormField())</span>
+				{
+<span class="nc" id="L78">					Logger.debug(DiskMultiPartRequestHandler.class, &quot;name=&quot;+diskFile.getFieldName()+&quot; value=&quot;+diskFile.getString(SetCharacterEncodingFilter.getEncoding())+&quot; isFormField=&quot;+diskFile.isFormField()+&quot; inMemory=&quot;+diskFile.isInMemory());</span>
+				}
+				else
+				{
+<span class="nc" id="L82">					Logger.debug(DiskMultiPartRequestHandler.class, &quot;name=&quot;+diskFile.getFieldName()+&quot; size=&quot;+diskFile.getSize()+&quot; contentType=&quot;+diskFile.getContentType()+&quot; isFormField=&quot;+diskFile.isFormField()+&quot; inMemory=&quot;+diskFile.isInMemory());</span>
+				}
+
+<span class="nc bnc" id="L85" title="All 4 branches missed.">				if (!diskFile.isFormField() || diskFile.getString() == null) continue;</span>
+
+<span class="nc" id="L87">				Logger.debug(DiskMultiPartRequestHandler.class, &quot;setting&quot;);</span>
+
+<span class="nc" id="L89">				String name = diskFile.getFieldName();</span>
+<span class="nc" id="L90">				String value = diskFile.getString(SetCharacterEncodingFilter.getEncoding());</span>
+
+				//aby nam fungovalo aj request.getParameterValues()
+<span class="nc" id="L93">				List&lt;String&gt; valuesList = paramsTable.get(name);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (valuesList == null)</span>
+				{
+<span class="nc" id="L96">					valuesList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L97">					paramsTable.put(name, valuesList);</span>
+				}
+
+<span class="nc" id="L100">				valuesList.add(value);</span>
+<span class="nc" id="L101">			}</span>
+
+<span class="nc" id="L103">			Set&lt;Map.Entry&lt;String, List&lt;String&gt;&gt;&gt; paramSet = paramsTable.entrySet();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			for (Map.Entry&lt;String, List&lt;String&gt;&gt; me : paramSet)</span>
+			{
+<span class="nc" id="L106">				String name = me.getKey();</span>
+<span class="nc" id="L107">				List&lt;String&gt; valueList = me.getValue();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (valueList.size()&lt;1) continue;</span>
+<span class="nc" id="L109">				wrapped.setParameterValues(name, valueList.toArray(new String[0]));</span>
+<span class="nc" id="L110">			}</span>
+		}
+
+		//uloz parametre do request beanu, kedze tam su zatial prazdne
+<span class="nc" id="L114">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (rb != null) {</span>
+<span class="nc" id="L116">			rb.setParameters(wrapped.getParameterMap());</span>
+		}
+
+<span class="nc" id="L119">		return wrapped;</span>
+   }
+
+	public Map&lt;String, UploadedFile&gt; getFileElements()
+	{
+<span class="nc" id="L124">		Map&lt;String, UploadedFile&gt; items = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		for (FileItem item : files)</span>
+		{
+<span class="nc" id="L127">			DiskFileItem diskFile = ((DiskFileItem)item);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (diskFile.isFormField()) continue;</span>
+<span class="nc" id="L129">			items.put(diskFile.getFieldName(), new UploadedFile(diskFile));</span>
+<span class="nc" id="L130">		}</span>
+<span class="nc" id="L131">		return items;</span>
+	}
+
+	public Map&lt;String, List&lt;UploadedFile&gt;&gt; getFileElementsMultiple()
+	{
+<span class="nc" id="L136">		Map&lt;String, List&lt;UploadedFile&gt;&gt; items = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		for (FileItem item : files)</span>
+		{
+<span class="nc" id="L139">			DiskFileItem diskFile = ((DiskFileItem)item);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (diskFile.isFormField()) continue;</span>
+
+<span class="nc" id="L142">			String key = diskFile.getFieldName();</span>
+
+<span class="nc" id="L144">			List&lt;UploadedFile&gt; uploadedFiles = items.get(key);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (uploadedFiles == null) {</span>
+<span class="nc" id="L146">				uploadedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L147">				items.put(key, uploadedFiles);</span>
+			}
+
+<span class="nc" id="L150">			uploadedFiles.add(new UploadedFile(diskFile));</span>
+<span class="nc" id="L151">		}</span>
+<span class="nc" id="L152">		return items;</span>
+	}
+
+	public void rollback()
+	{
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		for (FileItem item : files)</span>
+		{
+<span class="nc" id="L159">			item.delete();</span>
+<span class="nc" id="L160">		}</span>
+<span class="nc" id="L161">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlExport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.displaytag</a> &gt; <span class="el_source">XmlExport.java</span></div><h1>XmlExport.java</h1><pre class="source lang-java linenums">package sk.iway.displaytag;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.jsp.JspException;
+
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
+import org.displaytag.export.ExportView;
+import org.displaytag.export.TextExportView;
+import org.displaytag.model.Column;
+import org.displaytag.model.ColumnIterator;
+import org.displaytag.model.HeaderCell;
+import org.displaytag.model.Row;
+import org.displaytag.model.RowIterator;
+import org.displaytag.model.TableModel;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.SearchTools;
+/**
+ *  XmlExport.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.7 $
+ *@created      Date: 30.6.2006 11:49:45
+ *@modified     $Date: 2008/12/11 08:40:28 $
+ */
+
+
+
+
+
+/**
+ * spravne nazvy atributy podla hlavicky tabulky a odstrani anchory z exportu
+ *
+ * 
+ */
+<span class="fc" id="L48">public class XmlExport implements TextExportView {</span>
+   
+
+/**
+     * TableModel to render.
+     */
+    private TableModel model;
+
+/**
+     * export full list?
+     */
+    private boolean exportFull;
+
+/**
+     * decorate export?
+     */
+    private boolean decorated;
+<span class="fc" id="L65">    private List&lt;String&gt; headerTitles = new ArrayList&lt;String&gt;();</span>
+
+
+    /**
+     * @see ExportView#setParameters(org.displaytag.model.TableModel, boolean, boolean, boolean)
+     */
+    @Override
+    public void setParameters(TableModel tableModel, boolean exportFullList, boolean includeHeader,
+                              boolean decorateValues) {
+<span class="nc" id="L74">        this.model = tableModel;</span>
+<span class="nc" id="L75">        this.exportFull = exportFullList;</span>
+<span class="nc" id="L76">        this.decorated = decorateValues;</span>
+<span class="nc" id="L77">    }</span>
+
+/**
+     * @see org.displaytag.export.BaseExportView#getRowStart()
+     */
+    protected String getRowStart() {
+<span class="nc" id="L83">        return &quot;&lt;row&gt;\n&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getRowEnd()
+     */
+    protected String getRowEnd() {
+<span class="nc" id="L90">        return &quot;&lt;/row&gt;\n&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getCellStart()
+     */
+    protected String getCellStart(String columnName) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (Tools.isEmpty(columnName)) columnName=&quot;column&quot;;</span>
+        
+<span class="nc" id="L99">        columnName = DocTools.removeChars(columnName, false);</span>
+        
+<span class="nc" id="L101">        return &quot;&lt;&quot; + columnName.replace('\n', '-') + &quot;&gt;&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getCellEnd()
+     */
+    protected String getCellEnd(String columnName) {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (Tools.isEmpty(columnName)) columnName=&quot;column&quot;;</span>
+        
+<span class="nc" id="L110">        columnName = DocTools.removeChars(columnName, false);</span>
+        
+<span class="nc" id="L112">        return &quot;&lt;/&quot; + columnName.replace('\n', '-') + &quot;&gt;\n&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getDocumentStart()
+     */
+    protected String getDocumentStart() {
+<span class="nc" id="L119">        return &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;windows-1250\&quot;?&gt;\n&lt;table&gt;\n&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getDocumentEnd()
+     */
+    protected String getDocumentEnd() {
+<span class="nc" id="L126">        return &quot;&lt;/table&gt;\n&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getAlwaysAppendCellEnd()
+     */
+    protected boolean getAlwaysAppendCellEnd() {
+<span class="nc" id="L133">        return true;</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#getAlwaysAppendRowEnd()
+     */
+    protected boolean getAlwaysAppendRowEnd() {
+<span class="nc" id="L140">        return true;</span>
+    }
+
+/**
+     * @see org.displaytag.export.ExportView#getMimeType()
+     */
+    @Override
+    public String getMimeType() {
+<span class="nc" id="L148">        return &quot;text/xml&quot;; //$NON-NLS-1$</span>
+    }
+
+/**
+     * @see org.displaytag.export.BaseExportView#escapeColumnValue(java.lang.Object)
+     */
+    protected String escapeColumnValue(Object value) {
+<span class="nc" id="L155">    	String text=&quot;&quot;;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if(value != null) {</span>
+<span class="nc" id="L157">			text=value.toString().trim();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			if(text.endsWith(&quot;&amp;nbsp;&quot;))</span>
+<span class="nc" id="L159">   			text=text.substring(0,text.length()-6);</span>
+<span class="nc" id="L160">			text = SearchTools.htmlToPlain(text);</span>
+		}
+<span class="nc" id="L162">            return StringEscapeUtils.escapeXml(text.trim());</span>
+    }
+
+/**
+     * @see TextExportView#doExport(java.io.Writer)
+     */
+    @Override
+    public void doExport(Writer out) throws IOException, JspException {
+        
+
+<span class="nc" id="L172">final String DOCUMENT_START = getDocumentStart();</span>
+<span class="nc" id="L173">        final String DOCUMENT_END = getDocumentEnd();</span>
+<span class="nc" id="L174">        final String ROW_START = getRowStart();</span>
+<span class="nc" id="L175">        final String ROW_END = getRowEnd();</span>
+<span class="nc" id="L176">        final boolean ALWAYS_APPEND_CELL_END = getAlwaysAppendCellEnd();</span>
+<span class="nc" id="L177">        final boolean ALWAYS_APPEND_ROW_END = getAlwaysAppendRowEnd();</span>
+
+<span class="nc" id="L179">buildHeaders();</span>
+
+// document start
+<span class="nc" id="L182">        write(out, DOCUMENT_START);</span>
+
+// get the correct iterator (full or partial list according to the exportFull field)
+<span class="nc" id="L185">        RowIterator rowIterator = this.model.getRowIterator(this.exportFull);</span>
+
+// iterator on rows
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        while (rowIterator.hasNext()) {</span>
+<span class="nc" id="L189">            Row row = rowIterator.next();</span>
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">if (this.model.getTableDecorator() != null) {</span>
+
+<span class="nc" id="L193">String stringStartRow = this.model.getTableDecorator().startRow();</span>
+<span class="nc" id="L194">                write(out, stringStartRow);</span>
+            }
+
+// iterator on columns
+<span class="nc" id="L198">            ColumnIterator columnIterator = row.getColumnIterator(this.model.getHeaderCellList());</span>
+
+<span class="nc" id="L200">write(out, ROW_START);</span>
+
+<span class="nc" id="L202">int columnNumber = 0;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            while (columnIterator.hasNext()) {</span>
+<span class="nc" id="L204">                Column column = columnIterator.nextColumn();</span>
+<span class="nc" id="L205">                String columnHeader = DB.internationalToEnglish(headerTitles.get(columnNumber));</span>
+<span class="nc" id="L206">                String cellStart = getCellStart(columnHeader);</span>
+<span class="nc" id="L207">                String cellEnd = getCellEnd(columnHeader);</span>
+
+// Get the value to be displayed for the column
+<span class="nc" id="L210">                String value = escapeColumnValue(column.getValue(this.decorated));</span>
+
+<span class="nc" id="L212">write(out, cellStart);</span>
+
+<span class="nc" id="L214">write(out, value);</span>
+
+<span class="nc bnc" id="L216" title="All 4 branches missed.">if (ALWAYS_APPEND_CELL_END || columnIterator.hasNext()) {</span>
+<span class="nc" id="L217">                    write(out, cellEnd);</span>
+                }
+<span class="nc" id="L219">                columnNumber++;</span>
+<span class="nc" id="L220">            }</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">            if (ALWAYS_APPEND_ROW_END || rowIterator.hasNext()) {</span>
+<span class="nc" id="L222">                write(out, ROW_END);</span>
+            }
+<span class="nc" id="L224">        }</span>
+
+// document end
+
+<span class="nc" id="L228">        write(out, DOCUMENT_END);</span>
+
+<span class="nc" id="L230">}</span>
+
+/**
+     * Write a String, checking for nulls value.
+     *
+     * @param out output writer
+     * @param string String to be written
+     * @throws java.io.IOException thrown by out.write
+     */
+    private void write(Writer out, String string) throws IOException {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (string != null) {</span>
+<span class="nc" id="L241">            out.write(string);</span>
+        }
+<span class="nc" id="L243">    }</span>
+
+/**
+     * @see TextExportView#outputPage()
+     */
+    @Override
+    public boolean outputPage() {
+<span class="nc" id="L250">        return false;</span>
+    }
+
+/**
+     * iterates through the headers once, placing the titles in an ArrayList for
+     * quick'n'easy access as we iterate through each row
+     */
+    private void buildHeaders()
+    {
+<span class="nc" id="L259">        headerTitles.clear();</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L261">        Iterator&lt;HeaderCell&gt; iterator = this.model.getHeaderCellList().iterator();</span>
+
+<span class="nc bnc" id="L263" title="All 2 branches missed.">while (iterator.hasNext())</span>
+        {
+<span class="nc" id="L265">            HeaderCell headerCell = iterator.next();</span>
+<span class="nc" id="L266">            String columnHeader = DB.internationalToEnglish(headerCell.getTitle());</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (columnHeader == null)</span>
+            {
+<span class="nc" id="L269">                columnHeader = headerCell.getBeanPropertyName();</span>
+            }
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">if (columnHeader != null)</span>
+            {
+<span class="nc" id="L274">                columnHeader = StringUtils.deleteWhitespace(WordUtils.capitalizeFully(columnHeader));</span>
+<span class="nc" id="L275">                columnHeader = escapeColumnValue(columnHeader);</span>
+            }
+
+<span class="nc" id="L278">headerTitles.add(columnHeader);</span>
+
+<span class="nc" id="L280">}</span>
+
+<span class="nc" id="L282">}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

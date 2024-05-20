@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner</a> &gt; <span class="el_source">BannerRestController.java</span></div><h1>BannerRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/banner&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuBanner')&quot;)
+@Datatable
+public class BannerRestController extends DatatableRestControllerV2&lt;BannerBean, Long&gt;{
+
+    private final BannerRepository bannerRepository;
+
+    @Autowired
+    public BannerRestController(BannerRepository bannerRepository) {
+<span class="fc" id="L45">        super(bannerRepository);</span>
+<span class="fc" id="L46">        this.bannerRepository = bannerRepository;</span>
+<span class="fc" id="L47">    }</span>
+
+    @Override
+    public Page&lt;BannerBean&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L51">        return super.getAllItemsIncludeSpecSearch(new BannerBean(), null);</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;BannerBean&gt; root, CriteriaBuilder builder) {
+<span class="fc" id="L56">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (getUser().isDisabledItem(&quot;cmp_banner_seeall&quot;)) {</span>
+<span class="fc" id="L58">            predicates.add(builder.equal(root.get(&quot;clientId&quot;), getUser().getUserId()));</span>
+        }
+<span class="fc" id="L60">    }</span>
+
+    @Override
+    public BannerBean getOne(@PathVariable(&quot;id&quot;) long id) {
+
+        BannerBean entity;
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if(id == -1) {</span>
+<span class="fc" id="L67">            entity = new BannerBean();</span>
+<span class="fc" id="L68">            entity.setMaxViews(0);</span>
+<span class="fc" id="L69">            entity.setMaxClicks(0);</span>
+<span class="fc" id="L70">            entity.setPriority(10);</span>
+<span class="fc" id="L71">            entity.setActive(true);</span>
+        } else {
+<span class="fc" id="L73">            entity = bannerRepository.getById(id);</span>
+
+<span class="pc bpc" id="L75" title="5 of 6 branches missed.">            if (getUser().isDisabledItem(&quot;cmp_banner_seeall&quot;) &amp;&amp; (entity.getClientId()==null || entity.getClientId().intValue()!=getUser().getUserId())) {</span>
+                //na entitu nema pravo
+<span class="nc" id="L77">                entity = null;</span>
+            }
+        }
+
+<span class="fc" id="L81">        return processFromEntity(entity, ProcessItemAction.GETONE);</span>
+    }
+
+    @Override
+    public BannerBean processFromEntity(BannerBean entity, ProcessItemAction action) {
+
+<span class="fc" id="L87">        BannerEditorFields bef = new BannerEditorFields();</span>
+<span class="fc" id="L88">        Date now = new Date(Tools.getNow());</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (Boolean.FALSE.equals(entity.getActive()) ||</span>
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">            (entity.getDateFrom()!=null &amp;&amp; now.before(entity.getDateFrom())) ||</span>
+<span class="fc bfc" id="L91" title="All 4 branches covered.">            (entity.getDateTo()!=null &amp;&amp; now.after(entity.getDateTo())) ||</span>
+<span class="pc bpc" id="L92" title="4 of 8 branches missed.">            (entity.getMaxViews()!=null &amp;&amp; entity.getStatViews()!=null &amp;&amp; entity.getMaxViews().intValue()&gt;0 &amp;&amp; entity.getStatViews().intValue()&gt;entity.getMaxViews().intValue()) || //NOSONAR</span>
+<span class="pc bpc" id="L93" title="4 of 8 branches missed.">            (entity.getMaxClicks()!=null &amp;&amp; entity.getStatClicks()!=null &amp;&amp; entity.getMaxClicks().intValue()&gt;0 &amp;&amp; entity.getStatClicks().intValue()&gt;entity.getMaxClicks().intValue())   //NOSONAR</span>
+           ) {
+<span class="fc" id="L95">            bef.setViewable(false);</span>
+<span class="fc" id="L96">            bef.addRowClass(&quot;is-disabled&quot;);</span>
+        } else {
+<span class="fc" id="L98">            bef.setViewable(true);</span>
+        }
+
+<span class="fc" id="L101">        bef.setFieldsDefinition(bef.getFields(entity, &quot;components.banner&quot;, 'F'));</span>
+
+<span class="fc" id="L103">        entity.setEditorFields(bef);</span>
+<span class="fc" id="L104">        return entity;</span>
+    }
+
+    /**
+     * Vrati zoznam uz existujucich skupin
+     * @param term
+     * @return
+     */
+    @GetMapping(&quot;/autocomplete&quot;)
+    public List&lt;String&gt; getAutocomplete(@RequestParam String term) {
+
+<span class="nc" id="L115">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
+
+        //Get all where group name is like %term%, and distict because its autocomplete list and we dont want duplicity
+<span class="nc" id="L118">        List&lt;BannerBean&gt; groupNamesPage =  bannerRepository.findDistinctAllByBannerGroupLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+
+        //Loop gained entities and add group name to autcomplete list &quot;ac&quot;
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        for(BannerBean entity : groupNamesPage) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (ac.contains(entity.getBannerGroup())==false) ac.add(entity.getBannerGroup());</span>
+<span class="nc" id="L123">        }</span>
+
+<span class="nc" id="L125">        return ac;</span>
+    }
+
+    @Override
+    public void afterDelete(BannerBean entity, long id) {
+<span class="fc" id="L130">        deleteCache();</span>
+<span class="fc" id="L131">    }</span>
+
+    @Override
+    public void afterSave(BannerBean entity, BannerBean saved) {
+<span class="fc" id="L135">        deleteCache();</span>
+<span class="fc" id="L136">    }</span>
+
+    /**
+     * Zmaze celu BannerDB cache + cached banner restrictions
+     */
+    private void deleteCache() {
+<span class="fc" id="L142">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L143">        c.removeObjectStartsWithName(&quot;BannerDB.&quot;);</span>
+<span class="fc" id="L144">    }</span>
+
+    /**
+     * vrati vyskladanu URL pre zobrazenie Kampanoveho bannera
+     * @param bannerLocation - umiestnenie bannera
+     * @param campaignTitle - hodnota parametra z konf. premennej bannerCampaignParamName
+     */
+    @GetMapping(&quot;/generate-url-for-campaign-title&quot;)
+    public String getUrlForCamapaignTitle(HttpServletRequest request, @RequestParam String bannerLocation, @RequestParam String campaignTitle)
+    {
+<span class="fc" id="L154">        StringBuilder result=new StringBuilder();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if(Tools.isNotEmpty(campaignTitle))</span>
+        {
+<span class="fc" id="L157">            result.append(Tools.getDomainBaseHref(request));</span>
+<span class="fc" id="L158">            result.append(bannerLocation);</span>
+<span class="fc" id="L159">            result.append(&quot;?&quot;).append(Constants.getString(&quot;bannerCampaignParamName&quot;));</span>
+<span class="fc" id="L160">            result.append(&quot;=&quot;).append(campaignTitle);</span>
+        }
+
+<span class="fc" id="L163">        return result.toString();</span>
+    }
+
+    @Override
+    public void getOptions(DatatablePageImpl&lt;BannerBean&gt; page) {
+        List&lt;UserDetails&gt; admins;
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        if (getUser().isEnabledItem(&quot;cmp_banner_seeall&quot;)) {</span>
+<span class="fc" id="L171">            admins = UsersDB.getAdmins();</span>
+<span class="fc" id="L172">            UserDetails nepriradeny = new UserDetails();</span>
+<span class="fc" id="L173">            nepriradeny.setUserId(-1);</span>
+<span class="fc" id="L174">            nepriradeny.setFirstName(getProp().getText(&quot;components.banner.nepriradeny&quot;));</span>
+<span class="fc" id="L175">            admins.add(0, nepriradeny);</span>
+<span class="fc" id="L176">        } else {</span>
+<span class="fc" id="L177">            admins = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L178">            admins.add(getUser());</span>
+        }
+<span class="fc" id="L180">        page.addOptions(&quot;clientId&quot;, admins, &quot;fullName&quot;, &quot;userId&quot;, false);</span>
+<span class="fc" id="L181">    }</span>
+
+    @Override
+    public void beforeSave(BannerBean entity) {
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (entity.getWidth()==null) entity.setWidth(0);</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (entity.getHeight()==null) entity.setHeight(0);</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if (entity.getStatViews()==null) entity.setStatViews(0);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (entity.getStatClicks()==null) entity.setStatClicks(0);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (entity.getFrameRate()==null) entity.setFrameRate(0);</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (entity.getClientId()==null) entity.setClientId(-1);</span>
+<span class="fc" id="L191">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

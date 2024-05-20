@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorToolsForCore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">EditorToolsForCore.java</span></div><h1>EditorToolsForCore.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.io.File;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sourceforge.stripes.mock.MockHttpServletResponse;
+import sk.iway.Password;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.AtrBean;
+import sk.iway.iwcm.doc.AtrDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.filebrowser.EditForm;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.WJResponseWrapper;
+
+public class EditorToolsForCore {
+<span class="fc" id="L36">    public static String RENDER_DATA_SEPARATOR = &quot;\n\n-----------------------------------------------------------------\n\n&quot;;</span>
+
+    private EditorToolsForCore() {
+
+    }
+
+    /**
+     * Nastavi formu virtualPath
+     * @param my_form
+     */
+    public static void setVirtualPath(EditorForm my_form)
+    {
+<span class="nc" id="L48">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L49">        String domain = groupsDB.getDomain(my_form.getGroupId());</span>
+<span class="nc bnc" id="L50" title="All 4 branches missed.">        if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML &amp;&amp; my_form.getVirtualPath().startsWith(&quot;javascript:&quot;)==false)</span>
+        {
+<span class="nc" id="L52">            boolean mustGenerateVirtualPath = false;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (Tools.isNotEmpty(my_form.getVirtualPath()))</span>
+            {
+<span class="nc" id="L55">                int actualDocId = DocDB.getDocIdFromURL(my_form.getVirtualPath(), domain);</span>
+<span class="nc bnc" id="L56" title="All 4 branches missed.">                if (actualDocId &gt; 0 &amp;&amp; actualDocId != my_form.getDocId())</span>
+                {
+<span class="nc" id="L58">                    mustGenerateVirtualPath = true;</span>
+<span class="nc" id="L59">                    my_form.setVirtualPath(&quot;&quot;);</span>
+                }
+            }
+
+<span class="nc bnc" id="L63" title="All 6 branches missed.">            if (mustGenerateVirtualPath || Tools.isEmpty(my_form.getVirtualPath()) || my_form.getVirtualPath().indexOf('/')==-1)</span>
+            {
+                //nastavime ako treba
+<span class="nc" id="L66">                String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), my_form.getGroupId());</span>
+<span class="nc" id="L67">                DocDetails doc = new DocDetails();</span>
+<span class="nc" id="L68">                doc.setDocId(my_form.getDocId());</span>
+<span class="nc" id="L69">                doc.setTitle(my_form.getTitle());</span>
+<span class="nc" id="L70">                doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));</span>
+<span class="nc" id="L71">                doc.setVirtualPath(my_form.getVirtualPath());</span>
+<span class="nc" id="L72">                doc.setGroupId(my_form.getGroupId());</span>
+<span class="nc" id="L73">                String virtualPath = DocDB.getURL(doc, groupDiskPath);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                String koncovka = virtualPath.endsWith(&quot;/&quot;) ? &quot;/&quot; : &quot;.html&quot;;</span>
+<span class="nc" id="L75">                String editorPageExtension = Constants.getString(&quot;editorPageExtension&quot;);</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                for (int i=1; i&lt;1000; i++)</span>
+                {
+<span class="nc bnc" id="L79" title="All 4 branches missed.">                    if(virtualPath != null &amp;&amp; virtualPath.length() &gt; 255)</span>
+                    {
+<span class="nc" id="L81">                        String vpTmp = virtualPath.substring(0, virtualPath.length()-koncovka.length());</span>
+<span class="nc" id="L82">                        vpTmp = DB.prepareString(vpTmp, 255-koncovka.length())+koncovka;</span>
+<span class="nc" id="L83">                        virtualPath = vpTmp;</span>
+                    }
+
+<span class="nc" id="L86">                    int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);</span>
+<span class="nc" id="L87">                    Logger.debug(EditorToolsForCore.class, &quot;setVirtualPath: allreadyDocId for virtualPath: &quot;+virtualPath + &quot; ,docid: &quot;+allreadyDocId);</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">                    if (allreadyDocId &lt;= 0 || allreadyDocId==my_form.getDocId())</span>
+                    {
+<span class="nc" id="L90">                        break;</span>
+                    }
+<span class="nc" id="L92">                    doc.setTitle(my_form.getTitle()+&quot; &quot;+i);</span>
+<span class="nc" id="L93">                    doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128)+&quot; &quot;+i);</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                    if (&quot;/&quot;.equals(editorPageExtension))</span>
+                    {
+                        //nastav cistu, handluje sa to nastavenim title s cislom vyssie
+<span class="nc" id="L98">                        doc.setVirtualPath(&quot;&quot;);</span>
+                    }
+                    else
+                    {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                        if (my_form.getVirtualPath().endsWith(&quot;.html&quot;))</span>
+                        {
+<span class="nc" id="L104">                            doc.setVirtualPath(Tools.replace(my_form.getVirtualPath(), &quot;.html&quot;, &quot;-&quot; + i + &quot;.html&quot;));</span>
+<span class="nc" id="L105">                            koncovka = &quot;-&quot; + i + &quot;.html&quot;;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                        } else if (my_form.getVirtualPath().endsWith(&quot;/&quot;))</span>
+                        {
+<span class="nc" id="L108">                            doc.setVirtualPath(my_form.getVirtualPath() + i + &quot;.html&quot;);</span>
+<span class="nc" id="L109">                            koncovka = i + &quot;.html&quot;;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                        } else if (Tools.isEmpty(my_form.getVirtualPath()))</span>
+                        {
+<span class="nc" id="L112">                            doc.setVirtualPath(Tools.replace(my_form.getTitle() + &quot;.html&quot;, &quot;/&quot;, &quot;-&quot;));</span>
+<span class="nc" id="L113">                            my_form.setVirtualPath(doc.getVirtualPath());</span>
+<span class="nc" id="L114">                            koncovka = &quot;.html&quot;;</span>
+                        }
+                    }
+
+<span class="nc" id="L118">                    virtualPath = DocDB.getURL(doc, groupDiskPath);</span>
+                }
+
+<span class="nc" id="L121">                my_form.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));</span>
+
+<span class="nc" id="L123">                Logger.println(EditorToolsForCore.class, &quot;nastaveny virtual path na:&quot;+virtualPath+&quot;;&quot;);</span>
+<span class="nc" id="L124">            }</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            else if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+            {
+                //tiket 15910 - kontrola specialnych znakov v URL
+<span class="nc" id="L128">                String cleaned = DocTools.removeCharsDir(DB.internationalToEnglish(my_form.getVirtualPath())).toLowerCase();</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                if(!cleaned.equals(my_form.getVirtualPath()))</span>
+                {
+<span class="nc" id="L131">                    my_form.setVirtualPath(DocDB.normalizeVirtualPath(cleaned));</span>
+<span class="nc" id="L132">                    Logger.println(EditorToolsForCore.class, &quot;virtual path upraveny na:&quot;+my_form.getVirtualPath()+&quot;;&quot;);</span>
+                }
+            }
+        }
+<span class="nc" id="L136">    }</span>
+
+    public static String getDataAsc(String data, EditorForm ef, boolean isLucene, HttpServletRequest request)
+    {
+<span class="fc" id="L140">        boolean isRendered = false;</span>
+<span class="pc bpc" id="L141" title="3 of 4 branches missed.">        if (Constants.getBoolean(&quot;fulltextExecuteApps&quot;) &amp;&amp; Tools.isEmpty(ef.getExternalLink()))</span>
+        {
+<span class="nc" id="L143">            DocDetails doc = ef.toDocDetails();</span>
+
+<span class="nc" id="L145">            String renderedData = renderIncludes(doc, true, request);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (Tools.isNotEmpty(renderedData))</span>
+            {
+                //odpaz domeny a blbosti
+<span class="nc" id="L149">                String domain = Tools.getBaseHref(request);</span>
+<span class="nc" id="L150">                renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc" id="L152">                domain = Tools.getBaseHrefLoopback(request);</span>
+<span class="nc" id="L153">                renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                if (request!=null)</span>
+                {
+<span class="nc" id="L157">                    domain = &quot;http://&quot; + request.getServerName();</span>
+<span class="nc" id="L158">                    renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc" id="L160">                    domain = &quot;https://&quot; + request.getServerName();</span>
+<span class="nc" id="L161">                    renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc" id="L163">                    domain = &quot;http://&quot; + DocDB.getDomain(request);</span>
+<span class="nc" id="L164">                    renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc" id="L166">                    domain = &quot;https://&quot; + DocDB.getDomain(request);</span>
+<span class="nc" id="L167">                    renderedData = Tools.replace(renderedData, domain, &quot;&quot;);</span>
+
+<span class="nc" id="L169">                    domain = &quot;:&quot;+request.getLocalPort()+&quot;/&quot;;</span>
+<span class="nc" id="L170">                    renderedData = Tools.replace(renderedData, domain, &quot;/&quot;);</span>
+                }
+
+<span class="nc" id="L173">                domain = &quot;:8080/&quot;;</span>
+<span class="nc" id="L174">                renderedData = Tools.replace(renderedData, domain, &quot;/&quot;);</span>
+
+<span class="nc" id="L176">                domain = &quot;:&quot;+ Constants.getInt(&quot;httpServerPort&quot;)+&quot;/&quot;;</span>
+<span class="nc" id="L177">                renderedData = Tools.replace(renderedData, domain, &quot;/&quot;);</span>
+
+<span class="nc" id="L179">                data = renderedData;</span>
+<span class="nc" id="L180">                isRendered = true;</span>
+            }
+        }
+
+        String dataAsc;
+
+<span class="pc bpc" id="L186" title="2 of 4 branches missed.">        if (isLucene || isRendered) dataAsc = data;</span>
+<span class="fc" id="L187">        else dataAsc = (DB.internationalToEnglish(data).trim()).toLowerCase();</span>
+
+<span class="fc" id="L189">        dataAsc = removeHtmlTagsKeepLength(dataAsc);</span>
+
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (ef != null)</span>
+        {
+            //ak tam nie je title, dopln
+<span class="fc" id="L194">            String titleAsc = (DB.internationalToEnglish(ef.getTitle()).trim()).toLowerCase();</span>
+            //aby spravne hladalo aj v nazvoch suborov len s pouzitim contains
+<span class="fc" id="L196">            titleAsc = Tools.replace(titleAsc, &quot;_&quot;, &quot; &quot;);</span>
+<span class="fc" id="L197">            titleAsc = Tools.replace(titleAsc, &quot;-&quot;, &quot; &quot;);</span>
+<span class="fc" id="L198">            titleAsc = Tools.replace(titleAsc, &quot;.&quot;, &quot; &quot;);</span>
+<span class="fc" id="L199">            titleAsc = Tools.replace(titleAsc, &quot;/&quot;, &quot; &quot;);</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (isLucene)</span>
+            {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                if (dataAsc.indexOf(ef.getTitle())==-1) dataAsc += &quot; &quot;+ef.getTitle()+&quot;\n&quot;;</span>
+            }
+            else
+            {
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">                if (dataAsc.indexOf(titleAsc)==-1) dataAsc += &quot;&lt;h1&gt;&quot;+titleAsc+&quot;&lt;/h1&gt;\n&quot;;</span>
+            }
+
+<span class="fc" id="L209">            DocDB docDB = DocDB.getInstance();</span>
+            //ak treba dopln keywords
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeKeywords&quot;))</span>
+            {
+                try
+                {
+<span class="nc" id="L215">                    String perexGroupIds[] = ef.getPerexGroup();</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">                    if (perexGroupIds != null)</span>
+                    {
+<span class="nc" id="L218">                        String keywords = null;</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">                        for (String keyword : perexGroupIds)</span>
+                        {
+<span class="nc" id="L221">                            keyword = docDB.convertPerexGroupIdToName(Tools.getIntValue(keyword, -1));</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                            if (Tools.isEmpty(keyword)) continue;</span>
+<span class="nc bnc" id="L223" title="All 6 branches missed.">                            if (keyword.startsWith(&quot;#&quot;) || keyword.startsWith(&quot;@&quot;) || keyword.startsWith(&quot;_&quot;)) keyword=keyword.substring(1);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                            if (keywords == null) keywords = keyword;</span>
+<span class="nc" id="L225">                            else keywords += &quot;, &quot;+keyword;</span>
+                        }
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                        if (Tools.isNotEmpty(keywords))</span>
+                        {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">                            if (isLucene) dataAsc += (DB.internationalToEnglish(keywords).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="nc" id="L230">                            else dataAsc += &quot;&lt;div style='display:none' class='fulltextKeywords'&gt;&quot;+(DB.internationalToEnglish(keywords).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+                        }
+                    }
+<span class="nc" id="L233">                } catch (Exception ex) {}</span>
+            }
+<span class="pc bpc" id="L235" title="1 of 4 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludePerex&quot;) &amp;&amp; Tools.isNotEmpty(ef.getHtmlData()))</span>
+            {
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                if (isLucene) dataAsc += (DB.internationalToEnglish(ef.getHtmlData()).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="fc" id="L238">                else dataAsc += &quot;&lt;div style='display:none' class='fulltextPerex'&gt;&quot;+(DB.internationalToEnglish(ef.getHtmlData()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+            }
+            //ak treba dopln atributy
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeAttributes&quot;))</span>
+            {
+                try
+                {
+<span class="nc" id="L245">                    List&lt;AtrBean&gt; attrs = AtrDB.getAtributes(ef.getDocId(), null, null);	//ziskam vsetky atributy pre danu stranku</span>
+<span class="nc bnc" id="L246" title="All 4 branches missed.">                    if (attrs != null &amp;&amp; attrs.size() &gt; 0)</span>
+                    {
+<span class="nc" id="L248">                        String attributes = null;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                        for (AtrBean attr : attrs)</span>
+                        {
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                            if (attr == null) continue;</span>
+<span class="nc bnc" id="L252" title="All 4 branches missed.">                            if(Tools.isNotEmpty(attr.getAtrName()) &amp;&amp; Tools.isNotEmpty(attr.getValueString()))</span>
+                            {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                                if (attributes == null) attributes = attr.getAtrName() + &quot;=&quot; + attr.getValueString();</span>
+<span class="nc" id="L255">                                else attributes += &quot;, &quot;+attr.getAtrName() + &quot;=&quot; + attr.getValueString();</span>
+                            }
+<span class="nc" id="L257">                        }</span>
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                        if (Tools.isNotEmpty(attributes))</span>
+                        {
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                            if (isLucene) dataAsc += (DB.internationalToEnglish(attributes).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="nc" id="L262">                            else dataAsc += &quot;&lt;div style='display:none' class='fulltextAttributes'&gt;&quot;+(DB.internationalToEnglish(attributes).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+                        }
+                    }
+<span class="nc" id="L265">                } catch (Exception ex) {}</span>
+            }
+
+            //#22131
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(Constants.getString(&quot;fulltextDataAscMethod&quot;)))</span>
+            {
+<span class="nc" id="L271">                String className = &quot;&quot;;</span>
+<span class="nc" id="L272">                String methodName = &quot;&quot;;</span>
+                try {
+<span class="nc" id="L274">                    className = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(0, Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L275">                    methodName = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;) + 1);</span>
+
+<span class="nc" id="L277">                    Class&lt;?&gt; clazz = Class.forName(className);</span>
+<span class="nc" id="L278">                    Method method = clazz.getMethod(methodName, EditorForm.class);</span>
+<span class="nc" id="L279">                    String returned = (String)method.invoke(null, ef);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">                    if(Tools.isNotEmpty(returned))</span>
+<span class="nc" id="L281">                        dataAsc += returned;</span>
+<span class="nc" id="L282">                } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {</span>
+<span class="nc" id="L283">                    Logger.debug(EditorToolsForCore.class, &quot;ReflectionLoader - &quot; + className + &quot;.&quot; + methodName + &quot; exception&quot;);</span>
+<span class="nc" id="L284">                    sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L285">                }</span>
+            }
+        }
+
+<span class="fc" id="L289">        dataAsc = Tools.replaceStrings(dataAsc, &quot;searchIndexReplaceStrings&quot;, false);</span>
+
+<span class="fc" id="L291">        return dataAsc;</span>
+    }
+
+    public static String renderIncludes(DocDetails doc, boolean addInternationalToEnglishSection, HttpServletRequest request)
+    {
+<span class="nc" id="L296">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L297">        TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());</span>
+<span class="nc" id="L298">        GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="nc bnc" id="L299" title="All 4 branches missed.">        if (temp != null &amp;&amp; group != null)</span>
+        {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">            String lng = Tools.isNotEmpty(temp.getLng()) ? temp.getLng() : &quot;&quot;;</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">            if (Tools.isNotEmpty(group.getLng())) lng = group.getLng();</span>
+<span class="nc" id="L303">            PageLng.setUserLng(request, null, lng);</span>
+
+<span class="nc" id="L305">            ShowDoc.setRequestData(doc, group, DocDB.getInstance(), groupsDB, request);</span>
+<span class="nc" id="L306">            ShowDoc.setRequestData(group, groupsDB, request);</span>
+<span class="nc" id="L307">            ShowDoc.setRequestData(temp, request);</span>
+        }
+
+<span class="nc" id="L310">        String data = doc.getData();</span>
+
+<span class="nc" id="L312">        return renderIncludes(data, addInternationalToEnglishSection, request);</span>
+    }
+
+    public static String renderIncludes(String data, boolean addInternationalToEnglishSection, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">        if (request != null) request.setAttribute(&quot;renderingIncludes&quot;, true);</span>
+<span class="fc" id="L318">        String renderedData = null;</span>
+<span class="fc" id="L319">        String includeFileName = &quot;/components/_common/fulltext_preview.jsp&quot;;</span>
+<span class="fc" id="L320">        StringBuilder htmlCode = null;</span>
+
+        try
+        {
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">            if (request!=null)</span>
+            {
+
+<span class="fc" id="L327">                WJResponseWrapper respWrapper = null;</span>
+<span class="fc" id="L328">                MockHttpServletResponse response = new MockHttpServletResponse();</span>
+<span class="fc" id="L329">                respWrapper = new WJResponseWrapper(response, request);</span>
+
+<span class="fc" id="L331">                request.setAttribute(&quot;fulltext_preview&quot;, data);</span>
+
+<span class="fc" id="L333">                request.getRequestDispatcher(includeFileName).include(request, respWrapper);</span>
+<span class="pc bpc" id="L334" title="1 of 2 branches missed.">                if (Tools.isEmpty(respWrapper.redirectURL))</span>
+                {
+<span class="fc" id="L336">                    htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());</span>
+                }
+<span class="fc" id="L338">            }</span>
+            else
+            {
+                //ak nemame request musime spravit loopback connect
+<span class="nc" id="L342">                Cache c = Cache.getInstance();</span>
+<span class="nc" id="L343">                String CACKE_KEY = &quot;fulltext_preview-&quot;+ Tools.getNow()+&quot;-&quot;+ Password.generatePassword(10);</span>
+<span class="nc" id="L344">                c.setObject(CACKE_KEY, data, 5);</span>
+
+<span class="nc" id="L346">                String downloaded = Tools.downloadUrl(Tools.getBaseHrefLoopback(null)+includeFileName+&quot;?key=&quot;+CACKE_KEY);</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">                if (Tools.isNotEmpty(downloaded))</span>
+                {
+<span class="nc" id="L349">                    htmlCode = new StringBuilder(downloaded);</span>
+                }
+<span class="nc" id="L351">                c.removeObject(CACKE_KEY);</span>
+            }
+
+<span class="pc bpc" id="L354" title="2 of 4 branches missed.">            if (htmlCode != null &amp;&amp; htmlCode.length()&gt;0)</span>
+            {
+<span class="fc" id="L356">                htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);</span>
+                //prevent spam nerobime, pretoze nam to potom vo form mail dava chybu JS do emailu htmlCode = WriteTagToolsForCore.preventSpam(htmlCode, request);
+<span class="fc" id="L358">                htmlCode = WriteTagToolsForCore.replaceWriteText(htmlCode, request);</span>
+
+<span class="fc" id="L360">                renderedData = Tools.replace(htmlCode, &quot;&amp;nbsp;&quot;, &quot; &quot;).toString();</span>
+
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">                if (addInternationalToEnglishSection)</span>
+                {
+<span class="nc" id="L364">                    String lcInternational = DB.internationalToEnglish(renderedData).toLowerCase();</span>
+
+<span class="nc" id="L366">                    renderedData = renderedData + RENDER_DATA_SEPARATOR + lcInternational;</span>
+                }
+            }
+
+        }
+<span class="nc" id="L371">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L373">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L374">            Logger.debug(EditorToolsForCore.class, &quot;renderIncludes ERROR, htmlData:&quot;+htmlCode);</span>
+<span class="fc" id="L375">        }</span>
+
+        //nastala exception, radsej to do FT indexu nedame
+<span class="pc bpc" id="L378" title="2 of 4 branches missed.">        if (renderedData!=null &amp;&amp; renderedData.contains(&quot;iwcm.tags.WriteTag.writeText&quot;)) renderedData = null;</span>
+<span class="pc bpc" id="L379" title="1 of 2 branches missed.">        if (request != null) request.removeAttribute(&quot;renderingIncludes&quot;);</span>
+
+<span class="fc" id="L381">        return renderedData;</span>
+    }
+
+    /**
+     * Remove from string html tags and keep the length of string
+     */
+    public static String removeHtmlTagsKeepLength(String html_text)
+    {
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        if (Tools.isEmpty(html_text)) return(&quot;&quot;);</span>
+
+        //Logger.debug(EditorDB.class, &quot;Html size: &quot;+html_text.length()+&quot; Html text: &quot;+html_text);
+
+        int c;
+<span class="fc" id="L394">        int tt = 0;</span>
+<span class="fc" id="L395">        boolean intag = false;</span>
+<span class="fc" id="L396">        StringBuilder s = new StringBuilder();</span>
+<span class="fc" id="L397">        String temp = &quot;&quot;;</span>
+
+<span class="fc" id="L399">        boolean script = false;</span>
+<span class="fc" id="L400">        int levels = 0;</span>
+
+<span class="fc" id="L402">        html_text = removeCommandKeepLength(html_text, &quot;!INCLUDE&quot;, &quot;)!&quot;);</span>
+<span class="fc" id="L403">        html_text = removeCommandKeepLength(html_text, &quot;!REMAP_PAGE(&quot;, &quot;)!&quot;);</span>
+<span class="fc" id="L404">        html_text = removeCommandKeepLength(html_text, &quot;!PARAMETER(&quot;, &quot;)!&quot;);</span>
+<span class="fc" id="L405">        html_text = removeCommandKeepLength(html_text, &quot;!REQUEST(&quot;, &quot;)!&quot;);</span>
+<span class="fc" id="L406">        html_text = removeCommandKeepLength(html_text, &quot;!LOGGED_USER&quot;, &quot;!&quot;);</span>
+
+        try
+        {
+<span class="fc" id="L410">            int failsafe = 0;</span>
+<span class="fc" id="L411">            c = html_text.charAt(tt);</span>
+<span class="pc bpc" id="L412" title="2 of 4 branches missed.">            while (tt &lt; (html_text.length()) &amp;&amp; failsafe++ &lt; 100000)</span>
+            {
+<span class="fc bfc" id="L414" title="All 2 branches covered.">                if (c == '&lt;')</span>
+                {
+                    //start of a tag
+<span class="fc" id="L417">                    intag = true;</span>
+<span class="fc" id="L418">                    temp = &quot;&quot;;</span>
+                    //clear script string
+                }
+<span class="pc bpc" id="L421" title="1 of 6 branches missed.">                if ((c == '&lt;') &amp;&amp; (script == false) &amp;&amp; (intag == true))</span>
+                {
+<span class="fc" id="L423">                    levels++;</span>
+                }
+<span class="fc bfc" id="L425" title="All 6 branches covered.">                if ((c == '&gt;') &amp;&amp; (script == false) &amp;&amp; (intag == true))</span>
+                {
+<span class="fc" id="L427">                    levels--;</span>
+                }
+
+<span class="pc bpc" id="L430" title="1 of 4 branches missed.">                if ((!intag) &amp;&amp; (script == false))</span>
+                {
+                    // not tag and not java script
+<span class="fc" id="L433">                    s.append((char) c);</span>
+                }
+
+<span class="fc bfc" id="L436" title="All 2 branches covered.">                if(intag)	//if in tag, add space - keep length</span>
+                {
+<span class="fc" id="L438">                    s.append(&quot; &quot;);</span>
+                }
+<span class="fc bfc" id="L440" title="All 2 branches covered.">                if (temp.compareToIgnoreCase(&quot;script&quot;) == 0)</span>
+                {
+                    // equal returns 0
+<span class="fc" id="L443">                    script = true;</span>
+<span class="fc" id="L444">                    temp = &quot;&quot;;</span>
+                }
+<span class="fc bfc" id="L446" title="All 2 branches covered.">                if (temp.compareToIgnoreCase(&quot;/script&quot;) == 0)</span>
+                {
+<span class="fc" id="L448">                    script = false;</span>
+<span class="fc" id="L449">                    temp = &quot;&quot;;</span>
+                }
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">                if (temp.compareToIgnoreCase(&quot;style&quot;) == 0)</span>
+                {
+                    // equal returns 0
+<span class="nc" id="L454">                    script = true;</span>
+<span class="nc" id="L455">                    temp = &quot;&quot;;</span>
+                }
+<span class="pc bpc" id="L457" title="1 of 2 branches missed.">                if (temp.compareToIgnoreCase(&quot;/style&quot;) == 0)</span>
+                {
+<span class="nc" id="L459">                    script = false;</span>
+<span class="nc" id="L460">                    temp = &quot;&quot;;</span>
+                }
+
+<span class="pc bpc" id="L463" title="1 of 6 branches missed.">                if ((c == '&gt;') &amp;&amp; (script == false) &amp;&amp; (levels == 0))</span>
+                {
+<span class="fc" id="L465">                    intag = false;</span>
+<span class="fc" id="L466">                    levels = 0;</span>
+                }
+<span class="fc" id="L468">                tt++;</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">                if(tt == (html_text.length())) break;</span>
+<span class="fc" id="L470">                c = html_text.charAt(tt);</span>
+
+<span class="fc bfc" id="L472" title="All 2 branches covered.">                if (intag == true)</span>
+                {
+<span class="fc" id="L474">                    temp += (char) c;</span>
+                }
+            }
+        }
+<span class="nc" id="L478">        catch (Exception e)</span>
+        {
+<span class="nc" id="L480">            Logger.error(EditorToolsForCore.class, e.getMessage());</span>
+<span class="nc" id="L481">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L482">        }</span>
+
+<span class="fc" id="L484">        return s.toString();</span>
+    }
+
+    /**
+     * Odstrani z HTML kodu riadiace bloky typu !INCLUDE(...)!, !PARAM(...)!, pricom zachova dlzku retazca
+     */
+    public static String removeCommandKeepLength(String html_text, String commandStart, String commandEnd)
+    {
+<span class="fc" id="L492">        commandStart = commandStart.toLowerCase();</span>
+<span class="fc" id="L493">        StringBuilder html = new StringBuilder(html_text);</span>
+
+<span class="fc" id="L495">        StringBuilder htmlLowerCase = new StringBuilder(html_text.toLowerCase());</span>
+
+        try
+        {
+            //Logger.println(this,&quot;html:&quot;+html);
+<span class="fc" id="L500">            int failsafe = 0;</span>
+            int startIndex;
+            int endIndex;
+<span class="pc bpc" id="L503" title="1 of 4 branches missed.">            while (htmlLowerCase.indexOf(commandStart) != -1 &amp;&amp; failsafe &lt; 50)</span>
+            {
+<span class="fc" id="L505">                failsafe++;</span>
+<span class="fc" id="L506">                startIndex = htmlLowerCase.indexOf(commandStart);</span>
+<span class="pc bpc" id="L507" title="1 of 2 branches missed.">                if (startIndex != -1)</span>
+                {
+<span class="fc" id="L509">                    endIndex = htmlLowerCase.indexOf(commandEnd, startIndex + commandStart.length());</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">                    if (endIndex &gt; startIndex)</span>
+                    {
+<span class="fc bfc" id="L512" title="All 2 branches covered.">                        for(int i = startIndex; i &lt; endIndex + commandEnd.length(); i++)</span>
+                        {
+<span class="fc" id="L514">                            html.setCharAt(i, ' ');</span>
+<span class="fc" id="L515">                            htmlLowerCase.setCharAt(i, ' ');</span>
+                        }
+                    }
+                }
+            }
+        }
+<span class="nc" id="L521">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L523">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L524">        }</span>
+
+<span class="fc" id="L526">        return html.toString();</span>
+    }
+
+    /**
+     * Pripravi data_asc pre full text hladanie (ak vkladate do DB priamo - mimo saveEditorForm)
+     * @param data
+     * @param ef
+     * @return
+     */
+    public static String getDataAsc(String data, EditorForm ef)
+    {
+<span class="nc" id="L537">        return getDataAsc(data, ef, false);</span>
+    }
+
+    public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
+    {
+<span class="nc" id="L542">        return getDataAsc(data, ef, false, null);</span>
+    }
+
+    /**
+     * naplni EditForm zo suboru zadaneho pomocou dir,file
+     *
+     * @return
+     */
+    public static EditForm fillEditFormFromFile(String dir, String file, boolean alsoData, Identity user)
+    {
+<span class="fc" id="L552">        String realDir = &quot;&quot;;</span>
+<span class="fc" id="L553">        StringBuilder contextFile = new StringBuilder();</span>
+<span class="fc" id="L554">        EditForm editForm = new EditForm();</span>
+        try
+        {
+<span class="pc bpc" id="L557" title="3 of 6 branches missed.">            if (user != null &amp;&amp; (&quot;jeeff&quot;.equals(user.getLoginName()) || &quot;lbalat&quot;.equals(user.getLoginName()))</span>
+<span class="nc bnc" id="L558" title="All 2 branches missed.">                        &amp;&amp; dir.indexOf(':') != -1)</span>
+            {
+<span class="nc" id="L560">                realDir = dir;</span>
+            }
+            else
+            {
+<span class="fc" id="L564">                realDir = Tools.getRealPath(dir);</span>
+            }
+<span class="fc bfc" id="L566" title="All 2 branches covered.">            if (file != null)</span>
+            {
+<span class="fc" id="L568">                IwcmFile f = new IwcmFile(realDir + File.separatorChar + file);</span>
+<span class="pc bpc" id="L569" title="2 of 4 branches missed.">                if (f.exists() &amp;&amp; alsoData)</span>
+                {
+<span class="nc" id="L571">                    InputStreamReader isr = new InputStreamReader(new IwcmInputStream(realDir + File.separatorChar + file),</span>
+                                Constants.FILE_ENCODING);
+<span class="nc" id="L573">                    char buff[] = new char[8000];</span>
+                    int len;
+                    String line;
+<span class="nc bnc" id="L576" title="All 2 branches missed.">                    while ((len = isr.read(buff)) != -1)</span>
+                    {
+<span class="nc" id="L578">                        line = new String(buff, 0, len);</span>
+<span class="nc" id="L579">                        contextFile.append(line);</span>
+<span class="nc bnc" id="L580" title="All 2 branches missed.">                        if (EditTools.parseLine(line) == false)</span>
+                        {
+                            // je to binarne, ani nemusime pokracovat...
+<span class="nc" id="L583">                            break;</span>
+                        }
+                    }
+<span class="nc" id="L586">                    isr.close();</span>
+<span class="nc" id="L587">                    editForm.setData(contextFile.toString());</span>
+                }
+<span class="fc" id="L589">                editForm.setFile(file);</span>
+<span class="fc" id="L590">                editForm.setOrigFile(file);</span>
+<span class="fc" id="L591">            }</span>
+            else
+            {
+<span class="fc" id="L594">                editForm.setData(&quot;&quot;);</span>
+<span class="fc" id="L595">                editForm.setFile(&quot;&quot;);</span>
+<span class="fc" id="L596">                editForm.setOrigFile(&quot;&quot;);</span>
+            }
+<span class="fc" id="L598">            editForm.setDir(dir);</span>
+        }
+<span class="nc" id="L600">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L602">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L603">        }</span>
+<span class="fc" id="L604">        return editForm;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

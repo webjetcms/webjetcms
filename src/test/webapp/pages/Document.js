@@ -21,7 +21,7 @@ module.exports = {
         windowResized = true;
       }
 
-      var path = "../../../docs" + screenshotFilePath;
+      var path = "../../../docs/" + I.getConfLng() + screenshotFilePath;
       //If platform is windows, edit path (or screens will not be saved)
       if(process.platform == "win32") {
         path = path.replace(/\//gi, '\\');
@@ -100,6 +100,7 @@ module.exports = {
       var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText("Potvrdiť");
       I.waitForElement(btn);
       I.click(btn);
+      I.say("Domain switched to: "+domain+" DO NOT FORGET TO LOGOUT AFTER THIS SCENARIO otherwise you will be logged in with wrong domain");
   },
 
   /**
@@ -168,5 +169,16 @@ module.exports = {
     I.switchTo();
     I.clickCss("a.cke_dialog_ui_button_ok");
     I.wait(6);
-  }
+  },
+
+  /**
+   * Scroll to element
+   * @param {*} selector
+   */
+  scrollTo(selector) {
+    I.executeScript(({selector}) => {
+      window.scrollbarMain.scrollIntoView($(selector)[0])
+    }, {selector});
+    I.wait(1);
+  },
 }

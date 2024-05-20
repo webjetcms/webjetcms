@@ -2,19 +2,19 @@ package sk.iway.iwcm.components.forms;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
+
 import java.util.Date;
 import java.util.List;
 
 @NoRepositoryBean
-public interface FormsRepositoryInterface<E> extends JpaRepository<E, Long>, JpaSpecificationExecutor<E> {
+public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long> {
 
     List<E> findAllByCreateDateIsNullAndDomainId(Integer domainId);
 

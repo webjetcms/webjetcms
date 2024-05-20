@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProxyDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.proxy</a> &gt; <span class="el_source">ProxyDB.java</span></div><h1>ProxyDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.proxy;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.proxy.jpa.ProxyBean;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+
+/**
+ *  ProxyDB.java - praca s databazou zaznamov proxy, singleton
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 4.11.2008 14:58:13
+ *@modified     $Date: 2009/06/02 06:23:51 $
+ */
+public class ProxyDB
+{
+	private static ProxyDB instance;
+<span class="fc" id="L38">	private static final Object classLock = ProxyDB.class;</span>
+
+	private ProxyBean[] data;
+	private List&lt;ProxyBean&gt; dataList;
+
+	public static ProxyDB getInstance()
+	{
+<span class="fc" id="L45">		return getInstance(false);</span>
+	}
+
+	/**
+	 * Ziskanie instancie
+	 * @param forceRefresh - ak je nastavene na true, znova sa aktualizuju data z databazy
+	 * @return
+	 */
+	public static ProxyDB getInstance(boolean forceRefresh)
+	{
+<span class="fc" id="L55">		synchronized (classLock)</span>
+		{
+<span class="fc bfc" id="L57" title="All 4 branches covered.">			if (instance == null || forceRefresh)</span>
+			{
+<span class="fc" id="L59">				instance = new ProxyDB();</span>
+			}
+<span class="fc" id="L61">			return instance;</span>
+		}
+	}
+
+	/**
+	 * Vrati proxy bean pre zadane URL, alebo null
+	 * @param url
+	 * @return
+	 */
+	public ProxyBean getProxy(String url)
+	{
+<span class="fc bfc" id="L72" title="All 2 branches covered.">		for (ProxyBean proxy : data) {</span>
+			String[] urls;
+<span class="fc" id="L74">			int i = proxy.getLocalUrl().trim().indexOf(&quot;\n&quot;);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">			if (i &gt; 0) {</span>
+<span class="nc" id="L76">				urls = Tools.getTokens(proxy.getLocalUrl(), &quot;\n&quot;, true);</span>
+			} else {
+<span class="fc" id="L78">				urls = new String[1];</span>
+<span class="fc" id="L79">				urls[0] = proxy.getLocalUrl();</span>
+			}
+<span class="fc bfc" id="L81" title="All 2 branches covered.">			for (String proxyUrl : urls) {</span>
+<span class="pc bpc" id="L82" title="3 of 4 branches missed.">				if (proxyUrl.startsWith(&quot;^&quot;) &amp;&amp; proxyUrl.endsWith(&quot;$&quot;)) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">					if (url.equals(proxyUrl.substring(1, proxyUrl.length()-1))) return proxy;</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">				} else if (proxyUrl.endsWith(&quot;$&quot;)) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">					if (url.endsWith(proxyUrl.substring(0, proxyUrl.length()-1))) return proxy;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">				} else if (url.startsWith(proxyUrl)) {</span>
+<span class="fc" id="L87">					return proxy;</span>
+				}
+			}
+		}
+<span class="fc" id="L91">		return null;</span>
+	}
+
+	/**
+	 * Return matched localUrl by url from web prowser
+	 * @param proxy
+	 * @param url
+	 * @return
+	 */
+	public static String getLocalUrl(ProxyBean proxy, String url) {
+		String[] urls;
+<span class="fc" id="L102">		int i = proxy.getLocalUrl().trim().indexOf(&quot;\n&quot;);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (i &gt; 0) {</span>
+<span class="nc" id="L104">			urls = Tools.getTokens(proxy.getLocalUrl(), &quot;\n&quot;, true);</span>
+		} else {
+<span class="fc" id="L106">			urls = new String[1];</span>
+<span class="fc" id="L107">			urls[0] = proxy.getLocalUrl();</span>
+		}
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">		for (String proxyUrl : urls) {</span>
+<span class="pc bpc" id="L110" title="3 of 4 branches missed.">			if (proxyUrl.startsWith(&quot;^&quot;) &amp;&amp; proxyUrl.endsWith(&quot;$&quot;)) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (url.equals(proxyUrl.substring(1, proxyUrl.length()-1))) return proxyUrl.substring(1, proxyUrl.length()-1);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">			} else if (proxyUrl.endsWith(&quot;$&quot;)) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (url.endsWith(proxyUrl.substring(0, proxyUrl.length()-1))) return proxyUrl.substring(0, proxyUrl.length()-1);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">			} else if (url.startsWith(proxyUrl)) {</span>
+<span class="fc" id="L115">				return proxyUrl;</span>
+			}
+		}
+		//failsafe
+<span class="nc" id="L119">		return proxy.getLocalUrl();</span>
+	}
+
+	/**
+	 * Vrati proxy so zadanym proxyId
+	 * @param proxyId
+	 * @return
+	 */
+	public ProxyBean getProxy(int proxyId)
+	{
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		for (ProxyBean proxy : data)</span>
+		{
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (proxy.getProxyId()==proxyId)</span>
+			{
+<span class="nc" id="L133">				return proxy;</span>
+			}
+		}
+<span class="nc" id="L136">		return null;</span>
+	}
+
+	/**
+	 * Private konstruktor
+	 */
+	private ProxyDB()
+<span class="fc" id="L143">	{</span>
+<span class="fc" id="L144">		Logger.debug(ProxyDB.class, &quot;ProxyDB.constructor&quot;);</span>
+<span class="fc" id="L145">		reloadData();</span>
+
+<span class="fc" id="L147">		ClusterDB.addRefresh(ProxyDB.class);</span>
+<span class="fc" id="L148">	}</span>
+
+	private static void fillProxyBean(ProxyBean proxy, ResultSet rs) throws SQLException
+	{
+<span class="fc" id="L152">		proxy.setProxyId(rs.getInt(&quot;proxy_id&quot;));</span>
+<span class="fc" id="L153">		proxy.setName(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="fc" id="L154">		proxy.setLocalUrl(DB.getDbString(rs, &quot;local_url&quot;));</span>
+<span class="fc" id="L155">		proxy.setRemoteServer(DB.getDbString(rs, &quot;remote_server&quot;));</span>
+<span class="fc" id="L156">		proxy.setRemotePort(rs.getInt(&quot;remote_port&quot;));</span>
+<span class="fc" id="L157">		proxy.setRemoteUrl(DB.getDbString(rs, &quot;remote_url&quot;));</span>
+<span class="fc" id="L158">		proxy.setCropStart(DB.getDbString(rs, &quot;crop_start&quot;));</span>
+<span class="fc" id="L159">		proxy.setCropEnd(DB.getDbString(rs, &quot;crop_end&quot;));</span>
+<span class="fc" id="L160">		proxy.setEncoding(DB.getDbString(rs, &quot;encoding&quot;));</span>
+<span class="fc" id="L161">		proxy.setProxyMethod(DB.getDbString(rs, &quot;proxy_method&quot;));</span>
+<span class="fc" id="L162">		proxy.setIncludeExt(DB.getDbString(rs, &quot;include_ext&quot;));</span>
+
+<span class="fc" id="L164">		proxy.setAuthMethod(DB.getDbString(rs, &quot;auth_method&quot;));</span>
+<span class="fc" id="L165">		proxy.setAuthUsername(DB.getDbString(rs, &quot;auth_username&quot;));</span>
+<span class="fc" id="L166">		proxy.setAuthPassword(DB.getDbString(rs, &quot;auth_password&quot;));</span>
+<span class="fc" id="L167">		proxy.setAuthHost(DB.getDbString(rs, &quot;auth_host&quot;));</span>
+<span class="fc" id="L168">		proxy.setAuthDomain(DB.getDbString(rs, &quot;auth_domain&quot;));</span>
+
+<span class="fc" id="L170">		proxy.setAllowedMethods(DB.getDbString(rs, &quot;allowed_methods&quot;));</span>
+
+<span class="fc" id="L172">		proxy.setKeepCropStart(rs.getBoolean(&quot;keep_crop_start&quot;));</span>
+<span class="fc" id="L173">		proxy.setKeepCropEnd(rs.getBoolean(&quot;keep_crop_end&quot;));</span>
+<span class="fc" id="L174">	}</span>
+
+	/**
+	 * Nacita data z databazy proxy zaznamov
+	 */
+	private synchronized void reloadData()
+	{
+<span class="fc" id="L181">		boolean isDatabaseOK = false;</span>
+
+<span class="fc" id="L183">		List&lt;ProxyBean&gt; dataListNew = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L185">		Connection db_conn = null;</span>
+<span class="fc" id="L186">		PreparedStatement ps = null;</span>
+<span class="fc" id="L187">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L190">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L191">			ps = db_conn.prepareStatement(&quot;SELECT * FROM proxy&quot;);</span>
+<span class="fc" id="L192">			rs = ps.executeQuery();</span>
+
+<span class="fc" id="L194">			isDatabaseOK = true;</span>
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L198">				ProxyBean proxy = new ProxyBean();</span>
+<span class="fc" id="L199">				fillProxyBean(proxy, rs);</span>
+<span class="fc" id="L200">				dataListNew.add(proxy);</span>
+<span class="fc" id="L201">			}</span>
+<span class="fc" id="L202">			rs.close();</span>
+<span class="fc" id="L203">			ps.close();</span>
+<span class="fc" id="L204">			db_conn.close();</span>
+<span class="fc" id="L205">			rs = null;</span>
+<span class="fc" id="L206">			ps = null;</span>
+<span class="fc" id="L207">			db_conn = null;</span>
+		}
+<span class="nc" id="L209">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L211">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L218">					rs.close();</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L220">					ps.close();</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L222">					db_conn.close();</span>
+			}
+<span class="nc" id="L224">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L226">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L227">			}</span>
+		}
+
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">		if (isDatabaseOK==false) throw new NullPointerException();</span>
+
+		//skonvertuj ArrayList na pole
+<span class="fc" id="L233">		ProxyBean[] dataNew = dataListNew.toArray(new ProxyBean[0]);</span>
+<span class="fc" id="L234">		Logger.debug(ProxyDB.class, &quot;data loaded, size: &quot; + dataNew.length);</span>
+
+		//nastav
+<span class="fc" id="L237">		this.data = dataNew;</span>
+<span class="fc" id="L238">		this.dataList = dataListNew;</span>
+<span class="fc" id="L239">	}</span>
+
+	/**
+	 * Ulozi proxy zaznam do databazy a aktualizuje zoznam proxy
+	 * @param proxy
+	 * @return
+	 */
+	public boolean saveProxy(ProxyBean proxy)
+	{
+<span class="nc" id="L248">		boolean saveOK = false;</span>
+
+<span class="nc" id="L250">		Connection db_conn = null;</span>
+<span class="nc" id="L251">		PreparedStatement ps = null;</span>
+<span class="nc" id="L252">		ProxyBean original = null;</span>
+		try
+		{
+<span class="nc" id="L255">			String sql = &quot;INSERT INTO proxy (name, local_url, remote_server, remote_url, remote_port, crop_start, crop_end, encoding, proxy_method, include_ext, auth_method, auth_username, auth_password, auth_host, auth_domain, allowed_methods, keep_crop_start, keep_crop_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (proxy.getProxyId()&gt;0)</span>
+			{
+<span class="nc" id="L258">				sql = &quot;UPDATE proxy SET name=?, local_url=?, remote_server=?, remote_url=?, remote_port=?, crop_start=?, crop_end=?, encoding=?, proxy_method=?, include_ext=?, auth_method=?, auth_username=?, auth_password=?, auth_host=?, auth_domain=?, allowed_methods=?, keep_crop_start=?, keep_crop_end=? WHERE proxy_id=?&quot;;</span>
+<span class="nc" id="L259">				original = getProxy(proxy.getProxyId());</span>
+			}
+<span class="nc" id="L261">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L262">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L264">			int psCounter = 1;</span>
+<span class="nc" id="L265">			ps.setString(psCounter++, proxy.getName());</span>
+<span class="nc" id="L266">			ps.setString(psCounter++, proxy.getLocalUrl());</span>
+<span class="nc" id="L267">			ps.setString(psCounter++, proxy.getRemoteServer());</span>
+<span class="nc" id="L268">			ps.setString(psCounter++, proxy.getRemoteUrl());</span>
+<span class="nc" id="L269">			ps.setInt(psCounter++, proxy.getRemotePort());</span>
+<span class="nc" id="L270">			ps.setString(psCounter++, proxy.getCropStart());</span>
+<span class="nc" id="L271">			ps.setString(psCounter++, proxy.getCropEnd());</span>
+<span class="nc" id="L272">			ps.setString(psCounter++, proxy.getEncoding());</span>
+<span class="nc" id="L273">			ps.setString(psCounter++, proxy.getProxyMethod());</span>
+<span class="nc" id="L274">			ps.setString(psCounter++, proxy.getIncludeExt());</span>
+
+<span class="nc" id="L276">			ps.setString(psCounter++, proxy.getAuthMethod());</span>
+<span class="nc" id="L277">			ps.setString(psCounter++, proxy.getAuthUsername());</span>
+<span class="nc" id="L278">			ps.setString(psCounter++, proxy.getAuthPassword());</span>
+<span class="nc" id="L279">			ps.setString(psCounter++, proxy.getAuthHost());</span>
+<span class="nc" id="L280">			ps.setString(psCounter++, proxy.getAuthDomain());</span>
+
+<span class="nc" id="L282">			ps.setString(psCounter++, proxy.getAllowedMethods());</span>
+
+<span class="nc" id="L284">			ps.setBoolean(psCounter++, proxy.isKeepCropStart());</span>
+<span class="nc" id="L285">			ps.setBoolean(psCounter++, proxy.isKeepCropEnd());</span>
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			if (proxy.getProxyId()&gt;0) ps.setInt(psCounter++, proxy.getProxyId());</span>
+
+<span class="nc" id="L289">			ps.execute();</span>
+<span class="nc" id="L290">			ps.close();</span>
+<span class="nc" id="L291">			db_conn.close();</span>
+<span class="nc" id="L292">			ps = null;</span>
+<span class="nc" id="L293">			db_conn = null;</span>
+
+<span class="nc" id="L295">			saveOK = true;</span>
+
+<span class="nc bnc" id="L297" title="All 2 branches missed.">			if (original == null)</span>
+			{
+<span class="nc" id="L299">				Adminlog.add(Adminlog.TYPE_PROXY_CREATE, &quot;Vytvorene proxy &quot;+proxy.getName(), -1, -1);</span>
+			}
+			else
+			{
+<span class="nc" id="L303">				BeanDiffPrinter diff = new BeanDiffPrinter(new BeanDiff().setOriginal(original).setNew(proxy));</span>
+<span class="nc" id="L304">				Adminlog.add(Adminlog.TYPE_PROXY_UPDATE, &quot;Zmenene proxy &quot;+proxy.getName()+diff, proxy.getProxyId(), -1);</span>
+			}
+
+<span class="nc" id="L307">			reloadData();</span>
+		}
+<span class="nc" id="L309">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L311">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L317" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L318">					ps.close();</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L320">					db_conn.close();</span>
+			}
+<span class="nc" id="L322">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L324">			}</span>
+		}
+
+<span class="nc" id="L327">		return saveOK;</span>
+	}
+
+	/**
+	 * Vymaze zaznam z databazy
+	 * @param proxyId
+	 * @return
+	 */
+	public boolean deleteProxy(int proxyId)
+	{
+<span class="nc" id="L337">		boolean delOK = false;</span>
+<span class="nc" id="L338">		ProxyBean original = getProxy(proxyId);</span>
+
+<span class="nc" id="L340">		Connection db_conn = null;</span>
+<span class="nc" id="L341">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L344">			Adminlog.add(Adminlog.TYPE_PROXY_DELETE, &quot;Zmazane proxy &quot;+original.getName(), proxyId, -1);</span>
+<span class="nc" id="L345">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L346">			ps = db_conn.prepareStatement(&quot;DELETE FROM proxy WHERE proxy_id=?&quot;);</span>
+<span class="nc" id="L347">			ps.setInt(1, proxyId);</span>
+<span class="nc" id="L348">			ps.execute();</span>
+<span class="nc" id="L349">			ps.close();</span>
+<span class="nc" id="L350">			db_conn.close();</span>
+<span class="nc" id="L351">			ps = null;</span>
+<span class="nc" id="L352">			db_conn = null;</span>
+
+<span class="nc" id="L354">			delOK = true;</span>
+
+<span class="nc" id="L356">			reloadData();</span>
+		}
+<span class="nc" id="L358">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L360">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L366" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L367">					ps.close();</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L369">					db_conn.close();</span>
+			}
+<span class="nc" id="L371">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L373">			}</span>
+		}
+
+<span class="nc" id="L376">		return delOK;</span>
+	}
+
+	public ProxyBean[] getData()
+	{
+<span class="nc" id="L381">		return data;</span>
+	}
+
+	public List&lt;ProxyBean&gt; getDataList()
+	{
+<span class="nc" id="L386">		return dataList;</span>
+	}
+
+	/**
+	 * Vrati rozne nazvy vzdialenych serverov z tabulky proxy kvoli formularu na filtrovanie
+	 *
+	 * @return
+	 */
+	public static List&lt;String&gt; getDistinctRemoteServers()
+	{
+<span class="nc" id="L396">		List&lt;String&gt; retList = new ArrayList&lt;&gt;();</span>
+
+		try
+		{
+<span class="nc" id="L400">			retList = new SimpleQuery().forListString(&quot;SELECT DISTINCT remote_server FROM proxy&quot;);</span>
+		}
+<span class="nc" id="L402">		catch (Exception e)</span>
+		{
+<span class="nc" id="L404">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L405">		}</span>
+
+<span class="nc" id="L407">		return retList;</span>
+	}
+
+	/**
+	 * Vrati rozne nazvy vzdialenych serverov z dodaneho listu proxy kvoli formularu na filtrovanie
+	 * @param beans List proxybeanov
+	 * @return
+	 */
+	public static List&lt;String&gt; getDistinctRemoteServers(List&lt;ProxyBean&gt; beans)
+	{
+<span class="nc" id="L417">		List&lt;String&gt; retList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">		for(ProxyBean p : beans){</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if(!retList.contains(p.getRemoteServer().trim().toLowerCase()))</span>
+<span class="nc" id="L420">				retList.add(p.getRemoteServer().trim().toLowerCase());</span>
+<span class="nc" id="L421">		}</span>
+<span class="nc" id="L422">   	return retList;</span>
+	}
+
+	/**
+	 * Vrati tie proxy, ktore zodpovedaju filtracnym podmienkam
+	 *
+	 * @param name				nazov proxy, pouziva sa LIKE
+	 * @param remoteServer	vzdialeny server, porovnava sa presny nazov, kedze sa vybera cez selectBox
+	 *
+	 * @return
+	 */
+	public static List&lt;ProxyBean&gt; getProxyBeans(String name, String remoteServer)
+   {
+<span class="nc" id="L435">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L437">		StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L438">			sql.append(&quot;SELECT * FROM proxy WHERE proxy_id &gt; 0 &quot;);</span>
+
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		if (Tools.isNotEmpty(name))</span>
+		{
+<span class="nc" id="L442">			sql.append(&quot; AND name LIKE ?&quot;);</span>
+<span class="nc" id="L443">			params.add(&quot;%&quot; + name + &quot;%&quot;);</span>
+
+		}
+
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		if (Tools.isNotEmpty(remoteServer))</span>
+		{
+<span class="nc" id="L449">			sql.append(&quot; AND remote_server = ?&quot;);</span>
+<span class="nc" id="L450">			params.add(remoteServer);</span>
+		}
+
+<span class="nc" id="L453">		List&lt;ProxyBean&gt; proxys = new ComplexQuery().setSql(sql.toString()).setParams(params.toArray()).list(new Mapper&lt;ProxyBean&gt;()</span>
+<span class="nc" id="L454">		{</span>
+			@Override
+			public ProxyBean map(ResultSet rs) throws SQLException
+			{
+<span class="nc" id="L458">				ProxyBean proxy = new ProxyBean();</span>
+
+<span class="nc" id="L460">				fillProxyBean(proxy, rs);</span>
+
+<span class="nc" id="L462">				return proxy;</span>
+			}
+		});
+
+<span class="nc" id="L466">		return proxys;</span>
+	}
+
+	public static String getCleanBodyIncludeStartEnd(String data, String start, String end)
+	{
+		//odstran vsetko pred &lt;body&gt; a po &lt;/body&gt;
+<span class="nc" id="L472">		String data_lcase = data.toLowerCase();</span>
+<span class="nc" id="L473">		start = start.toLowerCase();</span>
+<span class="nc" id="L474">		end = end.toLowerCase();</span>
+<span class="nc" id="L475">		int index = data_lcase.indexOf(start);</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		if (index != -1)</span>
+		{
+<span class="nc bnc" id="L478" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L480">				int index2 = data_lcase.lastIndexOf(&quot;&lt;&quot;, index+1);</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">				if (index2 != -1)</span>
+				{
+<span class="nc" id="L483">					data = data.substring(index2);</span>
+				}
+			}
+
+<span class="nc" id="L487">			index = data.toLowerCase().indexOf(end);</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L490">				data = data.substring(0, index + end.length());</span>
+			}
+		}
+<span class="nc" id="L493">		return (data);</span>
+	}
+
+	public static String getCleanBodyIncludeStartNoEnd(String data, String start, String end)
+	{
+		//odstran vsetko pred &lt;body&gt; a po &lt;/body&gt;
+<span class="nc" id="L499">		String data_lcase = data.toLowerCase();</span>
+<span class="nc" id="L500">		start = start.toLowerCase();</span>
+<span class="nc" id="L501">		end = end.toLowerCase();</span>
+<span class="nc" id="L502">		int index = data_lcase.indexOf(start);</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">		if (index != -1)</span>
+		{
+<span class="nc bnc" id="L505" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L507">				int index2 = data_lcase.lastIndexOf('&lt;', index);</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">				if (index2 !=-1)</span>
+				{
+<span class="nc" id="L510">					data = data.substring(index2);</span>
+				}
+			}
+
+<span class="nc" id="L514">			index = data.toLowerCase().indexOf(end);</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L517">				data = data.substring(0, index);</span>
+			}
+		}
+<span class="nc" id="L520">		return (data);</span>
+	}
+
+	public static String removeLineContains(String html, String searchString, boolean ignoreCase)
+	{
+<span class="nc bnc" id="L525" title="All 4 branches missed.">		if (Tools.isEmpty(html) || Tools.isEmpty(searchString)) return(html);</span>
+
+<span class="nc bnc" id="L527" title="All 2 branches missed.">		if (ignoreCase) searchString = searchString.toLowerCase();</span>
+
+<span class="nc" id="L529">		StringBuilder out = new StringBuilder(html.length());</span>
+<span class="nc" id="L530">		StringTokenizer st = new StringTokenizer(html, &quot;\n&quot;);</span>
+		String line;
+		String lineLC;
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L535">			line = st.nextToken();</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">			if (ignoreCase) lineLC = line.toLowerCase();</span>
+<span class="nc" id="L537">			else lineLC = line;</span>
+
+<span class="nc bnc" id="L539" title="All 2 branches missed.">			if (lineLC.indexOf(searchString)!=-1) continue;</span>
+
+<span class="nc" id="L541">			out.append(line + &quot;\n&quot;);</span>
+		}
+
+<span class="nc" id="L544">		return(out.toString());</span>
+	}
+
+	/**
+	 * Odstrani z HTML kodu vsetky vyskyty medzi start a end (napr. nejaky TD element), napr.:
+	 * html = removeElements(html, &quot;&lt;TD Class=\&quot;ms-vb-icon\&quot;&gt;&quot;, &quot;&lt;/TD&gt;&quot;);
+	 * @param htmlCode
+	 * @param startHtml
+	 * @param endHtml
+	 * @return
+	 */
+	public static String removeElements(String htmlCode, String startHtml, String endHtml)
+	{
+<span class="nc" id="L557">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L558">		int failsafe = 0;</span>
+<span class="nc" id="L559">		int lastPos = 0;</span>
+<span class="nc" id="L560">		int start = htmlCode.indexOf(startHtml);</span>
+<span class="nc bnc" id="L561" title="All 6 branches missed.">		while (start != -1 &amp;&amp; failsafe++ &lt; 500 &amp;&amp; lastPos != -1)</span>
+		{
+<span class="nc" id="L563">			sb.append(htmlCode.substring(lastPos, start));</span>
+
+			//posun sa na dalsie miesto
+<span class="nc" id="L566">			lastPos = htmlCode.indexOf(endHtml, start);</span>
+<span class="nc bnc" id="L567" title="All 2 branches missed.">			if (lastPos != -1) lastPos += endHtml.length();</span>
+<span class="nc" id="L568">			start = htmlCode.indexOf(startHtml, start+1);</span>
+
+<span class="nc bnc" id="L570" title="All 2 branches missed.">			if (start == -1)</span>
+			{
+				//koniec HTML kodu
+<span class="nc" id="L573">				sb.append(htmlCode.substring(lastPos));</span>
+			}
+		}
+
+<span class="nc" id="L577">		return sb.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetAllItemsDocOptions.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">GetAllItemsDocOptions.java</span></div><h1>GetAllItemsDocOptions.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import lombok.Data;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Options for method getAllItems from class WebpagesRestController
+ */
+@Data
+public class GetAllItemsDocOptions {
+
+    //groupId of groups we want
+    private int groupId;
+
+    /**
+     * If userGroupIdString != null ... userGroupId param will serve as PasswordProtected param to get DocPages
+     *
+     * Else if tempId != null ... tempId param will be used to get DocPages that use this template
+     *
+     * Else, this param will specify, what type of pages we want
+     *
+     *     - userGroupId = Constants.getInt(&quot;systemPagesRecentPages&quot;), mean we want DocDetails RecentPages from table documents
+     *     - groupId = Constants.getInt(&quot;systemPagesDocsToApprove&quot;), mean we want DocDetails PagesToApprove from table documents_history
+     *     - else we want just DocPages specified by groupId from table documents
+     */
+    private int userGroupId;
+    private int tempId;
+    private Pageable pageable;
+
+    private DocDetailsRepository docDetailsRepository;
+    private DocAtrDefRepository docAtrDefRepository;
+
+<span class="fc" id="L43">    private boolean recursiveSubfolders = false;</span>
+
+    private final HttpServletRequest request;
+    private final Identity currentUser;
+    private final boolean userGroupIdRequested ;
+    private final int userId;
+    private final boolean tempIdRequested;
+
+    private Specification&lt;DocDetails&gt; columnsSpecification;
+
+<span class="fc" id="L53">    public GetAllItemsDocOptions(HttpServletRequest request) {</span>
+
+<span class="fc" id="L55">        this.request = request;</span>
+<span class="fc" id="L56">        this.currentUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L57">        this.userId = this.currentUser.getUserId();</span>
+<span class="fc" id="L58">        this.columnsSpecification = null;</span>
+
+<span class="fc" id="L60">        this.userGroupId = -1;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if(request.getParameter(&quot;userGroupId&quot;) != null) this.userGroupIdRequested = true;</span>
+<span class="fc" id="L62">        else this.userGroupIdRequested = false;</span>
+
+<span class="fc" id="L64">        this.tempId = -1;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if(request.getParameter(&quot;tempId&quot;) != null) this.tempIdRequested = true;</span>
+<span class="fc" id="L66">        else this.tempIdRequested = false;</span>
+<span class="fc" id="L67">    };</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

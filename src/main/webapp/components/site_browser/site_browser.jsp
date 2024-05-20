@@ -22,13 +22,13 @@ public String sanitize(String path)
 	if ("/".equals(path)) return "";
 	//remove slashes at begining of word
 	char slash=path.toCharArray()[0];
-	
+
 	while (slash=='/')
 	{
 		path=path.substring(1);
 		slash=path.toCharArray()[0];
 	}
-	
+
 	String result="";
 	for (String part:path.split("/"))
 	{
@@ -38,7 +38,7 @@ public String sanitize(String path)
 	{
 		result=result.substring(0,result.length()-1);
 	}
-	
+
 	return result;
 }
 %>
@@ -124,12 +124,12 @@ request.setAttribute("fileList", fileList);
 
 <script type="text/javascript">
 		function noPopup()
-		{		
+		{
 			return(false);
 		}
-	
+
 		function docLinkClick(linka, file)
-		{		
+		{
 			return false;
 		}
 
@@ -143,7 +143,7 @@ request.setAttribute("fileList", fileList);
 	<% if (showActualDir) { %>
 		<p id="breadcrumb"><iwcm:text key="fbrowse.dir"/>: <%=("/"+sanitize(((String)request.getAttribute("correctDir")).replace("files","")))%></p>
 	<% } %>
-	
+
 	<table class="tabulkaStandard">
 		<thead>
 			<tr>

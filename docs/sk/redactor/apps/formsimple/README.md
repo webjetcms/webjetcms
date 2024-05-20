@@ -2,7 +2,7 @@
 
 Aplikácia formulár ľahko slúži na jednoduchú tvorbu formulárov. Výhoda je v jednoduchosti vytvorenia formuláru jednoduchým vkladaním pripravených vstupných polí s možnosťou zadania iného názvu poľa, označenia povinnosti vyplnenia a nastavenia textu vysvetlivky (```tooltip```). S výstupným HTML formátom sa autor formuláru nemusí zaoberať, je pripravený podľa dizajnu webu pre jednotlivé typy vstupných polí.
 
-## Štýl a nastavenia
+## Základné
 
 Formuláru je potrebné nastaviť nasledovné hodnoty.
 
@@ -12,10 +12,9 @@ Formuláru je potrebné nastaviť nasledovné hodnoty.
 - Text na začiatku e-mailu - text, ktorý sa pridá do emailu pred polia formuláru.
 - Text na konci e-mailu - text, ktorý sa pridá do emailu za polia formuláru.
 - Odoslať email ako text bez formátovania - ak zaškrtnete je email odoslaný ako neformátovaná text verzia (vo formáte meno poľa: hodnota), inak je odoslaný ako formátovaný HTML text v podobe ako je zobrazený na web stránke.
-- Šifrovací kľúč - ak chcete hodnoty formuláru zašifrovať, môžete zadať šifrovací kľúč.
 - Pridať technické informácie - ak zaškrtnete pridajú sa do emailu aj technické informácie (názov stránky, adresa stránky, dátum a čas odoslania, informácia o prehliadači).
 
-![](editor-dialog.png)
+![](editor-dialog-basic.png)
 
 Štandardne sa polia formuláru zobrazujú pod sebou:
 
@@ -24,6 +23,26 @@ Formuláru je potrebné nastaviť nasledovné hodnoty.
 Po zvolení možnosti Riadkové zobrazenie sa polia môžu zobrazovať v riadku vedľa seba. Pre vytvorenie nového riadku vložte do formuláru pole ```Nový riadok```:
 
 ![](formsimple-rowview.png)
+
+## Pokročilé
+
+Záložka pokročilé obsahuje pokročilé nastavenia nastavenia, ktoré nie sú povinné.
+
+- Šifrovací kľúč - ak chcete hodnoty formuláru zašifrovať, môžete zadať šifrovací kľúč.
+- Príjemca kópie emailu - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
+- Neviditeľní príjemcovia - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
+- Predmet emailu - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.
+- Presmerovanie po vyplnení - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
+- Presmerovanie po chybe - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má **Presmerovanie po vyplnení**.
+- Spôsob presmerovania - typ presmerovania po spracovaní formuláru.
+  -  Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr. formSend=true).
+  - Hodnota ```forward``` znamená, že na cieľovú stránku sa vykoná interné presmerovanie. Cieľová stránka má tak prístup k identickým parametrom ako formulár a môže vykonať dodatočnú akciu. Keďže sa jedná o interné presmerovanie v adresnom riadku prehliadača zostane hodnota ```/formmail.do```.
+  - Hodnota ```addParams``` vykoná presmerovanie na cieľovú stránku s pridaním jednotlivých parametrov do URL. V takomto prípade presmerovanie vykoná prehliadač a v adresnom riadku zostane adresa cieľovej stránky. Keďže ale parametre sú pridané do URL adresy je limitovaný ich počet dĺžkou URL čo je štandardne 2048 znakov.
+- Doc id stránky s verziou pre email - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
+- Doc id notifikácie pre používateľa - ak je nastavené na hodnotu docId niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
+- Interceptor pred odoslaním emailu - hodnota je názov triedy, ktorá **musí implementovať interface ```AfterSendInterceptor```**. Po odoslaní email-u sa vykoná kód z tejto triedy.
+
+![](editor-dialog-advanced.png)
 
 ## Položky
 
@@ -51,7 +70,7 @@ Pre **Výberový zoznam - select** je možné zadať aj rozdielny text pre zobra
 
 HTML kód zobrazenia polí a formuláru sa definuje v Nastavenia-Editácia textov. Textové kľúče majú prefix ```components.formsimple.```.
 
-![](formsimple.png)
+![](formsimple-wysiwyg.png)
 
 Základný kód formuláru je v kľúčoch:
 
@@ -97,6 +116,11 @@ components.formsimple.hide.radiogroup=placeholder
 components.formsimple.label.select=Výberový zoznam - select
 components.formsimple.input.select=<div class="form-group"><label for="${id}">${label}${tooltip}</label><select name="${id}" id="${id}" class="form-control form-select">${iterable} </select>${cs-error}</div>
 components.formsimple.iterable.select=<option value="${value}">${value-label}</option>
+
+//example of wysiwyg/cleditor - it must contains class ending formsimple-wysiwyg to render cleditor on page
+components.formsimple.label.wysiwyg=Formátované textové pole
+components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <textarea class="${classes}form-control formsimple-wysiwyg" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}">${value}</textarea>${cs-error}</div>
+components.formsimple.hide.wysiwyg=placeholder
 ```
 
 V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formuláru nahradia:

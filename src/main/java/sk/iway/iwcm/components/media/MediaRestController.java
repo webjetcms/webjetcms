@@ -47,7 +47,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     private final MediaRepository mediaRepository;
     private final MediaGroupRepository mediaGroupRepository;
-    private final String DOCUMENTS_TABLE_NAME = "documents";
+    private static final String DOCUMENTS_TABLE_NAME = "documents";
 
     @Autowired
     public MediaRestController(MediaRepository mediaRepository, MediaGroupRepository mediaGroupRepository) {
@@ -169,7 +169,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             try {
                 //sme vo vsetkych mediach, ak medium existuje, zachovajme datum
                 if (entity.getId()!=null && entity.getId()>0) {
-                    Media current = mediaRepository.getById(entity.getId());
+                    Media current = mediaRepository.findFirstByIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId()).orElse(null);
                     if (current != null) date = current.getLastUpdate();
                 } else if (entity.getMediaFkId()!=null && DOCUMENTS_TABLE_NAME.equals(entity.getMediaFkTableName())) {
                     //skus podla poslednej zmeny web stranky
@@ -197,7 +197,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         //set empty Media entity (without setting, creating dialog will not show but don't throw any error)
         if(entity == null) {
             entity = new Media();
-            entity.setGroups(new ArrayList<MediaGroupBean>());
+            entity.setGroups(new ArrayList<>());
             entity.setMediaFkTableName("");
             entity.setMediaFkId(-1);
             entity.setMediaLink("");
@@ -279,8 +279,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
             DocDetails doc = entity.getEditorFields().getDocDetails();
 
-            if(doc == null) valid = false;
-            else if(doc.getDocId() < 0) valid = false;
+            if(doc == null || doc.getDocId() < 0) valid = false;
 
             if(!valid) errors.rejectValue("errorField.editorFields.docDetails", null, getProp().getText("media.doc_tree_select.required"));
 

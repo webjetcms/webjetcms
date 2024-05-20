@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -120,7 +121,7 @@ public class UnusedFilesCleaner
 			return;
 		//preceding ","
 		disableSqlIn.deleteCharAt(0);
-		String sql = "UPDATE documents SET available = 0 WHERE doc_id IN("+disableSqlIn+")";
+		String sql = "UPDATE documents SET available = "+DB.getBooleanSql(false)+" WHERE doc_id IN("+disableSqlIn+")";
 		Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, "UnusedFileCleaner ran: "+sql, -1, -1);
 		new SimpleQuery().execute(sql);
 	}
@@ -128,9 +129,9 @@ public class UnusedFilesCleaner
 	private List<DocDetails> getUnusedFiles()
 	{
 		List<UnusedFile> unused = FileTools.getDirFileUsage(rootDirectory, null);
-		List<DocDetails> pagesOfUnusedFiles = new ArrayList<DocDetails>();
+		List<DocDetails> pagesOfUnusedFiles = new ArrayList<>();
 		//map lookup is WAY faster than iterating through basicDocDetailsAll
-		Map<String, Integer> externalLinkToDocId = new HashMap<String, Integer>();
+		Map<String, Integer> externalLinkToDocId = new HashMap<>();
 		for (DocDetails doc : DocDB.getInstance().getBasicDocDetailsAll())
 			if (doc.isAvailable() && isNotEmpty(doc.getExternalLink()))
 				externalLinkToDocId.put(doc.getExternalLink(), doc.getDocId());

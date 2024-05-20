@@ -1,0 +1,1661 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">SearchAction.java</span></div><h1>SearchAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.SpamProtection;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+
+/**
+ * full text search, ((z databazy selektuje vzdy len (perpage+1) zaznamov
+ * (perpage==pocet zaznamov na stranku) ak posledny selektnuty zaznam != null
+ * tak to je signal ze este nie sme na konci databazi a teda mozeme zviraznit
+ * linku dalej&gt;&gt;&gt; zvyraznovanie slov: v data_asc hladam vyskyt prveho slova vo
+ * words, =&gt; zvyraznim aj ostatne slova ktore sa zhoduju s words else do
+ * data_asc dam prvych EMPTYOUTPUT znakov ))
+ *
+ * @Title Interway Content Management
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2002
+ * @author $Author: joruz $ + $Edited by joruz$
+ * @version $Revision: 1.16 $
+ * @created $Date: 2004/03/18 09:28:11 $
+ * @modified $Date: 2004/03/18 09:28:11 $
+ */
+<span class="nc" id="L59">public class SearchAction</span>
+{
+
+	/**
+	 * Identifikator 'score' pri pouziti oracletext hodnota 10 je cisto nahodna, ide o to aby v dotaze bolo pouzite to iste cislo :)
+	 */
+<span class="fc" id="L65">	private static int ORACLE_TEXT_CONTAINS_IDENTIFIER = 10; //NOSONAR</span>
+
+	public static String search(HttpServletRequest request, HttpServletResponse response)
+	{
+<span class="nc" id="L69">		PageParams pageParams = new PageParams(request);</span>
+
+<span class="nc bnc" id="L71" title="All 6 branches missed.">		if (Constants.getBoolean(&quot;luceneAsDefaultSearch&quot;) || &quot;true&quot;.equals(request.getParameter(&quot;useLucene&quot;)) || pageParams.getBooleanValue(&quot;useLucene&quot;, false))</span>
+		{
+			//parameter useLucene=true je mozne pouzit pri porovnani standardneho a lucene vyhladavania
+<span class="nc" id="L74">			return LuceneSearchAction.search(request);</span>
+		}
+
+<span class="nc" id="L77">		HttpSession session = request.getSession();</span>
+<span class="nc" id="L78">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+
+<span class="nc" id="L80">		String forward = &quot;success&quot;;</span>
+<span class="nc" id="L81">		String error = &quot;error&quot;;</span>
+<span class="nc" id="L82">		boolean english = false;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (request.getParameter(&quot;lng&quot;) != null)</span>
+		{
+<span class="nc" id="L85">			english = true;</span>
+<span class="nc" id="L86">			forward = &quot;english&quot;;</span>
+		}
+<span class="nc" id="L88">		String pForward = request.getParameter(&quot;forward&quot;);</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">		if (pForward != null &amp;&amp; pForward.endsWith(&quot;.jsp&quot;))</span>
+		{
+<span class="nc" id="L91">			forward = &quot;/templates/&quot; + pForward;</span>
+		}
+<span class="nc" id="L93">		String searchGroupsParam = getParamAttribute(&quot;rootGroup&quot;, request, Integer.toString(Constants.getInt(&quot;rootGroupId&quot;)));</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (searchGroupsParam!=null) searchGroupsParam = searchGroupsParam.replace('+', ',');</span>
+<span class="nc" id="L95">		String[] groupIdParams = request.getParameterValues(&quot;groupId&quot;);</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">		if (groupIdParams != null &amp;&amp; groupIdParams.length&gt;0)</span>
+		{
+			int i;
+<span class="nc" id="L99">			searchGroupsParam = null;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			for (i=0; i&lt;groupIdParams.length; i++)</span>
+			{
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (i==0) searchGroupsParam = groupIdParams[i];</span>
+<span class="nc" id="L103">				else searchGroupsParam += &quot;,&quot;+groupIdParams[i]; //NOSONAR</span>
+			}
+		}
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">		boolean searchDetaultInTitle = Constants.getBoolean(&quot;searchDetaultInTitle&quot;) || &quot;true&quot;.equals(request.getParameter(&quot;searchDetaultInTitle&quot;));</span>
+
+<span class="nc" id="L109">		boolean searchAlsoProtectedPages = pageParams.getBooleanValue(&quot;searchAlsoProtectedPages&quot;, false);</span>
+
+<span class="nc" id="L111">		String searchFileNameQuery = null;</span>
+
+<span class="nc" id="L113">		StringTokenizer st = new StringTokenizer(searchGroupsParam, &quot;,+; &quot;);</span>
+<span class="nc" id="L114">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+		//tu si poznacim zadane root groups a tie nebudem neskor povazovat za internal folders
+<span class="nc" id="L116">		Map&lt;Integer, Integer&gt; rootGroupIdsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L117">		List&lt;DocDetails&gt; docsInGroups = null; //vsetky stranky v zadanych adresaroch</span>
+<span class="nc" id="L118">		List&lt;GroupDetails&gt; searchGroupsArray = null;</span>
+<span class="nc" id="L119">		DebugTimer dtt = new DebugTimer(&quot;SearchAction DUPLICITY&quot;);</span>
+		//ak je TRUE, tak chcem kontrolovat duplicitu pre multikategorie
+<span class="nc" id="L121">		boolean checkDuplicity = pageParams.getBooleanValue(&quot;checkDuplicity&quot;, false);</span>
+<span class="nc" id="L122">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+			try
+			{
+				//schvalne je tu Integer.parseInt aby to pripadne padlo na exception
+<span class="nc" id="L128">				int searchRootGroupId = Integer.parseInt(st.nextToken());</span>
+
+<span class="nc" id="L130">				rootGroupIdsTable.put(Integer.valueOf(searchRootGroupId), Integer.valueOf(1));</span>
+
+				//v stlpci file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
+				//nad tym limitujeme adresare (interne adresare to maju v databaze prazdne)
+
+<span class="nc" id="L135">				GroupDetails fileNameGrp = groupsDB.getGroup(searchRootGroupId);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">				if (fileNameGrp != null)</span>
+				{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					if (searchFileNameQuery == null) searchFileNameQuery = &quot;file_name LIKE '&quot;+DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))+&quot;%'&quot;;</span>
+<span class="nc" id="L139">					else searchFileNameQuery += &quot; OR file_name LIKE '&quot;+DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))+&quot;%'&quot;; //NOSONAR</span>
+				}
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if(checkDuplicity)</span>
+				{
+<span class="nc" id="L144">					searchGroupsArray = groupsDB.getGroupsTree(searchRootGroupId, true, false);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">					for (GroupDetails group : searchGroupsArray)</span>
+					{
+<span class="nc bnc" id="L147" title="All 2 branches missed.">						if (group != null)</span>
+						{
+<span class="nc bnc" id="L149" title="All 2 branches missed.">							if(docsInGroups == null) docsInGroups = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L150">							docsInGroups.addAll(docDB.getBasicDocDetailsByGroup(Tools.getIntValue(group.getGroupId(),0), 0));</span>
+						}
+<span class="nc" id="L152">					}</span>
+				}
+			}
+<span class="nc" id="L155">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L157">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L158">			}</span>
+		}
+<span class="nc" id="L160">		dtt.diff(&quot;after get all docs&quot;);</span>
+<span class="nc" id="L161">		StringBuffer docIdsNotIn = new StringBuffer(&quot;&quot;);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if(checkDuplicity)</span>
+		{
+<span class="nc" id="L164">			List&lt;Integer&gt; slavesMasterForDoc = null;</span>
+
+<span class="nc bnc" id="L166" title="All 4 branches missed.">			if(docDB.getSlavesMasterMappings() != null &amp;&amp; docsInGroups != null)</span>
+			{
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				if(docsInGroups.size() &gt; 0)</span>
+				{
+<span class="nc" id="L170">					HashMap&lt;Integer, Boolean&gt; docsInGroupsHm = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					for(DocDetails dd : docsInGroups) docsInGroupsHm.put(Integer.valueOf(dd.getDocId()), Boolean.TRUE);</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					for (Entry&lt;Integer, Boolean&gt; entry : docsInGroupsHm.entrySet())</span>
+					{
+<span class="nc bnc" id="L175" title="All 2 branches missed.">						if(entry.getValue() != Boolean.FALSE)</span>
+						{
+<span class="nc" id="L177">							Integer docId = entry.getKey();</span>
+							//ziskam zoznam docId, ktore su rovnake k danej stranke
+<span class="nc" id="L179">							slavesMasterForDoc = null;</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">							if(slavesMasterForDoc == null) slavesMasterForDoc = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L183">							Integer masterId = docDB.getSlavesMasterMappings().get(docId);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">							if(masterId != null)</span>
+							{
+								//ak sa master nachadza v zozname stranok, tak ponecham master miesto slave a vymazem vsetky slave stranky danej master stranky
+								//v opacnom pripade vymazem vsetky ostatne slaves
+<span class="nc bnc" id="L188" title="All 4 branches missed.">								boolean containsMaster = docsInGroupsHm.get(masterId) != null &amp;&amp; docsInGroupsHm.get(masterId) == Boolean.TRUE;</span>
+<span class="nc" id="L189">								Integer[] slaves = docDB.getMasterMappings().get(masterId);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">								if(slaves != null)</span>
+								{
+									//aby preskocilo pri iteracii master
+<span class="nc bnc" id="L193" title="All 2 branches missed.">									if(containsMaster) docsInGroupsHm.put(masterId, Boolean.FALSE);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">									for(Integer slave : slaves)</span>
+<span class="nc bnc" id="L195" title="All 6 branches missed.">										if(containsMaster || (!containsMaster &amp;&amp; slave.intValue() != docId.intValue())) slavesMasterForDoc.add(slave);</span>
+								}
+<span class="nc" id="L197">							}</span>
+							else
+							{
+								//ak docId je master, tak pridam do duplicitnych vsetky jeho slaves
+<span class="nc" id="L201">								Integer[] slaves = docDB.getMasterMappings().get(docId);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">								if(slaves != null) slavesMasterForDoc.addAll(Arrays.asList(slaves));</span>
+							}
+							//odstranim ich zo zonamu stranok
+<span class="nc bnc" id="L205" title="All 4 branches missed.">							if(slavesMasterForDoc != null &amp;&amp; slavesMasterForDoc.size() &gt; 0)</span>
+							{
+<span class="nc bnc" id="L207" title="All 2 branches missed.">								for(Integer sm: slavesMasterForDoc)</span>
+								{
+<span class="nc bnc" id="L209" title="All 2 branches missed.">									if(docsInGroupsHm.get(sm) != null)</span>
+									{
+<span class="nc" id="L211">										docsInGroupsHm.put(sm, Boolean.FALSE);</span>
+<span class="nc" id="L212">										docIdsNotIn.append(String.valueOf(sm.intValue())+&quot;,&quot;);</span>
+									}
+<span class="nc" id="L214">								}</span>
+							}
+						}
+<span class="nc" id="L217">					}</span>
+				}
+			}
+		}
+<span class="nc" id="L221">		dtt.diff(&quot;after docIdsNotIn&quot;);</span>
+
+		//Logger.println(this,&quot;searchGroups=&quot; + searchGroups);
+<span class="nc" id="L224">		int perPage = 10;</span>
+		try
+		{
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;) != null)</span>
+			{
+<span class="nc" id="L229">				perPage = Integer.parseInt(getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;));</span>
+			}
+		}
+<span class="nc" id="L232">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L234">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L235">		}</span>
+<span class="nc" id="L236">		String rq = request.getParameter(&quot;index&quot;);</span>
+		int index;
+		boolean hasAnotherPage;
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if (rq == null)</span>
+		{
+<span class="nc" id="L241">			index = 0;</span>
+		}
+		else
+		{
+			try
+			{
+<span class="nc" id="L247">				index = Integer.parseInt(rq);</span>
+			}
+<span class="nc" id="L249">			catch (Exception e)</span>
+			{
+<span class="nc" id="L251">				index = 0;</span>
+<span class="nc" id="L252">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L253">			}</span>
+		}
+		// **********************************
+		//String words = my_form.getWords();
+<span class="nc" id="L257">		String words = request.getParameter(&quot;words&quot;);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (Tools.isEmpty(words))</span>
+		{
+<span class="nc" id="L260">			words = (String)request.getAttribute(&quot;words&quot;);</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		   if (words == null) words = &quot;&quot;;</span>
+		}
+<span class="nc" id="L263">		String text = request.getParameter(&quot;text&quot;);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (Tools.isNotEmpty(text))</span>
+		{
+<span class="nc" id="L266">			words = text;</span>
+		}
+<span class="nc bnc" id="L268" title="All 2 branches missed.">      if (&quot;tatrabanka&quot;.equals(Constants.getInstallName()))</span>
+      {
+         //fix na TB, ale inak rozumne som to nevedel spravit
+         //vo fulltexte to mame ako TatraPay TB cize s medzerou kvoli sup
+<span class="nc" id="L272">         words = Tools.replace(words, &quot;TB&quot;, &quot; TB&quot;);</span>
+      }
+
+		//aby sme vedeli vnutit slovo pre vyhladavanie
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		if (Tools.isNotEmpty((String)request.getAttribute(&quot;forceWords&quot;)))</span>
+		{
+<span class="nc" id="L278">			words = (String)request.getAttribute(&quot;forceWords&quot;);</span>
+		}
+
+		//Logger.println(this,&quot;Search words1=&quot;+words);
+
+		//Logger.println(this,&quot;Search words ASC=&quot;+words);
+		//Logger.println(this,&quot;Perpage=&quot; + perPage + &quot;, words=&quot; + words);
+		String pom;
+		int i;
+<span class="nc" id="L287">		words = words.replace('\'', ' ');</span>
+		//words = words.replace('\&quot;', ' '); - zakomentovane aby sa dal hladat vyraz
+<span class="nc" id="L289">		words = words.replace(',', ' ');</span>
+<span class="nc" id="L290">		words = words.replace('.', ' ');</span>
+<span class="nc" id="L291">		words = words.replace(';', ' ');</span>
+
+		//nebezpecne znaky odpaz
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;searchActionOmitCharacters&quot;)))</span>
+		{
+<span class="nc" id="L296">			words = words.replaceAll(&quot;[&quot;+Constants.getString(&quot;searchActionOmitCharacters&quot;)+&quot;]&quot;, &quot;&quot;);</span>
+		}
+
+		//	otestuj, ci su zadane fields parametre
+<span class="nc" id="L300">		boolean hasInputParams = hasInputParams(request);</span>
+
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		if (&quot;***&quot;.equals(request.getAttribute(&quot;forceWords&quot;)))</span>
+		{
+<span class="nc" id="L304">			words = &quot;&quot;;</span>
+<span class="nc" id="L305">			hasInputParams = true;</span>
+		}
+
+<span class="nc" id="L308">		request.removeAttribute(&quot;forceWords&quot;);</span>
+
+		//toto je zadany text na vyhladavanie bez nebezpecnych znakov
+<span class="nc" id="L311">		String wordsAscii = DB.internationalToEnglish(words);</span>
+		// odstranenie jedno - dvoj znakovych slov
+<span class="nc" id="L313">		StringTokenizer sTok = new StringTokenizer(words);</span>
+<span class="nc" id="L314">		words = &quot;&quot;;</span>
+<span class="nc" id="L315">		String wordsMysql = &quot;&quot;;</span>
+<span class="nc" id="L316">		StringBuilder wordsMysqlBuilder = new StringBuilder();</span>
+<span class="nc" id="L317">		boolean quotes = false;</span>
+<span class="nc" id="L318">		StringBuilder wordsBuilder = new StringBuilder();</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		while (sTok.hasMoreElements())</span>
+		{
+<span class="nc" id="L321">			pom = sTok.nextToken();</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">			if (pom.length() &gt;= Constants.getInt(&quot;searchActionMinimumWordLength&quot;))</span>
+			{
+<span class="nc" id="L324">				pom = pom.trim();</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+				{
+<span class="nc bnc" id="L327" title="All 4 branches missed.">					if (quotes == false &amp;&amp; pom.startsWith(&quot;\&quot;&quot;))</span>
+					{
+<span class="nc" id="L329">						quotes = true;</span>
+<span class="nc" id="L330">						wordsMysqlBuilder.append(' ').append(pom);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">						if (pom.trim().endsWith(&quot;\&quot;&quot;)) quotes = false;</span>
+					}
+<span class="nc bnc" id="L333" title="All 4 branches missed.">					else if (quotes == true &amp;&amp; pom.endsWith(&quot;\&quot;&quot;))</span>
+					{
+<span class="nc" id="L335">						quotes = false;</span>
+<span class="nc" id="L336">						wordsMysqlBuilder.append(' ').append(pom);</span>
+					}
+<span class="nc bnc" id="L338" title="All 8 branches missed.">					else if (pom.startsWith(&quot;+&quot;) || pom.startsWith(&quot;-&quot;) || pom.startsWith(&quot;~&quot;) || pom.startsWith(&quot;&lt;&quot;)</span>
+<span class="nc bnc" id="L339" title="All 6 branches missed.">								|| pom.startsWith(&quot;(&quot;) || pom.startsWith(&quot;*&quot;) || pom.endsWith(&quot;*&quot;))</span>
+					{
+<span class="nc" id="L341">						wordsMysqlBuilder.append(' ').append(pom);</span>
+					}
+					else
+					{
+<span class="nc" id="L345">						wordsMysqlBuilder.append(&quot; +&quot;).append(pom);</span>
+					}
+				}
+<span class="nc" id="L348">				wordsBuilder.append(' ').append(pom);</span>
+
+			}
+		}
+<span class="nc" id="L352">		words = wordsBuilder.toString();</span>
+<span class="nc" id="L353">		words = words.trim();</span>
+<span class="nc" id="L354">		wordsMysql = wordsMysqlBuilder.toString();</span>
+<span class="nc" id="L355">		wordsMysql = DB.internationalToEnglish(wordsMysql).trim();</span>
+		//Logger.println(this,&quot;Perpage=&quot; + perPage + &quot;, words=&quot; + words);
+		long wait;
+
+<span class="nc" id="L359">		Logger.debug(null, &quot;Search in Title: &quot; +index);</span>
+
+<span class="nc bnc" id="L361" title="All 4 branches missed.">		if (words.length() == 0 &amp;&amp; hasInputParams==false)</span>
+		{
+			//nemame co vyhladavat
+
+			//session.setAttribute(&quot;words&quot;, &quot;&quot;);
+<span class="nc" id="L366">			request.setAttribute(&quot;aList&quot;, new ArrayList&lt;SearchDetails&gt;());</span>
+			//session.setAttribute(&quot;offset&quot;, Integer.valueOf(0));
+			//session.setAttribute(&quot;length&quot;, Integer.valueOf(perPage));
+<span class="nc" id="L369">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L370">			request.setAttribute(&quot;emptyrequest&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L371">			return (forward);</span>
+		}
+
+		//ochrana proti DOS utoku
+<span class="nc bnc" id="L375" title="All 6 branches missed.">		if (request.getAttribute(&quot;disableSearchSpamProtection&quot;)==null &amp;&amp; request.getAttribute(&quot;forceWords&quot;)==null &amp;&amp; rq == null)	//len ak ide o samotne vyhladavanie, nie o zobrazenie dalsej stranky vyhladavania</span>
+		{
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			if ((wait=SpamProtection.getWaitTimeout(&quot;search&quot;, request)) != 0)</span>
+			{
+				//prekrocil sa hodinovy limit
+<span class="nc" id="L380">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L381">				request.setAttribute(&quot;crossHourlyLimit&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L382">				request.setAttribute(&quot;wait&quot;, (wait/60/1000));</span>
+<span class="nc" id="L383">				return (forward);</span>
+			}
+
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (!SpamProtection.canPost(&quot;search&quot;, &quot;&quot;, request))</span>
+			{
+				//prekrocil sa cas medzi dvoma prehladavaniami
+<span class="nc" id="L389">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L390">				request.setAttribute(&quot;crossTimeout&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L391">				return (forward);</span>
+			}
+		}
+
+		String sesWord;
+<span class="nc" id="L396">		sesWord = (String) request.getAttribute(&quot;words&quot;);</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (sesWord == null)</span>
+		{
+<span class="nc" id="L399">			sesWord = &quot;&quot;;</span>
+		}
+<span class="nc" id="L401">		List&lt;SearchDetails&gt; aList = null;</span>
+<span class="nc" id="L402">		java.sql.Connection db_conn = null;</span>
+<span class="nc" id="L403">		java.sql.PreparedStatement ps = null;</span>
+<span class="nc" id="L404">		ResultSet rs = null;</span>
+<span class="nc" id="L405">		int aListCount = 0;</span>
+<span class="nc" id="L406">		int totalResults = 0;</span>
+<span class="nc" id="L407">		StringBuilder sql = new StringBuilder();</span>
+		String sqlTotalResults;
+
+<span class="nc" id="L410">		String D_DOCUMENT_FIELDS = DocDB.getDocumentFields();</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;fulltextExecuteApps&quot;)) D_DOCUMENT_FIELDS += &quot;, data_asc&quot;;</span>
+<span class="nc" id="L412">		int pocetVynechanychSuborov = 0;</span>
+		try
+		{
+<span class="nc bnc" id="L415" title="All 4 branches missed.">			boolean perexGroupUseJoin = Constants.getBoolean(&quot;perexGroupUseJoin&quot;) &amp;&amp; Arrays.toString(SearchTools.checkInputParams).contains(&quot;keyword&quot;);</span>
+
+<span class="nc bnc" id="L417" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+			{
+<span class="nc" id="L419">				int limit = index + (perPage * 3);</span>
+<span class="nc" id="L420">				sql.append(&quot;SELECT TOP &quot;)</span>
+<span class="nc" id="L421">					.append(limit)</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">					.append(' ').append(D_DOCUMENT_FIELDS).append(&quot;, data_asc FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE (CONTAINS(data_asc, ?) &quot;);</span>
+				//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L424" title="All 4 branches missed.">				if (searchDetaultInTitle &amp;&amp; request.getParameter(&quot;words&quot;)!=null) sql.append(&quot; OR title LIKE ? &quot;);</span>
+<span class="nc" id="L425">				sql.append(&quot;) &quot;);</span>
+
+<span class="nc bnc" id="L427" title="All 2 branches missed.">				sqlTotalResults = &quot;SELECT count(d.doc_id) as totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE (CONTAINS(data_asc, ?) &quot;;</span>
+				//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L429" title="All 4 branches missed.">				if (searchDetaultInTitle &amp;&amp; request.getParameter(&quot;words&quot;)!=null) sqlTotalResults += &quot; OR title LIKE ? &quot;;</span>
+<span class="nc" id="L430">				sqlTotalResults += &quot;) &quot;;</span>
+
+<span class="nc bnc" id="L432" title="All 2 branches missed.">				if (words.length() == 0)</span>
+				{
+<span class="nc" id="L434">					sql.delete(0, sql.length());</span>
+<span class="nc" id="L435">					sql.append(&quot;SELECT TOP &quot;)</span>
+<span class="nc" id="L436">						.append(limit)</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">						.append(' ').append(D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;);</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">					sqlTotalResults = &quot;SELECT count(d.doc_id) as totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;;</span>
+				}
+<span class="nc" id="L440">			}</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L443">				wordsAscii = wordsAscii.replace('\'', ' ');</span>
+
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;searchUseOracleText&quot;))</span>
+				{
+<span class="nc" id="L447">					StringBuilder oracleKeywords = new StringBuilder();</span>
+<span class="nc" id="L448">					StringTokenizer sto = new StringTokenizer(wordsAscii);</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">					while (sto.hasMoreTokens())</span>
+					{
+<span class="nc" id="L451">						String keyword = sto.nextToken().trim();</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">						if (Tools.isEmpty(keyword)) continue;</span>
+
+<span class="nc bnc" id="L455" title="All 2 branches missed.">						if (oracleKeywords.length()!=0) oracleKeywords.append(&quot; AND &quot;);</span>
+
+<span class="nc" id="L457">						oracleKeywords.append(keyword);</span>
+<span class="nc" id="L458">					}</span>
+
+<span class="nc bnc" id="L460" title="All 2 branches missed.">					if(Tools.isNotEmpty(oracleKeywords.toString()))</span>
+					{
+<span class="nc" id="L462">						String oracleTextMinScore = Constants.getString(&quot;searchOracleTextMinScore&quot;, &quot;1&quot;);</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">						sql.append(&quot;SELECT &quot;).append(D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE CONTAINS(data_asc, '&quot;).append(oracleKeywords.toString()).append(&quot;', &quot;+ORACLE_TEXT_CONTAINS_IDENTIFIER+&quot;)&gt;&quot;+oracleTextMinScore+&quot; &quot;);</span>
+
+<span class="nc bnc" id="L465" title="All 2 branches missed.">						sqlTotalResults = &quot;SELECT count(d.doc_id) as totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE CONTAINS(data_asc, '&quot;+oracleKeywords.toString()+&quot;', &quot;+ORACLE_TEXT_CONTAINS_IDENTIFIER+&quot;)&gt;&quot;+oracleTextMinScore+&quot; &quot;;</span>
+<span class="nc" id="L466">					}</span>
+					else
+					{
+						//ked je prazdne oracleKeywords, tak to musi ist takot, inak hlasi: text query parser syntax error on line 1, column 1
+<span class="nc bnc" id="L470" title="All 2 branches missed.">						sql.append(&quot;SELECT * FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE&quot;);</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">						sqlTotalResults = &quot;SELECT count(d.doc_id) as totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE&quot;;</span>
+					}
+						//	teraz hladame zaroven aj v title
+<span class="nc" id="L474">				}</span>
+				else
+				{
+					//ak mame viac slov pre LIKE command nahradime medzeru za percento pre hladanie viac slov
+<span class="nc" id="L478">					String wordsForLike = Tools.replace(words, &quot; &quot;, &quot;%&quot;);</span>
+<span class="nc" id="L479">					String wordsAsciiForLike = Tools.replace(wordsAscii, &quot; &quot;, &quot;%&quot;);</span>
+
+<span class="nc bnc" id="L481" title="All 2 branches missed.">					sql.append(&quot;SELECT &quot;).append(D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE (data_asc LIKE '%&quot;).append(DB.removeSlashes(wordsAsciiForLike.toLowerCase())).append(&quot;%' &quot;);</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L483" title="All 4 branches missed.">					if (searchDetaultInTitle &amp;&amp; request.getParameter(&quot;words&quot;)!=null) sql.append(&quot; OR title LIKE '%&quot;).append(DB.removeSlashes(wordsForLike)).append(&quot;%' &quot;);</span>
+<span class="nc" id="L484">					sql.append(&quot;) &quot;);</span>
+
+<span class="nc bnc" id="L486" title="All 2 branches missed.">					sqlTotalResults = &quot;SELECT count(d.doc_id) as totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE (data_asc LIKE '%&quot; + DB.removeSlashes(wordsAsciiForLike.toLowerCase()) + &quot;%' &quot;;</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L488" title="All 4 branches missed.">					if (searchDetaultInTitle &amp;&amp; request.getParameter(&quot;words&quot;)!=null) sqlTotalResults += &quot; OR title LIKE '%&quot; + DB.removeSlashes(wordsForLike) + &quot;%' &quot;;</span>
+<span class="nc" id="L489">					sqlTotalResults += &quot;) &quot;;</span>
+<span class="nc" id="L490">				}</span>
+
+				//Logger.println(SearchAction.class,&quot;search ORA sql:\n&quot;+sql);
+				//Logger.println(SearchAction.class,&quot;search ORA sqlTotalResults:\n&quot;+sqlTotalResults);
+			}
+<span class="nc bnc" id="L495" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+				//PostgreSQL
+<span class="nc bnc" id="L498" title="All 4 branches missed.">				sql.append(&quot;SELECT &quot;).append((perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE ( to_tsvector(data_asc) @@ to_tsquery(?) &quot;);</span>
+
+<span class="nc bnc" id="L500" title="All 2 branches missed.">				if (searchDetaultInTitle)</span>
+				{
+<span class="nc" id="L502">					sql.append(&quot; OR data_asc ILIKE ? &quot;);</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L504" title="All 2 branches missed.">					if (request.getParameter(&quot;words&quot;)!=null) sql.append(&quot; OR title ILIKE ? &quot;);</span>
+				}
+<span class="nc" id="L506">				sql.append(&quot;) &quot;);</span>
+
+<span class="nc bnc" id="L508" title="All 4 branches missed.">				sqlTotalResults = &quot;SELECT count(&quot;+(perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+&quot;d.doc_id) AS totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE ( to_tsvector(data_asc) @@ to_tsquery(?) &quot;;</span>
+
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (searchDetaultInTitle)</span>
+				{
+<span class="nc" id="L512">					sqlTotalResults += &quot; OR data_asc ILIKE ? &quot;;</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L514" title="All 2 branches missed.">					if (request.getParameter(&quot;words&quot;)!=null) sqlTotalResults += &quot; OR title ILIKE ? &quot;;</span>
+				}
+<span class="nc" id="L516">				sqlTotalResults += &quot;) &quot;;</span>
+
+<span class="nc bnc" id="L518" title="All 2 branches missed.">				if (words.length()==0)</span>
+				{
+<span class="nc" id="L520">					sql.delete(0, sql.length());</span>
+<span class="nc bnc" id="L521" title="All 4 branches missed.">					sql.append(&quot;SELECT &quot;).append((perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;);</span>
+<span class="nc bnc" id="L522" title="All 4 branches missed.">					sqlTotalResults = &quot;SELECT count(&quot;+(perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+&quot;d.doc_id) AS totalr &quot; + &quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;;</span>
+				}
+			}
+			else
+			{
+				//MySQL
+<span class="nc bnc" id="L528" title="All 4 branches missed.">				sql.append(&quot;SELECT &quot;).append((perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE ( MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE) &quot;);</span>
+
+<span class="nc bnc" id="L530" title="All 2 branches missed.">				if (searchDetaultInTitle)</span>
+				{
+<span class="nc" id="L532">					sql.append(&quot; OR data_asc LIKE ? &quot;);</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L534" title="All 2 branches missed.">					if (request.getParameter(&quot;words&quot;)!=null) sql.append(&quot; OR title LIKE ? &quot;);</span>
+				}
+<span class="nc" id="L536">				sql.append(&quot;) &quot;);</span>
+
+<span class="nc bnc" id="L538" title="All 4 branches missed.">				sqlTotalResults = &quot;SELECT count(&quot;+(perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+&quot;d.doc_id) AS totalr FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE ( MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE) &quot;;</span>
+
+<span class="nc bnc" id="L540" title="All 2 branches missed.">				if (searchDetaultInTitle)</span>
+				{
+<span class="nc" id="L542">					sqlTotalResults += &quot; OR data_asc LIKE ? &quot;;</span>
+					//	teraz hladame zaroven aj v title
+<span class="nc bnc" id="L544" title="All 2 branches missed.">					if (request.getParameter(&quot;words&quot;)!=null) sqlTotalResults += &quot; OR title LIKE ? &quot;;</span>
+				}
+<span class="nc" id="L546">				sqlTotalResults += &quot;) &quot;;</span>
+
+<span class="nc bnc" id="L548" title="All 2 branches missed.">				if (words.length()==0)</span>
+				{
+<span class="nc" id="L550">					sql.delete(0, sql.length());</span>
+<span class="nc bnc" id="L551" title="All 4 branches missed.">					sql.append(&quot;SELECT &quot;).append((perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+D_DOCUMENT_FIELDS).append(&quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;);</span>
+<span class="nc bnc" id="L552" title="All 4 branches missed.">					sqlTotalResults = &quot;SELECT count(&quot;+(perexGroupUseJoin ? &quot;DISTINCT &quot; : &quot;&quot;)+&quot;d.doc_id) AS totalr &quot; + &quot; FROM documents d&quot;+(perexGroupUseJoin ? &quot; LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id&quot; : &quot;&quot;)+&quot; WHERE title IS NOT NULL &quot;;</span>
+				}
+			}
+			//Logger.println(this,&quot;en groups=&quot;+en_groups);
+<span class="nc bnc" id="L556" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchFileNameQuery))</span>
+			{
+				//v stlpce file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
+				//nad tym limitujeme adresare
+<span class="nc" id="L560">				sql.append(&quot; AND (&quot;).append(searchFileNameQuery).append(&quot;) &quot;);</span>
+<span class="nc" id="L561">				sqlTotalResults += &quot; AND (&quot; + searchFileNameQuery + &quot;) &quot;;</span>
+			}
+
+<span class="nc bnc" id="L564" title="All 4 branches missed.">			if (user == null &amp;&amp; searchAlsoProtectedPages==false)</span>
+			{
+<span class="nc" id="L566">				sql.append(&quot; AND (password_protected IS null OR password_protected='') &quot;);</span>
+<span class="nc" id="L567">				sqlTotalResults += &quot; AND (password_protected IS null OR password_protected='') &quot;;</span>
+			}
+<span class="nc bnc" id="L569" title="All 4 branches missed.">			else if (user != null &amp;&amp; searchAlsoProtectedPages==false)</span>
+			{
+<span class="nc bnc" id="L571" title="All 4 branches missed.">				if (user.isAdmin()==false || Constants.getBoolean(&quot;adminCheckUserGroups&quot;))</span>
+				{
+					//skupiny pre web stranky
+<span class="nc" id="L574">					StringBuilder sqlProtected = new StringBuilder(&quot; AND (password_protected IS null OR password_protected=''&quot;);</span>
+<span class="nc" id="L575">					StringTokenizer stu = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">					while (stu.hasMoreTokens())</span>
+					{
+<span class="nc" id="L578">						int groupId = Tools.getIntValue(stu.nextToken(), -1);</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">						if (groupId &gt; 0)</span>
+						{
+<span class="nc" id="L581">							sqlProtected.append(&quot; OR password_protected='&quot;).append(groupId).append(&quot;' OR password_protected LIKE '&quot;).append(groupId).append(&quot;,%' OR password_protected LIKE '%,&quot;)</span>
+<span class="nc" id="L582">							.append(groupId).append(&quot;,%' OR password_protected LIKE '%,&quot;).append(groupId).append('\'');</span>
+						}
+<span class="nc" id="L584">					}</span>
+<span class="nc" id="L585">					sqlProtected.append(&quot;) &quot;);</span>
+<span class="nc" id="L586">					sql.append(sqlProtected.toString());</span>
+<span class="nc" id="L587">					sqlTotalResults += sqlProtected.toString();</span>
+				}
+			}
+
+			//dodatocne parametre
+<span class="nc" id="L592">			sql.append(addInputParamsSQL(request));</span>
+<span class="nc" id="L593">			sqlTotalResults += addInputParamsSQL(request);</span>
+
+<span class="nc" id="L595">			sql.append(&quot; AND searchable=&quot;+DB.getBooleanSql(true)+&quot; AND available=&quot;+DB.getBooleanSql(true)+&quot; AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') &quot;);</span>
+
+<span class="nc" id="L597">			String searchWhereSql = (String)request.getAttribute(&quot;searchWhereSql&quot;);</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchWhereSql))</span>
+			{
+<span class="nc" id="L600">				sql.append(' ').append(searchWhereSql);</span>
+<span class="nc" id="L601">				sqlTotalResults += &quot; &quot;+searchWhereSql;</span>
+<span class="nc" id="L602">				request.removeAttribute(&quot;searchWhereSql&quot;);</span>
+			}
+
+<span class="nc bnc" id="L605" title="All 2 branches missed.">			String afterWhere =  sql.toString().indexOf(&quot;WHERE&quot;) != -1 ? sql.toString().substring(sql.toString().indexOf(&quot;WHERE&quot;)) : &quot;&quot;;</span>
+<span class="nc bnc" id="L606" title="All 4 branches missed.">			boolean notFoundPublishStartEnd = afterWhere.indexOf(&quot;publish_start&quot;) == -1 &amp;&amp; afterWhere.indexOf(&quot;publish_end&quot;) == -1;</span>
+<span class="nc" id="L607">			request.setAttribute(&quot;notFoundPublishStartEnd&quot;, String.valueOf(notFoundPublishStartEnd));</span>
+<span class="nc bnc" id="L608" title="All 4 branches missed.">			if(notFoundPublishStartEnd &amp;&amp; Constants.getBoolean(&quot;showOnlyActualPublishedDoc&quot;))</span>
+			{
+<span class="nc" id="L610">				String sqlTmp = &quot; AND (publish_start IS NULL OR publish_start &lt;= ?) AND (publish_end IS NULL OR publish_end &gt;= ?) &quot;;</span>
+<span class="nc" id="L611">				sql.append(sqlTmp);</span>
+<span class="nc" id="L612">				sqlTotalResults += sqlTmp;</span>
+			}
+
+			//ak mame nejake duplicity, vynecham z vyhladavania
+<span class="nc bnc" id="L616" title="All 2 branches missed.">			if(Tools.isNotEmpty(docIdsNotIn.toString()))</span>
+			{
+<span class="nc" id="L618">				sql.append(&quot; AND d.doc_id NOT IN (&quot;+docIdsNotIn.substring(0, docIdsNotIn.length()-1)+&quot;) &quot;);</span>
+<span class="nc" id="L619">				sqlTotalResults += &quot; AND d.doc_id NOT IN (&quot;+docIdsNotIn.substring(0, docIdsNotIn.length()-1)+&quot;) &quot;;</span>
+			}
+
+<span class="nc" id="L622">			String order_var = &quot;ASC&quot;;</span>
+<span class="nc" id="L623">			String order = getParamAttribute(&quot;order&quot;, request, &quot;asc&quot;);</span>
+<span class="nc" id="L624">			String orderType = getParamAttribute(&quot;orderType&quot;, request, &quot;sort_priority&quot;);</span>
+<span class="nc bnc" id="L625" title="All 2 branches missed.">			if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
+			{
+<span class="nc" id="L627">				order_var = &quot;DESC&quot;;</span>
+			}
+<span class="nc bnc" id="L629" title="All 2 branches missed.">			if (&quot;asc&quot;.equalsIgnoreCase(order))</span>
+			{
+<span class="nc" id="L631">				order_var = &quot;ASC&quot;;</span>
+			}
+<span class="nc bnc" id="L633" title="All 2 branches missed.">			if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
+			{
+<span class="nc" id="L635">				orderType = &quot;date_created&quot;;</span>
+			}
+<span class="nc bnc" id="L637" title="All 2 branches missed.">			else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
+			{
+<span class="nc" id="L639">				orderType = &quot;sort_priority&quot;;</span>
+<span class="nc bnc" id="L640" title="All 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_ORACLE &amp;&amp; Constants.getBoolean(&quot;searchUseOracleText&quot;))</span>
+				{
+					//sortni to podla score
+<span class="nc" id="L643">					orderType = &quot;SCORE(&quot;+ORACLE_TEXT_CONTAINS_IDENTIFIER+&quot;)&quot;;</span>
+				}
+			}
+<span class="nc bnc" id="L646" title="All 2 branches missed.">			else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
+			{
+<span class="nc" id="L648">				orderType = &quot;title&quot;;</span>
+			}
+<span class="nc bnc" id="L650" title="All 2 branches missed.">			else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
+			{
+<span class="nc" id="L652">				orderType = &quot;publish_start&quot;;</span>
+			}
+<span class="nc bnc" id="L654" title="All 2 branches missed.">			else if (&quot;saveDate&quot;.equalsIgnoreCase(orderType))</span>
+			{
+<span class="nc" id="L656">				orderType = &quot;date_created&quot;;</span>
+			}
+<span class="nc" id="L658">			sql.append(&quot; ORDER BY &quot;).append(orderType).append(' ').append(order_var);</span>
+
+			//dalsie order by
+<span class="nc bnc" id="L661" title="All 2 branches missed.">			for (i=2; i&lt;=5; i++)</span>
+			{
+<span class="nc" id="L663">				orderType = getParamAttribute(&quot;orderType&quot;+i, request, null);</span>
+<span class="nc bnc" id="L664" title="All 2 branches missed.">				if (Tools.isNotEmpty(orderType))</span>
+				{
+<span class="nc" id="L666">					order_var = &quot;ASC&quot;;</span>
+<span class="nc" id="L667">					order = getParamAttribute(&quot;order&quot;+i, request, &quot;asc&quot;);</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">					if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
+					{
+<span class="nc" id="L670">						order_var = &quot;DESC&quot;;</span>
+					}
+
+<span class="nc bnc" id="L673" title="All 2 branches missed.">					if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
+					{
+<span class="nc" id="L675">						orderType = &quot;date_created&quot;;</span>
+					}
+<span class="nc bnc" id="L677" title="All 2 branches missed.">					else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
+					{
+<span class="nc" id="L679">						orderType = &quot;sort_priority&quot;;</span>
+<span class="nc bnc" id="L680" title="All 4 branches missed.">						if (Constants.DB_TYPE == Constants.DB_ORACLE &amp;&amp; Constants.getBoolean(&quot;searchUseOracleText&quot;))</span>
+						{
+							//sortni to podla score
+<span class="nc" id="L683">							orderType = &quot;SCORE(&quot;+ORACLE_TEXT_CONTAINS_IDENTIFIER+&quot;)&quot;;</span>
+						}
+					}
+<span class="nc bnc" id="L686" title="All 2 branches missed.">					else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
+					{
+<span class="nc" id="L688">						orderType = &quot;title&quot;;</span>
+					}
+<span class="nc bnc" id="L690" title="All 2 branches missed.">					else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
+					{
+<span class="nc" id="L692">						orderType = &quot;publish_start&quot;;</span>
+					}
+
+<span class="nc" id="L695">					sql.append(&quot;, &quot;).append(orderType).append(' ').append(order_var);</span>
+				}
+			}
+
+<span class="nc" id="L699">			sqlTotalResults += &quot; AND searchable=&quot;+DB.getBooleanSql(true)+&quot; AND available=&quot;+DB.getBooleanSql(true)+&quot; AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') &quot;;</span>
+<span class="nc bnc" id="L700" title="All 4 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+				//vsetky normalne DB okrem MSSQL nieco taketo poznaju
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				if (Constants.DB_TYPE == Constants.DB_PGSQL) sql.append(&quot; OFFSET &quot;).append(index).append(&quot; LIMIT &quot;).append((perPage * 3 + 1));</span>
+<span class="nc" id="L704">				else sql.append(&quot; LIMIT &quot;).append(index).append(&quot;, &quot;).append((perPage * 3 + 1));</span>
+
+<span class="nc" id="L706">				sql.append(' ');</span>
+				//ps.setInt(3, index);
+				//ps.setInt(4, perPage + 1);
+			}
+<span class="nc" id="L710">			sTok = new StringTokenizer(words);</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">			if(sql != null) //toto je kvoli Oracle verzii</span>
+<span class="nc" id="L712">				sql = new StringBuilder(Tools.replace(sql.toString(), &quot;WHERE AND&quot;, &quot;WHERE&quot;));</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">			if(Tools.isNotEmpty(sqlTotalResults))</span>
+<span class="nc" id="L714">				sqlTotalResults = Tools.replace(sqlTotalResults, &quot;WHERE AND&quot;, &quot;WHERE&quot;);</span>
+
+			// text to find
+<span class="nc" id="L717">			Logger.debug(SearchAction.class,&quot;words: &quot; + words);</span>
+<span class="nc" id="L718">			Logger.debug(SearchAction.class,&quot;wordsAscii: &quot; + wordsAscii);</span>
+<span class="nc" id="L719">			Logger.debug(SearchAction.class,&quot;wordsMysql: &quot; + wordsMysql);</span>
+<span class="nc" id="L720">			Logger.debug(SearchAction.class,&quot;search sql=&quot;+sql);</span>
+<span class="nc" id="L721">			int psIndex = 1;</span>
+
+<span class="nc" id="L723">			DebugTimer dt = new DebugTimer(&quot;SearchAction&quot;);</span>
+
+<span class="nc" id="L725">			db_conn = DBPool.getConnectionReadUncommited();</span>
+
+<span class="nc" id="L727">			ps = db_conn.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);</span>
+
+<span class="nc" id="L729">			psIndex = 1;</span>
+<span class="nc bnc" id="L730" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+				//pre oracle to mam rovno v query
+
+				//musime este doplnit hodnoty pre parametre v requeste
+<span class="nc" id="L735">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L737" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+				//Logger.println(this,&quot;nastavujem params: &quot; + wordsMysql + &quot; &quot; + index + &quot; &quot; + perPage);
+<span class="nc bnc" id="L740" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+<span class="nc" id="L742">					ps.setString(psIndex++, wordsMysql);</span>
+<span class="nc bnc" id="L743" title="All 2 branches missed.">					if (searchDetaultInTitle)</span>
+					{
+<span class="nc" id="L745">						ps.setString(psIndex++, &quot;%&quot;+wordsAscii+&quot;%&quot;);</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">						if (request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, &quot;%&quot;+words+&quot;%&quot;);</span>
+					}
+				}
+				//jeeff: toto som presunul rovno do SQL query, novemu MySQL driveru
+				// to robilo problem (mozno len bug)
+				//ps.setInt(3, index);
+				//ps.setInt(4, perPage + 1);
+
+<span class="nc" id="L754">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L756" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+				//Logger.println(this,&quot;nastavujem params: &quot; + wordsMysql + &quot; &quot; + index + &quot; &quot; + perPage);
+<span class="nc bnc" id="L759" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+<span class="nc" id="L761">					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words.trim()).toLowerCase(), &quot; &quot;, &quot; &amp; &quot;));</span>
+<span class="nc bnc" id="L762" title="All 2 branches missed.">					if (searchDetaultInTitle)</span>
+					{
+<span class="nc" id="L764">						ps.setString(psIndex++, wordsAscii);</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">						if (request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, words);</span>
+					}
+				}
+<span class="nc" id="L768">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L772" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+					//MSSQL vetva
+<span class="nc" id="L775">					StringBuilder mssqlContainsMatcher = toMssqlContainsSearch(wordsAscii);</span>
+
+<span class="nc bnc" id="L777" title="All 2 branches missed.">					if(mssqlContainsMatcher.length() &gt; 0)</span>
+					{
+<span class="nc" id="L779">						ps.setString(psIndex++, mssqlContainsMatcher.toString());</span>
+						//	title
+<span class="nc bnc" id="L781" title="All 4 branches missed.">						if (searchDetaultInTitle &amp;&amp; request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, &quot;%&quot;+wordsAscii+&quot;%&quot;);</span>
+					}
+					else
+					{
+<span class="nc" id="L785">						ps.setString(psIndex++, wordsAscii);</span>
+					}
+				}
+<span class="nc" id="L788">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L790" title="All 4 branches missed.">			if(notFoundPublishStartEnd &amp;&amp;  Constants.getBoolean(&quot;showOnlyActualPublishedDoc&quot;))</span>
+			{
+<span class="nc" id="L792">				Date now = new Date();</span>
+<span class="nc" id="L793">				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));</span>
+<span class="nc" id="L794">				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));</span>
+			}
+<span class="nc" id="L796">			rs = ps.executeQuery();</span>
+
+<span class="nc" id="L798">			dt.diff(&quot;after execute&quot;);</span>
+
+<span class="nc bnc" id="L800" title="All 4 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+				//movni sa
+<span class="nc bnc" id="L803" title="All 2 branches missed.">				if (index &gt; 0)</span>
+				{
+					//Logger.println(this,&quot;RS move: &quot;+index);
+<span class="nc bnc" id="L806" title="All 2 branches missed.">					for (i = 0; i &lt; index; i++)</span>
+					{
+						//rs.absolute(index);
+<span class="nc" id="L809">						rs.next();</span>
+					}
+				}
+			}
+<span class="nc" id="L813">			aList = new ArrayList&lt;&gt;();</span>
+			SearchDetails qDet;
+			String link;
+
+<span class="nc" id="L817">			String ttf = getTextToFind(request);</span>
+<span class="nc" id="L818">			dt.diff(&quot;after prepare TTF&quot;);</span>
+
+<span class="nc bnc" id="L820" title="All 4 branches missed.">			while (aList.size()&lt;perPage &amp;&amp; rs.next())</span>
+			{
+<span class="nc" id="L822">				dt.diff(&quot;NEXT &quot;+aListCount);</span>
+
+<span class="nc" id="L824">				aListCount++;</span>
+<span class="nc bnc" id="L825" title="All 2 branches missed.">				if (aListCount == (perPage + 1))</span>
+				{
+<span class="nc" id="L827">					Logger.debug(SearchAction.class,&quot;aListCount=&quot;+aListCount+&quot; perPage=&quot;+perPage);</span>
+<span class="nc bnc" id="L828" title="All 4 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+					{
+<span class="nc" id="L830">						break;</span>
+					}
+					continue;
+				}
+<span class="nc" id="L834">				qDet = new SearchDetails();</span>
+<span class="nc" id="L835">				DocDB.getDocDetails(rs, qDet, false, true);</span>
+
+<span class="nc" id="L837">				dt.diff(&quot;after getDocDetails: docId=&quot; + qDet.getDocId() + &quot; title=&quot; + qDet.getTitle() + &quot; path=&quot; + qDet.getVirtualPath() + &quot; size=&quot;+qDet.getData().length());</span>
+<span class="nc" id="L838">				qDet.setDataOriginal(qDet.getData());</span>
+
+<span class="nc bnc" id="L840" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;fulltextExecuteApps&quot;))</span>
+				{
+<span class="nc" id="L842">					String dataAsc = DB.getDbString(rs, &quot;data_asc&quot;);</span>
+<span class="nc" id="L843">					int separatorIndex = dataAsc.indexOf(EditorDB.RENDER_DATA_SEPARATOR);</span>
+<span class="nc bnc" id="L844" title="All 2 branches missed.">					if (separatorIndex&gt;0)</span>
+					{
+<span class="nc" id="L846">						qDet.setDataOriginal(dataAsc.substring(0, separatorIndex));</span>
+					}
+				}
+
+				//vymazeme mu data, ak by sa nieco pototo aby sa nezobrazila cela stranka
+<span class="nc" id="L851">				qDet.setData(&quot;&quot;);</span>
+
+<span class="nc" id="L853">				GroupDetails group = groupsDB.getGroup(qDet.getGroupId());</span>
+
+				//nastav prava stranke (aby sa dalo detekovat vo vysledkoch a zobrazit napr. obrazok zamku)
+<span class="nc bnc" id="L856" title="All 6 branches missed.">				if (Tools.isEmpty(qDet.getPasswordProtected()) &amp;&amp; group != null &amp;&amp; Tools.isNotEmpty(group.getPasswordProtected()))</span>
+				{
+<span class="nc" id="L858">					qDet.setPasswordProtected(group.getPasswordProtected());</span>
+				}
+
+				//dokumenty v internal foldroch neprehladavame (okrem root groups)
+<span class="nc bnc" id="L862" title="All 2 branches missed.">				if (group != null)</span>
+				{
+<span class="nc bnc" id="L864" title="All 4 branches missed.">					if (rootGroupIdsTable.get(Integer.valueOf(group.getGroupId()))==null &amp;&amp; group.isInternal())</span>
+					{
+<span class="nc" id="L866">						Logger.debug(SearchAction.class, &quot;preskakujem interny adresar: &quot;+group.getGroupIdName());</span>
+<span class="nc" id="L867">						aListCount--;</span>
+<span class="nc" id="L868">                        pocetVynechanychSuborov++;</span>
+<span class="nc" id="L869">						continue;</span>
+					}
+<span class="nc" id="L871">					link = groupsDB.getNavbar(group.getGroupId());</span>
+				}
+				else
+				{
+					//group uz neexistuje...
+<span class="nc" id="L876">					link = null;</span>
+				}
+				try
+				{
+<span class="nc bnc" id="L880" title="All 2 branches missed.">					if (qDet.getExternalLink().startsWith(&quot;/files/&quot;))</span>
+					{
+						//navbar pre subory generujem bez moznosti kliknutia na odkaz
+<span class="nc" id="L883">						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), request).split(&quot;\\/&quot;);</span>
+<span class="nc" id="L884">						link = &quot;&quot;;</span>
+<span class="nc bnc" id="L885" title="All 2 branches missed.">						for (int p=0; p&lt;fileLink.length-1; p++)</span>
+						{
+<span class="nc" id="L887">							String part = fileLink[p];</span>
+<span class="nc bnc" id="L888" title="All 2 branches missed.">							if (Tools.isEmpty(link)) link = part;</span>
+<span class="nc" id="L889">							else link += &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;+part; //NOSONAR</span>
+						}
+						//skontroluj ci subor skutocne existuje
+<span class="nc bnc" id="L892" title="All 2 branches missed.">						if (request.getAttribute(&quot;searchDontCheckFile&quot;)==null)</span>
+						{
+<span class="nc" id="L894">							IwcmFile iwf = new IwcmFile(Tools.getRealPath(qDet.getExternalLink()));</span>
+<span class="nc bnc" id="L895" title="All 2 branches missed.">							if (iwf.exists()==false)</span>
+							{
+<span class="nc" id="L897">								Logger.debug(SearchAction.class, &quot;Subor &quot;+qDet.getExternalLink()+&quot; neexistuje, preskakujem&quot;);</span>
+<span class="nc" id="L898">								aListCount--;</span>
+<span class="nc" id="L899">                                pocetVynechanychSuborov++;</span>
+<span class="nc" id="L900">								continue;</span>
+							}
+						}
+						//ak je aktivny file archiv nahrad meno suboru za virtual file name
+<span class="nc" id="L904">						FileArchivatorBean fab = FileArchivatorDB.getByUrl(qDet.getExternalLink());</span>
+<span class="nc bnc" id="L905" title="All 2 branches missed.">						if (fab != null)</span>
+						{
+<span class="nc" id="L907">							qDet.setTitle(fab.getVirtualFileName());</span>
+						}
+
+					}
+				}
+<span class="nc" id="L912">				catch (Exception e)</span>
+				{
+<span class="nc" id="L914">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L915">				}</span>
+
+<span class="nc bnc" id="L917" title="All 2 branches missed.">				if (link == null)</span>
+				{
+<span class="nc" id="L919">					qDet.setLink(&quot;&quot;);</span>
+				}
+				else
+				{
+<span class="nc" id="L923">					qDet.setLink(link);</span>
+				}
+
+<span class="nc" id="L926">				SearchSnippet searchSnippet = new SearchSnippet(qDet, ttf, request);</span>
+<span class="nc" id="L927">				String snippet = searchSnippet.getSnippet();</span>
+
+<span class="nc bnc" id="L929" title="All 2 branches missed.">				if (Tools.isEmpty(snippet)) snippet = &quot;&amp;nbsp;&quot;;</span>
+<span class="nc" id="L930">				qDet.setData(snippet);</span>
+<span class="nc" id="L931">				dt.diff(&quot;after snippet, size=&quot;+qDet.getData().length());</span>
+
+				//Logger.println(this,&quot;PRIDAVAM DO ZOZNAMU: &quot; + qDet.getTitle());
+<span class="nc" id="L934">				aList.add(qDet);</span>
+<span class="nc" id="L935">			}</span>
+
+<span class="nc" id="L937">			hasAnotherPage = rs.next();</span>
+
+<span class="nc" id="L939">			dt.diff(&quot;RS iterated&quot;);</span>
+
+<span class="nc" id="L941">			rs.close();</span>
+<span class="nc" id="L942">			dt.diff(&quot;after rs.close&quot;);</span>
+
+<span class="nc" id="L944">			ps.close();</span>
+<span class="nc" id="L945">			dt.diff(&quot;after ps.close&quot;);</span>
+
+<span class="nc" id="L947">			db_conn.close();</span>
+<span class="nc" id="L948">			dt.diff(&quot;after db_conn.close&quot;);</span>
+
+<span class="nc" id="L950">			rs = null;</span>
+<span class="nc" id="L951">			ps = null;</span>
+<span class="nc" id="L952">			db_conn = null;</span>
+
+<span class="nc" id="L954">			dt.diff(&quot;done&quot;);</span>
+		}
+<span class="nc" id="L956">		catch (Exception e)</span>
+		{
+<span class="nc" id="L958">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L959">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L960">			request.setAttribute(&quot;notfound&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L961">			request.setAttribute(&quot;err_msg&quot;, &quot;Chyba pri práci s databázou...&quot; + e.getMessage());</span>
+<span class="nc" id="L962">			return (error);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L968" title="All 2 branches missed.">				if (rs != null) try { rs.close(); } catch (Exception te) {sk.iway.iwcm.Logger.error(te);}</span>
+<span class="nc bnc" id="L969" title="All 2 branches missed.">				if (ps != null) try { ps.close(); } catch (Exception te) {sk.iway.iwcm.Logger.error(te);}</span>
+<span class="nc bnc" id="L970" title="All 2 branches missed.">				if (db_conn != null) try { db_conn.close(); } catch (Exception te) {}</span>
+			}
+<span class="nc" id="L972">			catch (Exception e)</span>
+			{
+<span class="nc" id="L974">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L975">				request.setAttribute(&quot;err_msg&quot;, &quot;Chyba pri práci s databázou: &quot; + e.getMessage());</span>
+<span class="nc" id="L976">			}</span>
+		}
+
+<span class="nc" id="L979">		totalResults = getResultsCount(sqlTotalResults, request, words, wordsAscii, wordsMysql, aList.size(), hasAnotherPage);</span>
+<span class="nc" id="L980">		request.setAttribute(&quot;words&quot;, words);</span>
+<span class="nc" id="L981">		request.setAttribute(&quot;aList&quot;, aList);</span>
+<span class="nc bnc" id="L982" title="All 2 branches missed.">		if (aList.isEmpty())</span>
+		{
+<span class="nc" id="L984">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L985">			request.setAttribute(&quot;notfound&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L986">			return (forward);</span>
+		}
+<span class="nc" id="L988">		String paramsLink = &quot;&quot;;</span>
+<span class="nc" id="L989">		StringBuilder paramsLinkBuilder = new StringBuilder();</span>
+<span class="nc" id="L990">		Enumeration&lt;String&gt; e = request.getParameterNames();</span>
+		String name;
+<span class="nc bnc" id="L992" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+		{
+<span class="nc" id="L994">			name = e.nextElement();</span>
+<span class="nc bnc" id="L995" title="All 4 branches missed.">			if (&quot;index&quot;.equals(name) || &quot;docid&quot;.equals(name)) continue;</span>
+
+<span class="nc" id="L997">			String[] values = request.getParameterValues(name);</span>
+<span class="nc bnc" id="L998" title="All 2 branches missed.">		   for (int v=0; v&lt;values.length; v++)</span>
+		   {
+<span class="nc" id="L1000">		   	paramsLinkBuilder.append(&quot;&amp;amp;&quot;).append(Tools.URLEncode(name)).append('=').append(Tools.URLEncode(values[v]));</span>
+		   }
+<span class="nc" id="L1002">		}</span>
+<span class="nc" id="L1003">		paramsLink = paramsLinkBuilder.toString();</span>
+<span class="nc" id="L1004">		request.setAttribute(&quot;paramsLink&quot;, paramsLink);</span>
+
+		//vypocitaj celkove pocty
+<span class="nc" id="L1007">		request.setAttribute(&quot;fromIndex&quot;, Integer.toString( (index + 1)));</span>
+<span class="nc" id="L1008">		int toIndex = index + aList.size();</span>
+<span class="nc" id="L1009">		request.setAttribute(&quot;toIndex&quot;, Integer.toString(toIndex));</span>
+		//
+<span class="nc bnc" id="L1011" title="All 4 branches missed.">		if(pocetVynechanychSuborov &gt; 0 &amp;&amp; totalResults &gt;= pocetVynechanychSuborov)</span>
+        {
+<span class="nc" id="L1013">            totalResults = totalResults - pocetVynechanychSuborov;</span>
+        }
+<span class="nc" id="L1015">		Logger.debug(SearchAction.class, &quot;totalResults=&quot;+totalResults);</span>
+<span class="nc" id="L1016">		request.setAttribute(&quot;totalResults&quot;, Integer.toString(totalResults));</span>
+
+		//vytvor pages
+<span class="nc" id="L1019">		preparePages(request, perPage, index, totalResults, paramsLink,&quot;search.do&quot;);</span>
+
+<span class="nc bnc" id="L1021" title="All 2 branches missed.">		if (totalResults &gt; toIndex)</span>
+		{
+<span class="nc bnc" id="L1023" title="All 2 branches missed.">			if (!english)</span>
+			{
+<span class="nc" id="L1025">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; Ďalej &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
+			}
+			else
+			{
+<span class="nc" id="L1029">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; Next &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
+			}
+
+<span class="nc" id="L1032">			request.setAttribute(&quot;nextHref&quot;, &quot;search.do?index=&quot; + (index + perPage) + paramsLink);</span>
+		}
+		else
+		{
+			//request.setAttribute(&quot;next&quot;, NEXT);
+		}
+<span class="nc bnc" id="L1038" title="All 2 branches missed.">		if (index != 0)</span>
+		{
+<span class="nc bnc" id="L1040" title="All 2 branches missed.">			if (!english)</span>
+			{
+<span class="nc" id="L1042">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Späť &lt;/a&gt;&quot;);</span>
+			}
+			else
+			{
+<span class="nc" id="L1046">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Back &lt;/a&gt;&quot;);</span>
+			}
+<span class="nc" id="L1048">			request.setAttribute(&quot;prevHref&quot;, &quot;search.do?index=&quot; + (index - perPage)	+ paramsLink);</span>
+		}
+		else
+		{
+			//request.setAttribute(&quot;prev&quot;, PREV);
+		}
+
+<span class="nc" id="L1055">		String searchTerm = request.getParameter(&quot;words&quot;);</span>
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter(&quot;text&quot;);</span>
+<span class="nc bnc" id="L1057" title="All 2 branches missed.">		if (Tools.isNotEmpty(searchTerm))</span>
+		{
+<span class="nc" id="L1059">			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1), request);</span>
+		}
+
+<span class="nc" id="L1062">		return (forward);</span>
+	}
+
+	protected static void preparePages(HttpServletRequest request, int perPage, int index, int totalResults, String paramsLink, String searchAction)
+	{
+<span class="nc" id="L1067">		List&lt;LabelValueDetails&gt; pages = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L1068">		request.removeAttribute(&quot;pages&quot;);</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		boolean paging = totalResults &gt; perPage;</span>
+<span class="nc" id="L1070">		int page = (index / perPage) + 1;</span>
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">		if (paging)</span>
+		{
+			LabelValueDetails lv_page;
+<span class="nc" id="L1074">			int p = 1;</span>
+<span class="nc" id="L1075">			int start = 0;</span>
+<span class="nc bnc" id="L1076" title="All 2 branches missed.">			if (perPage &gt; 0)</span>
+			{
+<span class="nc bnc" id="L1078" title="All 2 branches missed.">				while (start &lt; totalResults)</span>
+				{
+<span class="nc bnc" id="L1080" title="All 2 branches missed.">					if (p == page)</span>
+					{
+<span class="nc" id="L1082">						lv_page = new LabelValueDetails(Integer.toString(p), &quot;&quot;);//aktualna strana</span>
+					}
+					else
+					{
+<span class="nc" id="L1086">						lv_page = new LabelValueDetails(Integer.toString(p), searchAction+&quot;?index=&quot; + (start) + paramsLink);</span>
+					}
+<span class="nc" id="L1088">					pages.add(lv_page);</span>
+<span class="nc" id="L1089">					p++;</span>
+<span class="nc" id="L1090">					start = start + perPage;</span>
+				}
+			}
+<span class="nc bnc" id="L1093" title="All 2 branches missed.">			if (pages.size()&gt;1) request.setAttribute(&quot;pages&quot;, pages);</span>
+		}
+<span class="nc" id="L1095">	}</span>
+
+	private static StringBuilder toMssqlContainsSearch(String words)
+	{
+<span class="nc" id="L1099">		String wordsMssql = words.replaceAll(&quot;[^A-Za-z0-9]&quot;, &quot; &quot;).replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="nc" id="L1100">		StringBuilder mssqlContainsMatcher = new StringBuilder();</span>
+		//uniq
+<span class="nc" id="L1102">		String[] terms = new HashSet&lt;String&gt;(Arrays.asList(wordsMssql.split(&quot; &quot;))).toArray(new String[]{});</span>
+
+<span class="nc bnc" id="L1104" title="All 2 branches missed.">		for(String term : terms)</span>
+<span class="nc" id="L1105">			mssqlContainsMatcher.append(&quot; AND \&quot;&quot;).append(term).append(&quot;*\&quot;&quot;);</span>
+<span class="nc" id="L1106">		mssqlContainsMatcher.delete(0, &quot; AND &quot;.length());</span>
+<span class="nc" id="L1107">		return mssqlContainsMatcher;</span>
+	}
+
+	/**
+	 * Deprecated, pouzite priamo SearchTools.htmlToPlain
+	 * prevod HTML do plain textu
+	 *
+	 * @param html
+	 *           Description of the Parameter
+	 * @return Description of the Return Value
+	 * @deprecated - use SearchTools.htmlToPlain
+	 */
+	@Deprecated
+	public static String htmlToPlain(String html)
+	{
+<span class="nc" id="L1122">		return SearchTools.htmlToPlain(html);</span>
+	}
+
+	/**
+	 * Odstrani z HTML kodu riadiace bloky typu !INCLUDE(...)!, !PARAM(...)!
+	 * @param html
+	 * @return
+	 * @deprecated - use SearchTools.removeCommands
+	 */
+	@Deprecated
+	public static String removeCommands(String html)
+	{
+<span class="nc" id="L1134">		return SearchTools.removeCommands(html);</span>
+	}
+
+
+
+	protected static String getParamAttribute(String name, HttpServletRequest request, String defaultValue)
+	{
+<span class="nc" id="L1141">		String ret = request.getParameter(name);</span>
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">		if (ret == null)</span>
+		{
+<span class="nc" id="L1144">			ret = (String) request.getAttribute(name);</span>
+<span class="nc bnc" id="L1145" title="All 2 branches missed.">			if (ret == null)</span>
+<span class="nc" id="L1146">				ret = defaultValue;</span>
+		}
+		else
+		{
+			//nebezpecne znaky odpaz
+<span class="nc bnc" id="L1151" title="All 2 branches missed.">			if (Constants.containsKey(&quot;searchActionOmitCharacters&quot;))</span>
+			{
+<span class="nc" id="L1153">				ret = ret.replaceAll(&quot;[&quot;+Constants.getString(&quot;searchActionOmitCharacters&quot;)+&quot;]&quot;, &quot;&quot;);</span>
+			}
+		}
+<span class="nc bnc" id="L1156" title="All 2 branches missed.">		if (ret != null)</span>
+		{
+<span class="nc" id="L1158">			ret = ret.replace('\'', ' ');</span>
+<span class="nc" id="L1159">			ret = ret.replace('\&quot;', ' ');</span>
+<span class="nc" id="L1160">			ret = ret.replace(',', ' ');</span>
+<span class="nc bnc" id="L1161" title="All 2 branches missed.">			if (name.indexOf(&quot;publish&quot;)==-1)</span>
+			{
+<span class="nc" id="L1163">				ret = ret.replace('.', ' ');</span>
+			}
+<span class="nc" id="L1165">			ret = ret.replace(';', ' ');</span>
+		}
+<span class="nc" id="L1167">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati parameter, alebo atribut bez escapovania zlych hodnot, je mozne nastavit len za pouzitia PreparedStatement
+	 * @param name
+	 * @param request
+	 * @param defaultValue
+	 * @return
+	 */
+	protected static String getParamAttributeUnsafe(String name, HttpServletRequest request, String defaultValue)
+	{
+<span class="nc" id="L1179">		String ret = request.getParameter(name);</span>
+<span class="nc bnc" id="L1180" title="All 2 branches missed.">		if (ret == null)</span>
+		{
+<span class="nc" id="L1182">			ret = (String) request.getAttribute(name);</span>
+<span class="nc bnc" id="L1183" title="All 2 branches missed.">			if (ret == null)</span>
+<span class="nc" id="L1184">				ret = defaultValue;</span>
+		}
+		else
+		{
+			//nebezpecne znaky odpaz (typu %%% pre vyhladanie cohokolvek)
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">			if (Constants.containsKey(&quot;searchActionOmitCharacters&quot;))</span>
+			{
+<span class="nc" id="L1191">				ret = ret.replaceAll(&quot;[&quot;+Constants.getString(&quot;searchActionOmitCharacters&quot;)+&quot;]&quot;, &quot;&quot;);</span>
+			}
+		}
+<span class="nc" id="L1194">		return (ret);</span>
+	}
+
+
+	/**
+	 * Vrati pocet zaznamov vyhovujucich kriteriam vyhladavani na zaklade SQL dotazu.
+	 * Pri nastaveni Constants.searchActionOptimize na true sa snazi tento pocet odhadnut a dotaz nevykonava.
+	 */
+	private static int getResultsCount(String sqlTotalResults, HttpServletRequest request, String words, String wordsAscii, String wordsMysql, int fetchedCount, boolean hasAnotherPage)
+	{
+<span class="nc bnc" id="L1204" title="All 2 branches missed.">		if (fetchedCount == 0)</span>
+<span class="nc" id="L1205">			return 0;</span>
+
+<span class="nc" id="L1207">		int resultsPerPage = Integer.parseInt(getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;));</span>
+<span class="nc bnc" id="L1208" title="All 2 branches missed.">		int index = request.getParameter(&quot;index&quot;) != null ? Integer.parseInt(request.getParameter(&quot;index&quot;)) : 0;</span>
+
+<span class="nc bnc" id="L1210" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;searchActionOptimize&quot;) &amp;&amp; hasAnotherPage)</span>
+<span class="nc" id="L1211">			return index + resultsPerPage + resultsPerPage;</span>
+
+<span class="nc" id="L1213">		Connection db_conn = null;</span>
+<span class="nc" id="L1214">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1215">		ResultSet rs = null;</span>
+
+<span class="nc" id="L1217">		int totalResults = 0;</span>
+
+		try
+		{
+<span class="nc" id="L1221">			Logger.debug(SearchAction.class,&quot;search sql TOTAL=&quot;+sqlTotalResults);</span>
+
+<span class="nc" id="L1223">			db_conn = DBPool.getConnectionReadUncommited();</span>
+
+<span class="nc" id="L1225">			int psIndex = 1;</span>
+<span class="nc" id="L1226">			ps = db_conn.prepareStatement(sqlTotalResults);</span>
+<span class="nc bnc" id="L1227" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+				//pre oracle to mam rovno v query
+
+				//musime este doplnit hodnoty pre parametre v requeste
+<span class="nc" id="L1232">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc bnc" id="L1236" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+<span class="nc" id="L1238">					ps.setString(psIndex++, wordsMysql);</span>
+<span class="nc bnc" id="L1239" title="All 4 branches missed.">					if (Constants.getBoolean(&quot;searchDetaultInTitle&quot;) || &quot;true&quot;.equals(request.getParameter(&quot;searchDetaultInTitle&quot;)))</span>
+					{
+<span class="nc" id="L1241">						ps.setString(psIndex++, &quot;%&quot;+wordsAscii+&quot;%&quot;);</span>
+<span class="nc bnc" id="L1242" title="All 2 branches missed.">						if (request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, &quot;%&quot;+words+&quot;%&quot;);</span>
+					}
+				}
+<span class="nc" id="L1245">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L1247" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+<span class="nc" id="L1251">					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words).toLowerCase(), &quot; &quot;, &quot; &amp; &quot;));</span>
+<span class="nc bnc" id="L1252" title="All 4 branches missed.">					if (Constants.getBoolean(&quot;searchDetaultInTitle&quot;) || &quot;true&quot;.equals(request.getParameter(&quot;searchDetaultInTitle&quot;)))</span>
+					{
+<span class="nc" id="L1254">						ps.setString(psIndex++, &quot;%&quot;+wordsAscii+&quot;%&quot;);</span>
+<span class="nc bnc" id="L1255" title="All 2 branches missed.">						if (request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, &quot;%&quot;+words+&quot;%&quot;);</span>
+					}
+				}
+<span class="nc" id="L1258">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L1262" title="All 2 branches missed.">				if (words.length()&gt;0)</span>
+				{
+					//MSSQL
+<span class="nc" id="L1265">					StringBuilder mssqlSearch = toMssqlContainsSearch(wordsAscii);</span>
+<span class="nc bnc" id="L1266" title="All 2 branches missed.">					if (mssqlSearch.length() &gt; 0)</span>
+					{
+<span class="nc" id="L1268">						ps.setString(psIndex++, mssqlSearch.toString());</span>
+					}
+					else
+					{
+<span class="nc" id="L1272">						ps.setString(psIndex++, wordsAscii);</span>
+					}
+					//	title
+<span class="nc bnc" id="L1275" title="All 6 branches missed.">					if ((Constants.getBoolean(&quot;searchDetaultInTitle&quot;) || &quot;true&quot;.equals(request.getParameter(&quot;searchDetaultInTitle&quot;))) &amp;&amp; request.getParameter(&quot;words&quot;)!=null) ps.setString(psIndex++, &quot;%&quot;+words+&quot;%&quot;);</span>
+				}
+
+<span class="nc" id="L1278">				psIndex = addInputParamsSQL(request, ps, psIndex);</span>
+			}
+<span class="nc bnc" id="L1280" title="All 6 branches missed.">			if(request.getAttribute(&quot;notFoundPublishStartEnd&quot;) != null &amp;&amp; &quot;true&quot;.equals((String)request.getAttribute(&quot;notFoundPublishStartEnd&quot;)) &amp;&amp;  Constants.getBoolean(&quot;showOnlyActualPublishedDoc&quot;)) //NOSONAR</span>
+			{
+<span class="nc" id="L1282">				Date now = new Date();</span>
+<span class="nc" id="L1283">				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));</span>
+<span class="nc" id="L1284">				ps.setTimestamp(psIndex++, new Timestamp(now.getTime()));</span>
+			}
+			//Logger.println(this,sqlTotalResults);
+<span class="nc" id="L1287">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1288" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L1290">				totalResults = rs.getInt(&quot;totalr&quot;);</span>
+			}
+<span class="nc" id="L1292">			rs.close();</span>
+<span class="nc" id="L1293">			ps.close();</span>
+<span class="nc" id="L1294">			db_conn.close();</span>
+
+<span class="nc" id="L1296">			rs = null;</span>
+<span class="nc" id="L1297">			ps = null;</span>
+<span class="nc" id="L1298">			db_conn = null;</span>
+
+<span class="nc" id="L1300">			Logger.debug(SearchAction.class, &quot;totalResults=&quot;+totalResults);</span>
+		}
+<span class="nc" id="L1302">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1304">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1310" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1311">					rs.close();</span>
+<span class="nc bnc" id="L1312" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1313">					ps.close();</span>
+<span class="nc bnc" id="L1314" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1315">					db_conn.close();</span>
+			}
+<span class="nc" id="L1317">			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}</span>
+		}
+
+<span class="nc" id="L1320">		return totalResults;</span>
+	}
+
+	/**
+	 * Vrati SQL prikaz pre pridanie parametrov field_a, field_b... (ak su zadane)
+	 * @param request
+	 * @return
+	 */
+	public static String addInputParamsSQL(HttpServletRequest request)
+	{
+<span class="nc" id="L1330">		StringBuilder ret = new StringBuilder();</span>
+<span class="nc" id="L1331">		int len = SearchTools.checkInputParams.length;</span>
+		int i;
+		String param;
+
+		//	pridanie publish_start a publish_end parametrov nerobime ak je nejaky rozumny dateText
+<span class="nc" id="L1336">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
+<span class="nc" id="L1337">		boolean checkPublishDates = false;</span>
+<span class="nc bnc" id="L1338" title="All 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
+		{
+<span class="nc" id="L1340">			checkPublishDates = true;</span>
+		}
+
+<span class="nc bnc" id="L1343" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+		{
+<span class="nc" id="L1345">			param = getParamAttributeUnsafe(SearchTools.checkInputParams[i], request, null);</span>
+<span class="nc bnc" id="L1346" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+			{
+<span class="nc bnc" id="L1348" title="All 2 branches missed.">				if (SearchTools.checkInputParams[i].equals(&quot;publish_start&quot;))</span>
+				{
+<span class="nc bnc" id="L1350" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1352">						ret.append(&quot; AND ( (publish_start IS NOT NULL AND publish_start &gt;= ?) OR (publish_start IS NULL AND date_created &gt;= ?) ) &quot;);</span>
+					}
+				}
+<span class="nc bnc" id="L1355" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
+				{
+<span class="nc bnc" id="L1357" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1359">						ret.append(&quot; AND ( (publish_start IS NOT NULL AND publish_start &lt;= ?) OR (publish_start IS NULL AND date_created &lt;= ?) ) &quot;);</span>
+					}
+				}
+<span class="nc bnc" id="L1362" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_end&quot;))</span>
+				{
+<span class="nc bnc" id="L1364" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1366">						ret.append(&quot; AND ( (publish_end IS NOT NULL AND publish_end &lt;= ?) OR (publish_end IS NULL AND date_created &lt;= ?) ) &quot;);</span>
+					}
+				}
+<span class="nc bnc" id="L1369" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
+				{
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1373">						ret.append(&quot; AND ( (publish_end IS NOT NULL AND publish_end &gt;= ?) OR (publish_end IS NULL AND date_created &gt;= ?) ) &quot;);</span>
+					}
+				}
+<span class="nc bnc" id="L1376" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;temp_id&quot;))</span>
+				{
+<span class="nc" id="L1378">					ret.append(&quot; AND &quot; + SearchTools.checkInputParams[i] + &quot; = ? &quot;);</span>
+				}
+<span class="nc bnc" id="L1380" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;keyword&quot;))</span>
+				{
+<span class="nc bnc" id="L1382" title="All 2 branches missed.">					if(Constants.getBoolean(&quot;perexGroupUseJoin&quot;)) ret.append(&quot; AND p.perex_group_id = ? &quot;);</span>
+<span class="nc" id="L1383">					else ret.append(&quot; AND ( perex_group LIKE ? ) &quot;); //perex skupiny maju osetrene vkladanie pomocou , a , na zaciatku a konci</span>
+				}
+				else
+				{
+					//ak mame viac slov rozdel po slovach
+<span class="nc bnc" id="L1388" title="All 2 branches missed.">					if (param != null) {</span>
+<span class="nc" id="L1389">						StringTokenizer st = new StringTokenizer(param);</span>
+<span class="nc bnc" id="L1390" title="All 4 branches missed.">						if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
+						{
+<span class="nc" id="L1392">							ret.append(&quot; AND &quot; + SearchTools.checkInputParams[i] + &quot; LIKE ?&quot;);</span>
+						}
+						else
+						{
+<span class="nc" id="L1396">							String mode = getInputParamMode(SearchTools.checkInputParams[i], request);</span>
+<span class="nc" id="L1397">							ret.append(&quot; AND (&quot;);</span>
+<span class="nc bnc" id="L1398" title="All 2 branches missed.">							while (st.hasMoreTokens())</span>
+							{
+<span class="nc" id="L1400">								st.nextToken();</span>
+<span class="nc" id="L1401">								ret.append(SearchTools.checkInputParams[i]).append(&quot; LIKE ? &quot;);</span>
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">								if (st.hasMoreTokens()) ret.append(mode).append(' ');</span>
+							}
+<span class="nc" id="L1404">							ret.append(&quot;) &quot;);</span>
+						}
+					}
+				}
+			}
+		}
+		//	textove vyjadrenie dateText = &quot;today,lastWeek,lastMonth&quot;;
+<span class="nc bnc" id="L1411" title="All 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
+		{
+<span class="nc" id="L1413">			ret.append(&quot; AND ( (publish_start IS NOT NULL AND publish_start &gt;= ?) OR (publish_start IS NULL AND date_created &gt;= ?) ) AND ( (publish_end IS NOT NULL AND publish_end &lt;= ?) OR (publish_end IS NULL AND date_created &lt;= ?) ) &quot;);</span>
+		}
+<span class="nc" id="L1415">		return(ret).toString();</span>
+	}
+
+	/**
+	 * Prida parametre do PreparedStatementu
+	 * @param request
+	 * @param ps
+	 * @return
+	 * @throws SQLException
+	 */
+	public static int addInputParamsSQL(HttpServletRequest request, PreparedStatement ps, int psIndex) throws SQLException
+	{
+<span class="nc" id="L1427">		int len = SearchTools.checkInputParams.length;</span>
+		int i;
+		String param;
+
+		//pridanie publish_start a publish_end parametrov nerobime ak je nejaky rozumny dateText
+<span class="nc" id="L1432">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
+<span class="nc" id="L1433">		boolean checkPublishDates = false;</span>
+<span class="nc bnc" id="L1434" title="All 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
+		{
+<span class="nc" id="L1436">			checkPublishDates = true;</span>
+		}
+
+<span class="nc bnc" id="L1439" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+		{
+<span class="nc" id="L1441">			param = getParamAttributeUnsafe(SearchTools.checkInputParams[i], request, null);</span>
+<span class="nc bnc" id="L1442" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+			{
+<span class="nc" id="L1444">				Logger.debug(SearchAction.class, &quot;addPram &quot;+psIndex+&quot; &quot;+ SearchTools.checkInputParams[i]+&quot;=&quot;+param);</span>
+<span class="nc bnc" id="L1445" title="All 2 branches missed.">				if (SearchTools.checkInputParams[i].equals(&quot;publish_start&quot;))</span>
+				{
+<span class="nc bnc" id="L1447" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1449">						long d = DB.getTimestamp(param, &quot;0:00&quot;);</span>
+<span class="nc" id="L1450">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1451">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1452">					}</span>
+				}
+<span class="nc bnc" id="L1454" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
+				{
+<span class="nc bnc" id="L1456" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1458">						long d = DB.getTimestamp(param);</span>
+<span class="nc" id="L1459">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1460">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1461">					}</span>
+				}
+<span class="nc bnc" id="L1463" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_end&quot;))</span>
+				{
+<span class="nc bnc" id="L1465" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1467">						long d = DB.getTimestamp(param, &quot;23:59&quot;);</span>
+<span class="nc" id="L1468">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1469">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1470">					}</span>
+				}
+<span class="nc bnc" id="L1472" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
+				{
+<span class="nc bnc" id="L1474" title="All 2 branches missed.">					if (checkPublishDates)</span>
+					{
+<span class="nc" id="L1476">						long d = DB.getTimestamp(param);</span>
+<span class="nc" id="L1477">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1478">						ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(d, 1970, 3000)));</span>
+<span class="nc" id="L1479">					}</span>
+				}
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;temp_id&quot;))</span>
+				{
+<span class="nc" id="L1483">					ps.setInt(psIndex++, Tools.getIntValue(param, 0));</span>
+				}
+<span class="nc bnc" id="L1485" title="All 2 branches missed.">				else if (SearchTools.checkInputParams[i].equals(&quot;keyword&quot;))</span>
+				{
+					//skonvertuj keyword na ID skupiny
+<span class="nc" id="L1488">					int perexGroupId = 0;</span>
+<span class="nc" id="L1489">					DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L1490">					PerexGroupBean pgb = docDB.getPerexGroup(-1, param);</span>
+<span class="nc bnc" id="L1491" title="All 2 branches missed.">					if (pgb != null) perexGroupId = pgb.getPerexGroupId();</span>
+
+<span class="nc bnc" id="L1493" title="All 2 branches missed.">					if(Constants.getBoolean(&quot;perexGroupUseJoin&quot;)) ps.setInt(psIndex++, perexGroupId);</span>
+<span class="nc" id="L1494">					else ps.setString(psIndex++, &quot;%,&quot;+perexGroupId+&quot;,%&quot;);</span>
+<span class="nc" id="L1495">				}</span>
+				else
+				{
+<span class="nc bnc" id="L1498" title="All 2 branches missed.">					if (param != null) {</span>
+<span class="nc" id="L1499">						StringTokenizer st = new StringTokenizer(param);</span>
+<span class="nc bnc" id="L1500" title="All 4 branches missed.">						if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
+						{
+<span class="nc" id="L1502">							ps.setString(psIndex++, &quot;%&quot;+Tools.replace(param, &quot;\&quot;&quot;, &quot;&quot;)+&quot;%&quot;);</span>
+						}
+						else
+						{
+<span class="nc bnc" id="L1506" title="All 2 branches missed.">							while (st.hasMoreTokens())</span>
+							{
+<span class="nc" id="L1508">								ps.setString(psIndex++, &quot;%&quot;+st.nextToken()+&quot;%&quot;);</span>
+							}
+						}
+					}
+				}
+			}
+		}
+		//	textove vyjadrenie dateText = &quot;today,lastWeek,lastMonth&quot;;
+<span class="nc bnc" id="L1516" title="All 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
+		{
+<span class="nc" id="L1518">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1519">			long dEnd = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;23:59&quot;);</span>
+<span class="nc bnc" id="L1520" title="All 2 branches missed.">			if (&quot;lastWeek&quot;.equals(dateText))</span>
+			{
+<span class="nc" id="L1522">				cal.add(Calendar.WEEK_OF_YEAR, -1);</span>
+			}
+<span class="nc bnc" id="L1524" title="All 2 branches missed.">			else if (&quot;lastMonth&quot;.equals(dateText))</span>
+			{
+<span class="nc" id="L1526">				cal.add(Calendar.MONTH, -1);</span>
+			}
+<span class="nc" id="L1528">			long dStart = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;0:00&quot;);</span>
+<span class="nc" id="L1529">			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
+<span class="nc" id="L1530">			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
+<span class="nc" id="L1531">			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
+<span class="nc" id="L1532">			ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
+		}
+<span class="nc" id="L1534">		return(psIndex);</span>
+	}
+
+	/**
+	 * Vrati true, ak niektory z dodatocnych parametrov nie je prazdny
+	 * @param request
+	 * @return
+	 */
+	public static boolean hasInputParams(HttpServletRequest request)
+	{
+<span class="nc" id="L1544">		int len = SearchTools.checkInputParams.length;</span>
+		int i;
+		String param;
+<span class="nc bnc" id="L1547" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+		{
+<span class="nc" id="L1549">			param = getParamAttribute(SearchTools.checkInputParams[i], request, null);</span>
+<span class="nc bnc" id="L1550" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+			{
+<span class="nc" id="L1552">				return(true);</span>
+			}
+		}
+		//textove vyjadrenie dateText = &quot;today,lastWeek,lastMonth&quot;;
+<span class="nc bnc" id="L1556" title="All 2 branches missed.">		if (Tools.isNotEmpty(request.getParameter(&quot;dateText&quot;)))</span>
+		{
+<span class="nc" id="L1558">			return(true);</span>
+		}
+<span class="nc" id="L1560">		return(false);</span>
+	}
+
+	/**
+	 *
+	 * @param name
+	 * @param request
+	 * @return
+	 */
+	public static String getInputParamMode(String name, HttpServletRequest request)
+	{
+<span class="nc" id="L1571">		String value = getParamAttribute(name+&quot;_mode&quot;, request, &quot;AND&quot;);</span>
+<span class="nc bnc" id="L1572" title="All 2 branches missed.">		if (&quot;OR&quot;.equalsIgnoreCase(value)) return &quot;OR&quot;;</span>
+<span class="nc" id="L1573">		return &quot;AND&quot;;</span>
+	}
+
+	/**
+	 * Vrati komplet vsetky zadane texty pouzite pre highlight
+	 * @param request
+	 * @return
+	 */
+	public static String getTextToFind(HttpServletRequest request)
+	{
+<span class="nc" id="L1583">		String words = getParamAttribute(&quot;words&quot;, request, null);</span>
+<span class="nc" id="L1584">		String text = getParamAttribute(&quot;text&quot;, request, null);</span>
+
+<span class="nc" id="L1586">		String ttf = words;</span>
+<span class="nc bnc" id="L1587" title="All 2 branches missed.">		if (text != null)</span>
+		{
+<span class="nc bnc" id="L1589" title="All 2 branches missed.">			if (ttf == null) ttf = text;</span>
+<span class="nc" id="L1590">			else ttf += &quot; &quot; + text;</span>
+		}
+
+
+<span class="nc" id="L1594">		int len = SearchTools.checkInputParams.length;</span>
+		int i;
+		String param;
+<span class="nc bnc" id="L1597" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+		{
+<span class="nc" id="L1599">			param = getParamAttribute(SearchTools.checkInputParams[i], request, null);</span>
+<span class="nc bnc" id="L1600" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+			{
+<span class="nc bnc" id="L1602" title="All 2 branches missed.">				if (ttf == null) ttf = param;</span>
+<span class="nc" id="L1603">				else ttf += &quot; &quot; + param; //NOSONAR</span>
+			}
+		}
+
+<span class="nc bnc" id="L1607" title="All 2 branches missed.">		if (ttf == null) return &quot;&quot;;</span>
+
+<span class="nc" id="L1609">		return ttf;</span>
+	}
+
+	/**
+	 * Vrati true ak je pre danu stranku lepsie pouzit rychle generovanie snippetu
+	 * @param doc
+	 * @param request
+	 * @return
+	 */
+	public static boolean shouldDoQuickSnippet(SearchDetails doc, HttpServletRequest request)
+	{
+<span class="nc" id="L1620">		int searchQuickSnippetSize = Constants.getInt(&quot;searchQuickSnippetSize&quot;);</span>
+<span class="nc bnc" id="L1621" title="All 6 branches missed.">		boolean shouldDoQuickSnippet = doc.getDataOriginal().length()&gt;searchQuickSnippetSize || (request!=null &amp;&amp; &quot;true&quot;.equals(request.getParameter(&quot;fastSnippet&quot;)));</span>
+
+<span class="nc" id="L1623">		return shouldDoQuickSnippet;</span>
+	}
+
+	/**
+	 * Pokusi sa vyhladat vyraz v HTML kode tak, ze HTML kod odstrani a zrusi vsetky medzery
+	 * Pre hladanie CardPayTB v html kode CardPay&lt;sup&gt;TB&lt;/sup&gt;
+	 * @param code
+	 * @param searchTerm
+	 * @return
+	 */
+	public static boolean containsIgnoreHtml(String code, String searchTerm)
+	{
+<span class="pc bpc" id="L1635" title="1 of 4 branches missed.">		if (Tools.isEmpty(code) || Tools.isEmpty(searchTerm)) return false;</span>
+
+<span class="fc" id="L1637">		code = code.toLowerCase();</span>
+<span class="fc" id="L1638">		searchTerm = searchTerm.toLowerCase();</span>
+
+<span class="fc" id="L1640">		code = EditorDB.removeHtmlTagsKeepLength(code);</span>
+<span class="fc" id="L1641">		searchTerm = EditorDB.removeHtmlTagsKeepLength(searchTerm);</span>
+
+<span class="fc" id="L1643">		code = Tools.replace(code, &quot; &quot;, &quot;&quot;);</span>
+<span class="fc" id="L1644">		searchTerm = Tools.replace(searchTerm, &quot; &quot;, &quot;&quot;);</span>
+
+<span class="pc bpc" id="L1646" title="1 of 2 branches missed.">		if (code.contains(searchTerm)) return true;</span>
+
+<span class="fc" id="L1648">		return false;</span>
+	}
+
+	/**
+	 *
+	 * @return
+	 * @deprecated - use SearchTools.getCheckInputParams
+	 */
+	@Deprecated
+    public static String[] getCheckInputParams() {
+<span class="nc" id="L1658">		return SearchTools.getCheckInputParams();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContentGalleryBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">ContentGalleryBean.java</span></div><h1>ContentGalleryBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+
+import sk.iway.iwcm.gallery.GalleryBean;
+import sk.iway.iwcm.sync.export.Content;
+
+/**
+ *  ContentGalleryImageBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 27.6.2012 15:41:56
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L17">public abstract class ContentGalleryBean</span>
+{
+
+	public static class Info extends SimpleContentBean&lt;Content.GalleryInfo&gt;
+	{
+
+		public Info(int number, Content.GalleryInfo remoteInfo, Content.GalleryInfo localInfo)
+		{
+<span class="nc" id="L25">			super(number, remoteInfo, localInfo);</span>
+<span class="nc" id="L26">		}</span>
+
+		public String getPath()
+		{
+<span class="nc" id="L30">			return remoteItem.getInfo().getGalleryPath();</span>
+		}
+
+	}
+
+	public static class Image extends SimpleContentBean&lt;GalleryBean&gt;
+	{
+
+		public Image(int number, GalleryBean remoteImage, GalleryBean localImage)
+		{
+<span class="nc" id="L40">			super(number, remoteImage, localImage);</span>
+<span class="nc" id="L41">		}</span>
+
+		public String getPath()
+		{
+<span class="nc" id="L45">			return remoteItem.getImagePath();</span>
+		}
+
+		public String getName()
+		{
+<span class="nc" id="L50">			return remoteItem.getImageName();</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.spirit.model</a> &gt; <span class="el_source">MediaEditorFields.java</span></div><h1>MediaEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.spirit.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.media.MediaGroupRepository;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+public class MediaEditorFields extends BaseEditorFields {
+
+    //used for remapping groups
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, renderFormat = &quot;dt-format-select&quot;, title = &quot;editor.media.group&quot;, sortAfter = &quot;mediaTitleSk&quot;, tab = &quot;basic&quot;,
+    editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;-1&quot;)
+            }
+        )
+    })
+    private Integer[] groups;
+
+    @NotBlank
+    private DocDetails docDetails;
+
+<span class="fc" id="L37">    public MediaEditorFields() {</span>
+        //default konstruktor
+<span class="fc" id="L39">    }</span>
+
+    //initialize MediaEditorFields.groups
+    public void fromMedia(Media media) {
+        //get groups from actual media
+<span class="fc" id="L44">        List&lt;MediaGroupBean&gt; tmp = media.getGroups();</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (tmp != null) {</span>
+<span class="fc" id="L46">            groups = new Integer[tmp.size()];</span>
+
+            //loop getted Media.groups and push their id's to MediaEditorFields.groups
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            for(int i = 0; i &lt; tmp.size(); i++) {</span>
+<span class="fc" id="L50">                groups[i] = tmp.get(i).getMediaGroupId();</span>
+            }
+        }
+
+<span class="pc bpc" id="L54" title="1 of 6 branches missed.">        if(media.getMediaFkTableName().equals(&quot;documents&quot;) &amp;&amp; media.getMediaFkId() != null &amp;&amp; media.getMediaFkId().intValue() &gt; 0) {</span>
+<span class="fc" id="L55">            docDetails = WebpagesService.getBasicDoc(media.getMediaFkId().intValue());</span>
+        }
+<span class="fc" id="L57">    }</span>
+
+    //set Media.grousp using MediaEditorFields.groups
+    public void toMedia(Media media, MediaGroupRepository repo) {
+
+<span class="fc" id="L62">        Integer groupLength = media.getEditorFields().getGroups().length;</span>
+<span class="fc" id="L63">        List&lt;MediaGroupBean&gt; newGroups = new ArrayList&lt;MediaGroupBean&gt;();</span>
+
+        //loop MediaEditorFields.groups(array of id's)
+        //use this id's to get MediaGroupBean and push them into prepared List newGroups
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if(groupLength &gt; 0) {</span>
+<span class="fc" id="L68">            Integer[] tmp = media.getEditorFields().getGroups();</span>
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if(tmp[0] != -1) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                for(int i = 0; i &lt; tmp.length; i++) {</span>
+<span class="fc" id="L72">                    newGroups.add(repo.getById(Long.valueOf(tmp[i])));</span>
+                }
+            }
+        }
+        //set Media.group using List newGroups
+<span class="fc" id="L77">        media.setGroups(newGroups);</span>
+<span class="fc" id="L78">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

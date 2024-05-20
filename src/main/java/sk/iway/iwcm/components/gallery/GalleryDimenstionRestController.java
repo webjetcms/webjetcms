@@ -48,7 +48,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
         if(dimensionId != -1) {
             try {
-                Optional<GalleryDimension> optional = repository.findById(Long.valueOf(dimensionId));
+                Optional<GalleryDimension> optional = repository.findFirstByIdAndDomainId(Long.valueOf(dimensionId), CloudToolsForCore.getDomainId());
                 if (optional.isPresent()) {
                     GalleryDimension entity = optional.get();
                     list.add(entity);
@@ -141,7 +141,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             int dimensionId = Tools.getIntValue(getRequest().getParameter("dimensionId"), -1);
             //If dimension id is present, get parent gallery and set his path to child (in insertItem we will adding to path new entity name)
             if(dimensionId != -1) {
-                GalleryDimension parentGallery = repository.getById(Long.valueOf(dimensionId));
+                GalleryDimension parentGallery = repository.findFirstByIdAndDomainId(Long.valueOf(dimensionId), CloudToolsForCore.getDomainId()).orElse(null);
                 entity = getNewEntity(parentGallery.getPath());
                 entity.setName("");
                 entity.setResizeMode(parentGallery.getResizeMode());

@@ -20,7 +20,7 @@ Scenario('overenie vyzvy pre zadanie kodu', ({ I }) => {
     I.see("Prihlásiť sa");
 });
 
-Scenario('odhlasenie', ({ I, login }) => {
+Scenario('odhlasenie', ({ I }) => {
     I.logout();
 });
 
@@ -34,7 +34,7 @@ Scenario('overenie nezobrazenie spravy sifrovacich klucov', ({ I }) => {
     I.see("Odhlásenie", "ul.dropdown-menu.show");
 });
 
-Scenario('odhlasenie2', ({ I, login }) => {
+Scenario('odhlasenie2', ({ I }) => {
     I.logout();
 });
 

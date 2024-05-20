@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DemoComponent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.demo8</a> &gt; <span class="el_source">DemoComponent.java</span></div><h1>DemoComponent.java</h1><pre class="source lang-java linenums">package sk.iway.demo8;
+
+import org.springframework.ui.Model;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.system.annotations.DefaultHandler;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+@WebjetComponent(&quot;sk.iway.demo8.DemoComponent&quot;)
+@WebjetAppStore(nameKey = &quot;Demo komponenta&quot;, descKey = &quot;Demo komponenta nejaky dlhy opis&quot;, imagePath = &quot;fa fa-snowflake text-danger&quot;, galleryImages = &quot;/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg&quot;, commonSettings = true)
+@Getter
+@Setter
+<span class="fc" id="L25">public class DemoComponent extends WebjetComponentAbstract {</span>
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab = &quot;basic&quot;)
+	private String stringField;
+
+	@DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = &quot;basic&quot;)
+	private boolean primitiveBooleanField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;basic&quot;)
+	private int primitiveIntegerField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;basic&quot;)
+	private double primitiveDoubleField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;basic&quot;)
+	private float primitiveFloatField;
+
+
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;advanced&quot;)
+	private BigDecimal bigDecimalField;
+
+	@DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = &quot;advanced&quot;)
+	private Boolean booleanField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;advanced&quot;)
+	private Integer integerField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;advanced&quot;)
+	private Double doubleField;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, tab = &quot;advanced&quot;)
+	private Float floatField;
+
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title = &quot;date&quot;, tab = &quot;advanced&quot;)
+    private Date date;
+
+
+
+	@DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;groupDetails&quot;, tab = &quot;json&quot;, className = &quot;dt-tree-group&quot;)
+    private GroupDetails groupDetails;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;docDetails&quot;, tab = &quot;json&quot;, className = &quot;dt-tree-page&quot;)
+    private DocDetails docDetails;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;groupDetailsList&quot;, tab = &quot;json&quot;, className = &quot;dt-tree-group-array&quot;)
+    private List&lt;GroupDetails&gt; groupDetailsList;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;docDetailsList&quot;, tab = &quot;json&quot;, className = &quot;dt-tree-page-array&quot;)
+    private List&lt;GroupDetails&gt; docDetailsList;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;dirSimple&quot;, tab = &quot;json&quot;, className = &quot;dt-tree-dir-simple&quot;)
+    private String dirSimple;
+
+	@DefaultHandler
+	public String render(Model model)
+	{
+<span class="fc" id="L82">		Logger.debug(this.getClass(), &quot;groupDetails=&quot;+groupDetails+&quot; docDetails=&quot;+docDetails+&quot; groupDetailsList=&quot;+groupDetailsList+&quot; docDetailsList=&quot;+docDetailsList+&quot; dirSimple=&quot;+dirSimple+&quot; date=&quot;+date);</span>
+
+<span class="fc" id="L84">        model.addAttribute(&quot;test&quot;, &quot;Toto je test&quot;);</span>
+<span class="fc" id="L85">		model.addAttribute(&quot;demoComponent&quot;, this);</span>
+
+<span class="fc" id="L87">		return &quot;/components/aceintegration/demo-component/view&quot;;</span>
+	}
+
+	/**
+	 * To call this method there should be URL parameter ?save (value is not important) OR page parameter !INCLUDE(... ,defaultHandler=save)!
+	 * @param model
+	 * @return
+	 */
+	public String save(Model model)
+	{
+<span class="fc" id="L97">		Logger.debug(this.getClass(), &quot;groupDetails=&quot;+groupDetails+&quot; docDetails=&quot;+docDetails+&quot; groupDetailsList=&quot;+groupDetailsList+&quot; docDetailsList=&quot;+docDetailsList+&quot; dirSimple=&quot;+dirSimple+&quot; date=&quot;+date);</span>
+
+<span class="fc" id="L99">        model.addAttribute(&quot;test&quot;, &quot;This is save method&quot;);</span>
+<span class="fc" id="L100">		model.addAttribute(&quot;demoComponent&quot;, this);</span>
+
+<span class="fc" id="L102">		return &quot;/components/aceintegration/demo-component/view&quot;;</span>
+	}
+
+	@Override
+	public void init()
+	{
+		//There should be initialization of component
+<span class="fc" id="L109">		Logger.debug(this.getClass(), &quot;DemoComponent init&quot;);</span>
+<span class="fc" id="L110">	}</span>
+
+	@Override
+	public String getViewFolder()
+	{
+<span class="fc" id="L115">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

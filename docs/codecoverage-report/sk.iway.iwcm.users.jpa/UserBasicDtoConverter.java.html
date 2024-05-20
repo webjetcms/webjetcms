@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserBasicDtoConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users.jpa</a> &gt; <span class="el_source">UserBasicDtoConverter.java</span></div><h1>UserBasicDtoConverter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users.jpa;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+
+import sk.iway.iwcm.users.UserBasicDto;
+import sk.iway.iwcm.users.UserBasicDtoMapper;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@Converter
+<span class="fc" id="L12">public class UserBasicDtoConverter implements AttributeConverter&lt;UserBasicDto, Integer&gt; {</span>
+
+    @Override
+    public Integer convertToDatabaseColumn(UserBasicDto user) {
+<span class="pc bpc" id="L16" title="1 of 2 branches missed.">        if (user != null) return user.getUserId();</span>
+<span class="nc" id="L17">        return null;</span>
+    }
+
+    @Override
+    public UserBasicDto convertToEntityAttribute(Integer userId) {
+<span class="pc bpc" id="L22" title="2 of 4 branches missed.">        if (userId == null || userId.intValue()&lt;1) return null;</span>
+<span class="fc" id="L23">        UserDetails user = UsersDB.getUserCached(userId);</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        if (user!=null)</span>
+        {
+<span class="fc" id="L26">            UserBasicDto dto = UserBasicDtoMapper.INSTANCE.userDetailsToDto(user);</span>
+<span class="fc" id="L27">            return dto;</span>
+        }
+<span class="nc" id="L29">        return null;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

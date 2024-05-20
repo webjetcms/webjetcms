@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PDF.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.findexer</a> &gt; <span class="el_source">PDF.java</span></div><h1>PDF.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.findexer;
+
+import java.util.StringTokenizer;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmInputStream;
+
+
+/**
+ *  Vytiahne z PDF vsetky texty
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Streda, 2004, január 21
+ *@modified     $Date: 2004/01/27 17:48:00 $
+ */
+<span class="nc" id="L24">public class PDF</span>
+{
+
+	/**
+	 *  Gets the text attribute of the PDF class
+	 *
+	 *@param  fileName  Description of the Parameter
+	 *@return           The text value
+	 */
+	public static String getText(String fileName)
+	{
+<span class="nc" id="L35">		StringBuilder sb = new StringBuilder();</span>
+		try
+		{
+<span class="nc" id="L38">			IwcmInputStream is = new IwcmInputStream(fileName);</span>
+
+<span class="nc" id="L40">			PDDocument pdfDocument = PDDocument.load(is, &quot;&quot;);</span>
+	        try {
+	      	   /*
+	            if (pdfDocument.isEncrypted()) {
+	                try {
+	                    pdfDocument.decrypt(&quot;&quot;);
+	                } catch (Exception e) {
+	                    // Ignore
+	                }
+	            }
+	            */
+
+<span class="nc" id="L52">	            PDFTextStripper stripper = new PDFTextStripper();</span>
+
+<span class="nc" id="L54">				   stripper.setSortByPosition(false);</span>
+<span class="nc" id="L55">				   stripper.setSuppressDuplicateOverlappingText(true);</span>
+
+<span class="nc" id="L57">				   String text = stripper.getText(pdfDocument);</span>
+
+				   //System.out.println(text);
+
+<span class="nc" id="L61">              StringTokenizer st = new StringTokenizer(text, &quot;\n&quot;);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">              while (st.hasMoreTokens())</span>
+              {
+<span class="nc" id="L64">                 String line = fixVerticalText(st.nextToken());</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                 if (Tools.isEmpty(line)) continue;</span>
+<span class="nc" id="L66">                 sb.append(line);</span>
+<span class="nc" id="L67">                 sb.append('\n');</span>
+<span class="nc" id="L68">              }</span>
+
+               //sb.append(text);
+
+	        } finally {
+<span class="nc" id="L73">	            pdfDocument.close();</span>
+	        }
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			try { if (is!=null) is.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+
+<span class="nc" id="L78">			return(sb.toString());</span>
+			//return (sw.getBuffer().toString());
+		}
+<span class="nc" id="L81">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L83">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+
+<span class="nc" id="L86">		return (null);</span>
+	}
+
+   /**
+    * v TB sme narazili na problem parsovania horizontalneho textu, ani aktualna verzia PDFboxu to neriesila
+    * vystupom boli bloky textu typu silna sucast:
+    * ssiil
+    * naa
+    * sssuuuu
+    * ccaaaaa
+    * ssttt
+    * @param line
+    * @return
+    */
+	private static String fixVerticalText(String line)
+   {
+<span class="nc" id="L102">      line = line.trim();</span>
+<span class="nc bnc" id="L103" title="All 8 branches missed.">      if (line.length()&gt;25 || line.contains(&quot; &quot;) || line.contains(&quot;,&quot;) || line.contains(&quot;.&quot;)) return line;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">      if (line.length()&lt;3) return &quot;&quot;;</span>
+
+<span class="nc" id="L106">      char lastChar = line.charAt(0);</span>
+<span class="nc" id="L107">      StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L108">      sb.append(lastChar);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">      for (int i = 1; i&lt;line.length(); i++)</span>
+      {
+<span class="nc" id="L111">         char ch = line.charAt(i);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">         if (lastChar != ch)</span>
+         {
+<span class="nc" id="L114">            sb.append(ch);</span>
+<span class="nc" id="L115">            lastChar = ch;</span>
+         }
+      }
+
+<span class="nc" id="L119">      Logger.debug(PDF.class, &quot;fixVerticalText: line=&quot;+line+&quot; sb=&quot;+sb.toString());</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">      if (sb.length()&lt;3) return &quot;&quot;;</span>
+
+<span class="nc" id="L123">      return sb.toString();</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

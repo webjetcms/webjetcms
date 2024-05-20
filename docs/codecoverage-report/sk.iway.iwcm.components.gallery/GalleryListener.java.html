@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryListener.java</span></div><h1>GalleryListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+@Component
+public class GalleryListener {
+
+    private final GalleryTreeService galleryTreeService;
+
+<span class="fc" id="L24">    public GalleryListener(GalleryTreeService galleryTreeService) {</span>
+<span class="fc" id="L25">        this.galleryTreeService = galleryTreeService;</span>
+<span class="fc" id="L26">    }</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='gallery' &amp;&amp; event.source.subpage=='index'&quot;)
+    private void setData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+        try {
+<span class="fc" id="L31">            ModelMap model = event.getSource().getModel();</span>
+
+            //set baseDir to open in jstree
+<span class="fc" id="L34">            String baseDir = Constants.getString(&quot;imagesRootDir&quot;) + &quot;/&quot; + Constants.getString(&quot;galleryDirName&quot;);</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">            if (Constants.getString(&quot;imagesRootDir&quot;).length() &gt; 1) {</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="fc" id="L37">                    String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(event.getSource().getRequest()));</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">                    if (Tools.isNotEmpty(domainAlias)) {</span>
+<span class="nc" id="L39">                        baseDir = Constants.getString(&quot;imagesRootDir&quot;) + &quot;/&quot; + domainAlias + &quot;/&quot; + Constants.getString(&quot;galleryDirName&quot;);</span>
+                    }
+                }
+            }
+
+<span class="fc" id="L44">            model.addAttribute(&quot;baseDir&quot;, baseDir);</span>
+
+<span class="fc" id="L46">            String dir = event.getSource().getRequest().getParameter(&quot;dir&quot;);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            if (Tools.isEmpty(dir)) dir = baseDir;</span>
+
+<span class="fc" id="L49">            model.addAttribute(&quot;treeInitialJson&quot;, JsonTools.objectToJSON(getTreeInitialJson(dir)));</span>
+<span class="nc" id="L50">        } catch (Exception ex) {</span>
+<span class="nc" id="L51">            Logger.error(getClass(), ex);</span>
+<span class="fc" id="L52">        }</span>
+<span class="fc" id="L53">    }</span>
+
+    /**
+     * Recursivelly fill List for tree render
+     * @param url
+     * @return
+     */
+    private List&lt;GalleryJsTreeItem&gt; getTreeInitialJson(String url) {
+<span class="fc" id="L61">        List&lt;GalleryJsTreeItem&gt; treeInitialJson = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L62">        String[] pathArr = Tools.getTokens(url, &quot;/&quot;, true);</span>
+<span class="fc" id="L63">        final StringBuilder currentPath = new StringBuilder();</span>
+<span class="fc" id="L64">        boolean isRoot = true;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (String path : pathArr) {</span>
+<span class="fc" id="L66">            currentPath.append(&quot;/&quot;).append(path);</span>
+<span class="fc" id="L67">            List&lt;GalleryJsTreeItem&gt; items = galleryTreeService.getItems(currentPath.toString());</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (isRoot) {</span>
+<span class="fc" id="L69">                items.stream().forEach((item) -&gt; {</span>
+                    //root item
+<span class="fc" id="L71">                    item.setParent(&quot;#&quot;);</span>
+<span class="fc" id="L72">                });</span>
+<span class="fc" id="L73">                isRoot = false;</span>
+            } else {
+<span class="fc" id="L75">                items.stream().forEach((item) -&gt; {</span>
+<span class="fc" id="L76">                    item.setParent(currentPath.toString());</span>
+<span class="fc" id="L77">                });</span>
+            }
+<span class="fc" id="L79">            treeInitialJson.addAll(items);</span>
+        }
+        //set opened and selected state
+<span class="fc" id="L82">        treeInitialJson.stream().forEach((item) -&gt; {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if (url.startsWith(item.getId())) item.getState().setOpened(true);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            if (url.equals(item.getId())) item.getState().setSelected(true);</span>
+<span class="fc" id="L85">        });</span>
+<span class="fc" id="L86">        return treeInitialJson;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

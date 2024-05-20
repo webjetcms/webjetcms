@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlovakStemmer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">SlovakStemmer.java</span></div><h1>SlovakStemmer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+
+/**
+ *  SlovakStemmer.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff thaber $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 29.5.2012 14:19:04
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
+public class SlovakStemmer {
+
+
+<span class="nc" id="L23">	private static List&lt;String []&gt; pripony = vytvorPripony();</span>
+
+<span class="nc" id="L25">	private static String [] ei = new String[] {&quot;e&quot;, &quot;i&quot;, &quot;iam&quot;, &quot;iach&quot;, &quot;iami&quot;, &quot;í&quot;, &quot;ia&quot;, &quot;ie&quot;, &quot;iu&quot;, &quot;ím&quot;};</span>
+
+<span class="nc" id="L27">	private static HashMap&lt;String, String&gt; dtnl = vytvorDTNL();</span>
+
+<span class="nc" id="L29">	private static HashMap&lt;String, String&gt; dlheKratke = vytvorDlheKratke();</span>
+
+<span class="nc" id="L31">	private static String [] cudzieSlovaPredIa = new String[] {&quot;c&quot;, &quot;z&quot;, &quot;g&quot;};</span>
+
+<span class="nc" id="L33">	private static String [] samohlasky = new String[] {&quot;a&quot;, &quot;á&quot;, &quot;ä&quot;, &quot;e&quot;, &quot;é&quot;,</span>
+		&quot;i&quot;, &quot;í&quot;, &quot;o&quot;, &quot;ó&quot;, &quot;u&quot;, &quot;ú&quot;, &quot;y&quot;, &quot;ý&quot;, &quot;ô&quot;, &quot;ia&quot;, &quot;ie&quot;, &quot;iu&quot;};
+
+<span class="nc" id="L36">	private static String [] lr = new String [] {&quot;r&quot;, &quot;ŕ&quot;, &quot;l&quot;, &quot;ĺ&quot;};</span>
+
+<span class="nc" id="L38">	protected SlovakStemmer() {</span>
+		//utility class
+<span class="nc" id="L40">	}</span>
+
+	/**
+	 * Ostemuje zadane slovo.
+	 *
+	 * @param in slovo
+	 * @return jeho ostemovany tvar
+	 */
+	public static String stem(String in) {
+
+<span class="nc" id="L50">		return zbavSaPripon(in);</span>
+
+	}
+
+
+
+
+	private static String zbavSaPripon(String in) {
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		for(String [] prip : pripony) {</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			for(String pripona : prip) {</span>
+
+				//nasli sme priponu
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				if(in.endsWith(pripona)) {</span>
+
+					//detenele, ditinili
+<span class="nc bnc" id="L67" title="All 2 branches missed.">					if(ei(pripona)) {</span>
+<span class="nc" id="L68">						return zmenDTNL(odstranPriponu(in, pripona));</span>
+					}
+
+					//cudzie -cia, -gia...
+<span class="nc bnc" id="L72" title="All 2 branches missed.">					if(pripona.startsWith(&quot;i&quot;)) {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">						if(cudzie(in, pripona)) {</span>
+<span class="nc" id="L74">							return odstranPriponu(in, pripona).concat(&quot;i&quot;);</span>
+						}
+					}
+
+					//ci nepride k overstemmingu
+<span class="nc bnc" id="L79" title="All 2 branches missed.">					if(overstemming(in, pripona))</span>
+<span class="nc" id="L80">						return in;</span>
+
+					//inak odstranime priponu
+<span class="nc" id="L83">					return odstranPriponu(in, pripona);</span>
+				}
+			}
+<span class="nc" id="L86">		}</span>
+
+		//konci na er -&gt; peter, sveter....
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if(in.endsWith(&quot;er&quot;)) {</span>
+<span class="nc" id="L90">			return (odstranPriponu(in, &quot;er&quot;)).concat(&quot;r&quot;);</span>
+		}
+
+		//konci na ok -&gt; sviatok, odpadok....
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if(in.endsWith(&quot;ok&quot;)) {</span>
+<span class="nc" id="L95">			return (odstranPriponu(in, &quot;ok&quot;)).concat(&quot;k&quot;);</span>
+		}
+
+		//konci na zen -&gt; podobizen, bielizen....
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if(in.endsWith(&quot;zeň&quot;)) {</span>
+<span class="nc" id="L100">			return (odstranPriponu(in, &quot;eň&quot;)).concat(&quot;n&quot;);</span>
+		}
+
+		//konci na ol -&gt; kotol....
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if(in.endsWith(&quot;ol&quot;)) {</span>
+<span class="nc" id="L105">			return (odstranPriponu(in, &quot;ol&quot;)).concat(&quot;l&quot;);</span>
+		}
+
+		//konci na ic -&gt; matematic (matematik, matematici)... (pracovnici vs slnecnic)
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if(in.endsWith(&quot;ic&quot;)) {</span>
+<span class="nc" id="L110">			return (odstranPriponu(in, &quot;c&quot;)).concat(&quot;k&quot;);</span>
+		}
+
+		//konci na ec -&gt; tanec, obec....
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if(in.endsWith(&quot;ec&quot;)) {</span>
+<span class="nc" id="L115">			return (odstranPriponu(in, &quot;ec&quot;)).concat(&quot;c&quot;);</span>
+		}
+
+		//konci na um -&gt; studium, stadium....
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if(in.endsWith(&quot;um&quot;)) {</span>
+<span class="nc" id="L120">			return (odstranPriponu(in, &quot;um&quot;));</span>
+		}
+
+		//genitiv pluralu pre vzory zena, ulica, gazdina, mesto, srdce ???
+<span class="nc" id="L124">		return poriesGenitivPluralu(in);</span>
+
+	}
+
+
+	//problem = napriklad pes - psa, den - dna a podobne TODO
+	private static boolean overstemming(String in, String pripona) {
+
+		//overstemming zrejme vtedy, ked nam ostane koren bez samohlasky / bez l/r v strede slova
+
+<span class="nc" id="L134">		String s = odstranPriponu(in, pripona);</span>
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		for(String samohlaska : samohlasky) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if(s.contains(samohlaska))</span>
+<span class="nc" id="L138">				return false;</span>
+		}
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		for(String rl : lr) {</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">			if(s.contains(rl) &amp;&amp; !s.endsWith(rl))</span>
+<span class="nc" id="L143">				return false;</span>
+		}
+
+<span class="nc" id="L146">		return true;</span>
+	}
+
+
+
+	//problem = ako rozoznat, ci je to zensky/stredny rod. pr: lama - lam vs. pan - panov TODO
+
+
+
+
+	/**
+	 *
+	 * @param in
+	 * @return ak je to genitiv pluralu, vrat spravny tvar, ak nie je, vrat in
+	 */
+	private static String poriesGenitivPluralu(String in) {
+
+		//v poslednej slabike musi byt dlha samohlaska / dlhe r/l
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		for(Map.Entry&lt;String, String&gt; entry : dlheKratke.entrySet()) {</span>
+<span class="nc" id="L166">			String dlha = entry.getKey();</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">			if(in.contains(dlha)) {</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				if(poslednaSlabika(in, dlha)) {</span>
+
+<span class="nc" id="L172">					in = nahradPosledne(in, dlha, entry.getValue());</span>
+
+<span class="nc" id="L174">					break;</span>
+				}
+			}
+
+<span class="nc" id="L178">		}</span>
+
+<span class="nc" id="L180">		return in;</span>
+	}
+
+
+	/**
+	 * posledna slabika - ak sa za danym substringom uz nenaxadza uz ziadna samohlaska
+	 * @param s string
+	 * @param t substring
+	 * @return
+	 */
+	private static boolean poslednaSlabika(String s, String t) {
+
+<span class="nc" id="L192">		int pokial = s.lastIndexOf(t);</span>
+<span class="nc" id="L193">		String koniec = s.substring(pokial);</span>
+<span class="nc" id="L194">		koniec = koniec.substring(t.length());</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		for(String samohlaska : samohlasky) {</span>
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			if(koniec.contains(samohlaska))</span>
+<span class="nc" id="L199">				return false;</span>
+
+		}
+
+<span class="nc" id="L203">		return true;</span>
+	}
+
+
+
+
+
+
+
+	/**
+	 * nahradi posledny vyskyt podretazca v retazci inym podretazcom
+	 * @param s
+	 * @param co
+	 * @param cim
+	 * @return
+	 */
+	private static String nahradPosledne(String s, String co, String cim) {
+
+<span class="nc" id="L221">		int pokial = s.lastIndexOf(co);</span>
+
+<span class="nc" id="L223">		String koniec = s.substring(pokial);</span>
+
+<span class="nc" id="L225">		koniec = koniec.substring(co.length());</span>
+
+<span class="nc" id="L227">		koniec = cim + koniec;</span>
+
+<span class="nc" id="L229">		s = s.substring(0, pokial) + koniec;</span>
+
+<span class="nc" id="L231">		return s;</span>
+	}
+
+
+
+	//problem - srdcia TODO
+	private static boolean cudzie(String in, String pripona) {
+<span class="nc" id="L238">		String s = odstranPriponu(in, pripona);</span>
+
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		for(String koncovka : cudzieSlovaPredIa) {</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if(s.endsWith(koncovka))</span>
+<span class="nc" id="L242">				return true;</span>
+		}
+
+<span class="nc" id="L245">		return false;</span>
+	}
+
+
+
+
+	private static String odstranPriponu(String s, String p) {
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		if(!s.endsWith(p))</span>
+<span class="nc" id="L254">			return s;</span>
+
+<span class="nc" id="L256">		return s.substring(0, s.length() - p.length());</span>
+	}
+
+	//TODO problem - napr sused - sudedia vs. priatel - priatelia
+	private static boolean ei(String s1) {
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		for(String s2 : ei) {</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">			if(s1.equals(s2))</span>
+<span class="nc" id="L263">				return true;</span>
+		}
+<span class="nc" id="L265">		return false;</span>
+	}
+
+
+	private static String zmenDTNL(String in) {
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">		for(Map.Entry&lt;String, String&gt; entry : dtnl.entrySet()) {</span>
+<span class="nc" id="L272">			String tvrdy = entry.getKey();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if(in.endsWith(tvrdy)) {</span>
+<span class="nc" id="L274">				in = in.substring(0, in.length() - 1);</span>
+<span class="nc" id="L275">				in = in.concat(entry.getValue());</span>
+			}
+<span class="nc" id="L277">		}</span>
+
+<span class="nc" id="L279">		return in;</span>
+	}
+
+
+
+
+
+
+	/**
+	 * Vytvori zoznam pripon podstatnych mien od najdlhsich po najkratsie tak,
+	 * 	ze ak je nejaka pripona obsiahnuta v inej, je kratsia.
+	 *
+	 * Pripony pre vzory:
+	 * 		chlap, hrdina, dub, stroj, hostinsky
+	 * 		zena, ulica, dlan, kost, gazdina
+	 * 		mesto, srdce, vysvedcenie, dievca (+ holuba)
+	 *
+	 * @return zoznam pripon
+	 */
+	private static List&lt;String[]&gt; vytvorPripony() {
+
+<span class="nc" id="L300">		List&lt;String[]&gt; p = new ArrayList&lt;&gt;();</span>
+
+		// od najdlhsich po najkratsie tak, ze ak je nejaka pripona obsiahnuta v inej, je kratsia
+
+		//najdlhsie (nie su v ziadnej inej obsiahnute)
+<span class="nc" id="L305">		p.add(new String[] {&quot;encami&quot;, &quot;atami&quot;, &quot;ätami&quot;, &quot;iami&quot;, &quot;ými&quot;, &quot;ovi&quot;, &quot;ati&quot;, &quot;äti&quot;,</span>
+				&quot;eniec&quot;, &quot;ence&quot;, &quot;ie&quot;, &quot;aťom&quot;, &quot;äťom&quot;, &quot;encom&quot;, &quot;atám&quot;, &quot;ätám&quot;, &quot;iam&quot;, &quot;ím&quot;,
+				&quot;ým&quot;, &quot;encoch&quot;, &quot;atách&quot;, &quot;ätách&quot;, &quot;iach&quot;, &quot;ých&quot;, &quot;aťa&quot;, &quot;äťa&quot;, &quot;ovia&quot;, &quot;atá&quot;,
+				&quot;ätá&quot;, &quot;aťu&quot;, &quot;äťu&quot;, &quot;ému&quot;, &quot;iu&quot;, &quot;iou&quot;, &quot;ov&quot;, &quot;at&quot;, &quot;ät&quot;, &quot;ä&quot;, &quot;ého&quot;, &quot;ý&quot;,
+				&quot;y&quot;, &quot;ií&quot;, &quot;ej&quot;, &quot;ú&quot;, &quot;é&quot;});
+
+<span class="nc" id="L311">		p.add(new String[] {&quot;e&quot;, &quot;om&quot;, &quot;ami&quot;, &quot;ám&quot;, &quot;och&quot;, &quot;ach&quot;, &quot;ách&quot;, &quot;ia&quot;, &quot;á&quot;, &quot;ou&quot;, &quot;o&quot;, &quot;ii&quot;, &quot;í&quot;});</span>
+
+<span class="nc" id="L313">		p.add(new String[] {&quot;mi&quot;, &quot;a&quot;, &quot;u&quot;});</span>
+
+<span class="nc" id="L315">		p.add(new String[] {&quot;i&quot;});</span>
+
+<span class="nc" id="L317">		return p;</span>
+
+	}
+
+
+	/**
+	 * vramcizenskeho a stredneho rodu - ideme riesit genitiv pluralu
+	 * @return
+	 */
+	private static HashMap&lt;String, String&gt; vytvorDlheKratke() {
+
+<span class="nc" id="L328">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L330">		h.put(&quot;á&quot;, &quot;a&quot;);</span>
+<span class="nc" id="L331">		h.put(&quot;ie&quot;, &quot;e&quot;);</span>
+<span class="nc" id="L332">		h.put(&quot;ŕ&quot;, &quot;r&quot;);</span>
+<span class="nc" id="L333">		h.put(&quot;ĺ&quot;, &quot;l&quot;);</span>
+<span class="nc" id="L334">		h.put(&quot;í&quot;, &quot;i&quot;);</span>
+<span class="nc" id="L335">		h.put(&quot;ú&quot;, &quot;u&quot;);</span>
+<span class="nc" id="L336">		h.put(&quot;ô&quot;, &quot;o&quot;);</span>
+
+<span class="nc" id="L338">		return h;</span>
+	}
+
+
+
+	/**
+	 * d -&gt; ď, t -&gt; ť, ...
+	 * @return
+	 */
+	private static HashMap&lt;String, String&gt; vytvorDTNL() {
+
+<span class="nc" id="L349">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L351">		h.put(&quot;d&quot;, &quot;ď&quot;);</span>
+<span class="nc" id="L352">		h.put(&quot;t&quot;, &quot;ť&quot;);</span>
+<span class="nc" id="L353">		h.put(&quot;n&quot;, &quot;ň&quot;);</span>
+<span class="nc" id="L354">		h.put(&quot;l&quot;, &quot;ľ&quot;);</span>
+
+<span class="nc" id="L356">		return h;</span>
+	}
+
+
+
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

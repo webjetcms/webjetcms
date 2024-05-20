@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
@@ -161,4 +163,13 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         return false;
     }
 
+    @Override
+    public boolean checkItemPerms(FormsEntity entity, Long id) {
+        if (InitServlet.isTypeCloud()) {
+            if (entity.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
+            FormsEntity old = getRepo().getById(entity.getId());
+            if (old != null && old.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
+        }
+        return true;
+    }
 }

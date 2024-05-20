@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ZipOutputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.zip</a> &gt; <span class="el_source">ZipOutputStream.java</span></div><h1>ZipOutputStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.zip;
+
+import java.io.IOException;
+
+/**
+ *  ZipOutputStream.java - modifikovany pre podporu diakritiky v nazvoch suborov
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 9.6.2005 9:30:34
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+
+/*
+ * @(#)ZipOutputStream.java	1.27 03/02/07
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+import java.io.OutputStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Vector;
+import java.util.zip.CRC32;
+import java.util.zip.Deflater;
+import java.util.zip.ZipException;
+
+
+/**
+ * This class implements an output stream filter for writing files in the
+ * ZIP file format. Includes support for both compressed and uncompressed
+ * entries.
+ *
+ * @author	David Connelly
+ * @version	1.27, 02/07/03
+ */
+public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStream implements sk.iway.iwcm.system.zip.ZipConstants {
+    private ZipEntry entry;
+<span class="nc" id="L44">    private Vector&lt;ZipEntry&gt; entries = new Vector&lt;&gt;();</span>
+<span class="nc" id="L45">    private Map&lt;String, ZipEntry&gt; names = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L46">    private CRC32 crc = new CRC32();</span>
+    private long written;
+<span class="nc" id="L48">    private long locoff = 0;</span>
+    private String comment;
+<span class="nc" id="L50">    private int method = DEFLATED;</span>
+    private boolean finished;
+
+<span class="nc" id="L53">    private boolean closed = false;</span>
+
+    /**
+     * Check to make sure that this stream has not been closed
+     */
+    private void ensureOpen() throws IOException
+	 {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">    	if (closed)</span>
+    	{
+<span class="nc" id="L62">    		throw new IOException(&quot;Stream closed&quot;);</span>
+      }
+<span class="nc" id="L64">    }</span>
+    /**
+     * Compression method for uncompressed (STORED) entries.
+     */
+    public static final int STORED = ZipEntry.STORED;
+
+    /**
+     * Compression method for compressed (DEFLATED) entries.
+     */
+    public static final int DEFLATED = ZipEntry.DEFLATED;
+
+    /**
+     * Creates a new ZIP output stream.
+     * @param out the actual output stream
+     */
+    public ZipOutputStream(OutputStream out)
+    {
+<span class="nc" id="L81">    	super(out, new Deflater(Deflater.DEFAULT_COMPRESSION, true));</span>
+<span class="nc" id="L82">      usesDefaultDeflater = true;</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Sets the ZIP file comment.
+     * @param comment the comment string
+     * @exception IllegalArgumentException if the length of the specified
+     *		  ZIP file comment is greater than 0xFFFF bytes
+     */
+    public void setComment(String comment)
+    {
+<span class="nc bnc" id="L93" title="All 6 branches missed.">    	if (comment != null &amp;&amp; comment.length() &gt; 0xffff/3 &amp;&amp; getUTF8Length(comment) &gt; 0xffff)</span>
+      {
+<span class="nc" id="L95">    		throw new IllegalArgumentException(&quot;ZIP file comment too long.&quot;);</span>
+		}
+<span class="nc" id="L97">		this.comment = comment;</span>
+<span class="nc" id="L98">    }</span>
+
+    /**
+     * Sets the default compression method for subsequent entries. This
+     * default will be used whenever the compression method is not specified
+     * for an individual ZIP file entry, and is initially set to DEFLATED.
+     * @param method the default compression method
+     * @exception IllegalArgumentException if the specified compression method
+     *		  is invalid
+     */
+    public void setMethod(int method)
+    {
+<span class="nc bnc" id="L110" title="All 4 branches missed.">    	if (method != DEFLATED &amp;&amp; method != STORED)</span>
+    	{
+<span class="nc" id="L112">    		throw new IllegalArgumentException(&quot;invalid compression method&quot;);</span>
+		}
+<span class="nc" id="L114">		this.method = method;</span>
+<span class="nc" id="L115">    }</span>
+
+    /**
+     * Sets the compression level for subsequent entries which are DEFLATED.
+     * The default setting is DEFAULT_COMPRESSION.
+     * @param level the compression level (0-9)
+     * @exception IllegalArgumentException if the compression level is invalid
+     */
+    public void setLevel(int level)
+    {
+<span class="nc" id="L125">    	def.setLevel(level);</span>
+<span class="nc" id="L126">    }</span>
+
+    /**
+     * Begins writing a new ZIP file entry and positions the stream to the
+     * start of the entry data. Closes the current entry if still active.
+     * The default compression method will be used if no compression method
+     * was specified for the entry, and the current time will be used if
+     * the entry has no set modification time.
+     * @param e the ZIP entry to be written
+     * @exception ZipException if a ZIP format error has occurred
+     * @exception IOException if an I/O error has occurred
+     */
+    public void putNextEntry(ZipEntry e) throws IOException
+	 {
+<span class="nc" id="L140">    	ensureOpen();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">    	if (entry != null)</span>
+    	{
+<span class="nc" id="L143">    		closeEntry();	// close previous entry</span>
+		}
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (e.time == -1)</span>
+		{
+<span class="nc" id="L147">		    e.setTime(System.currentTimeMillis());</span>
+		}
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (e.method == -1)</span>
+		{
+<span class="nc" id="L151">		    e.method = method;	// use default method</span>
+		}
+<span class="nc bnc" id="L153" title="All 3 branches missed.">		switch (e.method)</span>
+		{
+			case DEFLATED:
+<span class="nc bnc" id="L156" title="All 6 branches missed.">					if (e.size == -1 || e.csize == -1 || e.crc == -1)</span>
+					{
+						// store size, compressed size, and crc-32 in data descriptor
+						// immediately following the compressed entry data
+<span class="nc" id="L160">						e.flag = 8;</span>
+				   }
+<span class="nc bnc" id="L162" title="All 6 branches missed.">					else if (e.size != -1 &amp;&amp; e.csize != -1 &amp;&amp; e.crc != -1)</span>
+					{
+						// store size, compressed size, and crc-32 in LOC header
+<span class="nc" id="L165">						e.flag = 0;</span>
+				   }
+					else
+					{
+<span class="nc" id="L169">						throw new ZipException(&quot;DEFLATED entry missing size, compressed size, or crc-32&quot;);</span>
+				   }
+<span class="nc" id="L171">				   e.version = 20;</span>
+<span class="nc" id="L172">				   break;</span>
+
+			case STORED:
+				    // compressed size, uncompressed size, and crc-32 must all be
+				    // set for entries using STORED compression method
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				    if (e.size == -1)</span>
+				    {
+<span class="nc" id="L179">				    	e.size = e.csize;</span>
+				    }
+<span class="nc bnc" id="L181" title="All 2 branches missed.">				    else if (e.csize == -1)</span>
+				    {
+<span class="nc" id="L183">				    	e.csize = e.size;</span>
+				    }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				    else if (e.size != e.csize)</span>
+				    {
+<span class="nc" id="L187">				    	throw new ZipException(&quot;STORED entry where compressed != uncompressed size&quot;);</span>
+				    }
+<span class="nc bnc" id="L189" title="All 4 branches missed.">				    if (e.size == -1 || e.crc == -1)</span>
+				    {
+<span class="nc" id="L191">				    	throw new ZipException(&quot;STORED entry missing size, compressed size, or crc-32&quot;);</span>
+				    }
+<span class="nc" id="L193">				    e.version = 10;</span>
+<span class="nc" id="L194">				    e.flag = 0;</span>
+<span class="nc" id="L195">				    break;</span>
+
+			default:
+<span class="nc" id="L198">			    	throw new ZipException(&quot;unsupported compression method&quot;);</span>
+		}
+
+<span class="nc" id="L201">		e.offset = written;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (names.put(e.name, e) != null)</span>
+		{
+<span class="nc" id="L204">		    throw new ZipException(&quot;duplicate entry: &quot; + e.name);</span>
+		}
+
+<span class="nc" id="L207">	   writeLOC(e);</span>
+<span class="nc" id="L208">		entries.addElement(e);</span>
+<span class="nc" id="L209">		entry = e;</span>
+<span class="nc" id="L210">    }</span>
+
+    /**
+     * Closes the current ZIP entry and positions the stream for writing
+     * the next entry.
+     * @exception ZipException if a ZIP format error has occurred
+     * @exception IOException if an I/O error has occurred
+     */
+    public void closeEntry() throws IOException
+	 {
+<span class="nc" id="L220">    	ensureOpen();</span>
+<span class="nc" id="L221">    	ZipEntry e = entry;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">    	if (e != null)</span>
+    	{
+<span class="nc bnc" id="L224" title="All 3 branches missed.">		    switch (e.method)</span>
+			 {
+			    case DEFLATED:
+<span class="nc" id="L227">				    	def.finish();</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">				    	while (!def.finished())</span>
+				    	{
+<span class="nc" id="L230">					    deflate();</span>
+						}
+<span class="nc bnc" id="L232" title="All 2 branches missed.">						if ((e.flag &amp; 8) == 0)</span>
+						{
+							// verify size, compressed size, and crc-32 settings
+<span class="nc bnc" id="L235" title="All 2 branches missed.">						   if (e.size != def.getTotalIn())</span>
+						   {
+<span class="nc" id="L237">						   	throw new ZipException(&quot;invalid entry size (expected &quot; +e.size+ &quot; but got &quot; + def.getTotalIn() + &quot; bytes)&quot;);</span>
+						    }
+<span class="nc bnc" id="L239" title="All 2 branches missed.">						    if (e.csize != def.getTotalOut())</span>
+						    {
+<span class="nc" id="L241">						    	throw new ZipException(&quot;invalid entry compressed size (expected &quot; +e.csize+ &quot; but got &quot; +def.getTotalOut()+ &quot; bytes)&quot;);</span>
+						    }
+<span class="nc bnc" id="L243" title="All 2 branches missed.">						    if (e.crc != crc.getValue())</span>
+						    {
+<span class="nc" id="L245">						    	throw new ZipException(&quot;invalid entry CRC-32 (expected 0x&quot; +Long.toHexString(e.crc)+ &quot; but got 0x&quot; +Long.toHexString(crc.getValue())+ &quot;)&quot;);</span>
+						    }
+						}
+						else
+						{
+<span class="nc" id="L250">						    e.size = def.getTotalIn();</span>
+<span class="nc" id="L251">						    e.csize = def.getTotalOut();</span>
+<span class="nc" id="L252">						    e.crc = crc.getValue();</span>
+<span class="nc" id="L253">						    writeEXT(e);</span>
+						}
+<span class="nc" id="L255">						def.reset();</span>
+<span class="nc" id="L256">						written += e.csize;</span>
+<span class="nc" id="L257">						break;</span>
+
+			    case STORED:
+						// we already know that both e.size and e.csize are the same
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						if (e.size != written - locoff)</span>
+						{
+<span class="nc" id="L263">						    throw new ZipException(&quot;invalid entry size (expected &quot; +e.size+ &quot; but got &quot; +(written - locoff)+ &quot; bytes)&quot;);</span>
+						}
+<span class="nc bnc" id="L265" title="All 2 branches missed.">						if (e.crc != crc.getValue())</span>
+						{
+<span class="nc" id="L267">						    throw new ZipException(&quot;invalid entry crc-32 (expected 0x&quot; +Long.toHexString(e.crc)+ &quot; but got 0x&quot; +Long.toHexString(crc.getValue())+ &quot;)&quot;);</span>
+						}
+						break;
+
+			    default:
+<span class="nc" id="L272">			    		throw new InternalError(&quot;invalid compression method&quot;);</span>
+		    }
+<span class="nc" id="L274">		    crc.reset();</span>
+<span class="nc" id="L275">		    entry = null;</span>
+    	}
+<span class="nc" id="L277">    }</span>
+
+    /**
+     * Writes an array of bytes to the current ZIP entry data. This method
+     * will block until all the bytes are written.
+     * @param b the data to be written
+     * @param off the start offset in the data
+     * @param len the number of bytes that are written
+     * @exception ZipException if a ZIP file error has occurred
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public synchronized void write(byte[] b, int off, int len) throws IOException
+	 {
+<span class="nc" id="L291">    	ensureOpen();</span>
+<span class="nc bnc" id="L292" title="All 6 branches missed.">      if (off &lt; 0 || len &lt; 0 || off &gt; b.length - len)</span>
+      {
+<span class="nc" id="L294">      	throw new IndexOutOfBoundsException();</span>
+      }
+<span class="nc bnc" id="L296" title="All 2 branches missed.">      else if (len == 0)</span>
+      {
+<span class="nc" id="L298">      	return;</span>
+      }
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">		if (entry == null)</span>
+		{
+<span class="nc" id="L303">			throw new ZipException(&quot;no current ZIP entry&quot;);</span>
+		}
+<span class="nc bnc" id="L305" title="All 3 branches missed.">		switch (entry.method)</span>
+		{
+			case DEFLATED:
+<span class="nc" id="L308">			    super.write(b, off, len);</span>
+<span class="nc" id="L309">			    break;</span>
+
+			case STORED:
+<span class="nc" id="L312">			    written += len;</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			    if (written - locoff &gt; entry.size)</span>
+			    {
+<span class="nc" id="L315">			    	throw new ZipException(&quot;attempt to write past end of STORED entry&quot;);</span>
+			    }
+<span class="nc" id="L317">			    out.write(b, off, len);</span>
+<span class="nc" id="L318">			    break;</span>
+
+			default:
+<span class="nc" id="L321">			    throw new InternalError(&quot;invalid compression method&quot;);</span>
+		}
+<span class="nc" id="L323">		crc.update(b, off, len);</span>
+<span class="nc" id="L324">    }</span>
+
+    /**
+     * Finishes writing the contents of the ZIP output stream without closing
+     * the underlying stream. Use this method when applying multiple filters
+     * in succession to the same output stream.
+     * @exception ZipException if a ZIP file error has occurred
+     * @exception IOException if an I/O exception has occurred
+     */
+    @Override
+	public void finish() throws IOException
+	 {
+<span class="nc" id="L336">    	ensureOpen();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">    	if (finished)</span>
+    	{
+<span class="nc" id="L339">    		return;</span>
+    	}
+<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (entry != null)</span>
+		{
+<span class="nc" id="L343">		    closeEntry();</span>
+		}
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		if (entries.size() &lt; 1)</span>
+		{
+<span class="nc" id="L347">			throw new ZipException(&quot;ZIP file must have at least one entry&quot;);</span>
+		}
+
+		// write central directory
+<span class="nc" id="L351">		long off = written;</span>
+<span class="nc" id="L352">		Enumeration&lt;ZipEntry&gt; e = entries.elements();</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+		{
+<span class="nc" id="L355">			writeCEN(e.nextElement());</span>
+		}
+
+<span class="nc" id="L358">		writeEND(off, written - off);</span>
+<span class="nc" id="L359">		finished = true;</span>
+<span class="nc" id="L360">    }</span>
+
+    /**
+     * Closes the ZIP output stream as well as the stream being filtered.
+     * @exception ZipException if a ZIP file error has occurred
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public void close() throws IOException
+	 {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">    	if (!closed)</span>
+    	{
+<span class="nc" id="L372">    		super.close();</span>
+<span class="nc" id="L373">         closed = true;</span>
+    	}
+<span class="nc" id="L375">    }</span>
+
+    /*
+     * Writes local file (LOC) header for specified entry.
+     */
+    private void writeLOC(ZipEntry e) throws IOException
+	 {
+<span class="nc" id="L382">			writeInt(LOCSIG);	    // LOC header signature</span>
+<span class="nc" id="L383">			writeShort(e.version);      // version needed to extract</span>
+<span class="nc" id="L384">			writeShort(e.flag);         // general purpose bit flag</span>
+<span class="nc" id="L385">			writeShort(e.method);       // compression method</span>
+<span class="nc" id="L386">			writeInt(e.time);           // last modification time</span>
+
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if ((e.flag &amp; 8) == 8)</span>
+			{
+			    // store size, uncompressed size, and crc-32 in data descriptor
+			    // immediately following compressed entry data
+<span class="nc" id="L392">			    writeInt(0);</span>
+<span class="nc" id="L393">			    writeInt(0);</span>
+<span class="nc" id="L394">			    writeInt(0);</span>
+			}
+			else
+			{
+<span class="nc" id="L398">			    writeInt(e.crc);        // crc-32</span>
+<span class="nc" id="L399">			    writeInt(e.csize);      // compressed size</span>
+<span class="nc" id="L400">			    writeInt(e.size);       // uncompressed size</span>
+			}
+
+			//byte[] nameBytes = getUTF8Bytes(e.name);
+<span class="nc" id="L404">			byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
+
+<span class="nc" id="L406">			writeShort(nameBytes.length);</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">			writeShort(e.extra != null ? e.extra.length : 0);</span>
+<span class="nc" id="L408">			writeBytes(nameBytes, 0, nameBytes.length);</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">			if (e.extra != null)</span>
+			{
+<span class="nc" id="L411">			    writeBytes(e.extra, 0, e.extra.length);</span>
+			}
+<span class="nc" id="L413">			locoff = written;</span>
+<span class="nc" id="L414">    }</span>
+
+    /*
+     * Writes extra data descriptor (EXT) for specified entry.
+     */
+    private void writeEXT(ZipEntry e) throws IOException
+	 {
+<span class="nc" id="L421">		writeInt(EXTSIG);	    // EXT header signature</span>
+<span class="nc" id="L422">		writeInt(e.crc);	    // crc-32</span>
+<span class="nc" id="L423">		writeInt(e.csize);	    // compressed size</span>
+<span class="nc" id="L424">		writeInt(e.size);	    // uncompressed size</span>
+<span class="nc" id="L425">    }</span>
+
+    /*
+     * Write central directory (CEN) header for specified entry.
+     * REMIND: add support for file attributes
+     */
+    private void writeCEN(ZipEntry e) throws IOException
+	 {
+<span class="nc" id="L433">		writeInt(CENSIG);	    // CEN header signature</span>
+<span class="nc" id="L434">		writeShort(e.version);	    // version made by</span>
+<span class="nc" id="L435">		writeShort(e.version);	    // version needed to extract</span>
+<span class="nc" id="L436">		writeShort(e.flag);	    // general purpose bit flag</span>
+<span class="nc" id="L437">		writeShort(e.method);	    // compression method</span>
+<span class="nc" id="L438">		writeInt(e.time);	    // last modification time</span>
+<span class="nc" id="L439">		writeInt(e.crc);	    // crc-32</span>
+<span class="nc" id="L440">		writeInt(e.csize);	    // compressed size</span>
+<span class="nc" id="L441">		writeInt(e.size);	    // uncompressed size</span>
+
+		//byte[] nameBytes = getUTF8Bytes(e.name);
+<span class="nc" id="L444">		byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
+
+<span class="nc" id="L446">		writeShort(nameBytes.length);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		writeShort(e.extra != null ? e.extra.length : 0);</span>
+		byte[] commentBytes;
+<span class="nc bnc" id="L449" title="All 2 branches missed.">		if (e.comment != null)</span>
+		{
+		    //commentBytes = getUTF8Bytes(e.comment);
+<span class="nc" id="L452">			commentBytes = e.comment.getBytes(&quot;Cp852&quot;);</span>
+<span class="nc" id="L453">			writeShort(commentBytes.length);</span>
+		}
+		else
+		{
+<span class="nc" id="L457">			commentBytes = null;</span>
+<span class="nc" id="L458">		   writeShort(0);</span>
+		}
+<span class="nc" id="L460">		writeShort(0);		    // starting disk number</span>
+<span class="nc" id="L461">		writeShort(0);		    // internal file attributes (unused)</span>
+<span class="nc" id="L462">		writeInt(0);		    // external file attributes (unused)</span>
+<span class="nc" id="L463">		writeInt(e.offset);	    // relative offset of local header</span>
+<span class="nc" id="L464">		writeBytes(nameBytes, 0, nameBytes.length);</span>
+
+<span class="nc bnc" id="L466" title="All 2 branches missed.">		if (e.extra != null)</span>
+		{
+<span class="nc" id="L468">		    writeBytes(e.extra, 0, e.extra.length);</span>
+		}
+<span class="nc bnc" id="L470" title="All 2 branches missed.">		if (commentBytes != null)</span>
+		{
+<span class="nc" id="L472">		    writeBytes(commentBytes, 0, commentBytes.length);</span>
+		}
+<span class="nc" id="L474">    }</span>
+
+    /*
+     * Writes end of central directory (END) header.
+     */
+    private void writeEND(long off, long len) throws IOException
+	 {
+<span class="nc" id="L481">		writeInt(ENDSIG);	    // END record signature</span>
+<span class="nc" id="L482">		writeShort(0);		    // number of this disk</span>
+<span class="nc" id="L483">		writeShort(0);		    // central directory start disk</span>
+<span class="nc" id="L484">		writeShort(entries.size()); // number of directory entries on disk</span>
+<span class="nc" id="L485">		writeShort(entries.size()); // total number of directory entries</span>
+<span class="nc" id="L486">		writeInt(len);		    // length of central directory</span>
+<span class="nc" id="L487">		writeInt(off);		    // offset of central directory</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">		if (comment != null)</span>
+		{	 // zip file comment
+		    //byte[] b = getUTF8Bytes(comment);
+<span class="nc" id="L491">			byte[] b = comment.getBytes(&quot;Cp852&quot;);</span>
+<span class="nc" id="L492">		   writeShort(b.length);</span>
+<span class="nc" id="L493">		   writeBytes(b, 0, b.length);</span>
+<span class="nc" id="L494">		}</span>
+		else
+		{
+<span class="nc" id="L497">		   writeShort(0);</span>
+		}
+<span class="nc" id="L499">    }</span>
+
+    /*
+     * Writes a 16-bit short to the output stream in little-endian byte order.
+     */
+    private void writeShort(int v) throws IOException
+	 {
+<span class="nc" id="L506">		OutputStream out = this.out;</span>
+<span class="nc" id="L507">		out.write((v &gt;&gt;&gt; 0) &amp; 0xff);</span>
+<span class="nc" id="L508">		out.write((v &gt;&gt;&gt; 8) &amp; 0xff);</span>
+<span class="nc" id="L509">		written += 2;</span>
+<span class="nc" id="L510">    }</span>
+
+    /*
+     * Writes a 32-bit int to the output stream in little-endian byte order.
+     */
+    private void writeInt(long v) throws IOException
+	 {
+<span class="nc" id="L517">		OutputStream out = this.out;</span>
+<span class="nc" id="L518">		out.write((int)((v &gt;&gt;&gt;  0) &amp; 0xff));</span>
+<span class="nc" id="L519">		out.write((int)((v &gt;&gt;&gt;  8) &amp; 0xff));</span>
+<span class="nc" id="L520">		out.write((int)((v &gt;&gt;&gt; 16) &amp; 0xff));</span>
+<span class="nc" id="L521">		out.write((int)((v &gt;&gt;&gt; 24) &amp; 0xff));</span>
+<span class="nc" id="L522">		written += 4;</span>
+<span class="nc" id="L523">    }</span>
+
+    /*
+     * Writes an array of bytes to the output stream.
+     */
+    private void writeBytes(byte[] b, int off, int len) throws IOException
+	 {
+<span class="nc" id="L530">		super.out.write(b, off, len);</span>
+<span class="nc" id="L531">		written += len;</span>
+<span class="nc" id="L532">    }</span>
+
+    /*
+     * Returns the length of String's UTF8 encoding.
+     */
+    static int getUTF8Length(String s)
+    {
+<span class="nc" id="L539">    	int count = 0;</span>
+<span class="nc bnc" id="L540" title="All 2 branches missed.">      for (int i = 0; i &lt; s.length(); i++)</span>
+      {
+<span class="nc" id="L542">      	char ch = s.charAt(i);</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">      	if (ch &lt;= 0x7f)</span>
+      	{
+<span class="nc" id="L545">      		count++;</span>
+         }
+<span class="nc bnc" id="L547" title="All 2 branches missed.">      	else if (ch &lt;= 0x7ff)</span>
+      	{
+<span class="nc" id="L549">      		count += 2;</span>
+         }
+      	else
+      	{
+<span class="nc" id="L553">            count += 3;</span>
+         }
+      }
+<span class="nc" id="L556">      return count;</span>
+    }
+
+    /*
+     * Returns an array of bytes representing the UTF8 encoding
+     * of the specified String.
+     */
+    /*private static byte[] getUTF8Bytes(String s)
+    {
+		char[] c = s.toCharArray();
+		int len = c.length;
+		// Count the number of encoded bytes...
+		int count = 0;
+		for (int i = 0; i &lt; len; i++)
+		{
+		    int ch = c[i];
+		    if (ch &lt;= 0x7f)
+		    {
+		    	count++;
+		    }
+		    else if (ch &lt;= 0x7ff)
+		    {
+		    	count += 2;
+		    }
+		    else
+		    {
+		    	count += 3;
+		    }
+		}
+
+		// Now return the encoded bytes...
+		byte[] b = new byte[count];
+		int off = 0;
+
+		for (int i = 0; i &lt; len; i++)
+		{
+			int ch = c[i];
+		   if (ch &lt;= 0x7f)
+		   {
+		   	b[off++] = (byte)ch;
+		   }
+		   else if (ch &lt;= 0x7ff)
+		   {
+				b[off++] = (byte)((ch &gt;&gt; 6) | 0xc0);
+				b[off++] = (byte)((ch &amp; 0x3f) | 0x80);
+		   }
+		   else
+		   {
+				b[off++] = (byte)((ch &gt;&gt; 12) | 0xe0);
+				b[off++] = (byte)(((ch &gt;&gt; 6) &amp; 0x3f) | 0x80);
+				b[off++] = (byte)((ch &amp; 0x3f) | 0x80);
+		   }
+		}
+		return b;
+    }*/
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

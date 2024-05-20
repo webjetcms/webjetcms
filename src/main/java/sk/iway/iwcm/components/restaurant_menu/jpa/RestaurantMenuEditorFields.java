@@ -140,7 +140,7 @@ public class RestaurantMenuEditorFields extends BaseEditorFields {
     public void toRestaurantMenuEntity(RestaurantMenuEntity originalEntity, RestaurantMenuMealsRepository rmmr) {
         if(originalEntity.getEditorFields() == null) return;
 
-        Optional<RestaurantMenuMealsEntity> selectedMeal = rmmr.findByIdAndDomainId(selectedMealId, CloudToolsForCore.getDomainId());
+        Optional<RestaurantMenuMealsEntity> selectedMeal = rmmr.findFirstByIdAndDomainId(selectedMealId.longValue(), CloudToolsForCore.getDomainId());
         if(selectedMeal.isPresent()) originalEntity.setMeal( selectedMeal.get() );
         else throw new RuntimeException("Something went wrong - uknow meal");
     }

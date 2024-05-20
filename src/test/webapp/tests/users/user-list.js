@@ -28,7 +28,8 @@ Scenario('user-list-zakladne testy', async ({ I, DataTables, DTE }) => {
                //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
                I.see("Povinné pole. Zadajte aspoň jeden znak.", "div.DTE_Field_Name_editorFields\\.login")
                I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
-          }
+          },
+          skipSwitchDomain: true
      });
 });
 
@@ -72,7 +73,8 @@ Scenario('user-list-test pridania a odobratia skupin prav', async ({ I, DataTabl
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_1:checked");
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_2:checked");
                I.click("#pills-dt-datatableInit-personalInfo-tab");
-          }
+          },
+          skipSwitchDomain: true
      });
 });
 
@@ -234,6 +236,16 @@ Scenario("BUG set user perms from first page", ({I, DTE}) => {
 
      DTE.cancel();
 
+});
+
+Scenario("BUG permgroups icons not shown", ({I, DTE}) => {
+     I.amOnPage("/admin/v9/users/user-list/?id=1");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.seeElement("li#perms_cmp_adminlog span.taggroup span.tag.permgroup-62");
+     I.dontSeeElement("li#perms_cmp_adminlog_logging span.taggroup span.tag.permgroup-63");
+
+     DTE.cancel();
 });
 
 function userEditDialog(I, login, isSelf) {
@@ -433,6 +445,41 @@ function insertFile(I, fileName, skipWrong) {
 
 Scenario("logout 2", ({I}) => {
      I.logout();
+});
+
+Scenario('user-list-multiweb testy @singlethread', async ({ I, DataTables, DT, DTE, Document }) => {
+     //test users in MultiWeb configuration - split by domains
+
+     Document.setConfigValue("usersSplitByDomain", "true");
+     I.amOnPage("/admin/v9/users/user-list/");
+     Document.switchDomain("test23.tau27.iway.sk");
+     DT.waitForLoader();
+     I.dontSee("arnoldschwarzenegger", "div.dataTables_scrollBody tbody");
+     DT.filter("login", "admin");
+     I.waitForText("Záznamy 0 až 0 z 0", 10, "div.dataTables_info");
+     I.amOnPage("/admin/v9/users/user-list/");
+
+     await DataTables.baseTest({
+          dataTable: 'usersDatatable',
+          perms: 'menuUsers',
+          createSteps: function(I, options) {
+               DTE.save();
+               I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
+               I.fillField("#DTE_Field_password", "password");
+               I.waitForText("Toto je veľmi často používané heslo.", "div.DTE_Field_Name_password");
+               I.fillField("#DTE_Field_password", "Heslo"+randomText);
+
+               //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
+               I.see("Povinné pole. Zadajte aspoň jeden znak.", "div.DTE_Field_Name_editorFields\\.login")
+               I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
+          }
+     });
+     I.relogin("admin");
+     Document.setConfigValue("usersSplitByDomain", "false");
+});
+
+Scenario("reset wjVersion @singlethread", ({Document}) => {
+     Document.setConfigValue("usersSplitByDomain", "false");
 });
 
 

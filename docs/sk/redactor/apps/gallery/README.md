@@ -54,7 +54,7 @@ Nástrojová lišta obsahuje ikony ```SML``` na nastavenie veľkosti zobrazenýc
 
 ![](admin-toolbar-photo.png)
 
-Kliknutím na fotografiu ju označíte, následne môžete zvoliť funkciu kliknutím na nástrojovú lištu (upraviť, zmazať, otočiť...). Pre rýchle zobrazenie editora môžete kliknúť priamo na názov súboru.
+Kliknutím na fotografiu ju označíte, následne môžete zvoliť funkciu kliknutím na nástrojovú lištu (upraviť, zmazať, zobraziť, otočiť...). Pre rýchle zobrazenie editora môžete kliknúť priamo na názov súboru.
 
 ![](admin-edit-photo.png)
 

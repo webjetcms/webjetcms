@@ -3834,6 +3834,8 @@ public class GalleryDB
 		{
 			case Constants.DB_MYSQL : sql = "SELECT * FROM gallery_dimension WHERE create_date IS NOT NULL"+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY create_date DESC LIMIT "+count;
 				break;
+			case Constants.DB_PGSQL : sql = "SELECT * FROM gallery_dimension WHERE create_date IS NOT NULL"+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY create_date DESC LIMIT "+count;
+				break;
 			case Constants.DB_MSSQL : sql = "SELECT TOP "+count+" * FROM gallery_dimension WHERE create_date IS NOT NULL"+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY create_date DESC";
 				break;
 			case Constants.DB_ORACLE : sql = "SELECT GD.*, ROWNUM FROM gallery_dimension GD WHERE create_date IS NOT NULL"+CloudToolsForCore.getDomainIdSqlWhere(true)+" AND ROWNUM < "+count+" ORDER BY create_date DESC";
@@ -3916,8 +3918,8 @@ public class GalleryDB
 		String limitSqlBefore = "";
 		String whereCondition = "";
 
-		if(Constants.DB_TYPE == Constants.DB_MYSQL)
-			limitSQLAfter = " LIMIT 0,1";
+		if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)
+			limitSQLAfter = " LIMIT 1";
 
 		else if(Constants.DB_TYPE == Constants.DB_MSSQL)
 			limitSqlBefore = " TOP " + 1;

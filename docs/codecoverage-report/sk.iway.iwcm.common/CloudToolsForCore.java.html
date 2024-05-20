@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CloudToolsForCore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">CloudToolsForCore.java</span></div><h1>CloudToolsForCore.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import cvu.html.HTMLTokenizer;
+import cvu.html.TagToken;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+public class CloudToolsForCore {
+
+    public static final String CLOUD_TEXT_KEY_PREFIX = &quot;cloud.template.&quot;;
+<span class="fc" id="L47">	public static final Pattern CLOUD_TEXT_PATTERN = Pattern.compile(CLOUD_TEXT_KEY_PREFIX+&quot;[a-zA-Z0-9\\._-]+&quot;);</span>
+
+<span class="nc" id="L49">    protected CloudToolsForCore() {</span>
+        //utility class
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Vrati aktualne meno domeny
+     * @return
+     */
+    public static String getDomainName()
+    {
+<span class="fc" id="L59">        String domain = &quot;&quot;;</span>
+<span class="fc" id="L60">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (rb != null)</span>
+        {
+<span class="fc" id="L63">            domain = rb.getDomain();</span>
+
+            //pre niektore adresare musime vratiti default domain, napr. /images/gallery/user/
+<span class="pc bpc" id="L66" title="2 of 4 branches missed.">            if(Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;domainIdFixedUrls&quot;))</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                    &amp;&amp; rb.isUserAdmin())</span>
+            {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (DocTools.isXssStrictUrlException(rb.getUrl(), &quot;domainIdFixedUrls&quot;) ||</span>
+<span class="pc bpc" id="L70" title="3 of 4 branches missed.">                        &quot;/admin/importxls.do&quot;.equalsIgnoreCase(rb.getUrl()) &amp;&amp; &quot;type=sk.iway.iwcm.users.ImportUsersXLS&quot;.equals(rb.getQueryString()))</span>
+                {
+                    //return rootGroupId;
+<span class="fc" id="L73">                    GroupDetails root = GroupsDB.getInstance().getGroup(Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                    if (root != null) {</span>
+<span class="fc" id="L75">                        return root.getDomainName();</span>
+                    }
+                }
+            }
+        }
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (Tools.isEmpty(domain)) domain = &quot;unknown&quot;;</span>
+
+<span class="fc" id="L82">        return domain.toLowerCase();</span>
+    }
+
+    /**
+     * Vrati ID domeny pre databazove tabulky delene podla domen (napr. gallery) f
+     * ak nie je zapnuty cloud tak automaticky vrati 1
+     * @return vrati id root adresara domeny, ak nie je ziadna domena tak vrati 1
+     */
+    public static int getDomainId()
+    {
+<span class="fc" id="L92">        String domain = &quot;&quot;;</span>
+<span class="fc" id="L93">        int domainId = 1;</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        if(InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true)</span>
+        {
+<span class="fc" id="L96">            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (rb != null)</span>
+            {
+                //pre niektore URL musime vratit default domain (napr. nastenku na welcome obrazovke), ak je to len multidomain
+<span class="pc bpc" id="L100" title="2 of 6 branches missed.">                if(InitServlet.isTypeCloud()==false &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;domainIdFixedUrls&quot;)) &amp;&amp; rb.isUserAdmin())</span>
+                {
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                    if(DocTools.isXssStrictUrlException(rb.getUrl(), &quot;domainIdFixedUrls&quot;) ||</span>
+<span class="pc bpc" id="L103" title="3 of 4 branches missed.">                            (&quot;/admin/importxls.do&quot;.equalsIgnoreCase(rb.getUrl()) &amp;&amp; &quot;type=sk.iway.iwcm.users.ImportUsersXLS&quot;.equals(rb.getQueryString())))</span>
+                    {
+                        //domainIdCommon sa pouziva v podmienke v getDomainIdSqlWhere, standardne to nie je nastavene,
+                        //moze sa zapnut na 1 alebo inu hodnotu ak chceme mat ine spolocne ID domeny, vtedy nenastavime na 1 ale na danu hodnotu
+<span class="fc" id="L107">                        int domainIdFixed = Constants.getInt(&quot;domainIdCommon&quot;);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                        if (domainIdFixed&lt;1) domainIdFixed = 1;</span>
+
+<span class="fc" id="L110">                        return domainIdFixed;</span>
+                    }
+
+                }
+
+<span class="fc" id="L115">                domain = rb.getDomain();</span>
+            }
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (!Tools.isEmpty(domain))</span>
+            {
+<span class="fc" id="L119">                domainId = GroupsDB.getDomainId(domain);</span>
+            }
+
+            //pre neexistujuce domeny vratime default domenu pri multidomain WJ
+<span class="pc bpc" id="L123" title="3 of 4 branches missed.">            if (domainId == -1 &amp;&amp; Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true) domainId = 1;</span>
+        }
+<span class="fc" id="L125">        return domainId;</span>
+    }
+
+    /**
+     * Vrati prefix a  &quot;.domain_id=[cislo]&quot; pre Cloud WebJet. Bodku pred domain_id prida samo.
+     * MBO: ak je vypnuty cloud, zameni vsetky klauzuly domain_id=? za 1=1
+     * @param addAnd  ak je true prida &quot; AND &quot; pred domain_id=[cislo]
+     * @param tblPrefix tablukovy prefix pred .domain_id
+     * @return &quot; AND prefix.domain_id=[cislo] &quot; resp. &quot; prefix.domain_id=[cislo] &quot;
+     */
+    public static String getDomainIdSqlWhere(boolean addAnd, String tblPrefix)
+    {
+        // MBO: musi vracat platnu cast klauzuly WHERE alebo &quot;1&quot;, pretoze v niektorych SQL kodoch sa kvoli tomu klauzula WHERE pridavala a bez toho by nedavala zmysel
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud())</span>
+        {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (addAnd)</span>
+            {
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                return &quot; AND &quot;+(Tools.isNotEmpty(tblPrefix) ? tblPrefix+&quot;.&quot; : &quot;&quot;)+&quot;domain_id=&quot;+ getDomainId()+&quot; &quot;;</span>
+            }
+            else
+            {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                return &quot; &quot;+(Tools.isNotEmpty(tblPrefix) ? tblPrefix+&quot;.&quot; : &quot;&quot;)+&quot;domain_id=&quot;+ getDomainId()+&quot; &quot;;</span>
+            }
+        }
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        else if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true)</span>
+        {
+<span class="fc" id="L151">            String orAppend = &quot;&quot;;</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (Constants.getInt(&quot;domainIdCommon&quot;)&gt;0) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                orAppend = &quot; OR &quot;+(Tools.isNotEmpty(tblPrefix) ? tblPrefix+&quot;.&quot; : &quot;&quot;)+&quot;domain_id=&quot;+Constants.getInt(&quot;domainIdCommon&quot;);</span>
+            }
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (addAnd)</span>
+            {
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                return &quot; AND (&quot;+(Tools.isNotEmpty(tblPrefix) ? tblPrefix+&quot;.&quot; : &quot;&quot;)+&quot;domain_id=&quot;+ getDomainId()+orAppend+&quot;) &quot;;</span>
+            }
+            else
+            {
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">                return &quot; (&quot;+(Tools.isNotEmpty(tblPrefix) ? tblPrefix+&quot;.&quot; : &quot;&quot;)+&quot;domain_id=&quot;+ getDomainId()+orAppend+&quot;) &quot;;</span>
+            }
+        }
+        else
+        {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            if (addAnd)</span>
+            {
+<span class="nc" id="L168">                return &quot; &quot;; //toto je zbytocne, netreba dat ziadnu podmienku: AND 1=1</span>
+            }
+            else
+            {
+<span class="nc" id="L172">                return &quot; 1=1 &quot;;</span>
+            }
+        }
+    }
+
+    /**
+     * Vrati retazec domain_id=[cislo] pre Cloud WebJet
+     * @param addAnd ak je true prida &quot; AND &quot; pred retazec
+     * @return &quot; AND domain_id=[cislo] &quot; resp. &quot; domain_id=[cislo] &quot;
+     */
+    public static String getDomainIdSqlWhere(boolean addAnd)
+    {
+<span class="fc" id="L184">        return getDomainIdSqlWhere(addAnd, &quot;&quot;);</span>
+    }
+
+
+
+
+    /**
+     * Odfiltruje s ciarkou oddeleneho zoznamu ID adresarov, ktore nepatria aktualnej domene
+     * @param editableGroups
+     * @return
+     */
+    private static String filterGroupIds(String editableGroups)
+    {
+        try
+        {
+<span class="nc bnc" id="L199" title="All 2 branches missed.">            if (Tools.isNotEmpty(editableGroups))</span>
+            {
+<span class="nc" id="L201">                GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc" id="L203">                int[] groupIds = Tools.getTokensInt(editableGroups, &quot;,&quot;);</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">                if (groupIds != null &amp;&amp; groupIds.length &gt; 0)</span>
+                {
+<span class="nc" id="L206">                    StringBuilder filteredGroups = null;</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">                    for (int groupId : groupIds)</span>
+                    {
+<span class="nc" id="L210">                        GroupDetails checkGroup = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L211" title="All 4 branches missed.">                        if (checkGroup != null &amp;&amp; checkGroup.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName()))</span>
+                        {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                            if (filteredGroups == null) filteredGroups = new StringBuilder(String.valueOf(groupId));</span>
+<span class="nc" id="L214">                            else filteredGroups.append(&quot;,&quot;+groupId);</span>
+                        }
+                    }
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                    if (filteredGroups != null) return filteredGroups.toString();</span>
+                }
+            }
+        }
+<span class="nc" id="L222">        catch (Exception e)</span>
+        {
+<span class="nc" id="L224">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L225">        }</span>
+<span class="nc" id="L226">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Odfiltruje so zoznamu adresarov len tie, ktore zacinaju na /images/ alebo /files/
+     * @param writableFolders
+     * @return
+     */
+    private static String filterWritableFolders(String writableFolders)
+    {
+        try
+        {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">            if (Tools.isNotEmpty(writableFolders))</span>
+            {
+<span class="nc" id="L240">                String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+
+<span class="nc" id="L242">                String[] folders = Tools.getTokens(writableFolders, &quot;\n&quot;);</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">                if (folders != null &amp;&amp; folders.length &gt; 0)</span>
+                {
+<span class="nc" id="L245">                    StringBuilder filteredFolders = null;</span>
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">                    for (String folder : folders)</span>
+                    {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                        if (FileBrowserTools.hasForbiddenSymbol(folder)) continue;</span>
+
+<span class="nc" id="L251">                        boolean addFolder = false;</span>
+<span class="nc bnc" id="L252" title="All 4 branches missed.">                        if (folder.startsWith(&quot;/images/&quot;) || folder.startsWith(&quot;/files/&quot;)) addFolder = true;</span>
+
+<span class="nc bnc" id="L254" title="All 4 branches missed.">                        if (&quot;cloud&quot;.equals(Constants.getInstallName())==false &amp;&amp; Tools.isNotEmpty(domainAlias))</span>
+                        {
+                            //nie sme cloud ale multiweb, povol aj podla domain aliasu
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                            if (folder.indexOf(&quot;/&quot;+domainAlias+&quot;/&quot;)!=-1) addFolder = true;</span>
+                        }
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">                        if (addFolder)</span>
+                        {
+<span class="nc bnc" id="L262" title="All 2 branches missed.">                            if (filteredFolders == null) filteredFolders = new StringBuilder(folder);</span>
+<span class="nc" id="L263">                            else filteredFolders.append(&quot;\n&quot;).append(folder);</span>
+                        }
+                    }
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">                    if (filteredFolders != null) return filteredFolders.toString();</span>
+                }
+            }
+        }
+<span class="nc" id="L271">        catch (Exception e)</span>
+        {
+<span class="nc" id="L273">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L274">        }</span>
+<span class="nc" id="L275">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Nastavi prava podla domeny, je to tu kvoli tomu, ze to pouziva aj MultiWeb
+     * @param user
+     * @param rb
+     */
+    public static void setPermissions(Identity user, RequestBean rb)
+    {
+<span class="nc" id="L285">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L286">        List&lt;GroupDetails&gt; rootGroups = groupsDB.getGroups(0);</span>
+
+<span class="nc" id="L288">        user.setEditablePages(&quot;&quot;);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+        {
+<span class="nc" id="L291">            user.setEditableGroups(&quot;&quot;);</span>
+        }
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        else if (Tools.isNotEmpty(user.getEditableGroups()))</span>
+        {
+<span class="nc" id="L295">            user.setEditableGroups(filterGroupIds(user.getEditableGroups()));</span>
+        }
+
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (Tools.isEmpty(user.getEditableGroups()))</span>
+        {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">            for (GroupDetails g : rootGroups)</span>
+            {
+<span class="nc bnc" id="L302" title="All 2 branches missed.">                if (g.getDomainName().equalsIgnoreCase(rb.getDomain()))</span>
+                {
+<span class="nc" id="L304">                    user.setEditableGroups(String.valueOf(g.getGroupId()));</span>
+                }
+<span class="nc" id="L306">            }</span>
+        }
+
+<span class="nc" id="L309">        String defaultFolders = &quot;/images/*\n/files/*&quot;;</span>
+
+<span class="nc" id="L311">        user.setWritableFolders(filterWritableFolders(user.getWritableFolders()));</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">        if (Tools.isEmpty(user.getWritableFolders()))</span>
+        {
+
+<span class="nc" id="L315">            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">            if (&quot;cloud&quot;.equals(Constants.getInstallName())==false &amp;&amp; Tools.isNotEmpty(domainAlias))</span>
+            {
+                //pre multiweb pridame tieto adresare ak ma domena domainAlias
+<span class="nc" id="L319">                defaultFolders += &quot;\n/components/&quot;+domainAlias+&quot;/*\n/templates/&quot;+domainAlias+&quot;/*&quot;;</span>
+            }
+
+<span class="nc" id="L322">            user.setWritableFolders(defaultFolders);</span>
+        }
+
+        //vytvor adresare (ak neexistuju)
+<span class="nc" id="L326">        IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/images/&quot;));</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
+
+<span class="nc" id="L329">        f = new IwcmFile(Tools.getRealPath(&quot;/files/&quot;));</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
+
+        //nastav prava na moduly
+<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+        {
+            //nastav disabled items
+<span class="nc" id="L336">            Map&lt;String, String&gt; disabledItemsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L337">            user.setDisabledItemsTable(disabledItemsTable);</span>
+<span class="nc" id="L338">            user.addDisabledItem(&quot;menuSync&quot;);</span>
+
+<span class="nc" id="L340">            user.addDisabledItem(&quot;menuConfig&quot;);</span>
+<span class="nc" id="L341">            user.addDisabledItem(&quot;modUpdate&quot;);</span>
+<span class="nc" id="L342">            user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
+<span class="nc" id="L343">            user.addDisabledItem(&quot;edit_text&quot;);</span>
+<span class="nc" id="L344">            user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
+<span class="nc" id="L345">            user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
+<span class="nc" id="L346">            user.addDisabledItem(&quot;cmp_redirects&quot;);</span>
+<span class="nc" id="L347">            user.addDisabledItem(&quot;modRestart&quot;);</span>
+<span class="nc" id="L348">            user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
+<span class="nc" id="L349">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
+<span class="nc" id="L350">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
+<span class="nc" id="L351">            user.addDisabledItem(&quot;export_offline&quot;);</span>
+<span class="nc" id="L352">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
+
+<span class="nc" id="L354">            user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
+<span class="nc" id="L355">            user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
+<span class="nc" id="L356">        }</span>
+        else
+        {
+<span class="nc bnc" id="L359" title="All 6 branches missed.">            if (CloudToolsForCore.getDomainId()==1 &amp;&amp; (user.getEmail().indexOf(&quot;@interway.sk&quot;)!=-1 || user.getEmail().indexOf(&quot;@webactive.cz&quot;)!=-1))</span>
+            {
+                //prvemu hostu a iway || webactive user povolime niektore systemove moduly
+            }
+            else
+            {
+<span class="nc" id="L365">                user.addDisabledItem(&quot;menuConfig&quot;);</span>
+<span class="nc" id="L366">                user.addDisabledItem(&quot;modUpdate&quot;);</span>
+<span class="nc" id="L367">                user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
+<span class="nc" id="L368">                user.addDisabledItem(&quot;edit_text&quot;);</span>
+<span class="nc" id="L369">                user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
+<span class="nc" id="L370">                user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
+                //uz je povolene user.addDisabledItem(&quot;cmp_redirects&quot;);
+<span class="nc" id="L372">                user.addDisabledItem(&quot;modRestart&quot;);</span>
+<span class="nc" id="L373">                user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
+
+<span class="nc" id="L375">                user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
+<span class="nc" id="L376">                user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
+            }
+
+<span class="nc" id="L379">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
+<span class="nc" id="L380">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
+<span class="nc" id="L381">            user.addDisabledItem(&quot;export_offline&quot;);</span>
+<span class="nc" id="L382">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
+            //statistika uz je v multiwebe dostupna
+            //user.addDisabledItem(&quot;cmp_stat&quot;);
+
+<span class="nc" id="L386">            String specialPerms = Constants.getString(&quot;multiwebSpecialPerms-&quot;+user.getUserId());</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">            if (Tools.isNotEmpty(specialPerms))</span>
+            {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                for (String special : Tools.getTokens(specialPerms, &quot;,&quot;))</span>
+                {
+<span class="nc" id="L391">                    user.removeDisabledItem(special);</span>
+                }
+            }
+
+<span class="nc" id="L395">            UsersDB.loadDisabledItemsFromDB(user);</span>
+        }
+<span class="nc" id="L397">    }</span>
+
+    /**
+     * Ziska korenove ID adresara aktualne nastavenej domeny
+     * @param request
+     * @return
+     */
+    public static int getRootGroupId(HttpServletRequest request)
+	{
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">		if (InitServlet.isTypeCloud()) return CloudToolsForCore.getDomainId();</span>
+		//aby nam to fungovalo aj na sablonovom WebJETe
+<span class="fc" id="L408">		return GroupsDB.getDomainId(DocDB.getDomain(request));</span>
+	}
+
+    /**
+	 * Vrati hodnotu z nastaveni (vid. CustomHeaderFooterAction)
+	 * @param param
+	 * @return
+	 */
+	public static String getValue(String param)
+	{
+<span class="nc" id="L418">		int rootGroupId = CloudToolsForCore.getDomainId();</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">		if (rootGroupId &lt; 1) return null;</span>
+
+<span class="nc" id="L421">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		if (rootGroup == null) return null;</span>
+
+<span class="nc" id="L424">		return getValue(rootGroup.getFieldC(), param);</span>
+	}
+
+	/**
+	 * Z dat nastaveni vrati danu hodnotu (vid. CustomHeaderFooterAction)
+	 * @param data
+	 * @param param
+	 * @return
+	 */
+	public static String getValue(String data, String param)
+	{
+<span class="nc" id="L435">		return StringUtils.substringBetween(data, param+&quot;=&quot;, &quot;;&quot;);</span>
+	}
+
+    /**
+	 * Test ci je mozne, danu web stranku menit, vrati null ak ano, inak vrati originalny doc details (pred zmenou)
+	 * @param docId
+	 * @return
+	 */
+	public static DocDetails isPossibleToChangeDoc(int docId)
+	{
+<span class="pc bpc" id="L445" title="3 of 4 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; docId&gt;0)</span>
+		{
+<span class="nc" id="L447">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L448">			DocDB docDB = DocDB.getInstance();</span>
+
+<span class="nc" id="L450">			DocDetails existing = docDB.getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L451" title="All 6 branches missed.">			if (existing != null &amp;&amp;  ( existing.getTitle().equals(&quot;Header&quot;) || existing.getTitle().equals(&quot;Footer&quot;) ))</span>
+			{
+<span class="nc" id="L453">				GroupDetails existingParentGroup = groupsDB.getGroup(existing.getGroupId());</span>
+<span class="nc bnc" id="L454" title="All 4 branches missed.">				if (existingParentGroup != null &amp;&amp; existingParentGroup.getGroupName().equals(&quot;System&quot;))</span>
+				{
+					//nemozeme menit title ani groupid
+<span class="nc" id="L457">					return existing;</span>
+				}
+			}
+		}
+<span class="fc" id="L461">		return null;</span>
+	}
+
+    /**
+	 * Vrati true ak je IP adresa HTTP poziadavky povazovanu za internu
+	 *
+	 * @param request
+	 * @return
+	 */
+	public static boolean isInternalIp(HttpServletRequest request)
+	{
+<span class="nc" id="L472">		String remoteIp = Tools.getRemoteIP(request);</span>
+<span class="nc" id="L473">		StringTokenizer ips = new StringTokenizer(Constants.getString(&quot;cloudCloneAllowedIps&quot;),&quot;,&quot;);</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		while(ips.hasMoreTokens())</span>
+		{
+<span class="nc bnc" id="L476" title="All 2 branches missed.">			if(remoteIp.startsWith(ips.nextToken()))</span>
+			{
+<span class="nc" id="L478">				return true;</span>
+			}
+		}
+<span class="nc" id="L481">		return false;</span>
+	}
+
+    /**
+	 * Vrati pravdepodobneho administratora pre domenu (admina s najnizsim ID)
+	 * samotne odfiltrovanie adminov len pre danu domenu je uz v UsersDB takze
+	 * tu sa len vyberie ten s najnizsim id.
+	 *
+	 * @return UserDetails
+	 */
+	public static UserDetails getAdmin()
+	{
+<span class="nc" id="L493">		List&lt;UserDetails&gt; admins = UsersDB.getAdmins();</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">		if (admins!=null)</span>
+		{
+<span class="nc bnc" id="L496" title="All 2 branches missed.">			if (admins.size()&gt;0)</span>
+			{
+				//return UsersDB.getUser(min(admins, on(UserDetails.class).getUserId()));
+<span class="nc" id="L499">                Optional&lt;UserDetails&gt; admin = admins.stream().min(Comparator.comparing(UserDetails::getUserId));</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">                if (admin.isPresent()) return admin.get();</span>
+			}
+		}
+<span class="nc" id="L503">		return null;</span>
+	}
+
+    /**
+	 * Prelozi v texte vsetky kluce zacinajuce na cloud.template. (CLOUD_TEXT_KEY_PREFIX) ktore najde
+	 * vrati text s nahradenymi klucami
+	 * @param lng jazyk do ktoreho sa to ma prelozit
+	 * @param text
+	 * @return povodny text s nahradenymi klucami v jazyku predanom ako parameter
+	 */
+	public static String translate(String lng, String text)
+	{
+<span class="nc" id="L515">		String htmlCode = text;</span>
+<span class="nc" id="L516">		Prop prop = Prop.getInstance(lng);</span>
+
+<span class="nc bnc" id="L518" title="All 2 branches missed.">		if(text.indexOf(CLOUD_TEXT_KEY_PREFIX) == -1)</span>
+		{
+<span class="nc" id="L520">			StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L522">			int startIdx = 0;</span>
+			//lepsie ako vymenovat vsetky mozne konce kluca, radsej dame len povolene znaky v kluci a akykolvek iny ho ukonci
+<span class="nc" id="L524">			Matcher matcher = CLOUD_TEXT_PATTERN.matcher(text);</span>
+			//hladame od konca posledneho najdeneho kluca
+<span class="nc bnc" id="L526" title="All 2 branches missed.">			while(matcher.find(startIdx))</span>
+			{
+				//v group mam key
+<span class="nc" id="L529">				sb.append(text.substring(startIdx, matcher.start()));</span>
+<span class="nc" id="L530">				sb.append(prop.getText(matcher.group()));</span>
+<span class="nc" id="L531">				startIdx = matcher.end();</span>
+			}
+			//doplnime zvysok
+<span class="nc bnc" id="L534" title="All 2 branches missed.">			if(startIdx &lt; text.length())</span>
+<span class="nc" id="L535">				sb.append(text.substring(startIdx, text.length()));</span>
+
+<span class="nc" id="L537">			htmlCode = sb.toString();</span>
+		}
+
+<span class="nc bnc" id="L540" title="All 4 branches missed.">		if (&quot;en&quot;.equals(lng) || Tools.isEmpty(lng)) return text;</span>
+
+<span class="nc" id="L542">		return translateText(htmlCode, prop);</span>
+	}
+
+	/**
+	 * Prelozi cloudove kluce v editor forme v title, data
+	 * @param lng jazyk do ktoreho sa ma prekladat
+	 * @param ef editorform
+	 * @return EditorForm s prelozenymi textami pre cloudove kluce
+	 * @author mhalas
+	 */
+	public static EditorForm translate(String lng, EditorForm ef, GroupDetails localGroup)
+	{
+<span class="nc bnc" id="L554" title="All 2 branches missed.">		if(ef == null) throw new IllegalArgumentException(&quot;EditorForm cant be null&quot;);</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">		if (localGroup.getFullPath().indexOf(&quot;/System&quot;)==-1) ef.setTitle(translate(lng, ef.getTitle()));</span>
+<span class="nc" id="L556">		ef.setData(translate(lng, ef.getData()));</span>
+<span class="nc bnc" id="L557" title="All 4 branches missed.">		if(Tools.isNotEmpty(ef.getVirtualPath()) &amp;&amp; !ef.getVirtualPath().equals(&quot;/&quot;))</span>
+		{
+			//path sa nam potom vytvori podla nazvu stranky uz v danom jazyku... eh, teda snad :)
+<span class="nc" id="L560">			ef.setVirtualPath(&quot;&quot;);</span>
+		}
+<span class="nc" id="L562">		return ef;</span>
+	}
+
+    /**
+	 * Prelozi texty v HTML kode - najskor extrahuje textove bloky a tie nasledne prelozi
+	 * @param htmlCode
+	 * @param prop
+	 * @return
+	 */
+	private static String translateText(String htmlCode, Prop prop)
+	{
+		//DebugTimer dt = new DebugTimer(&quot;CloudToolsForCore.translateText&quot;);
+
+<span class="nc" id="L575">		Map&lt;String, String&gt; textyToAdd = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L576">		extractTexts(htmlCode, textyToAdd, null);</span>
+
+		//dt.diff(&quot;Extracted&quot;);
+
+<span class="nc" id="L580">		Set&lt;Map.Entry&lt;String, String&gt;&gt; entrySet = textyToAdd.entrySet();</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">		for (Entry&lt;String, String&gt; entry : entrySet)</span>
+		{
+<span class="nc" id="L583">			String key = entry.getKey();</span>
+<span class="nc" id="L584">			String translated = prop.getText(entry.getKey());</span>
+
+<span class="nc bnc" id="L586" title="All 2 branches missed.">			if (key.equals(translated)==false)</span>
+			{
+<span class="nc" id="L588">				Logger.debug(CloudToolsForCore.class, &quot;Translating, key=&quot;+key+&quot; text=&quot;+translated+&quot; value=&quot;+entry.getValue());</span>
+<span class="nc" id="L589">				htmlCode = Tools.replace(htmlCode, entry.getValue(), translated);</span>
+			}
+<span class="nc" id="L591">		}</span>
+
+		//quickfix
+<span class="nc" id="L594">		htmlCode = Tools.replace(htmlCode, &quot;inlineComponentTlačítko&quot;, &quot;inlineComponentButton&quot;);</span>
+<span class="nc" id="L595">		htmlCode = Tools.replace(htmlCode, &quot;showKontakts&quot;, &quot;showContacts&quot;);</span>
+
+		//dt.diff(&quot;done&quot;);
+
+<span class="nc" id="L599">		return htmlCode;</span>
+	}
+
+    /**
+	 * Pouziva sa na extrakciu textov z HTML kodu (najde len textove bloky)
+	 * @param htmlCode
+	 * @param textyToAdd
+	 * @param prop
+	 */
+	public static void extractTexts(String htmlCode, Map&lt;String, String&gt; textyToAdd, Prop prop)
+	{
+<span class="nc" id="L610">		HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(htmlCode, &quot;/&gt;&quot;, &quot;&gt;&quot;).toCharArray());</span>
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L612">		Enumeration&lt;Object&gt; e = htmlTokenizer.getTokens();</span>
+		Object o;
+
+<span class="nc" id="L615">		boolean wasHtmlText = false;</span>
+
+<span class="nc bnc" id="L617" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+		{
+<span class="nc" id="L619">			wasHtmlText = true;</span>
+
+<span class="nc" id="L621">			o = e.nextElement();</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">			if (o instanceof TagToken)</span>
+			{
+				//tagToken = (TagToken) o;
+				//System.out.println(&quot;TAG=&quot;+tagToken.getName()+&quot; &quot;+tagToken.isEndTag());
+			}
+			else
+			{
+<span class="nc" id="L629">				String text = o.toString();</span>
+<span class="nc" id="L630">				extractTextAddToList(text, textyToAdd, prop);</span>
+<span class="nc" id="L631">			}</span>
+		}
+
+<span class="nc bnc" id="L634" title="All 2 branches missed.">		if (wasHtmlText == false)</span>
+		{
+			//nebol to HTML content ale len napr. nadpis
+<span class="nc" id="L637">			extractTextAddToList(htmlCode, textyToAdd, prop);</span>
+		}
+<span class="nc" id="L639">	}</span>
+
+    /**
+	 * Prida najdeny text do listu na dalsie pouzitie
+	 * @param text
+	 * @param textyToAdd
+	 * @param prop
+	 */
+	private static void extractTextAddToList(String text, Map&lt;String, String&gt; textyToAdd, Prop prop)
+	{
+<span class="nc bnc" id="L649" title="All 8 branches missed.">		if (Tools.isNotEmpty(text) &amp;&amp; text.length()&gt;2 &amp;&amp; text.indexOf(&quot;!INCLUDE&quot;)==-1 &amp;&amp; text.startsWith(&quot;@import&quot;)==false)</span>
+		{
+<span class="nc" id="L651">			String key = getTextKey(text);</span>
+			//Logger.debug(CloudToolsForCore.class, &quot;Text=&quot;+text+&quot; key=&quot;+key);
+<span class="nc bnc" id="L653" title="All 6 branches missed.">			if ((prop==null || prop.getText(key).equals(key)) &amp;&amp; textyToAdd.containsKey(key)==false)</span>
+			{
+				//Logger.debug(CloudToolsForCore.class, &quot;++++adding: &quot;+key+&quot;=&quot;+text);
+<span class="nc" id="L656">				textyToAdd.put(key, text);</span>
+			}
+		}
+<span class="nc" id="L659">	}</span>
+
+    private static String getTextKey(String text)
+	{
+<span class="nc" id="L663">		text = DocTools.removeCharsDir(text, false);</span>
+<span class="nc" id="L664">		text = text.replace('/', '-');</span>
+<span class="nc" id="L665">		text = text.trim();</span>
+
+<span class="nc" id="L667">		return &quot;&lt;cloud.template.&quot;+text+&quot;&gt;&quot;;</span>
+	}
+
+    /**
+	 * Vrati ci je pouzivany modul basket, cachuje vysledok 5 minut
+	 * @param request
+	 * @return
+	 */
+	public static boolean hasShop(HttpServletRequest request)
+	{
+<span class="fc" id="L677">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
+<span class="fc" id="L678">		String CACHE_KEY = &quot;sk.iway.cloud.hasShop-&quot;+rootGroupId;</span>
+<span class="fc" id="L679">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L680">		Boolean hasShop = (Boolean)c.getObject(CACHE_KEY);</span>
+<span class="fc bfc" id="L681" title="All 2 branches covered.">		if (hasShop != null) return hasShop.booleanValue();</span>
+
+		//vyhladajme stranky pre nas web v ktorom sa nachadza include products.jsp
+<span class="fc" id="L684">		String sqlQuery = &quot;SELECT count(doc_id) FROM documents WHERE doc_id&gt;0 &quot;+StatDB.getRootGroupWhere(&quot;group_id&quot;, rootGroupId)+&quot; AND data LIKE '%/components/basket/%'&quot;;</span>
+		//System.out.println(&quot;---------------&gt; &quot; + CloudToolsForCore.getRootGroupId(request));
+		//System.out.println(sqlQuery);
+<span class="fc" id="L687">		int records = (new SimpleQuery()).forInt(sqlQuery);</span>
+<span class="pc bpc" id="L688" title="1 of 2 branches missed.">		if (records &gt; 0) hasShop = Boolean.TRUE;</span>
+<span class="fc" id="L689">		else hasShop = Boolean.FALSE;</span>
+
+<span class="fc" id="L691">		c.setObjectSeconds(CACHE_KEY, hasShop, 5*60, true);</span>
+
+<span class="fc" id="L693">		return hasShop.booleanValue();</span>
+	}
+
+    /**
+	 * Vrati true ak zadane groupId patri k mojej domene
+	 * @param groupId
+	 * @return
+	 */
+	public static boolean isGroupFromMyDomain(int groupId)
+	{
+<span class="nc" id="L703">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L704">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L705" title="All 4 branches missed.">		if (group != null &amp;&amp; group.getDomainName().equals(CloudToolsForCore.getDomainName())) return true;</span>
+
+<span class="nc" id="L707">		return false;</span>
+	}
+
+    /**
+	 *  Vrati meno aktualneho Template-u pre Cloud
+	 * @param request request
+	 * @return String - meno template-u, ak nie sme v Cloude vrati &quot;unknown&quot;
+	 */
+	public static String getRootTempName(HttpServletRequest request)
+	{
+<span class="nc" id="L717">		TemplateDetails rootTemp = getRootTemp(request);</span>
+		//if (rootTemp != null) return rootTemp.getTempName();
+<span class="nc bnc" id="L719" title="All 2 branches missed.">		if (rootTemp != null)</span>
+		{
+<span class="nc bnc" id="L721" title="All 4 branches missed.">			if(rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &lt; rootTemp.getTempName().length() &amp;&amp; rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &gt; 0)</span>
+<span class="nc" id="L722">				return rootTemp.getTempName().substring(0,rootTemp.getTempName().lastIndexOf(&quot;-&quot;));</span>
+<span class="nc" id="L723">			return rootTemp.getTempName();</span>
+		}
+
+<span class="nc" id="L726">		Logger.debug(CloudToolsForCore.class, &quot;You are not in Cloud, returning \&quot;unknown\&quot; name of template &quot;);</span>
+<span class="nc" id="L727">		return &quot;unknown&quot;;</span>
+	}
+
+    /**
+	 * Vrati root sablonu
+	 * @param request
+	 * @return
+	 */
+	public static TemplateDetails getRootTemp(HttpServletRequest request)
+	{
+<span class="nc" id="L737">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
+<span class="nc" id="L738">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L739" title="All 2 branches missed.">		if (rootGroup != null)</span>
+		{
+<span class="nc" id="L741">			TemplateDetails rootTemp = TemplatesDB.getInstance().getTemplate(rootGroup.getTempId());</span>
+<span class="nc" id="L742">			return rootTemp;</span>
+		}
+<span class="nc" id="L744">		return null;</span>
+	}
+
+    /**
+	 * Vrati meno JSP suboru sablony (pouziva sa na podmenene spravanie niecoho podla sablony)
+	 * @param request
+	 * @return
+	 */
+	public static String getRootTempJsp(HttpServletRequest request)
+	{
+<span class="nc" id="L754">		String templateJsp = &quot;&quot;;</span>
+<span class="nc" id="L755">		TemplateDetails rootTemp = CloudToolsForCore.getRootTemp(request);</span>
+<span class="nc bnc" id="L756" title="All 4 branches missed.">		if (rootTemp != null &amp;&amp; rootTemp.getForward()!=null) templateJsp = rootTemp.getForward();</span>
+
+<span class="nc" id="L758">		return templateJsp;</span>
+	}
+
+    /**
+	 * Vrati true ak sa jedna o bootstrap sablonu
+	 * @param request
+	 * @return
+	 */
+	public static boolean isBootstrap(HttpServletRequest request)
+	{
+<span class="nc" id="L768">		String templateJsp = getRootTempJsp(request);</span>
+
+<span class="nc bnc" id="L770" title="All 4 branches missed.">		if (templateJsp.indexOf(&quot;bootstrap&quot;)!=-1 || templateJsp.indexOf(&quot;ublocks&quot;)!=-1) return true;</span>
+
+<span class="nc" id="L772">		return false;</span>
+	}
+
+    /**
+     * Vrati email adresu pre posielanie poziadaviek na support
+     * @return
+     */
+    public static String getSupportEmail()
+	{
+<span class="nc" id="L781">		return Constants.getString(&quot;cloudSupportEmail&quot;);</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

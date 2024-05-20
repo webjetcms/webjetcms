@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XLSServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form</a> &gt; <span class="el_source">XLSServlet.java</span></div><h1>XLSServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form;
+
+import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserDetails;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.StringTokenizer;
+
+/**
+ *  Export udajov formularu do excelu
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Pondelok, 2002, júl 1
+ *@modified     $Date: 2003/11/03 17:28:20 $
+ */
+<span class="nc" id="L37">public class XLSServlet extends HttpServlet</span>
+{
+	private static final long serialVersionUID = 2042587682339189238L;
+
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+	{
+<span class="nc" id="L44">		doExport(request, response); //NOSONAR</span>
+<span class="nc" id="L45">	}</span>
+
+	/**
+    *  Description of the Method
+    *
+    *@param  request               Description of the Parameter
+    *@param  response              Description of the Parameter
+    *@exception  ServletException  Description of the Exception
+    *@exception  IOException       Description of the Exception
+    */
+	@Override
+   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+   {
+<span class="nc" id="L58">   	doExport(request, response); //NOSONAR</span>
+<span class="nc" id="L59">   }</span>
+
+   public static void doExport(HttpServletRequest request, HttpServletResponse response) throws IOException
+   {
+<span class="nc" id="L63">   	Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin())</span>
+		{
+			//ok
+		}
+		else
+		{
+<span class="nc" id="L70">			return;</span>
+		}
+
+<span class="nc" id="L73">		Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+      //zisti ci mas data
+      @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L77">      List&lt;FormDetails&gt; data = (List&lt;FormDetails&gt;) request.getAttribute(&quot;data&quot;);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">      if (data != null)</span>
+      {
+<span class="nc" id="L80">         String formName = DB.internationalToEnglish(request.getParameter(&quot;formname&quot;));</span>
+<span class="nc" id="L81">         SimpleDateFormat sdf = new SimpleDateFormat(&quot;dd_MM_yyyy&quot;);</span>
+<span class="nc" id="L82">         String fileName = DocTools.removeChars(formName)+&quot;-&quot;+sdf.format(new Date())+&quot;.xls&quot;;</span>
+<span class="nc" id="L83">         response.setContentType(&quot;application/vnd.ms-excel&quot;);</span>
+<span class="nc" id="L84">         response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + fileName + &quot;\&quot;&quot;);</span>
+
+<span class="nc" id="L86">         HSSFWorkbook wb = new HSSFWorkbook();</span>
+<span class="nc" id="L87">         HSSFSheet sheet = wb.createSheet(&quot;Sheet 1&quot;);</span>
+
+<span class="nc" id="L89">         HSSFFont font = wb.createFont();</span>
+<span class="nc" id="L90">         font.setFontHeightInPoints((short) 10);</span>
+<span class="nc" id="L91">         font.setFontName(&quot;Arial&quot;);</span>
+
+<span class="nc" id="L93">         HSSFCellStyle style = wb.createCellStyle();</span>
+<span class="nc" id="L94">         style.setFont(font);</span>
+<span class="nc" id="L95">         style.setBorderLeft(BorderStyle.THIN);</span>
+<span class="nc" id="L96">         style.setBorderRight(BorderStyle.THIN);</span>
+<span class="nc" id="L97">         style.setBorderTop(BorderStyle.THIN);</span>
+<span class="nc" id="L98">         style.setBorderBottom(BorderStyle.THIN);</span>
+<span class="nc" id="L99">         style.setVerticalAlignment(VerticalAlignment.TOP);</span>
+<span class="nc" id="L100">         style.setWrapText(true);</span>
+
+<span class="nc" id="L102">         HSSFFont fontHeader = wb.createFont();</span>
+<span class="nc" id="L103">         fontHeader.setFontHeightInPoints((short) 10);</span>
+<span class="nc" id="L104">         fontHeader.setFontName(&quot;Arial&quot;);</span>
+<span class="nc" id="L105">         fontHeader.setBold(true);</span>
+
+<span class="nc" id="L107">         HSSFCellStyle styleHeader = wb.createCellStyle();</span>
+<span class="nc" id="L108">         styleHeader.setFont(fontHeader);</span>
+<span class="nc" id="L109">         styleHeader.setAlignment(HorizontalAlignment.CENTER);</span>
+<span class="nc" id="L110">         styleHeader.setBorderLeft(BorderStyle.THIN);</span>
+<span class="nc" id="L111">         styleHeader.setBorderRight(BorderStyle.THIN);</span>
+<span class="nc" id="L112">         styleHeader.setBorderTop(BorderStyle.THIN);</span>
+<span class="nc" id="L113">         styleHeader.setBorderBottom(BorderStyle.THIN);</span>
+<span class="nc" id="L114">         styleHeader.setFillForegroundColor(HSSFColorPredefined.GREY_25_PERCENT.getIndex());</span>
+<span class="nc" id="L115">         styleHeader.setFillPattern(FillPatternType.SOLID_FOREGROUND);</span>
+
+<span class="nc" id="L117">         HSSFCellStyle styleHeaderUser = wb.createCellStyle();</span>
+<span class="nc" id="L118">         styleHeaderUser.setFont(fontHeader);</span>
+<span class="nc" id="L119">         styleHeaderUser.setAlignment(HorizontalAlignment.CENTER);</span>
+<span class="nc" id="L120">         styleHeaderUser.setBorderLeft(BorderStyle.THIN);</span>
+<span class="nc" id="L121">         styleHeaderUser.setBorderRight(BorderStyle.THIN);</span>
+<span class="nc" id="L122">         styleHeaderUser.setBorderTop(BorderStyle.THIN);</span>
+<span class="nc" id="L123">         styleHeaderUser.setBorderBottom(BorderStyle.THIN);</span>
+<span class="nc" id="L124">         styleHeaderUser.setFillForegroundColor(HSSFColorPredefined.GREY_40_PERCENT.getIndex());</span>
+<span class="nc" id="L125">         styleHeaderUser.setFillPattern(FillPatternType.SOLID_FOREGROUND);</span>
+
+<span class="nc" id="L127">         HSSFCellStyle styleDate = wb.createCellStyle();</span>
+<span class="nc" id="L128">         styleDate.setDataFormat(HSSFDataFormat.getBuiltinFormat(&quot;m/d/yy h:mm&quot;));</span>
+<span class="nc" id="L129">         styleDate.setFont(font);</span>
+<span class="nc" id="L130">         styleDate.setBorderLeft(BorderStyle.THIN);</span>
+<span class="nc" id="L131">         styleDate.setBorderRight(BorderStyle.THIN);</span>
+<span class="nc" id="L132">         styleDate.setBorderTop(BorderStyle.THIN);</span>
+<span class="nc" id="L133">         styleDate.setBorderBottom(BorderStyle.THIN);</span>
+<span class="nc" id="L134">         styleDate.setVerticalAlignment(VerticalAlignment.TOP);</span>
+<span class="nc" id="L135">         styleDate.setAlignment(HorizontalAlignment.CENTER);</span>
+
+         HSSFRow row;
+         HSSFCell cell;
+
+<span class="nc" id="L140">         int row_index = 0;</span>
+<span class="nc" id="L141">         int cell_index = 0;</span>
+         String s_row;
+         String s_tmp;
+         StringTokenizer st;
+<span class="nc" id="L145">         sheet.setDefaultColumnWidth(30);</span>
+<span class="nc" id="L146">         int text_width = 10;</span>
+         String text;
+
+         String field;
+         int i;
+         Integer iInteger;
+<span class="nc" id="L152">         int rowLength = -1;</span>
+         Date d;
+
+         UserDetails formUser;
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">         for (FormDetails formDetails : data)</span>
+         {
+<span class="nc" id="L159">            row = sheet.createRow(row_index);</span>
+<span class="nc" id="L160">            cell_index = 0x0;</span>
+<span class="nc" id="L161">            s_row = formDetails.getData();</span>
+
+<span class="nc" id="L163">            st = new StringTokenizer(s_row, &quot;|&quot;);</span>
+
+            //datum
+<span class="nc" id="L166">            cell = row.createCell(cell_index++);</span>
+
+            //text_width = fontMetrics.stringWidth(&quot;Dátum vytvorenia&quot;);
+            //sirka je ako 1/256 pismena
+<span class="nc" id="L170">            text_width = 20 * 256;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (text_width &gt; sheet.getColumnWidth(0))</span>
+            {
+<span class="nc" id="L173">               sheet.setColumnWidth(0, text_width);</span>
+            }
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (formDetails.isHeader())</span>
+            {
+            	//datum vytvorenia
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L181">               cell.setCellValue(prop.getText(&quot;formslist.createDate&quot;));</span>
+<span class="nc" id="L182">               cell.setCellStyle(styleHeader);</span>
+
+               // poznamka
+<span class="nc" id="L185">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L188">               cell.setCellValue(prop.getText(&quot;formslist.note&quot;));</span>
+<span class="nc" id="L189">               cell.setCellStyle(styleHeader);</span>
+            }
+            else
+            {
+
+<span class="nc" id="L194">            	d = new Date(formDetails.getCreateDate());</span>
+<span class="nc" id="L195">               cell.setCellValue(Tools.formatDate(d) + &quot; &quot; + Tools.formatTime(d)); //new Date(formDetails.getCreateDate()));</span>
+               //cell.setCellValue(new Date());
+<span class="nc" id="L197">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L199">               cell = row.createCell(cell_index++);</span>
+
+<span class="nc" id="L201">               cell.setCellValue(formDetails.getNote());</span>
+<span class="nc" id="L202">               cell.setCellStyle(style);</span>
+            }
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (rowLength == -1)</span>
+            {
+<span class="nc" id="L207">	            rowLength = st.countTokens();</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">	      		if (formDetails.getColNames()!=null &amp;&amp; formDetails.getColNames().size()&gt;1)</span>
+	      		{
+<span class="nc" id="L210">	      			rowLength = formDetails.getColNames().size();</span>
+	      		}
+            }
+
+      		//vytvor bunky
+<span class="nc bnc" id="L215" title="All 2 branches missed.">      		for (i=0; i&lt;rowLength; i++)</span>
+      		{
+<span class="nc" id="L217">      			cell = row.createCell(i+2);</span>
+
+      			//cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+      		}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
+            {
+<span class="nc" id="L224">               text = st.nextToken();</span>
+
+<span class="nc" id="L226">      			field = null;</span>
+      			try
+      			{
+<span class="nc" id="L229">      				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">      				if (i&gt;0)</span>
+      				{
+<span class="nc" id="L232">      					field = text.substring(0, i);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">      					if (i&lt;text.length())</span>
+      					{
+<span class="nc" id="L235">      						text = text.substring(i+1);</span>
+      					}
+      				}
+<span class="nc bnc" id="L238" title="All 2 branches missed.">      				else if (i==0)</span>
+      				{
+<span class="nc bnc" id="L240" title="All 2 branches missed.">      					if (text.length() == 1)</span>
+      					{
+<span class="nc" id="L242">      						text = &quot;&quot;;</span>
+      					}
+      					else
+      					{
+<span class="nc" id="L246">      						text = text.substring(1);</span>
+      					}
+      				}
+      			}
+<span class="nc" id="L250">      			catch (Exception ex)</span>
+      			{
+
+<span class="nc" id="L253">      			}</span>
+
+<span class="nc bnc" id="L255" title="All 2 branches missed.">               if (formDetails.isHeader())</span>
+               {
+<span class="nc" id="L257">                  text = FormDB.getValueNoDash(text);</span>
+               }
+               else
+               {
+<span class="nc" id="L261">                   text = Tools.unescapeHtmlEntities(CryptoFactory.decrypt(text));</span>
+               }
+<span class="nc" id="L263">               text = text.trim();</span>
+
+<span class="nc" id="L265">               s_tmp = text;</span>
+<span class="nc" id="L266">               s_tmp = s_tmp.replace('\r', '\n');</span>
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">               if (formDetails.isHeader())</span>
+               {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">               	if (cell_index &lt; (rowLength+2))</span>
+               	{
+<span class="nc" id="L272">	      				cell = row.getCell(cell_index);</span>
+<span class="nc" id="L273">	                  cell.setCellValue(s_tmp);</span>
+<span class="nc" id="L274">	                  cell.setCellStyle(styleHeader);</span>
+               	}
+               }
+               else
+               {
+
+<span class="nc" id="L280">	               i = -1;</span>
+<span class="nc bnc" id="L281" title="All 6 branches missed.">	      			if (formDetails.getColNames()!=null &amp;&amp; field!=null &amp;&amp; field.length()&gt;0)</span>
+	      			{
+<span class="nc" id="L283">	      				iInteger = formDetails.getColNames().get(field);</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">	      				if (iInteger!=null)</span>
+	      				{
+<span class="nc" id="L286">	      					i = iInteger.intValue() + 1;</span>
+	      				}
+	      			}
+<span class="nc bnc" id="L289" title="All 4 branches missed.">	      			if (i&gt;0 &amp;&amp; i&lt;=rowLength)</span>
+	      			{
+<span class="nc" id="L291">	      				cell = row.getCell(i+1);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">	      				if (cell == null)</span>
+	      				{
+<span class="nc" id="L294">	      					Logger.println(XLSServlet.class,&quot;cell je null, vytvaram&quot;);</span>
+<span class="nc" id="L295">	      					cell = row.createCell(i);</span>
+	      				}
+	                  //
+	                  //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc bnc" id="L299" title="All 2 branches missed.">	                  if (s_tmp.length() &lt; 1)</span>
+	                  {
+<span class="nc" id="L301">	                     cell.setCellValue(&quot; &quot;);</span>
+	                  }
+	                  else
+	                  {
+<span class="nc" id="L305">	                     cell.setCellValue(s_tmp);</span>
+	                  }
+
+<span class="nc" id="L308">	                  cell.setCellStyle(style);</span>
+
+	                  //text_width = fontMetrics.stringWidth(s_tmp);
+<span class="nc" id="L311">	                  text_width = s_tmp.length() + 2;</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">	                  if (text_width &gt; 50)</span>
+	                  {
+<span class="nc" id="L314">	                     text_width = 50;</span>
+	                  }
+<span class="nc bnc" id="L316" title="All 2 branches missed.">	                  if (formDetails.isHeader())</span>
+	                  {
+<span class="nc" id="L318">	                     text_width = text_width * 335;</span>
+	                  }
+	                  else
+	                  {
+<span class="nc" id="L322">	                     text_width = text_width * 260;</span>
+	                  }
+<span class="nc bnc" id="L324" title="All 2 branches missed.">	                  if (text_width &gt; sheet.getColumnWidth(cell_index))</span>
+	                  {
+<span class="nc" id="L326">	                     sheet.setColumnWidth(cell_index, (short) text_width);</span>
+	                  }
+	      			}
+               }
+
+
+
+<span class="nc" id="L333">               cell_index++;</span>
+            }
+
+<span class="nc" id="L336">            cell_index = (short)(rowLength + 2);</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">            if (formDetails.isHeader())</span>
+            {
+            	//          user id, login, email, first name, last name
+<span class="nc" id="L340">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L343">	            cell.setCellValue(&quot;userId&quot;);</span>
+<span class="nc" id="L344">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L346">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L349">	            cell.setCellValue(prop.getText(&quot;user.firstName&quot;));</span>
+<span class="nc" id="L350">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L352">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L355">	            cell.setCellValue(prop.getText(&quot;user.lastName&quot;));</span>
+<span class="nc" id="L356">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L358">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L361">	            cell.setCellValue(prop.getText(&quot;user.login&quot;));</span>
+<span class="nc" id="L362">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L364">               cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L367">	            cell.setCellValue(prop.getText(&quot;user.company&quot;));</span>
+<span class="nc" id="L368">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L370">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L373">	            cell.setCellValue(prop.getText(&quot;user.address&quot;));</span>
+<span class="nc" id="L374">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L376">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L379">	            cell.setCellValue(prop.getText(&quot;user.city&quot;));</span>
+<span class="nc" id="L380">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L382">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L385">	            cell.setCellValue(prop.getText(&quot;user.ZIP&quot;));</span>
+<span class="nc" id="L386">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L388">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L391">	            cell.setCellValue(prop.getText(&quot;user.country&quot;));</span>
+<span class="nc" id="L392">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L394">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L397">	            cell.setCellValue(prop.getText(&quot;user.email&quot;));</span>
+<span class="nc" id="L398">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L400">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L403">	            cell.setCellValue(prop.getText(&quot;user.phone&quot;));</span>
+<span class="nc" id="L404">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L406">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L409">	            cell.setCellValue(prop.getText(&quot;user.fieldA&quot;));</span>
+<span class="nc" id="L410">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L412">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L415">	            cell.setCellValue(prop.getText(&quot;user.fieldB&quot;));</span>
+<span class="nc" id="L416">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L418">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L421">	            cell.setCellValue(prop.getText(&quot;user.fieldC&quot;));</span>
+<span class="nc" id="L422">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L424">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L427">	            cell.setCellValue(prop.getText(&quot;user.fieldD&quot;));</span>
+<span class="nc" id="L428">	            cell.setCellStyle(styleHeaderUser);</span>
+
+<span class="nc" id="L430">	            cell = row.createCell(cell_index++);</span>
+
+	            //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L433">	            cell.setCellValue(prop.getText(&quot;user.fieldE&quot;));</span>
+<span class="nc" id="L434">	            cell.setCellStyle(styleHeaderUser);</span>
+            }
+            else
+            {
+<span class="nc" id="L438">            	formUser = formDetails.getUserDetails();</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">               if (formUser == null)</span>
+               {
+<span class="nc" id="L441">               	formUser = new UserDetails();</span>
+               }
+
+               // user id, login, email, first name, last name
+<span class="nc" id="L445">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc bnc" id="L448" title="All 2 branches missed.">               if (formUser.getUserId()&gt;0)</span>
+               {
+<span class="nc" id="L450">               	cell.setCellValue(formUser.getUserId());</span>
+               }
+               else
+               {
+<span class="nc" id="L454">               	cell.setCellValue(&quot;&quot;);</span>
+               }
+<span class="nc" id="L456">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L458">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L461">               cell.setCellValue(formUser.getFirstName());</span>
+<span class="nc" id="L462">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L464">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L467">               cell.setCellValue(formUser.getLastName());</span>
+<span class="nc" id="L468">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L470">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L473">               cell.setCellValue(formUser.getLogin());</span>
+<span class="nc" id="L474">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L476">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L479">               cell.setCellValue(formUser.getCompany());</span>
+<span class="nc" id="L480">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L482">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L485">               cell.setCellValue(formUser.getAdress());</span>
+<span class="nc" id="L486">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L488">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L491">               cell.setCellValue(formUser.getCity());</span>
+<span class="nc" id="L492">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L494">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L497">               cell.setCellValue(formUser.getPSC());</span>
+<span class="nc" id="L498">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L500">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L503">               cell.setCellValue(formUser.getCountry());</span>
+<span class="nc" id="L504">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L506">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L509">               cell.setCellValue(formUser.getEmail());</span>
+<span class="nc" id="L510">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L512">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L515">               cell.setCellValue(formUser.getPhone());</span>
+<span class="nc" id="L516">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L518">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L521">               cell.setCellValue(formUser.getFieldA());</span>
+<span class="nc" id="L522">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L524">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L527">               cell.setCellValue(formUser.getFieldB());</span>
+<span class="nc" id="L528">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L530">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L533">               cell.setCellValue(formUser.getFieldC());</span>
+<span class="nc" id="L534">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L536">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L539">               cell.setCellValue(formUser.getFieldD());</span>
+<span class="nc" id="L540">               cell.setCellStyle(style);</span>
+
+<span class="nc" id="L542">               cell = row.createCell(cell_index++);</span>
+
+               //cell.setEncoding(HSSFCell.ENCODING_UTF_16);
+<span class="nc" id="L545">               cell.setCellValue(formUser.getFieldE());</span>
+<span class="nc" id="L546">               cell.setCellStyle(style);</span>
+            }
+
+
+<span class="nc" id="L550">            row_index++;</span>
+<span class="nc" id="L551">         }</span>
+
+         try {
+<span class="nc" id="L554">            ServletOutputStream out = response.getOutputStream();</span>
+<span class="nc" id="L555">            wb.write(out);</span>
+<span class="nc" id="L556">            wb.close();</span>
+<span class="nc" id="L557">            out.flush();</span>
+<span class="nc" id="L558">            out.close();</span>
+<span class="nc" id="L559">         } catch (IOException e) {</span>
+<span class="nc" id="L560">            Logger.error(XLSServlet.class, e);</span>
+<span class="nc" id="L561">         }</span>
+<span class="nc" id="L562">      }</span>
+      else
+      {
+<span class="nc" id="L565">         Logger.println(XLSServlet.class,&quot;data is null&quot;);</span>
+      }
+<span class="nc" id="L567">   }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

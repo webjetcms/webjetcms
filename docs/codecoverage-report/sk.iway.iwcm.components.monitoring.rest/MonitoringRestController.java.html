@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.rest</a> &gt; <span class="el_source">MonitoringRestController.java</span></div><h1>MonitoringRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.rest;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.components.monitoring.jpa.MonitoringActualBean;
+import sk.iway.iwcm.components.monitoring.jpa.MonitoringEntity;
+import sk.iway.iwcm.components.monitoring.jpa.MonitoringRepository;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+/**
+ * REST sluzba pre vratenie hodnot aktualneho stavu monitoringu
+ */
+@RestController
+@RequestMapping(&quot;/admin/rest/monitoring&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_server_monitoring')&quot;)
+public class MonitoringRestController extends DatatableRestControllerV2&lt;MonitoringEntity, Long&gt;{
+
+    private MonitoringRepository monitoringRepository;
+    private Date dateFrom;
+    private Date dateTo;
+<span class="fc" id="L32">    private Integer maxDataCount = 500;</span>
+
+    @Autowired
+    public MonitoringRestController(MonitoringRepository monitoringRepository) {
+<span class="fc" id="L36">        super(monitoringRepository);</span>
+<span class="fc" id="L37">        this.monitoringRepository = monitoringRepository;</span>
+<span class="fc" id="L38">    }</span>
+
+    @Override
+    public void beforeSave(MonitoringEntity entity) {
+<span class="nc" id="L42">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L43">    }</span>
+
+    @Override
+    public Page&lt;MonitoringEntity&gt; getAllItems(Pageable pageable){
+        //Generate 14 days date range (dateFrom, dateTo)
+<span class="fc" id="L48">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L49">        cal.setTime(new Date());</span>
+<span class="fc" id="L50">        cal.add(Calendar.DAY_OF_YEAR, -14);</span>
+<span class="fc" id="L51">        dateFrom = cal.getTime();</span>
+<span class="fc" id="L52">        dateTo = new Date();</span>
+
+        //If page size is bigger than set constant (in this case maxDataCount = 500) first aggregate data of one month range then return. Or return directly.
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if(pageable.getPageSize() &gt;= this.maxDataCount) {</span>
+<span class="nc" id="L56">            Page&lt;MonitoringEntity&gt; pageableData = monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);</span>
+<span class="nc" id="L57">            MonitoringManager monitoringManger = new MonitoringManager(pageableData, dateFrom, dateTo);</span>
+<span class="nc" id="L58">            return new PageImpl&lt;&gt;(monitoringManger.returnAggregatedData());</span>
+        } else {
+<span class="fc" id="L60">            Page&lt;MonitoringEntity&gt; pageableData = monitoringRepository.findAll(pageable);</span>
+<span class="fc" id="L61">            return pageableData;</span>
+        }
+    }
+
+    @Override
+    public Page&lt;MonitoringEntity&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, MonitoringEntity search) {
+
+<span class="fc" id="L68">        String stringRange = &quot;&quot;;</span>
+        //Get dateRange param from map
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if(entry.getKey().equals(&quot;searchDayDate&quot;)) {</span>
+<span class="fc" id="L72">                stringRange = (String) entry.getValue();</span>
+<span class="fc" id="L73">                stringRange = stringRange.substring(&quot;daterange:&quot;.length());</span>
+<span class="fc" id="L74">                break;</span>
+            }
+<span class="nc" id="L76">        }</span>
+
+<span class="fc" id="L78">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L79">        dateFrom = dateRangeArr[0];</span>
+<span class="fc" id="L80">        dateTo = dateRangeArr[1];</span>
+
+        /*If pagination param is set to true or page size is bigger than set constant (in this case maxDataCount = 500) first aggregate data in set date
+        range then return. Or return data directly withou aggregation.*/
+<span class="fc" id="L84">        String paggination = params.get(&quot;pagination&quot;);</span>
+<span class="pc bpc" id="L85" title="2 of 6 branches missed.">        if( (paggination != null &amp;&amp; paggination.equals(&quot;true&quot;)) || pageable.getPageSize() &gt;= this.maxDataCount) {</span>
+<span class="fc" id="L86">            Page&lt;MonitoringEntity&gt; pageableData = monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);</span>
+<span class="fc" id="L87">            MonitoringManager monitoringManger = new MonitoringManager(pageableData, dateFrom, dateTo);</span>
+<span class="fc" id="L88">            return new PageImpl&lt;&gt;(monitoringManger.returnAggregatedData());</span>
+        } else {
+<span class="fc" id="L90">            return monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);</span>
+        }
+    }
+
+    @RequestMapping(&quot;/actual&quot;)
+    public MonitoringActualBean getActualValues() {
+<span class="fc" id="L96">        MonitoringActualBean actual = new MonitoringActualBean();</span>
+<span class="fc" id="L97">        return actual;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

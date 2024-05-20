@@ -5,24 +5,24 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.util.Version;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockServletContext;
-import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.fulltext.lucene.CustomAnalyzer;
 import sk.iway.iwcm.system.fulltext.lucene.IndexSearcherBuilder;
 import sk.iway.iwcm.system.fulltext.lucene.Lemmas;
+import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -40,21 +40,8 @@ import java.util.List;
  *@created Date: 5.5.2011 14:40:15
  *@modified $Date: 2004/08/16 06:26:11 $
  */
-public class FulltextSearchTest
+class FulltextSearchTest extends BaseWebjetTest
 {
-	@BeforeEach
-	public void setup()
-	{
-		MockServletContext context = new MockServletContext("")
-		{
-			public String getRealPath(String path)
-			{
-				return new File("/home/thaber/workspace/webjet7/WebContent/", path).getAbsolutePath();
-			}
-		};
-		Constants.setServletContext(context);
-	}
-
 	public void shouldCreateSQL()
 	{
 		System.out.println(new Documents("sk").sql());
@@ -115,10 +102,15 @@ public class FulltextSearchTest
 		}
 	}
 	@Test
-	public void shouldIndex()
+	void shouldIndex()
 	{
 		try
 		{
+			DBPool.getInstance();
+			DBPool.jpaInitialize();
+
+			DocDB.getInstance();
+			TemplatesDB.getInstance();
 			Logger.setWJLogLevel(Logger.DEBUG);
 			FulltextSearch.index(new Documents("sk"),new PrintWriter(System.out));
 		}

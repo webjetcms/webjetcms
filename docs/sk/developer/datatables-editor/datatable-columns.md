@@ -110,6 +110,7 @@ Voliteľné polia:
   - `not-export` - pole sa nebude exportovať.
   - `show-html` - zobrazí sa HTML kód v hodnote vrátane entít typu `&#39;`, stĺpcu nastaví atribút `entityDecode: false`.
   - `wrap` - zapne zalamovanie textu, používa sa primárne v poliach typu `textarea`.
+  - `multiweb-noteditable` - v MultiWeb inštalácii je pole zobrazené šedou farbou, čo evokuje, že je ne-editovateľné.
 - ```name``` - https://datatables.net/reference/option/columns.name
 - ```data``` - https://datatables.net/reference/option/columns.data
 - ```defaultContent``` - https://datatables.net/reference/option/columns.defaultContent

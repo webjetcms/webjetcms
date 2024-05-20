@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CampaingsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.jpa</a> &gt; <span class="el_source">CampaingsEntity.java</span></div><h1>CampaingsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.jpa;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name = &quot;emails_campain&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+<span class="fc" id="L32">public class CampaingsEntity implements Serializable {</span>
+
+    @Id
+    @Column(name = &quot;emails_campain_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_emails_campain&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, tab = &quot;main&quot;)
+    private Long id;
+
+    @Column(name = &quot;subject&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.dmail.camp.subject&quot;,
+        tab = &quot;main&quot;
+    )
+    @Size(max = 255)
+    private String subject;
+
+    @Column(name = &quot;sender_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;user.Name&quot;,
+        tab = &quot;main&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;email.sender&quot;),
+                }
+            )
+        }
+    )
+    @Size(max = 255)
+    private String senderName;
+
+    @Column(name = &quot;sender_email&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;user.email&quot;,
+        tab = &quot;main&quot;
+    )
+    @Size(max = 255)
+    private String senderEmail;
+
+    @Column(name = &quot;url&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private String url;
+
+    @Column(name = &quot;create_date&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.dmail.camp.date&quot;,
+        hiddenEditor = true
+    )
+    private Date createDate;
+
+    @Column(name = &quot;last_sent_date&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.dmail.camp.sent_date&quot;,
+        hiddenEditor = true
+    )
+    private Date lastSentDate;
+
+    //Handle thru editorFields
+    @Column(name = &quot;user_groups&quot;)
+    @Size(max = 64)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private String userGroupsIds;
+
+    //Bind editor fields
+<span class="fc" id="L101">    @Transient</span>
+    @DataTableColumnNested
+	private CampaingsEditorFields editorFields = null;
+
+    //From these two colulmns is concated editorFields.sentMails
+    @Column(name = &quot;count_of_recipients&quot;)
+    private Integer countOfRecipients;
+
+    @Column(name = &quot;count_of_sent_mails&quot;)
+    private Integer countOfSentMails;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;receivers&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;,
+                                            value = &quot;/admin/rest/dmail/emails?campainId={id}&amp;selectType=recipients&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.dmail.jpa.EmailsEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,recipientName,recipientEmail,sentDate,status&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;3,desc&quot;)
+            }
+        )
+    })
+    private List&lt;EmailsEntity&gt; recipientsTab;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;opens&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/dmail/emails?campainId={id}&amp;selectType=opens&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.dmail.jpa.EmailsEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,remove,import,celledit,duplicate&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,recipientName,recipientEmail,seenDate&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;0,desc&quot;)
+            }
+        )
+    })
+    private List&lt;EmailsEntity&gt; opensTab;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;clicks&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/dmail/stat-clicks?campainId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.dmail.jpa.StatClicksEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,remove,import,celledit,duplicate&quot;),
+            }
+        )
+    })
+    private List&lt;StatClicksEntity&gt; statClicksTab;
+
+    @Column(name = &quot;created_by_user_id&quot;)
+    private Integer createdByUserId;
+
+    @Column
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN
+    )
+    private String attachments;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.dmail.replyTo&quot;,
+        tab = &quot;advanced&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+    @Column(name = &quot;reply_to&quot;)
+    private String replyTo;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.dmail.ccEmail&quot;,
+        tab = &quot;advanced&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+    @Column(name = &quot;cc_email&quot;)
+    private String ccEmail;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.dmail.bccEmail&quot;,
+        tab = &quot;advanced&quot;,
+        visible = false
+    )
+    @Size(max = 255)
+    @Column(name = &quot;bcc_email&quot;)
+    private String bccEmail;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.dmail.campaigns.sendAt&quot;,
+        tab = &quot;advanced&quot;,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                }
+            )
+        }
+    )
+
+    @Column(name = &quot;send_at&quot;)
+    private Date sendAt;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

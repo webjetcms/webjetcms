@@ -1,0 +1,1183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocationType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather.met.no.generated</a> &gt; <span class="el_source">LocationType.java</span></div><h1>LocationType.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather.met.no.generated;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlType;
+
+
+/**
+ * Element containing weather parameters for this location
+ * 			
+ * 
+ * &lt;p&gt;Java class for locationType complex type.
+ * 
+ * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+ * 
+ * &lt;pre&gt;
+ * &amp;lt;complexType name=&quot;locationType&quot;&gt;
+ *   &amp;lt;complexContent&gt;
+ *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *       &amp;lt;sequence maxOccurs=&quot;unbounded&quot;&gt;
+ *         &amp;lt;element name=&quot;groundCover&quot; type=&quot;{}groundcover&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;pressure&quot; type=&quot;{}pressure&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maximumPrecipitation&quot; type=&quot;{}precipitation&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;highestTemperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;lowestTemperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;precipitation&quot; type=&quot;{}precipitation&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;fog&quot; type=&quot;{}cloudiness&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;cloudiness&quot; type=&quot;{}cloudiness&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;lowClouds&quot; type=&quot;{}cloudiness&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;mediumClouds&quot; type=&quot;{}cloudiness&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;highClouds&quot; type=&quot;{}cloudiness&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;temperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;dewpointTemperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;minTemperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;minTemperatureDay&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;minTemperatureNight&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maxTemperature&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maxTemperatureDay&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maxTemperatureNight&quot; type=&quot;{}temperature&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;uv&quot; type=&quot;{}uv&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;tidalwater&quot; type=&quot;{}tidalwater&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;currentDirection&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maxWaveHeight&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;surfaceTemperature&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;waveDirection&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;wavePeriod&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;waveHeight&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;humidity&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;bias&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;numberofobservations&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;meanabsoluteerror&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;score&quot; type=&quot;{}score&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;windDirection&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;deg&quot; use=&quot;required&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}decimal&quot;&gt;
+ *                       &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+ *                       &amp;lt;maxInclusive value=&quot;990&quot;/&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;name&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}string&quot;&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;windSpeed&quot; type=&quot;{}windspeed&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;windGust&quot; type=&quot;{}windspeed&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;maxWindSpeed&quot; type=&quot;{}windspeed&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;areaMaxWindSpeed&quot; type=&quot;{}windspeed&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;stateOfTheSea&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot;&gt;
+ *                       &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+ *                       &amp;lt;maxInclusive value=&quot;9&quot;/&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;meter&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;snowDepth&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;cm&quot; use=&quot;required&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}decimal&quot;&gt;
+ *                       &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;weather&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;name&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}string&quot;&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot;&gt;
+ *                   &amp;lt;simpleType&gt;
+ *                     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot;&gt;
+ *                       &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+ *                       &amp;lt;maxInclusive value=&quot;99&quot;/&gt;
+ *                     &amp;lt;/restriction&gt;
+ *                   &amp;lt;/simpleType&gt;
+ *                 &amp;lt;/attribute&gt;
+ *                 &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;symbol&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;symbol&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;forest-fire&quot; minOccurs=&quot;0&quot;&gt;
+ *           &amp;lt;complexType&gt;
+ *             &amp;lt;complexContent&gt;
+ *               &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *                 &amp;lt;attribute name=&quot;unit&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *                 &amp;lt;attribute name=&quot;value&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *               &amp;lt;/restriction&gt;
+ *             &amp;lt;/complexContent&gt;
+ *           &amp;lt;/complexType&gt;
+ *         &amp;lt;/element&gt;
+ *         &amp;lt;element name=&quot;windProbability&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;temperatureProbability&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *         &amp;lt;element name=&quot;symbolProbability&quot; type=&quot;{}unit_value&quot; minOccurs=&quot;0&quot;/&gt;
+ *       &amp;lt;/sequence&gt;
+ *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;stationid&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;country&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;county&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;latitude&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;longitude&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;altitude&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *     &amp;lt;/restriction&gt;
+ *   &amp;lt;/complexContent&gt;
+ * &amp;lt;/complexType&gt;
+ * &lt;/pre&gt;
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = &quot;locationType&quot;, propOrder = {
+    &quot;groundCoverAndPressureAndMaximumPrecipitation&quot;
+})
+<span class="nc" id="L192">public class LocationType {</span>
+
+    @XmlElementRefs({
+        @XmlElementRef(name = &quot;lowClouds&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;tidalwater&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;wavePeriod&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;precipitation&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;score&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;weather&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maxWindSpeed&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maxTemperatureNight&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;waveHeight&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;windSpeed&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;symbolProbability&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maximumPrecipitation&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;fog&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maxTemperatureDay&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;humidity&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;meanabsoluteerror&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;cloudiness&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;minTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;highClouds&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;groundCover&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;temperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;temperatureProbability&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;snowDepth&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;windProbability&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;uv&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;mediumClouds&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;surfaceTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;bias&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;minTemperatureDay&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;windDirection&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;symbol&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;stateOfTheSea&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;waveDirection&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;highestTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;lowestTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;dewpointTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;forest-fire&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;minTemperatureNight&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;windGust&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maxWaveHeight&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;pressure&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;areaMaxWindSpeed&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;maxTemperature&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;currentDirection&quot;, type = JAXBElement.class, required = false),
+        @XmlElementRef(name = &quot;numberofobservations&quot;, type = JAXBElement.class, required = false)
+    })
+    protected List&lt;JAXBElement&lt;?&gt;&gt; groundCoverAndPressureAndMaximumPrecipitation;
+    @XmlAttribute(name = &quot;id&quot;)
+    protected String id;
+    @XmlAttribute(name = &quot;name&quot;)
+    protected String name;
+    @XmlAttribute(name = &quot;stationid&quot;)
+    protected BigInteger stationid;
+    @XmlAttribute(name = &quot;country&quot;)
+    protected String country;
+    @XmlAttribute(name = &quot;county&quot;)
+    protected String county;
+    @XmlAttribute(name = &quot;latitude&quot;)
+    protected String latitude;
+    @XmlAttribute(name = &quot;longitude&quot;)
+    protected String longitude;
+    @XmlAttribute(name = &quot;altitude&quot;)
+    protected String altitude;
+
+    /**
+     * Gets the value of the groundCoverAndPressureAndMaximumPrecipitation property.
+     * 
+     * &lt;p&gt;
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a &lt;CODE&gt;set&lt;/CODE&gt; method for the groundCoverAndPressureAndMaximumPrecipitation property.
+     * 
+     * &lt;p&gt;
+     * For example, to add a new item, do as follows:
+     * &lt;pre&gt;
+     *    getGroundCoverAndPressureAndMaximumPrecipitation().add(newItem);
+     * &lt;/pre&gt;
+     * 
+     * 
+     * &lt;p&gt;
+     * Objects of the following type(s) are allowed in the list
+     * {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Tidalwater }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Precipitation }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Score }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.Weather }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Precipitation }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Groundcover }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.SnowDepth }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Uv }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Cloudiness }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.WindDirection }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.Symbol }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.StateOfTheSea }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link LocationType.ForestFire }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Pressure }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Windspeed }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link Temperature }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * {@link JAXBElement }{@code &lt;}{@link UnitValue }{@code &gt;}
+     * 
+     * 
+     */
+    public List&lt;JAXBElement&lt;?&gt;&gt; getGroundCoverAndPressureAndMaximumPrecipitation() {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        if (groundCoverAndPressureAndMaximumPrecipitation == null) {</span>
+<span class="nc" id="L327">            groundCoverAndPressureAndMaximumPrecipitation = new ArrayList&lt;JAXBElement&lt;?&gt;&gt;();</span>
+        }
+<span class="nc" id="L329">        return this.groundCoverAndPressureAndMaximumPrecipitation;</span>
+    }
+
+    /**
+     * Gets the value of the id property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getId() {
+<span class="nc" id="L341">        return id;</span>
+    }
+
+    /**
+     * Sets the value of the id property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setId(String value) {
+<span class="nc" id="L353">        this.id = value;</span>
+<span class="nc" id="L354">    }</span>
+
+    /**
+     * Gets the value of the name property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getName() {
+<span class="nc" id="L365">        return name;</span>
+    }
+
+    /**
+     * Sets the value of the name property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setName(String value) {
+<span class="nc" id="L377">        this.name = value;</span>
+<span class="nc" id="L378">    }</span>
+
+    /**
+     * Gets the value of the stationid property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getStationid() {
+<span class="nc" id="L389">        return stationid;</span>
+    }
+
+    /**
+     * Sets the value of the stationid property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setStationid(BigInteger value) {
+<span class="nc" id="L401">        this.stationid = value;</span>
+<span class="nc" id="L402">    }</span>
+
+    /**
+     * Gets the value of the country property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getCountry() {
+<span class="nc" id="L413">        return country;</span>
+    }
+
+    /**
+     * Sets the value of the country property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setCountry(String value) {
+<span class="nc" id="L425">        this.country = value;</span>
+<span class="nc" id="L426">    }</span>
+
+    /**
+     * Gets the value of the county property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getCounty() {
+<span class="nc" id="L437">        return county;</span>
+    }
+
+    /**
+     * Sets the value of the county property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setCounty(String value) {
+<span class="nc" id="L449">        this.county = value;</span>
+<span class="nc" id="L450">    }</span>
+
+    /**
+     * Gets the value of the latitude property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLatitude() {
+<span class="nc" id="L461">        return latitude;</span>
+    }
+
+    /**
+     * Sets the value of the latitude property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLatitude(String value) {
+<span class="nc" id="L473">        this.latitude = value;</span>
+<span class="nc" id="L474">    }</span>
+
+    /**
+     * Gets the value of the longitude property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLongitude() {
+<span class="nc" id="L485">        return longitude;</span>
+    }
+
+    /**
+     * Sets the value of the longitude property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLongitude(String value) {
+<span class="nc" id="L497">        this.longitude = value;</span>
+<span class="nc" id="L498">    }</span>
+
+    /**
+     * Gets the value of the altitude property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAltitude() {
+<span class="nc" id="L509">        return altitude;</span>
+    }
+
+    /**
+     * Sets the value of the altitude property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAltitude(String value) {
+<span class="nc" id="L521">        this.altitude = value;</span>
+<span class="nc" id="L522">    }</span>
+
+
+    /**
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;unit&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;value&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L545">    public static class ForestFire {</span>
+
+        @XmlAttribute(name = &quot;unit&quot;)
+        protected String unit;
+        @XmlAttribute(name = &quot;value&quot;)
+        protected String value;
+
+        /**
+         * Gets the value of the unit property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getUnit() {
+<span class="nc" id="L561">            return unit;</span>
+        }
+
+        /**
+         * Sets the value of the unit property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setUnit(String value) {
+<span class="nc" id="L573">            this.unit = value;</span>
+<span class="nc" id="L574">        }</span>
+
+        /**
+         * Gets the value of the value property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getValue() {
+<span class="nc" id="L585">            return value;</span>
+        }
+
+        /**
+         * Sets the value of the value property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setValue(String value) {
+<span class="nc" id="L597">            this.value = value;</span>
+<span class="nc" id="L598">        }</span>
+
+    }
+
+
+    /**
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;cm&quot; use=&quot;required&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}decimal&quot;&gt;
+     *             &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L629">    public static class SnowDepth {</span>
+
+        @XmlAttribute(name = &quot;cm&quot;, required = true)
+        protected BigDecimal cm;
+        @XmlAttribute(name = &quot;id&quot;)
+        protected String id;
+
+        /**
+         * Gets the value of the cm property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public BigDecimal getCm() {
+<span class="nc" id="L645">            return cm;</span>
+        }
+
+        /**
+         * Sets the value of the cm property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public void setCm(BigDecimal value) {
+<span class="nc" id="L657">            this.cm = value;</span>
+<span class="nc" id="L658">        }</span>
+
+        /**
+         * Gets the value of the id property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getId() {
+<span class="nc" id="L669">            return id;</span>
+        }
+
+        /**
+         * Sets the value of the id property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setId(String value) {
+<span class="nc" id="L681">            this.id = value;</span>
+<span class="nc" id="L682">        }</span>
+
+    }
+
+
+    /**
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot;&gt;
+     *             &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+     *             &amp;lt;maxInclusive value=&quot;9&quot;/&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;meter&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L716">    public static class StateOfTheSea {</span>
+
+        @XmlAttribute(name = &quot;number&quot;, required = true)
+        protected int number;
+        @XmlAttribute(name = &quot;meter&quot;)
+        protected String meter;
+        @XmlAttribute(name = &quot;name&quot;)
+        protected String name;
+        @XmlAttribute(name = &quot;id&quot;)
+        protected String id;
+
+        /**
+         * Gets the value of the number property.
+         * 
+         */
+        public int getNumber() {
+<span class="nc" id="L732">            return number;</span>
+        }
+
+        /**
+         * Sets the value of the number property.
+         * 
+         */
+        public void setNumber(int value) {
+<span class="nc" id="L740">            this.number = value;</span>
+<span class="nc" id="L741">        }</span>
+
+        /**
+         * Gets the value of the meter property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getMeter() {
+<span class="nc" id="L752">            return meter;</span>
+        }
+
+        /**
+         * Sets the value of the meter property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setMeter(String value) {
+<span class="nc" id="L764">            this.meter = value;</span>
+<span class="nc" id="L765">        }</span>
+
+        /**
+         * Gets the value of the name property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getName() {
+<span class="nc" id="L776">            return name;</span>
+        }
+
+        /**
+         * Sets the value of the name property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setName(String value) {
+<span class="nc" id="L788">            this.name = value;</span>
+<span class="nc" id="L789">        }</span>
+
+        /**
+         * Gets the value of the id property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getId() {
+<span class="nc" id="L800">            return id;</span>
+        }
+
+        /**
+         * Sets the value of the id property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setId(String value) {
+<span class="nc" id="L812">            this.id = value;</span>
+<span class="nc" id="L813">        }</span>
+
+    }
+
+
+    /**
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L839">    public static class Symbol {</span>
+
+        @XmlAttribute(name = &quot;id&quot;)
+        protected String id;
+        @XmlAttribute(name = &quot;name&quot;)
+        protected String name;
+        @XmlAttribute(name = &quot;number&quot;, required = true)
+        protected BigInteger number;
+
+        /**
+         * Gets the value of the id property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getId() {
+<span class="nc" id="L857">            return id;</span>
+        }
+
+        /**
+         * Sets the value of the id property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setId(String value) {
+<span class="nc" id="L869">            this.id = value;</span>
+<span class="nc" id="L870">        }</span>
+
+        /**
+         * Gets the value of the name property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getName() {
+<span class="nc" id="L881">            return name;</span>
+        }
+
+        /**
+         * Sets the value of the name property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setName(String value) {
+<span class="nc" id="L893">            this.name = value;</span>
+<span class="nc" id="L894">        }</span>
+
+        /**
+         * Gets the value of the number property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigInteger }
+         *     
+         */
+        public BigInteger getNumber() {
+<span class="nc" id="L905">            return number;</span>
+        }
+
+        /**
+         * Sets the value of the number property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigInteger }
+         *     
+         */
+        public void setNumber(BigInteger value) {
+<span class="nc" id="L917">            this.number = value;</span>
+<span class="nc" id="L918">        }</span>
+
+    }
+
+
+    /**
+     * Element denoting a weather symbol by name or number.
+     * 						
+     * 
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;name&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}string&quot;&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;number&quot; use=&quot;required&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot;&gt;
+     *             &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+     *             &amp;lt;maxInclusive value=&quot;99&quot;/&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *       &amp;lt;attribute name=&quot;symbol&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L960">    public static class Weather {</span>
+
+        @XmlAttribute(name = &quot;name&quot;)
+        protected String name;
+        @XmlAttribute(name = &quot;number&quot;, required = true)
+        protected int number;
+        @XmlAttribute(name = &quot;id&quot;)
+        protected String id;
+        @XmlAttribute(name = &quot;symbol&quot;)
+        protected BigInteger symbol;
+
+        /**
+         * Gets the value of the name property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getName() {
+<span class="nc" id="L980">            return name;</span>
+        }
+
+        /**
+         * Sets the value of the name property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setName(String value) {
+<span class="nc" id="L992">            this.name = value;</span>
+<span class="nc" id="L993">        }</span>
+
+        /**
+         * Gets the value of the number property.
+         * 
+         */
+        public int getNumber() {
+<span class="nc" id="L1000">            return number;</span>
+        }
+
+        /**
+         * Sets the value of the number property.
+         * 
+         */
+        public void setNumber(int value) {
+<span class="nc" id="L1008">            this.number = value;</span>
+<span class="nc" id="L1009">        }</span>
+
+        /**
+         * Gets the value of the id property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getId() {
+<span class="nc" id="L1020">            return id;</span>
+        }
+
+        /**
+         * Sets the value of the id property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setId(String value) {
+<span class="nc" id="L1032">            this.id = value;</span>
+<span class="nc" id="L1033">        }</span>
+
+        /**
+         * Gets the value of the symbol property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigInteger }
+         *     
+         */
+        public BigInteger getSymbol() {
+<span class="nc" id="L1044">            return symbol;</span>
+        }
+
+        /**
+         * Sets the value of the symbol property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigInteger }
+         *     
+         */
+        public void setSymbol(BigInteger value) {
+<span class="nc" id="L1056">            this.symbol = value;</span>
+<span class="nc" id="L1057">        }</span>
+
+    }
+
+
+    /**
+     * Element denoting the wind direction by angle or
+     * 						compass direction.
+     * 						
+     * 
+     * &lt;p&gt;Java class for anonymous complex type.
+     * 
+     * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+     * 
+     * &lt;pre&gt;
+     * &amp;lt;complexType&gt;
+     *   &amp;lt;complexContent&gt;
+     *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+     *       &amp;lt;attribute name=&quot;deg&quot; use=&quot;required&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}decimal&quot;&gt;
+     *             &amp;lt;minInclusive value=&quot;0&quot;/&gt;
+     *             &amp;lt;maxInclusive value=&quot;990&quot;/&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;name&quot;&gt;
+     *         &amp;lt;simpleType&gt;
+     *           &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}string&quot;&gt;
+     *           &amp;lt;/restriction&gt;
+     *         &amp;lt;/simpleType&gt;
+     *       &amp;lt;/attribute&gt;
+     *       &amp;lt;attribute name=&quot;id&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+     *     &amp;lt;/restriction&gt;
+     *   &amp;lt;/complexContent&gt;
+     * &amp;lt;/complexType&gt;
+     * &lt;/pre&gt;
+     * 
+     * 
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = &quot;&quot;)
+<span class="nc" id="L1099">    public static class WindDirection {</span>
+
+        @XmlAttribute(name = &quot;deg&quot;, required = true)
+        protected BigDecimal deg;
+        @XmlAttribute(name = &quot;name&quot;)
+        protected String name;
+        @XmlAttribute(name = &quot;id&quot;)
+        protected String id;
+
+        /**
+         * Gets the value of the deg property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public BigDecimal getDeg() {
+<span class="nc" id="L1117">            return deg;</span>
+        }
+
+        /**
+         * Sets the value of the deg property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link BigDecimal }
+         *     
+         */
+        public void setDeg(BigDecimal value) {
+<span class="nc" id="L1129">            this.deg = value;</span>
+<span class="nc" id="L1130">        }</span>
+
+        /**
+         * Gets the value of the name property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getName() {
+<span class="nc" id="L1141">            return name;</span>
+        }
+
+        /**
+         * Sets the value of the name property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setName(String value) {
+<span class="nc" id="L1153">            this.name = value;</span>
+<span class="nc" id="L1154">        }</span>
+
+        /**
+         * Gets the value of the id property.
+         * 
+         * @return
+         *     possible object is
+         *     {@link String }
+         *     
+         */
+        public String getId() {
+<span class="nc" id="L1165">            return id;</span>
+        }
+
+        /**
+         * Sets the value of the id property.
+         * 
+         * @param value
+         *     allowed object is
+         *     {@link String }
+         *     
+         */
+        public void setId(String value) {
+<span class="nc" id="L1177">            this.id = value;</span>
+<span class="nc" id="L1178">        }</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

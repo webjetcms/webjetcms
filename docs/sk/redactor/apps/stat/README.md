@@ -4,9 +4,9 @@ Aplikácia štatistika vám umožňuje zobraziť štatistické informácie o ná
 
 V aplikácii sa používajú nasledovné výrazy:
 
-- ```videní``` - celkový počet zobrazených stránok
-- ```návštev (alebo sedení)``` - počet návštev jednotlivých ľudí, pričom za jednu návštevu sa považuje čas, počas ktorého návštevník nezatvoril internetový prehliadač. Čiže ak sa návštevník dostal na vašu stránku a pozrel si 5 stránok zaráta sa 5 videní a 1 návšteva. Keď zatvorí internetový prehliadač (alebo si nepozrie žiadnu stránku za viac ako 30 minút) a na stránku príde znova, zaráta sa to ako ďalšia návšteva
-- ```rôznych používateľov``` - približné číslo skutočne rozdielnych návštevníkov stránky. Ak návštevník navštívi vašu stránku zašle sa mu cookie, pomocou ktorého bude identifikovaný aj pri ďalšej návšteve. Platnosť tejto cookie je nastavená na jeden rok, čiže aj keby prišiel na stránku za relatívne dlhé obdobie, stále sa bude považovať za toho istého návštevníka
+- videní - celkový počet zobrazených stránok
+- návštev (alebo sedení) - počet návštev jednotlivých ľudí, pričom za jednu návštevu sa považuje čas, počas ktorého návštevník nezatvoril internetový prehliadač. Čiže ak sa návštevník dostal na vašu stránku a pozrel si 5 stránok zaráta sa 5 videní a 1 návšteva. Keď zatvorí internetový prehliadač (alebo si nepozrie žiadnu stránku za viac ako 30 minút) a na stránku príde znova, zaráta sa to ako ďalšia návšteva
+- rôznych používateľov - približné číslo skutočne rozdielnych návštevníkov stránky. Ak návštevník navštívi vašu stránku zašle sa mu cookie, pomocou ktorého bude identifikovaný aj pri ďalšej návšteve. Platnosť tejto cookie je nastavená na jeden rok, čiže aj keby prišiel na stránku za relatívne dlhé obdobie, stále sa bude považovať za toho istého návštevníka
 
 Upozornenie: ukladanie štatistiky je podmienené GDPR súhlasom na ukladanie štatistických cookies. Pokiaľ návštevník nedá súhlas na ich ukladanie je štatistika anonymizovaná:
 
@@ -48,7 +48,7 @@ V tabuľke je zoznam najnavštevovanejších stránok s údajmi o počte videní
 
 > Z ktorých krajín prichádzajú návštevníci? Na aké jazykové mutácie je potrebné sa zamerať?
 
-Zobrazuje návštevnosť podľa krajín. Krajina sa určí podľa HTTP hlavičky ```accept-language``` prehliadača, ktorý zobrazuje web stránku. Typicky je to jazyk, ktorý má používateľ nastavený v operačnom systéme. Ak sa krajinu nepodarilo identifikovať je zaradená ako ```Neznáma```.
+Zobrazuje návštevnosť podľa krajín. Krajina sa určí podľa HTTP hlavičky ```accept-language``` prehliadača, ktorý zobrazuje web stránku. Typicky je to jazyk, ktorý má používateľ nastavený v operačnom systéme. Ak sa krajinu nepodarilo identifikovať je zaradená ako **Neznáma**.
 
 ![](country-page.png)
 
@@ -58,9 +58,11 @@ Zobrazuje návštevnosť podľa krajín. Krajina sa určí podľa HTTP hlavičky
 
 Zoznam používaných prehliadačov a ich verzií. V grafe sú zobrazené najpoužívanejšie prehliadače s verziou, časové zobrazenie a kompletná tabuľka.
 
-Hodnota ```Neznámy``` alebo ```???``` sa zobrazuje pre neznáme prehliadače a pre prehliadače pri ktorých návštevník nedal súhlas na zbieranie štatistických cookies.
+Hodnota **Neznámy** alebo **???** sa zobrazuje pre neznáme prehliadače a pre prehliadače pri ktorých návštevník nedal súhlas na zbieranie štatistických cookies.
 
 ![](browser-page.png)
+
+**Poznámka:** typ, verzia, operačný systém sa deteguje podľa HTTP hlavičky `User-Agent`. Používa sa knižnica [UAP-java](https://github.com/ua-parser/uap-java). Použitý [YAML](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) súbor je možné aktualizovať a cestu k nemu nastaviť do konf. premennej `uaParserYamlPath`. Aplikuje sa po reštartovaní aplikačného servera.
 
 ## Vyhľadávače
 

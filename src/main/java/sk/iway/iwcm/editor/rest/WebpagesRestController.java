@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.blog.rest.BlogService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -52,7 +54,7 @@ import sk.iway.iwcm.users.UserDetails;
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/web-pages")
-@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages|cmp_news')")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('Constants:webpagesFunctionsPerms')")
 public class WebpagesRestController extends DatatableRestControllerV2<DocDetails, Long> {
 
     private final DocDetailsRepository docDetailsRepository;
@@ -73,6 +75,7 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        groupId = getNewsGroupId(groupId);
         getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
         options.setGroupId(groupId);
@@ -86,13 +89,27 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
 
         if("true".equals(getRequest().getParameter("recursive"))) options.setRecursiveSubfolders(true);
 
-        if (options.getGroupId()!=Constants.getInt("systemPagesRecentPages") && GroupsDB.isGroupEditable(getUser(), options.getGroupId())==false && GroupsDB.isGroupViewable(getUser(), options.getGroupId())==false) {
-            throwError("components.jstree.access_denied__group");
+        if(isBlogVersion()) {
+            //its blogger user
+            if (BlogService.isUserBloggerOrBloggerAdmin(getUser())==false) {
+                throwError(getProp().getText("components.permsDenied"));
+            }
+        } else {
+           //Original control
+           if (options.getGroupId()!=Constants.getInt("systemPagesRecentPages") && GroupsDB.isGroupEditable(getUser(), options.getGroupId())==false && GroupsDB.isGroupViewable(getUser(), options.getGroupId())==false) {
+                throwError("components.jstree.access_denied__group");
+            }
         }
 
-        Page<DocDetails> page = WebpagesService.getAllItems(options);
+        return WebpagesService.getAllItems(options);
+    }
 
-        return page;
+    @Override
+    public void beforeSave(DocDetails entity) {
+        //In abtesting version user cant edit/insert/duplicate page's
+        if(isAbTestingVersion()) {
+            throwError(getProp().getText("admin.editPage.error"));
+        }
     }
 
     @Override
@@ -117,6 +134,32 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
 
     @Override
     public DocDetails insertItem(DocDetails entity) {
+        //Is this blog version
+        if(isBlogVersion()) {
+            //Check user perms
+            boolean isBloggerAdmin = BlogService.isUserBloggerAdmin( getUser() );
+            boolean isBlogger = BlogService.isUserBlogger( getUser() );
+
+            //If user is not blogger admin or blogger, throw error
+            if(isBloggerAdmin==false && isBlogger==false) throwError(getProp().getText("components.blog.basic_perm_error"));
+
+            //There must be selected groupId
+            int selectedGroup = entity.getEditorFields().getGroupDetails().getGroupId();
+
+            //Check that default group is not selected
+            if(selectedGroup == Constants.getInt("rootGroupId")) throwError(getProp().getText("components.blog.add_page.error"));
+
+            //If user is blogger admin, check if group is blogger group
+            if(isBloggerAdmin) {
+                List<Integer> allBloggersGroupIds = BlogService.getAllBloggersGroupIds();
+                if(false==allBloggersGroupIds.contains(selectedGroup)) throwError(getProp().getText("components.blog.basic_perm_error"));
+            } //If user is blogger, check if he has perm to selected group
+            else if(isBlogger && false == GroupsDB.isGroupEditable(getUser(), selectedGroup)) throwError(getProp().getText("components.blog.basic_perm_error"));
+
+            //For safety, cant set this
+            entity.getEditorFields().setGroupCopyDetails(null);
+        }
+
         DocDetails saved = editorFacade.save(entity);
         addNotify(editorFacade.getNotify());
 
@@ -136,6 +179,28 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
     public DocDetails getOneItem(long id) {
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
+
+        if (isBlogVersion()) {
+            if (groupId < 1 || groupId == Constants.getInt("rootGroupId")) {
+                String unclassifiedGroupName = getProp().getText("components.blog.default_group_name");
+                int unclassifiedGroupId = -1;
+                int userRootGroupId = WebpagesService.getUserFirstEditableGroup(getUser());
+                if (userRootGroupId>0) {
+                    GroupsDB groupsDB = GroupsDB.getInstance();
+                    List<GroupDetails> subgroups = groupsDB.getGroups(userRootGroupId);
+
+                    for (GroupDetails group : subgroups) {
+                        if (group != null && group.getGroupName().equals(unclassifiedGroupName)) unclassifiedGroupId = group.getGroupId();
+                    }
+                    if (unclassifiedGroupId > 0) {
+                        groupId = unclassifiedGroupId;
+                    } else {
+                        groupId = userRootGroupId;
+                    }
+                }
+            }
+        }
+        groupId = getNewsGroupId(groupId);
 
         if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
             //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
@@ -170,7 +235,7 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
             if (historyId < 1) {
                 //ak nemame zadane historyId pridaj notifikaciu o tom, ze existuje novsia verzia
                 NotifyBean notify = new NotifyBean(prop.getText("text.warning"), prop.getText("editor.notify.checkHistory"), NotifyBean.NotifyType.WARNING, 15000);
-                notify.addButton(new NotifyButton(prop.getText("editor.notify.editFromHistory"), "btn btn-primary", "far fa-pencil", "editFromHistory("+history.get(0).getDocId()+", "+history.get(0).getHistoryId()+")"));
+                notify.addButton(new NotifyButton(prop.getText("editor.notify.editFromHistory"), "btn btn-primary", "ti ti-history", "editFromHistory("+history.get(0).getDocId()+", "+history.get(0).getHistoryId()+")"));
                 addNotify(notify);
             }
             getRequest().getSession().removeAttribute("docHistory");
@@ -186,11 +251,21 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
         });
         doc.getEditorFields().setAttrs(atrDefs);
 
+        String newPageTitleKey = getRequest().getParameter("newPageTitleKey");
+        if (Tools.isNotEmpty(newPageTitleKey) && doc.getDocId()<1) {
+            doc.setTitle(prop.getText(newPageTitleKey));
+        }
+
         return doc;
     }
 
     @Override
     public boolean deleteItem(DocDetails entity, long id) {
+        //In abtesting version user cant edit page's
+        if(isAbTestingVersion()) {
+            throwError(getProp().getText("admin.editPage.error"));
+        }
+
         boolean deleted = editorFacade.delete(entity);
         addNotify(editorFacade.getNotify());
 
@@ -223,7 +298,7 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
 
-        WebpagesService.addSpecSearch(params, predicates, root, builder);
+        WebpagesService.addSpecSearch(params, predicates, root, builder, getUser());
 
         super.addSpecSearch(params, predicates, root, builder);
     }
@@ -252,7 +327,7 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
             getSearchProperties(params, searchProperties, searchWrapped, null, false);
 
             //Get specification from columns params
-            Specification<DocDetails> columnsSpecification = getSearchConditions(searchProperties, params);
+            Specification<DocDetails> columnsSpecification = getSearchConditions(searchProperties, params, search);
 
             GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
@@ -315,6 +390,16 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
             editorFacade.recoverWebpageFromTrash(entity);
 
             addNotify(editorFacade.getNotify());
+
+            return true;
+        } else if("addBloggerGroup".equals(action)) {
+            String customData = getRequest().getParameter("customData");
+            boolean success = BlogService.addNewBloggerGroup(editorFacade, getUser(), customData);
+
+            if(success)
+                addNotify( new NotifyBean(getProp().getText("components.blog.add_folder.title"), getProp().getText("components.blog.add_new_group.success"), NotifyBean.NotifyType.SUCCESS, 60000) );
+            else
+                addNotify( new NotifyBean(getProp().getText("components.blog.add_folder.title"), getProp().getText("components.blog.add_new_group.failed"), NotifyBean.NotifyType.ERROR, 60000) );
 
             return true;
         }
@@ -380,5 +465,78 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
                 addNotify(notify);
             }
         }
+    }
+
+    @RequestMapping(value="/blogger-groups")
+    public Map<Integer, String> getActualBloggerGroups() {
+        Map<Integer, String> groupsMap = new HashMap<>();
+
+        //Check if it's blogger ADMIN
+        if(BlogService.isUserBloggerAdmin( getUser() )) {
+            //Return all bloggers groups
+            List<Integer> bloggersRootGroupsIds = BlogService.getAllBloggersRootGroupIds();
+
+            for(Integer rootGroupId : bloggersRootGroupsIds) {
+                //Get groups tree from user editable root group
+				List<GroupDetails> groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);
+                for(GroupDetails group : groopsTree)
+                    groupsMap.put(group.getGroupId(), group.getFullPath());
+            }
+            return groupsMap;
+        }
+
+        //Check if it's blogger with perm
+        if(BlogService.isUserBlogger( getUser() )) {
+            //Root group id
+            int rootGroupId = Tools.getTokensInt(getUser().getEditableGroups(), ",")[0];
+            List<GroupDetails> groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);
+            for(GroupDetails group : groopsTree)
+                groupsMap.put(group.getGroupId(), group.getFullPath());
+
+            return groupsMap;
+        }
+
+        //Else return empty map
+        return groupsMap;
+    }
+
+    private int getNewsGroupId(int currentGroupId) {
+        int groupId = currentGroupId;
+        //news version get group ID in groupIdList parameter
+        String groupIdList = getRequest().getParameter("groupIdList");
+        if (Tools.isNotEmpty(groupIdList)) {
+            if (groupId < 1 || groupId == Constants.getInt("rootGroupId")) {
+                try {
+                    groupIdList = Tools.replace(groupIdList, "*", "");
+                    if (groupIdList.indexOf(",")!=-1) groupIdList=groupIdList.substring(0, groupIdList.indexOf(","));
+
+                    int groupIdParser = Tools.getIntValue(groupIdList, -1);
+                    if (groupIdParser > 0) groupId = groupIdParser;
+                } catch (Exception e) {
+                    //do nothing - failsafe
+                }
+            }
+        }
+        return groupId;
+    }
+
+    private boolean isBlogVersion() {
+        return "true".equals(getRequest().getParameter("isBlogVersion"));
+    }
+
+    private boolean isAbTestingVersion() {
+        return "true".equals(getRequest().getParameter("isABtestingVersion"));
+    }
+
+    @Override
+    public boolean checkItemPerms(DocDetails entity, Long id) {
+        if (InitServlet.isTypeCloud() && entity.getDocId()>0) {
+            DocDetails old = DocDB.getInstance().getBasicDocDetails(entity.getDocId(), false);
+            if (old != null) {
+                GroupDetails group = GroupsDB.getInstance().getGroup(old.getGroupId());
+                if (group != null && GroupsDB.isGroupEditable(getUser(), group.getGroupId())==false) return false;
+            }
+        }
+        return true;
     }
 }

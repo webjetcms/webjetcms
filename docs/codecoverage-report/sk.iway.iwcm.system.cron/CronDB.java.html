@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CronDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cron</a> &gt; <span class="el_source">CronDB.java</span></div><h1>CronDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cron;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+/**
+ *  CronDB.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 9.7.2010 17:44:00
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L25">public class CronDB</span>
+{
+	private static final String SQL_INSERT = &quot;INSERT INTO crontab(task_name, second, minute, hour, dayofmonth,&quot;
+			+ &quot; month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
+
+	private static final String SQL_UPDATE = &quot;UPDATE crontab SET task_name=?, second=?, minute=?, hour=?, dayofmonth=?,&quot;
+			+ &quot; month=?, dayofweek=?, year=?, task=?, extrainfo=?, businessDays=?, cluster_node = ?, audit_task = ?, run_at_startup=?, enable_task=? WHERE id=?&quot;;
+
+	private static final String SQL_MAX_VALUE = &quot;SELECT MAX(id) FROM crontab&quot;;
+
+<span class="fc" id="L35">	public static final Mapper&lt;CronTask&gt; mapper = new Mapper&lt;CronTask&gt;()</span>
+<span class="fc" id="L36">	{</span>
+		@Override
+		public CronTask map(ResultSet rs) throws SQLException
+		{
+<span class="fc" id="L40">			CronTask task = new CronTask();</span>
+<span class="fc" id="L41">			task.setId(rs.getLong(&quot;id&quot;));</span>
+<span class="fc" id="L42">			task.setTaskName(DB.getDbString(rs, &quot;task_name&quot;));</span>
+<span class="fc" id="L43">			task.setSeconds(DB.getDbString(rs, &quot;second&quot;));</span>
+<span class="fc" id="L44">			task.setMinutes(DB.getDbString(rs, &quot;minute&quot;));</span>
+<span class="fc" id="L45">			task.setHours(DB.getDbString(rs, &quot;hour&quot;));</span>
+<span class="fc" id="L46">			task.setDaysOfMonth(DB.getDbString(rs, &quot;dayofmonth&quot;));</span>
+<span class="fc" id="L47">			task.setMonths(DB.getDbString(rs, &quot;month&quot;));</span>
+<span class="fc" id="L48">			task.setDaysOfWeek(DB.getDbString(rs, &quot;dayofweek&quot;));</span>
+<span class="fc" id="L49">			task.setYears(DB.getDbString(rs, &quot;year&quot;));</span>
+<span class="fc" id="L50">			task.setTask(DB.getDbString(rs, &quot;task&quot;).trim());</span>
+<span class="fc" id="L51">			task.setParams(DB.getDbString(rs, &quot;extrainfo&quot;));</span>
+			//task.setBusinessDays(rs.getBoolean(&quot;businessDays&quot;)); - uz sa nepouziva
+<span class="fc" id="L53">			task.setBusinessDays(false);</span>
+<span class="fc" id="L54">			task.setClusterNode(DB.getDbString(rs, &quot;cluster_node&quot;));</span>
+<span class="fc" id="L55">			task.setAudit(rs.getBoolean(&quot;audit_task&quot;));</span>
+<span class="fc" id="L56">			task.setRunAtStartup(rs.getBoolean(&quot;run_at_startup&quot;));</span>
+<span class="fc" id="L57">			task.setEnableTask(rs.getBoolean(&quot;enable_task&quot;));</span>
+<span class="fc" id="L58">			return task;</span>
+		}
+	};
+
+	public static CronTask getById(Long id)
+	{
+		try
+		{
+<span class="fc" id="L66">			return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE id = ?&quot;).setParams(id).singleResult(mapper);</span>
+		}
+<span class="nc" id="L68">		catch (Exception ex)</span>
+		{
+
+		}
+<span class="nc" id="L72">		return null;</span>
+	}
+
+	public static List&lt;CronTask&gt; getAll()
+	{
+<span class="fc" id="L77">		return new ComplexQuery().setSql(&quot;SELECT * FROM crontab&quot;).list(mapper);</span>
+	}
+
+	public static List&lt;CronTask&gt; getCronTasks(String filterCrontabTask)
+	{
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (Tools.isNotEmpty(filterCrontabTask))</span>
+<span class="nc" id="L83">			return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE task LIKE ?&quot;).setParams(&quot;%&quot; + filterCrontabTask + &quot;%&quot;).list(mapper);</span>
+		else
+<span class="nc" id="L85">			return CronDB.getAll();</span>
+	}
+
+	public static List&lt;CronTask&gt; getCronTasksRunAtStartup()
+	{
+<span class="fc" id="L90">		return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE run_at_startup = ? AND enable_task = ?&quot;).setParams(Boolean.TRUE, Boolean.TRUE).list(mapper);</span>
+	}
+
+	public static void delete(Long id)
+	{
+<span class="fc" id="L95">		CronTask task = getById(id);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">		if (task != null)</span>
+		{
+<span class="fc" id="L98">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Zmazana uloha na pozadi, &quot;+id+&quot; &quot;+task.getTask()+&quot; &quot;+task.getParams(), id.intValue(), -1);</span>
+		}
+		else
+		{
+<span class="nc" id="L102">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Zmazana uloha na pozadi, &quot;+id, id.intValue(), -1);</span>
+		}
+
+<span class="fc" id="L105">		new SimpleQuery().execute(&quot;DELETE FROM crontab WHERE id = ?&quot;, id);</span>
+<span class="fc" id="L106">	}</span>
+
+	public static CronTask save(CronTask task)
+	{
+<span class="fc" id="L110">		Adminlog.add(Adminlog.TYPE_CRON, &quot;Upravena uloha na pozadi, &quot;+task.getId()+&quot; &quot;+task.getTask()+&quot; &quot;+task.getParams(), task.getId().intValue(), -1);</span>
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		if (task.getId() &lt; 0)</span>
+<span class="fc" id="L113">			new SimpleQuery().execute(SQL_INSERT, task.getTaskName(), task.getSeconds(), task.getMinutes(), task.getHours(), task.getDaysOfMonth(), task.getMonths(),</span>
+<span class="fc" id="L114">					task.getDaysOfWeek(), task.getYears(), task.getTask(), task.getParams(), task.isBusinessDays(), task.getClusterNode(), task.getAudit(), task.isRunAtStartup(), task.isEnableTask());</span>
+		else
+<span class="fc" id="L116">			new SimpleQuery().execute(SQL_UPDATE, task.getTaskName(), task.getSeconds(), task.getMinutes(), task.getHours(), task.getDaysOfMonth(), task.getMonths(),</span>
+<span class="fc" id="L117">					task.getDaysOfWeek(), task.getYears(), task.getTask(), task.getParams(), task.isBusinessDays(), task.getClusterNode(), task.getAudit(), task.isRunAtStartup(), task.isEnableTask(), task.getId());</span>
+
+<span class="fc" id="L119">		Long id = task.getId();</span>
+<span class="pc bpc" id="L120" title="1 of 4 branches missed.">		if (id == null || id.longValue()&lt;1) {</span>
+<span class="fc" id="L121">			id = Long.valueOf((new SimpleQuery()).forLong(SQL_MAX_VALUE));</span>
+		}
+<span class="fc" id="L123">		return getById(id);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

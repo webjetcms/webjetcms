@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">DirTreeRestController.java</span></div><h1>DirTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
+import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ * REST rozhranie pre zobrazenie stromovej struktury v type pola json
+ * http://docs.webjetcms.sk/v2021/#/developer/datatables-editor/field-json
+ */
+@RestController
+@RequestMapping(value = &quot;/admin/rest/elfinder/tree&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.isAdmin()&quot;)
+<span class="fc" id="L29">public class DirTreeRestController extends JsTreeRestController&lt;DirTreeItem&gt; {</span>
+
+    @Override
+    protected void tree(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
+<span class="nc" id="L33">        String parentPath = item.getId();</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (&quot;-1&quot;.equals(parentPath)) parentPath = &quot;/&quot;;</span>
+
+<span class="nc" id="L36">        boolean isRoot = &quot;/&quot;.equals(parentPath);</span>
+
+<span class="nc" id="L38">        Identity user = getUser();</span>
+
+        List&lt;IwcmFile&gt; files;
+<span class="nc bnc" id="L41" title="All 4 branches missed.">        if (isRoot || user.isFolderWritable(parentPath)) {</span>
+<span class="nc" id="L42">            IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));</span>
+<span class="nc" id="L43">            files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -&gt; {</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (file.isFile()) return false;</span>
+
+                //System.out.println(&quot;path=&quot;+file.getVirtualPath()+&quot; isRoot=&quot;+isRoot+&quot; isJarPackaging=&quot;+file.isJarPackaging());
+<span class="nc bnc" id="L47" title="All 4 branches missed.">                if (isRoot==false &amp;&amp; file.isJarPackaging()) return false;</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                if (user.isFolderWritable(file.getVirtualPath())==false) return false;</span>
+
+<span class="nc" id="L51">                return true;</span>
+            })));
+<span class="nc" id="L53">        } else {</span>
+<span class="nc" id="L54">            files = new ArrayList&lt;&gt;();</span>
+        }
+
+<span class="nc" id="L57">        List&lt;DirTreeItem&gt; items = files.stream().map(f -&gt; new DirTreeItem(f)).collect(Collectors.toList());</span>
+
+<span class="nc" id="L59">        result.put(&quot;result&quot;, true);</span>
+<span class="nc" id="L60">        result.put(&quot;items&quot;, items);</span>
+<span class="nc" id="L61">    }</span>
+
+    @Override
+    protected void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
+<span class="nc" id="L65">        result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L66">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L67">        return;</span>
+    }
+
+    @Override
+    protected void save(Map&lt;String, Object&gt; result, DirTreeItem item) {
+<span class="nc" id="L72">        result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L73">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L74">        return;</span>
+    }
+
+    @Override
+    protected void delete(Map&lt;String, Object&gt; result, DirTreeItem item) {
+<span class="nc" id="L79">        result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L80">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L81">        return;</span>
+    }
+
+    @Override
+    public boolean checkAccessAllowed(HttpServletRequest request) {
+        //prava kontrolujeme hore v cykle
+<span class="nc" id="L87">        return true;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

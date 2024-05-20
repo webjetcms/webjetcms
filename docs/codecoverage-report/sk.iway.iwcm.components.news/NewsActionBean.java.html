@@ -1,0 +1,1854 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsActionBean.java</span></div><h1>NewsActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
+
+import static sk.iway.iwcm.components.news.FieldEnum.PUBLISH_END;
+import static sk.iway.iwcm.components.news.FieldEnum.PUBLISH_START;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.and;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.greaterEqual;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.isEmpty;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.isNotNull;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.isNull;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.lessEqual;
+import static sk.iway.iwcm.components.news.criteria.DatabaseCriteria.or;
+
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.sql.Timestamp;
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.tools.generic.DateTool;
+import org.json.JSONObject;
+
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.StreamingResolution;
+import net.sourceforge.stripes.validation.Validate;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.news.NewsQuery.OrderEnum;
+import sk.iway.iwcm.components.news.NewsQuery.SortEnum;
+import sk.iway.iwcm.components.news.NewsTemplateBean.PagingPosition;
+import sk.iway.iwcm.components.news.criteria.Criteria;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria.CriteriaType;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.helpers.RequestHelper;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.json.JsonObjectGenerator;
+import sk.iway.iwcm.system.json.ObjectFormaterFactory;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.stripes.BindPageParams;
+import sk.iway.iwcm.system.stripes.PageParamOnly;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Include actionBean pre nove news komponenty
+ *
+ * Title webjet7
+ * Company Interway s.r.o. (www.interway.sk)
+ * Copyright Interway s.r.o. (c) 2001-2015
+ * @author Author: mbocko
+ * @version Revision:
+ * created Date: 12.11.2014
+ * modified Date: 12.11.2014 8:54:56
+ */
+@BindPageParams
+<span class="fc" id="L78">public class NewsActionBean extends WebJETActionBean</span>
+{
+<span class="fc" id="L80">	@PageParamOnly</span>
+	private String requestPerexGroupsName = &quot;&quot;;
+
+<span class="fc" id="L83">	@PageParamOnly</span>
+	private boolean ascending = true;
+
+<span class="fc" id="L86">	@PageParamOnly</span>
+	private boolean paging = false;
+
+<span class="fc" id="L89">	@PageParamOnly</span>
+	private int pageSize = 10;
+
+<span class="fc" id="L92">	@PageParamOnly</span>
+	private String newsName = &quot;&quot;;
+
+<span class="fc" id="L95">	@PageParamOnly</span>
+	private boolean perex = false;
+
+<span class="fc" id="L98">	@PageParamOnly</span>
+	private boolean date = false;
+
+<span class="fc" id="L101">	@PageParamOnly</span>
+	private boolean place = false;
+
+<span class="fc" id="L104">	@PageParamOnly</span>
+	private boolean includeActualDoc = false;
+
+	@PageParamOnly
+	private int[] groupIds;
+
+	@PageParamOnly
+	private int[] perexGroup;
+
+	@PageParamOnly
+	private int[] perexGroupNot;
+
+<span class="fc" id="L116">	@PageParamOnly</span>
+	private boolean alsoSubGroups = false;
+
+<span class="fc" id="L119">	@PageParamOnly</span>
+	private boolean loadData = false;
+
+<span class="fc" id="L122">	@PageParamOnly</span>
+	private boolean returnDocsWithAtributes = false;
+
+	@PageParamOnly
+	private String[] contextClasses;
+
+<span class="fc" id="L128">	@PageParamOnly</span>
+	private int perexCrop = 0;
+
+<span class="fc" id="L131">	@PageParamOnly</span>
+	private boolean perexNotRequired = false;
+
+	@PageParamOnly
+	private String tagClickLink;
+
+	private String htmlOut;
+
+<span class="fc" id="L139">	@Validate(converter = EnumeratedTypeConverter.class)</span>
+	@PageParamOnly
+	private PublishType publishType = PublishType.NEW;
+
+<span class="fc" id="L143">	@Validate(converter = EnumeratedTypeConverter.class)</span>
+	@PageParamOnly
+	private OrderEnum order = OrderEnum.SAVE_DATE;
+
+	@Validate(converter= NewsTemplateConverter.class)
+	private NewsTemplateBean template;
+
+	@Validate(converter= NewsTemplateConverter.class)
+	private NewsTemplateBean templateUpdate;
+
+<span class="fc" id="L153">	private int page = 1;</span>
+
+<span class="fc" id="L155">	private int totalPages = 1;</span>
+
+<span class="fc" id="L157">	@PageParamOnly</span>
+	private int offset=0;
+
+<span class="fc" id="L160">	@PageParamOnly</span>
+	private boolean searchAlsoProtectedPages = false;
+
+<span class="fc" id="L163">	private NewsQuery newsQuery = new NewsQuery();</span>
+
+	private List&lt;? extends DocDetails&gt; newsList;
+
+<span class="fc" id="L167">	private Map&lt;String, Object&gt; paginator = null;</span>
+
+<span class="fc" id="L169">	@PageParamOnly</span>
+	private Map&lt;String, List&lt;String&gt;&gt; filter = new HashMap&lt;&gt;();
+
+<span class="fc" id="L172">	private Map&lt;String, List&lt;String&gt;&gt; search = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L174">	@PageParamOnly</span>
+	private int cacheMinutes = 10;
+	//private static final String CACHE_KEY = &quot;news-list&quot;;
+
+	private DocDetails doc;
+	private Identity user;
+
+	@PageParamOnly
+	private boolean checkDuplicity;
+
+	private String tag;
+
+	//tu bude drzany zoznam expandnutych ID adresarov, naplni sa v addGroups
+<span class="fc" id="L187">	private List&lt;Integer&gt; groupIdsExpanded = null;</span>
+
+	private String author;
+
+<span class="fc" id="L191">	@PageParamOnly</span>
+	private boolean removeDefaultDocs = false;
+
+	@DefaultHandler
+	public Resolution news()
+	{
+		//Cache c = Cache.getInstance();
+
+<span class="fc" id="L199">		doc = new RequestHelper(getRequest()).getDocument();</span>
+<span class="fc" id="L200">		user = getCurrentUser();</span>
+
+<span class="pc bpc" id="L202" title="2 of 6 branches missed.">		if (user!=null &amp;&amp; user.isAdmin() &amp;&amp; Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false)</span>
+		{
+			//ak je user admin necachuj
+<span class="fc" id="L205">			newsList = null;</span>
+		}
+
+<span class="fc" id="L208">		availableOnly();</span>
+<span class="fc" id="L209">		addFilter();</span>
+<span class="fc" id="L210">		addSearch();</span>
+<span class="fc" id="L211">		addDocId();</span>
+<span class="fc" id="L212">		addLoadData();</span>
+<span class="fc" id="L213">		addPaging();</span>
+<span class="fc" id="L214">		addPasswordProtected();</span>
+<span class="fc" id="L215">		addGroups();</span>
+<span class="fc" id="L216">		addDuplicityFilter();</span>
+
+
+
+<span class="fc" id="L220">		addPerexGroups();</span>
+<span class="fc" id="L221">		addPerexNotRequired();</span>
+<span class="fc" id="L222">		addPublishType();</span>
+<span class="fc" id="L223">		addRequestCriteria();</span>
+<span class="fc" id="L224">		addOrder();</span>
+
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">		if (newsList == null) {</span>
+			// newsQuery.addOrder(OrderEnum.ORDER_TITLE,
+			// SortEnum.SORT_ASC).addOrder(OrderEnum.ORDER_PRIORITY,
+			// SortEnum.SORT_ASC).addOrder(OrderEnum.ORDER_ID, SortEnum.SORT_DESC);
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">			newsList = returnDocsWithAtributes ? newsQuery.getNewsListWithAtributes() : newsQuery.getNewsList();</span>
+		}
+
+<span class="fc bfc" id="L233" title="All 2 branches covered.">		if (checkDuplicity)</span>
+		{
+			//pridajme do zoznamu IDecka nacitanych web stranok vratane ich child stranok
+
+<span class="fc" id="L237">			LinkedList&lt;Integer&gt; duplicityList = getDuplicityList();</span>
+<span class="fc" id="L238">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L239">			Map&lt;Integer, Integer&gt; slavesMaster = docDB.getSlavesMasterMappings();</span>
+
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			for (DocDetails docDetails: newsList)</span>
+			{
+<span class="fc" id="L243">				duplicityList.add(docDetails.getDocId());</span>
+
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">				if (slavesMaster != null) {</span>
+					//musime pridat aj child stranky
+<span class="fc" id="L247">					Integer masterId = slavesMaster.get(Integer.valueOf(docDetails.getDocId()));</span>
+					//docid nie je slave, moze to byt ale realne master
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">					if (masterId == null) masterId = Integer.valueOf(docDetails.getDocId());</span>
+<span class="fc" id="L250">					Integer[] slaves = docDB.getMasterMappings().get(masterId);</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">					if (slaves != null) {</span>
+<span class="nc" id="L252">						duplicityList.addAll(Arrays.asList(slaves));</span>
+					}
+				}
+<span class="fc" id="L255">			}</span>
+		}
+
+<span class="fc" id="L258">		cropPerex();</span>
+<span class="fc" id="L259">		fillTemplate();</span>
+
+<span class="fc" id="L261">		return new ForwardResolution(WebJETActionBean.RESOLUTION_CONTINUE);</span>
+	}
+
+	/**
+	 * Metoda pre odfiltrovanie duplicitnych noviniek.
+	 * Vyuzite pre viacero instancii news velocity na tej istej stranke.
+	 */
+	private void addDuplicityFilter()
+	{
+<span class="fc bfc" id="L270" title="All 2 branches covered.">		if (checkDuplicity)</span>
+		{
+<span class="fc" id="L272">			LinkedList&lt;Integer&gt; duplicityList = getDuplicityList();</span>
+<span class="fc" id="L273">			DocDB docDB = DocDB.getInstance();</span>
+
+			//pridaj do zoznamu vylucenie child stranok z podadresarov, aby sme nemali 2x ten isty dokument v zozname
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">			if(docDB.getSlavesMasterMappings() != null)</span>
+			{
+				//vytvor si zoznam stranok v podadresaroch
+<span class="fc" id="L279">				List&lt;DocDetails&gt; docsInGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">				for(int groupId : groupIdsExpanded)</span>
+				{
+<span class="fc" id="L282">					docsInGroups.addAll(docDB.getBasicDocDetailsByGroup(groupId, 0));</span>
+<span class="fc" id="L283">				}</span>
+
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">				if(docsInGroups.size() &gt; 0)</span>
+				{
+<span class="fc" id="L287">					HashMap&lt;Integer, Boolean&gt; docsInGroupsTable = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">					for(DocDetails dd : docsInGroups)</span>
+					{
+						//TRUE hovori, ze treba kontrolovat, kvoli performance, ked najdeme childy tak ich nastavime na FALSE
+						//dalo by sa to aj vyhadzovat zo zoznamu, to by nam ale robilo problem v iteracii atd.
+<span class="fc" id="L292">						docsInGroupsTable.put(Integer.valueOf(dd.getDocId()), Boolean.TRUE);</span>
+<span class="fc" id="L293">					}</span>
+
+<span class="fc bfc" id="L295" title="All 2 branches covered.">					for (Map.Entry&lt;Integer, Boolean&gt; entry : docsInGroupsTable.entrySet())</span>
+					{
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">						if(Boolean.TRUE.equals(entry.getValue()))</span>
+						{
+<span class="fc" id="L299">							Integer docId = entry.getKey();</span>
+							//ziskam zoznam docId, ktore su rovnake k danej stranke
+<span class="fc" id="L301">							List&lt;Integer&gt; slavesMasterForDoc = new ArrayList&lt;&gt;();</span>
+
+							//najdi masterId
+<span class="fc" id="L304">							Integer masterId = docDB.getSlavesMasterMappings().get(docId);</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">							if(masterId != null)</span>
+							{
+								//ak sa master nachadza v zozname stranok, tak ponecham master miesto slave a vymazem vsetky slave stranky danej master stranky
+								//v opacnom pripade vymazem vsetky ostatne slaves
+<span class="nc" id="L309">								boolean containsMaster = Boolean.TRUE.equals(docsInGroupsTable.get(masterId));</span>
+<span class="nc" id="L310">								Integer[] slaves = docDB.getMasterMappings().get(masterId);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">								if(slaves != null)</span>
+								{
+<span class="nc bnc" id="L313" title="All 2 branches missed.">									if(containsMaster) //aby preskocilo pri iteracii master</span>
+<span class="nc" id="L314">										docsInGroupsTable.put(masterId, Boolean.FALSE);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">									for(Integer slave : slaves)</span>
+									{
+<span class="nc bnc" id="L317" title="All 6 branches missed.">										if(containsMaster || (!containsMaster &amp;&amp; slave.intValue() != docId.intValue()))</span>
+<span class="nc" id="L318">											slavesMasterForDoc.add(slave);</span>
+									}
+								}
+<span class="nc" id="L321">							}</span>
+							else
+							{
+								//ak docId je master, tak pridam do duplicitnych vsetky jeho slaves
+<span class="fc" id="L325">								Integer[] slaves = docDB.getMasterMappings().get(docId);</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">								if(slaves != null)</span>
+								{
+<span class="nc" id="L328">									slavesMasterForDoc.addAll(Arrays.asList(slaves));</span>
+								}
+							}
+							//odstranim ich zo zonamu stranok
+<span class="pc bpc" id="L332" title="2 of 4 branches missed.">							if(slavesMasterForDoc != null &amp;&amp; slavesMasterForDoc.size() &gt; 0)</span>
+							{
+<span class="nc bnc" id="L334" title="All 2 branches missed.">								for(Integer sm: slavesMasterForDoc)</span>
+								{
+<span class="nc bnc" id="L336" title="All 2 branches missed.">									if(docsInGroupsTable.get(sm) != null)</span>
+									{
+<span class="nc" id="L338">										docsInGroupsTable.put(sm, Boolean.FALSE);</span>
+<span class="nc" id="L339">										duplicityList.add(sm);</span>
+									}
+<span class="nc" id="L341">								}</span>
+							}
+						}
+<span class="fc" id="L344">					}</span>
+				}
+			}
+
+<span class="fc bfc" id="L348" title="All 2 branches covered.">			if (!duplicityList.isEmpty())	newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, getDuplicityList()));</span>
+		}
+<span class="fc" id="L350">	}</span>
+
+	/**
+	 * Metoda vrati zoznam doc_id noviniek, ktore zobrazuju predchadzajuce news komponenty.
+	 * @return
+	 */
+	private LinkedList&lt;Integer&gt; getDuplicityList()
+	{
+<span class="fc" id="L358">		final String REQUEST_KEY = &quot;sk.iway.iwcm.components.news.duplicityList&quot;;</span>
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L360">		LinkedList&lt;Integer&gt; duplicityList = (LinkedList&lt;Integer&gt;)getRequest().getAttribute(REQUEST_KEY);</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">		if (duplicityList == null)</span>
+<span class="fc" id="L362">			duplicityList = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L363">		getRequest().setAttribute(REQUEST_KEY, duplicityList);</span>
+<span class="fc" id="L364">		return duplicityList;</span>
+	}
+
+	private void availableOnly()
+	{
+<span class="fc" id="L369">		newsQuery.addCriteria(DatabaseCriteria.equal(FieldEnum.AVAILABLE, Boolean.TRUE));</span>
+<span class="fc" id="L370">	}</span>
+
+	private void addFilter()
+	{
+<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (!filter.isEmpty())</span>
+		{
+<span class="nc bnc" id="L376" title="All 2 branches missed.">			for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : filter.entrySet())</span>
+			{
+<span class="nc" id="L378">				String key = entry.getKey();</span>
+<span class="nc" id="L379">				List&lt;String&gt; value = entry.getValue();</span>
+				// filter[title_eq]=kjbnkj, filter[title_eq]=hadghja
+<span class="nc" id="L381">				String[] fieldOperator = Tools.getTokens(key, &quot;_&quot;);</span>
+<span class="nc" id="L382">				Criteria cr = parseCriteria(fieldOperator[0], fieldOperator[1], value);</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (cr != null) newsQuery.addCriteria(cr);</span>
+<span class="nc" id="L384">			}</span>
+		}
+<span class="fc" id="L386">	}</span>
+
+	private void addSearch() {
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">		if (!search.isEmpty())</span>
+		{
+<span class="nc bnc" id="L391" title="All 2 branches missed.">			for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : search.entrySet())</span>
+			{
+<span class="nc" id="L393">				String key = entry.getKey();</span>
+<span class="nc" id="L394">				List&lt;String&gt; value = entry.getValue();</span>
+<span class="nc" id="L395">				String[] fieldOperator = Tools.getTokens(key, &quot;_&quot;);</span>
+<span class="nc bnc" id="L396" title="All 4 branches missed.">				if(fieldOperator != null &amp;&amp; fieldOperator.length == 2)</span>
+				{
+<span class="nc bnc" id="L398" title="All 2 branches missed.">					if (filter.containsKey(key))</span>
+					{
+<span class="nc" id="L400">						Logger.debug(getClass(), &quot;Nieje mozne vyhladavat pre vyraz '&quot; + key + &quot;' = '&quot; + value + &quot;'&quot;);</span>
+					}
+<span class="nc" id="L402">					Criteria cr = parseCriteria(fieldOperator[0], fieldOperator[1], value);</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">					if (cr != null) newsQuery.addCriteria(cr);</span>
+				}
+<span class="nc" id="L405">			}</span>
+		}
+<span class="fc" id="L407">	}</span>
+
+	private void addDocId() {
+<span class="pc bpc" id="L410" title="1 of 4 branches missed.">		if (doc != null &amp;&amp; !includeActualDoc)</span>
+		{
+<span class="fc" id="L412">			newsQuery.addCriteria(DatabaseCriteria.notEqual(FieldEnum.DOC_ID, doc.getDocId()));</span>
+		}
+<span class="fc" id="L414">	}</span>
+
+	private void addLoadData() {
+<span class="fc" id="L417">		newsQuery.setLoadData(loadData);</span>
+<span class="fc" id="L418">	}</span>
+
+	private void addPaging()
+	{
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">		if (paging) {</span>
+<span class="nc" id="L423">			newsQuery.setPageSize(pageSize).setPage(page);</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">			if (offset&gt;0) newsQuery.setInitialOffset(offset);</span>
+		}
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">		else if (pageSize &gt; 0)</span>
+		{
+<span class="fc" id="L428">			newsQuery.setPageSize(pageSize);</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">			if (offset&gt;0) newsQuery.setInitialOffset(offset);</span>
+		}
+<span class="fc" id="L431">	}</span>
+
+	private void addPasswordProtected()
+	{
+<span class="pc bpc" id="L435" title="1 of 4 branches missed.">		if (user == null &amp;&amp; searchAlsoProtectedPages == false) {</span>
+<span class="fc" id="L436">			newsQuery.addCriteria(isEmpty(FieldEnum.PASSWORD_PROTECTED));</span>
+		}
+<span class="pc bpc" id="L438" title="2 of 4 branches missed.">		else if (user != null &amp;&amp; searchAlsoProtectedPages == false) {</span>
+<span class="fc" id="L439">			DatabaseCriteria andCriteria = null;// DatabaseCriteria.and();</span>
+<span class="fc" id="L440">			StringTokenizer stu = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">			while (stu.hasMoreTokens())</span>
+			{
+<span class="fc" id="L443">				int groupId = Tools.getIntValue(stu.nextToken(), -1);</span>
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
+				{
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">					if (andCriteria == null) andCriteria = DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId);</span>
+<span class="nc" id="L447">					else andCriteria.addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId));</span>
+				}
+<span class="fc" id="L449">			}</span>
+<span class="fc bfc" id="L450" title="All 2 branches covered.">			DatabaseCriteria orCriteria = (andCriteria != null ? or(isEmpty(FieldEnum.PASSWORD_PROTECTED), andCriteria) : isEmpty(FieldEnum.PASSWORD_PROTECTED));</span>
+			// orCriteria.addCriteria(andCriteria);
+<span class="fc" id="L452">			newsQuery.addCriteria(orCriteria);</span>
+		}
+<span class="fc" id="L454">	}</span>
+
+	private void addGroups()
+	{
+<span class="pc bpc" id="L458" title="3 of 4 branches missed.">		if (groupIds == null &amp;&amp; doc != null) {</span>
+<span class="nc" id="L459">			GroupDetails group = doc.getGroup();</span>
+<span class="nc" id="L460">			groupIds = new int[] {</span>
+<span class="nc" id="L461">					group.getGroupId()</span>
+			};
+		}
+
+<span class="fc" id="L465">		List&lt;Integer&gt; defaultDocs = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">		if (groupIds != null)</span>
+		{
+<span class="fc" id="L469">			groupIdsExpanded = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L470">			GroupsDB gdb = GroupsDB.getInstance();</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">			for (Integer groupId : groupIds)</span>
+			{
+<span class="fc" id="L473">				groupIdsExpanded.add(groupId);</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">				if (alsoSubGroups)</span>
+				{
+<span class="nc" id="L476">					List&lt;GroupDetails&gt; groupList = gdb.getGroupsTree(groupId, false, false);</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">					for (GroupDetails g : groupList)</span>
+					{
+<span class="nc" id="L479">						groupIdsExpanded.add(g.getGroupId());</span>
+<span class="nc" id="L480">						defaultDocs.add(g.getDefaultDocId());</span>
+<span class="nc" id="L481">					}</span>
+				}
+			}
+<span class="fc" id="L484">			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, groupIdsExpanded));</span>
+		}
+
+<span class="pc bpc" id="L487" title="3 of 4 branches missed.">		if (removeDefaultDocs &amp;&amp; defaultDocs.size() &gt; 0)</span>
+		{
+<span class="nc" id="L489">			newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, defaultDocs));</span>
+		}
+<span class="fc" id="L491">	}</span>
+
+	private Optional&lt;PerexGroupBean&gt; getPerexGroup(String title) {
+<span class="nc" id="L494">		List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups();</span>
+<span class="nc" id="L495">		Optional&lt;PerexGroupBean&gt; result = perexGroups</span>
+<span class="nc" id="L496">				.stream()</span>
+<span class="nc" id="L497">				.filter(group -&gt; {</span>
+<span class="nc" id="L498">					String perexGroupName = DB.internationalToEnglish(group.getPerexGroupName()).trim();</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">					if (perexGroupName.contains(&quot;|&quot;)) {</span>
+<span class="nc" id="L500">						perexGroupName = perexGroupName.substring(0, perexGroupName.indexOf(&quot;|&quot;)).trim();</span>
+					}
+<span class="nc" id="L502">					return perexGroupName.equalsIgnoreCase(DB.internationalToEnglish(title));</span>
+				})
+<span class="nc" id="L504">				.findFirst();</span>
+
+<span class="nc" id="L506">		return result;</span>
+	}
+
+	private void addPerexGroups()
+	{
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(tag)) {</span>
+			try {
+<span class="nc" id="L513">				tag = URLDecoder.decode(tag, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L514">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L515">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L516">			}</span>
+
+<span class="nc" id="L518">			Optional&lt;PerexGroupBean&gt; perexGroupOptional = getPerexGroup(&quot;#&quot; + tag);</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">			if (perexGroupOptional.isPresent()) {</span>
+<span class="nc" id="L520">				int perexGroupId = perexGroupOptional.get().getPerexGroupId();</span>
+<span class="nc" id="L521">				Logger.debug(NewsActionBean.class, &quot;&quot; + perexGroupId);</span>
+<span class="nc" id="L522">				newsQuery.addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP, perexGroupId));</span>
+			}
+		}
+
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(author)) {</span>
+			try {
+<span class="nc" id="L528">				author = URLDecoder.decode(author, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L529">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L530">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L531">			}</span>
+
+<span class="nc" id="L533">			Optional&lt;PerexGroupBean&gt; perexGroupOptional = getPerexGroup(&quot;@&quot; + author);</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">			if (perexGroupOptional.isPresent()) {</span>
+<span class="nc" id="L535">				int perexGroupId = perexGroupOptional.get().getPerexGroupId();</span>
+<span class="nc" id="L536">				Logger.debug(NewsActionBean.class, &quot;&quot; + perexGroupId);</span>
+<span class="nc" id="L537">				newsQuery.addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP, perexGroupId));</span>
+			}
+		}
+
+		// setne perexgroupy z requestu
+<span class="pc bpc" id="L542" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(&quot;requestPerexGroupsName&quot;)) {</span>
+<span class="fc" id="L543">			String[] tmpPerexGroups = getRequest().getParameterValues(requestPerexGroupsName);</span>
+<span class="pc bpc" id="L544" title="1 of 2 branches missed.">			if(tmpPerexGroups != null) {</span>
+<span class="nc" id="L545">				int[] perexGroups = Arrays.asList(tmpPerexGroups).stream().mapToInt(Integer::parseInt).toArray();</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">				if(perexGroups.length &gt; 0) {</span>
+<span class="nc" id="L547">					perexGroup = perexGroups;</span>
+				}
+			}
+		}
+
+
+<span class="pc bpc" id="L553" title="3 of 4 branches missed.">		if (perexGroup!=null&amp;&amp; perexGroup.length&gt;0)</span>
+		{
+<span class="nc" id="L555">			DatabaseCriteria orPerexGroups = null;</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">			for (int i=0;i&lt;perexGroup.length;i++)</span>
+			{
+<span class="nc bnc" id="L558" title="All 2 branches missed.">				if (orPerexGroups==null)</span>
+				{
+<span class="nc" id="L560">					orPerexGroups = DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP, perexGroup[i]);</span>
+				}
+				else
+				{
+<span class="nc" id="L564">					orPerexGroups = DatabaseCriteria.or(orPerexGroups, DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP, perexGroup[i]));</span>
+				}
+
+			}
+<span class="nc" id="L568">			newsQuery.addCriteria(orPerexGroups);</span>
+		}
+<span class="pc bpc" id="L570" title="3 of 4 branches missed.">		if (perexGroupNot!=null&amp;&amp; perexGroupNot.length&gt;0)</span>
+		{
+<span class="nc bnc" id="L572" title="All 2 branches missed.">			for (int i=0;i&lt;perexGroupNot.length;i++)</span>
+			{
+<span class="nc" id="L574">				newsQuery.addCriteria(</span>
+<span class="nc" id="L575">						DatabaseCriteria.or(</span>
+<span class="nc" id="L576">								DatabaseCriteria.isNull(FieldEnum.PEREX_GROUP),</span>
+<span class="nc" id="L577">								DatabaseCriteria.not(</span>
+<span class="nc" id="L578">										DatabaseCriteria.or(</span>
+<span class="nc" id="L579">												DatabaseCriteria.contains(FieldEnum.PEREX_GROUP, &quot;,&quot;+perexGroupNot[i]+&quot;,&quot;),</span>
+<span class="nc" id="L580">												DatabaseCriteria.startsWith(FieldEnum.PEREX_GROUP, perexGroupNot[i] + &quot;,%&quot;),</span>
+<span class="nc" id="L581">												DatabaseCriteria.endsWith(FieldEnum.PEREX_GROUP, &quot;%,&quot; + perexGroupNot[i]),</span>
+<span class="nc" id="L582">												DatabaseCriteria.contains(FieldEnum.PEREX_GROUP, &quot;%,&quot; + perexGroupNot[i] + &quot;,%&quot;)</span>
+										)
+								)
+
+						)
+				);
+
+			}
+		}
+<span class="fc" id="L591">	}</span>
+
+
+	private void addPerexNotRequired()
+	{
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">		if (!perexNotRequired)</span>
+		{
+<span class="fc" id="L598">			newsQuery.addCriteria(DatabaseCriteria.isNotEmptyText(FieldEnum.HTML_DATA));</span>
+		}
+<span class="fc" id="L600">	}</span>
+
+	private void addPublishType() {
+		// typ noviniek
+<span class="pc bpc" id="L604" title="4 of 5 branches missed.">		switch (publishType)</span>
+		{
+			case NEW:
+<span class="fc" id="L607">				newsQuery.addCriteria(</span>
+<span class="fc" id="L608">						and(</span>
+<span class="fc" id="L609">								or(</span>
+<span class="fc" id="L610">										isNull(PUBLISH_START),</span>
+<span class="fc" id="L611">										lessEqual(PUBLISH_START, new Timestamp(Tools.getNow()))</span>
+								),
+<span class="fc" id="L613">								or(</span>
+<span class="fc" id="L614">										isNull(PUBLISH_END),</span>
+<span class="fc" id="L615">										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))</span>
+								)
+						)
+				);
+<span class="fc" id="L619">				break;</span>
+			case VALID:
+<span class="nc" id="L621">				newsQuery.addCriteria(</span>
+<span class="nc" id="L622">						and(</span>
+<span class="nc" id="L623">								and(</span>
+<span class="nc" id="L624">										isNotNull(PUBLISH_START),</span>
+<span class="nc" id="L625">										lessEqual(PUBLISH_START, new Timestamp(Tools.getNow()))</span>
+								),
+<span class="nc" id="L627">								or(</span>
+<span class="nc" id="L628">										isNull(PUBLISH_END),</span>
+<span class="nc" id="L629">										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))</span>
+								)
+						)
+				);
+<span class="nc" id="L633">				break;</span>
+			case NEXT:
+<span class="nc" id="L635">				newsQuery.addCriteria(</span>
+<span class="nc" id="L636">						or(</span>
+<span class="nc" id="L637">								and(</span>
+<span class="nc" id="L638">										isNotNull(PUBLISH_END),</span>
+<span class="nc" id="L639">										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))</span>
+								),
+<span class="nc" id="L641">								and(</span>
+<span class="nc" id="L642">										isNull(PUBLISH_END),</span>
+<span class="nc" id="L643">										isNotNull(PUBLISH_START),</span>
+<span class="nc" id="L644">										greaterEqual(PUBLISH_START, new Timestamp(Tools.getNow()))</span>
+								)
+						)
+				);
+<span class="nc" id="L648">				break;</span>
+			case OLD:
+<span class="nc" id="L650">				newsQuery.addCriteria(</span>
+<span class="nc" id="L651">						and(</span>
+<span class="nc" id="L652">								isNotNull(PUBLISH_END),</span>
+<span class="nc" id="L653">								lessEqual(PUBLISH_END, new Timestamp(Tools.getNow()))</span>
+						)
+				);
+<span class="nc" id="L656">				break;</span>
+			default:
+		}
+<span class="fc" id="L659">	}</span>
+
+	private void addRequestCriteria()
+	{
+		/* Zoberieme Criteria ulozene v requeste (obdoba stareho whereSql) */
+<span class="fc" id="L664">		int hash = 0;</span>
+<span class="pc bpc" id="L665" title="1 of 2 branches missed.">		if (getRequest().getAttribute(REQUEST_CRITERIA_KEY + String.valueOf(hash)) != null)</span>
+		{
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L668">			List&lt;Criteria&gt; reqCriteria = (List&lt;Criteria&gt;) getRequest().getAttribute(REQUEST_CRITERIA_KEY + String.valueOf(hash));</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">			for (Criteria c : reqCriteria)</span>
+			{
+<span class="nc" id="L671">				newsQuery.addCriteria(c);</span>
+<span class="nc" id="L672">			}</span>
+<span class="nc" id="L673">			getRequest().removeAttribute(REQUEST_CRITERIA_KEY + String.valueOf(hash));</span>
+		}
+<span class="fc" id="L675">	}</span>
+
+	private void addOrder()
+	{
+<span class="pc bpc" id="L679" title="1 of 2 branches missed.">		if (order != null)</span>
+		{
+<span class="pc bpc" id="L681" title="1 of 2 branches missed.">			newsQuery.addOrder(order, ascending ? SortEnum.ASC : SortEnum.DESC);</span>
+		}
+		else
+		{
+<span class="nc" id="L685">			newsQuery.addOrder(OrderEnum.DATE, SortEnum.ASC);</span>
+		}
+<span class="fc" id="L687">	}</span>
+
+	private void cropPerex() {
+<span class="pc bpc" id="L690" title="5 of 6 branches missed.">		if (perexCrop &gt; 0 &amp;&amp; newsList != null &amp;&amp; newsList.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L692" title="All 2 branches missed.">			for (DocDetails d : newsList)</span>
+			{
+<span class="nc bnc" id="L694" title="All 4 branches missed.">				if (Tools.isNotEmpty(d.getHtmlData()) &amp;&amp; d.getHtmlData().length() &gt; perexCrop)</span>
+				{
+<span class="nc" id="L696">					d.setHtmlData(d.getHtmlData().substring(0, perexCrop - 3) + &quot;...&quot;);</span>
+				}
+<span class="nc" id="L698">			}</span>
+		}
+<span class="fc" id="L700">	}</span>
+
+	private void fillTemplate() {
+
+<span class="pc bpc" id="L704" title="1 of 2 branches missed.">		if (template != null)</span>
+		{
+<span class="fc" id="L706">			String templateText = template.getValue();</span>
+<span class="pc bpc" id="L707" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(templateText))</span>
+			{
+<span class="fc" id="L709">				VelocityEngine ve = new VelocityEngine();</span>
+
+//				ve.evaluate(vc, swOut, &quot;Generate comment&quot;, prop.getText(&quot;helpdesk.ticket.commentTemplate&quot;));
+<span class="fc" id="L712">				StringWriter swOut = new StringWriter();</span>
+<span class="fc" id="L713">				VelocityContext vc = new VelocityContext();</span>
+
+<span class="fc" id="L715">				Prop prop = Prop.getInstance(PageLng.getUserLng(getRequest()));</span>
+
+<span class="fc" id="L717">				vc.put(&quot;news&quot;, newsList);</span>
+<span class="fc" id="L718">				vc.put(&quot;actionBean&quot;, this);</span>
+<span class="fc" id="L719">				vc.put(&quot;context&quot;, this);</span>
+<span class="fc" id="L720">				vc.put(&quot;prop&quot;, prop);</span>
+<span class="fc" id="L721">				vc.put(&quot;Tools&quot;, Tools.class);</span>
+<span class="fc" id="L722">				vc.put(&quot;DocDB&quot;, sk.iway.iwcm.doc.DocDB.class);</span>
+<span class="fc" id="L723">				vc.put(&quot;GroupsDB&quot;, sk.iway.iwcm.doc.GroupsDB.class);</span>
+<span class="fc" id="L724">				vc.put(&quot;MediaDB&quot;, sk.iway.spirit.MediaDB.class);</span>
+<span class="fc" id="L725">				vc.put(&quot;pageParams&quot;, new PageParams(getRequest()));</span>
+<span class="fc" id="L726">				vc.put(&quot;dateTool&quot;, new DateTool());</span>
+
+<span class="pc bpc" id="L728" title="3 of 4 branches missed.">				if (contextClasses!=null &amp;&amp; contextClasses.length&gt;0)</span>
+				{
+<span class="nc bnc" id="L730" title="All 2 branches missed.">					for (String clazzName : Tools.getTokens(String.join(&quot;+&quot;, contextClasses), &quot;,;+|&quot;))</span>
+					{
+						//uz pridavame implicitne
+<span class="nc bnc" id="L733" title="All 2 branches missed.">						if (&quot;sk.iway.iwcm.doc.DocDB&quot;.equals(clazzName)) continue;</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">						if (&quot;sk.iway.iwcm.doc.GroupsDB&quot;.equals(clazzName)) continue;</span>
+
+						try
+						{
+<span class="nc" id="L738">							Class&lt;?&gt; clazz = Class.forName(clazzName);</span>
+<span class="nc bnc" id="L739" title="All 2 branches missed.">							if (!vc.containsKey(clazz.getSimpleName()))</span>
+							{
+<span class="nc" id="L741">								vc.put(clazz.getSimpleName(), clazz);</span>
+							}
+							else
+							{
+<span class="nc" id="L745">								Logger.debug(getClass(), &quot;FillTeplate classObject with name &quot;+clazzName+&quot; already contained.&quot;);</span>
+							}
+						}
+<span class="nc" id="L748">						catch (ClassNotFoundException e)</span>
+						{
+<span class="nc" id="L750">							Logger.debug(getClass(), &quot;FillTeplate classObject to context failed, class &quot;+clazzName+&quot; not found.&quot;);</span>
+<span class="nc" id="L751">						}</span>
+					}
+				}
+
+				try
+				{
+//					VelocityEngine ve = new VelocityEngine();
+<span class="fc" id="L758">					ve.init();</span>
+<span class="fc" id="L759">					ve.evaluate(vc, swOut, &quot;Template evaluate&quot;, VelocityTools.upgradeTemplate(templateText));</span>
+				}
+<span class="nc" id="L761">				catch (Exception e)</span>
+				{
+<span class="nc" id="L763">					swOut.append(WriteTag.getErrorMessage(prop, &quot;writetag.error&quot;, &quot;news&quot;));</span>
+
+<span class="nc" id="L765">					StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L766">					e.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L768">					user = getCurrentUser();</span>
+<span class="nc bnc" id="L769" title="All 6 branches missed.">					if (user != null &amp;&amp; user.isAdmin() &amp;&amp; getRequest().getAttribute(&quot;writeTagDontShowError&quot;)==null)</span>
+					{
+<span class="nc" id="L771">						swOut.append(&quot;&lt;div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'&gt;&quot;+ ResponseUtils.filter(e.getMessage())+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L772">						String stackTrace = ResponseUtils.filter(sw.toString());</span>
+<span class="nc" id="L773">						swOut.append(stackTrace + &quot;&lt;/div&gt;&quot;);</span>
+					}
+
+<span class="nc" id="L776">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L777">				}</span>
+
+<span class="fc" id="L779">				htmlOut = swOut.toString();</span>
+			}
+
+<span class="fc" id="L782">			String pagingText = template.getPagingValue();</span>
+<span class="pc bpc" id="L783" title="3 of 4 branches missed.">			if (isPaging() &amp;&amp; Tools.isNotEmpty(pagingText))</span>
+			{
+<span class="nc" id="L785">				String pagingHtml = getPaging(pagingText);</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">				if (Tools.isNotEmpty(pagingHtml))</span>
+				{
+<span class="nc bnc" id="L788" title="All 4 branches missed.">					if (template.getPagingPosition() == PagingPosition.BEFORE || template.getPagingPosition() == PagingPosition.BEFORE_AND_AFTER) {</span>
+<span class="nc" id="L789">						htmlOut = pagingHtml + htmlOut;</span>
+					}
+
+<span class="nc bnc" id="L792" title="All 4 branches missed.">					if (template.getPagingPosition() == PagingPosition.AFTER || template.getPagingPosition() == PagingPosition.BEFORE_AND_AFTER) {</span>
+<span class="nc" id="L793">						htmlOut += pagingHtml;</span>
+					}
+				}
+			}
+		}
+<span class="fc" id="L798">	}</span>
+
+	private String getPaging(String pagingText) {
+<span class="nc" id="L801">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L802">		String result = &quot;&quot;;</span>
+<span class="nc" id="L803">		Map&lt;String, Object&gt; paginatorMap = getPaginator(prop);</span>
+<span class="nc bnc" id="L804" title="All 2 branches missed.">		if (paginatorMap != null)</span>
+		{
+<span class="nc" id="L806">			StringWriter swOut = new StringWriter();</span>
+<span class="nc" id="L807">			VelocityContext vc = new VelocityContext();</span>
+
+<span class="nc" id="L809">			vc.put(&quot;firstPage&quot;, paginatorMap.get(&quot;first&quot;));</span>
+<span class="nc" id="L810">			vc.put(&quot;prevPage&quot;, paginatorMap.get(&quot;prev&quot;));</span>
+<span class="nc" id="L811">			vc.put(&quot;nextPage&quot;, paginatorMap.get(&quot;next&quot;));</span>
+<span class="nc" id="L812">			vc.put(&quot;lastPage&quot;, paginatorMap.get(&quot;last&quot;));</span>
+<span class="nc" id="L813">			vc.put(&quot;pages&quot;, paginatorMap.get(&quot;pages&quot;));</span>
+<span class="nc" id="L814">			vc.put(&quot;pagesAll&quot;, paginatorMap.get(&quot;pagesAll&quot;));</span>
+<span class="nc" id="L815">			vc.put(&quot;prop&quot;, prop);</span>
+<span class="nc" id="L816">			vc.put(&quot;dateTool&quot;, new DateTool());</span>
+<span class="nc" id="L817">			vc.put(&quot;totalCount&quot;, paginatorMap.get(&quot;totalCount&quot;));</span>
+<span class="nc" id="L818">			vc.put(&quot;totalPages&quot;, paginatorMap.get(&quot;totalPages&quot;));</span>
+
+			//ak tam je len jedna stranka nema zmysel zobrazit paginator, vratme prazdne
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L822">			List&lt;PaginationInfo&gt; pagesAll = (List&lt;PaginationInfo&gt;)paginatorMap.get(&quot;pagesAll&quot;);</span>
+<span class="nc bnc" id="L823" title="All 4 branches missed.">			if (pagesAll == null || pagesAll.isEmpty()) return &quot;&quot;;</span>
+
+			try
+			{
+<span class="nc" id="L827">				VelocityEngine ve = new VelocityEngine();</span>
+//				VelocityEngine ve = new VelocityEngine();
+<span class="nc" id="L829">				ve.init();</span>
+<span class="nc" id="L830">				ve.evaluate(vc, swOut, &quot;Paging evaluate&quot;, VelocityTools.upgradeTemplate(pagingText));</span>
+			}
+<span class="nc" id="L832">			catch (Exception e)</span>
+			{
+<span class="nc" id="L834">				swOut.append(WriteTag.getErrorMessage(prop, &quot;writetag.error&quot;, &quot;news&quot;));</span>
+
+<span class="nc" id="L836">				StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L837">				e.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L839">				user = getCurrentUser();</span>
+<span class="nc bnc" id="L840" title="All 6 branches missed.">				if (user != null &amp;&amp; user.isAdmin() &amp;&amp; getRequest().getAttribute(&quot;writeTagDontShowError&quot;)==null)</span>
+				{
+<span class="nc" id="L842">					swOut.append(&quot;&lt;div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'&gt;&quot;+ ResponseUtils.filter(e.getMessage())+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L843">					String stackTrace = ResponseUtils.filter(sw.toString());</span>
+<span class="nc" id="L844">					swOut.append(stackTrace + &quot;&lt;/div&gt;&quot;);</span>
+				}
+
+<span class="nc" id="L847">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L848">			}</span>
+
+<span class="nc" id="L850">			result = swOut.toString();</span>
+		}
+
+<span class="nc" id="L853">		return result;</span>
+	}
+
+	public Resolution loadTemplate()
+	{
+<span class="nc" id="L858">		JSONObject result = new JSONObject();</span>
+<span class="nc bnc" id="L859" title="All 2 branches missed.">		if (template != null)</span>
+		{
+<span class="nc" id="L861">			JsonObjectGenerator jog = new JsonObjectGenerator();</span>
+<span class="nc" id="L862">			jog.setObjectFormaterFactory(new ObjectFormaterFactory());</span>
+<span class="nc" id="L863">			jog.addObject(result, &quot;template&quot;, template, &quot;key,keyShort,pagingKey,image,value,pagingValue,pagingPosition&quot;);</span>
+		}
+<span class="nc" id="L865">		return new StreamingResolution(&quot;application/json&quot;, new StringReader(result.toString()));</span>
+	}
+
+	public Resolution loadTemplates()
+	{
+<span class="nc" id="L870">		JSONObject result = new JSONObject();</span>
+<span class="nc" id="L871">		List&lt;NewsTemplateBean&gt; templates = getTemplates();</span>
+
+<span class="nc" id="L873">		JsonObjectGenerator jog = new JsonObjectGenerator();</span>
+<span class="nc" id="L874">		jog.setObjectFormaterFactory(new ObjectFormaterFactory());</span>
+
+<span class="nc" id="L876">		jog.addArrayOfObjects(result, &quot;templates&quot;, templates, &quot;image,key,keyShort,pagingKey,pagingValue,selected,value&quot;);</span>
+
+<span class="nc" id="L878">		return new StreamingResolution(&quot;application/json&quot;, new StringReader(result.toString()));</span>
+	}
+
+	public Resolution deleteTemplate()
+	{
+<span class="nc bnc" id="L883" title="All 2 branches missed.">		if (templateUpdate != null)</span>
+		{
+<span class="nc" id="L885">			templateUpdate.delete();</span>
+		}
+
+<span class="nc" id="L888">		return loadTemplates();</span>
+	}
+
+	public Resolution saveTemplate()
+	{
+<span class="nc bnc" id="L893" title="All 2 branches missed.">		if (templateUpdate != null)</span>
+		{
+<span class="nc" id="L895">			String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+<span class="nc bnc" id="L896" title="All 4 branches missed.">			if (Tools.isNotEmpty(domainAlias) &amp;&amp; templateUpdate.getKeyShort().indexOf(domainAlias)==-1)</span>
+			{
+<span class="nc" id="L898">				templateUpdate.setKeyShort(templateUpdate.getKeyShort()+&quot; (&quot;+domainAlias+&quot;)&quot;);</span>
+			}
+
+<span class="nc" id="L901">			templateUpdate.fillTemplateBean();</span>
+<span class="nc" id="L902">			templateUpdate.save();</span>
+		}
+<span class="nc" id="L904">		return loadTemplates();</span>
+	}
+
+	public Resolution setTags() {
+<span class="nc" id="L908">		RequestHelper requestHelper = new RequestHelper(getRequest());</span>
+<span class="nc" id="L909">		String[] perexGroups = requestHelper.getDocument().getPerexGroupNames();</span>
+<span class="nc" id="L910">		tags = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L912" title="All 2 branches missed.">		for (String group : perexGroups) {</span>
+<span class="nc bnc" id="L913" title="All 2 branches missed.">			if (group.startsWith(&quot;#&quot;)) {</span>
+<span class="nc" id="L914">				LabelValueDetails lvd = new LabelValueDetails();</span>
+<span class="nc" id="L915">				lvd.setLabel(group.substring(1));</span>
+<span class="nc" id="L916">				lvd.setValue(DB.internationalToEnglish(group.substring(1)));</span>
+<span class="nc" id="L917">				tags.add(lvd);</span>
+			}
+		}
+
+<span class="nc" id="L921">		return new ForwardResolution(WebJETActionBean.RESOLUTION_CONTINUE);</span>
+	}
+
+	public Resolution setAuthors() {
+<span class="nc" id="L925">		RequestHelper requestHelper = new RequestHelper(getRequest());</span>
+<span class="nc" id="L926">		String[] perexGroups = requestHelper.getDocument().getPerexGroupNames();</span>
+<span class="nc" id="L927">		authors = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L929" title="All 2 branches missed.">		for (String group : perexGroups) {</span>
+<span class="nc bnc" id="L930" title="All 2 branches missed.">			if (group.startsWith(&quot;@&quot;)) {</span>
+<span class="nc" id="L931">				LabelValueDetails lvd = new LabelValueDetails();</span>
+<span class="nc" id="L932">				lvd.setLabel(group.substring(1));</span>
+<span class="nc" id="L933">				lvd.setValue(DB.internationalToEnglish(group.substring(1)));</span>
+<span class="nc" id="L934">				authors.add(lvd);</span>
+			}
+		}
+
+<span class="nc" id="L938">		return new ForwardResolution(WebJETActionBean.RESOLUTION_CONTINUE);</span>
+	}
+
+	@SuppressWarnings(&quot;java:S1452&quot;)
+	public List&lt;? extends DocDetails&gt; getNewsList()
+	{
+<span class="nc" id="L944">		return newsList;</span>
+	}
+
+	private static final String REQUEST_CRITERIA_KEY = &quot;NewsActionBean-Criteria&quot;;
+
+	/**
+	 * Umoznuje pridat dalsie kriteria, napr v JSP - obdoba whereSql v
+	 * predoslych newskach
+	 *
+	 * @param request
+	 * @param criteria
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void addCriteria(HttpServletRequest request, Criteria... criteria)
+	{
+<span class="nc" id="L959">		int hash = 0;</span>
+<span class="nc" id="L960">		List&lt;Criteria&gt; cr = null;</span>
+<span class="nc bnc" id="L961" title="All 2 branches missed.">		if (request.getAttribute(REQUEST_CRITERIA_KEY + String.valueOf(hash)) != null)</span>
+		{
+<span class="nc" id="L963">			cr = (List&lt;Criteria&gt;) request.getAttribute(REQUEST_CRITERIA_KEY);</span>
+		}
+		else
+		{
+<span class="nc" id="L967">			cr = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L968">			request.setAttribute(REQUEST_CRITERIA_KEY + String.valueOf(hash), cr);</span>
+		}
+<span class="nc bnc" id="L970" title="All 2 branches missed.">		if (criteria != null)</span>
+		{
+<span class="nc" id="L972">			cr.addAll(Arrays.asList(criteria));</span>
+		}
+<span class="nc" id="L974">	}</span>
+
+	private Criteria parseCriteria(String property, String operator, List&lt;String&gt; values)
+	{
+<span class="nc" id="L978">		FieldEnum field = FieldEnum.getField(property);</span>
+<span class="nc bnc" id="L979" title="All 2 branches missed.">		if (field != null)</span>
+		{
+<span class="nc" id="L981">			CriteriaType criteriaType = null;</span>
+
+<span class="nc bnc" id="L983" title="All 2 branches missed.">			if (operator.equalsIgnoreCase(&quot;eq&quot;)) criteriaType = CriteriaType.EQUALS;</span>
+<span class="nc bnc" id="L984" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;gt&quot;)) criteriaType = CriteriaType.GREATER_THAN;</span>
+<span class="nc bnc" id="L985" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;ge&quot;)) criteriaType = CriteriaType.GREATER_THAN_EQUAL;</span>
+<span class="nc bnc" id="L986" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;le&quot;)) criteriaType = CriteriaType.LESS_THAN_EQUAL;</span>
+<span class="nc bnc" id="L987" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;lt&quot;)) criteriaType = CriteriaType.LESS_THAN;</span>
+<span class="nc bnc" id="L988" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;sw&quot;)) criteriaType = CriteriaType.LIKE;</span>
+<span class="nc bnc" id="L989" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;ew&quot;)) criteriaType = CriteriaType.LIKE;</span>
+<span class="nc bnc" id="L990" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;co&quot;)) criteriaType = CriteriaType.LIKE;</span>
+<span class="nc bnc" id="L991" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;swciai&quot;)) criteriaType = CriteriaType.LIKE;</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;ewciai&quot;)) criteriaType = CriteriaType.LIKE;</span>
+<span class="nc bnc" id="L993" title="All 2 branches missed.">			else if (operator.equalsIgnoreCase(&quot;cociai&quot;)) criteriaType = CriteriaType.LIKE;</span>
+
+<span class="nc bnc" id="L995" title="All 2 branches missed.">			if (criteriaType != null)</span>
+			{
+<span class="nc bnc" id="L997" title="All 2 branches missed.">				if (values.size() &gt; 1)</span>
+				{
+<span class="nc" id="L999">					DatabaseCriteria result = null;</span>
+<span class="nc bnc" id="L1000" title="All 2 branches missed.">					for (String val : values)</span>
+					{
+<span class="nc" id="L1002">						val = addLikeAtrs(operator, val);</span>
+
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">						if (result == null) result = new DatabaseCriteria(criteriaType, field, castObject(field, val), false);</span>
+<span class="nc" id="L1005">						else result = DatabaseCriteria.or(result, new DatabaseCriteria(criteriaType, field, castObject(field, val), false));</span>
+<span class="nc" id="L1006">					}</span>
+<span class="nc" id="L1007">					return result;</span>
+				}
+				else
+				{
+<span class="nc" id="L1011">					return new DatabaseCriteria(criteriaType, field, castObject(field, addLikeAtrs(operator, values.get(0))), false);</span>
+				}
+			}
+<span class="nc" id="L1014">		}</span>
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">		else if (property.startsWith(&quot;atr:&quot;))</span>
+		{
+			// vyhladanie podla nazvu atributu
+<span class="nc" id="L1018">			String atributeName = property.substring(&quot;atr:&quot;.length());</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">			if (operator.equalsIgnoreCase(&quot;eq&quot;))</span>
+			{
+<span class="nc bnc" id="L1021" title="All 2 branches missed.">				if (values.size() &gt; 1)</span>
+				{
+<span class="nc" id="L1023">					DatabaseCriteria result = null;</span>
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">					for (String val : values)</span>
+					{
+<span class="nc bnc" id="L1026" title="All 2 branches missed.">						if (result == null) result = DatabaseCriteria.Atribute.equal(atributeName, val);</span>
+<span class="nc" id="L1027">						else result = DatabaseCriteria.or(result, DatabaseCriteria.Atribute.equal(atributeName, val));</span>
+<span class="nc" id="L1028">					}</span>
+<span class="nc" id="L1029">					return result;</span>
+				}
+				else
+				{
+<span class="nc" id="L1033">					return DatabaseCriteria.Atribute.equal(atributeName, values.get(0));// (field,</span>
+				}
+			}
+<span class="nc" id="L1036">		}</span>
+<span class="nc bnc" id="L1037" title="All 2 branches missed.">		else if (property.startsWith(&quot;atrId:&quot;))</span>
+		{
+			// vyhladanie podla ID atributu
+<span class="nc" id="L1040">			int atributeId = Tools.getIntValue(property.substring(&quot;atrId:&quot;.length()), 0);</span>
+<span class="nc bnc" id="L1041" title="All 4 branches missed.">			if (atributeId &gt; 0 &amp;&amp; operator.equalsIgnoreCase(&quot;eq&quot;))</span>
+			{
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">				if (values.size() &gt; 1)</span>
+				{
+<span class="nc" id="L1045">					DatabaseCriteria result = null;</span>
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">					for (String val : values)</span>
+					{
+<span class="nc bnc" id="L1048" title="All 2 branches missed.">						if (result == null) result = DatabaseCriteria.Atribute.equal(atributeId, val);</span>
+<span class="nc" id="L1049">						else result = DatabaseCriteria.or(result, DatabaseCriteria.Atribute.equal(atributeId, val));</span>
+<span class="nc" id="L1050">					}</span>
+<span class="nc" id="L1051">					return result;</span>
+				}
+				else
+				{
+<span class="nc" id="L1055">					return DatabaseCriteria.Atribute.equal(atributeId, values.get(0));</span>
+				}
+			}
+		}
+<span class="nc" id="L1059">		return null;</span>
+	}
+
+	private String addLikeAtrs(String operator, String value)
+	{
+<span class="nc bnc" id="L1064" title="All 2 branches missed.">		if (operator.equalsIgnoreCase(&quot;sw&quot;)) value = value+&quot;%&quot;;</span>
+<span class="nc bnc" id="L1065" title="All 2 branches missed.">		else if (operator.equalsIgnoreCase(&quot;ew&quot;)) value = &quot;%&quot;+value;</span>
+<span class="nc bnc" id="L1066" title="All 2 branches missed.">		else if (operator.equalsIgnoreCase(&quot;co&quot;)) value = &quot;%&quot;+value+&quot;%&quot;;</span>
+			//pouziva sa napr pri stlpci documents.data_asc v Oracle kde nefunguje CI_AI pre CLOB objekty
+<span class="nc bnc" id="L1068" title="All 2 branches missed.">		else if (operator.equalsIgnoreCase(&quot;swciai&quot;)) value = DB.internationalToEnglish(value).toLowerCase()+&quot;%&quot;;</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		else if (operator.equalsIgnoreCase(&quot;ewciai&quot;)) value = &quot;%&quot;+ DB.internationalToEnglish(value).toLowerCase();</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">		else if (operator.equalsIgnoreCase(&quot;cociai&quot;)) value = &quot;%&quot;+ DB.internationalToEnglish(value).toLowerCase()+&quot;%&quot;;</span>
+
+<span class="nc" id="L1072">		return value;</span>
+	}
+
+	private Object castObject(FieldEnum field, String value)
+	{
+		try
+		{
+<span class="nc bnc" id="L1079" title="All 2 branches missed.">			if (&quot;Boolean&quot;.equals(field.getFieldTypeString()))</span>
+			{
+<span class="nc bnc" id="L1081" title="All 2 branches missed.">				if (&quot;true&quot;.equals(value)) return Boolean.TRUE;</span>
+<span class="nc" id="L1082">				return Boolean.FALSE;</span>
+			}
+<span class="nc bnc" id="L1084" title="All 2 branches missed.">			else if (&quot;Integer&quot;.equals(field.getFieldTypeString()))</span>
+			{
+<span class="nc" id="L1086">				return Integer.parseInt(value);</span>
+			}
+<span class="nc bnc" id="L1088" title="All 2 branches missed.">			else if (&quot;Date&quot;.equals(field.getFieldTypeString()))</span>
+			{
+<span class="nc" id="L1090">				return new Date(DB.getTimestamp(value));</span>
+			}
+		}
+<span class="nc" id="L1093">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1095">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1096">		}</span>
+
+<span class="nc" id="L1098">		return value;</span>
+	}
+
+	public void setPerexGroup(int[] perexGroup)
+	{
+<span class="fc" id="L1103">		this.perexGroup = perexGroup;</span>
+<span class="fc" id="L1104">	}</span>
+
+	public void setAscending(boolean ascending)
+	{
+<span class="fc" id="L1108">		this.ascending = ascending;</span>
+<span class="fc" id="L1109">	}</span>
+
+	public void setPaging(boolean paging)
+	{
+<span class="fc" id="L1113">		this.paging = paging;</span>
+<span class="fc" id="L1114">	}</span>
+
+	public void setPageSize(int pageSize)
+	{
+<span class="fc" id="L1118">		this.pageSize = pageSize;</span>
+<span class="fc" id="L1119">	}</span>
+
+	public void setNewsName(String newsName)
+	{
+<span class="nc" id="L1123">		this.newsName = newsName;</span>
+<span class="nc" id="L1124">	}</span>
+
+	public void setPerex(boolean perex)
+	{
+<span class="nc" id="L1128">		this.perex = perex;</span>
+<span class="nc" id="L1129">	}</span>
+
+	public void setDate(boolean date)
+	{
+<span class="nc" id="L1133">		this.date = date;</span>
+<span class="nc" id="L1134">	}</span>
+
+	public void setPlace(boolean place)
+	{
+<span class="nc" id="L1138">		this.place = place;</span>
+<span class="nc" id="L1139">	}</span>
+
+	public void setGroupIds(int[] groupIds)
+	{
+<span class="fc" id="L1143">		this.groupIds = groupIds;</span>
+<span class="fc" id="L1144">	}</span>
+
+	public void setNewsQuery(NewsQuery newsQuery)
+	{
+<span class="nc" id="L1148">		this.newsQuery = newsQuery;</span>
+<span class="nc" id="L1149">	}</span>
+
+	public void setSearchAlsoProtectedPages(boolean searchAlsoProtectedPages)
+	{
+<span class="nc" id="L1153">		this.searchAlsoProtectedPages = searchAlsoProtectedPages;</span>
+<span class="nc" id="L1154">	}</span>
+
+	public boolean isLoadData()
+	{
+<span class="fc" id="L1158">		return loadData;</span>
+	}
+
+	public void setLoadData(boolean loadData)
+	{
+<span class="fc" id="L1163">		this.loadData = loadData;</span>
+<span class="fc" id="L1164">	}</span>
+
+	public boolean isPaging()
+	{
+<span class="fc" id="L1168">		return paging;</span>
+	}
+
+	public boolean isPerex()
+	{
+<span class="nc" id="L1173">		return perex;</span>
+	}
+
+	public int getPage()
+	{
+<span class="nc" id="L1178">		return page;</span>
+	}
+
+	public void setPage(int page)
+	{
+<span class="nc" id="L1183">		this.page = page;</span>
+<span class="nc" id="L1184">	}</span>
+
+	public boolean isDate()
+	{
+<span class="nc" id="L1188">		return date;</span>
+	}
+
+	public boolean isPlace()
+	{
+<span class="nc" id="L1193">		return place;</span>
+	}
+
+	public String getRequestPerexGroupsName() {
+<span class="nc" id="L1197">		return requestPerexGroupsName;</span>
+	}
+
+	public void setRequestPerexGroupsName(String requestPerexGroupsName) {
+<span class="nc" id="L1201">		this.requestPerexGroupsName = requestPerexGroupsName;</span>
+<span class="nc" id="L1202">	}</span>
+
+	public Map&lt;String, Object&gt; getPaginator(Prop prop)
+	{
+<span class="nc bnc" id="L1206" title="All 2 branches missed.">		if (paginator == null)</span>
+		{
+<span class="nc" id="L1208">			String url = Tools.getBaseLink(getRequest(), new String[] { &quot;page&quot; });</span>
+<span class="nc" id="L1209">			int totalCount = newsQuery.getNewsCount();</span>
+<span class="nc bnc" id="L1210" title="All 2 branches missed.">			if (totalCount &gt; 0)</span>
+			{
+<span class="nc" id="L1212">				paginator = new HashMap&lt;&gt;();</span>
+
+				//totalPages = totalCount / pageSize + 1;
+<span class="nc" id="L1215">				int totalPages = (int)Math.ceil((double)totalCount / (double)pageSize); //NOSONAR</span>
+
+<span class="nc" id="L1217">				paginator.put(&quot;first&quot;, getFirst(prop, url));</span>
+<span class="nc" id="L1218">				paginator.put(&quot;prev&quot;, getPrev(prop, url));</span>
+<span class="nc" id="L1219">				paginator.put(&quot;next&quot;, getNext(prop, url, totalPages));</span>
+<span class="nc" id="L1220">				paginator.put(&quot;last&quot;, getLast(prop, url, totalPages));</span>
+<span class="nc" id="L1221">				paginator.put(&quot;totalPages&quot;, totalPages);</span>
+
+<span class="nc" id="L1223">				List&lt;PaginationInfo&gt; pages = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L1224">				List&lt;PaginationInfo&gt; pagesAll = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L1225">				boolean wasSkipped = false;</span>
+<span class="nc bnc" id="L1226" title="All 2 branches missed.">				for (int pageCnt = 1; pageCnt &lt;= totalPages; pageCnt++)</span>
+				{
+<span class="nc" id="L1228">					PaginationInfo pi = new PaginationInfo();</span>
+<span class="nc" id="L1229">					pi.setPageNumber(pageCnt);</span>
+<span class="nc" id="L1230">					pi.setUrl(Tools.addParameterToUrlNoAmp(url, &quot;page&quot;, String.valueOf(pageCnt)));</span>
+<span class="nc" id="L1231">					pi.setLabel(String.valueOf(pageCnt));</span>
+<span class="nc bnc" id="L1232" title="All 2 branches missed.">					if (pageCnt == 1) pi.setFirst(true);</span>
+<span class="nc bnc" id="L1233" title="All 2 branches missed.">					if (pageCnt == totalPages) pi.setLast(true);</span>
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">					if (pageCnt == page) pi.setActual(true);</span>
+
+<span class="nc" id="L1236">					pagesAll.add(pi);</span>
+
+<span class="nc bnc" id="L1238" title="All 12 branches missed.">					if (pageCnt&gt;2 &amp;&amp; pageCnt&lt;totalPages-2 &amp;&amp; ((pageCnt&lt;page &amp;&amp; page-pageCnt&gt;2) || (pageCnt&gt;page &amp;&amp; pageCnt-page&gt;2)) )</span>
+					{
+<span class="nc" id="L1240">						wasSkipped = true;</span>
+<span class="nc" id="L1241">						continue;</span>
+					}
+<span class="nc bnc" id="L1243" title="All 2 branches missed.">					if (wasSkipped)</span>
+					{
+<span class="nc" id="L1245">						wasSkipped=false;</span>
+<span class="nc" id="L1246">						PaginationInfo pi2 = new PaginationInfo();</span>
+<span class="nc" id="L1247">						pi2.setLabel(&quot;...&quot;);</span>
+<span class="nc" id="L1248">						pi2.setUrl(&quot;javascript:void(0);&quot;);</span>
+<span class="nc" id="L1249">						pages.add(pi2);</span>
+<span class="nc" id="L1250">						continue;</span>
+					}
+
+<span class="nc" id="L1253">					pages.add(pi);</span>
+				}
+
+<span class="nc" id="L1256">				paginator.put(&quot;pages&quot;, pages);</span>
+<span class="nc" id="L1257">				paginator.put(&quot;pagesAll&quot;, pagesAll);</span>
+<span class="nc" id="L1258">				paginator.put(&quot;totalCount&quot;, totalCount);</span>
+			}
+		}
+<span class="nc" id="L1261">		return paginator;</span>
+	}
+
+	private PaginationInfo getFirst(Prop prop, String url)
+	{
+<span class="nc" id="L1266">		PaginationInfo item = new PaginationInfo();</span>
+<span class="nc" id="L1267">		item.setLabel(prop.getText(&quot;components.menu.paging.firstPage&quot;));</span>
+<span class="nc" id="L1268">		item.setPageNumber(1);</span>
+<span class="nc" id="L1269">		item.setUrl(Tools.addParameterToUrlNoAmp(url, &quot;page&quot;, &quot;1&quot;));</span>
+<span class="nc bnc" id="L1270" title="All 2 branches missed.">		item.setActive(page &gt; 1);</span>
+
+<span class="nc" id="L1272">		return item;</span>
+	}
+
+	private PaginationInfo getPrev(Prop prop, String url)
+	{
+<span class="nc" id="L1277">		PaginationInfo item = new PaginationInfo();</span>
+<span class="nc bnc" id="L1278" title="All 2 branches missed.">		int pageNumber = page - 1 &gt; 0 ? page - 1 : 1;</span>
+
+<span class="nc" id="L1280">		item.setLabel(prop.getText(&quot;components.menu.paging.prevPage&quot;));</span>
+<span class="nc" id="L1281">		item.setPageNumber(pageNumber);</span>
+<span class="nc" id="L1282">		item.setUrl(Tools.addParameterToUrlNoAmp(url, &quot;page&quot;, String.valueOf(pageNumber)));</span>
+<span class="nc bnc" id="L1283" title="All 2 branches missed.">		item.setActive(page &gt; 1);</span>
+
+<span class="nc" id="L1285">		return item;</span>
+	}
+
+	private PaginationInfo getNext(Prop prop, String url, int totalPages)
+	{
+<span class="nc" id="L1290">		PaginationInfo item = new PaginationInfo();</span>
+<span class="nc bnc" id="L1291" title="All 2 branches missed.">		int pageNumber = page + 1 &lt; totalPages ? page + 1 : totalPages;</span>
+
+<span class="nc" id="L1293">		item.setLabel(prop.getText(&quot;components.menu.paging.nextPage&quot;));</span>
+<span class="nc" id="L1294">		item.setPageNumber(pageNumber);</span>
+<span class="nc" id="L1295">		item.setUrl(Tools.addParameterToUrlNoAmp(url, &quot;page&quot;, String.valueOf(pageNumber)));</span>
+<span class="nc bnc" id="L1296" title="All 2 branches missed.">		item.setActive(page &lt; totalPages);</span>
+
+<span class="nc" id="L1298">		return item;</span>
+	}
+
+	private PaginationInfo getLast(Prop prop, String url, int totalPages)
+	{
+<span class="nc" id="L1303">		PaginationInfo item = new PaginationInfo();</span>
+<span class="nc" id="L1304">		item.setLabel(prop.getText(&quot;components.menu.paging.lastPage&quot;));</span>
+<span class="nc" id="L1305">		item.setPageNumber(totalPages);</span>
+<span class="nc" id="L1306">		item.setUrl(Tools.addParameterToUrlNoAmp(url, &quot;page&quot;, String.valueOf(totalPages)));</span>
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">		item.setActive(page &lt; totalPages);</span>
+
+<span class="nc" id="L1309">		return item;</span>
+	}
+
+<span class="nc" id="L1312">	public static class PaginationInfo</span>
+	{
+		private String label;
+
+		private int pageNumber;
+
+		private String url;
+
+		private boolean active;
+
+		private boolean actual;
+
+		private boolean first;
+
+		private boolean last;
+
+		private String link;
+
+		public String getLabel()
+		{
+<span class="nc" id="L1332">			return label;</span>
+		}
+
+		public void setLabel(String label)
+		{
+<span class="nc" id="L1337">			this.label = label;</span>
+<span class="nc" id="L1338">		}</span>
+
+		public int getPageNumber()
+		{
+<span class="nc" id="L1342">			return pageNumber;</span>
+		}
+
+		public void setPageNumber(int pageNumber)
+		{
+<span class="nc" id="L1347">			this.pageNumber = pageNumber;</span>
+<span class="nc" id="L1348">		}</span>
+
+		public boolean isActive()
+		{
+<span class="nc" id="L1352">			return active;</span>
+		}
+
+		public void setActive(boolean active)
+		{
+<span class="nc" id="L1357">			this.active = active;</span>
+<span class="nc" id="L1358">		}</span>
+
+		public boolean isFirst()
+		{
+<span class="nc" id="L1362">			return first;</span>
+		}
+
+		public void setFirst(boolean first)
+		{
+<span class="nc" id="L1367">			this.first = first;</span>
+<span class="nc" id="L1368">		}</span>
+
+		public boolean isLast()
+		{
+<span class="nc" id="L1372">			return last;</span>
+		}
+
+		public void setLast(boolean last)
+		{
+<span class="nc" id="L1377">			this.last = last;</span>
+<span class="nc" id="L1378">		}</span>
+
+		public String getUrl()
+		{
+<span class="nc" id="L1382">			return url;</span>
+		}
+
+		public void setUrl(String url)
+		{
+<span class="nc" id="L1387">			this.url = url;</span>
+<span class="nc" id="L1388">		}</span>
+
+		public boolean isActual()
+		{
+<span class="nc" id="L1392">			return actual;</span>
+		}
+
+		public void setActual(boolean actual)
+		{
+<span class="nc" id="L1397">			this.actual = actual;</span>
+<span class="nc" id="L1398">		}</span>
+
+		public String getLink()
+		{
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">			if (link == null) {</span>
+<span class="nc" id="L1403">				link = &quot;&lt;a href=\&quot;&quot; + this.getUrl() + &quot;\&quot; class=\&quot;page-link\&quot;&gt;&quot; + this.getLabel() + &quot;&lt;/a&gt;&quot;;</span>
+			}
+<span class="nc" id="L1405">			return link;</span>
+		}
+
+		public void setLink(String link)
+		{
+<span class="nc" id="L1410">			this.link = link;</span>
+<span class="nc" id="L1411">		}</span>
+
+		public String getLi()
+		{
+<span class="nc" id="L1415">			StringBuilder li = new StringBuilder();</span>
+<span class="nc" id="L1416">			li.append(&quot;&lt;li&quot;);</span>
+<span class="nc" id="L1417">			li.append(getLiClass());</span>
+<span class="nc" id="L1418">			li.append(&quot;&gt;&quot;);</span>
+<span class="nc" id="L1419">			li.append(&quot;&lt;a href=\&quot;&quot;).append(this.getUrl()).append(&quot;\&quot; class=\&quot;page-link\&quot;&gt;&quot;).append(this.getLabel()).append(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L1420">			li.append(&quot;&lt;/li&gt;&quot;);</span>
+<span class="nc" id="L1421">			return li.toString();</span>
+		}
+
+		public String getLiClass()
+		{
+<span class="nc" id="L1426">			StringBuilder li = new StringBuilder();</span>
+<span class="nc" id="L1427">			li.append(&quot; class=\&quot;page-item&quot;);</span>
+<span class="nc bnc" id="L1428" title="All 2 branches missed.">			if (isActual()) li.append(&quot; active&quot;);</span>
+<span class="nc bnc" id="L1429" title="All 2 branches missed.">			else if (getUrl().contains(&quot;javascript:void&quot;)) li.append(&quot; disabled&quot;);</span>
+<span class="nc" id="L1430">			li.append(&quot;\&quot;&quot;);</span>
+<span class="nc" id="L1431">			return li.toString();</span>
+		}
+	}
+
+	public int getTotalPages()
+	{
+<span class="nc" id="L1437">		return totalPages;</span>
+	}
+
+	public void setReturnDocsWithAtributes(boolean returnDocsWithAtributes)
+	{
+<span class="nc" id="L1442">		this.returnDocsWithAtributes = returnDocsWithAtributes;</span>
+<span class="nc" id="L1443">	}</span>
+
+	public Map&lt;String, List&lt;String&gt;&gt; getFilter()
+	{
+<span class="fc" id="L1447">		return filter;</span>
+	}
+
+	public void setFilter(Map&lt;String, List&lt;String&gt;&gt; filter)
+	{
+<span class="nc" id="L1452">		this.filter = filter;</span>
+<span class="nc" id="L1453">	}</span>
+
+	public Map&lt;String, List&lt;String&gt;&gt; getSearch()
+	{
+<span class="nc" id="L1457">		return search;</span>
+	}
+
+	public void setSearch(Map&lt;String, List&lt;String&gt;&gt; search)
+	{
+<span class="nc" id="L1462">		this.search = search;</span>
+<span class="nc" id="L1463">	}</span>
+
+	public void setAlsoSubGroups(boolean alsoSubGroups)
+	{
+<span class="fc" id="L1467">		this.alsoSubGroups = alsoSubGroups;</span>
+<span class="fc" id="L1468">	}</span>
+
+	public String getGroupIdsString()
+	{
+<span class="fc" id="L1472">		StringBuilder result = new StringBuilder();</span>
+<span class="pc bpc" id="L1473" title="1 of 2 branches missed.">		if (groupIds != null)</span>
+		{
+<span class="fc bfc" id="L1475" title="All 2 branches covered.">			for (Integer in : groupIds)</span>
+			{
+<span class="fc" id="L1477">				result.append(&quot;,&quot;).append(in);</span>
+			}
+		}
+<span class="pc bpc" id="L1480" title="1 of 2 branches missed.">		return result.indexOf(&quot;,&quot;) == 0 ? result.substring(1) : result.toString();</span>
+	}
+
+	public String getPerexGroupString()
+	{
+<span class="fc" id="L1485">		StringBuilder result = new StringBuilder();</span>
+<span class="pc bpc" id="L1486" title="1 of 2 branches missed.">		if (perexGroup != null)</span>
+		{
+<span class="nc bnc" id="L1488" title="All 2 branches missed.">			for (Integer in : perexGroup)</span>
+			{
+<span class="nc" id="L1490">				result.append(&quot;,&quot;).append(in);</span>
+			}
+		}
+<span class="pc bpc" id="L1493" title="1 of 2 branches missed.">		return result.indexOf(&quot;,&quot;) == 0 ? result.substring(1) : result.toString();</span>
+	}
+	public String getPerexGroupNotString()
+	{
+<span class="fc" id="L1497">		StringBuilder result = new StringBuilder();</span>
+<span class="pc bpc" id="L1498" title="1 of 2 branches missed.">		if (perexGroupNot != null)</span>
+		{
+<span class="nc bnc" id="L1500" title="All 2 branches missed.">			for (Integer in : perexGroupNot)</span>
+			{
+<span class="nc" id="L1502">				result.append(&quot;,&quot;).append(in);</span>
+			}
+		}
+<span class="pc bpc" id="L1505" title="1 of 2 branches missed.">		return result.indexOf(&quot;,&quot;) == 0 ? result.substring(1) : result.toString();</span>
+	}
+
+	public boolean isAscending()
+	{
+<span class="fc" id="L1510">		return ascending;</span>
+	}
+
+	public int getPageSize()
+	{
+<span class="fc" id="L1515">		return pageSize;</span>
+	}
+
+	public boolean isAlsoSubGroups()
+	{
+<span class="fc" id="L1520">		return alsoSubGroups;</span>
+	}
+
+	public int[] getPerexGroup()
+	{
+<span class="nc" id="L1525">		return perexGroup;</span>
+	}
+
+	public int[] getGroupIds()
+	{
+<span class="nc" id="L1530">		return groupIds;</span>
+	}
+
+	public int getPerexCrop()
+	{
+<span class="nc" id="L1535">		return perexCrop;</span>
+	}
+
+	public void setPerexCrop(int perexCrop)
+	{
+<span class="nc" id="L1540">		this.perexCrop = perexCrop;</span>
+<span class="nc" id="L1541">	}</span>
+
+	public void setPerexNotRequired(boolean perexNotRequired)
+	{
+<span class="fc" id="L1545">		this.perexNotRequired = perexNotRequired;</span>
+<span class="fc" id="L1546">	}</span>
+
+<span class="fc" id="L1548">	public enum PublishType</span>
+	{
+<span class="fc" id="L1550">		NEW,</span>
+<span class="fc" id="L1551">		OLD,</span>
+<span class="fc" id="L1552">		ALL,</span>
+<span class="fc" id="L1553">		NEXT,</span>
+<span class="fc" id="L1554">		VALID;</span>
+	}
+
+	public void setPublishType(PublishType publishType)
+	{
+<span class="fc" id="L1559">		this.publishType = publishType;</span>
+<span class="fc" id="L1560">	}</span>
+
+	public PublishType getPublishType()
+	{
+<span class="fc" id="L1564">		return publishType;</span>
+	}
+
+	public OrderEnum getOrder()
+	{
+<span class="fc" id="L1569">		return order;</span>
+	}
+
+	public void setOrder(OrderEnum order)
+	{
+<span class="fc" id="L1574">		this.order = order;</span>
+<span class="fc" id="L1575">	}</span>
+
+	public String getHtmlOut()
+	{
+<span class="fc" id="L1579">		return htmlOut;</span>
+	}
+
+	public boolean isPerexNotRequired()
+	{
+<span class="fc" id="L1584">		return perexNotRequired;</span>
+	}
+
+	public boolean isSearchAlsoProtectedPages()
+	{
+<span class="nc" id="L1589">		return searchAlsoProtectedPages;</span>
+	}
+
+	public String link(DocDetails doc)
+	{
+<span class="fc" id="L1594">		return DocDB.getInstance().getDocLink(doc.getDocId(), doc.getExternalLink(), getRequest());</span>
+	}
+
+	public void setTemplate(NewsTemplateBean template)
+	{
+<span class="fc" id="L1599">		this.template = template;</span>
+<span class="fc" id="L1600">	}</span>
+
+	public NewsTemplateBean getTemplate()
+	{
+<span class="fc" id="L1604">		return template;</span>
+	}
+
+	public List&lt;NewsTemplateBean&gt; getTemplates()
+	{
+		//natvrdo sk lebo sablony zapisujeme do SK propertiesov (aby boli pre vsetky jazyky)
+<span class="fc" id="L1610">		Prop prop = Prop.getInstance(getRequest().getServletContext(), &quot;sk&quot;, false);</span>
+<span class="fc" id="L1611">		Map&lt;String, String&gt; templatesMap = prop.getTextStartingWith(&quot;news.template.&quot;);</span>
+
+<span class="fc bfc" id="L1613" title="All 2 branches covered.">		for (Iterator&lt;Map.Entry&lt;String, String&gt;&gt; iterator = templatesMap.entrySet().iterator(); iterator.hasNext();)</span>
+		{
+<span class="fc bfc" id="L1615" title="All 2 branches covered.">			if (Tools.isEmpty(iterator.next().getValue()))</span>
+			{
+<span class="fc" id="L1617">				iterator.remove();</span>
+			}
+		}
+
+<span class="fc" id="L1621">		return getTemplatesList(templatesMap);</span>
+	}
+
+	private List&lt;NewsTemplateBean&gt; getTemplatesList(Map&lt;String, String&gt; templatesMap)
+	{
+<span class="fc" id="L1626">		List&lt;NewsTemplateBean&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1627" title="All 2 branches covered.">		for (Map.Entry&lt;String, String&gt; entry : templatesMap.entrySet())</span>
+		{
+<span class="fc bfc" id="L1629" title="All 4 branches covered.">			if (!entry.getKey().endsWith(NewsTemplateBean.PAGING_KEY) &amp;&amp; !entry.getKey().endsWith(NewsTemplateBean.PAGING_POSITION_KEY))</span>
+			{
+<span class="fc" id="L1631">				result.add(new NewsTemplateBean(getRequest(), entry.getKey(), template));</span>
+			}
+<span class="fc" id="L1633">		}</span>
+
+<span class="fc" id="L1635">		Collections.sort(result, new Comparator&lt;NewsTemplateBean&gt;() {</span>
+			@Override
+			public int compare(NewsTemplateBean one, NewsTemplateBean two) {
+<span class="fc" id="L1638">				return one.getKey().compareTo(two.getKey());</span>
+			}
+		});
+
+
+
+<span class="fc" id="L1644">		return filterMultidomainTemplates(result);</span>
+	}
+
+	private List&lt;NewsTemplateBean&gt; filterMultidomainTemplates(List&lt;NewsTemplateBean&gt; templates)
+	{
+<span class="fc" id="L1649">		String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+<span class="pc bpc" id="L1650" title="1 of 2 branches missed.">		if (Tools.isEmpty(domainAlias)) return templates;</span>
+
+<span class="nc" id="L1652">		List&lt;NewsTemplateBean&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1653" title="All 2 branches missed.">		for (NewsTemplateBean newsTemp : templates)</span>
+		{
+<span class="nc bnc" id="L1655" title="All 4 branches missed.">			if (newsTemp.getKey().indexOf(&quot;(&quot;)==-1 || newsTemp.getKey().indexOf(&quot;(&quot;+domainAlias+&quot;)&quot;)!=-1)</span>
+			{
+<span class="nc" id="L1657">				filtered.add(newsTemp);</span>
+			}
+<span class="nc" id="L1659">		}</span>
+<span class="nc" id="L1660">		return filtered;</span>
+	}
+
+	public NewsTemplateBean getTemplateUpdate()
+	{
+<span class="nc" id="L1665">		return templateUpdate;</span>
+	}
+
+	public void setTemplateUpdate(NewsTemplateBean templateUpdate)
+	{
+<span class="nc" id="L1670">		this.templateUpdate = templateUpdate;</span>
+<span class="nc" id="L1671">	}</span>
+
+	public List&lt;NewsContextMenuItem&gt; getVelocityProperties()
+	{
+<span class="fc" id="L1675">		return NewsContextMenuItems.getVelocityProperties();</span>
+	}
+
+
+	public List&lt;NewsContextMenuItem&gt; getDocDetailsProperties()
+	{
+<span class="fc" id="L1681">		return NewsContextMenuItems.getDocDetailsProperties();</span>
+	}
+
+	public List&lt;NewsContextMenuItem&gt; getGroupDetailsProperties()
+	{
+<span class="fc" id="L1686">		return NewsContextMenuItems.getGroupDetailsProperties();</span>
+	}
+
+	public List&lt;NewsContextMenuItem&gt; getPagingProperties()
+	{
+<span class="fc" id="L1691">		return NewsContextMenuItems.getPagingProperties();</span>
+	}
+
+	public boolean isCanEdit()
+	{
+<span class="fc" id="L1696">		return UsersDB.checkUserPerms(getCurrentUser(), &quot;components.news.edit_templates&quot;);</span>
+	}
+
+	/**
+	 * Vrati atributy pre news komponentu na jej lahsiu editaciu, pouzije sa na kazdom news elemente v liste
+	 * @param request
+	 * @param doc
+	 * @return
+	 */
+	public static String getEditAttributesPopup(HttpServletRequest request, DocDetails doc)
+	{
+<span class="nc" id="L1707">		return getEditAttributes(request, doc, &quot;newsPopup&quot;);</span>
+	}
+
+	public static String getEditAttributesInline(HttpServletRequest request, DocDetails doc)
+	{
+<span class="nc" id="L1712">		return getEditAttributes(request, doc, &quot;newsInline&quot;);</span>
+	}
+
+	private static String getEditAttributes(HttpServletRequest request, DocDetails doc, String appName)
+	{
+<span class="nc" id="L1717">		StringBuilder atrs = new StringBuilder();</span>
+
+<span class="nc" id="L1719">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L1720" title="All 2 branches missed.">		if (user != null)</span>
+		{
+<span class="nc" id="L1722">			atrs.append(&quot; data-wjapp='&quot;).append(appName).append(&quot;' data-wjappkey='&quot;).append(doc.getDocId()).append(&quot;'&quot;);</span>
+		}
+
+<span class="nc" id="L1725">		return atrs.toString();</span>
+	}
+
+	public static UserDetails getAuthor(DocDetails doc) {
+<span class="nc" id="L1729">		UserDetails authorUserDetails = UsersDB.getUser(doc.getAuthorId());</span>
+<span class="nc bnc" id="L1730" title="All 2 branches missed.">		if (authorUserDetails == null) {</span>
+<span class="nc" id="L1731">			authorUserDetails = new UserDetails();</span>
+<span class="nc" id="L1732">			authorUserDetails.setLastName(&quot;&quot;);</span>
+<span class="nc" id="L1733">			authorUserDetails.setFirstName(&quot;&quot;);</span>
+<span class="nc" id="L1734">			authorUserDetails.setPhoto(&quot;&quot;);</span>
+		}
+<span class="nc" id="L1736">		return authorUserDetails;</span>
+	}
+
+
+	public int getCacheMinutes()
+	{
+<span class="fc" id="L1742">		return cacheMinutes;</span>
+	}
+
+
+	public void setCacheMinutes(int cacheMinutes)
+	{
+<span class="fc" id="L1748">		this.cacheMinutes = cacheMinutes;</span>
+<span class="fc" id="L1749">	}</span>
+
+	public String[] getContextClasses()
+	{
+<span class="fc" id="L1753">		return contextClasses;</span>
+	}
+
+	public void setContextClasses(String[] contextClasses)
+	{
+<span class="fc" id="L1758">		this.contextClasses = contextClasses;</span>
+<span class="fc" id="L1759">	}</span>
+
+	public int[] getPerexGroupNot()
+	{
+<span class="nc" id="L1763">		return perexGroupNot;</span>
+	}
+
+	public int getOffset()
+	{
+<span class="fc" id="L1768">		return offset;</span>
+	}
+
+	public void setOffset(int offset)
+	{
+<span class="fc" id="L1773">		this.offset = offset;</span>
+<span class="fc" id="L1774">	}</span>
+
+	public void setPerexGroupNot(int[] perexGroupNot)
+	{
+<span class="fc" id="L1778">		this.perexGroupNot = perexGroupNot;</span>
+<span class="fc" id="L1779">	}</span>
+
+	public boolean isIncludeActualDoc() {
+<span class="nc" id="L1782">		return includeActualDoc;</span>
+	}
+
+	public void setIncludeActualDoc(boolean includeActualDoc) {
+<span class="nc" id="L1786">		this.includeActualDoc = includeActualDoc;</span>
+<span class="nc" id="L1787">	}</span>
+
+	public void clearList()
+	{
+<span class="nc" id="L1791">		this.newsList=null;</span>
+<span class="nc" id="L1792">	}</span>
+
+	public boolean isCheckDuplicity() {
+<span class="fc" id="L1795">		return checkDuplicity;</span>
+	}
+
+	public void setCheckDuplicity(boolean checkDuplicity) {
+<span class="fc" id="L1799">		this.checkDuplicity = checkDuplicity;</span>
+<span class="fc" id="L1800">	}</span>
+
+	public String getTagClickLink() {
+<span class="nc" id="L1803">		return tagClickLink;</span>
+	}
+
+	public void setTagClickLink(String tagClickLink) {
+<span class="nc" id="L1807">		this.tagClickLink = tagClickLink;</span>
+<span class="nc" id="L1808">	}</span>
+
+	private List&lt;LabelValueDetails&gt; tags;
+
+	public List&lt;LabelValueDetails&gt; getTags() {
+<span class="nc" id="L1813">		return tags;</span>
+	}
+
+	public void setTags(List&lt;LabelValueDetails&gt; tags) {
+<span class="nc" id="L1817">		this.tags = tags;</span>
+<span class="nc" id="L1818">	}</span>
+
+	public String getTag() {
+<span class="nc" id="L1821">		return tag;</span>
+	}
+
+	public void setTag(String tag) {
+<span class="nc" id="L1825">		this.tag = tag;</span>
+<span class="nc" id="L1826">	}</span>
+
+	private List&lt;LabelValueDetails&gt; authors;
+
+	public List&lt;LabelValueDetails&gt; getAuthors() {
+<span class="nc" id="L1831">		return authors;</span>
+	}
+
+	public void setAuthors(List&lt;LabelValueDetails&gt; authors) {
+<span class="nc" id="L1835">		this.authors = authors;</span>
+<span class="nc" id="L1836">	}</span>
+
+	public String getAuthor() {
+<span class="nc" id="L1839">		return author;</span>
+	}
+
+	public void setAuthor(String author) {
+<span class="nc" id="L1843">		this.author = author;</span>
+<span class="nc" id="L1844">	}</span>
+
+	public boolean isRemoveDefaultDocs() {
+<span class="fc" id="L1847">		return removeDefaultDocs;</span>
+	}
+
+	public void setRemoveDefaultDocs(boolean removeDefaultDocs) {
+<span class="fc" id="L1851">		this.removeDefaultDocs = removeDefaultDocs;</span>
+<span class="fc" id="L1852">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

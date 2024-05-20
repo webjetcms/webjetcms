@@ -80,99 +80,96 @@ public class MenuService {
         }
         String[][] icons = {
             //welcome
-            { "welcome", "far fa-chart-pie-alt" },
-            { "cmp_stat", "far fa-chart-bar" },
-            { "cmp_server_monitoring", "far fa-chart-line" },
-            { "cmp_adminlog", "far fa-file-search" },
-            { "cmp_in-memory-logging", "far fa-fast-backward" },
-            { "cmp_adminlog_logging", "far fa-files" },
-            { "menuMessages", "far fa-envelope-open-text" },
-            { "welcomeShowLoggedAdmins", "far fa-user-shield" },
+            { "welcome", "ti ti-home" },
+            { "cmp_stat", "ti ti-chart-area-line" },
+            { "cmp_server_monitoring", "ti ti-device-heart-monitor" },
+            { "cmp_adminlog", "ti ti-shield-search" },
+            { "cmp_in-memory-logging", "ti ti-player-skip-back" },
+            { "cmp_adminlog_logging", "ti ti-files" },
+            { "menuMessages", "ti ti-mail-opened" },
+            { "welcomeShowLoggedAdmins", "ti ti-user-shield" },
             //website
-            { "menuWebpages", "far fa-file-alt" },
-            { "cmp_clone_structure", "far fa-copy" },
-            { "cmp_attributes", "far fa-file-invoice" },
-            { "cmp_redirects", "far fa-file-upload" },
-            { "export_offline", "far fa-download" },
-            { "editorMiniEdit", "far fa-filter" },
-            { "editorFullMenu", "far fa-box-full" },
-            { "addPage", "far fa-plus" },
-            { "pageSave", "far fa-save" },
-            { "pageSaveAs", "far fa-copy" },
-            { "deletePage", "far fa-trash-alt" },
-            { "editDir", "far fa-pencil" },
-            { "addSubdir", "far fa-plus" },
-            { "deleteDir", "far fa-trash-alt" },
-            { "editor_edit_perex", "far fa-hashtag" },
-            { "editor_edit_media_all", "fa fa-file-medical"},
-            { "editor_edit_media_group", "far fa-file-medical" },
-            { "editor_show_hidden_folders", "fad fa-folders" },
-            { "cmp_sync", "far fa-sync" },
-            { "imageEditor", "far fa-image-polaroid" },
+            { "menuWebpages", "ti ti-file-text" },
+            { "cmp_clone_structure", "ti ti-copy" },
+            { "cmp_attributes", "ti ti-file-invoice" },
+            { "cmp_redirects", "ti ti-external-link" },
+            { "export_offline", "ti ti-database-export" },
+            { "editorMiniEdit", "ti ti-filter" },
+            { "editorFullMenu", "ti ti-box-padding" },
+            { "addPage", "ti ti-plus" },
+            { "pageSave", "ti ti-device-floppy" },
+            { "pageSaveAs", "ti ti-copy" },
+            { "deletePage", "ti ti-trash" },
+            { "editDir", "ti ti-pencil" },
+            { "addSubdir", "ti ti-plus" },
+            { "deleteDir", "ti ti-trash" },
+            { "editor_edit_perex", "ti ti-hash" },
+            { "editor_show_hidden_folders", "ti ti-folders" },
+            { "cmp_sync", "ti ti-refresh" },
+            { "imageEditor", "ti ti-polaroid" },
             //news
-            { "cmp_blog", "far fa-comment-alt-lines" },
-            { "cmp_news", "far fa-newspaper" },
-            { "cmp_diskusia", "far fa-comments-alt" },
-            { "components.news.edit_templates", "fal fa-layer-group" },
+            { "cmp_blog", "ti ti-article" },
+            { "cmp_news", "ti ti-news" },
+            { "cmp_diskusia", "ti ti-messages" },
+            { "components.news.edit_templates", "ti ti-stack-2" },
             //apps
-            { "cmp_abtesting", "far fa-analytics" },
-            { "menuEmail", "far fa-envelope" },
-            { "cmp_calendar", "far fa-calendar" },
-            { "cmp_form", "far fa-book" },
-            { "menuInquiry", "far fa-poll" },
-            { "menuQa", "far fa-question-circle" },
-            { "menuGallery", "far fa-photo-video" },
-            { "menuGDPR", "far fa-shield-alt" },
-            { "menuGDPRDelete", "far fa-trash-alt" },
-            { "menuGDPRregexp", "far fa-print-search" },
-            { "menuBanner", "far fa-ad" },
-            { "cmp_insert_script", "far fa-file-code" },
-            { "cmp_basket", "far fa-shopping-basket" },
-            { "cmp_enumerations", "far fa-th-list" },
-            { "cmp_proxy", "far fa-dungeon" },
-            { "cmp_reservation", "far fa-calendar-check" },
-            { "cmp_restaurant_menu", "far fa-utensils" },
-            { "cmp_seo", "fab fa-searchengin" },
-            { "cmp_tooltip", "far fa-question-circle" },
-            { "cmp_export", "far fa-cloud-download" },
-            { "cmp_quiz", "far fa-question-square" },
-            { "cmp_calendar_approve", "far fa-thumbs-up" },
-            { "cmp_banner_add", "far fa-plus" },
-            { "cmp_banner_seeall", "far fa-ballot" },
-            { "cmp_insert_script", "far fa-file-code" },
-            { "cmp_menu", "far fa-ellipsis-v" },
-            { "sharedIcons", "far fa-share-square" },
-            { "cmp_content-block", "far fa-shapes" },
+            { "cmp_abtesting", "ti ti-a-b" },
+            { "menuEmail", "ti ti-mail" },
+            { "cmp_calendar", "ti ti-calendar-month" },
+            { "cmp_form", "ti ti-forms" },
+            { "menuInquiry", "ti ti-chart-histogram" },
+            { "menuQa", "ti ti-help" },
+            { "menuGallery", "ti ti-photo" },
+            { "menuGDPR", "ti ti-shield-half" },
+            { "menuGDPRDelete", "ti ti-trash" },
+            { "menuGDPRregexp", "ti ti-devices-search" },
+            { "menuBanner", "ti ti-ad" },
+            { "cmp_basket", "ti ti-shopping-bag" },
+            { "cmp_enumerations", "ti ti-table" },
+            { "cmp_proxy", "ti ti-network" },
+            { "cmp_reservation", "ti ti-calendar-check" },
+            { "cmp_restaurant_menu", "ti ti-tools-kitchen-2" },
+            { "cmp_seo", "ti ti-seo" },
+            { "cmp_tooltip", "ti ti-help" },
+            { "cmp_export", "ti ti-database-export" },
+            { "cmp_quiz", "ti ti-message-circle-question" },
+            { "cmp_calendar_approve", "ti ti-thumb-up" },
+            { "cmp_banner_add", "ti ti-plus" },
+            { "cmp_banner_seeall", "ti ti-notes" },
+            { "cmp_insert_script", "ti ti-code" },
+            { "cmp_menu", "ti ti-dots-vertical" },
+            { "sharedIcons", "ti ti-share-2" },
+            { "cmp_content-block", "ti ti-triangle-square-circle" },
             //files
-            { "menuFbrowser", "far fa-folder-tree" },
-            { "cmp_file_archiv", "far fa-archive" },
-            { "make_zip_archive", "far fa-cabinet-filing" },
-            { "fbrowser_delete_directory", "far fa-trash-alt" },
-            { "menuFileArchivExportFiles", "far fa-upload" },
-            { "menuFileArchivImportFiles", "far fa-download" },
-            { "menuFileArchivManagerCategory", "far fa-tasks-alt" },
-            { "cmp_fileArchiv_edit_del_rollback", "far fa-pencil" },
-            { "cmp_fileArchiv_advanced_settings", "far fa-wrench" },
-            { "editor_unlimited_upload", "far fa-infinity" },
+            { "menuFbrowser", "ti ti-folders" },
+            { "cmp_file_archiv", "ti ti-archive" },
+            { "make_zip_archive", "ti ti-server-bolt" },
+            { "fbrowser_delete_directory", "ti ti-trash" },
+            { "menuFileArchivExportFiles", "ti ti-upload" },
+            { "menuFileArchivImportFiles", "ti ti-download" },
+            { "menuFileArchivManagerCategory", "ti ti-subtask" },
+            { "cmp_fileArchiv_edit_del_rollback", "ti ti-pencil" },
+            { "cmp_fileArchiv_advanced_settings", "ti ti-tool" },
+            { "editor_unlimited_upload", "ti ti-infinity" },
             //templates
-            { "menuTemplates", "far fa-window-maximize" },
-            { "menuTemplatesGroup", "far fa-layer-group" },
+            { "menuTemplates", "ti ti-template" },
+            { "menuTemplatesGroup", "ti ti-layers-subtract" },
             //users
-            { "menuUsers", "far fa-user-friends" },
-            { "user.admin.userGroups", "far fa-users" },
-            { "users.perm_groups", "far fa-gavel" },
-            { "users.edit_admins", "far fa-user-shield" },
-            { "users.edit_public_users", "far fa-user-friends" },
+            { "menuUsers", "ti ti-users" },
+            { "user.admin.userGroups", "ti ti-users-group" },
+            { "users.perm_groups", "ti ti-user-shield" },
+            { "users.edit_admins", "ti ti-shield-cog" },
+            { "users.edit_public_users", "ti ti-users-group" },
             //config
-            { "menuConfig", "far fa-sliders-v-square" },
-            { "edit_text", "far fa-key" },
-            { "cmp_data_deleting", "far fa-database" },
-            { "cmp_crontab", "far fa-repeat" },
-            { "modUpdate", "far fa-cloud-download" },
-            { "modRestart", "far fa-power-off" },
-            { "conf.show_all_variables", "far fa-user-shield" },
-            { "prop.show_all_texts", "far fa-user-shield" },
-            { "replaceAll", "far fa-search" }
+            { "menuConfig", "ti ti-adjustments" },
+            { "edit_text", "ti ti-language" },
+            { "cmp_data_deleting", "ti ti-database" },
+            { "cmp_crontab", "ti ti-settings-automation" },
+            { "modUpdate", "ti ti-cloud-download" },
+            { "modRestart", "ti ti-power" },
+            { "conf.show_all_variables", "ti ti-user-shield" },
+            { "prop.show_all_texts", "ti ti-user-shield" },
+            { "replaceAll", "ti ti-search" }
         };
         for (String[] pair : icons) {
             iconsMap.put(pair[0], pair[1]);
@@ -208,6 +205,7 @@ public class MenuService {
             { "/components/banner/banner_stat.jsp", "/apps/banner/admin/banner-stat/"},
             { "/components/proxy/admin_list.jsp", "/apps/proxy/admin/"},
             { "/components/news/admin_news_list.jsp", "/apps/news/admin/"},
+            { "/components/quiz/admin_list.jsp", "/apps/quiz/admin/"},
             { "/components/restaurant_menu/admin_list_meals.jsp", "/apps/restaurant-menu/admin/meals/"},
             { "/components/restaurant_menu/admin_new_menu.jsp", "/apps/restaurant-menu/admin/"},
             { "/components/restaurant_menu/admin_list_menu.jsp", ""},
@@ -223,6 +221,8 @@ public class MenuService {
             //calendar
             { "/admin/listevents.do", "/apps/calendar/admin/"},
             { "/components/calendar/admin_edit_type.jsp", "/apps/calendar/admin/calendar-types/"},
+            { "/components/calendar/admin_neschvalene_udalosti.jsp", "/apps/calendar/admin/non-approved-events/"},
+            { "/components/calendar/admin_suggest_evens.jsp", "/apps/calendar/admin/suggest-events/"},
 
             { "/components/insert_script/admin_insert_script_list.jsp", "/admin/v9/apps/insert-script/"},
             //ovladaci panel
@@ -231,6 +231,8 @@ public class MenuService {
             { "/admin/conf_editor.jsp", "/admin/v9/settings/configuration/"},
             { "/components/crontab/crontab_list.jsp", "/admin/v9/settings/cronjob/"},
             { "javascript:WJ.openPopupDialog('/components/crontab/crontab_edit.jsp?crontabId=-1');", ""},
+            { "/components/adminlog/web_pages.jsp", "/admin/v9/apps/audit-changed-webpages/"},
+            { "/components/adminlog/adminlog_wait_publishing.jsp", "/admin/v9/apps/audit-awaiting-publish-webpages/"},
 
             { "/components/redirects/admin_list.jsp?url=&kategoria=1&searchSubmit=", "/admin/v9/settings/redirect/"},
             { "javascript:WJ.openPopupDialog('/components/redirects/admin_edit.jsp?urlRedirect.urlRedirectId=-1');", ""},
@@ -306,6 +308,10 @@ public class MenuService {
 
             //
             { "/components/forum/admin_diskusia_zoznam.jsp", "/apps/forum/admin/"},
+            { "/components/blog/blog_comments.jsp", "/apps/blog/admin/"},
+            { "/components/blog/blog_admin.jsp", "/apps/blog/admin/bloggers/"},
+
+            { "/components/abtesting/admin_abtesting.jsp", "/apps/abtesting/admin/"},
         };
         for (String[] pair : linkReplaces) {
             menuLinkReplaces.put(pair[0], pair[1]);
@@ -389,7 +395,7 @@ public class MenuService {
     private static String getIcon9(String itemKey, String defaultIcon)
     {
         String icon = iconsMap.get(itemKey);
-        if (icon == null) icon = "fa fa-"+defaultIcon;
+        if (icon == null) icon = "ti ti-"+defaultIcon;
 
         return icon;
     }
@@ -450,14 +456,14 @@ public class MenuService {
     public static List<MenuBean> getRootItems(Prop prop) {
         List<MenuBean> roots = new ArrayList<>();
 
-        roots.add((new MenuBean()).setGroup("welcome").setText(prop.getText("menu.root.welcome")).setIcon("fa far fa-home"));
-        roots.add((new MenuBean()).setGroup("website").setText(prop.getText("menu.root.websites")).setIcon("fa fal fa-copy"));
-        roots.add((new MenuBean()).setGroup("news").setText(prop.getText("menu.root.news")).setIcon("fa fal fa-edit"));
-        roots.add((new MenuBean()).setGroup("components").setText(prop.getText("components.modules.title")).setIcon("fa fal fa-cube"));
-        roots.add((new MenuBean()).setGroup("files").setText(prop.getText("menu.root.files")).setIcon("fa fal fa-folder-open"));
-        roots.add((new MenuBean()).setGroup("templates").setText(prop.getText("menu.root.templates")).setIcon("fa fal fa-layer-group"));
-        roots.add((new MenuBean()).setGroup("users").setText(prop.getText("menu.root.users")).setIcon("fa fal fa-user"));
-        roots.add((new MenuBean()).setGroup("config").setText(prop.getText("menu.root.config")).setIcon("fa fal fa-cog"));
+        roots.add((new MenuBean()).setGroup("welcome").setText(prop.getText("menu.root.welcome")).setIcon("ti ti-home"));
+        roots.add((new MenuBean()).setGroup("website").setText(prop.getText("menu.root.websites")).setIcon("ti ti-file-text"));
+        roots.add((new MenuBean()).setGroup("news").setText(prop.getText("menu.root.news")).setIcon("ti ti-edit"));
+        roots.add((new MenuBean()).setGroup("components").setText(prop.getText("components.modules.title")).setIcon("ti ti-apps"));
+        roots.add((new MenuBean()).setGroup("files").setText(prop.getText("menu.root.files")).setIcon("ti ti-folder-open"));
+        roots.add((new MenuBean()).setGroup("templates").setText(prop.getText("menu.root.templates")).setIcon("ti ti-layout"));
+        roots.add((new MenuBean()).setGroup("users").setText(prop.getText("menu.root.users")).setIcon("ti ti-users"));
+        roots.add((new MenuBean()).setGroup("config").setText(prop.getText("menu.root.config")).setIcon("ti ti-settings"));
 
         return roots;
     }
@@ -474,6 +480,15 @@ public class MenuService {
             // out.println(renderLeftMenu(group, customItems, actualMenuPath, user, prop));
             addMenuItems(rootItem);
         }
+
+        List<MenuBean> filtered = new ArrayList<>();
+        //remove empty root items
+        for (MenuBean rootItem : menu) {
+            if (rootItem.getChildrens().isEmpty()==false) {
+                filtered.add(rootItem);
+            }
+        }
+        menu = filtered;
     }
 
     /**

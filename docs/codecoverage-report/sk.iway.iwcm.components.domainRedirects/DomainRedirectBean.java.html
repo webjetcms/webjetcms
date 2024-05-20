@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainRedirectBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.domainRedirects</a> &gt; <span class="el_source">DomainRedirectBean.java</span></div><h1>DomainRedirectBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.domainRedirects;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.validation.constraints.NotBlank;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ *  RedirectBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: Marián Halaš $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 9.11.2010 15:35:43
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;domain_redirects&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_REDIRECT_UPDATE)
+public class DomainRedirectBean implements Serializable
+{
+
+	private static final long serialVersionUID = -6434400704509503505L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_domain_redirects&quot;)
+	@TableGenerator(name=&quot;WJGen_domain_redirects&quot;,pkColumnValue=&quot;domain_redirects&quot;)
+   @Column(name=&quot;redirect_id&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title = &quot;components.redirect.label.id&quot;
+   )
+   private Integer redirectId;
+
+	@Column(name=&quot;redirect_from&quot;)
+	@NotBlank
+	@DataTableColumn(
+		inputType = DataTableColumnType.OPEN_EDITOR,
+		title = &quot;components.redirect.label.from&quot;
+	)
+   private String redirectFrom;
+
+	@Column(name=&quot;redirect_to&quot;)
+	@NotBlank
+	@DataTableColumn(
+		inputType = DataTableColumnType.TEXT,
+		title = &quot;components.redirect.label.to&quot;
+	)
+   private String redirectTo;
+
+	@Column(name=&quot;http_protocol&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.SELECT,
+		title = &quot;components.redirect.label.protocol&quot;,
+		editor = {
+			@DataTableColumnEditor(
+					options = {
+						@DataTableColumnEditorAttr(key = &quot;&quot;, value = &quot;&quot;),
+						@DataTableColumnEditorAttr(key = &quot;http&quot;, value = &quot;http&quot;),
+						@DataTableColumnEditorAttr(key = &quot;https&quot;, value = &quot;https&quot;),
+						@DataTableColumnEditorAttr(key = &quot;alias&quot;, value = &quot;alias&quot;)
+					}
+			)
+		}
+	)
+   private String protocol;
+
+   @Column(name=&quot;active&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN,
+		title = &quot;components.redirect.label.active&quot;,
+		defaultValue = &quot;true&quot;
+	)
+   private boolean active;
+
+   @Column(name=&quot;redirect_params&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN,
+		title = &quot;components.redirect.label.params&quot;,
+		defaultValue = &quot;true&quot;
+	)
+   private boolean redirectParams;
+
+   @Column(name=&quot;redirect_path&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN,
+		title = &quot;components.redirect.label.path&quot;,
+		defaultValue = &quot;true&quot;
+	)
+   private boolean redirectPath;
+
+   public boolean isRedirectPath()
+	{
+<span class="fc" id="L110">		return redirectPath;</span>
+	}
+
+	public void setRedirectPath(boolean redirectPath)
+	{
+<span class="fc" id="L115">		this.redirectPath = redirectPath;</span>
+<span class="fc" id="L116">	}</span>
+
+	public Integer getRedirectId() {
+<span class="fc" id="L119">		return redirectId;</span>
+	}
+
+	public void setRedirectId(Integer redirectId) {
+<span class="fc" id="L123">		this.redirectId = redirectId;</span>
+<span class="fc" id="L124">	}</span>
+
+	public boolean getActive() {
+<span class="fc" id="L127">		return active;</span>
+	}
+
+	public void setActive(boolean active) {
+<span class="fc" id="L131">		this.active = active;</span>
+<span class="fc" id="L132">	}</span>
+
+	public String getRedirectFrom() {
+<span class="fc" id="L135">		return redirectFrom;</span>
+	}
+
+	public void setRedirectFrom(String redirectFrom) {
+<span class="fc" id="L139">		this.redirectFrom = redirectFrom;</span>
+<span class="fc" id="L140">	}</span>
+
+	public String getRedirectTo() {
+<span class="fc" id="L143">		return redirectTo;</span>
+	}
+
+	public void setRedirectTo(String redirectTo) {
+<span class="fc" id="L147">		this.redirectTo = Tools.trim(redirectTo);</span>
+<span class="fc" id="L148">	}</span>
+
+
+	public boolean getRedirectParams() {
+<span class="fc" id="L152">		return redirectParams;</span>
+	}
+
+	public void setRedirectParams(boolean redirectParams) {
+<span class="fc" id="L156">		this.redirectParams = redirectParams;</span>
+<span class="fc" id="L157">	}</span>
+
+<span class="fc" id="L159">	public DomainRedirectBean(){</span>
+
+<span class="fc" id="L161">	}</span>
+
+	public DomainRedirectBean(int redirectId, boolean active, String redirectFrom,
+			String redirectTo, boolean redirectSource, boolean redirectParams, boolean redirectPath, String protocol) {
+<span class="nc" id="L165">		super();</span>
+<span class="nc" id="L166">		this.redirectId = redirectId;</span>
+<span class="nc" id="L167">		this.active = active;</span>
+<span class="nc" id="L168">		this.redirectFrom = redirectFrom;</span>
+<span class="nc" id="L169">		this.redirectTo = redirectTo;</span>
+<span class="nc" id="L170">		this.redirectParams = redirectParams;</span>
+<span class="nc" id="L171">		this.redirectPath = redirectPath;</span>
+<span class="nc" id="L172">		this.protocol = protocol;</span>
+<span class="nc" id="L173">	}</span>
+
+	@Override
+	 public String toString() {
+<span class="fc" id="L177">	   return new StringBuilder().append(&quot;Redirect = { redirectFrom: &quot;).append(getRedirectFrom()).append(&quot;, redirectTo: &quot;).append(getRedirectTo()).append(&quot; ,redirectId: &quot;).append(getRedirectId()).append(&quot;, redirectPath: &quot;).append(isRedirectPath()).append(&quot; , redirectParams: &quot;).append(getRedirectParams()).append(&quot; , active: &quot;).append(getActive()).append(&quot; , protocol: &quot;).append(getProtocol()).toString();</span>
+	 }
+
+	public String getProtocol()
+	{
+<span class="fc" id="L182">		return protocol;</span>
+	}
+
+	public void setProtocol(String protocol)
+	{
+<span class="fc" id="L187">		this.protocol = protocol;</span>
+<span class="fc" id="L188">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

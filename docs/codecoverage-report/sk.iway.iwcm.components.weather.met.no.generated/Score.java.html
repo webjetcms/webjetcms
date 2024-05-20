@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Score.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather.met.no.generated</a> &gt; <span class="el_source">Score.java</span></div><h1>Score.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather.met.no.generated;
+
+import java.math.BigInteger;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
+
+
+/**
+ * &lt;p&gt;Java class for score complex type.
+ * 
+ * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+ * 
+ * &lt;pre&gt;
+ * &amp;lt;complexType name=&quot;score&quot;&gt;
+ *   &amp;lt;complexContent&gt;
+ *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *       &amp;lt;attribute name=&quot;unit&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;overall&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;very_good&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;good&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;mediocre&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}integer&quot; /&gt;
+ *     &amp;lt;/restriction&gt;
+ *   &amp;lt;/complexContent&gt;
+ * &amp;lt;/complexType&gt;
+ * &lt;/pre&gt;
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = &quot;score&quot;)
+<span class="nc" id="L34">public class Score {</span>
+
+    @XmlAttribute(name = &quot;unit&quot;)
+    protected String unit;
+    @XmlAttribute(name = &quot;overall&quot;)
+    protected BigInteger overall;
+    @XmlAttribute(name = &quot;very_good&quot;)
+    protected BigInteger veryGood;
+    @XmlAttribute(name = &quot;good&quot;)
+    protected BigInteger good;
+    @XmlAttribute(name = &quot;mediocre&quot;)
+    protected BigInteger mediocre;
+
+    /**
+     * Gets the value of the unit property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getUnit() {
+<span class="nc" id="L56">        return unit;</span>
+    }
+
+    /**
+     * Sets the value of the unit property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setUnit(String value) {
+<span class="nc" id="L68">        this.unit = value;</span>
+<span class="nc" id="L69">    }</span>
+
+    /**
+     * Gets the value of the overall property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getOverall() {
+<span class="nc" id="L80">        return overall;</span>
+    }
+
+    /**
+     * Sets the value of the overall property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setOverall(BigInteger value) {
+<span class="nc" id="L92">        this.overall = value;</span>
+<span class="nc" id="L93">    }</span>
+
+    /**
+     * Gets the value of the veryGood property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getVeryGood() {
+<span class="nc" id="L104">        return veryGood;</span>
+    }
+
+    /**
+     * Sets the value of the veryGood property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setVeryGood(BigInteger value) {
+<span class="nc" id="L116">        this.veryGood = value;</span>
+<span class="nc" id="L117">    }</span>
+
+    /**
+     * Gets the value of the good property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getGood() {
+<span class="nc" id="L128">        return good;</span>
+    }
+
+    /**
+     * Sets the value of the good property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setGood(BigInteger value) {
+<span class="nc" id="L140">        this.good = value;</span>
+<span class="nc" id="L141">    }</span>
+
+    /**
+     * Gets the value of the mediocre property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getMediocre() {
+<span class="nc" id="L152">        return mediocre;</span>
+    }
+
+    /**
+     * Sets the value of the mediocre property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setMediocre(BigInteger value) {
+<span class="nc" id="L164">        this.mediocre = value;</span>
+<span class="nc" id="L165">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigurationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.configuration</a> &gt; <span class="el_source">ConfigurationService.java</span></div><h1>ConfigurationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.configuration;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import sk.iway.Password;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.SelectionFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.ConfDetails;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class ConfigurationService {
+
+    private final ConfDetailsMapper confDetailsMapper;
+
+    @Autowired
+<span class="fc" id="L28">    public ConfigurationService(ConfDetailsMapper confDetailsMapper) {</span>
+<span class="fc" id="L29">        this.confDetailsMapper = confDetailsMapper;</span>
+<span class="fc" id="L30">    }</span>
+
+    public List&lt;ConfDetailsDto&gt; getAll(Identity user) {
+<span class="fc" id="L33">        List&lt;ConfDetails&gt; configurationData = ConfDB.filterConfDetailsByPerms(user, ConfDB.getConfig());</span>
+<span class="fc" id="L34">        configurationData = filterStatSessionsCluster(configurationData);</span>
+<span class="fc" id="L35">        List&lt;ConfDetailsDto&gt; configurationDataDtos = confDetailsMapper.entityListToDtoList(configurationData);</span>
+
+<span class="fc" id="L37">        List&lt;ConfDetails&gt; constantsData = Constants.getAllValues();</span>
+<span class="fc" id="L38">        Map&lt;String, String&gt; constantsMapWithValue = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L39">        Map&lt;String, String&gt; constantsMapWIthDescription = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        for (ConfDetails singleConstantsData : constantsData) {</span>
+<span class="fc" id="L42">            constantsMapWithValue.put(singleConstantsData.getName(), singleConstantsData.getValue());</span>
+<span class="fc" id="L43">            constantsMapWIthDescription.put(singleConstantsData.getName(), singleConstantsData.getDescription());</span>
+<span class="fc" id="L44">        }</span>
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (ConfDetailsDto constantsDto : configurationDataDtos) {</span>
+<span class="fc" id="L47">            constantsDto.setOldValue(constantsMapWithValue.get(constantsDto.getName()));</span>
+<span class="fc" id="L48">            constantsDto.setDescription(constantsMapWIthDescription.get(constantsDto.getName()));</span>
+<span class="fc" id="L49">        }</span>
+<span class="fc" id="L50">        return configurationDataDtos;</span>
+    }
+
+    /**
+     * Odflitruje v zozname hodnoty statDistinctUser- a statSessions- co su len hodnoty potrebne pre vypocet navstevnosti v clustri
+     * standardne ich nie je potrebne vidiet
+     * @param all
+     * @return
+     */
+    private List&lt;ConfDetails&gt; filterStatSessionsCluster(List&lt;ConfDetails&gt; all) {
+<span class="fc" id="L60">        List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (ConfDetails conf : all) {</span>
+<span class="fc bfc" id="L62" title="All 4 branches covered.">            if (conf.getName().startsWith(&quot;statDistinctUsers-&quot;) || conf.getName().startsWith(&quot;statSessions-&quot;)) continue;</span>
+
+<span class="fc" id="L64">            filtered.add(conf);</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">        return filtered;</span>
+    }
+
+    ConfDetailsDto save(Identity currentUser, ConfDetailsDto confDetailsDto) throws Exception {
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (null == currentUser) {</span>
+<span class="nc" id="L71">            return null;</span>
+        }
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (confDetailsDto.isEncrypt()) {</span>
+<span class="nc" id="L75">            Password password = new Password();</span>
+<span class="nc" id="L76">            confDetailsDto.setValue(&quot;encrypted:&quot; + password.encrypt(confDetailsDto.getValue()));</span>
+        }
+
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        if (null == confDetailsDto.getDatePrepared()) {</span>
+<span class="fc" id="L80">            ConfDB.setName(confDetailsDto.getName(), confDetailsDto.getValue());</span>
+            //zapis zmenu do historie
+<span class="fc" id="L82">            ConfDB.setNamePrepared(confDetailsDto.getName(), confDetailsDto.getValue(), null);</span>
+        } else {
+<span class="nc" id="L84">            ConfDB.setNamePrepared(confDetailsDto.getName(), confDetailsDto.getValue(), confDetailsDto.getDatePrepared());</span>
+        }
+
+<span class="fc" id="L87">        ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-&quot; + confDetailsDto.getName());</span>
+
+        //musime vratit aktualne nastavenu hodnotu, pretoze sa mohla dat sifrovat, alebo je v buducnosti
+<span class="fc" id="L90">        ConfDetails actual = ConfDB.getVariable(confDetailsDto.getName());</span>
+<span class="fc" id="L91">        ConfDetailsDto actualDto = confDetailsMapper.entityToDto(actual);</span>
+<span class="pc bpc" id="L92" title="2 of 4 branches missed.">        if (confDetailsDto.getId()!=null &amp;&amp; confDetailsDto.getId()&gt;0) actualDto.setId(confDetailsDto.getId());</span>
+<span class="nc" id="L93">        else actualDto.setId(Tools.getNow());</span>
+
+<span class="fc" id="L95">        setOldValueDescription(actualDto);</span>
+
+<span class="fc" id="L97">        return actualDto;</span>
+    }
+
+    void deleteConfDetails(String name) {
+<span class="fc" id="L101">        ConfDB.deleteName(name);</span>
+<span class="fc" id="L102">    }</span>
+
+    /**
+     * Vrati ConfDetails pre zadane name pre autocomplete
+     * @param name
+     * @return
+     */
+    public ConfDetailsDto getAutocompleteDetail(Identity user, String name) {
+
+<span class="nc" id="L111">        List&lt;ConfDetailsDto&gt; all = getAll(user);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        for (ConfDetailsDto c : all) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (c.getName().equals(name)) {</span>
+<span class="nc" id="L114">                return c;</span>
+            }
+<span class="nc" id="L116">        }</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (ConfDB.isKeyVisibleToUser(user, name)) {</span>
+            //nenaslo sa, takze este nie je nastavena, posli hodnotu
+<span class="nc" id="L120">            ConfDetailsDto c = new ConfDetailsDto();</span>
+<span class="nc" id="L121">            c.setName(name);</span>
+<span class="nc" id="L122">            c.setValue(Constants.getString(name));</span>
+
+            //old value sa neda inak ziskat ako takto
+<span class="nc" id="L125">            c.setOldValue(getOldValue(name));</span>
+<span class="nc" id="L126">            c.setDescription(Constants.getDescription(name));</span>
+<span class="nc" id="L127">            return c;</span>
+        }
+
+<span class="nc" id="L130">        return null;</span>
+    }
+
+    private String getOldValue(String name) {
+<span class="nc" id="L134">        List&lt;ConfDetails&gt; constantsData = Constants.getAllValues();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (ConfDetails c : constantsData) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (c.getName().equals(name)) return c.getValue();</span>
+<span class="nc" id="L137">        }</span>
+<span class="nc" id="L138">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Doplni do DTO objektu oroginalnu hodnotu z Constants triedy a description
+     * @param conf
+     */
+    private void setOldValueDescription(ConfDetailsDto conf) {
+<span class="fc" id="L146">        List&lt;ConfDetails&gt; constantsData = Constants.getAllValues();</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for (ConfDetails c : constantsData) {</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">            if (c.getName().equals(conf.getName())) {</span>
+<span class="fc" id="L149">                conf.setOldValue(c.getValue());</span>
+<span class="fc" id="L150">                conf.setDescription(c.getDescription());</span>
+            }
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">    }</span>
+
+    public List&lt;String&gt; getAutocomplete(Identity user, String term) {
+<span class="nc" id="L156">        final String termLC = term.toLowerCase();</span>
+<span class="nc" id="L157">        List&lt;String&gt; allKeys = Constants.getAllKeys();</span>
+<span class="nc" id="L158">        List&lt;String&gt; keysToSort = Tools.filter(allKeys, new SelectionFilter &lt;String&gt;(){</span>
+
+            public boolean fullfilsConditions(String key){
+<span class="nc bnc" id="L161" title="All 4 branches missed.">                return key != null &amp;&amp; key.toLowerCase().contains(termLC);</span>
+            }
+        });
+<span class="nc" id="L164">        Collections.sort(keysToSort, new Comparator&lt;String&gt;(){</span>
+            public int compare(String key1, String key2){
+<span class="nc" id="L166">                key1 = key1.toLowerCase();</span>
+<span class="nc" id="L167">                key2 = key2.toLowerCase();</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">                if (key1.startsWith(termLC) &amp;&amp; key2.startsWith(termLC)) return key1.compareTo(key2);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                if (key1.startsWith(termLC)) return -1;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                if (key2.startsWith(termLC)) return 1;</span>
+<span class="nc" id="L171">                return key1.compareTo(key2);</span>
+            }
+        });
+
+<span class="nc" id="L175">        return ConfDB.filterByPerms(user, keysToSort);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

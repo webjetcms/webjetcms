@@ -10,6 +10,8 @@ export class WebPagesDatatable {
     #webpagesDatatableEventsBinded = false;
 
     constructor(options) {
+        var defaultTitleKey = "editor.newDocumentName";
+
         this.options = window.$.extend({}, {
             serverSide: true,
             tabs: null,
@@ -24,7 +26,7 @@ export class WebPagesDatatable {
             },
             editorButtons: [
                 {
-                    text: '<i class="fal fa-check"></i> ' + WJ.translate('button.save'),
+                    text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
                     action: function() {
                         //console.log("SAVING, this=", this);
                         let close = true;
@@ -49,9 +51,14 @@ export class WebPagesDatatable {
                         }
                     }
                 }
-            ]
+            ],
+            newPageTitleKey: defaultTitleKey,
         }, options);
         //console.log("WebPagesDatatable.options=", this.options);
+
+        if (this.options.newPageTitleKey != defaultTitleKey) {
+            this.options.url = WJ.urlAddParam(this.options.url, "newPageTitleKey", this.options.newPageTitleKey);
+        }
     }
 
     createDatatable() {
@@ -164,7 +171,7 @@ export class WebPagesDatatable {
                 let buttonCounter = 1;
                 //edit
                 historyTable.button().add(buttonCounter++, {
-                    text: '<i class="far fa-pencil"></i>',
+                    text: '<i class="ti ti-pencil"></i>',
                     action: function (e, dt, node) {
                         //console.log("btn, e=",e,"dt=",dt,"node=",node);
                         //ziskaj data selectnuteho riadku
@@ -187,7 +194,7 @@ export class WebPagesDatatable {
                 //delete
                 historyTable.button().add(buttonCounter++, {
                     extend: "remove",
-                    text: "<i class='far fa-trash-alt'></i>",
+                    text: "<i class='ti ti-trash'></i>",
                     editor: historyTable.EDITOR,
                     init: function ( dt, node, config ) {
                         var button = this;
@@ -213,7 +220,7 @@ export class WebPagesDatatable {
                 });
                 //preview
                 historyTable.button().add(buttonCounter++, {
-                    text: '<i class="far fa-eye"></i>',
+                    text: '<i class="ti ti-eye"></i>',
                     action: function (e, dt, node) {
                         //console.log("btn, e=",e,"dt=",dt,"node=",node);
                         //ziskaj data selectnuteho riadku
@@ -235,7 +242,7 @@ export class WebPagesDatatable {
                 });
                 //compare
                 historyTable.button().add(buttonCounter++, {
-                    text: '<i class="far fa-file-medical-alt"></i>',
+                    text: '<i class="ti ti-git-compare"></i>',
                     action: function (e, dt, node) {
                         //console.log("btn, e=",e,"dt=",dt,"node=",node);
                         //ziskaj data selectnuteho riadku
@@ -263,7 +270,7 @@ export class WebPagesDatatable {
                 let buttonCounter = 1;
                 //edit
                 historyTable.button().add(buttonCounter++, {
-                    text: '<i class="far fa-pencil"></i>',
+                    text: '<i class="ti ti-pencil"></i>',
                     action: function (e, dt, node) {
                         //console.log("btn, e=",e,"dt=",dt,"node=",node);
                         //ziskaj data selectnuteho riadku
@@ -328,7 +335,7 @@ export class WebPagesDatatable {
         let buttonCounter = 4;
         //preview page
         this.webpagesDatatable.button().add(buttonCounter++, {
-            text: '<i class="far fa-eye"></i>',
+            text: '<i class="ti ti-eye"></i>',
             action: function (e, dt, node) {
                 let selectedRows = dt.rows({ selected: true }).data();
                 for (let i=0; i<selectedRows.length; i++) {
@@ -354,7 +361,7 @@ export class WebPagesDatatable {
         if (WJ.hasPermission("cmp_abtesting")) {
             //ab test
             this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="fas fa-restroom"></i>',
+                text: '<i class="ti ti-a-b"></i>',
                 action: function (e, dt, node) {
                     self.webpagesDatatable.executeAction("saveAsAbTest", true, window.WJ.translate("editor.save_as_abtest.confirm.title"), window.WJ.translate("editor.save_as_abtest.confirm.text"));
                 },
@@ -372,7 +379,7 @@ export class WebPagesDatatable {
         if (WJ.hasPermission("cmp_stat")) {
             //show stat
             this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="far fa-chart-line"></i>',
+                text: '<i class="ti ti-chart-line"></i>',
                 action: function (e, dt, node) {
                     let selectedRows = dt.rows({ selected: true }).data();
                     for (let i=0; i<selectedRows.length; i++) {
@@ -388,7 +395,7 @@ export class WebPagesDatatable {
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },
-                className: 'btn btn-outline-secondary buttons-history-preview',
+                className: 'btn btn-outline-secondary buttons-stat',
                 attr: {
                     'title': window.WJ.translate('stat_doc.pageStat'),
                     'data-toggle': 'tooltip'
@@ -399,7 +406,7 @@ export class WebPagesDatatable {
         if (typeof window.webpagesDatatableGroupId !== "undefined") {
             //link check button
             this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="far fa-link-slash"></i>',
+                text: '<i class="ti ti-external-link"></i>',
                 action: function (e, dt, node) {
                     window.location.href="/admin/v9/webpages/linkcheck/?groupId="+webpagesDatatableGroupId;
                 },
@@ -454,8 +461,8 @@ export class WebPagesDatatable {
         this.webpagesDatatable.hideButton("export");
         if (typeof window.lastGroup != "undefined") {
             //povodny import/export stranok
-            this.webpagesDatatable.button().add(buttonCounter+2, {
-                text: '<i class="far fa-download"></i>',
+            this.webpagesDatatable.button().add(null, {
+                text: '<i class="ti ti-download"></i>',
                 action: function (e, dt, node) {
                     let groupId = 0;
                     if (typeof window.lastGroup != "undefined" && window.lastGroup != null && typeof window.lastGroup.groupId != "undefined") {
@@ -485,7 +492,7 @@ export class WebPagesDatatable {
                         else button.disable();
                     }, 500);
                 },
-                className: 'btn btn-outline-secondary buttons-divider buttons-import-export',
+                className: 'btn btn-outline-secondary buttons-divider buttons-import-export buttons-right',
                 attr: {
                     'title': window.WJ.translate('components.import_web_pages.menu'),
                     'data-toggle': 'tooltip',
@@ -502,15 +509,17 @@ export class WebPagesDatatable {
             if (self.#webpagesDatatableEventsBinded == false) {
                 //console.log("Binding webpages DTED events");
                 self.#webpagesDatatableEventsBinded = true;
+
+                var newPageTitle = WJ.translate(self.options.newPageTitleKey);
                 //navbar nastaveny podla title
                 $("#DTE_Field_title").on("focus", function() {
-                    if ($("#DTE_Field_title").val()==window.WJ.translate("editor.newDocumentName")) {
+                    if ($("#DTE_Field_title").val()==newPageTitle) {
                         $("#DTE_Field_title").val("");
                     }
                 });
                 $("#DTE_Field_title").on("blur", function() {
-                    if ($("#DTE_Field_navbar").val()=="" || $("#DTE_Field_navbar").val()==window.WJ.translate("editor.newDocumentName")) {
-                        if ($("#DTE_Field_navbar").val()==window.WJ.translate("editor.newDocumentName")) {
+                    if ($("#DTE_Field_navbar").val()=="" || $("#DTE_Field_navbar").val()==newPageTitle) {
+                        if ($("#DTE_Field_navbar").val()==newPageTitle) {
                             //zresetuj aj URL, aby sa znova vygenerovalo
                             $("#DTE_Field_virtualPath").val("");
                         }
@@ -536,7 +545,7 @@ export class WebPagesDatatable {
                         <input class="form-check-input" type="checkbox" value="" id="webpagesSaveCheckbox">
                         <label class="form-check-label" for="webpagesSaveCheckbox">
                             ${WJ.translate('editor.saveWorkCopy.js')}
-                            <span data-toggle="tooltip" title="${WJ.translate('editor.saveWorkCopy.tooltip.js')}"><i class="far fa-info-circle"></i></span>
+                            <span data-toggle="tooltip" title="${WJ.translate('editor.saveWorkCopy.tooltip.js')}"><i class="ti ti-info-circle"></i></span>
                         </label>
                     </div>
                 `;
@@ -551,6 +560,34 @@ export class WebPagesDatatable {
             let isChecked = $("#webpagesSaveCheckbox").is(':checked');
             self.webpagesDatatable.EDITOR.field("editorFields.requestPublish").val(!isChecked);
             //console.log("initSubmit, checked=", isChecked, "editorFields.requestPublish=", webpagesDatatable.EDITOR.field("editorFields.requestPublish").val())
+        });
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            if (self.webpagesDatatable.DATA.id===e.detail.id) {
+                if (self.webpagesDatatable.EDITOR.currentJson?.docId === -1) {
+                    if ($("#pills-dt-"+self.webpagesDatatable.DATA.id+"-content-tab").hasClass("active")) {
+                        //je to nova stranka, prepni sa na kartu Zakladne
+                        setTimeout(()=> {
+                            $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
+                        }, 700);
+                    }
+                }
+                //pri duplikovani zmazme niektore hodnoty
+                setTimeout(()=> {
+                    if ($("#"+self.webpagesDatatable.DATA.id+"_modal").attr("data-action")=="duplicate") {
+                        $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
+                        $("#DTE_Field_navbar").val("");
+                        $("#DTE_Field_virtualPath").val("");
+                    }
+                }, 700);
+
+                //bug: edit - celledit - edit = virtualPath bad positioning, fix to flex
+                var display = $("div.DTE_Field_Name_virtualPath").css("display");
+                //console.log("display=", display);
+                if (typeof display != undefined && "block"==display) {
+                    $("div.DTE_Field_Name_virtualPath").css("display", "flex");
+                }
+            }
         });
     }
 

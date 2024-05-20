@@ -226,8 +226,100 @@ static {
 	replaces.add(new OptionDto("MenuDB.getInstance().getByDate(day)", "RestaurantMenuService.getByDate(day,prop)", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("MenuDB", "RestaurantMenuService", "/components/restaurant_menu/"));
 
+	//Quiz
+	replaces.add(
+		new OptionDto("<" + "%@page import=\"sk.iway.iwcm.components.quiz.QuizBean\"%" + ">",
+		"<" + "%@page import=\"sk.iway.iwcm.components.quiz.QuizBean\"%" + "> \n <" + "%@page import=\"sk.iway.iwcm.components.quiz.jpa.QuizType\"%" + "> \n <" + "%@page import=\"sk.iway.iwcm.components.quiz.jpa.QuizResultEntity\"%" + "> \n <" + "%@page import=\"sk.iway.iwcm.components.quiz.jpa.QuizAnswerEntity\"%" + ">",
+		"/components/quiz/")
+	);
+	replaces.add(new OptionDto("sk.iway.iwcm.components.quiz.QuizQuestionBean", "sk.iway.iwcm.components.quiz.jpa.QuizQuestionEntity", "/components/quiz/"));
+	replaces.add(new OptionDto("sk.iway.iwcm.components.quiz.QuizBean", "sk.iway.iwcm.components.quiz.jpa.QuizEntity", "/components/quiz/"));
+	replaces.add(new OptionDto("sk.iway.iwcm.components.quiz.QuizService", "sk.iway.iwcm.components.quiz.rest.QuizService", "/components/quiz/"));
+	replaces.add(new OptionDto("QuizBean", "QuizEntity", "/components/quiz/"));
+	replaces.add(new OptionDto("QuizQuestionBean", "QuizQuestionEntity", "/components/quiz/"));
+	replaces.add(new OptionDto(".getImage()", ".getImageUrl()", "/components/quiz/"));
+	replaces.add(new OptionDto("if(option != null)", "if(option != null && !(\"\".equals(option)))", "/components/quiz/"));
+	replaces.add(new OptionDto("", "", "/components/quiz/"));
+
+
 	//old v8 datatables
 	replaces.add(new OptionDto("pagingType: \"bootstrap_extended\"", "pagingType: datatables_globalConfig.pagingType", null));
+
+	//iwcm:forEach
+	replaces.add(new OptionDto("<iwcm:forEach items=\"$"+"{galleryActionBean.photoList}\" var=\"image\" type=\"sk.iway.iwcm.gallery.GalleryBean\">", "<c:forEach items=\"$"+"{galleryActionBean.photoList}\" var=\"image\"><"+"%sk.iway.iwcm.gallery.GalleryBean image = (sk.iway.iwcm.gallery.GalleryBean)pageContext.getAttribute(\"image\");%"+">", null));
+	replaces.add(new OptionDto("<iwcm:forEach items=\"$"+"{perexGroupsNot}\" var=\"option\" type=\"sk.iway.iwcm.doc.PerexGroupBean\">", "<c:forEach items=\"$"+"{perexGroupsNot}\" var=\"option\"><"+"%sk.iway.iwcm.doc.PerexGroupBean option = (sk.iway.iwcm.doc.PerexGroupBean)pageContext.getAttribute(\"option\");%"+">", null));
+	replaces.add(new OptionDto("</iwcm:forEach>", "</c:forEach>", null));
+
+	//remove datetime.tld
+	replaces.add(new OptionDto("<"+"%@ taglib uri=\"/WEB-INF/datetime.tld\" prefix=\"dt\" %"+">", "", null));
+	replaces.add(new OptionDto("<"+"%@ taglib uri=\"/WEB-INF/datetime.tld\" prefix=\"dt\"", "<"+"%", null));
+
+	//font-awesome
+	replaces.add(new OptionDto("fa fa-angle-right", "ti ti-chevron-right", null));
+	replaces.add(new OptionDto("fa fa-chevron-left", "ti ti-chevron-left", null));
+	replaces.add(new OptionDto("fa fa-chevron-right", "ti ti-chevron-right", null));
+	replaces.add(new OptionDto("fa fa-cog", "ti ti-settings", null));
+	replaces.add(new OptionDto("far fa-plus", "ti ti-plus", null));
+	replaces.add(new OptionDto("fa fa-plus", "ti ti-plus", null));
+	replaces.add(new OptionDto("fa fa-times", "ti ti-x", null));
+	replaces.add(new OptionDto("far fa-chart-simple", "ti ti-chart-line", null));
+	replaces.add(new OptionDto("far fa-chart-line", "ti ti-chart-line", null));
+	replaces.add(new OptionDto("far fa-chart-bar", "ti ti-chart-line", null));
+	replaces.add(new OptionDto("fas fa-circle-check", "ti ti-circle-check", null));
+	replaces.add(new OptionDto("fas fa-circle-xmark", "ti ti-circle-x", null));
+	replaces.add(new OptionDto("fas fa-thumbs-up", "ti ti-thumb-up", null));
+	replaces.add(new OptionDto("fas fa-thumbs-down", "ti ti-thumb-down", null));
+	replaces.add(new OptionDto("far fa-eye", "ti ti-eye", null));
+	replaces.add(new OptionDto("fas fa-toggle-on", "ti ti-toggle-right", null));
+	replaces.add(new OptionDto("fas fa-toggle-off", "ti ti-toggle-left", null));
+	replaces.add(new OptionDto("fas fa-repeat", "ti ti-repeat", null));
+	replaces.add(new OptionDto("fas fa-trash-can-undo", "ti ti-trash-off", null));
+	replaces.add(new OptionDto("fal fa-dumpster", "ti ti-trash-x", null));
+	replaces.add(new OptionDto("far fa-trash-alt", "ti ti-trash", null));
+	replaces.add(new OptionDto("fas fa-check", "ti ti-check", null));
+	replaces.add(new OptionDto("fas fa-xmark", "ti ti-x", null));
+	replaces.add(new OptionDto("fas fa-rotate-right", "ti ti-restore", null));
+	replaces.add(new OptionDto("fas fa-rotate-left", "ti ti-rotate-left", null));
+	replaces.add(new OptionDto("fa-duotone fa-rotate", "ti ti-refresh", null));
+	replaces.add(new OptionDto("far fa-search", "ti ti-search", null));
+	replaces.add(new OptionDto("far fa-crosshairs", "ti ti-focus-2", null));
+	replaces.add(new OptionDto("fa fa-exclamation-triangle", "ti ti-alert-triangle", null));
+	replaces.add(new OptionDto("fa fa-image", "ti ti-photo", null));
+	replaces.add(new OptionDto("fa fa-file", "ti ti-file", null));
+	replaces.add(new OptionDto("fa fa-file-alt", "ti ti-file", null));
+	replaces.add(new OptionDto("fa fa-file-text", "ti ti-file", null));
+	replaces.add(new OptionDto("fa fa-link", "ti ti-focus-2", null));
+	replaces.add(new OptionDto("fa fa-calendar", "ti ti-calendar", null));
+	replaces.add(new OptionDto("fa fa-clock", "ti ti-clock", null));
+	replaces.add(new OptionDto("fa fa-clock-o", "ti ti-clock", null));
+	replaces.add(new OptionDto("fas fa-angle-right", "ti ti-chevron-right", null));
+	replaces.add(new OptionDto("fas fa-angle-left", "ti ti-chevron-left", null));
+	replaces.add(new OptionDto("fab fa-facebook-f", "ti ti-brand-facebook", null));
+	replaces.add(new OptionDto("fab fa-twitter", "ti ti-brand-twitter", null));
+	replaces.add(new OptionDto("fab fa-linkedin-in", "ti ti-brand-linkedin", null));
+	replaces.add(new OptionDto("far fa-envelope", "ti ti-envelope", null));
+	replaces.add(new OptionDto("fas fa-th-large", "ti ti-layout-grid", null));
+	replaces.add(new OptionDto("fas fa-list", "ti ti-list", null));
+	replaces.add(new OptionDto("fas fa-shopping-basket", "ti ti-basket", null));
+	replaces.add(new OptionDto("fas fa-thumbs-up", "ti ti-thumbs-up", null));
+	replaces.add(new OptionDto("far fa-pencil", "ti ti-pencil", null));
+	replaces.add(new OptionDto("far fa-wrench", "ti ti-adjustments-horizontal", null));
+	replaces.add(new OptionDto("far fa-info-circle", "ti ti-info-circle", null));
+	replaces.add(new OptionDto("far fa-question-circle", "ti ti-help", null));
+	replaces.add(new OptionDto("far fa-browser", "ti ti-browser", null));
+	replaces.add(new OptionDto("far fa-comment-alt", "ti ti-message", null));
+	replaces.add(new OptionDto("far fa-bell", "ti ti-bell", null));
+	replaces.add(new OptionDto("far fa-address-card", "ti ti-id", null));
+	replaces.add(new OptionDto("far fa-user", "ti ti-user", null));
+	replaces.add(new OptionDto("far fa-phone", "ti ti-device-mobile-message", null));
+	replaces.add(new OptionDto("far fa-key", "ti ti-key", null));
+	replaces.add(new OptionDto("far fa-sign-out", "ti ti-logout", null));
+	replaces.add(new OptionDto("fas fa-folder-times", "ti ti-folder-x", null));
+	replaces.add(new OptionDto("fas fa-folder", "ti ti-folder-filled", null));
+	replaces.add(new OptionDto("far fa-folder", "ti ti-folder", null));
+	replaces.add(new OptionDto("far fa-check-circle", "ti ti-circle-check", null));
+	replaces.add(new OptionDto("fas fa-lock", "ti ti-lock-filled", null));
+	replaces.add(new OptionDto("fas fa-home", "ti ti-home", null));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -256,6 +348,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 			//sam sebe sam, rekurzia pri kompilacii
 			if ("/admin/update/update-2023-18.jsp".equals(fullUrl)) continue;
+			if ("/admin/update/ldap-conn-test.jsp".equals(fullUrl)) continue;
 
 			System.out.println(fullUrl);
 			out.println(Tools.escapeHtml(fullUrl));
@@ -294,6 +387,17 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				}
 				//original null je mozne pouzit len na jsp subory
 				if (original == null && f.getName().endsWith(".jsp")==false) continue;
+
+				//FA icons replace only for admin files
+				if (to.startsWith("ti ti-")) {
+					boolean isAdmin = false;
+					if (fullUrl.contains("admin")) isAdmin = true;
+					else if (fullUrl.contains("editor_component")) isAdmin = true;
+					else if (content.contains("layout_top.jsp")) isAdmin = true;
+					else if (content.contains("<"+"iwcm:checkLogon")) isAdmin = true;
+
+					if (isAdmin == false) continue;
+				}
 
 				if (content.contains(from)) {
 					content = Tools.replace(content, from, to);

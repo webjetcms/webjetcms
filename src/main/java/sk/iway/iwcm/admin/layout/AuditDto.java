@@ -18,10 +18,12 @@ public class AuditDto {
     private int createdByUserId;
     private String createdByUserName;
     private String createdByUserLogin;
+    private int logId;
 
     public AuditDto(AdminlogBean adminlog) {
+        logId = adminlog.getLogId();
         type = Prop.getInstance().getText("components.adminlog."+adminlog.getLogType());
-        description = DB.prepareString(adminlog.getDescription(), 100);
+        description = DB.prepareString(adminlog.getDescription(), 140);
         date = Tools.formatDateTime(adminlog.getCreateDate());
         createdByUserId = adminlog.getUserId();
         UserDetails user = UsersDB.getUser(createdByUserId);

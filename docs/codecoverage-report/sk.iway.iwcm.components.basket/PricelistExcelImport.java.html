@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PricelistExcelImport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">PricelistExcelImport.java</span></div><h1>PricelistExcelImport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *
+ * Naimportuje z exceluje cennik a updatuje polozky, ktore sa v dokumente nachadzali
+ *
+ *
+ *  PricelistExcelImport.java
+ *
+ *@Title        webjet6
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 19.6.2008 11:24:42
+ *@modified     $Date: 2010/01/20 10:12:27 $
+ */
+public final class PricelistExcelImport extends ExcelImportJXL
+{
+	//rozpoznavane meny
+<span class="nc" id="L37">	private static final List&lt;String&gt; supportedCurrencies = Arrays.asList(Constants.getString(&quot;supportedCurrencies&quot;).split(&quot;,&quot;));</span>
+
+	private String titleFieldName;
+
+	private String quantityFieldName;
+
+	private String priceFieldName;
+
+	private String vatFieldName;
+
+	private String currencyFieldName;
+
+	private String docIdFieldName;
+
+	private String partNumberFieldName;
+
+	private boolean isImportedByDocId;
+
+	public PricelistExcelImport(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="nc" id="L57">		super(in, request, out);</span>
+		//------------------------ZISTI, AKE SU HLAVICKY STLPCOV--------------------
+<span class="nc" id="L59">		titleFieldName 		= trimHeaderName(request.getParameter(&quot;title&quot;));</span>
+<span class="nc" id="L60">		quantityFieldName 	= trimHeaderName(request.getParameter(&quot;quantity&quot;));</span>
+<span class="nc" id="L61">		currencyFieldName 	= trimHeaderName(request.getParameter(&quot;currency&quot;));</span>
+<span class="nc" id="L62">		priceFieldName 		= trimHeaderName(request.getParameter(&quot;price&quot;));</span>
+<span class="nc" id="L63">		vatFieldName	 		= trimHeaderName(request.getParameter(&quot;vat&quot;));</span>
+<span class="nc" id="L64">		docIdFieldName			= trimHeaderName(request.getParameter(&quot;docId&quot;));</span>
+<span class="nc" id="L65">		partNumberFieldName	= trimHeaderName(request.getParameter(&quot;partNumber&quot;));</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		isImportedByDocId = docIdFieldName != null;</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc" id="L72">		checkHeaderNames();</span>
+		//musia byt uvedene udaje titul, cena, dph, mena
+<span class="nc bnc" id="L74" title="All 6 branches missed.">		if (row==null || row.length &lt; 4 || !areHeaderNamesOk)</span>
+<span class="nc" id="L75">			return;</span>
+
+<span class="nc" id="L77">		PreparedStatement ps = null;</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (!isRowValid(row, prop))</span>
+<span class="nc" id="L80">			return;</span>
+
+<span class="nc" id="L82">		String vat = getValue(row, vatFieldName).trim();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		vat = vat.endsWith(&quot;%&quot;) ? vat.substring(0, vat.length() -1).trim() : vat;</span>
+		try
+		{
+<span class="nc" id="L86">			println(&quot;Importujem &quot;+getValue(row, titleFieldName), rowCounter);</span>
+
+			//------------------------ZAPIS V DATABAZU--------------------------
+			//TODO mozna SQL injection, treba zistit, ci sa to inak neda
+<span class="nc" id="L90">			String sql = &quot;UPDATE documents SET &quot;+</span>
+<span class="nc" id="L91">				formatFieldName(Constants.getString(&quot;basketPriceField&quot;))+&quot;=?, &quot;+</span>
+<span class="nc" id="L92">				formatFieldName(Constants.getString(&quot;basketVatField&quot;))+&quot;=?, &quot;+</span>
+<span class="nc" id="L93">				formatFieldName(Constants.getString(&quot;basketCurrencyField&quot;))+&quot;=?, &quot;+</span>
+<span class="nc" id="L94">				formatFieldName(Constants.getString(&quot;basketQuantityField&quot;))+&quot;=? &quot;;</span>
+			//dva mozne pripady - update podla docId alebo podla partNo
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			sql += isImportedByDocId ? &quot;WHERE doc_id = ?&quot; : &quot;WHERE &quot;+formatFieldName(Constants.getString(&quot;basketPartNoField&quot;))+&quot; = ?&quot;;</span>
+<span class="nc" id="L97">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L99">			double price = getDouble(row, priceFieldName, 0);</span>
+			String priceStr;
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (price != 0) {</span>
+<span class="nc" id="L102">				priceStr = Tools.replace( String.valueOf(price).replaceAll(&quot;\\s+&quot;, &quot;&quot;) , &quot;.&quot;, &quot;,&quot;);</span>
+			} else {
+<span class="nc" id="L104">				priceStr = getValue(row, priceFieldName).replaceAll(&quot;\\s+&quot;, &quot;&quot;);</span>
+			}
+
+<span class="nc" id="L107">			ps.setString(1, priceStr);</span>
+<span class="nc" id="L108">			ps.setString(2, vat);</span>
+<span class="nc" id="L109">			ps.setString(3, getValue(row, currencyFieldName).toLowerCase().replaceAll(&quot;\\s+&quot;, &quot;&quot;));</span>
+			//musime sa rozhodnut, ci budeme modifikovat zaznamy v databaze podla docid alebo podla partNo
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			String updateKey = isImportedByDocId ? docIdFieldName : partNumberFieldName;</span>
+<span class="nc" id="L112">			ps.setString(4, String.valueOf(getIntValue(row, quantityFieldName)));</span>
+<span class="nc" id="L113">			ps.setString(5, getValue(row, updateKey));</span>
+<span class="nc" id="L114">			int returnedRows = ps.executeUpdate();</span>
+			//------------------------KONIEC ZAPISU DAT--------------------------
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (returnedRows == 0)</span>
+<span class="nc" id="L117">				printlnError(prop.getText(&quot;components.basket.price_import.title_not_found&quot;, getValue(row, updateKey)),rowCounter);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (returnedRows &gt; 1)</span>
+<span class="nc" id="L119">				println(prop.getText(&quot;components.basket.price_import.more_rows_affected&quot;, getValue(row, updateKey),Integer.toString(returnedRows)),rowCounter);</span>
+<span class="nc" id="L120">			ps.close();</span>
+<span class="nc" id="L121">			ps = null;</span>
+		}
+<span class="nc" id="L123">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L125">			printlnError(&quot;Error, not importing&quot;);</span>
+<span class="nc" id="L126">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L133">					ps.close();</span>
+			}
+<span class="nc" id="L135">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L137">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L138">			}</span>
+		}
+<span class="nc" id="L140">	}</span>
+
+	@SuppressWarnings(&quot;java:S6353&quot;)
+	private boolean isRowValid(Cell[] row,Prop prop)
+	{
+		try
+		{
+			//-------------------------------VALIDACIE---------------------------
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (Tools.isEmpty(getValue(row, titleFieldName)))</span>
+<span class="nc" id="L149">				return false;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (Tools.getIntValue(getValue(row, quantityFieldName), -2) &lt; 0)</span>
+<span class="nc" id="L151">				return false;</span>
+<span class="nc" id="L152">			String currency = getValue(row, currencyFieldName).toLowerCase().trim();</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (!supportedCurrencies.contains(currency))</span>
+			{
+<span class="nc" id="L155">				printlnError(prop.getText(&quot;components.basket.price_import.unknown_currency&quot;, currency,supportedCurrencies.toString()),rowCounter);</span>
+<span class="nc" id="L156">				return false;</span>
+			}
+<span class="nc" id="L158">			String price = getValue(row, priceFieldName).trim().replaceAll(&quot;\\s+&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (!price.matches(&quot;^[0-9]+([,.][0-9]+)?$&quot;))</span>
+			{
+<span class="nc" id="L161">				printlnError(prop.getText(&quot;components.basket.price_import.bad_price_format&quot;, price),rowCounter);</span>
+<span class="nc" id="L162">				return false;</span>
+			}
+<span class="nc" id="L164">			String vat = getValue(row, vatFieldName).trim();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			vat = vat.endsWith(&quot;%&quot;) ? vat.substring(0, vat.length() -1).trim() : vat;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (!vat.matches(&quot;^[0-9]+([,.][0-9]+)?$&quot;))</span>
+			{
+<span class="nc" id="L168">				printlnError(prop.getText(&quot;components.basket.price_import.bad_vat_format&quot;, vat),rowCounter);</span>
+<span class="nc" id="L169">				return false;</span>
+			}
+			//----------------------KONIEC VALIDACII-------------------------------
+<span class="nc" id="L172">			return true;</span>
+		}
+<span class="nc" id="L174">		catch (Exception e)</span>
+		{
+<span class="nc" id="L176">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L177">			return false;</span>
+		}
+	}
+
+
+<span class="nc" id="L182">	private boolean alreadyChecked = false;</span>
+<span class="nc" id="L183">	private boolean areHeaderNamesOk = false;</span>
+
+	/**
+	 * Skontroluje, ci zadane hlavicky stlpcov naozaj su v spracovavanom
+	 * excelovskom subore.
+	 */
+	private void checkHeaderNames()
+	{
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (!alreadyChecked)</span>
+		{
+			//--------------------SEDIA MENA HEADROV?------------------------
+<span class="nc" id="L194">			areHeaderNamesOk = true;</span>
+<span class="nc" id="L195">			List&lt;String&gt; headerNames = Arrays.asList(headerNamesOriginal);</span>
+			//prehodime mena stlpcov na male pismena, aby sme mali obe v lowerCase
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			for (int columnIndex = 0; columnIndex &lt; headerNames.size(); columnIndex++)</span>
+<span class="nc" id="L198">				headerNames.set(columnIndex, headerNames.get(columnIndex).toLowerCase().trim() );</span>
+
+<span class="nc bnc" id="L200" title="All 6 branches missed.">			if (!(headerNames.contains(titleFieldName) &amp;&amp; headerNames.contains(quantityFieldName) &amp;&amp; headerNames.contains(currencyFieldName) &amp;&amp;</span>
+<span class="nc bnc" id="L201" title="All 4 branches missed.">			 		headerNames.contains(priceFieldName) &amp;&amp; headerNames.contains(vatFieldName) &amp;&amp;</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">					(headerNames.contains(docIdFieldName) || headerNames.contains(partNumberFieldName)) ) )</span>
+			{
+<span class="nc" id="L204">				printlnError(Prop.getInstance(request).getText(&quot;components.basket.price_import.column_header_mismatch&quot;),rowCounter);</span>
+<span class="nc" id="L205">				areHeaderNamesOk = false;</span>
+			}
+			//--------------------KONIEC KONTROLY------------------------
+		}
+<span class="nc" id="L209">		alreadyChecked =true;</span>
+<span class="nc" id="L210">	}</span>
+
+
+	/**
+	 * Mena, cena a dph sa budu zapisovat zrejme do field_x v tabulke documents, ale
+	 * my o ich vieme iba, ze sa ukladaju vo fieldJ, fieldK a podobne. tato metoda sluzi na
+	 * namapovanie fieldX na field_x.
+	 * @param fieldName
+	 * @return
+	 */
+	private String formatFieldName (String fieldName)
+	{
+<span class="nc" id="L222">		String fieldNameCopy = fieldName.toLowerCase().split(&quot;\\s&quot;)[0];</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (!fieldNameCopy.toLowerCase().startsWith(&quot;field&quot;))</span>
+<span class="nc" id="L225">			return fieldName;</span>
+
+<span class="nc" id="L227">		return &quot;field_&quot;+fieldNameCopy.charAt( fieldNameCopy.length() - 1 );</span>
+	}
+
+	/**
+	 * Sluzi na premazanie stavu kontroly po kazdom spracovanom sheete.
+	 */
+	@Override
+	public void importSheet(Sheet sheet, Prop prop)
+	{
+<span class="nc" id="L236">		super.importSheet(sheet, prop);</span>
+<span class="nc" id="L237">		alreadyChecked = false;</span>
+<span class="nc" id="L238">		areHeaderNamesOk = false;</span>
+<span class="nc" id="L239">	}</span>
+
+	private String trimHeaderName(String headerName)
+	{
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		return (headerName == null ? headerName : headerName.toLowerCase().trim());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

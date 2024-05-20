@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsBasic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsBasic.java</span></div><h1>UserDetailsBasic.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@MappedSuperclass
+@Getter
+@Setter
+<span class="fc" id="L29">public class UserDetailsBasic {</span>
+
+    @Id
+    @Column(name = &quot;user_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_users&quot;)
+    @DataTableColumn(
+            inputType = DataTableColumnType.ID,
+            title = &quot;[[#{components.users.id}]]&quot;,
+            renderFormat = &quot;dt-format-selector&quot;,
+            sortAfter = &quot;FIRST&quot;
+    )
+    private Long id;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;[[#{components.user.login}]]&quot;,
+        hiddenEditor = true,
+        sortAfter = &quot;id&quot;,
+        tab = &quot;personalInfo&quot;
+    )
+    //pre DT editor mame specialne pole editorFields.login tak, aby bolo hned za menom a priezviskom
+    private String login;
+
+    /*PERSONAL INFO - Person info*/
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.title}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;useredit.personal_info&quot;)
+                }
+            )
+        },
+        visible = false,
+        sortAfter = &quot;login&quot;
+    )
+    private String title;
+
+    @Column(name = &quot;first_name&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.firstName}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        sortAfter = &quot;title&quot;
+    )
+    private String firstName;
+
+    @Column(name = &quot;last_name&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.lastName}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        sortAfter = &quot;firstName&quot;
+    )
+    private String lastName;
+
+    @Column(name = &quot;date_of_birth&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title = &quot;[[#{components.user.newuser.dateOfBirth}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        visible = false,
+        sortAfter = &quot;lastName&quot;
+    )
+    private Date dateOfBirth;
+
+    @Column(name = &quot;sex_male&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.RADIO,
+        title = &quot;[[#{components.user.newuser.sexMale}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;reguser.male&quot;, value = &quot;true&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;reguser.female&quot;, value = &quot;false&quot;)
+                }
+            )
+        },
+        visible = false,
+        sortAfter = &quot;dateOfBirth&quot;
+    )
+    private Boolean sexMale;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = &quot;[[#{components.user.newuser.signature}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        visible = false,
+        sortAfter = &quot;sexMale&quot;
+    )
+    private String signature;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title = &quot;[[#{components.user.newuser.photo}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        visible = false,
+        sortAfter = &quot;signature&quot;
+    )
+    private String photo;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.PASSWORD,
+        title = &quot;[[#{components.user.password}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        hidden = true,
+        className = &quot;required&quot;,
+        sortAfter = &quot;email&quot;
+    )
+    @Transient //toto nechceme citat z DB
+    private String password;
+
+    /*CONTACTS - Contacts*/
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.company}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.users.contact&quot;)
+                }
+            )
+        },
+        visible = false
+    )
+    private String company;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.position}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String position;
+
+    @Column(name = &quot;adress&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.address}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String address;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.city}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String city;
+
+    @Column(name = &quot;PSC&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.zip}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String psc;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.country}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String country;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.phone}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String phone;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.fax}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String fax;
+
+    /*CONTACTS - Delivery address*/
+
+    @Column(name = &quot;delivery_first_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_first_name}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.basket.invoice_email.delivery_address&quot;)
+                }
+            )
+        },
+        visible = false
+    )
+    private String deliveryFirstName;
+
+    @Column(name = &quot;delivery_last_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_last_name}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryLastName;
+
+    @Column(name = &quot;delivery_company&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_company}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryCompany;
+
+    @Column(name = &quot;delivery_adress&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_address}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryAddress;
+
+    @Column(name = &quot;delivery_city&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_city}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryCity;
+
+    @Column(name = &quot;delivery_psc&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_psc}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryPsc;
+
+    @Column(name = &quot;delivery_country&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_country}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryCountry;
+
+    @Column(name = &quot;delivery_phone&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.delivery_phone}]]&quot;,
+        tab = &quot;contactTab&quot;,
+        visible = false
+    )
+    private String deliveryPhone;
+
+    //Prepare and return user full name
+    @JsonIgnore
+    public String getFullName() {
+<span class="fc" id="L307">		StringBuilder fullName = new StringBuilder(&quot;&quot;);</span>
+
+<span class="pc bpc" id="L309" title="3 of 4 branches missed.">		if(Constants.getBoolean(&quot;fullNameIncludeTitle&quot;) &amp;&amp; !Tools.isEmpty(title))</span>
+<span class="nc" id="L310">			fullName.append(title).append(&quot; &quot;);</span>
+
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">		if(!Tools.isEmpty(firstName))</span>
+<span class="fc" id="L313">			fullName.append(firstName).append(&quot; &quot;);</span>
+
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">		if(!Tools.isEmpty(lastName))</span>
+<span class="fc" id="L316">			fullName.append(lastName).append(&quot; &quot;);</span>
+
+<span class="fc" id="L318">		return fullName.toString().trim();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

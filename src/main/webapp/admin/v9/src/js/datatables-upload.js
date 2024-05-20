@@ -82,7 +82,7 @@ function adminUploadInit(options) {
         chunkSize: 2000000,
         forceChunking: true,
 
-        dictDefaultMessage: '<i class="fad fa-upload"></i>',
+        dictDefaultMessage: '<i class="ti ti-upload"></i>',
         headers: {
             'X-CSRF-TOKEN': window.csrfToken,
         },

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DictionaryBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.dictionary.model</a> &gt; <span class="el_source">DictionaryBean.java</span></div><h1>DictionaryBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.dictionary.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Entity
+@Table(name=&quot;dictionary&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_TOOLTIP)
+<span class="fc" id="L25">public class DictionaryBean extends ActiveRecord implements Serializable</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = -1016135704649424129L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_dictionary&quot;)
+	@TableGenerator(name=&quot;WJGen_dictionary&quot;, pkColumnValue=&quot;dictionary&quot;)
+	@Column(name=&quot;dictionary_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+	private int dictionaryId;
+
+	@Column(name=&quot;dictionary_group&quot;)
+	private String dictionaryGroup;
+
+	@Column(name=&quot;name&quot;)
+    @NotBlank
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title=&quot;[[#{components.tooltip.name}]]&quot;)
+	private String name;
+
+	@Column(name=&quot;name_orig&quot;)
+	private String nameOrig;
+
+	/**** TOOLTIPS  *****/
+	@Column(name=&quot;language&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.news.language_version}]]&quot;
+    )
+	private String language;
+
+	@Column(name=&quot;domain&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.news.domain}]]&quot;
+    )
+	private String domain;
+	/********************/
+
+    @Column(name=&quot;value&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title=&quot;[[#{components.htmlbox.basic}]]&quot;)
+	private String value;
+
+<span class="fc" id="L70">	public int getId() { return getDictionaryId(); }</span>
+
+	public void setId(int dictionaryId)
+	{
+<span class="fc" id="L74">		setDictionaryId(dictionaryId);</span>
+<span class="fc" id="L75">	}</span>
+
+	public int getDictionaryId()
+	{
+<span class="fc" id="L79">		return dictionaryId;</span>
+	}
+
+	public void setDictionaryId(int dictionaryId)
+	{
+<span class="fc" id="L84">		this.dictionaryId = dictionaryId;</span>
+<span class="fc" id="L85">	}</span>
+
+	public String getDictionaryGroup()
+	{
+<span class="fc" id="L89">		return dictionaryGroup;</span>
+	}
+
+	public void setDictionaryGroup(String dictionaryGroup)
+	{
+<span class="fc" id="L94">		this.dictionaryGroup = dictionaryGroup;</span>
+<span class="fc" id="L95">	}</span>
+
+	public String getName()
+	{
+<span class="fc" id="L99">		return name;</span>
+	}
+
+	public void setName(String name)
+	{
+<span class="fc" id="L104">		this.name = name;</span>
+<span class="fc" id="L105">	}</span>
+
+	public String getNameOrig()
+	{
+<span class="fc" id="L109">		return nameOrig;</span>
+	}
+
+	public void setNameOrig(String nameOrig)
+	{
+<span class="fc" id="L114">		this.nameOrig = nameOrig;</span>
+<span class="fc" id="L115">	}</span>
+
+	public String getValue()
+	{
+<span class="fc" id="L119">		return value;</span>
+	}
+
+	public void setValue(String value)
+	{
+<span class="fc" id="L124">		this.value = value;</span>
+<span class="fc" id="L125">	}</span>
+
+	public String getLanguage()
+	{
+<span class="fc" id="L129">		return language;</span>
+	}
+
+	public void setLanguage(String language)
+	{
+<span class="fc" id="L134">		this.language = language;</span>
+<span class="fc" id="L135">	}</span>
+
+	public String getDomain()
+	{
+<span class="fc" id="L139">		return domain;</span>
+	}
+
+	public void setDomain(String domain)
+	{
+<span class="fc" id="L144">		this.domain = domain;</span>
+<span class="fc" id="L145">	}</span>
+
+
+
+
+	/**
+	 * Vrati html link na toto slovo v slovniku
+	 * @return
+	 */
+    @JsonIgnore //Because seLink doesnt exist we must use JsonIgnore or auto test will failed
+	public String getLink()
+	{
+<span class="nc" id="L157">		return new StringBuilder(&quot;&lt;a class='dictionaryLink' onmouseover='!INCLUDE(/components/dictionary/mouseover.jsp,dictionaryId=&quot;).append(this.getDictionaryId()).append(&quot; )!' onmouseout='hideDictionaryTooltip();' &gt; &quot;).append(this.getName()).append(&quot;&lt;/a&gt;&quot;).toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

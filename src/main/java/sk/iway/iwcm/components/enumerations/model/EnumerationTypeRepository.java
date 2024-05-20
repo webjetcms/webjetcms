@@ -14,21 +14,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface EnumerationTypeRepository extends JpaRepository<EnumerationTypeBean, Long>, JpaSpecificationExecutor<EnumerationTypeBean> {
-    @Query(value = "SELECT * FROM enumeration_type WHERE enumeration_type_id = ?1 AND hidden = 0", nativeQuery=true)
-    EnumerationTypeBean getNonHiddenByEnumId(Integer enumerationTypeId);
+    @Query(value = "SELECT * FROM enumeration_type WHERE enumeration_type_id = ?1 AND hidden = ?2", nativeQuery=true)
+    EnumerationTypeBean getNonHiddenByEnumId(Integer enumerationTypeId, boolean hidden);
 
     @Query(value = "SELECT * FROM enumeration_type WHERE enumeration_type_id = ?1", nativeQuery=true)
     EnumerationTypeBean getByEnumId(Integer enumerationTypeId);
 
-    @Query(value = "SELECT * FROM enumeration_type WHERE hidden = 0 ORDER BY enumeration_type_id", nativeQuery=true)
-    List<EnumerationTypeBean> getAllNonHiddenOrderedById();
+    @Query(value = "SELECT * FROM enumeration_type WHERE hidden = ?1 ORDER BY enumeration_type_id", nativeQuery=true)
+    List<EnumerationTypeBean> getAllNonHiddenOrderedById(boolean hidden);
 
-    EnumerationTypeBean findFirstByHiddenOrderById(Integer hidden);
+    EnumerationTypeBean findFirstByHiddenOrderById(boolean hidden);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE EnumerationTypeBean SET hidden = 1 WHERE enumerationTypeId = :enumerationTypeId")
-    void deleteEnumTypeById(@Param("enumerationTypeId")Integer enumerationTypeId);
+    @Query(value = "UPDATE EnumerationTypeBean SET hidden = :hidden WHERE enumerationTypeId = :enumerationTypeId")
+    void deleteEnumTypeById(@Param("enumerationTypeId")Integer enumerationTypeId, @Param("hidden")boolean hidden);
 
     Page<EnumerationTypeBean> findAllByHiddenFalse(Pageable pagebale);
 

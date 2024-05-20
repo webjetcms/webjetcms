@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContextResponseWrapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.context</a> &gt; <span class="el_source">ContextResponseWrapper.java</span></div><h1>ContextResponseWrapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.context;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Locale;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+
+
+/**
+ *  ContextResponseWrapper.java - wrapper pre moznost fungovania WebJETu v inom ako ROOT contexte (napr. /wj7)
+ *  Povodne riesene pre TatraBanku projekt RaiffeisenBank
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 20.7.2012 9:12:24
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class ContextResponseWrapper extends HttpServletResponseWrapper
+{
+	PrintWriter writer;
+	private StringWriter strWriter;
+<span class="nc" id="L39">	private String redirectURL = null;</span>
+	HttpServletResponse origResponse;
+	HttpServletRequest origRequest;
+<span class="nc" id="L42">	ContextResponseStream outputStream = null;</span>
+<span class="nc" id="L43">	boolean debug = false;</span>
+<span class="nc" id="L44">	List&lt;Cookie&gt; cookies = null;</span>
+
+	public void writeResponseToOriginalOutput(HttpServletRequest req, boolean removeContextPath) throws IOException
+	{
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;writeResponseToOriginalOutput, contentType=&quot;+getContentType()+&quot; os=&quot;+outputStream);</span>
+<span class="nc bnc" id="L49" title="All 10 branches missed.">		if (getContentType()!=null &amp;&amp; (getContentType().startsWith(&quot;text&quot;) || outputStream == null || getContentType().indexOf(&quot;x-javascript&quot;)!=-1 || getContentType().indexOf(&quot;application/javascript&quot;)!=-1))</span>
+		{
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			if (debug) Logger.debug(ContextResponseWrapper.class, &quot;writeResponseToOriginalOutput, budem replacovat&quot;);</span>
+			String htmlCode;
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			if (outputStream != null)</span>
+			{
+<span class="nc" id="L55">				htmlCode = outputStream.getBaos().toString(SetCharacterEncodingFilter.getEncoding());</span>
+			}
+			else
+			{
+<span class="nc" id="L59">				htmlCode = strWriter.getBuffer().toString();</span>
+			}
+<span class="nc" id="L61">			writeResponseToOriginalOutput(req, htmlCode, removeContextPath);</span>
+<span class="nc" id="L62">		}</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">		else if (outputStream != null &amp;&amp; outputStream.getBaos()!=null)</span>
+		{
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (debug) Logger.debug(ContextResponseWrapper.class, &quot;writeResponseToOriginalOutput, zapisujem priamo&quot;);</span>
+<span class="nc" id="L66">			origResponse.getOutputStream().write(outputStream.getBaos().toByteArray());</span>
+		}
+<span class="nc" id="L68">	}</span>
+
+	/**
+	 * Zapise HTML kod na povodny vystup s testom na moznost gzip kompresie
+	 * @param req
+	 * @param htmlCode
+	 * @throws IOException
+	 */
+	private void writeResponseToOriginalOutput(HttpServletRequest req, String htmlCode, boolean removeContextPath) throws IOException
+	{
+		//zapis vystup
+		String outputCode;
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (removeContextPath == false)</span>
+		{
+<span class="nc" id="L82">			outputCode = ContextFilter.addContextPath(req.getContextPath(), htmlCode);</span>
+		}
+		else
+		{
+<span class="nc" id="L86">			outputCode = ContextFilter.removeContextPath(Constants.getString(&quot;contextPathAdmin&quot;), htmlCode);</span>
+		}
+		//TODO: toto treba ratat ako poset bytov, co pre UTF-8 nie je length
+		//byte bytes[] = outputCode.getBytes(SetCharacterEncodingFilter.getEncoding());
+		//origResponse.reset();
+		//origResponse.setContentLength(bytes.length);
+		/*
+		if (outputCode.length() &lt; 100000)
+		{
+			if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setting buffer to size: &quot;+(outputCode.length()+5000));
+			origResponse.setBufferSize(outputCode.length()+5000);
+		}
+		*/
+		//String output2 = &quot;&quot;+outputCode;
+
+<span class="nc" id="L101">		int length = outputCode.getBytes(SetCharacterEncodingFilter.getEncoding()).length;</span>
+<span class="nc" id="L102">		origResponse.setContentLength(length);</span>
+		//origResponse.setHeader(&quot;Content-Length&quot;, String.valueOf(output2.getBytes(&quot;utf-8&quot;).length));
+		//origResponse.setHeader(&quot;CLutf&quot;, String.valueOf(output2.getBytes(&quot;utf-8&quot;).length));
+		//origResponse.setHeader(&quot;CL2&quot;, String.valueOf(outputCode.length()));
+		//origResponse.setHeader(&quot;CL3&quot;, String.valueOf(outputCode.getBytes(&quot;&quot;).length));
+		//origResponse.setHeader(&quot;CL4&quot;, String.valueOf(outputCode.getBytes().length));
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (Tools.isNotEmpty(outputCode))</span>
+		{
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (debug) Logger.debug(ContextResponseWrapper.class, &quot;writing data, size=&quot;+outputCode.length());</span>
+
+<span class="nc" id="L112">			origResponse.getWriter().write(outputCode);</span>
+		}
+		//origResponse.getOutputStream().write(bytes);
+<span class="nc" id="L115">	}</span>
+
+	@Override
+	public void sendRedirect(String url) throws IOException
+	{
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (debug) Logger.println(this,&quot;--&gt; send redirect: &quot;+url);</span>
+<span class="nc" id="L121">		redirectURL = url;</span>
+		//super.sendRedirect(url);
+<span class="nc" id="L123">	}</span>
+	@Override
+	public void addCookie(Cookie c)
+	{
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (debug) Logger.debug(this,&quot;add cookie: &quot; + c.getName()+&quot; path=&quot;+c.getPath()+&quot; value=&quot;+c.getValue());</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (cookies != null) cookies.add(c);</span>
+<span class="nc" id="L129">	}</span>
+
+// ----------------------------------------------------------- Constructors
+
+
+   /**
+    * Construct a new response wrapper according to the specified parameters.
+    *
+    * @param response The servlet response we are wrapping
+    */
+   public ContextResponseWrapper(HttpServletResponse response,HttpServletRequest request)
+   {
+<span class="nc" id="L141">       super(response);</span>
+<span class="nc" id="L142">       debug = Constants.getBoolean(&quot;contextPathDebug&quot;);</span>
+<span class="nc" id="L143">       origResponse = response;</span>
+       //baos = new ByteArrayOutputStream();
+<span class="nc" id="L145">       strWriter = new StringWriter();</span>
+<span class="nc" id="L146">       writer = new PrintWriter(strWriter);</span>
+<span class="nc" id="L147">       origRequest = request;</span>
+
+<span class="nc" id="L149">       cookies = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L150">   }</span>
+
+
+   /**
+    * Swallow any attempt to flush the response buffer.
+    */
+   @Override
+   public void flushBuffer() throws IOException {
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">   	if (debug) Logger.debug(this,&quot;--&gt; FLUSH BUFFER&quot;);</span>
+
+<span class="nc" id="L161">   }</span>
+
+
+   /**
+    * Return a PrintWriter that can be used to accumulate the response data
+    * for the included resource.
+    *
+    * @exception IOException if an I/O error occurs
+    */
+   @Override
+   public PrintWriter getWriter() throws IOException {
+
+<span class="nc" id="L173">       return (writer);</span>
+
+   }
+   @Override
+	public void setBufferSize(int bufferSize)
+	{
+		try
+		{
+<span class="nc" id="L181">			super.setBufferSize(bufferSize);</span>
+		}
+<span class="nc" id="L183">		catch (Exception e)</span>
+		{
+
+<span class="nc" id="L186">		}</span>
+<span class="nc" id="L187">	}</span>
+	public String getRedirectURL()
+	{
+<span class="nc" id="L190">		return redirectURL;</span>
+	}
+
+	private ContextResponseStream createOutputStream()
+	{
+		try
+		{
+<span class="nc" id="L197">			return new ContextResponseStream(origResponse);</span>
+		}
+<span class="nc" id="L199">		catch (Exception e)</span>
+		{
+<span class="nc" id="L201">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L203">		return null;</span>
+	}
+
+	@Override
+	public ServletOutputStream getOutputStream() throws IOException
+	{
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		if (outputStream == null) outputStream = createOutputStream();</span>
+<span class="nc" id="L210">		return (outputStream);</span>
+	}
+
+	//setStatus implementation
+<span class="nc" id="L214">	protected int statusCode = 0;</span>
+<span class="nc" id="L215">	protected String statusMessage = null;</span>
+	@Override
+	@SuppressWarnings(&quot;deprecation&quot;)
+	public void setStatus(int sc, String sm)
+	{
+<span class="nc" id="L220">		super.setStatus(sc, sm);</span>
+<span class="nc" id="L221">		statusCode = sc;</span>
+<span class="nc" id="L222">		statusMessage = sm;</span>
+<span class="nc" id="L223">	}</span>
+	@Override
+	public void setStatus(int sc)
+	{
+<span class="nc" id="L227">		super.setStatus(sc);</span>
+<span class="nc" id="L228">		statusCode = sc;</span>
+<span class="nc" id="L229">	}</span>
+	public int getStatusCode()
+	{
+<span class="nc" id="L232">		return statusCode;</span>
+	}
+	public String getStatusMessage()
+	{
+<span class="nc" id="L236">		return statusMessage;</span>
+	}
+
+	//setCharacterEncoding implementation
+<span class="nc" id="L240">	protected String characterEncoding = null;</span>
+	@Override
+	public void setCharacterEncoding(String charset)
+	{
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setCharacterEncoding:&quot;+charset);</span>
+<span class="nc" id="L245">		super.setCharacterEncoding(charset);</span>
+<span class="nc" id="L246">		characterEncoding = charset;</span>
+<span class="nc" id="L247">	}</span>
+	@Override
+	public String getCharacterEncoding()
+	{
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;getCharacterEncoding: &quot;+characterEncoding+&quot; vs &quot;+super.getCharacterEncoding());</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if (characterEncoding == null) return super.getCharacterEncoding();</span>
+<span class="nc" id="L253">		return characterEncoding;</span>
+	}
+
+	//setContentType implementation
+<span class="nc" id="L257">	protected String contentType = null;</span>
+	@Override
+	public void setContentType(String type)
+	{
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		if (&quot;text/html&quot;.equalsIgnoreCase(type))</span>
+		{
+<span class="nc" id="L263">			type = &quot;text/html; charset=&quot;+SetCharacterEncodingFilter.getEncoding();</span>
+		}
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setContentType=&quot;+type);</span>
+<span class="nc" id="L267">		super.setContentType(type);</span>
+		//jeeff:tato kontrola je tu kvoli nejakej haluze, ze sa setContentType vola viac krat a niekedy konci nespravne ako text/css (netusim preco)
+<span class="nc bnc" id="L269" title="All 8 branches missed.">		if (contentType == null || type.indexOf(&quot;; charset=&quot;)!=-1 || type.indexOf(&quot;application/&quot;)!=-1 || type.indexOf(&quot;image/&quot;)!=-1)</span>
+		{
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setting contentType=&quot;+type);</span>
+<span class="nc" id="L272">			contentType = type;</span>
+<span class="nc" id="L273">			super.setContentType(type);</span>
+		}
+<span class="nc" id="L275">	}</span>
+	@Override
+	public String getContentType()
+	{
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		if (&quot;text/html&quot;.equalsIgnoreCase(contentType))</span>
+		{
+<span class="nc" id="L281">			contentType = &quot;text/html; charset=&quot;+SetCharacterEncodingFilter.getEncoding();</span>
+		}
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;getContentType=&quot;+contentType);</span>
+<span class="nc" id="L285">		return contentType;</span>
+	}
+
+	//setLocale implementation
+<span class="nc" id="L289">	Locale locale = null;</span>
+	@Override
+	public void setLocale(Locale loc)
+	{
+<span class="nc" id="L293">		super.setLocale(loc);</span>
+<span class="nc" id="L294">		locale = loc;</span>
+<span class="nc" id="L295">	}</span>
+	@Override
+	public Locale getLocale()
+	{
+<span class="nc bnc" id="L299" title="All 2 branches missed.">		if (locale == null) return super.getLocale();</span>
+<span class="nc" id="L300">		return locale;</span>
+	}
+
+	//sendError implementation
+<span class="nc" id="L304">	protected int errorCode=0;</span>
+<span class="nc" id="L305">	protected String errorMessage=null;</span>
+	@Override
+	public void sendError(int sc, String msg) throws IOException
+	{
+<span class="nc" id="L309">		errorCode = sc;</span>
+<span class="nc" id="L310">		errorMessage = msg;</span>
+		//super.sendError(sc, msg);
+<span class="nc" id="L312">	}</span>
+
+	@Override
+	public void sendError(int sc) throws IOException
+	{
+<span class="nc" id="L317">		errorCode = sc;</span>
+		//super.sendError(sc);
+<span class="nc" id="L319">	}</span>
+	public int getErrorCode()
+	{
+<span class="nc" id="L322">		return errorCode;</span>
+	}
+	public String getErrorMessage()
+	{
+<span class="nc" id="L326">		return errorMessage;</span>
+	}
+
+	//setHeader implementation
+<span class="nc" id="L330">	protected java.util.Hashtable&lt;String, String&gt; headers = null;</span>
+
+	@Override
+	public void setHeader(String name, String value)
+	{
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setHeader: name=&quot;+name+&quot; value=&quot;+value);</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">		if (headers == null) headers = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L337">		headers.put(name, value);</span>
+<span class="nc" id="L338">		super.setHeader(name, value);</span>
+
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		if (&quot;content-type&quot;.equalsIgnoreCase(name))</span>
+		{
+<span class="nc" id="L342">			setContentType(value);</span>
+		}
+<span class="nc" id="L344">	}</span>
+	@Override
+	public String getHeader(String name)
+	{
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;getHeader: &quot;+name);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">		if (headers == null) return null;</span>
+<span class="nc" id="L350">		return headers.get(name);</span>
+	}
+
+	@Override
+	public void addHeader(String name, String value)
+	{
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;addHeader: name=&quot;+name+&quot; value=&quot;+value);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		if (headers == null) headers = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L358">		headers.put(name, value);</span>
+<span class="nc" id="L359">		super.addHeader(name, value);</span>
+<span class="nc" id="L360">	}</span>
+
+	@Override
+	public void addIntHeader(String name, int value)
+	{
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;addIntHeader: name=&quot;+name+&quot; value=&quot;+value);</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">		if (headers == null) headers = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L367">		headers.put(name, String.valueOf(value));</span>
+<span class="nc" id="L368">		super.addIntHeader(name, value);</span>
+<span class="nc" id="L369">	}</span>
+
+	@Override
+	public void setIntHeader(String name, int value)
+	{
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		if (debug) Logger.debug(ContextResponseWrapper.class, &quot;setIntHeader: name=&quot;+name+&quot; value=&quot;+value);</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		if (headers == null) headers = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L376">		headers.put(name, String.valueOf(value));</span>
+<span class="nc" id="L377">		super.setIntHeader(name, value);</span>
+<span class="nc" id="L378">	}</span>
+
+	public List&lt;Cookie&gt; getCookies()
+	{
+<span class="nc" id="L382">		return cookies;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

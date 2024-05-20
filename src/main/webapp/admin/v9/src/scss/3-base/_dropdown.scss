@@ -27,7 +27,7 @@
         background-position: right 11px center !important;
         background-size: 16px 12px;
         .filter-option-inner-inner {
-            i.fa,i.far,i.fas {
+            i.fa,i.far,i.fas, i.ti {
                 display: none;
             }
         }
@@ -40,4 +40,8 @@
 div.dropdown ul.dropdown-menu li a {
     //ked som klikol a drzal mys v hlavicke na dropdowne mena, alebo zmeny domeny zrazu bolo pismo biele
     color: $secondary;
+
+    i.ti {
+        margin-right: .25rem;
+    }
 }

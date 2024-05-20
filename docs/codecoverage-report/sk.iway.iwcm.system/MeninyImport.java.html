@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MeninyImport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">MeninyImport.java</span></div><h1>MeninyImport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *  MeninyImport.java - import menin z Excelu
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      $Date: 2005/10/25 06:48:05 $
+ *@modified     $Date: 2005/10/25 06:48:05 $
+ */
+public class MeninyImport extends ExcelImportJXL
+{
+	PreparedStatement ps;
+	String sql;
+
+	private int day, month;
+	private String name, lng;
+
+	public MeninyImport(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="nc" id="L39">		super(in, request, out);</span>
+<span class="nc" id="L40">		Logger.println(this,&quot;MeninyImport constructor&quot;);</span>
+		//vymaz aktualne data
+<span class="nc" id="L42">		Connection db_conn = null;</span>
+<span class="nc" id="L43">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L46">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L47">			ps = db_conn.prepareStatement(&quot;DELETE FROM calendar_name_in_year&quot;);</span>
+<span class="nc" id="L48">			ps.execute();</span>
+<span class="nc" id="L49">			ps.close();</span>
+<span class="nc" id="L50">			ps = null;</span>
+		}
+<span class="nc" id="L52">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L54">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L60" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L61">					db_conn.close();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L63">					ps.close();</span>
+			}
+<span class="nc" id="L65">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L67">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L68">			}</span>
+		}
+<span class="nc" id="L70">	}</span>
+
+	/**
+	 * pridanie riadku do zoznamu riadkov
+	 * @param row
+	 */
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (row.length&lt;3)</span>
+		{
+<span class="nc" id="L81">			return;</span>
+		}
+
+<span class="nc" id="L84">		day = getIntValue(row, &quot;day&quot;);</span>
+<span class="nc" id="L85">		month = getIntValue(row, &quot;month&quot;);</span>
+<span class="nc" id="L86">		name = getValue(row, &quot;name&quot;);</span>
+<span class="nc" id="L87">		lng = getValue(row, &quot;lng&quot;);</span>
+
+<span class="nc bnc" id="L89" title="All 8 branches missed.">		if (day&gt;0 &amp;&amp; month&gt;0 &amp;&amp; Tools.isNotEmpty(name) &amp;&amp; Tools.isNotEmpty(lng))</span>
+		{
+<span class="nc" id="L91">			Logger.println(this,&quot;   importujem meniny: &quot; + day + &quot;.&quot; + month + &quot; &quot; + name + &quot; [&quot; + lng + &quot;]&quot;);</span>
+<span class="nc" id="L92">			sql = &quot;INSERT INTO calendar_name_in_year (day, month, name, lng) VALUES (?, ?, ?, ?) &quot;;</span>
+<span class="nc" id="L93">		   ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L94">		   ps.setInt(1, day);</span>
+<span class="nc" id="L95">		   ps.setInt(2, month);</span>
+<span class="nc" id="L96">			ps.setString(3, name);</span>
+<span class="nc" id="L97">			ps.setString(4, lng);</span>
+
+<span class="nc" id="L99">		   ps.execute();</span>
+<span class="nc" id="L100">		   ps.close();</span>
+		}
+		else
+		{
+<span class="nc" id="L104">			Logger.println(this,&quot;   skipping: &quot; + day + &quot;.&quot; + month + &quot; &quot; + name + &quot; [&quot; + lng + &quot;]&quot;);</span>
+		}
+<span class="nc" id="L106">	}</span>
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

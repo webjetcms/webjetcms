@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EventForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">EventForm.java</span></div><h1>EventForm.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+
+import sk.iway.iwcm.Constants;
+
+/**
+ *  formular na pridanie udalosti do kalendara
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.8 $
+ *@created      Streda, 2002, február 20
+ *@modified     $Date: 2004/02/17 22:34:03 $
+ */
+<span class="nc" id="L21">public class EventForm extends ActionForm</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 1L;
+<span class="nc" id="L27">	private boolean recode = true;</span>
+	private int calendarId;
+	private String title;
+	private String dateFrom;
+	private String dateTo;
+	private int typeId;
+	private String description;
+	private String area;
+	private String city;
+	private String address;
+	private String timeRange;
+	private String info1;
+	private String info2;
+	private String info3;
+	private String info4;
+	private String info5;
+	private int notifyHoursBefore;
+	private String notifyEmails;
+	private String notifySender;
+	private String notifyIntrotext;
+	private boolean notifySendSMS;
+<span class="nc" id="L48">	private String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+	private int creatorId;
+	private int approve; 
+	private boolean suggest;
+	private String approveCheckBox;
+	private int domainId; 
+	
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  input  Description of the Parameter
+	 *@return        Description of the Return Value
+	 */
+	private String recode(String input)
+	{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (input == null)</span>
+		{
+<span class="nc" id="L65">			return (&quot;&quot;);</span>
+		}
+		//Logger.println(this,&quot;Recoding: &quot;+input);
+<span class="nc" id="L68">		return (input.trim());</span>
+	}
+
+	/**
+	 *  Sets the recode attribute of the EventForm object
+	 *
+	 *@param  recode  The new recode value
+	 */
+	public void setRecode(boolean recode)
+	{
+<span class="nc" id="L78">		this.recode = recode;</span>
+<span class="nc" id="L79">	}</span>
+
+	/**
+	 *  Gets the recode attribute of the EventForm object
+	 *
+	 *@return    The recode value
+	 */
+	public boolean isRecode()
+	{
+<span class="nc" id="L88">		return recode;</span>
+	}
+
+	@Override
+	public void reset(ActionMapping mapping, HttpServletRequest request)
+	{
+<span class="nc" id="L94">		this.notifySendSMS = false;</span>
+<span class="nc" id="L95">	}</span>
+
+	/**
+	 *  Sets the calendarId attribute of the EventForm object
+	 *
+	 *@param  calendarId  The new calendarId value
+	 */
+	public void setCalendarId(int calendarId)
+	{
+<span class="nc" id="L104">		this.calendarId = calendarId;</span>
+<span class="nc" id="L105">	}</span>
+
+	/**
+	 *  Gets the calendarId attribute of the EventForm object
+	 *
+	 *@return    The calendarId value
+	 */
+	public int getCalendarId()
+	{
+<span class="nc" id="L114">		return calendarId;</span>
+	}
+
+	/**
+	 *  Sets the title attribute of the EventForm object
+	 *
+	 *@param  title  The new title value
+	 */
+	public void setTitle(String title)
+	{
+<span class="nc" id="L124">		this.title = recode(title);</span>
+<span class="nc" id="L125">	}</span>
+
+	/**
+	 *  Gets the title attribute of the EventForm object
+	 *
+	 *@return    The title value
+	 */
+	public String getTitle()
+	{
+<span class="nc" id="L134">		return title;</span>
+	}
+
+	/**
+	 *  Sets the dateFrom attribute of the EventForm object
+	 *
+	 *@param  dateFrom  The new dateFrom value
+	 */
+	public void setDateFrom(String dateFrom)
+	{
+<span class="nc" id="L144">		this.dateFrom = dateFrom;</span>
+<span class="nc" id="L145">	}</span>
+
+	/**
+	 *  Gets the dateFrom attribute of the EventForm object
+	 *
+	 *@return    The dateFrom value
+	 */
+	public String getDateFrom()
+	{
+<span class="nc" id="L154">		return dateFrom;</span>
+	}
+
+	/**
+	 *  Sets the dateTo attribute of the EventForm object
+	 *
+	 *@param  dateTo  The new dateTo value
+	 */
+	public void setDateTo(String dateTo)
+	{
+<span class="nc" id="L164">		this.dateTo = dateTo;</span>
+<span class="nc" id="L165">	}</span>
+
+	/**
+	 *  Gets the dateTo attribute of the EventForm object
+	 *
+	 *@return    The dateTo value
+	 */
+	public String getDateTo()
+	{
+<span class="nc" id="L174">		return dateTo;</span>
+	}
+
+	/**
+	 *  Sets the type attribute of the EventForm object
+	 *
+	 *@param  type  The new type value
+	 */
+	public void setTypeId(int typeId)
+	{
+<span class="nc" id="L184">	 this.typeId = typeId;</span>
+<span class="nc" id="L185">	}</span>
+
+	/**
+	 *  Gets the type attribute of the EventForm object
+	 *
+	 *@return    The type value
+	 */
+	public int getTypeId()
+	{
+<span class="nc" id="L194">	 return typeId;</span>
+	}
+  public String getDescription() {
+<span class="nc" id="L197">	 return description;</span>
+  }
+  public void setDescription(String description) {
+<span class="nc" id="L200">	 this.description = description;</span>
+<span class="nc" id="L201">  }</span>
+  public String getArea() {
+<span class="nc" id="L203">	 return area;</span>
+  }
+  public void setArea(String area) {
+<span class="nc" id="L206">	 this.area = area;</span>
+<span class="nc" id="L207">  }</span>
+  public String getCity() {
+<span class="nc" id="L209">	 return city;</span>
+  }
+  public void setCity(String city) {
+<span class="nc" id="L212">	 this.city = city;</span>
+<span class="nc" id="L213">  }</span>
+  public String getAddress() {
+<span class="nc" id="L215">	 return address;</span>
+  }
+  public void setAddress(String address) {
+<span class="nc" id="L218">	 this.address = address;</span>
+<span class="nc" id="L219">  }</span>
+  public String getTimeRange() {
+<span class="nc" id="L221">	 return timeRange;</span>
+  }
+  public void setTimeRange(String timeRange) {
+<span class="nc" id="L224">	 this.timeRange = timeRange;</span>
+<span class="nc" id="L225">  }</span>
+	public String getInfo1()
+	{
+<span class="nc" id="L228">		return info1;</span>
+	}
+	public void setInfo1(String info1)
+	{
+<span class="nc" id="L232">		this.info1 = info1;</span>
+<span class="nc" id="L233">	}</span>
+	public String getInfo2()
+	{
+<span class="nc" id="L236">		return info2;</span>
+	}
+	public void setInfo2(String info2)
+	{
+<span class="nc" id="L240">		this.info2 = info2;</span>
+<span class="nc" id="L241">	}</span>
+	public String getInfo3()
+	{
+<span class="nc" id="L244">		return info3;</span>
+	}
+	public void setInfo3(String info3)
+	{
+<span class="nc" id="L248">		this.info3 = info3;</span>
+<span class="nc" id="L249">	}</span>
+	public String getInfo4()
+	{
+<span class="nc" id="L252">		return info4;</span>
+	}
+	public void setInfo4(String info4)
+	{
+<span class="nc" id="L256">		this.info4 = info4;</span>
+<span class="nc" id="L257">	}</span>
+	public String getInfo5()
+	{
+<span class="nc" id="L260">		return info5;</span>
+	}
+	public void setInfo5(String info5)
+	{
+<span class="nc" id="L264">		this.info5 = info5;</span>
+<span class="nc" id="L265">	}</span>
+	public int getNotifyHoursBefore()
+	{
+<span class="nc" id="L268">		return notifyHoursBefore;</span>
+	}
+	public void setNotifyHoursBefore(int notifyHoursBefore)
+	{
+<span class="nc" id="L272">		this.notifyHoursBefore = notifyHoursBefore;</span>
+<span class="nc" id="L273">	}</span>
+	public String getNotifyEmails()
+	{
+<span class="nc" id="L276">		return notifyEmails;</span>
+	}
+	public void setNotifyEmails(String notifyEmails)
+	{
+<span class="nc" id="L280">		this.notifyEmails = notifyEmails;</span>
+<span class="nc" id="L281">	}</span>
+	public String getNotifySender()
+	{
+<span class="nc" id="L284">		return notifySender;</span>
+	}
+	public void setNotifySender(String notifySender)
+	{
+<span class="nc" id="L288">		this.notifySender = notifySender;</span>
+<span class="nc" id="L289">	}</span>
+	public String getNotifyIntrotext()
+	{
+<span class="nc" id="L292">		return notifyIntrotext;</span>
+	}
+	public void setNotifyIntrotext(String notifyIntrotext)
+	{
+<span class="nc" id="L296">		this.notifyIntrotext = notifyIntrotext;</span>
+<span class="nc" id="L297">	}</span>
+	public boolean isNotifySendSMS()
+	{
+<span class="nc" id="L300">		return notifySendSMS;</span>
+	}
+	public void setNotifySendSMS(boolean notifySendSMS)
+	{
+<span class="nc" id="L304">		this.notifySendSMS = notifySendSMS;</span>
+<span class="nc" id="L305">	}</span>
+	public String getLng()
+	{
+<span class="nc" id="L308">		return lng;</span>
+	}
+	public void setLng(String lng)
+	{
+<span class="nc" id="L312">		this.lng = lng;</span>
+<span class="nc" id="L313">	}</span>
+
+	public int getCreatorId()
+	{
+<span class="nc" id="L317">		return creatorId;</span>
+	}
+
+	public int getApprove()
+	{
+<span class="nc" id="L322">		return approve;</span>
+	}
+
+	public void setApprove(int approve)
+	{
+<span class="nc" id="L327">		this.approve = approve;</span>
+<span class="nc" id="L328">	}</span>
+
+	public void setCreatorId(int creatorId)
+	{
+<span class="nc" id="L332">		this.creatorId = creatorId;</span>
+<span class="nc" id="L333">	}</span>
+
+	public boolean isSuggest()
+	{
+<span class="nc" id="L337">		return suggest;</span>
+	}
+
+	public void setSuggest(boolean suggest)
+	{
+<span class="nc" id="L342">		this.suggest = suggest;</span>
+<span class="nc" id="L343">	}</span>
+
+	public String getApproveCheckBox() {
+<span class="nc" id="L346">		return approveCheckBox;</span>
+	}
+
+	public void setApproveCheckBox(int ap) {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if(ap==1)</span>
+<span class="nc" id="L351">			this.approveCheckBox = &quot;true&quot;;</span>
+		else
+<span class="nc" id="L353">			this.approveCheckBox = &quot;false&quot;;</span>
+<span class="nc" id="L354">	}</span>
+
+	public int getDomainId() {
+<span class="nc" id="L357">		return domainId;</span>
+	}
+
+	public void setDomainId(int domainId) {
+<span class="nc" id="L361">		this.domainId = domainId;</span>
+<span class="nc" id="L362">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -123,7 +123,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
  });
 
- function changePasswordHeslo(I, login, DT, DTE) {
+ function changePasswordHeslo(I, DT, DTE) {
     I.logout();
 
     I.wait(5);
@@ -152,10 +152,10 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.forceClick("Prihlásiť sa");
  }
 
- Scenario('Test slabeho hesla a jeho zmeny @singlethread', ({ I, login, DT, DTE, Browser }) => {
+ Scenario('Test slabeho hesla a jeho zmeny @singlethread', ({ I, DT, DTE, Browser }) => {
     //Spring nedokazal po zmene hesla zobrazit FE, lebo nemal nastavene locales
     //najskor userovi nastavime slabe heslo a overime, ze zmena prebehne korektne
-    changePasswordHeslo(I, login, DT, DTE);
+    changePasswordHeslo(I, DT, DTE);
 
     I.see("Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie, alebo mu vypršala platnosť");
     if (Browser.isFirefox()) I.wait(1);
@@ -193,7 +193,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.say("over znova zmenu hesla, ci nepovoli pass history");
     I.logout();
 
-    changePasswordHeslo(I, login, DT, DTE);
+    changePasswordHeslo(I, DT, DTE);
     I.see("Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie, alebo mu vypršala platnosť");
     if (Browser.isFirefox()) I.wait(1);
 

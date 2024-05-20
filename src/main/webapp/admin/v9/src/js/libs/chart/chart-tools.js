@@ -1370,6 +1370,37 @@ export async function setWebPagesSelect(dataUrl, valueToSelect) {
     }});
 }
 
+//TODO: merge with setWebPagesSelect and setSearchEnginesSelect
+
+/**
+ * Get and set list of options, for select. Auto select value.
+ *
+ * @param {String} dataUrl - url of endpoint where we obtain data for select
+ * @param {*} valueToSelect - value that will be auto selected (if is in the list of obtained data)
+ */
+export async function setSelect(dataUrl, valueToSelect, elementId) {
+    await $.ajax({url: dataUrl, success: function(mapOfDirs) {
+        //Get object, select
+        let select = document.getElementById(elementId);
+        //Remove all options except the default one
+        while(select.options.length > 1)
+        select.remove(1);
+
+        //Add new options
+        let isInList = false;
+        for (const [key, value] of Object.entries(mapOfDirs)) {
+            select.add(new Option(value, key));
+            if(valueToSelect == key) isInList = true;
+        }
+
+        //If valueToSelect is in list of valued, select it
+        if(isInList) $("#" + elementId).val(valueToSelect);
+
+        //Refresh object
+        $("#" + elementId).selectpicker('refresh');
+    }});
+}
+
 /**
  * Return true if input value is valid String, that is not empty, else false.
  *

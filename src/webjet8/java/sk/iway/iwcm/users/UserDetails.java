@@ -2,7 +2,9 @@ package sk.iway.iwcm.users;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.ForumTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
@@ -811,6 +813,20 @@ public class UserDetails implements Serializable
 	{
 		return editableGroups;
 	}
+
+	/**
+	 * Returns editable groups for user, if empty, for multiweb it automatically add root groups for current domain
+	 * @param addMultiwebCheck
+	 * @return
+	 */
+	@JsonIgnore
+	public String getEditableGroups(boolean addMultiwebCheck) {
+		if (addMultiwebCheck && InitServlet.isTypeCloud() && Tools.isEmpty(getEditableGroups())) {
+			return CloudToolsForCore.getRootGroupIds();
+		}
+		return editableGroups;
+	}
+
 	/**
 	 * @param editableGroups The editableGroups to set.
 	 */

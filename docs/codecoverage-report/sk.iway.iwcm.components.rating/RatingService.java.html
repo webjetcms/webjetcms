@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RatingService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.rating</a> &gt; <span class="el_source">RatingService.java</span></div><h1>RatingService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.rating;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.rating.jpa.RatingEntity;
+import sk.iway.iwcm.components.rating.jpa.RatingRepository;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.forum.ForumDB;
+import sk.iway.iwcm.stat.StatDB;
+
+<span class="nc" id="L35">public class RatingService {</span>
+
+	/** Do tabulky documents do stlpcu forum_count vypocita priemerny rating vsetkych stranok (aj v podpriecinkoch).
+	 *  POZOR na danej stranke nemoze byt pozita diskusia (tiez pouziva stlpec forum_count)
+	 *
+	 * @param args - pole groupID
+	 */
+	public static void main(String[] args)
+	{
+<span class="nc" id="L44">		int count = 0;</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">		if(args != null &amp;&amp; args.length &gt; 0)</span>
+		{
+			//prejdeme vsetky grupy zadane ako parameter
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			for(String s : args)</span>
+			{
+				// prejdeme vsetky pod-grupy
+<span class="nc" id="L51">				List&lt;GroupDetails&gt; ret = GroupsDB.getInstance().getGroupsTree(Tools.getIntValue(s, -1),true,true,false);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">				for(GroupDetails gd:ret)</span>
+				{
+					// z kazdej pod-grupy prejdeme vsetky stranky
+<span class="nc" id="L55">					List&lt;DocDetails&gt; det = DocDB.getInstance().getBasicDocDetailsByGroup(gd.getGroupId(), DocDB.ORDER_PRIORITY);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">					for(DocDetails dc : det)</span>
+					{
+<span class="nc" id="L58">						RatingEntity rDB = getDocIdRating(dc.getDocId());</span>
+<span class="nc" id="L59">						int docIdRating = rDB.getRatingValue();</span>
+<span class="nc" id="L60">						ForumDB.setForumCountForDocIds(dc.getDocId(), docIdRating );</span>
+						//Logger.debug(RefreshRating.class,&quot;Refreshed : DocID: &quot;+dc.getDocId()+&quot; rating: &quot;+docIdRating);
+<span class="nc" id="L62">						count++;</span>
+<span class="nc" id="L63">					}</span>
+<span class="nc" id="L64">				}</span>
+			}
+<span class="nc" id="L66">		Logger.debug(RatingService.class, &quot;Rating of page was Refreshed for &quot;+count+&quot; pages.&quot;);</span>
+		}
+<span class="nc" id="L68">	}</span>
+
+
+	/**
+	 * Metoda vrati aktualne browserId, prip. priradi nove na zaklade typu pouzivatela (stroj, registrovany, neregistrovany).
+	 *
+	 * @param request
+	 * @param response
+	 *
+	 * @return
+	 */
+	public static long getBrowserId(HttpServletRequest request, HttpServletResponse response) {
+<span class="nc" id="L80">		return (StatDB.getBrowserId(request, response));</span>
+	}
+
+	/**
+	 * Ulozi rating do databazy a vrati TRUE, ak je vsetko OK
+	 * @param rBean - rating, ktory sa ulozi do DB
+	 * @return
+	 */
+	public static boolean saveRating(RatingEntity entity) {
+<span class="nc" id="L89">		return saveRating(entity, null);</span>
+	}
+
+	/**
+	 * Ulozi rating do databazy a vrati TRUE, ak je vsetko OK
+	 * @param rBean - rating, ktory sa ulozi do DB
+	 * @return
+	 */
+	public static boolean saveRating(RatingEntity entity, HttpServletRequest request) {
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if(entity == null) return false;</span>
+
+<span class="fc" id="L100">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+		//set actual date time
+<span class="fc" id="L102">		entity.setInsertDate(new Date());</span>
+
+		//If non logged user doing rating
+<span class="pc bpc" id="L105" title="2 of 4 branches missed.">		if(entity.getUserId() == null || entity.getUserId() &lt; 1)</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if(request != null)</span>
+<span class="nc" id="L107">				entity.setUserId( (int)getBrowserId(request, null) + 10000 );</span>
+
+		//save
+<span class="fc" id="L110">		ratingRepository.save(entity);</span>
+
+<span class="fc" id="L112">		return true;</span>
+	}
+
+	/**
+	 * Vrati zoznam ratingov
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getRatings() {
+<span class="nc" id="L120">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+<span class="nc" id="L121">		return ratingRepository.findAllByOrderByIdAsc();</span>
+	}
+
+	/**
+	 * Vymaze rating z DB
+	 * @return
+	 */
+	public static boolean deleteRating(long ratingId) {
+<span class="nc" id="L129">		Logger.println(RatingService.class,&quot;DELETE: ratingId= &quot; + ratingId);</span>
+<span class="nc" id="L130">		int numberOfUpdated = (new SimpleQuery()).executeWithUpdateCount(&quot;DELETE FROM rating WHERE rating_id=?&quot;, ratingId);</span>
+<span class="nc" id="L131">		Logger.println(RatingService.class,&quot;Number of DELETED rows= &quot; + numberOfUpdated + &quot; from rating&quot;);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if(numberOfUpdated &gt; 0) return true;</span>
+<span class="nc" id="L133">		return false;</span>
+	}
+
+	/**
+	 * Vrati rating podla ratingID
+	 * @param ratingId - ID ratingu v DB
+	 * @return
+	 */
+	public static RatingEntity getRaitingById(long raitingId) {
+<span class="nc" id="L142">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+<span class="nc" id="L143">		Optional&lt;RatingEntity&gt; entityOpt = ratingRepository.findById(raitingId);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if(entityOpt.isPresent()) return entityOpt.get();</span>
+<span class="nc" id="L145">		return null;</span>
+	}
+
+	/**
+	 * Vrati vsetky ratingy usera
+	 * @param userId - ID uzivatela v DB
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getRatingsByUserId(int userId) {
+<span class="nc" id="L154">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+<span class="nc" id="L155">		return ratingRepository.findAllByUserIdOrderById(userId);</span>
+	}
+
+	/**
+	 * Vrati vsetky ratingy pre docId
+	 * @param docId
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getRatingsByDocId(int docId) {
+<span class="fc" id="L164">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+<span class="fc" id="L165">		return ratingRepository.findAllByDocId(docId);</span>
+	}
+
+	/**
+	 * Vrati RatingBean, ak user este nehlasoval za docId, vrati NULL
+	 * @param userId - ID uzivatela v DB
+	 * @param docId - ID stranky, za ktoru sa hlasuje
+	 * @return
+	 */
+	public static RatingEntity getRatingByUserByDoc(int userId, int docId)
+	{
+<span class="fc" id="L176">		return getRatingByUserByDoc(userId, docId, 0);</span>
+	}
+
+	/**
+	 * Vrati RatingBean, ak user este nehlasoval za docId, vrati NULL
+	 * @param userId - ID uzivatela v DB
+	 * @param docId - ID stranky, za ktoru sa hlasuje
+	 * @param rateAgainCycleInHours - pokial je &gt; 0, tak umozni uzivatelovi hlasovat viackrat s min odstupom rateAgainCycle hodin. Inak umozni zahlasovat len raz
+	 * @return
+	 */
+	public static RatingEntity getRatingByUserByDoc(int userId, int docId, int rateAgainCycleInHours) {
+		Optional&lt;RatingEntity&gt; entityOpt;
+<span class="fc" id="L188">		RatingRepository ratingRepository = Tools.getSpringBean(&quot;ratingRepository&quot;, RatingRepository.class);</span>
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">		if(rateAgainCycleInHours &gt; 0) {</span>
+<span class="nc" id="L191">			Calendar checkTime = Calendar.getInstance();</span>
+<span class="nc" id="L192">			checkTime.add(Calendar.HOUR, -rateAgainCycleInHours);</span>
+<span class="nc" id="L193">			entityOpt = ratingRepository.findByUserIdAndDocIdAndInsertDateGreaterThanEqualOrderByInsertDateDesc(userId, docId, checkTime.getTime());</span>
+<span class="nc" id="L194">		} else {</span>
+<span class="fc" id="L195">			entityOpt = ratingRepository.findByUserIdAndDocIdOrderByInsertDateDesc(userId, docId);</span>
+		}
+
+<span class="fc bfc" id="L198" title="All 2 branches covered.">		if(entityOpt.isPresent()) return entityOpt.get();</span>
+<span class="fc" id="L199">		return null;</span>
+	}
+
+	/**
+	 * Vrati pocet zaznamov pre zvolene kriterium, ak za krit. nezada, vrati pocet vsetkych
+	 * @param colName - nazov stlpca, nad ktorym sa vykona COUNT
+	 * @param whereCol - nazov stlpca, ktory je kriteriom pre WHERE (typ int), ak je NULL, WHERE sa nevykona
+	 * @param whereValue - int hodnota pre WHERE
+	 * @return
+	 */
+	public static int countCol(String countCol, String whereCol, int whereValue) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if(Tools.isNotEmpty(countCol)) {</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if(Tools.isNotEmpty(whereCol))</span>
+<span class="nc" id="L212">				return (new SimpleQuery()).forInt(&quot;SELECT COUNT(&quot; + countCol + &quot;) FROM rating WHERE &quot; + whereCol + &quot;=?&quot;, whereValue);</span>
+
+<span class="nc" id="L214">			return (new SimpleQuery()).forInt(&quot;SELECT COUNT(&quot; + countCol + &quot;) FROM rating&quot;);</span>
+		}
+<span class="nc" id="L216">		return 0;</span>
+	}
+
+	/**
+	 * Pre zadane docId vrati ratingBean s vypocitanym ratingom a poctom userov
+	 * @param docId - doc ID v DB
+	 * @return
+	 */
+	public static RatingEntity getDocIdRating(int docId) {
+<span class="fc" id="L225">		int sumRating = 0;</span>
+<span class="fc" id="L226">		RatingEntity entity = new RatingEntity();</span>
+<span class="fc" id="L227">		List&lt;RatingEntity&gt; ratings = getRatingsByDocId(docId);</span>
+
+<span class="fc bfc" id="L229" title="All 2 branches covered.">		for(RatingEntity rating : ratings)</span>
+<span class="fc" id="L230">			sumRating += rating.getRatingValue();</span>
+
+<span class="fc" id="L232">		int totalUsers = ratings.size();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">		if(totalUsers != 0) {</span>
+<span class="fc" id="L234">			entity.setTotalUsers(totalUsers);</span>
+<span class="fc" id="L235">			entity.setRatingValueDouble((double)sumRating / (double)totalUsers);</span>
+		}
+<span class="fc" id="L237">		return entity;</span>
+	}
+
+	/**
+	 * Vrati zoznam najaktivnejsich userov, v bean-e je iba userId a ratingStat
+	 * @param users - pocet userov v TOP-liste
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getUsersTopList(int users)
+	{
+<span class="nc" id="L247">		return(getUsersTopList(users, -1));</span>
+	}
+
+	/**
+	 * Vrati zoznam najaktivnejsich userov, v bean-e je iba userId a ratingStat
+	 * @param users - pocet userov v TOP-liste
+	 * @param period - pocet dni, od aktualneho datumu spat
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getUsersTopList(int users, int period) {
+<span class="nc" id="L257">		List&lt;RatingEntity&gt; retRatings = new ArrayList&lt;&gt;();</span>
+		long fromDate;
+		long dayInMiliSec;
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		if (period &lt; 1) //zobereme cely rok</span>
+<span class="nc" id="L262">			period = 365;</span>
+
+<span class="nc" id="L264">		dayInMiliSec = 24L * 60L * 60L * 1000L;</span>
+<span class="nc" id="L265">		fromDate = Tools.getNow() - (period * dayInMiliSec);</span>
+
+<span class="nc" id="L267">		StringBuilder allreadyHasUserId = new StringBuilder(&quot;-1&quot;);</span>
+<span class="nc" id="L268">		String sql = &quot;SELECT user_id, COUNT(user_id) AS clicks FROM rating WHERE insert_date &gt;= ? GROUP BY user_id ORDER BY clicks DESC&quot;;</span>
+<span class="nc" id="L269">		new ComplexQuery().setSql(sql).setParams( new Timestamp(fromDate) ).list(new Mapper&lt;RatingEntity&gt;() {</span>
+			@Override
+			public RatingEntity map(ResultSet rs) throws SQLException {
+<span class="nc" id="L272">				RatingEntity rating = new RatingEntity();</span>
+<span class="nc" id="L273">				rating.setUserId( rs.getInt(&quot;user_id&quot;) );</span>
+<span class="nc" id="L274">				rating.setRatingStat( rs.getInt(&quot;clicks&quot;) );</span>
+<span class="nc" id="L275">				retRatings.add(rating);</span>
+<span class="nc" id="L276">				allreadyHasUserId.append(',').append( rating.getUserId() );</span>
+
+<span class="nc" id="L278">				return null;</span>
+			}
+		});
+
+<span class="nc bnc" id="L282" title="All 4 branches missed.">		if (retRatings.size() &lt; users &amp;&amp; users &gt; 0) {</span>
+<span class="nc" id="L283">			sql = &quot;SELECT user_id, COUNT(user_id) AS clicks FROM rating WHERE user_id NOT IN (&quot; + allreadyHasUserId.toString() + &quot;) GROUP BY user_id ORDER BY clicks DESC&quot;;</span>
+<span class="nc" id="L284">			new ComplexQuery().setSql(sql).list(new Mapper&lt;RatingEntity&gt;() {</span>
+				@Override
+				public RatingEntity map(ResultSet rs) throws SQLException {
+<span class="nc" id="L287">					RatingEntity rating = new RatingEntity();</span>
+<span class="nc" id="L288">					rating.setUserId( rs.getInt(&quot;user_id&quot;) );</span>
+<span class="nc" id="L289">					rating.setRatingStat( rs.getInt(&quot;clicks&quot;) );</span>
+<span class="nc" id="L290">					retRatings.add(rating);</span>
+
+<span class="nc" id="L292">					return null;</span>
+				}
+			});
+		}
+
+<span class="nc" id="L297">		return retRatings;</span>
+	}
+
+	/**
+	 * Vrati zoznam TOP doc ID, v bean-e je iba docId a ratingStat
+	 * @param length - pocet docId v TOP-liste
+	 * @param period - pocet dni, od aktualneho datumu spat
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getDocIdTopList(int length, int period) {
+<span class="nc" id="L307">		List&lt;RatingEntity&gt; retRatings = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L308">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L309">		long dayInMiliSec = 24L * 60L * 60L * 1000L;</span>
+<span class="nc" id="L310">		long fromDate = Tools.getNow() - (period * dayInMiliSec);</span>
+
+<span class="nc" id="L312">		StringBuilder allreadyHasDocId = new StringBuilder(&quot;-1&quot;);</span>
+<span class="nc" id="L313">		String sql = &quot;SELECT doc_id, COUNT(doc_id) AS clicks FROM rating WHERE insert_date &gt;= ? GROUP BY doc_id ORDER BY clicks DESC&quot;;</span>
+<span class="nc" id="L314">		new ComplexQuery().setSql(sql).setParams( new Timestamp(fromDate) ).list(new Mapper&lt;RatingEntity&gt;() {</span>
+			@Override
+			public RatingEntity map(ResultSet rs) throws SQLException {
+<span class="nc" id="L317">				RatingEntity rating = new RatingEntity();</span>
+<span class="nc" id="L318">				rating.setDocId( rs.getInt(&quot;doc_id&quot;) );</span>
+
+<span class="nc" id="L320">				DocDetails testDoc = docDB.getBasicDocDetails(rating.getDocId(), false);</span>
+<span class="nc bnc" id="L321" title="All 4 branches missed.">				if (testDoc == null || testDoc.isAvailable() == false) return null;</span>
+
+<span class="nc" id="L323">				rating.setRatingStat( rs.getInt(&quot;clicks&quot;) );</span>
+<span class="nc" id="L324">				rating.setRatingValueDouble( getDocIdRating( rs.getInt(&quot;doc_id&quot;) ).getRatingValueDouble() );</span>
+<span class="nc" id="L325">				retRatings.add(rating);</span>
+
+<span class="nc" id="L327">				allreadyHasDocId.append(',').append(rating.getDocId());</span>
+
+<span class="nc" id="L329">				return null;</span>
+			}
+		});
+
+<span class="nc bnc" id="L333" title="All 4 branches missed.">		if (retRatings.size() &lt; length &amp;&amp; length &gt; 0) {</span>
+			//doplnime za cele obdobie
+<span class="nc" id="L335">			sql = &quot;SELECT doc_id, COUNT(doc_id) AS clicks FROM rating WHERE doc_id NOT IN (&quot; + allreadyHasDocId.toString() + &quot;) GROUP BY doc_id ORDER BY clicks DESC&quot;;</span>
+<span class="nc" id="L336">			new ComplexQuery().setSql(sql).list(new Mapper&lt;RatingEntity&gt;() {</span>
+				@Override
+				public RatingEntity map(ResultSet rs) throws SQLException {
+<span class="nc" id="L339">					RatingEntity rating = new RatingEntity();</span>
+<span class="nc" id="L340">					rating.setDocId( rs.getInt(&quot;doc_id&quot;) );</span>
+
+<span class="nc" id="L342">					DocDetails testDoc = docDB.getBasicDocDetails(rating.getDocId(), false);</span>
+<span class="nc bnc" id="L343" title="All 4 branches missed.">					if (testDoc == null || testDoc.isAvailable() == false) return null;</span>
+
+<span class="nc" id="L345">					rating.setRatingStat( rs.getInt(&quot;clicks&quot;) );</span>
+<span class="nc" id="L346">					rating.setRatingValueDouble( getDocIdRating( rs.getInt(&quot;doc_id&quot;) ).getRatingValueDouble() );</span>
+<span class="nc" id="L347">					retRatings.add(rating);</span>
+
+<span class="nc" id="L349">					allreadyHasDocId.append(',').append(rating.getDocId());</span>
+
+<span class="nc" id="L351">					return null;</span>
+				}
+			});
+		}
+
+<span class="nc" id="L356">		return retRatings;</span>
+	}
+
+	/**
+	 * Zobrazi zoznam clankov zoradenych podla vysky RATING-u.
+	 * Ak existuju clanky s rovnakym ratingom, zoradi ich podla poctu hlasujucich citatelov.
+	 * @param docsLength - pocet zobrazenych clankov
+	 * @param period - pocet dni dozadu za ktore sa statistika berie
+	 * @param minUsers - minimalny pocet citatelov, ktory hodnotili clanok
+	 * @param groupIds - id adresara v ktorom sa sledovane clanky nachadzaju
+	 * @param includeSubGroups - ak je true, beru sa aj podadresare
+	 * @param doubleSort - ak je true sortuje sa presne, ak je false, tak zaokruhlene na celu hodnotu
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getTopPages(int docsLength, int period, int minUsers, String groupIds, boolean includeSubGroups, boolean doubleSort) {
+<span class="nc" id="L371">		List&lt;RatingEntity&gt; topPages = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L372">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L373">		List&lt;RatingEntity&gt; ratings = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L374">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L375">		cal.add(Calendar.DAY_OF_MONTH, -period);</span>
+
+<span class="nc" id="L377">		DebugTimer dt = new DebugTimer(&quot;RatingService.getTopPages&quot;);</span>
+
+		//priprav si hashtabulku povolenych adresarov
+<span class="nc" id="L380">		Map&lt;Integer, Integer&gt; availableGroups = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L381">		boolean doGroupsCheck = false;</span>
+<span class="nc" id="L382">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		if (Tools.isNotEmpty(groupIds)) {</span>
+<span class="nc" id="L385">			StringTokenizer st = new StringTokenizer(groupIds, &quot;,+; &quot;);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L387">				int groupId = Tools.getIntValue(st.nextToken(), 0);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (groupId &gt; 0) {</span>
+<span class="nc" id="L389">					doGroupsCheck = true;</span>
+<span class="nc" id="L390">					availableGroups.put(groupId, 1);</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">					if (includeSubGroups) {</span>
+						//najdi child grupy
+<span class="nc bnc" id="L393" title="All 2 branches missed.">						for (GroupDetails group : groupsDB.getGroupsTree(groupId, false, false)) {</span>
+<span class="nc bnc" id="L394" title="All 4 branches missed.">							if (group != null &amp;&amp; group.isInternal() == false)</span>
+<span class="nc" id="L395">								availableGroups.put(group.getGroupId(), 1);</span>
+<span class="nc" id="L396">						}</span>
+					}
+				}
+<span class="nc" id="L399">			}</span>
+		}
+
+<span class="nc" id="L402">		dt.diff(&quot;availableGroups=&quot; + availableGroups.size());</span>
+
+<span class="nc" id="L404">		String sql = &quot;SELECT doc_id, COUNT(doc_id) AS clicks, SUM(rating_value) AS ratingSum FROM rating WHERE insert_date &gt;= ? GROUP BY doc_id&quot;;</span>
+
+<span class="nc" id="L406">		Logger.debug(RatingService.class, &quot;sql:&quot; + sql);</span>
+<span class="nc" id="L407">		Logger.debug(RatingService.class, &quot;fromDate:&quot; + Tools.formatDate(cal.getTime()));</span>
+
+<span class="nc" id="L409">		final boolean doGroupsCheckFinal = doGroupsCheck;</span>
+<span class="nc" id="L410">		new ComplexQuery().setSql(sql).setParams( new Timestamp(cal.getTimeInMillis()) ).list(new Mapper&lt;RatingEntity&gt;() {</span>
+			@Override
+			public RatingEntity map(ResultSet rs) throws SQLException {
+<span class="nc" id="L413">				RatingEntity rating = new RatingEntity();</span>
+<span class="nc" id="L414">				rating.setDocId( rs.getInt(&quot;doc_id&quot;) );</span>
+
+<span class="nc" id="L416">				DocDetails testDoc = docDB.getBasicDocDetails(rating.getDocId(), false);</span>
+<span class="nc bnc" id="L417" title="All 4 branches missed.">				if (testDoc == null || testDoc.isAvailable() == false) return null;</span>
+
+				//kontrola na groupids
+<span class="nc bnc" id="L420" title="All 2 branches missed.">				if (doGroupsCheckFinal)</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">					if (availableGroups.get(testDoc.getGroupId()) == null) return null;</span>
+
+<span class="nc" id="L423">				rating.setDocTitle( testDoc.getTitle() );</span>
+<span class="nc" id="L424">				rating.setRatingStat( rs.getInt(&quot;clicks&quot;) );</span>
+<span class="nc" id="L425">				rating.setTotalUsers( rating.getRatingStat() );</span>
+
+<span class="nc bnc" id="L427" title="All 4 branches missed.">				if (minUsers &gt; 0 &amp;&amp; rating.getTotalUsers() &lt; minUsers) return null;</span>
+
+<span class="nc" id="L429">				rating.setTotalSum( rs.getInt(&quot;ratingSum&quot;) );</span>
+<span class="nc" id="L430">				rating.setRatingValueDouble((double)rating.getTotalSum() / (double)rating.getTotalUsers());</span>
+<span class="nc" id="L431">				ratings.add(rating);</span>
+
+<span class="nc" id="L433">				return null;</span>
+			}
+		});
+
+<span class="nc" id="L437">		dt.diff(&quot;sorting&quot;);</span>
+
+		//usortuj to podla rating value a nazvu
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		if (doubleSort) {</span>
+<span class="nc" id="L441">			Collections.sort(ratings, new Comparator&lt;RatingEntity&gt;() {</span>
+				@Override
+				public int compare(RatingEntity r1, RatingEntity r2) {
+<span class="nc bnc" id="L444" title="All 2 branches missed.">					if (r1.getRatingValueDouble() == r2.getRatingValueDouble())</span>
+<span class="nc" id="L445">						return r1.getDocTitle().compareTo(r2.getDocTitle());</span>
+
+<span class="nc" id="L447">					return Double.compare(r2.getRatingValueDouble(), r1.getRatingValueDouble());</span>
+
+				}
+			});
+		} else {
+<span class="nc" id="L452">			Collections.sort(ratings, new Comparator&lt;RatingEntity&gt;() {</span>
+				@Override
+				public int compare(RatingEntity r1, RatingEntity r2) {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">					if (r1.getRatingValue() == r2.getRatingValue())</span>
+<span class="nc" id="L456">						return r1.getDocTitle().compareTo(r2.getDocTitle());</span>
+
+<span class="nc" id="L458">					return r2.getRatingValue() - r1.getRatingValue();</span>
+				}
+			});
+		}
+
+		//sprav z toho skrateny zoznam
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		if (docsLength &lt; 1) topPages = ratings;</span>
+		else{
+<span class="nc bnc" id="L466" title="All 4 branches missed.">			for (int i=0; (i &lt; docsLength &amp;&amp; i &lt; ratings.size()); i++)</span>
+<span class="nc" id="L467">				topPages.add( ratings.get(i) );</span>
+		}
+
+<span class="nc" id="L470">		dt.diff(&quot;done, size: &quot; + topPages.size());</span>
+
+<span class="nc" id="L472">		return topPages;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

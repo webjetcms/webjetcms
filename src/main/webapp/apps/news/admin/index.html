@@ -79,19 +79,21 @@
                     var order = [];
                     order.push([4, 'desc']);
 
+                    url = WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val());
+
                     let wpdInstance = new module.WebPagesDatatable({
-                        url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
+                        url: url,
                         columns: webpageColumns,
                         id: "newsDataTable",
-                        order: order
+                        order: order,
+                        newPageTitleKey: "apps.news.newsTitle.js",
                     });
                     newsDataTable = wpdInstance.createDatatable();
                 });
 
                 $("#groupIdFilterSelect").on("change", function() {
                     var value = this.value;
-                    var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
-                    newsDataTable.ajax.url(newUrl);
+                    newsDataTable.ajax.url(WJ.urlUpdateParam( newsDataTable.ajax.url() , "groupIdList", this.value));
                     newsDataTable.ajax.reload();
                 });
             }

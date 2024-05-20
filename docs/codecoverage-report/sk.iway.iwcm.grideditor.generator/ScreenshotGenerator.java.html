@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScreenshotGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.grideditor.generator</a> &gt; <span class="el_source">ScreenshotGenerator.java</span></div><h1>ScreenshotGenerator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.grideditor.generator;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+
+
+public class ScreenshotGenerator {
+
+    private ScreenshotGenerator() {
+
+    }
+
+    /**
+     * Vyvtori nahlad stranky
+     * Pozor, potrebne pripojit Phantomjs binarny subor
+     * @param properties - parametre pre metodu
+     */
+    public static ScreenShotPropBean generatePreview(ScreenShotPropBean properties)
+    {
+<span class="nc" id="L28">        String[] args = new String[11];//4</span>
+<span class="nc" id="L29">        args[0] = Constants.getString(&quot;grideditorPhantomjsPath&quot;)+getRuntimeFile();//phantomjs.exe&quot;;</span>
+<span class="nc" id="L30">        IwcmFile f1 = new IwcmFile(args[0]);</span>
+<span class="nc" id="L31">        IwcmFile f2 = new IwcmFile(&quot;C:/&quot;+ScreenshotGenerator.getRuntimeFile());</span>
+<span class="nc bnc" id="L32" title="All 4 branches missed.">        if(!f1.exists() &amp;&amp; f2.exists())</span>
+        {
+<span class="nc" id="L34">            f1 = f2;</span>
+<span class="nc" id="L35">            args[0] = f2.getAbsolutePath();</span>
+        }
+<span class="nc" id="L37">        String error = &quot;&quot;;</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if(!f1.exists())</span>
+        {
+<span class="nc" id="L40">            error = &quot;Binarny subor Phantomjs neexistuje nie je mozne generovat nahlady. Subor: &quot; + args[0];</span>
+<span class="nc" id="L41">            Logger.debug(ScreenshotGenerator.class, error);</span>
+<span class="nc" id="L42">            properties.getErrors().add(error);</span>
+        }
+        else
+        {
+            //JS skript na generovanie nahladu
+<span class="nc" id="L47">            args[1] = Tools.getRealPath(&quot;/components/grideditor/phantom/phantomjs_screenshot.js&quot;);</span>
+<span class="nc" id="L48">            IwcmFile fileScreenShotJs = new IwcmFile(args[1]);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">            if(!fileScreenShotJs.exists())</span>
+            {
+<span class="nc" id="L51">                error = &quot;JS subor pre Phantomjs neexistuje nie je mozne generovat nahlady. Subor: &quot; + args[1];</span>
+<span class="nc" id="L52">                Logger.debug(ScreenshotGenerator.class, error);</span>
+<span class="nc" id="L53">                properties.getErrors().add(error);</span>
+<span class="nc" id="L54">                properties.setResultNumber(5);</span>
+                //return 5;
+            }
+            //web stranka
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            args[2] = (properties.getScreenshotUrl().startsWith(&quot;http&quot;)) ? properties.getScreenshotUrl() : &quot;http://&quot;+properties.getScreenshotUrl();</span>
+            //nazov suboru-nahladu ktory bude vytvoreny
+<span class="nc" id="L60">            String generatedScreenshotFileName = convertDomainToImageName(properties.getScreenshotUrl());</span>
+<span class="nc" id="L61">            String defaultScreenshotFilePath = Constants.getString(&quot;phantomjsFileUrl&quot;)+&quot;screenshots/&quot;+generatedScreenshotFileName;//Tools.getRealPath(Constants.getString(&quot;imagesRootDir&quot;) + &quot;/screenshots/&quot;+file_name);</span>
+<span class="nc" id="L62">            String dirRealPath = Tools.getRealPath( properties.getSaveImageToPath());//Tools.getRealPath(Constants.getString(&quot;imagesRootDir&quot;) + &quot;/screenshots/&quot;);</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (dirRealPath != null)</span>
+            {
+<span class="nc" id="L66">                IwcmFile screenshotFile = new IwcmFile(dirRealPath);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                if (screenshotFile.getParentFile().getParentFile().getParentFile().exists()==false)</span>
+<span class="nc" id="L68">                    screenshotFile.getParentFile().getParentFile().getParentFile().mkdirs();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (screenshotFile.getParentFile().getParentFile().exists()==false)</span>
+<span class="nc" id="L70">                    screenshotFile.getParentFile().getParentFile().mkdirs();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                if (screenshotFile.getParentFile().exists()==false)</span>
+<span class="nc" id="L72">                    screenshotFile.getParentFile().mkdirs();</span>
+            }
+
+<span class="nc" id="L75">            args[3] = fixImagePath(properties.getSaveImageToPath() ,defaultScreenshotFilePath);</span>
+
+<span class="nc" id="L77">            args[4] = properties.getImageWidth()+&quot;&quot;;//&quot;920&quot;;//width</span>
+<span class="nc" id="L78">            args[5] = properties.getImageHeight()+&quot;&quot;;//&quot;880&quot;;//height</span>
+<span class="nc" id="L79">            args[6] = properties.getZoom()+&quot;&quot;;//&quot;1&quot;;//zoom</span>
+<span class="nc" id="L80">            args[7] = properties.getTimeDelayMilisecond()+&quot;&quot;;//&quot;3000&quot;;//delay before screenshot</span>
+            //ak potrebujeme nastavit cookie
+<span class="nc" id="L82">            args[8] = properties.getCookieHtmlData();</span>
+<span class="nc" id="L83">            args[9] = getDomainName(properties.getScreenshotUrl());// domena pre cookies</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            args[10] = properties.isAutoHeigth()? &quot;true&quot; : &quot;false&quot;;</span>
+            try
+            {
+<span class="nc" id="L87">                Runtime rt = Runtime.getRuntime();</span>
+<span class="nc" id="L88">                Process proc = rt.exec(args);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                if(properties.isDebug())</span>
+                {
+<span class="nc" id="L91">                    InputStream stderr = proc.getErrorStream();</span>
+<span class="nc" id="L92">                    BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L93">                    String line = null;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                    while ((line = br.readLine()) != null)</span>
+                    {
+<span class="nc" id="L96">                        Logger.debug(ScreenshotGenerator.class, &quot;Status for &quot;+properties.getScreenshotUrl()+&quot; : &quot;+line);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                        if(Tools.isNotEmpty(line))</span>
+                        {
+<span class="nc" id="L99">                            properties.getPhantomErrors().add(line);</span>
+                        }
+                    }
+<span class="nc" id="L102">                    br.close();</span>
+                }
+<span class="nc" id="L104">                properties.setResultNumber(proc.waitFor());</span>
+            }
+<span class="nc" id="L106">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L108">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L109">            }</span>
+<span class="nc" id="L110">            Logger.debug(ScreenshotGenerator.class,&quot;exitValue: &quot;+ properties.getResultNumber()+&quot; &quot;+fixImagePath(properties.getSaveImageToPath() ,defaultScreenshotFilePath));</span>
+<span class="nc" id="L111">            properties.setSaveImageToPath(fixImagePath(properties.getSaveImageToPath() ,defaultScreenshotFilePath));</span>
+<span class="nc" id="L112">            return properties;</span>
+        }
+<span class="nc" id="L114">        properties.setResultNumber(4);</span>
+<span class="nc" id="L115">        return properties;</span>
+    }
+
+    /** Ak je cesta relafivna, doplni absolutnu. Ak cesta konci na lomitko, doplni &quot;image.jpg&quot;. Ak cesta neobsahuje bodku (priponu), doplni &quot;.jpg&quot;
+     *
+     * @param imagePath
+     * @param defaultPath
+     * @return
+     */
+    private static String fixImagePath(String imagePath,String defaultPath)
+    {
+<span class="nc" id="L126">        String fixedPath = imagePath;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if(Tools.isNotEmpty(imagePath))</span>
+        {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if(fixedPath.endsWith(&quot;/&quot;))</span>
+            {
+<span class="nc" id="L131">                fixedPath =  fixedPath+&quot;image.jpg&quot; ;</span>
+            }
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            else if(fixedPath.indexOf(&quot;.&quot;) == -1)</span>
+            {
+<span class="nc" id="L135">                fixedPath = fixedPath + &quot;.jpg&quot;;</span>
+            }
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if(fixedPath.startsWith(&quot;/&quot;))</span>
+            {
+<span class="nc" id="L140">                fixedPath = Tools.getRealPath(fixedPath);</span>
+            }
+<span class="nc" id="L142">            return fixedPath;</span>
+        }
+<span class="nc" id="L144">        return defaultPath;</span>
+    }
+
+    public static String convertDomainToImageName (String str)
+    {
+<span class="nc" id="L149">        return (((str.replace(&quot;http://&quot;, &quot;&quot;)).replace(&quot;www.&quot;,&quot;&quot;)).replace(&quot;/&quot;,&quot;&quot;)).replace(&quot;.&quot;,&quot;_&quot;)+&quot;.jpg&quot;;</span>
+    }
+
+    /**
+     *
+     * @return vrati meno RuntimeFile-u &quot;phantomjs&quot; a pre Win &quot;phantomjs.exe&quot;
+     */
+    public static String getRuntimeFile()
+    {
+<span class="nc" id="L158">        String result = &quot;phantomjs&quot;;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1)</span>
+        {
+<span class="nc" id="L161">            result  = &quot;phantomjs.exe&quot;;</span>
+        }
+<span class="nc" id="L163">        return result ;</span>
+    }
+
+    public static String getDomainName(String url){
+        try
+        {
+<span class="nc" id="L169">            URI uri = new URI(url);</span>
+<span class="nc" id="L170">            String domain = uri.getHost();</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if(domain != null)</span>
+            {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                return domain.startsWith(&quot;www.&quot;) ? domain.substring(4) : domain;</span>
+            }
+        }
+<span class="nc" id="L176">        catch (URISyntaxException use)</span>
+        {
+<span class="nc" id="L178">            sk.iway.iwcm.Logger.error(use);</span>
+<span class="nc" id="L179">        }</span>
+<span class="nc" id="L180">        return &quot;&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

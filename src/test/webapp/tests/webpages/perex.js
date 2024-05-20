@@ -18,6 +18,7 @@ Scenario('perex-zakladne testy', async ({I, DataTables }) => {
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
+        skipSwitchDomain: true
     });
 });
 

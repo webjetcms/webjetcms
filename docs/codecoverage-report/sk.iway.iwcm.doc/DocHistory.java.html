@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocHistory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocHistory.java</span></div><h1>DocHistory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.users.UserBasicDto;
+import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
+
+@Entity
+@Table(name = &quot;documents_history&quot;)
+@Getter
+@Setter
+<span class="fc" id="L33">public class DocHistory extends DocBasic {</span>
+
+	@PrePersist
+    public void prePersist() {
+        //log.debug(&quot;prePersist&quot;);
+<span class="fc" id="L38">		Logger.debug(getClass(), &quot;prePersist, id1&quot;+id);</span>
+<span class="pc bpc" id="L39" title="2 of 6 branches missed.">		if (id != null &amp;&amp; (id.intValue()==0 || id.intValue()==-1)) {</span>
+<span class="fc" id="L40">			id = null;</span>
+<span class="fc" id="L41">			Logger.debug(getClass(), &quot;prePersist, id2=&quot;+id);</span>
+		}
+<span class="fc" id="L43">    }</span>
+
+    @Id
+	@Column(name = &quot;history_id&quot;)
+	@GeneratedValue(strategy = GenerationType.IDENTITY, generator=&quot;S_documents_history&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+	protected Long id;
+
+    @Column(name = &quot;doc_id&quot;)
+	private Integer docId;
+
+	@Column(name = &quot;awaiting_approve&quot;)
+	private String awaitingApprove;
+
+    @Column(name = &quot;publicable&quot;)
+	private Boolean publicable;
+
+	@Column(name = &quot;approved_by&quot;)
+	private Integer approvedBy;
+
+    @Column(name = &quot;disapproved_by&quot;)
+	private Integer disapprovedBy;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = &quot;approve_date&quot;)
+	private Date approveDate;
+
+	@Transient
+	private String historyApprovedByName;
+
+	@Transient
+	private String historyDisapprovedByName;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = &quot;save_date&quot;)
+	private Date saveDate;
+
+	@Column(name = &quot;actual&quot;)
+	private Boolean actual;
+
+	//Get author as UserDetails object
+	@Column(name = &quot;author_id&quot;, insertable = false, updatable = false) // author_id is allready used, so this one must be read onl
+    @Convert(converter = UserBasicDtoConverter.class)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
+    private UserBasicDto userDetails;
+
+	@Override
+	public Long getId()
+	{
+<span class="fc bfc" id="L92" title="All 4 branches covered.">		if (this.id != null &amp;&amp; this.id.longValue()&lt;1) return null;</span>
+<span class="fc" id="L93">		return this.id;</span>
+	}
+
+	@Override
+	public void setId(Long id)
+	{
+<span class="nc" id="L99">		this.id = id;</span>
+<span class="nc" id="L100">	}</span>
+
+    @Override
+	public int getDocId()
+	{
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		if (docId == null) return 0;</span>
+<span class="fc" id="L106">		return this.docId.intValue();</span>
+	}
+
+	@Override
+	public void setDocId(int docId)
+	{
+<span class="fc" id="L112">		this.docId = Integer.valueOf(docId);</span>
+<span class="fc" id="L113">	}</span>
+
+	public void setHistoryId(int historyId)
+	{
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		if (historyId == 0) return;</span>
+<span class="fc" id="L118">		this.id = Long.valueOf(historyId);</span>
+<span class="fc" id="L119">	}</span>
+
+	public void setHistoryApprovedBy(int historyApprovedBy)
+	{
+<span class="fc" id="L123">		this.approvedBy = historyApprovedBy;</span>
+<span class="fc" id="L124">	}</span>
+
+	public void setHistoryDisapprovedBy(int historyDisapprovedBy)
+	{
+<span class="fc" id="L128">		this.disapprovedBy = historyDisapprovedBy;</span>
+<span class="fc" id="L129">	}</span>
+
+	public int getHistoryId() {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">		if (id == null) return 0;</span>
+<span class="fc" id="L133">		return id.intValue();</span>
+	}
+
+	public int getHistoryApprovedBy() {
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if (approvedBy==null) return 0;</span>
+<span class="fc" id="L138">		return approvedBy.intValue();</span>
+	}
+
+	public int getHistoryDisapprovedBy() {
+<span class="fc bfc" id="L142" title="All 2 branches covered.">		if (disapprovedBy==null) return 0;</span>
+<span class="fc" id="L143">		return disapprovedBy.intValue();</span>
+	}
+
+	public void setHistorySaveDate(String historySaveDate)
+	{
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">		if (Tools.isEmpty(historySaveDate)) return;</span>
+<span class="nc" id="L149">		this.saveDate = new Date(DB.getTimestamp(historySaveDate));</span>
+<span class="nc" id="L150">	}</span>
+
+	public String getHistoryApproveDate() {
+<span class="fc" id="L153">		return Tools.formatDateTime(approveDate);</span>
+	}
+
+	public void setHistoryApproveDate(String historyApproveDate) {
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">		if (Tools.isEmpty(historyApproveDate)) return;</span>
+<span class="nc" id="L158">		this.approveDate = new Date(DB.getTimestamp(historyApproveDate));</span>
+<span class="nc" id="L159">	}</span>
+
+	public String getHistoryApprovedByName() {
+<span class="fc" id="L162">		return historyApprovedByName;</span>
+	}
+
+	public void setHistoryApprovedByName(String historyApprovedByName) {
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		if (Tools.isEmpty(historyApprovedByName)) return;</span>
+<span class="nc" id="L167">		this.historyApprovedByName = historyApprovedByName;</span>
+<span class="nc" id="L168">	}</span>
+
+	public String getHistoryDisapprovedByName() {
+<span class="fc" id="L171">		return historyDisapprovedByName;</span>
+	}
+
+	public void setHistoryDisapprovedByName(String historyDisapprovedByName) {
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">		if (Tools.isEmpty(historyDisapprovedByName)) return;</span>
+<span class="nc" id="L176">		this.historyDisapprovedByName = historyDisapprovedByName;</span>
+<span class="nc" id="L177">	}</span>
+
+	public String getHistorySaveDate() {
+<span class="fc" id="L180">		return Tools.formatDateTime(saveDate);</span>
+	}
+
+	public boolean isHistoryActual()
+	{
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">		if (actual == null) return false;</span>
+<span class="fc" id="L186">		return actual.booleanValue();</span>
+	}
+
+	public void setHistoryActual(boolean historyActual) {
+<span class="fc" id="L190">		this.actual = historyActual;</span>
+<span class="fc" id="L191">	}</span>
+
+	@Override
+	public String getPublishStartStringExtra() {
+<span class="fc bfc" id="L195" title="All 2 branches covered.">		if (Boolean.TRUE.equals(publicable)) {</span>
+<span class="fc" id="L196">			return getPublishStartString();</span>
+		}
+<span class="fc" id="L198">		return &quot;&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

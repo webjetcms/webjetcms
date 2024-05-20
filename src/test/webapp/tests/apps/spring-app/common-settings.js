@@ -10,7 +10,7 @@ Scenario('Hiding/showing CommonSetting tab in Spring based application', ({I, DT
     checkCommonSettingsTab(I, DTE, "Demo komponenta", "#demo-komponenta", true);
 
     I.say("Check that CommonSettings tab is MOT visible for Spring based application Kontakty");
-    checkCommonSettingsTab(I, DTE, "Kontakty", "#kontakty", false);
+    checkCommonSettingsTab(I, DTE, "Kontakty", "#apps-contact-title", false);
 });
 
 function checkCommonSettingsTab(I, DTE, searchText, appId, shouldBeVisible) {

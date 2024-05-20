@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Archive.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">Archive.java</span></div><h1>Archive.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspWriter;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.doc.RelatedPagesDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.zip.ZipEntry;
+import sk.iway.iwcm.system.zip.ZipOutputStream;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  Archive.java
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: thaber $
+ *@version      $Revision: 1.8 $
+ *@created      Date: 14.12.2004 14:20:08
+ *@modified     $Date: 2009/01/26 15:50:32 $
+ */
+<span class="nc" id="L38">public class Archive</span>
+{
+	private static final int BUFFER = 8192;
+
+	/**
+	 * Toto sa vola z crontabu raz za den
+	 * @param args
+	 */
+	public static void main(String[] args)
+	{
+<span class="nc bnc" id="L48" title="All 4 branches missed.">		if (args != null &amp;&amp; args.length &gt; 0)</span>
+		{
+			//adresar, kde sa ulozi zip-archiv
+<span class="nc" id="L51">			String zipDirPath = args[0];</span>
+
+			//adresare, ktore sa archivuju (WebRoot = /)
+<span class="nc" id="L54">			String archiveDirs = args[1];</span>
+
+<span class="nc" id="L56">			Logger.println(Archive.class,&quot;Archive.makeZipArchive()&quot;);</span>
+			try
+			{
+<span class="nc" id="L59">			makeZipArchive(null, Constants.getServletContext(), archiveDirs, zipDirPath, null);</span>
+			}
+<span class="nc" id="L61">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L63">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L64">			}</span>
+		}
+<span class="nc" id="L66">	}</span>
+
+
+
+	/**
+	 *  Rekurzivne prehlada adresare a najdene subory prida do ZIP-archivu
+	 *@param  mainDir - adresar, ktory chceme rekurzivne prehladat
+	 *@param  servletContext
+	 *@param  zipOut - out stream zip suboru
+	 *@param  printWriter
+	 *@return
+	 */
+	private static void getFilesFromDir(String mainDir, ServletContext servletContext, ZipOutputStream zipOut, JspWriter printWriter, String outFileName)
+	{
+<span class="nc" id="L80">		byte[] buf = new byte[BUFFER];</span>
+		FileInputStream in;
+		int nameIndex;
+<span class="nc" id="L83">		int scrollIndex = 0;</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (mainDir.endsWith(&quot;/&quot;))</span>
+		{
+<span class="nc" id="L87">			mainDir = mainDir.substring(0, mainDir.length()-1);</span>
+		}
+		//Logger.println(this,&quot;mainDir: &quot;+mainDir);
+
+<span class="nc" id="L91">		String realPath = Tools.getRealPath(mainDir);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (realPath != null)</span>
+		{
+<span class="nc" id="L94">			File file = new File(realPath);</span>
+			int size;
+			int i;
+			try
+			{
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (file.isDirectory())</span>
+				{
+<span class="nc" id="L101">					File[] files = file.listFiles();</span>
+<span class="nc" id="L102">					size = files.length;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">					for (i=0; i&lt;size; i++)</span>
+					{
+<span class="nc" id="L105">						file = files[i];</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">						if (file.isDirectory())</span>
+						{
+<span class="nc bnc" id="L108" title="All 2 branches missed.">							if (!file.getName().equalsIgnoreCase(&quot;cvs&quot;))</span>
+							{
+<span class="nc" id="L110">								getFilesFromDir(mainDir+&quot;/&quot;+file.getName(), servletContext, zipOut, printWriter, outFileName);</span>
+							}
+						}
+						else
+						{
+<span class="nc" id="L115">							 nameIndex = file.getName().indexOf(DocTools.removeChars(Constants.getInstallName())+&quot;-&quot;);</span>
+
+<span class="nc bnc" id="L117" title="All 6 branches missed.">							if (file.getName().toLowerCase().indexOf(&quot;.cvsignore&quot;) == -1 &amp;&amp; !(nameIndex != -1 &amp;&amp; file.getName().toLowerCase().endsWith(&quot;.zip&quot;)))</span>
+							{
+<span class="nc bnc" id="L119" title="All 2 branches missed.">								if (printWriter != null)</span>
+								{
+<span class="nc" id="L121">									printWriter.println(&quot;Adding file: &quot; + mainDir + &quot;/&quot; + file.getName() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">									if (scrollIndex &gt;= 15)</span>
+									{
+<span class="nc" id="L124">										printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L125">										scrollIndex = 0;</span>
+									}
+<span class="nc" id="L127">									printWriter.flush();</span>
+<span class="nc" id="L128">									scrollIndex++;</span>
+								}
+<span class="nc" id="L130">								in = new FileInputStream(realPath + File.separatorChar + file.getName());</span>
+								try
+								{
+									//Add ZIP entry to output stream.
+<span class="nc" id="L134">									zipOut.putNextEntry(new ZipEntry(mainDir + &quot;/&quot; + file.getName()));</span>
+
+					            // Transfer bytes from the file to the ZIP file
+					            int len;
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					            while ((len = in.read(buf)) &gt; 0)</span>
+					            {
+<span class="nc" id="L140">					            	zipOut.write(buf, 0, len);</span>
+					            }
+					            // Complete the entry
+<span class="nc" id="L143">					            zipOut.closeEntry();</span>
+								}
+<span class="nc" id="L145">								finally { in.close(); }</span>
+							}
+						}
+					}
+				}
+			}
+<span class="nc" id="L151">			catch (Exception e)</span>
+			{
+<span class="nc" id="L153">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L154">			}</span>
+		}
+<span class="nc" id="L156">	}</span>
+
+
+	/**
+	 * Vytvori ZIP-archiv Webroot adresara, ak su
+	 *
+	 * @param servletContext
+	 * @param mainDirs       - korenove adresare, ktore sa maju zalohovat
+	 * @param zipDirPath     - cesta k ZIP-suboru
+	 * @param printWriter
+	 */
+	public static void makeZipArchive(HttpServletRequest request, ServletContext servletContext, String mainDirs, String zipDirPath, JspWriter printWriter) throws IOException {
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Archiving...&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
+
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(zipDirPath) || FileBrowserTools.hasForbiddenSymbol(mainDirs)) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Forbidden symbol in path!&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L173">			return;</span>
+		}
+
+<span class="nc" id="L176">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L177" title="All 6 branches missed.">		if (user == null || user.isAdmin() || user.isFolderWritable(zipDirPath)==false) {</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Access denied!&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L179">			return;</span>
+		}
+
+<span class="nc" id="L182">		double time = 0;</span>
+<span class="nc" id="L183">		String[] archiveDirs = { &quot;/&quot; };</span>
+		// String outFilename;
+		String zipFilePath;
+<span class="nc" id="L186">		Prop prop = null;</span>
+
+		try {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (Tools.isEmpty(zipDirPath)) {</span>
+<span class="nc" id="L190">				zipDirPath = &quot;/files/protected-backup/&quot;; // NOSONAR</span>
+			}
+
+<span class="nc" id="L193">			SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="nc" id="L194">			SimpleDateFormat timeFormat = new SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
+<span class="nc" id="L195">			long dateTime = Tools.getNow();</span>
+			// poskladam nazov suboru
+<span class="nc" id="L197">			String fileName = Constants.getInstallName() + &quot;-&quot; + dateFormat.format(new Timestamp(dateTime)) + &quot;-&quot;</span>
+<span class="nc" id="L198">					+ timeFormat.format(new Timestamp(dateTime)) + &quot;.zip&quot;;</span>
+
+			// z nazvu suburu vyhodim zakazane znaky
+<span class="nc" id="L201">			fileName = DocTools.removeChars(fileName);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (!zipDirPath.startsWith(&quot;/&quot;))</span>
+<span class="nc" id="L203">				zipDirPath = &quot;/&quot; + zipDirPath; // NOSONAR</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (!zipDirPath.endsWith(&quot;/&quot;))</span>
+<span class="nc" id="L205">				zipDirPath = zipDirPath + &quot;/&quot;; // NOSONAR</span>
+
+			// poskladam cestu archivu
+<span class="nc" id="L208">			zipFilePath = zipDirPath + fileName;</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (Tools.isNotEmpty(mainDirs)) {</span>
+				// rozparsujeme si adresare, ktore sa budu archivovat
+<span class="nc" id="L212">				archiveDirs = RelatedPagesDB.getTokens(mainDirs, &quot;,&quot;);</span>
+			}
+
+<span class="nc" id="L215">			Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;ZIP archive, zip=&quot; + zipFilePath + &quot; dir=&quot; +  Tools.join(archiveDirs, &quot;,&quot;), -1, -1);</span>
+
+			// vytvorime si ZIP file
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (servletContext != null) {</span>
+<span class="nc" id="L219">				File outFile = new File(Tools.getRealPath(zipFilePath));</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (outFile.getParentFile().exists() == false) {</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">					if (!outFile.getParentFile().mkdirs() &amp;&amp; printWriter != null) {</span>
+<span class="nc" id="L222">						printWriter.println(&quot;&lt;br&gt;&lt;b&gt;Unable to create dirs: &quot; + zipFilePath + &quot;&lt;/b&gt;&quot;);</span>
+<span class="nc" id="L223">						return;</span>
+					}
+				}
+<span class="nc" id="L226">				ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outFile));</span>
+
+				// zmeriame cas operacie
+<span class="nc" id="L229">				time = Tools.getNow();</span>
+
+				// iterujeme po adresaroch a pridavame subory do ZIP-archivu
+<span class="nc bnc" id="L232" title="All 2 branches missed.">				for (int i = 0; i &lt; archiveDirs.length; i++) {</span>
+<span class="nc" id="L233">					getFilesFromDir(archiveDirs[i], servletContext, zipOut, printWriter, fileName);</span>
+				}
+
+				// uzavretie ZIP suboru
+<span class="nc" id="L237">				zipOut.close();</span>
+<span class="nc" id="L238">				time = (Tools.getNow() - time) / 1000D;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (request != null) {</span>
+<span class="nc" id="L240">					prop = Prop.getInstance(servletContext, request);</span>
+				}
+			}
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (prop != null) {</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (printWriter != null)</span>
+<span class="nc" id="L245">					printWriter.println(&quot;&lt;br&gt;&lt;b&gt;&quot; + prop.getText(&quot;admin.archive.done&quot;) + &quot;!&lt;br&gt;&quot;</span>
+<span class="nc" id="L246">							+ prop.getText(&quot;admin.archive.elapsed_time&quot;) + &quot;: &quot; + time + &quot; sec&lt;/b&gt;&quot;);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				if (printWriter != null)</span>
+<span class="nc" id="L248">					printWriter.println(&quot;&lt;br&gt;&quot; + prop.getText(&quot;admin.archive.archive_filename&quot;) + &quot;: &lt;b&gt;&lt;a href='&quot;</span>
+							+ zipFilePath + &quot;' target='_blank'&gt;&quot; + zipFilePath + &quot;&lt;/a&gt;&lt;/b&gt;&quot;);
+			} else {
+<span class="nc bnc" id="L251" title="All 2 branches missed.">				if (printWriter != null)</span>
+<span class="nc" id="L252">					printWriter.println(&quot;&lt;br&gt;&lt;b&gt;Done!&lt;br&gt;Elapsed time: &quot; + time + &quot; sec&lt;/b&gt;&quot;);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">				if (printWriter != null)</span>
+<span class="nc" id="L254">					printWriter.println(&quot;&lt;br&gt;Archive filename: &lt;b&gt;&lt;a href='&quot; + zipFilePath + &quot;' target='_blank'&gt;&quot;</span>
+							+ zipFilePath + &quot;&lt;/a&gt;&lt;/b&gt;&quot;);
+			}
+<span class="nc" id="L257">		} catch (Exception e) {</span>
+<span class="nc" id="L258">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L259">		}</span>
+<span class="nc" id="L260">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetProtectedFileServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GetProtectedFileServlet.java</span></div><h1>GetProtectedFileServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.io.File;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.filebrowser.EditForm;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+
+/**
+ *  Servlet na ziskanie suboru z /files/protected, ktore su chranene heslom
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       not attributable
+ *@version      1.0
+ *@created      Štvrtok, 2003, júl 3
+ *@modified     $Date: 2003/08/19 06:53:43 $
+ */
+
+<span class="fc" id="L38">public class GetProtectedFileServlet extends HttpServlet</span>
+{
+	private static final long serialVersionUID = -6417564199151540202L;
+	/**
+    *  Description of the Field
+    */
+   public final static String DIR_NAME = &quot;/files/protected&quot;;
+
+
+   /**
+    *  Description of the Method
+    *
+    *@exception  ServletException  Description of the Exception
+    */
+   @Override
+<span class="fc" id="L53">	public void init() throws ServletException { }</span>
+
+   /**
+    *  Description of the Method
+    *
+    *@param  request               Description of the Parameter
+    *@param  response              Description of the Parameter
+    *@exception  ServletException  Description of the Exception
+    *@exception  IOException       Description of the Exception
+    */
+   @Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+   {
+<span class="fc" id="L66">      String url = request.getRequestURI();</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">      if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);</span>
+      //Logger.println(this,&quot;RequestServlet: url=&quot;+url);
+
+<span class="pc bpc" id="L70" title="2 of 4 branches missed.">      if (url == null || url.compareTo(&quot;/&quot;) == 0)</span>
+      {
+<span class="nc" id="L72">         getServletContext().getRequestDispatcher(&quot;/index.jsp&quot;).forward(request, response);</span>
+<span class="nc" id="L73">         return;</span>
+      }
+
+<span class="fc" id="L76">      request.getSession().setAttribute(&quot;afterLogonRedirect&quot;, url);</span>
+
+      //Logger.println(this,&quot;--&gt;GetProtectedFileServlet: &quot; + url);
+
+<span class="fc" id="L80">      EditForm ef = PathFilter.isPasswordProtected(url, request);</span>
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">      if (url.startsWith(DIR_NAME))</span>
+      {
+<span class="fc" id="L84">      	Logger.println(this,&quot;mam dir name, url=&quot;+url);</span>
+         //ziskaj identitu
+<span class="fc" id="L86">         Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">         if (user == null)</span>
+         {
+<span class="fc" id="L89">             PathFilter.doFileForbiddenRedirect(ef, user, url, request, response);</span>
+<span class="fc" id="L90">            return;</span>
+         }
+
+         //otestuj, ci je subor dostupny pre daneho usera
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">         if (!user.isAdmin())</span>
+         {
+            //ziskaj nazov adresara
+<span class="fc" id="L97">            String dirName = &quot;&quot;;</span>
+            try
+            {
+<span class="fc" id="L100">               int index = url.indexOf(&quot;/&quot;, DIR_NAME.length() + 1);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">               if (index != -1)</span>
+               {
+<span class="fc" id="L103">                  dirName = url.substring(DIR_NAME.length()+1, index);</span>
+               }
+            }
+<span class="nc" id="L106">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L108">               sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L109">            }</span>
+
+<span class="fc" id="L111">             Logger.println(this,&quot;nie som admin, dirName=&quot;+dirName);</span>
+
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">            if (dirName != null &amp;&amp; dirName.length() &gt; 0)</span>
+            {
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">               if (dirName.equals(&quot;users&quot;))</span>
+               {
+                  //je to adresar pre konkretneho usera, skontroluj ci je to prave prihlaseny
+<span class="nc" id="L118">               	String loginName = DocTools.removeCharsDir(user.getLoginName()).toLowerCase();</span>
+<span class="nc" id="L119">               	loginName = DB.internationalToEnglish(loginName).toLowerCase();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                  if (url.startsWith(DIR_NAME + &quot;/&quot; + dirName + &quot;/&quot; + loginName + &quot;/&quot;) == false)</span>
+                  {
+<span class="nc" id="L122">                     PathFilter.doFileForbiddenRedirect(ef, user, url, request, response);</span>
+<span class="nc" id="L123">                     return;</span>
+                  }
+<span class="nc" id="L125">               }</span>
+               else
+               {
+                  //otestuj, ci user ma pravo na tento adresar
+<span class="fc" id="L129">                  UserGroupsDB userGroupsDB = UserGroupsDB.getInstance(getServletContext(), false, DBPool.getDBName(request));</span>
+<span class="fc" id="L130">                  UserGroupDetails userGroup = userGroupsDB.getUserGroupDirName(dirName);</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                  if (userGroup != null)</span>
+                  {
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                     if (user.isInUserGroup(userGroup.getUserGroupId()) == false)</span>
+                     {
+                        //user do danej grupy nepatri, nema tu co hladat
+<span class="nc" id="L136">                        request.getSession().setAttribute(&quot;password_protected&quot;, userGroup.getUserGroupName());</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                        if (PathFilter.doFileForbiddenRedirect(ef, user, url, request, response))</span>
+                        {
+<span class="nc" id="L139">                            return;</span>
+                        }
+                     }
+                  }
+                  else
+                  {
+                     //user do danej grupy nepatri, nema tu co hladat
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                     if (PathFilter.doFileForbiddenRedirect(ef, user, url, request, response))</span>
+                     {
+<span class="nc" id="L148">                         return;</span>
+                     }
+                  }
+               }
+            }
+         }
+
+<span class="fc" id="L155">         Logger.println(this,&quot;preposielam na vystup, url=&quot;+url);</span>
+
+         //preposli to na vystup
+<span class="fc" id="L158">         String realPath = Tools.getRealPath(url);</span>
+<span class="fc" id="L159">         File inFile = null;</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">         if (realPath != null)</span>
+         {
+<span class="fc" id="L162">            inFile = new File(realPath);</span>
+         }
+
+<span class="fc" id="L165">         Logger.println(this,&quot;testujem: &quot; + realPath);</span>
+
+<span class="pc bpc" id="L167" title="2 of 4 branches missed.">         if (inFile != null &amp;&amp; inFile.exists())</span>
+         {
+            //response.setHeader(&quot;Pragma&quot;, &quot;No-Cache&quot;);
+            //response.setDateHeader(&quot;Expires&quot;, 0);
+            //response.setHeader(&quot;Cache-Control&quot;, &quot;no-Cache&quot;);
+
+<span class="fc" id="L173">            String mimeType = &quot;application/octet-stream&quot;;</span>
+
+            try
+				{
+<span class="fc" id="L177">					mimeType = getServletContext().getMimeType(url.toLowerCase());</span>
+				}
+<span class="nc" id="L179">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L181">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L182">				}</span>
+
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">				if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+
+            //debilne WebSphere nevie zistit mimeType
+
+<span class="fc" id="L188">            response.setContentType(mimeType);</span>
+<span class="fc" id="L189">            ServletOutputStream out = response.getOutputStream();</span>
+<span class="fc" id="L190">            byte buff[] = new byte[64000];</span>
+<span class="fc" id="L191">            IwcmInputStream fis = new IwcmInputStream(realPath);</span>
+            int len;
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            while ((len = fis.read(buff)) != -1)</span>
+            {
+<span class="fc" id="L195">               out.write(buff, 0, len);</span>
+            }
+<span class="fc" id="L197">            fis.close();</span>
+            //out.close();
+
+            //Logger.println(this,&quot;hotovo&quot;);
+
+<span class="fc" id="L202">            return;</span>
+         }
+         else
+         {
+<span class="nc" id="L206">         	Logger.debug(GetProtectedFileServlet.class, &quot;forwarding to 404.jsp&quot;);</span>
+<span class="nc" id="L207">            getServletContext().getRequestDispatcher(&quot;/404.jsp&quot;).forward(request, response);</span>
+<span class="nc" id="L208">            return;</span>
+         }
+      }
+      else
+      {
+      	//nacitaj subor a posli na vystup
+<span class="nc" id="L214">      	String realPath = Tools.getRealPath(url);</span>
+<span class="nc" id="L215">         File inFile = null;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">         if (realPath != null)</span>
+         {
+<span class="nc" id="L218">            inFile = new File(realPath);</span>
+         }
+
+         //Logger.println(this,&quot;testujem: &quot; + realPath);
+
+<span class="nc bnc" id="L223" title="All 4 branches missed.">         if (inFile != null &amp;&amp; inFile.exists())</span>
+         {
+            //response.setHeader(&quot;Pragma&quot;, &quot;No-Cache&quot;);
+            //response.setDateHeader(&quot;Expires&quot;, 0);
+            //response.setHeader(&quot;Cache-Control&quot;, &quot;no-Cache&quot;);
+
+<span class="nc" id="L229">            String mimeType = &quot;application/octet-stream&quot;;</span>
+
+            try
+				{
+<span class="nc" id="L233">					mimeType = getServletContext().getMimeType(url.toLowerCase());</span>
+				}
+<span class="nc" id="L235">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L237">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L238">				}</span>
+
+<span class="nc bnc" id="L240" title="All 4 branches missed.">				if (mimeType == null || mimeType.length()==0)</span>
+				{
+<span class="nc" id="L242">					mimeType = &quot;application/octet-stream&quot;;</span>
+				}
+
+            //debilne WebSphere nevie zistit mimeType
+
+<span class="nc" id="L247">            response.setContentType(mimeType);</span>
+<span class="nc" id="L248">            ServletOutputStream out = response.getOutputStream();</span>
+<span class="nc" id="L249">            byte buff[] = new byte[64000];</span>
+<span class="nc" id="L250">            IwcmInputStream fis = new IwcmInputStream(realPath);</span>
+            int len;
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            while ((len = fis.read(buff)) != -1)</span>
+            {
+<span class="nc" id="L254">               out.write(buff, 0, len);</span>
+            }
+<span class="nc" id="L256">            fis.close();</span>
+            //out.close();
+
+            //Logger.println(this,&quot;hotovo&quot;);
+
+<span class="nc" id="L261">            return;</span>
+         }
+      }
+
+<span class="nc" id="L265">      Logger.debug(GetProtectedFileServlet.class, &quot;forwarding to 404.jsp&quot;);</span>
+<span class="nc" id="L266">      getServletContext().getRequestDispatcher(&quot;/404.jsp&quot;).forward(request, response);</span>
+
+      //Logger.println(this,&quot;subor nenajdeny&quot;);
+<span class="nc" id="L269">      return;</span>
+   }
+
+   /**
+    *  Description of the Method
+    */
+   @Override
+<span class="fc" id="L276">	public void destroy() { }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

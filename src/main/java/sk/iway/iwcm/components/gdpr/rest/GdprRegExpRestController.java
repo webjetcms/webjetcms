@@ -9,8 +9,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +18,6 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
@@ -29,21 +26,9 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @Datatable
 public class GdprRegExpRestController  extends DatatableRestControllerV2<GdprRegExpBean, Long> {
 
-    private final GdprRegExpRepository repository;
-
     @Autowired
     public GdprRegExpRestController(GdprRegExpRepository repository) {
         super(repository);
-        this.repository = repository;
-    }
-
-    @Override
-    public Page<GdprRegExpBean> getAllItems(Pageable pageable) {
-
-        Page<GdprRegExpBean> items = repository.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable);
-
-        DatatablePageImpl<GdprRegExpBean> page = new DatatablePageImpl<>(items);
-        return page;
     }
 
     @Override

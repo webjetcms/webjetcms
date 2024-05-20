@@ -46,6 +46,10 @@ public class UploadFileAction {
 
 	private static final String FILE_NOT_ALLOWED = "/admin/FCKeditor/editor/dialog/editor_upload_iframe.jsp";
 
+	private UploadFileAction() {
+		//utility class
+	}
+
 	/**
 	 * Save image that was drag&drop inside opened web page editor (uploadType=ckeditor).
 	 * @param request
@@ -55,14 +59,14 @@ public class UploadFileAction {
 	 * @throws IOException
 	 * @throws ServletException
 	 */
-	public static String execute(HttpServletRequest request, HttpServletResponse response, CommonsMultipartFile multipartFile) throws IOException, ServletException {
+	public static String execute(HttpServletRequest request, HttpServletResponse response, CommonsMultipartFile multipartFile) throws IOException {
 
 		HttpSession session = request.getSession();
 		if (session == null) return "logon_admin";
 
 		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
 		//povolenie pre blog alebo wiki
-		if (UsersDB.checkUserPerms(user, "admin|editableGroupsNotEmpty") == false) return "logon_admin";
+		if (UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false) return "logon_admin";
 
 		int groupId = Tools.getIntValue(request.getParameter("groupId"), -1);
 		int docId = Tools.getIntValue(request.getParameter("docId"), -1);

@@ -12,6 +12,7 @@
 - Web stránky
   - [Základná práca](/redactor/webpages/README.md)
   - [Editácia web stránky](/redactor/webpages/editor.md)
+  - [Priečinok web stránky](/redactor/webpages/group.md)
   - [História](/redactor/webpages/history.md)
   - [Obnovenie z koša](/redactor/webpages/recover.md)
   - [Page Builder](/redactor/webpages/pagebuilder.md)
@@ -24,12 +25,18 @@
   - [Média](/redactor/webpages/media.md)
   - [Značky](/redactor/webpages/perexgroups.md)
 - Aplikácie
-  - [AB testovanie](/redactor/apps/abtesting/README.md)
+  - AB testovanie
+    - [Úvod](/redactor/apps/abtesting/README.md)
+    - [AB Testovanie](/redactor/apps/abtesting/abtesting.md)
   - [Anketa](/redactor/apps/inquiry/README.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
+  - Blog
+    - [Zoznam článkov](/redactor/apps/blog/README.md)
+    - [Správa blogerov](/redactor/apps/blog/bloggers.md)
   - [Číselníky](/redactor/apps/enumeration/README.md)
+  - [Dotazníky](/redactor/apps/quiz/README.md)
   - [Export dát](/redactor/apps/export/README.md)
   - [Formulár ľahko](/redactor/apps/formsimple/README.md)
   - Formuláre
@@ -47,7 +54,7 @@
     - [Integrácia Google Tag Manager](/redactor/apps/gdpr/gtm.md)
   - Hromadný e-mail
     - [Kampane](/redactor/apps/dmail/campaings/README.md)
-    - [Formulár pre prihlásenie](/redactor/apps/dmail/form/README.md)
+    - [Formulár pre prihlásenie/odhlásenie](/redactor/apps/dmail/form/README.md)
     - [Doménové limity](/redactor/apps/dmail/domain-limits/README.md)
     - [Odhlásené e-maily](/redactor/apps/dmail/unsubscribed/README.md)
     - [Ako funguje odosielanie emailov](/redactor/apps/dmail/campaings/how-sender-works.md)
@@ -55,6 +62,8 @@
   - Kalendár udalostí
     - [Zoznam udalostí](/redactor/apps/calendar/README.md)
     - [Konfigurácia typov udalostí](/redactor/apps/calendar/calendar-types/README.md)
+    - [Neschválené udalosti](/redactor/apps/calendar/non-approved-events/README.md)
+    - [Odporučenie udalosti](/redactor/apps/calendar/suggest-events/README.md)
   - [Mapa stránok](/redactor/apps/sitemap/README.md)
   - [Menu (navigačné)](/redactor/apps/menu/README.md)
   - [Navigačná lišta](/redactor/apps/navbar/README.md)

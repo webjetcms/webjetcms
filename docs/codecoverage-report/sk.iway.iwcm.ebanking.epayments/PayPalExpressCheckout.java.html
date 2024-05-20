@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PayPalExpressCheckout.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">PayPalExpressCheckout.java</span></div><h1>PayPalExpressCheckout.java</h1><pre class="source lang-java linenums">/*https://developer.paypal.com/demo/checkout/#/pattern/client
+ * https://developer.paypal.com/docs/integration/direct/make-your-first-call/
+ *
+ * detail platby:
+ * https://developer.paypal.com/docs/api/payments/#payment_get
+ *
+ * */
+
+package sk.iway.iwcm.ebanking.epayments;
+
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.Logger;
+
+//podla tohoto implementovane
+//https://developer.paypal.com/docs/api/payments/#payment_get
+
+<span class="nc" id="L27">public class PayPalExpressCheckout {</span>
+	public static String getAccessToken()
+	{
+		try
+		{
+<span class="nc" id="L32">			JSONObject obj = new JSONObject(getAccessTokenResponse());</span>
+
+<span class="nc bnc" id="L34" title="All 2 branches missed.">			if(obj.getInt(&quot;expires_in&quot;) &lt;= 2)</span>
+			{
+<span class="nc" id="L36">				Logger.debug(null, &quot;oauth getAccessToken zaspavam na 2000&quot;);</span>
+<span class="nc" id="L37">				Thread.sleep(2000);</span>
+<span class="nc" id="L38">				obj = new JSONObject(getAccessTokenResponse());</span>
+			}
+<span class="nc" id="L40">			return obj.getString(&quot;access_token&quot;);</span>
+		}
+<span class="nc" id="L42">		catch(Exception ex)</span>
+		{
+<span class="nc" id="L44">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L45">			return null;</span>
+		}
+
+	}
+
+	public static String paymentVerify(String paymentId)
+	{
+<span class="nc" id="L52">		String url = &quot;https://api.sandbox.paypal.com/v1/payments/payment/&quot;+paymentId;</span>
+
+		try
+		{
+<span class="nc" id="L56">			HttpURLConnection con = getCustomConnection(url);</span>
+<span class="nc" id="L57">			con.setRequestProperty(&quot;Authorization&quot;, &quot;Bearer &quot; + getAccessToken());</span>
+<span class="nc" id="L58">			con.setRequestMethod(&quot;GET&quot;);</span>
+<span class="nc" id="L59">			Logger.debug(PayPalExpressCheckout.class, &quot;Connected method : &quot;+con.getRequestMethod() + &quot; Response Code : &quot;+con.getResponseCode()+&quot; Message : &quot;+con.getResponseMessage());</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if(isResponseError(con))</span>
+<span class="nc" id="L62">				return null;</span>
+
+<span class="nc" id="L64">			return contentToString(con.getContent());</span>
+
+		}
+<span class="nc" id="L67">		catch(Exception exc)</span>
+		{
+<span class="nc" id="L69">			catchMethod(exc);</span>
+		}
+<span class="nc" id="L71">		return null;</span>
+	}
+
+	public static String getAccessTokenResponse()
+	{
+<span class="nc" id="L76">		String url = &quot;https://api.sandbox.paypal.com/v1/oauth2/token&quot;;</span>
+<span class="nc" id="L77">		String login = &quot;AVvjcXS5hPVL27SACutRO_6ilUCrtc9FJUxBnrPFb0fH2XcdD4Eitm8I6lsGid38K2LSs-L20GMLdmtX&quot;;</span>
+<span class="nc" id="L78">		String heslo = &quot;EFDd3yp8_thTHwftcSR4IhH3rFBdnCz9g0zwot7FoTdfzDuQA4wlKHkGU_AjcFxOr_Wm713api3sAO2j&quot;;</span>
+
+		try
+		{
+<span class="nc" id="L82">			HttpURLConnection con = getCustomConnection(url);</span>
+<span class="nc" id="L83">			String userCredentials = login+&quot;:&quot;+heslo;//&quot;username:password&quot;;</span>
+<span class="nc" id="L84">			con.setRequestProperty(&quot;Authorization&quot;, &quot;Basic &quot; + new String(new Base64().encode(userCredentials.getBytes())));</span>
+<span class="nc" id="L85">			con.setRequestMethod(&quot;POST&quot;);</span>
+<span class="nc" id="L86">			String urlParameters  = &quot;grant_type=client_credentials&quot;;	//&quot;{\&quot;grant_type\&quot;: \&quot;client_credentials\&quot;&quot;;</span>
+<span class="nc" id="L87">			byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);</span>
+
+<span class="nc" id="L89">			DataOutputStream  osw = new DataOutputStream(con.getOutputStream());</span>
+<span class="nc" id="L90">			osw.write(postData);</span>
+<span class="nc" id="L91">			osw.flush();</span>
+<span class="nc" id="L92">			osw.close();</span>
+<span class="nc" id="L93">			con.connect();</span>
+
+<span class="nc" id="L95">			Logger.debug(PayPalExpressCheckout.class, &quot;Connected method : &quot;+con.getRequestMethod() + &quot; Response Code : &quot;+con.getResponseCode()+&quot; Message : &quot;+con.getResponseMessage());</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if(isResponseError(con))</span>
+<span class="nc" id="L98">				return null;</span>
+
+<span class="nc" id="L100">			return contentToString(con.getContent());</span>
+			//typicky vystup:
+			//{&quot;scope&quot;:&quot;https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/applications/webhooks openid&quot;,&quot;nonce&quot;:&quot;2017-06-08T12:38:46Z2NIcwTJg_rMfbIN0nNdGeP4wqNed7eBM1TV9L12uhk4&quot;,&quot;access_token&quot;:&quot;A21AAHSFookkTKeiAntt2TSDL80zKY1Fm0apgY9uOyNYpu0oSQU5t44IpAaCduZDz7jDZeDk25PQmhcFIuKYg8nNx-aCY288g&quot;,&quot;token_type&quot;:&quot;Bearer&quot;,&quot;app_id&quot;:&quot;APP-80W284485P519543T&quot;,&quot;expires_in&quot;:32246}
+		}
+<span class="nc" id="L104">		catch(Exception exc)</span>
+		{
+<span class="nc" id="L106">			catchMethod(exc);</span>
+		}
+<span class="nc" id="L108">		return null;</span>
+	}
+
+	private static HttpURLConnection getCustomConnection(String url) throws Exception
+	{
+<span class="nc" id="L113">		Logger.debug(PayPalExpressCheckout.class, &quot;Requested url: &quot;+url);</span>
+<span class="nc" id="L114">		HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();</span>
+<span class="nc" id="L115">		con.setDoOutput(true);</span>
+<span class="nc" id="L116">		con.setRequestProperty(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;);</span>
+<span class="nc" id="L117">		con.setReadTimeout(60*1000);</span>
+<span class="nc" id="L118">		return con;</span>
+	}
+
+	private static boolean isResponseError(HttpURLConnection con ) throws Exception
+	{
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if(con.getErrorStream()  != null)</span>
+		{
+<span class="nc" id="L125">			Logger.debug(PayPalExpressCheckout.class, &quot;getErrorStream() != null Treba precitat! &quot;);</span>
+<span class="nc" id="L126">			StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L127">			IOUtils.copy(con.getInputStream(), writer, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L128">			System.out.println(writer.toString());</span>
+		}
+
+		//ak nieco nezbehlo v poriadku
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if(con.getResponseCode() &gt;= 300)</span>
+		{
+<span class="nc" id="L134">			Logger.debug(PayPalExpressCheckout.class, &quot;!!! ResponseCode  =  &quot;+con.getResponseCode());</span>
+<span class="nc" id="L135">			return true;</span>
+		}
+
+<span class="nc" id="L138">		return false;</span>
+	}
+
+	private static String contentToString(Object connectionContent) throws Exception
+	{
+<span class="nc" id="L143">		StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L144">		IOUtils.copy((InputStream)connectionContent, writer, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L145">		return writer.toString();</span>
+	}
+
+	private static void catchMethod(Exception exc)
+	{
+//		StringWriter sw = new StringWriter();
+//		PrintWriter pw = new PrintWriter(sw);
+//		exc.printStackTrace(pw);
+<span class="nc" id="L153">		sk.iway.iwcm.Logger.error(exc);</span>
+<span class="nc" id="L154">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

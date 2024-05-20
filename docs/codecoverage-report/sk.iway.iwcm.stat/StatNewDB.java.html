@@ -1,0 +1,3039 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatNewDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatNewDB.java</span></div><h1>StatNewDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConfDB;
+
+/**
+ *  StatNewDB.java
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.40 $
+ *@created      Date: 10.1.2005 15:13:34
+ *@modified     $Date: 2010/01/20 10:13:22 $
+ */
+@SuppressWarnings({&quot;java:S2479&quot;, &quot;java:S1643&quot;})
+public class StatNewDB
+{
+
+	private static Map&lt;String, String&gt; dateFunc;
+
+<span class="nc" id="L58">	protected StatNewDB() {</span>
+		//utility class
+<span class="nc" id="L60">	}</span>
+
+	static
+	{
+<span class="fc" id="L64">		dateFunc = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L65">		dateFunc.put(&quot;mysql_hour&quot;, &quot;HOUR(field)&quot;);</span>
+<span class="fc" id="L66">		dateFunc.put(&quot;mssql_hour&quot;, &quot;DATEPART(hour, field)&quot;);</span>
+<span class="fc" id="L67">		dateFunc.put(&quot;ora_hour&quot;,   &quot;TO_CHAR(field, 'HH24')&quot;);</span>
+<span class="fc" id="L68">		dateFunc.put(&quot;pgsql_hour&quot;,   &quot;TO_CHAR(field, 'HH24')&quot;);</span>
+<span class="fc" id="L69">	}</span>
+
+	/**
+	 * Vytvori pole suffixov tabuliek v rozsahu zadanych datumov
+	 * @param dateFrom
+	 * @param dateTo
+	 * @return
+	 */
+	public static String[] getTableSuffix(long dateFrom, long dateTo)
+	{
+<span class="fc" id="L79">		return getTableSuffix(null, dateFrom, dateTo);</span>
+	}
+
+	private static boolean isPartitioningAllowedFor(String tableName)
+	{
+<span class="pc bpc" id="L84" title="3 of 4 branches missed.">		return Constants.getBoolean(&quot;statEnableTablePartitioning&quot;) || &quot;stat_clicks&quot;.equals(tableName);</span>
+	}
+
+	/**
+	 * Vytvori pole suffixov tabuliek v rozsahu zadanych datumov pre zadanu tabulku
+	 * @param tableName
+	 * @param dateFrom
+	 * @param dateTo
+	 * @return
+	 */
+	public static String[] getTableSuffix(String tableName, long dateFrom, long dateTo)
+	{
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">		if (isPartitioningAllowedFor(tableName)==false)</span>
+		{
+<span class="nc" id="L98">			String[] suffix = new String[1];</span>
+<span class="nc" id="L99">			suffix[0] = &quot;&quot;;</span>
+<span class="nc" id="L100">			return suffix;</span>
+		}
+<span class="fc" id="L102">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L103">		cal.setTimeInMillis(dateFrom);</span>
+<span class="fc" id="L104">		cal.set(Calendar.DATE, 1);</span>
+
+<span class="fc" id="L106">		List&lt;String&gt; suffixList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L108" title="All 6 branches covered.">		if (tableName != null &amp;&amp; !&quot;stat_clicks&quot;.equals(tableName) &amp;&amp; !&quot;stat_views&quot;.equals(tableName))</span>
+		{
+<span class="fc" id="L110">			String convertDate = Constants.getString(&quot;statTablePartitioningDate-&quot;+tableName);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(convertDate))</span>
+			{
+<span class="fc" id="L113">				long date = DB.getTimestamp(convertDate);</span>
+<span class="pc bpc" id="L114" title="2 of 4 branches missed.">				if (date &gt; 100000 &amp;&amp; date &gt; dateFrom)</span>
+				{
+<span class="nc" id="L116">					cal.setTimeInMillis(date);</span>
+					//v liste musime ponechat aj povodnu tabulku stat_from
+<span class="nc" id="L118">					suffixList.add(&quot;&quot;);</span>
+				}
+<span class="fc" id="L120">			}</span>
+			else
+			{
+				//na tabulke este nie je vytvorena particia
+<span class="nc" id="L124">				String[] suffix = new String[1];</span>
+<span class="nc" id="L125">				suffix[0] = &quot;&quot;;</span>
+<span class="nc" id="L126">				return suffix;</span>
+			}
+		}
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">		while (cal.getTimeInMillis() &lt;= dateTo)</span>
+		{
+<span class="fc" id="L132">			String suffix = &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
+<span class="fc" id="L133">			suffixList.add(suffix);</span>
+<span class="fc" id="L134">			cal.set(Calendar.DATE, 1);</span>
+<span class="fc" id="L135">			cal.add(Calendar.MONTH, 1);</span>
+<span class="fc" id="L136">		}</span>
+
+		//skonvertuj na pole
+<span class="fc" id="L139">		String[] suffixArray = new String[suffixList.size()];</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">		for (int i=0; i&lt;suffixArray.length; i++)</span>
+		{
+<span class="fc" id="L142">			suffixArray[i] = suffixList.get(i);</span>
+			//Logger.debug(StatNewDB.class, &quot;Suffix (&quot;+tableName+&quot;): &quot;+suffixArray[i]);
+		}
+
+<span class="fc" id="L146">		return suffixArray;</span>
+	}
+
+
+	public static String getTableSuffix(String tableName)
+	{
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">		if (isPartitioningAllowedFor(tableName)==false) return &quot;&quot;;</span>
+
+<span class="fc" id="L154">		String convertDate = Constants.getString(&quot;statTablePartitioningDate-&quot;+tableName);</span>
+
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">		if (Tools.isEmpty(convertDate))</span>
+		{
+			//prave sme to vytvorili
+<span class="nc" id="L159">			String actualDateTime = Tools.formatDateTime(Tools.getNow());</span>
+<span class="nc" id="L160">			Constants.setString(&quot;statTablePartitioningDate-&quot;+tableName, actualDateTime);</span>
+<span class="nc" id="L161">			ConfDB.setName(&quot;statTablePartitioningDate-&quot;+tableName, actualDateTime);</span>
+		}
+
+<span class="fc" id="L164">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L165">		return &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
+	}
+
+	/**
+	 * Skontroluje v popise chyby ci nastala chyba, ze neexistuje partitioning tabulka
+	 * ak ano vytvori ju a vrati true, inak vrati false. Takato chyba nastava v statistike
+	 * ked je nastavene obdobie, pre ktore este neexistuje vytvorena tabulka.
+	 * @param errorMessage
+	 * @param suffix
+	 * @return
+	 */
+	public static boolean createStatTablesFromError(String errorMessage, String suffix)
+	{
+<span class="nc" id="L178">		return createStatTablesFromError(errorMessage, suffix, &quot;stat_views&quot;);</span>
+	}
+
+	public static boolean createStatTablesFromError(String errorMessage, String suffix, String tableName)
+	{
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (Tools.isEmpty(errorMessage)) return false;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (isPartitioningAllowedFor(tableName))</span>
+		{
+			//ORA-00942 je chybovy kod chybajucej tabulky v Oracle - samotna hlaska moze byt internacionalizovana
+<span class="nc bnc" id="L187" title="All 8 branches missed.">			if (errorMessage.contains(&quot;Invalid object name&quot;) || errorMessage.contains(&quot;doesn't exist&quot;) || errorMessage.contains(&quot;not exist&quot;) || errorMessage.contains(&quot;ORA-00942&quot;))</span>
+			{
+<span class="nc" id="L189">				createStatTable(tableName, suffix);</span>
+<span class="nc" id="L190">				return true;</span>
+			}
+		}
+<span class="nc" id="L193">		return false;</span>
+	}
+
+	/**
+	 * Vytvori a nastavi default parametre pre PS - cursor a fetch size (setri pamat)
+	 * @param dbConn
+	 * @param sql
+	 * @return
+	 * @throws SQLException
+	 */
+	public static PreparedStatement prepareStatement(Connection dbConn, String sql) throws SQLException
+	{
+<span class="fc" id="L205">		DBPool.setTransactionIsolationReadUNCommited(dbConn);</span>
+<span class="fc" id="L206">		PreparedStatement ps = dbConn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);</span>
+
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">		if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);</span>
+<span class="nc" id="L209">	   else ps.setFetchSize(1);</span>
+
+<span class="fc" id="L211">		return ps;</span>
+	}
+
+	/**
+	 * Vrati SQL prikaz pre vytvorenie danej tabulky
+	 * @param tableName
+	 * @param suffix
+	 * @return
+	 */
+	private static String getCreateStatTableSqlCommand(String tableName, String suffix, int DB_TYPE)
+	{
+<span class="nc" id="L222">		String procedureName = Constants.getString(&quot;statTableCreateProcedureName&quot;);</span>
+<span class="nc bnc" id="L223" title="All 4 branches missed.">		if (Tools.isNotEmpty(procedureName) &amp;&amp; procedureName.length()&gt;2)</span>
+		{
+<span class="nc" id="L225">			procedureName = Tools.replace(procedureName, &quot;{1}&quot;, tableName);</span>
+<span class="nc" id="L226">			procedureName = Tools.replace(procedureName, &quot;{2}&quot;, suffix);</span>
+<span class="nc" id="L227">			return procedureName;</span>
+		}
+
+<span class="nc" id="L230">		String sql = null;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (&quot;stat_error&quot;.equals(tableName))</span>
+		{
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc" id="L235">				sql = &quot;CREATE TABLE stat_error&quot;+suffix+&quot; (&quot;+</span>
+				&quot;year int unsigned NOT NULL,&quot;+
+				&quot;week int unsigned NOT NULL,&quot;+
+				&quot;url varchar(255),&quot;+
+				&quot;query_string varchar(255),&quot;+
+				&quot;count int unsigned DEFAULT 0,&quot;+
+				&quot;KEY i_stat_error&quot;+suffix+&quot; (year, week)&quot;+
+<span class="nc" id="L242">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+			}
+<span class="nc bnc" id="L244" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L246">				sql = &quot;CREATE TABLE stat_error&quot;+suffix+&quot; (&quot;+</span>
+				&quot;year int NOT NULL,&quot;+
+				&quot;week int NOT NULL,&quot;+
+				&quot;url nvarchar(255),&quot;+
+				&quot;query_string nvarchar(255),&quot;+
+				&quot;count int DEFAULT 0&quot;+
+				&quot;);&quot;+
+				&quot;CREATE INDEX IX_yw&quot;+suffix+&quot; ON stat_error&quot;+suffix+&quot; (year, week);&quot;;
+			}
+<span class="nc bnc" id="L255" title="All 2 branches missed.">			else if (DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L257">				sql = &quot;CREATE TABLE stat_error&quot;+suffix+&quot; (&quot;+</span>
+				&quot;year INTEGER NOT NULL,&quot;+
+				&quot;week INTEGER NOT NULL,&quot;+
+				&quot;url nvarchar2(255),&quot;+
+				&quot;query_string nvarchar2(255),&quot;+
+				&quot;count INTEGER DEFAULT 0&quot;+
+				&quot;);&quot;+
+				&quot;CREATE INDEX IX_ywse&quot;+suffix+&quot; ON stat_error&quot;+suffix+&quot; (year, week);&quot;;
+			}
+		}
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		else if (&quot;stat_from&quot;.equals(tableName))</span>
+		{
+<span class="nc bnc" id="L269" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc" id="L271">				sql = &quot;CREATE TABLE stat_from&quot;+suffix+&quot; (&quot;+</span>
+				&quot;from_id int unsigned NOT NULL AUTO_INCREMENT,&quot;+
+				&quot;browser_id bigint unsigned,&quot;+
+				&quot;session_id bigint unsigned,&quot;+
+				&quot;referer_server_name varchar(255),&quot;+
+				&quot;referer_url varchar(255),&quot;+
+				&quot;from_time datetime,&quot;+
+				&quot;doc_id int,&quot;+
+				&quot;group_id int unsigned NOT NULL DEFAULT 0,&quot;+
+				&quot;PRIMARY KEY (from_id)&quot;+
+<span class="nc" id="L281">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+			}
+<span class="nc bnc" id="L283" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L285">				sql = &quot;CREATE TABLE stat_from&quot;+suffix+&quot; (&quot;+</span>
+				&quot;from_id int NOT NULL identity(1,1),&quot;+
+				&quot;browser_id bigint,&quot;+
+				&quot;session_id  bigint,&quot;+
+				&quot;referer_server_name nvarchar(255),&quot;+
+				&quot;referer_url nvarchar(255),&quot;+
+				&quot;from_time datetime,&quot;+
+				&quot;doc_id int,&quot;+
+				&quot;group_id int NOT NULL DEFAULT 0,&quot;+
+				&quot;PRIMARY KEY (from_id))&quot;;
+			}
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			else if (DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L298">				sql = &quot;CREATE TABLE stat_from&quot;+suffix+&quot; (&quot;+</span>
+				&quot;from_id INTEGER NOT NULL,&quot;+
+				&quot;browser_id INTEGER,&quot;+
+				&quot;session_id  INTEGER,&quot;+
+				&quot;referer_server_name nvarchar2(255),&quot;+
+				&quot;referer_url nvarchar2(255),&quot;+
+				&quot;from_time DATE,&quot;+
+				&quot;doc_id INTEGER,&quot;+
+				&quot;group_id INTEGER NOT NULL&quot;+
+				&quot;);&quot;+
+				&quot;ALTER TABLE stat_from&quot;+suffix+&quot; add CONSTRAINT pk_stat_from&quot;+suffix+&quot; PRIMARY KEY (from_id);&quot;+
+				&quot;CREATE SEQUENCE S_stat_from&quot;+suffix+&quot; START WITH 1;&quot;+
+				&quot;CREATE TRIGGER T_stat_from&quot;+suffix+&quot; BEFORE INSERT ON stat_from&quot;+suffix+&quot; &quot;+
+				&quot;FOR EACH ROW \n&quot;+
+				&quot;	DECLARE \n&quot;+
+				&quot;		val INTEGER|\n&quot;+
+				&quot;	BEGIN\n&quot;+
+				&quot;		IF :new.from_id IS NULL THEN\n&quot;+
+				&quot;			SELECT S_stat_from&quot;+suffix+&quot;.nextval into val FROM dual|\n&quot;+
+				&quot;			:new.from_id:= val|\n&quot;+
+				&quot;		END IF|\n&quot;+
+				&quot;	END|\n&quot;+
+				&quot;;&quot;;
+			}
+		}
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		else if (&quot;stat_searchengine&quot;.equals(tableName))</span>
+		{
+<span class="nc bnc" id="L325" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc" id="L327">				sql = &quot;CREATE TABLE stat_searchengine&quot;+suffix+&quot; (&quot;+</span>
+				&quot;search_date datetime NOT NULL, &quot;+
+				&quot;server varchar(16) NOT NULL,&quot;+
+				&quot;query varchar(64) NOT NULL,&quot;+
+				&quot;doc_id int NOT NULL,&quot;+
+				&quot;remote_host varchar(255),&quot;+
+				&quot;group_id int(10) unsigned NOT NULL&quot;+
+<span class="nc" id="L334">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+			}
+<span class="nc bnc" id="L336" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L338">				sql = &quot;CREATE TABLE stat_searchengine&quot;+suffix+&quot; (&quot;+</span>
+				&quot;search_date datetime NOT NULL, &quot;+
+				&quot;server nvarchar(16) NOT NULL,&quot;+
+				&quot;query nvarchar(64) NOT NULL,&quot;+
+				&quot;doc_id int NOT NULL,&quot;+
+				&quot;remote_host nvarchar(255),&quot;+
+				&quot;group_id int NOT NULL&quot;+
+				&quot;)&quot;;
+			}
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			else if (DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L349">				sql = &quot;CREATE TABLE stat_searchengine&quot;+suffix+&quot; (&quot;+</span>
+				&quot;search_date date NOT NULL, &quot;+
+				&quot;server nvarchar2(16) NOT NULL,&quot;+
+				&quot;query nvarchar2(64) NOT NULL,&quot;+
+				&quot;doc_id integer NOT NULL,&quot;+
+				&quot;remote_host nvarchar2(255),&quot;+
+				&quot;group_id integer NOT NULL&quot;+
+				&quot;)&quot;;
+			}
+		}
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		else if (&quot;stat_views&quot;.equals(tableName))</span>
+		{
+<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc" id="L363">				sql = &quot;CREATE TABLE stat_views&quot;+suffix+&quot; (&quot; +</span>
+				&quot;view_id int unsigned NOT NULL auto_increment,&quot; +
+				&quot;browser_id bigint unsigned,&quot; +
+				&quot;session_id bigint unsigned,&quot; +
+				&quot;doc_id int,&quot; +
+				&quot;last_doc_id int,&quot; +
+				&quot;view_time datetime,&quot; +
+				&quot;group_id int unsigned,&quot; +
+				&quot;last_group_id int unsigned,&quot; +
+				&quot;browser_ua_id int, &quot;+
+				&quot;platform_id int, &quot;+
+				&quot;subplatform_id int,&quot;+
+				&quot;country varchar(4), &quot;+
+				&quot;PRIMARY KEY  (view_id)&quot; +
+				//&quot;,KEY i_group_id (group_id),&quot; +
+				//&quot;KEY i_doc_id (doc_id)&quot; +
+<span class="nc" id="L379">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+			}
+<span class="nc bnc" id="L381" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L383">				sql = &quot;CREATE TABLE stat_views&quot;+suffix+&quot; (&quot;+</span>
+					&quot;view_id int NOT NULL identity(1,1), &quot;+
+					&quot;browser_id bigint, &quot;+
+					&quot;session_id bigint, &quot;+
+					&quot;doc_id int, &quot;+
+					&quot;last_doc_id int, &quot;+
+					&quot;view_time datetime NULL, &quot;+
+					&quot;group_id int,&quot; +
+					&quot;last_group_id int,&quot; +
+					&quot;browser_ua_id int, &quot;+
+					&quot;platform_id int, &quot;+
+					&quot;subplatform_id int,&quot;+
+					&quot;country varchar(4), &quot;+
+					&quot;PRIMARY KEY (view_id))&quot;;
+			}
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			else if (DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L400">				sql = &quot;CREATE TABLE stat_views&quot;+suffix+&quot; (&quot; +</span>
+						&quot;view_id INTEGER NOT NULL, &quot; +
+						&quot;browser_id INTEGER, &quot; +
+						&quot;session_id INTEGER, &quot; +
+						&quot;doc_id INTEGER, &quot; +
+						&quot;last_doc_id INTEGER, &quot; +
+						&quot;view_time DATE NULL,&quot; +
+						&quot;group_id INTEGER, &quot; +
+						&quot;last_group_id INTEGER, &quot; +
+						&quot;browser_ua_id INTEGER, &quot;+
+						&quot;platform_id INTEGER, &quot;+
+						&quot;subplatform_id INTEGER,&quot;+
+						&quot;country VARCHAR(4), &quot;+
+						&quot;PRIMARY KEY (view_id));&quot; +
+						&quot;CREATE SEQUENCE S_stat_views&quot;+suffix+&quot; START WITH 1;&quot; +
+						&quot;CREATE TRIGGER T_stat_views&quot;+suffix+&quot; BEFORE INSERT ON stat_views&quot;+suffix+&quot; &quot; +
+						&quot;FOR EACH ROW \n&quot; +
+						&quot;	DECLARE \n&quot; +
+						&quot;	    val INTEGER|\n&quot; +
+						&quot;	BEGIN\n&quot; +
+						&quot;		IF :new.view_id IS NULL THEN\n&quot; +
+						&quot;			SELECT S_stat_views&quot;+suffix+&quot;.nextval into val FROM dual| \n&quot; +
+						&quot;			:new.view_id:= val|\n&quot; +
+						&quot;		END IF|\n&quot; +
+						&quot;	END|\n&quot; +
+						&quot;;&quot;;
+			}
+		}
+<span class="nc bnc" id="L428" title="All 2 branches missed.">		else if (&quot;stat_clicks&quot;.equals(tableName))</span>
+		{
+<span class="nc bnc" id="L430" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+			{
+<span class="nc" id="L432">				sql = &quot;CREATE TABLE stat_clicks&quot;+suffix+&quot; (&quot;+</span>
+						&quot;stat_click_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,&quot;+
+						&quot;document_id INT,&quot;+
+						&quot;x INT,&quot;+
+						&quot;y INT,&quot;+
+<span class="nc" id="L437">						&quot;day_of_month INT) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+			}
+<span class="nc bnc" id="L439" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L441">				sql = &quot;CREATE TABLE stat_clicks&quot;+suffix+&quot; (&quot;+</span>
+						&quot;stat_click_id INT identity(1,1) NOT NULL,&quot;+
+						&quot;document_id INT,&quot;+
+						&quot;x INT,&quot;+
+						&quot;y INT,&quot;+
+						&quot;day_of_month INT);&quot;;
+			}
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			else if (DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L450">				sql = &quot;CREATE TABLE stat_clicks&quot;+suffix+&quot; (&quot;+</span>
+							&quot;stat_click_id INT NOT NULL,&quot;+
+							&quot;document_id INTEGER,&quot;+
+							&quot;x INTEGER,&quot;+
+							&quot;y INTEGER,&quot;+
+							&quot;day_of_month INTEGER);&quot;+
+
+						&quot;CREATE SEQUENCE S_stat_clicks&quot;+suffix+&quot; START WITH 1;&quot;+
+						&quot;	CREATE TRIGGER T_stat_clicks&quot;+suffix+&quot; BEFORE INSERT ON stat_clicks&quot;+suffix+
+						&quot;		FOR EACH ROW  &quot;+
+						&quot;			DECLARE&quot;+
+						&quot; 				val INTEGER|&quot;+
+						&quot;			BEGIN&quot;+
+						&quot;				IF :new.stat_click_id IS NULL THEN&quot;+
+						&quot;				SELECT S_stat_clicks&quot;+suffix+&quot;.nextval into val FROM dual|&quot;+
+						&quot;					:new.stat_click_id:= val|&quot;+
+						&quot;				END IF|&quot;+
+						&quot;			END|;&quot;;
+			}
+<span class="nc" id="L469">			sql += &quot;CREATE INDEX to_document_&quot;+suffix+&quot; ON stat_clicks&quot;+suffix+&quot;(document_id);&quot;;</span>
+		}
+<span class="nc bnc" id="L471" title="All 4 branches missed.">		if (DB_TYPE == Constants.DB_PGSQL &amp;&amp; sql != null) {</span>
+<span class="nc" id="L472">			int i = sql.indexOf(&quot;ENGINE=&quot;);</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">			if (i &gt; 0) sql = sql.substring(0, i);</span>
+
+			//remove unsigned
+<span class="nc" id="L476">			sql = Tools.replace(sql, &quot;unsigned&quot;, &quot;&quot;);</span>
+			//replace nvarchar
+<span class="nc" id="L478">			sql = Tools.replace(sql, &quot;nvarchar&quot;, &quot;varchar&quot;);</span>
+			//update MS SQL identity
+<span class="nc" id="L480">			sql = Tools.replace(sql, &quot;identity(1,1)&quot;, &quot;GENERATED BY DEFAULT AS IDENTITY&quot;);</span>
+			//update datetime
+<span class="nc" id="L482">			sql = Tools.replace(sql, &quot;datetime&quot;, &quot;timestamp&quot;);</span>
+		}
+<span class="nc" id="L484">		return sql;</span>
+	}
+
+	/**
+	 * Vytvori tabulku stat_views_X_Y (ak treba)
+	 * @param db_conn
+	 * @param suffix - suffix tabulky, alebo null (vytvori sa suffix pre aktualny mesiac)
+	 */
+	public static void createStatTable(String tableName, String suffix)
+	{
+<span class="nc bnc" id="L494" title="All 4 branches missed.">		if (isPartitioningAllowedFor(tableName)==false &amp;&amp; suffix == null)</span>
+		{
+			//podmienka na suffix==null je tu kvoli admin_db_convert.jsp kedy to este nie je nastavene
+			//ale suffix sa posiela
+<span class="nc" id="L498">			return;</span>
+		}
+
+<span class="nc bnc" id="L501" title="All 2 branches missed.">		if (suffix == null)</span>
+		{
+<span class="nc" id="L503">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L504">			suffix = &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
+		}
+
+<span class="nc" id="L507">		Logger.debug(StatNewDB.class, &quot;Creating table: &quot;+tableName+suffix);</span>
+
+<span class="nc" id="L509">		String sql = null;</span>
+<span class="nc" id="L510">		Connection db_conn = null;</span>
+<span class="nc" id="L511">		Statement ps = null;</span>
+		try
+		{
+<span class="nc" id="L514">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L516">			sql = getCreateStatTableSqlCommand(tableName, suffix, Constants.DB_TYPE);</span>
+
+<span class="nc bnc" id="L518" title="All 2 branches missed.">			if (Tools.isEmpty(sql)) return;</span>
+
+<span class="nc" id="L520">			StringTokenizer st = new StringTokenizer(sql, &quot;;&quot;);</span>
+<span class="nc bnc" id="L521" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L523">				sql = st.nextToken().trim();</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
+				{
+<span class="nc bnc" id="L526" title="All 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+					{
+<span class="nc" id="L528">						sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">					   if (sql.indexOf(&quot;TRIGGER&quot;)!=-1)</span>
+					   {
+					   	//sql = sql.replace('\n', ' ');
+					   	//sql = sql.replace('\r', ' ');
+<span class="nc" id="L533">					   	sql = sql.replace('\t', ' ');</span>
+					   }
+					}
+					try
+					{
+<span class="nc" id="L538">						Logger.debug(StatNewDB.class, &quot;createStatTable: &quot;+sql);</span>
+
+<span class="nc" id="L540">						ps = db_conn.createStatement();</span>
+<span class="nc" id="L541">						ps.execute(sql);</span>
+<span class="nc" id="L542">						ps.close();</span>
+					}
+<span class="nc" id="L544">					catch (SQLException e)</span>
+					{
+<span class="nc" id="L546">						String message = e.getMessage().toLowerCase();</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">						if (message != null &amp;&amp;</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">								(message.indexOf(&quot;already&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">								 message.indexOf(&quot;duplicate column name&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">								 message.indexOf(&quot;is specified more than once&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">								 message.indexOf(&quot;duplicate entry&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">								 message.indexOf(&quot;already an object&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L553" title="All 2 branches missed.">								 message.indexOf(&quot;tabuľke existuje&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">								 message.indexOf(&quot;duplicate key&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L555" title="All 2 branches missed.">								 message.indexOf(&quot;názov už používa existujúci objekt&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">								 message.indexOf(&quot;už existuje&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L557" title="All 2 branches missed.">								 message.indexOf(&quot;existujúci objekt&quot;)!=-1))</span>
+						{
+							//uz existuje, je to OK
+						}
+						else
+						{
+<span class="nc" id="L563">							Logger.println(StatNewDB.class, &quot;SQL: &quot;+sql);</span>
+<span class="nc" id="L564">							sk.iway.iwcm.Logger.error(e);</span>
+						}
+					}
+					finally
+					{
+					   try
+					   {
+<span class="nc bnc" id="L571" title="All 2 branches missed.">					      if (ps!=null) ps.close();</span>
+					   }
+<span class="nc" id="L573">					   catch (Exception ex2)</span>
+					   {
+
+<span class="nc" id="L576">					   }</span>
+<span class="nc" id="L577">					}</span>
+				}
+			}
+
+<span class="nc bnc" id="L581" title="All 2 branches missed.">		   if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		   if (db_conn != null) db_conn.close();</span>
+
+<span class="nc" id="L584">		   ps = null;</span>
+<span class="nc" id="L585">		   db_conn = null;</span>
+		}
+<span class="nc" id="L587">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L589">			String message = e.getMessage().toLowerCase();</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">			if (message != null &amp;&amp;</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">					(message.indexOf(&quot;already&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">					 message.indexOf(&quot;duplicate column name&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">					 message.indexOf(&quot;is specified more than once&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">					 message.indexOf(&quot;duplicate entry&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">					 message.indexOf(&quot;already an object&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">					 message.indexOf(&quot;tabuľke existuje&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">					 message.indexOf(&quot;duplicate key&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">					 message.indexOf(&quot;názov už používa existujúci objekt&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">					 message.indexOf(&quot;už existuje&quot;)!=-1))</span>
+			{
+				//uz existuje, je to OK
+			}
+			else
+			{
+<span class="nc" id="L605">				Logger.println(StatNewDB.class, &quot;SQL: &quot;+sql);</span>
+<span class="nc" id="L606">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+		}
+<span class="nc" id="L609">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L611">		   sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+		   try
+		   {
+<span class="nc bnc" id="L617" title="All 2 branches missed.">		      if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">		      if (db_conn!=null) db_conn.close();</span>
+		   }
+<span class="nc" id="L620">		   catch (Exception ex2)</span>
+		   {
+
+<span class="nc" id="L623">		   }</span>
+		}
+<span class="nc" id="L625">	}</span>
+
+	/**
+	 * Vrati SQL volanie pre vypis vt_day, vt_month a vt_year pre jednotlive DB
+	 * @param fieldName
+	 * @return
+	 */
+	public static String getDMYSelect(String fieldName)
+	{
+<span class="fc" id="L634">		String sql = &quot;DAYOFMONTH(&quot;+fieldName+&quot;) AS vt_day, MONTH(&quot;+fieldName+&quot;) AS vt_month, YEAR(&quot;+fieldName+&quot;) AS vt_year&quot;;</span>
+
+<span class="pc bpc" id="L636" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L638">			sql = &quot;DAY(&quot;+fieldName+&quot;) AS vt_day, MONTH(&quot;+fieldName+&quot;) AS vt_month, YEAR(&quot;+fieldName+&quot;) AS vt_year&quot;;</span>
+		}
+<span class="pc bpc" id="L640" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L642">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'DD') AS vt_day, TO_CHAR(&quot;+fieldName+&quot;, 'MM') AS vt_month, TO_CHAR(&quot;+fieldName+&quot;, 'YYYY') AS vt_year&quot;;</span>
+		}
+
+<span class="fc" id="L645">		return(sql);</span>
+	}
+
+	/**
+	 * Vrati SQL volanie do SELECTU pre vypis vt_year a vt_week
+	 * @param fieldName
+	 * @return
+	 */
+	public static String getYWSelect(String fieldName)
+	{
+<span class="fc" id="L655">		String sql = &quot;YEAR(&quot;+fieldName+&quot;) AS vt_year, WEEKOFYEAR(&quot;+fieldName+&quot;) AS vt_week&quot;;</span>
+
+<span class="pc bpc" id="L657" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L659">			sql = &quot;YEAR(&quot;+fieldName+&quot;) AS vt_year, DATEPART(week, &quot;+fieldName+&quot;) AS vt_week&quot;;</span>
+		}
+<span class="pc bpc" id="L661" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L663">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'YYYY') AS vt_year, TO_CHAR(&quot;+fieldName+&quot;, 'IW') AS vt_week&quot;;</span>
+		}
+
+<span class="fc" id="L666">		return(sql);</span>
+	}
+
+	public static String getYMSelect(String fieldName)
+	{
+<span class="fc" id="L671">		String sql = &quot;YEAR(&quot;+fieldName+&quot;) AS vt_year, MONTH(&quot;+fieldName+&quot;) AS vt_month&quot;;</span>
+
+<span class="pc bpc" id="L673" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L675">			sql = &quot;YEAR(&quot;+fieldName+&quot;) AS vt_year, MONTH(&quot;+fieldName+&quot;) AS vt_month&quot;;</span>
+		}
+<span class="pc bpc" id="L677" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L679">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'YYYY') AS vt_year, TO_CHAR(&quot;+fieldName+&quot;, 'MM') AS vt_month&quot;;</span>
+		}
+
+<span class="fc" id="L682">		return(sql);</span>
+	}
+
+	/**
+	 * Vrati SQL pre datum pre rozne DB
+	 * @param type
+	 * @param fieldName
+	 * @param as
+	 * @return
+	 */
+	public static String getDateSelect(String type, String fieldName, String as)
+	{
+<span class="fc" id="L694">		String db=&quot;mysql&quot;;</span>
+<span class="pc bpc" id="L695" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL) db = &quot;mssql&quot;;</span>
+<span class="pc bpc" id="L696" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE) db = &quot;ora&quot;;</span>
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) db = &quot;pgsql&quot;;</span>
+
+<span class="fc" id="L699">		String sql = dateFunc.get(db+&quot;_&quot;+type);</span>
+<span class="fc" id="L700">		sql = Tools.replace(sql, &quot;field&quot;, fieldName);</span>
+<span class="pc bpc" id="L701" title="1 of 2 branches missed.">		if (as != null) sql = sql + &quot; AS &quot; + as;</span>
+<span class="fc" id="L702">		return(sql);</span>
+	}
+
+	public static String getDateGroupBy(String type, String fieldName, String as)
+	{
+<span class="fc" id="L707">		String db = null;</span>
+<span class="pc bpc" id="L708" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL) db = &quot;mssql&quot;;</span>
+<span class="pc bpc" id="L709" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE) db = &quot;ora&quot;;</span>
+<span class="pc bpc" id="L710" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) db = &quot;pgsql&quot;;</span>
+		else
+		{
+			//mysql
+<span class="fc" id="L714">			return(as);</span>
+		}
+
+<span class="nc" id="L717">		String sql = dateFunc.get(db+&quot;_&quot;+type);</span>
+<span class="nc" id="L718">		sql = Tools.replace(sql, &quot;field&quot;, fieldName);</span>
+<span class="nc" id="L719">		return(sql);</span>
+	}
+
+	public static String getDMYGroupBy(String fieldName)
+	{
+<span class="fc" id="L724">		String sql = &quot;vt_day, vt_month, vt_year&quot;;</span>
+
+<span class="pc bpc" id="L726" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L728">			sql = &quot;DAY(&quot;+fieldName+&quot;), MONTH(&quot;+fieldName+&quot;), YEAR(&quot;+fieldName+&quot;)&quot;;</span>
+		}
+<span class="pc bpc" id="L730" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L732">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'DD'), TO_CHAR(&quot;+fieldName+&quot;, 'MM'), TO_CHAR(&quot;+fieldName+&quot;, 'YYYY')&quot;;</span>
+		}
+
+<span class="fc" id="L735">		return(sql);</span>
+	}
+
+	public static String getYWGroupBy(String fieldName)
+	{
+<span class="fc" id="L740">		String sql = &quot;vt_year, vt_week&quot;;</span>
+
+<span class="pc bpc" id="L742" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L744">			sql = &quot;YEAR(&quot;+fieldName+&quot;), DATEPART(week, &quot;+fieldName+&quot;)&quot;;</span>
+		}
+<span class="pc bpc" id="L746" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L748">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'YYYY'), TO_CHAR(&quot;+fieldName+&quot;, 'IW')&quot;;</span>
+		}
+
+<span class="fc" id="L751">		return(sql);</span>
+	}
+
+	public static String getYMGroupBy(String fieldName)
+	{
+<span class="fc" id="L756">		String sql = &quot;vt_year, vt_month&quot;;</span>
+
+<span class="pc bpc" id="L758" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L760">			sql = &quot;YEAR(&quot;+fieldName+&quot;), MONTH(&quot;+fieldName+&quot;)&quot;;</span>
+		}
+<span class="pc bpc" id="L762" title="2 of 4 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L764">			sql = &quot;TO_CHAR(&quot;+fieldName+&quot;, 'YYYY'), TO_CHAR(&quot;+fieldName+&quot;, 'MM')&quot;;</span>
+		}
+
+<span class="fc" id="L767">		return(sql);</span>
+	}
+
+
+	public static List&lt;Column&gt; getTopPages(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds)
+	{
+<span class="nc" id="L773">		return getTopPages(max_size, from, to, rootGroupId, skipDocIds, false);</span>
+	}
+
+	/**
+	 * Vygeneruje tabulku videni, sedeni, roznych userov pre top stranky za zvolene obdobie
+	 *
+	 * @param max_size
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param skipDocIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getTopPages(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds, boolean withoutBots)
+	{
+		//pri rozdeleni statistik nemusi byt presne z dovodu max_size citaneho podla prveho obdobia
+
+<span class="fc" id="L790">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L792">		DebugTimer timer = new DebugTimer(&quot;StatNewDB.getTopPages&quot;);</span>
+
+		Column col;
+<span class="fc" id="L795">		int count = 0;</span>
+<span class="fc" id="L796">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+		int docId;
+<span class="fc" id="L798">		DocDB docDB = DocDB.getInstance();</span>
+		DocDetails bdd;
+
+<span class="fc" id="L801">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L803">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L804" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L805">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L807">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L808" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L810">			count = 0;</span>
+
+<span class="fc" id="L812">			Connection db_conn = null;</span>
+<span class="fc" id="L813">			PreparedStatement ps = null;</span>
+<span class="fc" id="L814">			ResultSet rs = null;</span>
+
+			try
+			{
+<span class="fc" id="L818">				db_conn = DBPool.getConnectionReadUncommited();</span>
+
+				//pocet sedeni
+				//sql = &quot;SELECT DISTINCT doc_id, COUNT(DISTINCT session_id) AS pocet_sedeni FROM stat_ views GROUP BY doc_id ORDER BY pocet_sedeni DESC&quot;;
+
+				//pocet videni
+				//sql = &quot;SELECT s.doc_id, d.title, d.group_id, count(view_time) as pocet_videni FROM stat_ views s, documents d WHERE s.doc_id=d.doc_id GROUP BY s.doc_id ORDER BY pocet_videni DESC&quot;;
+
+				//spolocny vypis
+
+				//SQL robime na 2x - najskor zoznam a az potom join na documents, inak to v MySQL pri velkom pocte zaznamov trvalo strasne dlho
+<span class="fc" id="L829">				String sql = &quot;SELECT s.doc_id, COUNT(s.doc_id) as views, COUNT(DISTINCT s.session_id) AS sessions,&quot; +</span>
+						&quot; COUNT(DISTINCT s.browser_id) AS unique_users&quot; +
+						&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;
+
+				/*sql = &quot;SELECT s.doc_id, s.group_id, COUNT(s.doc_id) as views, COUNT(s.session_id) AS sessions,&quot; +
+				&quot; COUNT(s.browser_id) AS unique_users&quot; +
+				&quot; FROM stat_ views s&quot; +
+				&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;*/
+
+<span class="pc bpc" id="L839" title="3 of 4 branches missed.">				if (skipDocIds != null &amp;&amp; skipDocIds.length() &gt; 0)</span>
+				{
+<span class="nc" id="L841">					sql += &quot; AND s.doc_id NOT IN (&quot;+skipDocIds+&quot;) &quot;;</span>
+				}
+<span class="fc" id="L843">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
+<span class="fc" id="L844">				sql += whitelistedQuery;</span>
+<span class="fc" id="L845">				sql += &quot; GROUP BY s.doc_id&quot;;</span>
+<span class="fc" id="L846">				sql += &quot; ORDER BY views DESC&quot;;</span>
+
+<span class="fc" id="L848">				Logger.debug(StatNewDB.class,&quot;GetTopPages: &quot;+sql);</span>
+
+<span class="fc" id="L850">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L851">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L852">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L854">				timer.diff(&quot;before RS&quot;);</span>
+<span class="fc" id="L855">				rs = ps.executeQuery();</span>
+<span class="fc" id="L856">				timer.diff(&quot;after RS&quot;);</span>
+
+				//iteruj cez riadky
+<span class="pc bpc" id="L859" title="1 of 4 branches missed.">				while (rs.next() &amp;&amp; count &lt; max_size)</span>
+				{
+<span class="fc" id="L861">					docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="fc" id="L862">					col = colTable.get(docId);</span>
+<span class="pc bpc" id="L863" title="1 of 2 branches missed.">					if (col == null)</span>
+					{
+<span class="fc" id="L865">						col = new Column();</span>
+<span class="fc" id="L866">						col.setColumn1(Integer.toString(docId));</span>
+<span class="fc" id="L867">						bdd = docDB.getBasicDocDetails(docId, true);</span>
+<span class="fc" id="L868">						col.setColumn2(bdd.getTitle());</span>
+<span class="fc" id="L869">						col.setIntColumn3(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L870">						col.setIntColumn4(rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L871">						col.setIntColumn5(rs.getInt(&quot;unique_users&quot;));</span>
+<span class="fc" id="L872">						col.setColumn6(groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+col.getColumn2());</span>
+<span class="fc" id="L873">						col.setColumn7(&quot;/apps/stat/admin/top-details/?docId=&quot;+docId+&quot;&amp;title=&quot;+Tools.URLEncode(col.getColumn6()));//link</span>
+<span class="fc" id="L874">						ret.add(col);</span>
+<span class="fc" id="L875">						colTable.put(docId, col);</span>
+					}
+					else
+					{
+						//zvys hodnoty
+<span class="nc" id="L880">						col.setIntColumn3(col.getIntColumn3()+rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L881">						col.setIntColumn4(col.getIntColumn4()+rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L882">						col.setIntColumn5(col.getIntColumn5()+rs.getInt(&quot;unique_users&quot;));</span>
+					}
+<span class="fc" id="L884">					count++;</span>
+				}
+
+<span class="fc" id="L887">				rs.close();</span>
+<span class="fc" id="L888">				ps.close();</span>
+<span class="fc" id="L889">				db_conn.close();</span>
+<span class="fc" id="L890">				rs = null;</span>
+<span class="fc" id="L891">				ps = null;</span>
+<span class="fc" id="L892">				db_conn = null;</span>
+			}
+<span class="nc" id="L894">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L896" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L902" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L903">						rs.close();</span>
+<span class="pc bpc" id="L904" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L905">						ps.close();</span>
+<span class="pc bpc" id="L906" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L907">						db_conn.close();</span>
+				}
+<span class="nc" id="L909">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L911">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L912">				}</span>
+			}
+		}
+
+		//usporiadaj podla poctu videni
+<span class="fc" id="L917">		Collections.sort(ret, new Comparator&lt;Column&gt;() {</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="fc" id="L921">				return (c2.getIntColumn3() - c1.getIntColumn3());</span>
+			}
+
+		});
+
+<span class="fc" id="L926">		timer.diff(&quot;done&quot;);</span>
+
+		//orez to na max pocet zaznamov
+<span class="fc" id="L929">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L930">		count = 0;</span>
+<span class="fc" id="L931">		Iterator&lt;Column&gt; iter = ret.iterator();</span>
+<span class="pc bpc" id="L932" title="1 of 4 branches missed.">		while (iter.hasNext() &amp;&amp; count++&lt;max_size)</span>
+		{
+<span class="fc" id="L934">			ret2.add(iter.next());</span>
+		}
+
+<span class="fc" id="L937">		return (ret2);</span>
+	}
+
+	public static List&lt;Column&gt; getTopPagesIn(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds)
+	{
+<span class="nc" id="L942">		return getTopPagesIn(max_size, from, to, rootGroupId, skipDocIds, false);</span>
+	}
+
+	/**
+	 * Vrati zoznam nanavstevovanejsich vstupnych stranok
+	 * @param max_size
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param skipDocIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getTopPagesIn(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds, boolean withoutBots)
+	{
+		//pri rozdeleni statistik nemusi byt presne z dovodu max_size citaneho podla prveho obdobia
+
+<span class="nc" id="L958">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L960">		DebugTimer timer = new DebugTimer(&quot;StatNewDB.getTopPagesIn&quot;);</span>
+
+		Column col;
+<span class="nc" id="L963">		int count = 0;</span>
+<span class="nc" id="L964">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+		int docId;
+<span class="nc" id="L966">		DocDB docDB = DocDB.getInstance();</span>
+		DocDetails bdd;
+
+<span class="nc" id="L969">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L971">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="nc bnc" id="L972" title="All 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L973">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="nc" id="L975">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L976" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="nc" id="L978">			count = 0;</span>
+
+<span class="nc" id="L980">			Connection db_conn = null;</span>
+<span class="nc" id="L981">			PreparedStatement ps = null;</span>
+<span class="nc" id="L982">			ResultSet rs = null;</span>
+
+			try
+			{
+<span class="nc" id="L986">				db_conn = DBPool.getConnectionReadUncommited();</span>
+
+				//pocet sedeni
+				//sql = &quot;SELECT DISTINCT doc_id, COUNT(DISTINCT session_id) AS pocet_sedeni FROM stat_ views GROUP BY doc_id ORDER BY pocet_sedeni DESC&quot;;
+
+				//pocet videni
+				//sql = &quot;SELECT s.doc_id, d.title, d.group_id, count(view_time) as pocet_videni FROM stat_ views s, documents d WHERE s.doc_id=d.doc_id GROUP BY s.doc_id ORDER BY pocet_videni DESC&quot;;
+
+				//spolocny vypis
+
+				//SQL robime na 2x - najskor zoznam a az potom join na documents, inak to v MySQL pri velkom pocte zaznamov trvalo strasne dlho
+<span class="nc" id="L997">				String sql = &quot;SELECT s.doc_id, COUNT(s.doc_id) as views, COUNT(DISTINCT s.session_id) AS sessions,&quot; +</span>
+						&quot; COUNT(DISTINCT s.browser_id) AS unique_users&quot; +
+						&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=? AND last_doc_id=-1&quot;;
+
+				/*sql = &quot;SELECT s.doc_id, s.group_id, COUNT(s.doc_id) as views, COUNT(s.session_id) AS sessions,&quot; +
+				&quot; COUNT(s.browser_id) AS unique_users&quot; +
+				&quot; FROM stat_ views s&quot; +
+				&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;*/
+
+<span class="nc bnc" id="L1007" title="All 4 branches missed.">				if (skipDocIds != null &amp;&amp; skipDocIds.length() &gt; 0)</span>
+				{
+<span class="nc" id="L1009">					sql += &quot; AND s.doc_id NOT IN (&quot;+skipDocIds+&quot;) &quot;;</span>
+				}
+<span class="nc" id="L1011">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
+<span class="nc" id="L1012">				sql += whitelistedQuery;</span>
+<span class="nc" id="L1013">				sql += &quot; GROUP BY s.doc_id&quot;;</span>
+<span class="nc" id="L1014">				sql += &quot; ORDER BY views DESC&quot;;</span>
+
+<span class="nc" id="L1016">				Logger.debug(StatNewDB.class,&quot;GetTopPages: &quot;+sql);</span>
+
+<span class="nc" id="L1018">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L1019">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L1020">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="nc" id="L1022">				timer.diff(&quot;before RS&quot;);</span>
+<span class="nc" id="L1023">				rs = ps.executeQuery();</span>
+<span class="nc" id="L1024">				timer.diff(&quot;after RS&quot;);</span>
+
+				//iteruj cez riadky
+<span class="nc bnc" id="L1027" title="All 4 branches missed.">				while (rs.next() &amp;&amp; count &lt; max_size)</span>
+				{
+<span class="nc" id="L1029">					docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L1030">					col = colTable.get(docId);</span>
+<span class="nc bnc" id="L1031" title="All 2 branches missed.">					if (col == null)</span>
+					{
+<span class="nc" id="L1033">						col = new Column();</span>
+<span class="nc" id="L1034">						col.setColumn1(Integer.toString(docId));</span>
+<span class="nc" id="L1035">						bdd = docDB.getBasicDocDetails(docId, true);</span>
+<span class="nc" id="L1036">						col.setColumn2(bdd.getTitle());</span>
+<span class="nc" id="L1037">						col.setIntColumn3(rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L1038">						col.setIntColumn4(rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L1039">						col.setIntColumn5(rs.getInt(&quot;unique_users&quot;));</span>
+<span class="nc" id="L1040">						col.setColumn6(groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+col.getColumn2());</span>
+<span class="nc" id="L1041">						col.setColumn7(&quot;/apps/stat/admin/top-details/?docId=&quot;+docId+&quot;&amp;title=&quot;+Tools.URLEncode(col.getColumn6()));//link</span>
+<span class="nc" id="L1042">						ret.add(col);</span>
+<span class="nc" id="L1043">						colTable.put(docId, col);</span>
+					}
+					else
+					{
+						//zvys hodnoty
+<span class="nc" id="L1048">						col.setIntColumn3(col.getIntColumn3()+rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L1049">						col.setIntColumn4(col.getIntColumn4()+rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L1050">						col.setIntColumn5(col.getIntColumn5()+rs.getInt(&quot;unique_users&quot;));</span>
+					}
+<span class="nc" id="L1052">					count++;</span>
+				}
+
+<span class="nc" id="L1055">				rs.close();</span>
+<span class="nc" id="L1056">				ps.close();</span>
+<span class="nc" id="L1057">				db_conn.close();</span>
+<span class="nc" id="L1058">				rs = null;</span>
+<span class="nc" id="L1059">				ps = null;</span>
+<span class="nc" id="L1060">				db_conn = null;</span>
+			}
+<span class="nc" id="L1062">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1064" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1071">						rs.close();</span>
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1073">						ps.close();</span>
+<span class="nc bnc" id="L1074" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1075">						db_conn.close();</span>
+				}
+<span class="nc" id="L1077">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1079">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1080">				}</span>
+			}
+		}
+
+		//usporiadaj podla poctu videni
+<span class="nc" id="L1085">		Collections.sort(ret, new Comparator&lt;Column&gt;() {</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="nc" id="L1089">				return (c2.getIntColumn3() - c1.getIntColumn3());</span>
+			}
+
+		});
+
+<span class="nc" id="L1094">		timer.diff(&quot;done&quot;);</span>
+
+		//orez to na max pocet zaznamov
+<span class="nc" id="L1097">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1098">		count = 0;</span>
+<span class="nc" id="L1099">		Iterator&lt;Column&gt; iter = ret.iterator();</span>
+<span class="nc bnc" id="L1100" title="All 4 branches missed.">		while (iter.hasNext() &amp;&amp; count++&lt;max_size)</span>
+		{
+<span class="nc" id="L1102">			ret2.add(iter.next());</span>
+		}
+
+<span class="nc" id="L1105">		return (ret2);</span>
+	}
+
+	public static List&lt;Column&gt; getTopPagesOut(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds)
+	{
+<span class="nc" id="L1110">		return getTopPagesOut(max_size, from, to, rootGroupId, skipDocIds, false);</span>
+	}
+
+	/**
+	 * Ziska z databazy zoznam stranok, ktore boli posledne vramci session
+	 * @param max_size
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param skipDocIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getTopPagesOut(int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String skipDocIds, boolean withoutBots)
+	{
+<span class="nc" id="L1124">		DebugTimer timer = new DebugTimer(&quot;StatNewDB.getTopPagesOut&quot;);</span>
+
+<span class="nc" id="L1126">		Map&lt;Long, Integer&gt; sessionsTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L1128">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="nc bnc" id="L1129" title="All 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L1130">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="nc" id="L1132">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="nc" id="L1135">			Connection db_conn = null;</span>
+<span class="nc" id="L1136">			PreparedStatement ps = null;</span>
+<span class="nc" id="L1137">			ResultSet rs = null;</span>
+
+			try
+			{
+<span class="nc" id="L1141">				db_conn = DBPool.getConnectionReadUncommited();</span>
+
+<span class="nc" id="L1143">				String sql = &quot;SELECT session_id, doc_id&quot; +</span>
+						&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=? AND last_doc_id=-1&quot;;
+
+<span class="nc bnc" id="L1147" title="All 4 branches missed.">				if (skipDocIds != null &amp;&amp; skipDocIds.length() &gt; 0)</span>
+				{
+<span class="nc" id="L1149">					sql += &quot; AND s.doc_id NOT IN (&quot;+skipDocIds+&quot;) &quot;;</span>
+				}
+<span class="nc" id="L1151">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
+<span class="nc" id="L1152">				sql += whitelistedQuery;</span>
+<span class="nc" id="L1153">				sql += &quot; ORDER BY view_id ASC&quot;;</span>
+
+<span class="nc" id="L1155">				Logger.debug(StatNewDB.class,&quot;GetTopPagesOut: &quot;+sql);</span>
+
+<span class="nc" id="L1157">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L1158">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L1159">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="nc" id="L1161">				timer.diff(&quot;before RS&quot;);</span>
+<span class="nc" id="L1162">				rs = ps.executeQuery();</span>
+<span class="nc" id="L1163">				timer.diff(&quot;after RS&quot;);</span>
+
+				//iteruj cez riadky
+<span class="nc bnc" id="L1166" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L1168">					Long sessionId = rs.getLong(&quot;session_id&quot;);</span>
+<span class="nc" id="L1169">					int docId = rs.getInt(&quot;doc_id&quot;);</span>
+
+<span class="nc" id="L1171">					sessionsTable.put(sessionId, docId);</span>
+<span class="nc" id="L1172">				}</span>
+
+<span class="nc" id="L1174">				rs.close();</span>
+<span class="nc" id="L1175">				ps.close();</span>
+<span class="nc" id="L1176">				db_conn.close();</span>
+<span class="nc" id="L1177">				rs = null;</span>
+<span class="nc" id="L1178">				ps = null;</span>
+<span class="nc" id="L1179">				db_conn = null;</span>
+			}
+<span class="nc" id="L1181">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1183" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1190">						rs.close();</span>
+<span class="nc bnc" id="L1191" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1192">						ps.close();</span>
+<span class="nc bnc" id="L1193" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1194">						db_conn.close();</span>
+				}
+<span class="nc" id="L1196">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1198">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1199">				}</span>
+			}
+		}
+
+<span class="nc" id="L1203">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L1204">		DocDB docDB = DocDB.getInstance();</span>
+		DocDetails bdd;
+
+		//v hashtable mame zoznam vsetkych objektov, treba spocitat podla poctu jednotlivych kusov
+<span class="nc" id="L1208">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L1209">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+		Column col;
+<span class="nc bnc" id="L1211" title="All 2 branches missed.">		for (Map.Entry&lt;Long, Integer&gt; entry : sessionsTable.entrySet())</span>
+		{
+<span class="nc" id="L1213">			Integer docId = entry.getValue();</span>
+
+<span class="nc" id="L1215">			col = colTable.get(docId);</span>
+<span class="nc bnc" id="L1216" title="All 2 branches missed.">			if (col == null)</span>
+			{
+<span class="nc" id="L1218">				col = new Column();</span>
+<span class="nc" id="L1219">				col.setColumn1(Integer.toString(docId));</span>
+<span class="nc" id="L1220">				bdd = docDB.getBasicDocDetails(docId, true);</span>
+<span class="nc" id="L1221">				col.setColumn2(bdd.getTitle());</span>
+<span class="nc" id="L1222">				col.setIntColumn5(1);</span>
+<span class="nc" id="L1223">				col.setColumn6(groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+col.getColumn2());</span>
+<span class="nc" id="L1224">				col.setColumn7(&quot;/apps/stat/admin/top-details/?docId=&quot;+docId+&quot;&amp;title=&quot;+Tools.URLEncode(col.getColumn6()));//link</span>
+<span class="nc" id="L1225">				ret.add(col);</span>
+<span class="nc" id="L1226">				colTable.put(docId, col);</span>
+			}
+			else
+			{
+				//zvys hodnoty
+<span class="nc" id="L1231">				col.setIntColumn5(col.getIntColumn5()+1);</span>
+			}
+<span class="nc" id="L1233">		}</span>
+
+		//usporiadaj podla poctu videni
+<span class="nc" id="L1236">		Collections.sort(ret, new Comparator&lt;Column&gt;() {</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="nc" id="L1240">				return (c2.getIntColumn5() - c1.getIntColumn5());</span>
+			}
+
+		});
+
+<span class="nc" id="L1245">		timer.diff(&quot;done&quot;);</span>
+
+		//orez to na max pocet zaznamov
+<span class="nc" id="L1248">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1249">		int count = 0;</span>
+<span class="nc" id="L1250">		Iterator&lt;Column&gt; iter = ret.iterator();</span>
+<span class="nc bnc" id="L1251" title="All 4 branches missed.">		while (iter.hasNext() &amp;&amp; count++&lt;max_size)</span>
+		{
+<span class="nc" id="L1253">			ret2.add(iter.next());</span>
+		}
+
+<span class="nc" id="L1256">		return (ret2);</span>
+	}
+
+	/**
+	 * Vygeneruje pre zvolene docID tabulku videni, sedeni, roznych userov za zvolene obdobie
+	 * podla DNI
+	 *
+	 * @param docId
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public static List&lt;Column&gt; getPageViews(int docId, java.util.Date from, java.util.Date to)
+	{
+<span class="fc" id="L1270">		return getPageViews(docId, from, to, -1);</span>
+	}
+
+	/**
+	 * Vygeneruje pre zvolene docID tabulku videni, sedeni, roznych userov za zvolene obdobie
+	 * podla DNI a podla referera
+	 *
+	 * @param docId
+	 * @param from
+	 * @param to
+	 * @param lastDocId - referer, ak je nastavene na -1, neberie sa do uvahy
+	 * @return
+	 */
+	public static List&lt;Column&gt; getPageViews(int docId, java.util.Date from, java.util.Date to, int lastDocId)
+	{
+<span class="fc" id="L1285">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L1286" title="1 of 2 branches missed.">		if (docId &lt; 1) return ret;</span>
+
+<span class="fc" id="L1288">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1289" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L1291">			Connection db_conn = null;</span>
+<span class="fc" id="L1292">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1293">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L1296">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1297">				String sql = &quot;SELECT s.doc_id, &quot;+StatNewDB.getDMYSelect(&quot;view_time&quot;)+&quot;, COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot;;</span>
+<span class="fc" id="L1298">				sql +=&quot; FROM stat_views&quot;+suffixes[s]+&quot; s WHERE s.doc_id=? AND s.view_time&gt;=? AND s.view_time&lt;=?&quot;;</span>
+<span class="pc bpc" id="L1299" title="1 of 2 branches missed.">				if(lastDocId != -1)</span>
+				{
+<span class="nc" id="L1301">					sql += &quot; AND s.last_doc_id=?&quot;;</span>
+				}
+<span class="fc" id="L1303">				sql+=	&quot; GROUP BY s.doc_id, &quot;+StatNewDB.getDMYGroupBy(&quot;view_time&quot;)+&quot; ORDER BY vt_year, vt_month, vt_day&quot;;</span>
+
+<span class="fc" id="L1305">				Logger.debug(StatNewDB.class, &quot;getPageViews: &quot;+sql);</span>
+
+<span class="fc" id="L1307">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L1308">				ps.setInt(1,docId);</span>
+<span class="fc" id="L1309">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1310">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="pc bpc" id="L1311" title="1 of 2 branches missed.">				if(lastDocId != -1)</span>
+				{
+<span class="nc" id="L1313">					ps.setInt(4,lastDocId);</span>
+				}
+<span class="fc" id="L1315">				rs = ps.executeQuery();</span>
+
+				//iteruj cez riadky
+				Column col;
+<span class="fc bfc" id="L1319" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1321">					col = new Column();</span>
+<span class="fc" id="L1322">					col.setIntColumn1(rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L1323">					col.setIntColumn2(rs.getInt(&quot;vt_month&quot;));</span>
+<span class="fc" id="L1324">					col.setIntColumn3(rs.getInt(&quot;vt_day&quot;));</span>
+<span class="fc" id="L1325">					col.setIntColumn4(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L1326">					col.setIntColumn5(rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L1327">					col.setIntColumn6(rs.getInt(&quot;unique_users&quot;));</span>
+<span class="fc" id="L1328">					ret.add(col);</span>
+				}
+<span class="fc" id="L1330">				rs.close();</span>
+<span class="fc" id="L1331">				ps.close();</span>
+<span class="fc" id="L1332">				db_conn.close();</span>
+<span class="fc" id="L1333">				rs = null;</span>
+<span class="fc" id="L1334">				ps = null;</span>
+<span class="fc" id="L1335">				db_conn = null;</span>
+			}
+<span class="nc" id="L1337">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1339" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L1345" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1346">						rs.close();</span>
+<span class="pc bpc" id="L1347" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1348">						ps.close();</span>
+<span class="pc bpc" id="L1349" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1350">						db_conn.close();</span>
+				}
+<span class="nc" id="L1352">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1354">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1355">				}</span>
+			}
+		}
+<span class="fc" id="L1358">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla tyzdnov za dane obdobie a adresar
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getWeekViews(java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="nc" id="L1370">		return getWeekViews(from, to, String.valueOf(rootGroupId), false);</span>
+	}
+
+	public static List&lt;Column&gt; getWeekViews(java.util.Date from, java.util.Date to, int rootGroupId, boolean withoutBots)
+	{
+<span class="fc" id="L1375">		return getWeekViews(from, to, String.valueOf(rootGroupId), withoutBots);</span>
+	}
+
+	public static List&lt;Column&gt; getWeekViews(java.util.Date from, java.util.Date to, String groupIds)
+	{
+<span class="nc" id="L1380">		return getWeekViews(from, to, groupIds, false);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla tyzdnov za dane obdobie a adresar
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param groupIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getWeekViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
+	{
+<span class="fc" id="L1393">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1394">		Map&lt;String, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L1396">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L1397" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L1398">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L1400">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1401" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L1403">			Connection db_conn = null;</span>
+<span class="fc" id="L1404">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1405">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L1408">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L1410">				String sql = &quot;SELECT &quot; + getYWSelect(&quot;s.view_time&quot;)+&quot;, &quot;;</span>
+
+<span class="fc" id="L1412">				sql += &quot; COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot; +</span>
+			 			&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;
+
+<span class="fc" id="L1416">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupIds);</span>
+<span class="fc" id="L1417">				sql += whitelistedQuery;</span>
+
+<span class="fc" id="L1419">				sql += &quot; GROUP BY &quot;+getYWGroupBy(&quot;s.view_time&quot;);</span>
+
+				//sql += &quot; ORDER BY  vt_year ASC, vt_week ASC&quot;;
+
+<span class="fc" id="L1423">				Logger.debug(StatNewDB.class,&quot;getViews: &quot;+sql);</span>
+
+<span class="fc" id="L1425">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L1426">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1427">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L1429">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+				Column col;
+
+<span class="fc bfc" id="L1433" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1435">					int year = rs.getInt(&quot;vt_year&quot;);</span>
+<span class="fc" id="L1436">					int week = rs.getInt(&quot;vt_week&quot;);</span>
+<span class="fc" id="L1437">					String key = year+&quot;-&quot;+week;</span>
+<span class="fc" id="L1438">					col = colTable.get(key);</span>
+<span class="fc bfc" id="L1439" title="All 2 branches covered.">					if (col == null)</span>
+					{
+<span class="fc" id="L1441">						col = new Column();</span>
+<span class="fc" id="L1442">						col.setIntColumn1(year);</span>
+<span class="fc" id="L1443">						col.setIntColumn2(week);</span>
+<span class="fc" id="L1444">						col.setIntColumn3(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L1445">						col.setIntColumn4(rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L1446">						col.setIntColumn5(rs.getInt(&quot;unique_users&quot;));</span>
+
+						//spatna kompatibilita
+<span class="fc" id="L1449">						col.setColumn1(Integer.toString(col.getIntColumn1()));</span>
+<span class="fc" id="L1450">						col.setColumn2(Integer.toString(col.getIntColumn2()));</span>
+<span class="fc" id="L1451">						col.setColumn3(Integer.toString(col.getIntColumn3()));</span>
+<span class="fc" id="L1452">						col.setColumn4(Integer.toString(col.getIntColumn4()));</span>
+<span class="fc" id="L1453">						col.setColumn5(Integer.toString(col.getIntColumn5()));</span>
+<span class="fc" id="L1454">						ret.add(col);</span>
+<span class="fc" id="L1455">						colTable.put(key, col);</span>
+					}
+					else
+					{
+<span class="fc" id="L1459">						col.setIntColumn3(col.getIntColumn3()+rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L1460">						col.setIntColumn4(col.getIntColumn4()+rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L1461">						col.setIntColumn5(col.getIntColumn5()+rs.getInt(&quot;unique_users&quot;));</span>
+
+<span class="fc" id="L1463">						col.setColumn3(Integer.toString(col.getIntColumn3()));</span>
+<span class="fc" id="L1464">						col.setColumn4(Integer.toString(col.getIntColumn4()));</span>
+<span class="fc" id="L1465">						col.setColumn5(Integer.toString(col.getIntColumn5()));</span>
+					}
+<span class="fc" id="L1467">				}</span>
+<span class="fc" id="L1468">				rs.close();</span>
+<span class="fc" id="L1469">				ps.close();</span>
+<span class="fc" id="L1470">				db_conn.close();</span>
+<span class="fc" id="L1471">				rs = null;</span>
+<span class="fc" id="L1472">				ps = null;</span>
+<span class="fc" id="L1473">				db_conn = null;</span>
+			}
+<span class="nc" id="L1475">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1477" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L1483" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1484">						rs.close();</span>
+<span class="pc bpc" id="L1485" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1486">						ps.close();</span>
+<span class="pc bpc" id="L1487" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1488">						db_conn.close();</span>
+				}
+<span class="nc" id="L1490">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1492">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1493">				}</span>
+			}
+		}
+<span class="fc" id="L1496">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla dni za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getDayViews(java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="nc" id="L1509">		return getDayViews(from, to, String.valueOf(rootGroupId));</span>
+	}
+
+	public static List&lt;Column&gt; getDayViews(java.util.Date from, java.util.Date to, int rootGroupId, boolean filterBotsOut)
+	{
+<span class="fc" id="L1514">		return getDayViews(from, to, String.valueOf(rootGroupId), filterBotsOut);</span>
+	}
+
+	public static List&lt;Column&gt; getDayViews(java.util.Date from, java.util.Date to, String groupIds)
+	{
+<span class="nc" id="L1519">		return getDayViews(from, to, groupIds, false);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla dni za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param groupIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getDayViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
+	{
+<span class="fc" id="L1533">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+		Integer[] data;
+<span class="fc" id="L1535">		Map&lt;String, Integer[]&gt; dates = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L1537">		Calendar cal = Calendar.getInstance();</span>
+		Column col;
+
+<span class="fc" id="L1540">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="fc bfc" id="L1541" title="All 2 branches covered.">		if(withoutBots)</span>
+<span class="fc" id="L1542">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L1544">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1545" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L1547">			Connection db_conn = null;</span>
+<span class="fc" id="L1548">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1549">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L1552">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L1554">				String sql = &quot;SELECT &quot;+getDMYSelect(&quot;s.view_time&quot;)+&quot;, COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot;;</span>
+
+<span class="fc" id="L1556">				sql += &quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +</span>
+						&quot; WHERE s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;;
+
+<span class="fc" id="L1559">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupIds);</span>
+<span class="fc" id="L1560">				sql += whitelistedQuery;</span>
+
+<span class="fc" id="L1562">				sql += &quot; GROUP BY &quot;+getDMYGroupBy(&quot;s.view_time&quot;);</span>
+				//sql += &quot; ORDER BY vt_year, vt_month, vt_day&quot;; - nepotrebujeme
+
+<span class="fc" id="L1565">				Logger.debug(StatNewDB.class,&quot;getDayViews: &quot;+sql);</span>
+
+<span class="fc" id="L1567">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L1568">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1569">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L1571">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+<span class="fc bfc" id="L1573" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1575">					cal.clear();</span>
+<span class="fc" id="L1576">					cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1577">					cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L1578">					cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L1579">					cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+
+<span class="fc" id="L1581">					data = new Integer[3];</span>
+<span class="fc" id="L1582">					data[0] = Integer.valueOf(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L1583">					data[1] = Integer.valueOf(rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L1584">					data[2] = Integer.valueOf(rs.getInt(&quot;unique_users&quot;));</span>
+					//Logger.debug(StatNewDB.class, &quot;Nastavujem: &quot; + Tools.formatDate(cal.getTime()));
+<span class="fc" id="L1586">					dates.put(Tools.formatDate(cal.getTime()), data);</span>
+					//Logger.debug(this,&quot;Data: &quot;+data[0]+&quot; &quot;+data[1]+&quot; &quot;+data[2]);
+				}
+<span class="fc" id="L1589">				rs.close();</span>
+<span class="fc" id="L1590">				ps.close();</span>
+<span class="fc" id="L1591">				db_conn.close();</span>
+<span class="fc" id="L1592">				rs = null;</span>
+<span class="fc" id="L1593">				ps = null;</span>
+<span class="fc" id="L1594">				db_conn = null;</span>
+			}
+<span class="nc" id="L1596">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1598" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L1604" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1605">						rs.close();</span>
+<span class="pc bpc" id="L1606" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1607">						ps.close();</span>
+<span class="pc bpc" id="L1608" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1609">						db_conn.close();</span>
+				}
+<span class="nc" id="L1611">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1613">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1614">				}</span>
+			}
+		}
+
+		try
+		{
+			//Logger.debug(this,&quot;Hashtable: &quot;+dates.size()+ &quot;   Count: &quot;+count);
+
+<span class="fc" id="L1622">			Calendar calTo = Calendar.getInstance();</span>
+<span class="fc" id="L1623">			calTo.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1624">			calTo.setTime(to);</span>
+
+<span class="fc" id="L1626">			cal.clear();</span>
+<span class="fc" id="L1627">			cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1628">			cal.setTimeInMillis(from.getTime());</span>
+
+			//Logger.debug(this,&quot;Date: &quot;+cal.getTime());
+
+<span class="fc bfc" id="L1632" title="All 2 branches covered.">			while (cal.getTimeInMillis() &lt;= calTo.getTimeInMillis())</span>
+			{
+				//Logger.debug(StatNewDB.class, &quot;Ziskavam: &quot; + Tools.formatDate(cal.getTime()));
+<span class="fc" id="L1635">				data = dates.get(Tools.formatDate(cal.getTime()));</span>
+				//Logger.debug(this,&quot;Datum: &quot;+cal.getTime()+&quot;  Data: &quot;+dates.get(cal.getTime()));
+<span class="fc bfc" id="L1637" title="All 2 branches covered.">				if (data != null)</span>
+				{
+<span class="fc" id="L1639">					col = new Column();</span>
+<span class="fc" id="L1640">					col.setDateColumn1(cal.getTime());</span>
+<span class="fc" id="L1641">					col.setIntColumn2(data[0].intValue());</span>
+<span class="fc" id="L1642">					col.setIntColumn3(data[1].intValue());</span>
+<span class="fc" id="L1643">					col.setIntColumn4(data[2].intValue());</span>
+<span class="fc" id="L1644">					ret.add(col);</span>
+				}
+				else
+				{
+<span class="fc" id="L1648">					col = new Column();</span>
+<span class="fc" id="L1649">					col.setDateColumn1(cal.getTime());</span>
+<span class="fc" id="L1650">					col.setIntColumn2(0);</span>
+<span class="fc" id="L1651">					col.setIntColumn3(0);</span>
+<span class="fc" id="L1652">					col.setIntColumn4(0);</span>
+<span class="fc" id="L1653">					ret.add(col);</span>
+				}
+
+<span class="fc" id="L1656">				cal.add(Calendar.DAY_OF_YEAR, 1);</span>
+			}
+		}
+<span class="nc" id="L1659">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1661">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1662">		}</span>
+
+<span class="fc" id="L1664">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla hodin za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getHours(java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="nc" id="L1677">		return getHours(from, to, String.valueOf(rootGroupId), false);</span>
+	}
+
+	public static List&lt;Column&gt; getHours(java.util.Date from, java.util.Date to, int rootGroupId, boolean withoutBots)
+	{
+<span class="fc" id="L1682">		return getHours(from, to, String.valueOf(rootGroupId), withoutBots);</span>
+	}
+
+	public static List&lt;Column&gt; getHours(java.util.Date from, java.util.Date to, String groupIds)
+	{
+<span class="nc" id="L1687">		return getHours(from, to, groupIds, false);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla hodin za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param groupIds
+	 * @return
+	 */
+	public static List&lt;Column&gt; getHours(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
+	{
+<span class="fc" id="L1701">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1702">		int[][] data = new int[24][3];</span>
+		int i;
+		int j;
+
+<span class="fc bfc" id="L1706" title="All 2 branches covered.">		for (i = 0; i &lt; 24; i++)</span>
+		{
+<span class="fc bfc" id="L1708" title="All 2 branches covered.">			for (j = 0; j &lt; 3; j++)</span>
+			{
+<span class="fc" id="L1710">				data[i][j] = 0;</span>
+			}
+		}
+
+		Column col;
+
+<span class="fc" id="L1716">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L1717" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L1718">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L1720">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1721" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L1723">			Connection db_conn = null;</span>
+<span class="fc" id="L1724">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1725">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L1728">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L1730">				String sql = &quot;SELECT &quot;+getDateSelect(&quot;hour&quot;, &quot;s.view_time&quot;, &quot;vt_hour&quot;)+&quot;, COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot;;</span>
+
+<span class="fc" id="L1732">				sql+=	&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +</span>
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;
+
+<span class="fc" id="L1735">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupIds);</span>
+<span class="fc" id="L1736">				sql += whitelistedQuery;</span>
+
+<span class="fc" id="L1738">				sql += &quot; GROUP BY &quot;+getDateGroupBy(&quot;hour&quot;, &quot;s.view_time&quot;, &quot;vt_hour&quot;);</span>
+				//sql += &quot; ORDER BY  vt_hour&quot;;
+
+				//Logger.debug(this,&quot;GetTopPages: &quot;+sql);
+<span class="fc" id="L1742">				Logger.debug(StatNewDB.class, &quot;getHours sql: &quot;+sql);</span>
+
+<span class="fc" id="L1744">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L1745">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1746">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L1748">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+
+<span class="fc bfc" id="L1751" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1753">					int vtHour = rs.getInt(&quot;vt_hour&quot;);</span>
+<span class="pc bpc" id="L1754" title="2 of 4 branches missed.">					if (vtHour &gt;= 0 &amp;&amp; vtHour &lt; 24)</span>
+					{
+<span class="fc" id="L1756">						data[vtHour][0] = data[vtHour][0] + rs.getInt(&quot;views&quot;);</span>
+<span class="fc" id="L1757">						data[vtHour][1] = data[vtHour][1] + rs.getInt(&quot;sessions&quot;);</span>
+<span class="fc" id="L1758">						data[vtHour][2] = data[vtHour][2] + rs.getInt(&quot;unique_users&quot;);</span>
+					}
+<span class="fc" id="L1760">				}</span>
+<span class="fc" id="L1761">				rs.close();</span>
+<span class="fc" id="L1762">				ps.close();</span>
+<span class="fc" id="L1763">				db_conn.close();</span>
+<span class="fc" id="L1764">				rs = null;</span>
+<span class="fc" id="L1765">				ps = null;</span>
+<span class="fc" id="L1766">				db_conn = null;</span>
+			}
+<span class="nc" id="L1768">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1770" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L1776" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1777">						rs.close();</span>
+<span class="pc bpc" id="L1778" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1779">						ps.close();</span>
+<span class="pc bpc" id="L1780" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1781">						db_conn.close();</span>
+				}
+<span class="nc" id="L1783">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1785">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1786">				}</span>
+			}
+		}
+
+		try
+		{
+<span class="fc bfc" id="L1792" title="All 2 branches covered.">			for (i = 0; i &lt; 24; i++)</span>
+			{
+<span class="fc" id="L1794">				col = new Column();</span>
+<span class="fc" id="L1795">				col.setIntColumn1(i);</span>
+<span class="fc" id="L1796">				col.setIntColumn2(data[i][0]);</span>
+<span class="fc" id="L1797">				col.setIntColumn3(data[i][1]);</span>
+<span class="fc" id="L1798">				col.setIntColumn4(data[i][2]);</span>
+<span class="fc" id="L1799">				ret.add(col);</span>
+			}
+
+		}
+<span class="nc" id="L1803">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1805">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1806">		}</span>
+
+<span class="fc" id="L1808">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla dni za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getMonthViews(java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="nc" id="L1821">		return getMonthViews(from, to, String.valueOf(rootGroupId), false);</span>
+	}
+
+	public static List&lt;Column&gt; getMonthViews(java.util.Date from, java.util.Date to, int rootGroupId, boolean withoutBots)
+	{
+<span class="fc" id="L1826">		return getMonthViews(from, to, String.valueOf(rootGroupId), withoutBots);</span>
+	}
+
+	public static List&lt;Column&gt; getMonthViews(java.util.Date from, java.util.Date to, String groupIds)
+	{
+<span class="nc" id="L1831">		return getMonthViews(from, to, groupIds, false);</span>
+	}
+
+	/**
+	 * Vrati statistiku podla dni za dane obdobie
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param groupIds - id adresarov oddelenych ciarkou
+	 * @return
+	 */
+	public static List&lt;Column&gt; getMonthViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
+	{
+<span class="fc" id="L1845">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1846">		Map&lt;String, Integer[]&gt; dates = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L1848">		Calendar cal = Calendar.getInstance();</span>
+		Column col;
+
+<span class="fc" id="L1851">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L1852" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L1853">			whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L1855">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1856" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L1858">			Connection db_conn = null;</span>
+<span class="fc" id="L1859">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1860">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L1863">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L1865">				String sql = &quot;SELECT &quot;+getYMSelect(&quot;s.view_time&quot;)+&quot;, COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot;;</span>
+
+<span class="fc" id="L1867">				sql += &quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +</span>
+						&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=? &quot;;
+
+<span class="fc" id="L1870">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupIds);</span>
+<span class="fc" id="L1871">				sql += whitelistedQuery;</span>
+
+<span class="fc" id="L1873">				sql += &quot; GROUP BY &quot;+getYMGroupBy(&quot;s.view_time&quot;);</span>
+				//sql += &quot; ORDER BY vt_year, vt_month&quot;;
+
+<span class="fc" id="L1876">				Logger.debug(StatNewDB.class,&quot;getDayViews: &quot;+sql);</span>
+<span class="fc" id="L1877">				cal.setTimeInMillis(from.getTime());</span>
+<span class="fc" id="L1878">				cal.set(Calendar.DATE, 1);</span>
+
+<span class="fc" id="L1880">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L1881">				ps.setTimestamp(1, new Timestamp(cal.getTimeInMillis()));</span>
+
+<span class="fc" id="L1883">				cal.setTimeInMillis(to.getTime());</span>
+<span class="fc" id="L1884">				cal.set(Calendar.DATE, 1);</span>
+<span class="fc" id="L1885">				cal.add(Calendar.MONTH, 1);</span>
+<span class="fc" id="L1886">				cal.add(Calendar.DATE, -1);</span>
+
+<span class="fc" id="L1888">				ps.setTimestamp(2, new Timestamp(cal.getTimeInMillis()));</span>
+
+<span class="fc" id="L1890">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+<span class="fc bfc" id="L1892" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1894">					cal.clear();</span>
+<span class="fc" id="L1895">					cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1896">					cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L1897">					cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L1898">					cal.set(Calendar.DAY_OF_MONTH, 1);</span>
+
+<span class="fc" id="L1900">					Integer[] data = new Integer[3];</span>
+<span class="fc" id="L1901">					data[0] = Integer.valueOf(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L1902">					data[1] = Integer.valueOf(rs.getInt(&quot;sessions&quot;));</span>
+<span class="fc" id="L1903">					data[2] = Integer.valueOf(rs.getInt(&quot;unique_users&quot;));</span>
+					//Logger.debug(StatNewDB.class, &quot;Nastavujem: &quot; + Tools.formatDate(cal.getTime()));
+
+<span class="fc" id="L1906">					dates.put(cal.get(Calendar.MONTH)+&quot;.&quot;+cal.get(Calendar.YEAR) , data);</span>
+					//Logger.debug(this,&quot;Data: &quot;+data[0]+&quot; &quot;+data[1]+&quot; &quot;+data[2]);
+<span class="fc" id="L1908">				}</span>
+<span class="fc" id="L1909">				rs.close();</span>
+<span class="fc" id="L1910">				ps.close();</span>
+<span class="fc" id="L1911">				db_conn.close();</span>
+<span class="fc" id="L1912">				rs = null;</span>
+<span class="fc" id="L1913">				ps = null;</span>
+<span class="fc" id="L1914">				db_conn = null;</span>
+			}
+<span class="nc" id="L1916">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1918" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L1924" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L1925">						rs.close();</span>
+<span class="pc bpc" id="L1926" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1927">						ps.close();</span>
+<span class="pc bpc" id="L1928" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1929">						db_conn.close();</span>
+				}
+<span class="nc" id="L1931">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1933">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1934">				}</span>
+			}
+		}
+
+		try
+		{
+			//Logger.debug(this,&quot;Hashtable: &quot;+dates.size()+ &quot;   Count: &quot;+count);
+
+<span class="fc" id="L1942">			Calendar calTo = Calendar.getInstance();</span>
+<span class="fc" id="L1943">			calTo.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1944">			calTo.setTime(to);</span>
+
+<span class="fc" id="L1946">			cal.clear();</span>
+<span class="fc" id="L1947">			cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1948">			cal.setTimeInMillis(from.getTime());</span>
+
+			//Logger.debug(this,&quot;Date: &quot;+cal.getTime());
+
+<span class="fc bfc" id="L1952" title="All 2 branches covered.">			while (cal.getTimeInMillis() &lt;= calTo.getTimeInMillis())</span>
+			{
+				//Logger.debug(StatNewDB.class, &quot;Ziskavam: &quot; + Tools.formatDate(cal.getTime()));
+<span class="fc" id="L1955">				Integer[] data = dates.get(cal.get(Calendar.MONTH)+&quot;.&quot;+cal.get(Calendar.YEAR));</span>
+				//Logger.debug(this,&quot;Datum: &quot;+cal.getTime()+&quot;  Data: &quot;+dates.get(cal.getTime()));
+<span class="pc bpc" id="L1957" title="1 of 2 branches missed.">				if (data != null)</span>
+				{
+<span class="fc" id="L1959">					col = new Column();</span>
+<span class="fc" id="L1960">					col.setDateColumn1(cal.getTime());</span>
+<span class="fc" id="L1961">					col.setIntColumn1(cal.get(Calendar.YEAR));</span>
+<span class="fc" id="L1962">					col.setIntColumn2(cal.get(Calendar.MONTH)+1);</span>
+<span class="fc" id="L1963">					col.setIntColumn3(data[0].intValue());</span>
+<span class="fc" id="L1964">					col.setIntColumn4(data[1].intValue());</span>
+<span class="fc" id="L1965">					col.setIntColumn5(data[2].intValue());</span>
+<span class="fc" id="L1966">					ret.add(col);</span>
+				}
+				else
+				{
+<span class="nc" id="L1970">					col = new Column();</span>
+<span class="nc" id="L1971">					col.setDateColumn1(cal.getTime());</span>
+<span class="nc" id="L1972">					col.setIntColumn1(cal.get(Calendar.YEAR));</span>
+<span class="nc" id="L1973">					col.setIntColumn2(cal.get(Calendar.MONTH)+1);</span>
+<span class="nc" id="L1974">					col.setIntColumn3(0);</span>
+<span class="nc" id="L1975">					col.setIntColumn4(0);</span>
+<span class="nc" id="L1976">					col.setIntColumn5(0);</span>
+<span class="nc" id="L1977">					ret.add(col);</span>
+				}
+
+<span class="fc" id="L1980">				cal.add(Calendar.MONTH, 1);</span>
+<span class="fc" id="L1981">			}</span>
+		}
+<span class="nc" id="L1983">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1985">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1986">		}</span>
+
+<span class="fc" id="L1988">		return (ret);</span>
+	}
+
+
+	/**
+	 *
+	 * @param from
+	 * @param to
+	 * @param maxResults
+	 * @return
+	 */
+	public static List&lt;Column&gt; getStatReferer(java.util.Date from, java.util.Date to, int maxRows, String groupIdsQuery)
+	{
+<span class="pc bpc" id="L2001" title="1 of 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
+
+<span class="fc" id="L2003">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L2005">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_from&quot;, from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L2006" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L2008">			Connection db_conn = null;</span>
+<span class="fc" id="L2009">			PreparedStatement ps = null;</span>
+<span class="fc" id="L2010">			ResultSet rs = null;</span>
+			try
+			{
+				String sql;
+<span class="fc" id="L2014">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L2016">				sql = &quot;SELECT referer_server_name, COUNT(referer_server_name) AS ref_views&quot; +</span>
+			 			&quot; FROM stat_from&quot;+suffixes[s] +
+						&quot; WHERE from_time&gt;=? AND from_time&lt;=? &quot; + groupIdsQuery +
+						&quot; GROUP BY referer_server_name&quot; +
+						&quot; ORDER BY ref_views DESC&quot;;
+
+<span class="fc" id="L2022">				Logger.debug(StatNewDB.class,&quot;getStatReferer: &quot;+sql+&quot; start=&quot;+Tools.formatDateTime(from)+&quot; end=&quot;+Tools.formatDateTime(to));</span>
+
+<span class="fc" id="L2024">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L2025">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L2026">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L2028">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+<span class="fc bfc" id="L2030" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L2032">					String key = ResponseUtils.filter(DB.getDbString(rs, &quot;referer_server_name&quot;));</span>
+<span class="fc" id="L2033">					Number currentValue = map.get(key);</span>
+
+<span class="pc bpc" id="L2035" title="1 of 2 branches missed.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;ref_views&quot;)));</span>
+<span class="nc" id="L2036">					else map.put(key, Integer.valueOf(rs.getInt(&quot;ref_views&quot;)+currentValue.intValue()));</span>
+<span class="fc" id="L2037">				}</span>
+<span class="fc" id="L2038">				rs.close();</span>
+<span class="fc" id="L2039">				ps.close();</span>
+<span class="fc" id="L2040">				db_conn.close();</span>
+<span class="fc" id="L2041">				db_conn = null;</span>
+<span class="fc" id="L2042">				rs = null;</span>
+<span class="fc" id="L2043">				ps = null;</span>
+			}
+<span class="nc" id="L2045">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+			finally{
+				try{
+<span class="pc bpc" id="L2048" title="1 of 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="pc bpc" id="L2049" title="1 of 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L2050" title="1 of 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L2051">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+			}
+		}
+
+<span class="fc" id="L2055">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+		//je mozne, ze tam mame viac ako max zaznamov, upracme a povazujme to za &quot;ostatne&quot;
+<span class="fc" id="L2058">		map = StatDB.sortByValue(map);</span>
+
+<span class="fc" id="L2060">		Iterator&lt;Map.Entry&lt;String, Number&gt;&gt; iter = map.entrySet().iterator();</span>
+		Map.Entry&lt;String, Number&gt; me;
+<span class="fc" id="L2062">		int i = 0;</span>
+<span class="pc bpc" id="L2063" title="1 of 4 branches missed.">		while (iter.hasNext() &amp;&amp; i++&lt;maxRows)</span>
+		{
+<span class="fc" id="L2065">			me = iter.next();</span>
+<span class="fc" id="L2066">			String key = me.getKey();</span>
+<span class="fc" id="L2067">			Number value = me.getValue();</span>
+
+			//Logger.debug(StatDB.class, &quot;getStatReferer: key=&quot;+key+&quot; value=&quot;+value);
+
+<span class="fc" id="L2071">			Column col = new Column();</span>
+<span class="fc" id="L2072">			col.setColumn1(key);</span>
+<span class="fc" id="L2073">			col.setColumn2(col.getColumn1());</span>
+<span class="fc" id="L2074">			col.setIntColumn2(value.intValue());</span>
+
+<span class="fc" id="L2076">			ret.add(col);</span>
+<span class="fc" id="L2077">		}</span>
+
+<span class="fc" id="L2079">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati pocet unikatnych pouzivatelov za stanovene obdobie z tab. stat_ views
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static int getUniqueUsersFromStatViews(java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="nc" id="L2092">		return getUniqueUsersFromStatViews(from, to, String.valueOf(rootGroupId), false);</span>
+	}
+
+	public static int getUniqueUsersFromStatViews(java.util.Date from, java.util.Date to, int rootGroupId, boolean withoutBots)
+	{
+<span class="nc" id="L2097">		return getUniqueUsersFromStatViews(from, to, String.valueOf(rootGroupId), withoutBots);</span>
+	}
+
+	public static int getUniqueUsersFromStatViews(java.util.Date from, java.util.Date to, String groupIds)
+	{
+<span class="nc" id="L2102">		return getUniqueUsersFromStatViews(from, to, groupIds, false);</span>
+	}
+
+	/**
+	 * Vrati pocet unikatnych pouzivatelov za stanovene obdobie z tab. stat_ views
+	 *
+	 * @param from
+	 * @param to
+	 * @param rootGroupId
+	 * @param groupIds
+	 * @return
+	 */
+	public static int getUniqueUsersFromStatViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
+	{
+<span class="nc" id="L2116">		int ret = 0;</span>
+<span class="nc" id="L2117">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L2118" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="nc" id="L2120">			Connection db_conn = null;</span>
+<span class="nc" id="L2121">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2122">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L2125">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L2127">				String whitelistedQuery = &quot;&quot;;</span>
+<span class="nc bnc" id="L2128" title="All 2 branches missed.">				if(withoutBots)</span>
+<span class="nc" id="L2129">					whitelistedQuery = getWhiteListedUAQuery();</span>
+
+<span class="nc" id="L2131">				String sql = &quot;SELECT COUNT(DISTINCT s.browser_id) AS unique_users&quot; +</span>
+	 			&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+				&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=?&quot;;
+
+<span class="nc" id="L2135">				sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupIds);</span>
+<span class="nc" id="L2136">				sql += whitelistedQuery;</span>
+
+<span class="nc" id="L2138">				Logger.debug(StatNewDB.class, &quot;getUniqueUsersFromStatViews sql:&quot;+sql);</span>
+
+<span class="nc" id="L2140">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2141">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2142">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2143">				rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L2145" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L2147">					int uniq = rs.getInt(&quot;unique_users&quot;);</span>
+<span class="nc" id="L2148">					ret += uniq;</span>
+					//Logger.debug(StatNewDB.class, &quot;uniq=&quot;+uniq+&quot; ret=&quot;+ret);
+<span class="nc" id="L2150">				}</span>
+<span class="nc" id="L2151">				rs.close();</span>
+<span class="nc" id="L2152">				ps.close();</span>
+<span class="nc" id="L2153">				db_conn.close();</span>
+<span class="nc" id="L2154">				rs = null;</span>
+<span class="nc" id="L2155">				ps = null;</span>
+<span class="nc" id="L2156">				db_conn = null;</span>
+			}
+<span class="nc" id="L2158">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2160" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L2166" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2167">						rs.close();</span>
+<span class="nc bnc" id="L2168" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2169">						ps.close();</span>
+<span class="nc bnc" id="L2170" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2171">						db_conn.close();</span>
+				}
+<span class="nc" id="L2173">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2175">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2176">				}</span>
+			}
+		}
+<span class="nc" id="L2179">		return (ret);</span>
+	}
+
+	/**
+	 * Vygeneruje pre zvolene docID tabulku videni, sedeni, roznych userov za zvolene obdobie
+	 * podla TYZDNOV
+	 *
+	 * @param from
+	 * @param to
+	 * @param docId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getViewsForDoc(java.util.Date from, java.util.Date to, int docId)
+	{
+<span class="nc" id="L2193">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L2195" title="All 2 branches missed.">		if (docId &lt; 1) return ret;</span>
+
+<span class="nc" id="L2197">		Map&lt;String, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L2199">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L2200" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="nc" id="L2202">			Connection db_conn = null;</span>
+<span class="nc" id="L2203">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2204">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L2207">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L2209">				String sql = &quot;SELECT &quot;+getYWSelect(&quot;s.view_time&quot;)+&quot;,COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot;;</span>
+<span class="nc" id="L2210">				sql +=&quot; FROM stat_views&quot;+suffixes[s]+&quot; s WHERE s.view_time&gt;=? AND s.view_time&lt;=? AND s.doc_id=?&quot;;</span>
+<span class="nc" id="L2211">				sql += &quot; GROUP BY &quot;+getYWGroupBy(&quot;s.view_time&quot;)+&quot; ORDER BY  vt_year ASC, vt_week ASC&quot;;</span>
+
+<span class="nc" id="L2213">				Logger.debug(StatNewDB.class, &quot;getViewsForDoc sql:&quot;+sql);</span>
+
+<span class="nc" id="L2215">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2216">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2217">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2218">				ps.setInt(3, docId);</span>
+
+<span class="nc" id="L2220">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+				Column col;
+
+<span class="nc bnc" id="L2224" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L2226">					int year = rs.getInt(&quot;vt_year&quot;);</span>
+<span class="nc" id="L2227">					int week = rs.getInt(&quot;vt_week&quot;);</span>
+
+<span class="nc" id="L2229">					String key = year+&quot;-&quot;+week;</span>
+
+<span class="nc" id="L2231">					col = colTable.get(key);</span>
+<span class="nc bnc" id="L2232" title="All 2 branches missed.">					if (col == null)</span>
+					{
+<span class="nc" id="L2234">						col = new Column();</span>
+<span class="nc" id="L2235">						col.setIntColumn1(year);</span>
+<span class="nc" id="L2236">						col.setIntColumn2(week);</span>
+<span class="nc" id="L2237">						col.setIntColumn3(rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L2238">						col.setIntColumn4(rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L2239">						col.setIntColumn5(rs.getInt(&quot;unique_users&quot;));</span>
+<span class="nc" id="L2240">						ret.add(col);</span>
+<span class="nc" id="L2241">						colTable.put(key, col);</span>
+					}
+					else
+					{
+<span class="nc" id="L2245">						col.setIntColumn3(col.getIntColumn3()+rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L2246">						col.setIntColumn4(col.getIntColumn4()+rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L2247">						col.setIntColumn5(col.getIntColumn5()+rs.getInt(&quot;unique_users&quot;));</span>
+					}
+<span class="nc" id="L2249">				}</span>
+<span class="nc" id="L2250">				rs.close();</span>
+<span class="nc" id="L2251">				ps.close();</span>
+<span class="nc" id="L2252">				db_conn.close();</span>
+<span class="nc" id="L2253">				rs = null;</span>
+<span class="nc" id="L2254">				ps = null;</span>
+<span class="nc" id="L2255">				db_conn = null;</span>
+			}
+<span class="nc" id="L2257">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2259" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L2265" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2266">						rs.close();</span>
+<span class="nc bnc" id="L2267" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2268">						ps.close();</span>
+<span class="nc bnc" id="L2269" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2270">						db_conn.close();</span>
+				}
+<span class="nc" id="L2272">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2274">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2275">				}</span>
+			}
+		}
+<span class="nc" id="L2278">		return (ret);</span>
+	}
+
+
+	/**
+	 * Vygeneruje pre zvolenu rootGroupID tabulku videni, sedeni, roznych userov za zvolene obdobie
+	 *
+	 * @param backInterval - pocet mesiacov spat, za ktore sa ma vygenerovat statistika
+	 * @param rootGroupId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getMonthViewsForDoc(int backInterval, int docId)
+	{
+<span class="nc" id="L2291">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L2293">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L2294">		long to = cal.getTimeInMillis();</span>
+<span class="nc" id="L2295">		cal.set(Calendar.DATE, 1);</span>
+<span class="nc" id="L2296">		cal.set(Calendar.HOUR, 0);</span>
+<span class="nc" id="L2297">		cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L2298">		cal.set(Calendar.SECOND, 0);</span>
+
+<span class="nc" id="L2300">		cal.add(Calendar.MONTH, -backInterval);</span>
+<span class="nc" id="L2301">		long from = cal.getTimeInMillis();</span>
+
+		Column col;
+<span class="nc" id="L2304">		Map&lt;String, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L2306">		String[] suffixes = getTableSuffix(from, to);</span>
+<span class="nc bnc" id="L2307" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="nc" id="L2309">			Connection db_conn = null;</span>
+<span class="nc" id="L2310">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2311">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L2314">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L2316">				String sql = &quot;SELECT &quot;+getYMSelect(&quot;s.view_time&quot;)+&quot;, COUNT(s.doc_id) AS views, COUNT(DISTINCT s.session_id) AS sessions, COUNT(DISTINCT s.browser_id) AS unique_users&quot; +</span>
+	 			&quot; FROM stat_views&quot;+suffixes[s]+&quot; s&quot; +
+				&quot; WHERE s.view_time&gt;=? AND s.view_time&lt;=? AND s.doc_id=?&quot;;
+
+<span class="nc" id="L2320">				sql += &quot; GROUP BY &quot;+getYMGroupBy(&quot;s.view_time&quot;)+&quot; ORDER BY  vt_year DESC, vt_month DESC&quot;;</span>
+
+<span class="nc" id="L2322">				Logger.debug(StatNewDB.class, &quot;getMonthViewsForDoc sql:&quot;+sql);</span>
+
+<span class="nc" id="L2324">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2325">				ps.setTimestamp(1, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L2326">				ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L2327">				ps.setInt(3, docId);</span>
+
+<span class="nc" id="L2329">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+
+<span class="nc bnc" id="L2332" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L2334">					int month = rs.getInt(&quot;vt_month&quot;);</span>
+<span class="nc" id="L2335">					int year = rs.getInt(&quot;vt_year&quot;);</span>
+<span class="nc" id="L2336">					String key = year+&quot;-&quot;+month;</span>
+
+<span class="nc" id="L2338">					col = new Column();</span>
+<span class="nc" id="L2339">					col.setIntColumn1(year);</span>
+<span class="nc" id="L2340">					col.setIntColumn2(month);</span>
+<span class="nc" id="L2341">					col.setIntColumn3(rs.getInt(&quot;views&quot;));</span>
+<span class="nc" id="L2342">					col.setIntColumn4(rs.getInt(&quot;sessions&quot;));</span>
+<span class="nc" id="L2343">					col.setIntColumn5(rs.getInt(&quot;unique_users&quot;));</span>
+
+<span class="nc" id="L2345">					colTable.put(key, col);</span>
+<span class="nc" id="L2346">				}</span>
+<span class="nc" id="L2347">				rs.close();</span>
+<span class="nc" id="L2348">				ps.close();</span>
+<span class="nc" id="L2349">				db_conn.close();</span>
+<span class="nc" id="L2350">				rs = null;</span>
+<span class="nc" id="L2351">				ps = null;</span>
+<span class="nc" id="L2352">				db_conn = null;</span>
+			}
+<span class="nc" id="L2354">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2356" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L2362" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2363">						rs.close();</span>
+<span class="nc bnc" id="L2364" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2365">						ps.close();</span>
+<span class="nc bnc" id="L2366" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2367">						db_conn.close();</span>
+				}
+<span class="nc" id="L2369">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2371">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2372">				}</span>
+			}
+		}
+
+		//vytvorime list a doplnime chybajuce (ak nejake su) mesiace
+		try
+		{
+<span class="nc bnc" id="L2379" title="All 2 branches missed.">			while (cal.getTimeInMillis() &lt; to)</span>
+			{
+<span class="nc" id="L2381">				String key = cal.get(Calendar.YEAR)+&quot;-&quot;+(cal.get(Calendar.MONTH)+1);</span>
+<span class="nc" id="L2382">				col = colTable.get(key);</span>
+
+<span class="nc bnc" id="L2384" title="All 2 branches missed.">				if (col == null)</span>
+				{
+<span class="nc" id="L2386">					col = new Column();</span>
+<span class="nc" id="L2387">					col.setIntColumn1(cal.get(Calendar.YEAR));</span>
+<span class="nc" id="L2388">					col.setIntColumn2(cal.get(Calendar.MONTH)+1);</span>
+<span class="nc" id="L2389">					col.setIntColumn3(0);</span>
+<span class="nc" id="L2390">					col.setIntColumn4(0);</span>
+<span class="nc" id="L2391">					col.setIntColumn5(0);</span>
+				}
+
+<span class="nc" id="L2394">				ret.add(col);</span>
+<span class="nc" id="L2395">				cal.add(Calendar.MONTH, 1);</span>
+<span class="nc" id="L2396">			}</span>
+		}
+<span class="nc" id="L2398">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2400">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2401">		}</span>
+
+<span class="nc" id="L2403">		return (ret);</span>
+	}
+	/**
+	 * Vygeneruje pre zvolene docID tabulku kolko na dane docId prislo navstev z ktoreho docId
+	 *
+	 * @param docId
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public static List&lt;Column&gt; getIncomingStats(int docId, java.util.Date from, java.util.Date to, String groupIdsQuery, HttpServletRequest request)
+	{
+<span class="pc bpc" id="L2415" title="1 of 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
+
+<span class="fc" id="L2417">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L2418">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L2419">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2420">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L2421">		Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);</span>
+
+		DocDetails bdd;
+<span class="fc" id="L2424">		int pocetPriamychPristupov = 0;</span>
+
+
+		//najskor nacitaj priame pristupy
+		if (true)
+		{
+			//v ife to mame, aby neboli problemy s nazvami premennych
+
+<span class="fc" id="L2432">			Connection db_conn = null;</span>
+<span class="fc" id="L2433">			PreparedStatement ps = null;</span>
+<span class="fc" id="L2434">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L2437">				db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L2439">				String sql=&quot;SELECT count(doc_id) AS pocet, referer_server_name, referer_url FROM stat_from &quot;+</span>
+				&quot;WHERE doc_id=? AND from_time &gt;= ? AND from_time &lt;= ? &quot; + groupIdsQuery +
+				&quot;GROUP BY referer_server_name, referer_url &quot;+
+				&quot;ORDER BY pocet desc&quot;;
+
+<span class="fc" id="L2444">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
+
+<span class="fc" id="L2446">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L2447">				ps.setInt(1,docId);</span>
+<span class="fc" id="L2448">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L2449">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L2450">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L2451" title="1 of 2 branches missed.">				while(rs.next())</span>
+				{
+<span class="nc" id="L2453">					Column col = new Column();</span>
+<span class="nc" id="L2454">					col.setIntColumn2(rs.getInt(&quot;pocet&quot;));</span>
+<span class="nc" id="L2455">					pocetPriamychPristupov+=col.getIntColumn2();</span>
+<span class="nc" id="L2456">					col.setColumn1(rs.getString(&quot;referer_server_name&quot;)+rs.getString(&quot;referer_url&quot;));</span>
+<span class="nc" id="L2457">					col.setColumn2(&quot;http://&quot;+col.getColumn1());</span>
+<span class="nc" id="L2458">					ret.add(col);</span>
+<span class="nc" id="L2459">				}</span>
+<span class="fc" id="L2460">				rs.close();</span>
+<span class="fc" id="L2461">				ps.close();</span>
+<span class="fc" id="L2462">				db_conn.close();</span>
+<span class="fc" id="L2463">				rs = null;</span>
+<span class="fc" id="L2464">				ps = null;</span>
+<span class="fc" id="L2465">				db_conn = null;</span>
+			}
+<span class="nc" id="L2467">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L2469">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L2475" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2476">						rs.close();</span>
+<span class="pc bpc" id="L2477" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2478">						ps.close();</span>
+<span class="pc bpc" id="L2479" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2480">						db_conn.close();</span>
+				}
+<span class="nc" id="L2482">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2484">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L2485">				}</span>
+			}
+		}
+
+		//nacitaj udaje statistiky
+<span class="fc" id="L2490">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L2491" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L2493">			Connection db_conn = null;</span>
+<span class="fc" id="L2494">			PreparedStatement ps = null;</span>
+<span class="fc" id="L2495">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L2498">				db_conn = DBPool.getConnectionReadUncommited();</span>
+
+<span class="fc" id="L2500">				String sql=&quot;SELECT count(doc_id) AS pocet, last_doc_id &quot;+</span>
+				&quot;FROM stat_views&quot;+suffixes[s]+&quot; &quot;+
+				&quot;WHERE doc_id=? AND view_time &gt;= ? AND view_time &lt;= ? &quot;+
+				&quot;GROUP BY last_doc_id &quot;+
+				&quot;ORDER BY pocet desc&quot;;
+
+<span class="fc" id="L2506">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
+
+<span class="fc" id="L2508">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L2509">				ps.setInt(1,docId);</span>
+<span class="fc" id="L2510">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L2511">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L2512">				rs = ps.executeQuery();</span>
+
+<span class="fc bfc" id="L2514" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L2516">					int lastDocId=rs.getInt(&quot;last_doc_id&quot;);</span>
+<span class="fc" id="L2517">					int pocet=rs.getInt(&quot;pocet&quot;);</span>
+
+<span class="pc bpc" id="L2519" title="1 of 2 branches missed.">					if(lastDocId==-1)</span>
+					{
+<span class="fc" id="L2521">						pocet = pocet - pocetPriamychPristupov;</span>
+					}
+
+<span class="fc" id="L2524">					Column col = colTable.get(lastDocId);</span>
+<span class="pc bpc" id="L2525" title="1 of 2 branches missed.">					if (col == null)</span>
+					{
+<span class="fc" id="L2527">						col = new Column();</span>
+<span class="fc" id="L2528">						col.setIntColumn2(pocet);</span>
+
+<span class="fc" id="L2530">						bdd = docDB.getBasicDocDetails(lastDocId, true);</span>
+<span class="fc" id="L2531">						String title=groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle();</span>
+<span class="fc" id="L2532">						col.setColumn1(title);</span>
+<span class="pc bpc" id="L2533" title="1 of 2 branches missed.">						if(lastDocId==-1)</span>
+						{
+<span class="fc" id="L2535">							col.setColumn1(prop.getText(&quot;stat_doc.directAccess&quot;));</span>
+						}
+<span class="fc" id="L2537">						col.setColumn2(&quot;/apps/stat/admin/top-details/?docId=&quot;+lastDocId+&quot;&amp;title=&quot;+Tools.URLEncode(title));</span>
+<span class="fc" id="L2538">						ret.add(col);</span>
+<span class="fc" id="L2539">						colTable.put(lastDocId, col);</span>
+<span class="fc" id="L2540">					}</span>
+					else
+					{
+<span class="nc" id="L2543">						col.setIntColumn2(col.getIntColumn2()+pocet);</span>
+					}
+<span class="fc" id="L2545">				}</span>
+<span class="fc" id="L2546">				rs.close();</span>
+<span class="fc" id="L2547">				ps.close();</span>
+<span class="fc" id="L2548">				db_conn.close();</span>
+<span class="fc" id="L2549">				rs = null;</span>
+<span class="fc" id="L2550">				ps = null;</span>
+<span class="fc" id="L2551">				db_conn = null;</span>
+			}
+<span class="nc" id="L2553">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2555" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L2561" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2562">						rs.close();</span>
+<span class="pc bpc" id="L2563" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2564">						ps.close();</span>
+<span class="pc bpc" id="L2565" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2566">						db_conn.close();</span>
+				}
+<span class="nc" id="L2568">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2570">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L2571">				}</span>
+			}
+		}
+
+		//usporiadaj
+<span class="fc" id="L2576">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
+<span class="fc" id="L2577">		{</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="nc" id="L2581">				return (c2.getIntColumn2() - c1.getIntColumn2());</span>
+			}
+		});
+
+		//ak je tam nieco zaporne (vyradenie priamych pristupov) vyhod
+<span class="fc" id="L2586">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L2587" title="All 2 branches covered.">		for (Column col : ret)</span>
+		{
+<span class="pc bpc" id="L2589" title="1 of 2 branches missed.">			if (col.getIntColumn2()&gt;0) ret2.add(col);</span>
+<span class="fc" id="L2590">		}</span>
+
+<span class="fc" id="L2592">		return (ret2);</span>
+	}
+	/**
+	 * Vygeneruje pre zvolene docID tabulku kolko z docId navstev islo na ktore docId
+	 *
+	 * @param docId
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public static List&lt;Column&gt; getOutgoingStats(int docId, java.util.Date from, java.util.Date to)
+	{
+<span class="fc" id="L2604">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L2605">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L2606">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2607">		DocDB docDB = DocDB.getInstance();</span>
+		DocDetails bdd;
+		Column col;
+
+<span class="fc" id="L2611">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L2612" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L2614">			Connection db_conn = null;</span>
+<span class="fc" id="L2615">			PreparedStatement ps = null;</span>
+<span class="fc" id="L2616">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L2619">				db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="fc" id="L2620">				String sql=&quot;SELECT count(last_doc_id) AS pocet, doc_id &quot;+</span>
+				&quot;FROM stat_views&quot;+suffixes[s]+&quot; &quot;+
+				&quot;WHERE last_doc_id= ? AND view_time &gt;= ? AND view_time &lt;= ? &quot;+
+				&quot;GROUP BY doc_id &quot;+
+				&quot;ORDER BY pocet desc&quot;;
+
+<span class="fc" id="L2626">				Logger.debug(StatNewDB.class, &quot;getOutgoingStats sql: &quot;+sql);</span>
+
+<span class="fc" id="L2628">				ps = prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L2629">				ps.setInt(1,docId);</span>
+<span class="fc" id="L2630">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L2631">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L2632">				rs = ps.executeQuery();</span>
+
+<span class="pc bpc" id="L2634" title="1 of 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L2636">					int docId2 = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L2637">					col = colTable.get(docId2);</span>
+<span class="nc bnc" id="L2638" title="All 2 branches missed.">					if (col == null)</span>
+					{
+<span class="nc" id="L2640">						col = new Column();</span>
+<span class="nc" id="L2641">						col.setIntColumn2(rs.getInt(&quot;pocet&quot;));</span>
+<span class="nc" id="L2642">						bdd = docDB.getBasicDocDetails(docId2, true);</span>
+<span class="nc" id="L2643">						String title=groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle();</span>
+<span class="nc" id="L2644">						col.setColumn1(title);</span>
+<span class="nc" id="L2645">						col.setColumn2(&quot;/apps/stat/admin/top-details/?docId=&quot;+rs.getInt(&quot;doc_id&quot;)+&quot;&amp;title=&quot;+Tools.URLEncode(title));</span>
+<span class="nc" id="L2646">						ret.add(col);</span>
+<span class="nc" id="L2647">						colTable.put(docId2, col);</span>
+<span class="nc" id="L2648">					}</span>
+					else
+					{
+<span class="nc" id="L2651">						col.setIntColumn2(col.getIntColumn2()+rs.getInt(&quot;pocet&quot;));</span>
+					}
+<span class="nc" id="L2653">				}</span>
+<span class="fc" id="L2654">				rs.close();</span>
+<span class="fc" id="L2655">				ps.close();</span>
+<span class="fc" id="L2656">				db_conn.close();</span>
+<span class="fc" id="L2657">				rs = null;</span>
+<span class="fc" id="L2658">				ps = null;</span>
+<span class="fc" id="L2659">				db_conn = null;</span>
+			}
+<span class="nc" id="L2661">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2663" title="All 2 branches missed.">				if (!createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L2669" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2670">						rs.close();</span>
+<span class="pc bpc" id="L2671" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2672">						ps.close();</span>
+<span class="pc bpc" id="L2673" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2674">						db_conn.close();</span>
+				}
+<span class="nc" id="L2676">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2678">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L2679">				}</span>
+			}
+		}
+
+		//usporiadaj
+<span class="fc" id="L2684">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
+<span class="fc" id="L2685">		{</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="nc" id="L2689">				return (c2.getIntColumn2() - c1.getIntColumn2());</span>
+			}
+		});
+
+<span class="fc" id="L2693">		return (ret);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati zoznam vsetkych pristupov daneho registrovaneho pouzivatela zoradenych od najnovsieho po najstarsi.
+	 * &lt;br /&gt; Zoznam obshauje identifikacne cislo prihlasenia (intColumn1), prehliadany dokument (column1), posledne prehliadany dokument (last_doc),
+	 * nazov skupiny, do ktorej patri prehliadana stranka (column3) a cas pristupu (dateColumn1)
+	 *
+	 * @param from datetime, od ktoreho chceme vyhladavat zobrazenia stranok
+	 * @param to datetime, do ktoreho chceme vyhladavat zobrazenia stranok
+	 * @param rootGroupId identifikator skupiny, ktoru chceme filtrovat. Ak sa rovna -1, tak to znamena, ze chceme vyhladavat vo vsetkych skupinach
+	 * @return List naplneny jednotlivymi zobrazeniami stranok pre urceneho registrovaneho pouzivatela s roznymi vlastnostami
+	 */
+	public static List&lt;Column&gt; getUserStatViews(int userId, java.util.Date from, java.util.Date to, int rootGroupId)
+	{
+<span class="fc" id="L2708">		Connection db_conn = null;</span>
+<span class="fc" id="L2709">		PreparedStatement ps = null;</span>
+<span class="fc" id="L2710">		ResultSet rs = null;</span>
+		Column col;
+<span class="fc" id="L2712">		List&lt;Column&gt; userStatViews = new ArrayList&lt;&gt;();</span>
+		String sql;
+
+<span class="fc" id="L2715">		String[] suffixes = StatNewDB.getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L2716" title="All 2 branches covered.">		for (int s = (suffixes.length-1); s &gt;= 0; s = s - 1)	// potrebujem opacne zoradene pole</span>
+		{
+<span class="fc" id="L2718">			sql = &quot;SELECT s.session_id AS session, documents.title AS doc, docs.title AS last_doc, groups.group_name, s.view_time &quot;;</span>
+<span class="fc" id="L2719">			sql += &quot;FROM stat_views&quot; + suffixes[s] + &quot; s&quot;;</span>
+<span class="fc" id="L2720">			sql += &quot; LEFT JOIN documents ON s.doc_id = documents.doc_id LEFT JOIN documents docs ON s.last_doc_id = docs.doc_id LEFT JOIN groups ON s.group_id = groups.group_id &quot;;</span>
+<span class="fc" id="L2721">			sql += &quot;WHERE s.browser_id = ? AND s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;;</span>
+<span class="fc" id="L2722">			sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
+<span class="fc" id="L2723">			sql += &quot; ORDER BY s.view_time DESC&quot;;</span>
+
+<span class="fc" id="L2725">			Logger.debug(StatNewDB.class,&quot;getUserStatViews: &quot;+sql);</span>
+
+			try
+			{
+<span class="fc" id="L2729">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L2730">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L2731">				ps.setInt(1, userId);</span>
+<span class="fc" id="L2732">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L2733">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L2735">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+
+<span class="fc bfc" id="L2738" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L2740">					col = new Column();</span>
+
+<span class="fc" id="L2742">					col.setColumn4(String.valueOf(rs.getLong(&quot;session&quot;)));</span>
+<span class="fc" id="L2743">					col.setColumn1(rs.getString(&quot;doc&quot;));</span>
+<span class="fc" id="L2744">					col.setColumn2(rs.getString(&quot;last_doc&quot;));</span>
+<span class="fc" id="L2745">					col.setColumn3(rs.getString(&quot;group_name&quot;));</span>
+<span class="fc" id="L2746">					col.setDateColumn1(rs.getTimestamp(&quot;view_time&quot;));</span>
+
+<span class="fc" id="L2748">					userStatViews.add(col);</span>
+				}
+<span class="fc" id="L2750">				rs.close();</span>
+<span class="fc" id="L2751">				ps.close();</span>
+<span class="fc" id="L2752">				db_conn.close();</span>
+<span class="fc" id="L2753">				rs = null;</span>
+<span class="fc" id="L2754">				ps = null;</span>
+<span class="fc" id="L2755">				db_conn = null;</span>
+			}
+
+<span class="nc" id="L2758">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L2760" title="All 2 branches missed.">				if (!StatNewDB.createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L2766" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L2767">						rs.close();</span>
+<span class="pc bpc" id="L2768" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L2769">						ps.close();</span>
+<span class="pc bpc" id="L2770" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L2771">						db_conn.close();</span>
+				}
+<span class="nc" id="L2773">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L2775">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L2776">				}</span>
+			}
+		}
+
+<span class="fc" id="L2780">		return (userStatViews);</span>
+	}
+
+	/**
+	 * Grants SELECT, UPDATE, INSERT, DELETE on specified table to supplied username
+	 * @param tableName name of table (ie stat_error)
+	 * @param suffix suffix for partitioning (ie _2012_10) _YYYY_MM
+	 * @param publicWebDbUserName name of user to whom will be granted priviledges
+	 *
+	 * @return true if grant was successful, otherwise false
+	 *
+	 * @throws IllegalArgumentException if suffix, tableName od udername is null
+	 * @throws IllegalStateException if there is exception while granting permissions
+	 *
+	 */
+	public static boolean grantRightsToUser(String tableName, String suffix, String publicWebDbUserName)
+	{
+<span class="nc bnc" id="L2797" title="All 2 branches missed.">		if (suffix == null)</span>
+		{
+<span class="nc" id="L2799">			throw new IllegalArgumentException(&quot;Suffix can't be null&quot;);</span>
+		}
+<span class="nc bnc" id="L2801" title="All 2 branches missed.">		if (tableName == null)</span>
+		{
+<span class="nc" id="L2803">			throw new IllegalArgumentException(&quot;tableName can't be null&quot;);</span>
+		}
+<span class="nc bnc" id="L2805" title="All 2 branches missed.">		if (publicWebDbUserName == null)</span>
+		{
+<span class="nc" id="L2807">			throw new IllegalArgumentException(&quot;publicWebDbUserName can't be null&quot;);</span>
+		}
+<span class="nc" id="L2809">		boolean ret = false;</span>
+<span class="nc" id="L2810">		Logger.debug(StatNewDB.class, &quot;Granting rights on &quot; + tableName+suffix + &quot; to: &quot; + publicWebDbUserName);</span>
+		try
+		{
+<span class="nc" id="L2813">			new SimpleQuery().execute(&quot;GRANT SELECT, UPDATE, INSERT, DELETE ON ? TO ?&quot; , tableName+suffix,publicWebDbUserName);</span>
+<span class="nc" id="L2814">			Logger.debug(StatNewDB.class, &quot;Grant sucessfull&quot;);</span>
+<span class="nc" id="L2815">			ret = true;</span>
+		}
+<span class="nc" id="L2817">		catch(IllegalStateException e)</span>
+		{
+<span class="nc" id="L2819">			Logger.debug(StatNewDB.class, &quot;Failed to grant permissions. Cause: &quot;+e.getMessage() );</span>
+<span class="nc" id="L2820">		}</span>
+<span class="nc" id="L2821">		return ret;</span>
+	}
+
+	/**
+	 * Checks if there exists table with spacified name in DB
+	 * method ignores case
+	 * @param tablename name of the table
+	 * @return true if table with specified name exists in DB
+	 *
+	 * @throws IllegalArgumentException if tablename is null or empty
+	 */
+	public static boolean tableExists(String tablename)
+	{
+<span class="pc bpc" id="L2834" title="1 of 2 branches missed.">		if(Tools.isEmpty(tablename))</span>
+		{
+<span class="nc" id="L2836">			throw new IllegalArgumentException(&quot;Parameter tablename can't be empty!&quot;);</span>
+		}
+
+<span class="fc" id="L2839">		Connection con = null;</span>
+<span class="fc" id="L2840">		ResultSet res = null;</span>
+<span class="fc" id="L2841">		boolean found = false;</span>
+		try
+		{
+<span class="fc" id="L2844">			con = DBPool.getConnection();</span>
+<span class="fc" id="L2845">			java.sql.DatabaseMetaData meta = con.getMetaData();</span>
+<span class="fc" id="L2846">	      res = meta.getTables(null, null, null, new String[] {&quot;TABLE&quot;});</span>
+
+<span class="pc bpc" id="L2848" title="1 of 2 branches missed.">	      while (res.next()) {</span>
+
+<span class="fc bfc" id="L2850" title="All 2 branches covered.">	      	if(res.getString(&quot;TABLE_NAME&quot;).equalsIgnoreCase(tablename))</span>
+	      	{
+<span class="fc" id="L2852">	      		found = true;</span>
+<span class="fc" id="L2853">	      		return found;</span>
+	      	}
+	      }
+<span class="nc" id="L2856">	      res.close();</span>
+<span class="nc" id="L2857">	      res=null;</span>
+<span class="nc" id="L2858">			con.close();</span>
+<span class="nc" id="L2859">			con = null;</span>
+		}
+<span class="nc" id="L2861">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2863">			IllegalStateException exception = new IllegalStateException(ex.getMessage());</span>
+<span class="nc" id="L2864">			exception.initCause(ex);</span>
+<span class="nc" id="L2865">			throw exception;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L2871" title="1 of 2 branches missed.">				if (res != null)</span>
+<span class="fc" id="L2872">					res.close();</span>
+<span class="pc bpc" id="L2873" title="1 of 2 branches missed.">				if (con != null)</span>
+<span class="fc" id="L2874">					con.close();</span>
+			}
+<span class="nc" id="L2876">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L2878">			}</span>
+		}
+<span class="nc" id="L2880">		return found;</span>
+	}
+
+	public static String amChartsData(Map&lt;String, Map&lt;Date, Number&gt;&gt; data)
+	{
+<span class="nc" id="L2885">		return amChartsData(data, false);</span>
+	}
+
+	public static String amChartsData(Map&lt;String, Map&lt;Date, Number&gt;&gt; data, boolean monitoring)
+	{
+<span class="nc" id="L2890">		String chartData = &quot;[]&quot;;</span>
+<span class="nc bnc" id="L2891" title="All 4 branches missed.">		if(data!=null &amp;&amp; data.size()&gt;0)</span>
+		{
+<span class="nc" id="L2893">			Map&lt;Date, Number[]&gt; graph = new TreeMap&lt;&gt;();</span>
+
+<span class="nc" id="L2895">			int i = 0;</span>
+<span class="nc bnc" id="L2896" title="All 2 branches missed.">			for(Map.Entry&lt;String, Map&lt;Date, Number&gt;&gt; e : data.entrySet())</span>
+			{
+<span class="nc bnc" id="L2898" title="All 2 branches missed.">				for(Map.Entry&lt;Date, Number&gt; n : e.getValue().entrySet())</span>
+				{
+<span class="nc" id="L2900">					Date day = n.getKey();</span>
+
+<span class="nc" id="L2902">					Number[] storedValues = graph.get(day);</span>
+<span class="nc bnc" id="L2903" title="All 2 branches missed.">					if(storedValues == null)</span>
+					{
+<span class="nc" id="L2905">						Number[] newValues = new Number[data.size()];</span>
+<span class="nc" id="L2906">						newValues[i] = n.getValue();</span>
+<span class="nc" id="L2907">						graph.put(day, newValues);</span>
+<span class="nc" id="L2908">					}</span>
+					else
+					{
+<span class="nc" id="L2911">						storedValues[i] = n.getValue();</span>
+<span class="nc" id="L2912">						graph.put(day, storedValues);</span>
+					}
+<span class="nc" id="L2914">				}</span>
+<span class="nc" id="L2915">				i++;</span>
+<span class="nc" id="L2916">			}</span>
+
+<span class="nc" id="L2918">			chartData = &quot;[&quot;;</span>
+<span class="nc bnc" id="L2919" title="All 2 branches missed.">			for(Map.Entry&lt;Date, Number[]&gt; e : graph.entrySet())</span>
+			{
+<span class="nc" id="L2921">				chartData += &quot;{\&quot;date\&quot;: \&quot;&quot;;</span>
+<span class="nc bnc" id="L2922" title="All 2 branches missed.">				if(monitoring)</span>
+<span class="nc" id="L2923">					chartData += Tools.formatDateTime(e.getKey());</span>
+				else
+<span class="nc" id="L2925">					chartData += Tools.formatDate(e.getKey());</span>
+<span class="nc" id="L2926">				chartData += &quot;\&quot;&quot;;</span>
+
+<span class="nc bnc" id="L2928" title="All 2 branches missed.">				for(int k=0; k&lt;e.getValue().length; k++)</span>
+				{
+<span class="nc bnc" id="L2930" title="All 2 branches missed.">					if(e.getValue()[k] != null)</span>
+					{
+<span class="nc" id="L2932">						chartData += &quot;,\&quot;value&quot; + k + &quot;\&quot;: &quot;;</span>
+<span class="nc bnc" id="L2933" title="All 2 branches missed.">						if(monitoring)</span>
+<span class="nc" id="L2934">							chartData += e.getValue()[k].intValue();</span>
+						else
+<span class="nc" id="L2936">							chartData += e.getValue()[k];</span>
+					}
+				}
+
+<span class="nc" id="L2940">				chartData += &quot;},&quot;;</span>
+<span class="nc" id="L2941">			}</span>
+<span class="nc bnc" id="L2942" title="All 2 branches missed.">			if (chartData.endsWith(&quot;,&quot;)) chartData = chartData.substring(0, chartData.length()-1);</span>
+<span class="nc" id="L2943">			chartData += &quot;]&quot;;</span>
+		}
+
+<span class="nc" id="L2946">		return chartData;</span>
+	}
+
+	/**
+	 * vrati &quot; AND browser_ua_id IN [povolene prehliadace]&quot;, alebo prazdny string
+	 *
+	 * @return
+	 */
+	public static String getWhiteListedUAQuery()
+	{
+<span class="fc" id="L2956">		String cacheKey = &quot;statistika-getWhiteListedUAQuery&quot;;</span>
+<span class="fc" id="L2957">		Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="fc bfc" id="L2958" title="All 2 branches covered.">		if(o != null)</span>
+<span class="fc" id="L2959">			return (String) o;</span>
+
+<span class="fc" id="L2961">		String result = &quot;&quot;;</span>
+<span class="fc" id="L2962">		String whitelistQuery = &quot;&quot;;</span>
+
+<span class="fc" id="L2964">		List&lt;String&gt; items = Arrays.asList(Constants.getString(&quot;whiteListedUA&quot;).split(&quot;\\s*,\\s*&quot;));</span>
+		//List&lt;String&gt; items = Arrays.asList(&quot;chrome, firefox&quot;.split(&quot;\\s*,\\s*&quot;));
+<span class="fc bfc" id="L2966" title="All 2 branches covered.">		for(int i=0; i&lt;items.size(); i++)</span>
+		{
+<span class="fc bfc" id="L2968" title="All 2 branches covered.">			if(i!=items.size()-1)</span>
+<span class="fc" id="L2969">				whitelistQuery += &quot; &quot;+DB.fixAiCiCol(&quot;value&quot;)+&quot; LIKE ? OR &quot;;</span>
+			else
+<span class="fc" id="L2971">				whitelistQuery += &quot; &quot;+DB.fixAiCiCol(&quot;value&quot;)+&quot; LIKE ? &quot;;</span>
+		}
+
+<span class="fc" id="L2974">		Connection db_conn = null;</span>
+<span class="fc" id="L2975">		PreparedStatement ps = null;</span>
+<span class="fc" id="L2976">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L2979">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L2980">			ps = db_conn.prepareStatement(&quot;SELECT stat_keys_id FROM stat_keys WHERE &quot; + whitelistQuery);</span>
+
+<span class="fc bfc" id="L2982" title="All 2 branches covered.">			for(int i=0; i&lt;items.size(); i++)</span>
+			{
+<span class="fc" id="L2984">				ps.setString(i+1, &quot;%&quot;+DB.fixAiCiValue(items.get(i))+&quot;%&quot;);</span>
+			}
+
+<span class="fc" id="L2987">			rs = ps.executeQuery();</span>
+<span class="fc" id="L2988">			result += &quot;( &quot;;</span>
+<span class="fc" id="L2989">			boolean empty = true;</span>
+<span class="fc bfc" id="L2990" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L2992">				empty = false;</span>
+<span class="fc" id="L2993">				result += rs.getInt(&quot;stat_keys_id&quot;) + &quot;, &quot;;</span>
+			}
+<span class="pc bpc" id="L2995" title="1 of 2 branches missed.">			if(empty)</span>
+<span class="nc" id="L2996">				result = &quot;&quot;;</span>
+			else
+			{
+<span class="fc" id="L2999">				result = result.substring(0, result.length()-2);</span>
+<span class="fc" id="L3000">				result += &quot; )&quot;;</span>
+			}
+<span class="fc" id="L3002">			rs.close();</span>
+<span class="fc" id="L3003">			ps.close();</span>
+<span class="fc" id="L3004">			db_conn.close();</span>
+<span class="fc" id="L3005">			rs = null;</span>
+<span class="fc" id="L3006">			ps = null;</span>
+<span class="fc" id="L3007">			db_conn = null;</span>
+		}
+<span class="nc" id="L3009">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L3011">			result = &quot;&quot;;</span>
+<span class="nc" id="L3012">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L3018" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L3019">					rs.close();</span>
+<span class="pc bpc" id="L3020" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L3021">					ps.close();</span>
+<span class="pc bpc" id="L3022" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L3023">					db_conn.close();</span>
+			}
+<span class="nc" id="L3025">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L3027">			}</span>
+		}
+
+<span class="pc bpc" id="L3030" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(result))</span>
+<span class="fc" id="L3031">			result = &quot; AND browser_ua_id IN &quot; + result;</span>
+
+<span class="fc" id="L3033">		Cache.getInstance().setObject(cacheKey, result, 1440);</span>
+<span class="fc" id="L3034">		return result;</span>
+	}
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

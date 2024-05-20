@@ -50,4 +50,12 @@ public class DocHistoryDto {
     private boolean disableAfterEnd;
     private BaseEditorFields editorFields;
 
+    //Need fo AUDIt log
+    @DataTableColumn(
+		inputType = DataTableColumnType.TEXT,
+		title = "sync.path",
+		visible = false,
+		orderable = false
+	)
+	private String fullPath = null;
 }

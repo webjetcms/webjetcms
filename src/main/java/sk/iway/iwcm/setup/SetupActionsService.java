@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -37,8 +36,12 @@ import sk.iway.iwcm.system.UpdateDatabase;
 @SuppressWarnings("java:S106")
 public class SetupActionsService {
 
-	private static final String forward = "/admin/setup/setup";
-	private static final String saved = "/admin/setup/setup_saved";
+	private static final String FORWARD = "/admin/setup/setup";
+	private static final String SAVED = "/admin/setup/setup_saved";
+
+	private SetupActionsService() {
+		// Private constructor to hide the implicit public one.
+	}
 
 	private static boolean isHostAllowed(String serverName) {
 		if ("iwcm.interway.sk".equals(serverName) || "localhost".equals(serverName)) return true;
@@ -62,7 +65,7 @@ public class SetupActionsService {
 		return data;
 	}
 
-	public static String setupAction(Model model, HttpServletRequest request, HttpServletResponse response, String lng) throws IOException, ServletException {
+	public static String setupAction(Model model, HttpServletRequest request, HttpServletResponse response, String lng) throws IOException {
 
 		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false) {
 			return null;
@@ -96,8 +99,10 @@ public class SetupActionsService {
 							if (driver != null) {
 								if (driver.contains("Oracle"))
 									sForm.setDbDriver("oracle.jdbc.driver.OracleDriver");
-								if (driver.contains("jtds"))
+								else if (driver.contains("jtds"))
 									sForm.setDbDriver("net.sourceforge.jtds.jdbc.Driver");
+								else if (driver.contains("postgresql"))
+									sForm.setDbDriver("org.postgresql.Driver");
 							}
 							String url = XmlUtils.getFirstChildValue(n, "url");
 							if (url != null) {
@@ -221,13 +226,13 @@ public class SetupActionsService {
 
 		setModel(model, sForm, false, false);
 
-		return forward;
+		return FORWARD;
 	}
 
-	public static String setupSaveAction(SetupFormBean setupForm, Model model, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public static String setupSaveAction(SetupFormBean setupForm, Model model, HttpServletRequest request, HttpServletResponse response) {
 		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false){
 			System.out.println("WebJET is allready initialized");
-			return saved;
+			return SAVED;
 		}
 
 		String data = readPoolman();
@@ -253,7 +258,11 @@ public class SetupActionsService {
 				connErrMsg += "Could Not Find the database Driver: " + setupForm.getDbDriver();
 			}
 
-			con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+			String userName = setupForm.getDbUsername();
+			String password = setupForm.getDbPassword();
+			if (Tools.isEmpty(userName)) userName = null;
+			if (Tools.isEmpty(password)) password = null;
+			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
 			con.close();
 			dbConnectOK = true;
 		}
@@ -347,6 +356,19 @@ public class SetupActionsService {
 			} else if ("oracle.jdbc.driver.OracleDriver".equals(setupForm.getDbDriver())) {
 				//napln databazu
 				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseOracle();
+			} else if ("org.postgresql.Driver".equals(setupForm.getDbDriver())) {
+				//napln databazu
+				String schema = "webjet_cms";
+				if (Tools.isNotEmpty(setupForm.getDbParameters())) {
+					String[] params = Tools.getTokens(setupForm.getDbParameters(), "&");
+					for (String param : params) {
+						if (param.startsWith("currentSchema=")) {
+							schema = param.substring(14);
+							break;
+						}
+					}
+				}
+				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabasePgSQL(schema);
 			} else {
 				//	napln databazu
 				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMSSQL();
@@ -354,7 +376,7 @@ public class SetupActionsService {
 
 			if (Tools.isNotEmpty(dbCreateErrMsg)) {
 				setModelWithErr(model, setupForm, false, null, dbCreateErrMsg);
-				return forward;
+				return FORWARD;
 			}
 
 			//uloz konfiguracne hodnoty
@@ -363,9 +385,10 @@ public class SetupActionsService {
 				db_conn = DBPool.getConnection();
 
 				Enumeration<String> e = request.getParameterNames();
-				String name, value;
+				String name;
+				String value;
 				while (e.hasMoreElements()) {
-					name = (String)e.nextElement();
+					name = e.nextElement();
 					if (name.startsWith("conf_")) {
 						value = request.getParameter(name);
 						name = name.substring(5);
@@ -400,10 +423,10 @@ public class SetupActionsService {
 
 			setModel(model, null, true, true);
 
-			return saved;
+			return SAVED;
 		} else {
 			setModelWithErr(model, setupForm, true, connErrMsg, null);
-			return forward;
+			return FORWARD;
 		}
 	}
 
@@ -467,6 +490,10 @@ public class SetupActionsService {
 
 			if (Tools.isNotEmpty(sForm.getDbParameters()))
 				url += "/"+sForm.getDbParameters();
+		} else if ("org.postgresql.Driver".equals(sForm.getDbDriver())) {
+			String params = "currentSchema=webjet_cms";
+			if (Tools.isNotEmpty(sForm.getDbParameters())) params = sForm.getDbParameters();
+			url = "jdbc:postgresql://"+sForm.getDbDomain()+port+"/"+sForm.getDbName()+"?"+params;
 		}
 		return(url);
 	}
@@ -491,7 +518,7 @@ public class SetupActionsService {
 		ps.close();
 	}
 
-	private static void setModel(Model model, SetupFormBean setupForm, Boolean disableLanguageSelect, Boolean isSave) {
+	private static void setModel(Model model, SetupFormBean setupForm, Boolean disableLanguageSelect, boolean isSave) {
 		//Informing FE what key to use, when creating page
 		if(isSave)
 			// page /admin/setup/setup

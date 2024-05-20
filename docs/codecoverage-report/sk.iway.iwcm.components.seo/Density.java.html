@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Density.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo</a> &gt; <span class="el_source">Density.java</span></div><h1>Density.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo;
+
+public class Density
+{
+	private String keyWord;
+	private int h1Count;
+	private int h2Count;
+	private int h3Count;
+	private int strong;
+	private int italics;
+	private int link;
+	private int alltogether;
+
+	public Density(String keyWord)
+	{
+<span class="nc" id="L16">		super();</span>
+<span class="nc" id="L17">		this.keyWord = keyWord;</span>
+<span class="nc" id="L18">		this.h1Count = 0;</span>
+<span class="nc" id="L19">		this.h2Count = 0;</span>
+<span class="nc" id="L20">		this.h3Count = 0;</span>
+<span class="nc" id="L21">		this.strong = 0;</span>
+<span class="nc" id="L22">		this.italics = 0;</span>
+<span class="nc" id="L23">		this.link = 0;</span>
+<span class="nc" id="L24">		this.alltogether = 0;</span>
+<span class="nc" id="L25">	}</span>
+
+	public String getKeyWord()
+	{
+<span class="nc" id="L29">		return keyWord;</span>
+	}
+
+	public int getH1Count()
+	{
+<span class="nc" id="L34">		return h1Count;</span>
+	}
+
+	public int getH2Count()
+	{
+<span class="nc" id="L39">		return h2Count;</span>
+	}
+
+	public int getH3Count()
+	{
+<span class="nc" id="L44">		return h3Count;</span>
+	}
+	
+	public int getStrong()
+	{
+<span class="nc" id="L49">		return strong;</span>
+	}
+	
+	public int getItalics()
+	{
+<span class="nc" id="L54">		return italics;</span>
+	}
+	
+	public int getLink()
+	{
+<span class="nc" id="L59">		return link;</span>
+	}
+	
+	public int getAllTogether()
+	{
+<span class="nc" id="L64">		return alltogether;</span>
+	}
+	
+	public void incrementH1(int i){
+<span class="nc" id="L68">		h1Count += i;</span>
+<span class="nc" id="L69">	}</span>
+	
+	public void incrementH2(int i){
+<span class="nc" id="L72">		h2Count += i;</span>
+<span class="nc" id="L73">	}</span>
+	
+	public void incrementH3(int i){
+<span class="nc" id="L76">		this.h3Count += i;</span>
+<span class="nc" id="L77">	}</span>
+	
+	public void incrementStrong(int i){
+<span class="nc" id="L80">		this.strong += i;</span>
+<span class="nc" id="L81">	}</span>
+	
+	public void incrementItalics(int i){
+<span class="nc" id="L84">		this.italics += i;</span>
+<span class="nc" id="L85">	}</span>
+	
+	public void incrementLink(int i){
+<span class="nc" id="L88">		this.link += i;</span>
+<span class="nc" id="L89">	}</span>
+	
+	public void incrementAlltogether(int i){
+<span class="nc" id="L92">		this.alltogether += i;</span>
+<span class="nc" id="L93">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

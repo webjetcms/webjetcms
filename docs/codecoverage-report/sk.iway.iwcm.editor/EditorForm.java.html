@@ -1,0 +1,2020 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">EditorForm.java</span></div><h1>EditorForm.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.struts.upload.FormFile;
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.editor.rest.FieldValue;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.utils.Pair;
+
+/**
+ *  Formular ktory sa pouziva pri editore
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.10 $
+ *@created      $Date: 2004/02/16 16:44:26 $
+ *@modified     $Date: 2004/02/16 16:44:26 $
+ */
+public class EditorForm implements Serializable
+{
+	private static final long serialVersionUID = -7904465994457304390L;
+	public static final String PRIVATE_SECRET = &quot;omfegin430egkneg05ykgndf83&quot;;
+
+	/**
+	 *  Description of the Field
+	 */
+<span class="fc" id="L59">	protected String title = &quot;&quot;;</span>
+	/**
+	 *  Description of the Field
+	 */
+	protected FormFile theFile;
+<span class="fc" id="L64">	private int docId = -1;</span>
+<span class="fc" id="L65">	private int copyMediaFrom = -1;</span>
+<span class="fc" id="L66">	private String externalLink = &quot;&quot;;</span>
+<span class="fc" id="L67">	private String data = &quot;&quot;;</span>
+	private boolean recode;
+<span class="fc" id="L69">	private String navbar = &quot;&quot;;</span>
+<span class="fc" id="L70">	private String dateCreated = &quot;&quot;;</span>
+<span class="fc" id="L71">	private String publishStart = &quot;&quot;;</span>
+<span class="fc" id="L72">	private String publishStartTime = &quot;&quot;;</span>
+<span class="fc" id="L73">	private String publishEnd = &quot;&quot;;</span>
+<span class="fc" id="L74">	private String publishEndTime = &quot;&quot;;</span>
+	private boolean searchable;
+	private boolean available;
+	private boolean cacheable;
+	private boolean publicable;
+<span class="fc" id="L79">	private int groupId = -1;</span>
+<span class="fc" id="L80">	private int tempId = -1;</span>
+<span class="fc" id="L81">	private int saveAsNew = 0;</span>
+<span class="fc" id="L82">	private String fileName = &quot;&quot;;</span>
+<span class="fc" id="L83">	private String groupName = &quot;&quot;;</span>
+<span class="fc" id="L84">	private int sortPriority = 10;</span>
+<span class="fc" id="L85">	private int headerDocId = -1;</span>
+<span class="fc" id="L86">	private int footerDocId = -1;</span>
+<span class="fc" id="L87">	private String publish = &quot;&quot;;</span>
+<span class="fc" id="L88">	private int menuDocId = -1;</span>
+<span class="fc" id="L89">	private int authorId = -1;</span>
+<span class="fc" id="L90">	private int approveHistoryId = -1;</span>
+	private int[] passwordProtected;
+<span class="fc" id="L92">	private String htmlHead = &quot;&quot;;</span>
+<span class="fc" id="L93">	private String htmlData = &quot;&quot;;</span>
+
+	// bolo stlacene edituj web stranku
+<span class="fc" id="L96">	private int publicableToZero = -1;</span>
+
+<span class="fc" id="L98">	private String perexImage=&quot;&quot;;</span>
+<span class="fc" id="L99">	private String perexPlace=&quot;&quot;;</span>
+	private String[] perexGroup;
+	private boolean showInMenu;
+<span class="fc" id="L102">	private String eventDate = &quot;&quot;;</span>
+<span class="fc" id="L103">	private String eventTime = &quot;&quot;;</span>
+<span class="fc" id="L104">	private String virtualPath = &quot;&quot;;</span>
+<span class="fc" id="L105">	private int rightMenuDocId = -1;</span>
+
+<span class="fc" id="L107">	private String fieldA = &quot;&quot;;</span>
+<span class="fc" id="L108">	private String fieldB = &quot;&quot;;</span>
+<span class="fc" id="L109">	private String fieldC = &quot;&quot;;</span>
+<span class="fc" id="L110">	private String fieldD = &quot;&quot;;</span>
+<span class="fc" id="L111">	private String fieldE = &quot;&quot;;</span>
+<span class="fc" id="L112">	private String fieldF = &quot;&quot;;</span>
+
+<span class="fc" id="L114">	private String fieldG = &quot;&quot;;</span>
+<span class="fc" id="L115">	private String fieldH = &quot;&quot;;</span>
+<span class="fc" id="L116">	private String fieldI = &quot;&quot;;</span>
+<span class="fc" id="L117">	private String fieldJ = &quot;&quot;;</span>
+<span class="fc" id="L118">	private String fieldK = &quot;&quot;;</span>
+<span class="fc" id="L119">	private String fieldL = &quot;&quot;;</span>
+
+	private boolean disableAfterEnd;
+
+<span class="fc" id="L123">	private String fieldM = &quot;&quot;;</span>
+<span class="fc" id="L124">	private String fieldN = &quot;&quot;;</span>
+<span class="fc" id="L125">	private String fieldO = &quot;&quot;;</span>
+<span class="fc" id="L126">	private String fieldP = &quot;&quot;;</span>
+<span class="fc" id="L127">	private String fieldQ = &quot;&quot;;</span>
+<span class="fc" id="L128">	private String fieldR = &quot;&quot;;</span>
+<span class="fc" id="L129">	private String fieldS = &quot;&quot;;</span>
+<span class="fc" id="L130">	private String fieldT = &quot;&quot;;</span>
+	private String domainName;
+	private boolean refreshCss;
+
+	private int lastDocId;
+
+	private boolean requireSsl;
+
+	private String note;
+
+	@JsonIgnore
+	private GroupDetails group;
+	@JsonIgnore
+	private GroupDetails localSystemGroup;
+
+	@JsonIgnore
+	private TemplateDetails template;
+	private String language;
+
+	private int historyId;
+	private List&lt;Field&gt; fields;
+	private List&lt;Map&lt;String, Object&gt;&gt; templates;
+
+	private String baseCssPath;
+	private String tempCssPath;
+	private List&lt;Map&lt;String, Object&gt;&gt; docAtrs;
+
+	private List&lt;Map&lt;String, Object&gt;&gt; media;
+
+	@JsonIgnore
+	private String contextPath;
+
+	private String cssStyle;
+
+	@JsonIgnore
+	private int syncId;
+
+<span class="fc" id="L167">	public EditorForm() {</span>
+<span class="fc" id="L168">	}</span>
+
+	public EditorForm(DocDetails doc)
+<span class="fc" id="L171">	{</span>
+<span class="fc" id="L172">		title = doc.getTitle();</span>
+<span class="fc" id="L173">		docId = doc.getDocId();</span>
+<span class="fc" id="L174">		externalLink = doc.getExternalLink();</span>
+<span class="fc" id="L175">		data = doc.getData();</span>
+<span class="fc" id="L176">		navbar = doc.getNavbar();</span>
+<span class="fc" id="L177">		dateCreated = doc.getDateCreatedString();</span>
+<span class="fc" id="L178">		publishStart = doc.getPublishStartString();</span>
+<span class="fc" id="L179">		publishStartTime = doc.getPublishStartTimeString();</span>
+<span class="fc" id="L180">		publishEnd = doc.getPublishEndString();</span>
+<span class="fc" id="L181">		publishEndTime = doc.getPublishEndTimeString();</span>
+<span class="fc" id="L182">		searchable = doc.isSearchable();</span>
+<span class="fc" id="L183">		available  = doc.isAvailable();</span>
+<span class="fc" id="L184">		cacheable = doc.isCacheable();</span>
+<span class="fc" id="L185">		publicable = doc.isPublicable();</span>
+<span class="fc" id="L186">		groupId = doc.getGroupId();</span>
+<span class="fc" id="L187">		tempId = doc.getTempId();</span>
+<span class="fc" id="L188">		sortPriority = doc.getSortPriority();</span>
+<span class="fc" id="L189">		headerDocId = doc.getHeaderDocId();</span>
+<span class="fc" id="L190">		footerDocId = doc.getFooterDocId();</span>
+<span class="fc" id="L191">		publish = &quot;1&quot;;</span>
+<span class="fc" id="L192">		menuDocId = doc.getMenuDocId();</span>
+<span class="fc" id="L193">		rightMenuDocId = doc.getRightMenuDocId();</span>
+<span class="fc" id="L194">		authorId = doc.getAuthorId();</span>
+		//TODO: osetrit password protected
+<span class="fc" id="L196">		setPasswordProtectedString(doc.getPasswordProtected());</span>
+<span class="fc" id="L197">		htmlHead = doc.getHtmlHead();</span>
+<span class="fc" id="L198">		htmlData = doc.getHtmlData();</span>
+<span class="fc" id="L199">		perexImage = doc.getPerexImage();</span>
+<span class="fc" id="L200">		perexPlace = doc.getPerexPlace();</span>
+<span class="fc" id="L201">		setPerexGroupString(doc.getPerexGroupIdsString());</span>
+<span class="fc" id="L202">		showInMenu = doc.isShowInMenu();</span>
+<span class="fc" id="L203">		eventDate = doc.getEventDateString();</span>
+<span class="fc" id="L204">		eventTime = doc.getEventTimeString();</span>
+<span class="fc" id="L205">		virtualPath = doc.getVirtualPath();</span>
+
+<span class="fc" id="L207">		fieldA = doc.getFieldA();</span>
+<span class="fc" id="L208">		fieldB = doc.getFieldB();</span>
+<span class="fc" id="L209">		fieldC = doc.getFieldC();</span>
+<span class="fc" id="L210">		fieldD = doc.getFieldD();</span>
+<span class="fc" id="L211">		fieldE = doc.getFieldE();</span>
+<span class="fc" id="L212">		fieldF = doc.getFieldF();</span>
+<span class="fc" id="L213">		fieldG = doc.getFieldG();</span>
+<span class="fc" id="L214">		fieldH = doc.getFieldH();</span>
+<span class="fc" id="L215">		fieldI = doc.getFieldI();</span>
+<span class="fc" id="L216">		fieldJ = doc.getFieldJ();</span>
+<span class="fc" id="L217">		fieldK = doc.getFieldK();</span>
+<span class="fc" id="L218">		fieldL = doc.getFieldL();</span>
+
+<span class="fc" id="L220">		disableAfterEnd = doc.isDisableAfterEnd();</span>
+
+<span class="fc" id="L222">		fieldM = doc.getFieldM();</span>
+<span class="fc" id="L223">		fieldN = doc.getFieldN();</span>
+<span class="fc" id="L224">		fieldO = doc.getFieldO();</span>
+<span class="fc" id="L225">		fieldP = doc.getFieldP();</span>
+<span class="fc" id="L226">		fieldQ = doc.getFieldQ();</span>
+<span class="fc" id="L227">		fieldR = doc.getFieldR();</span>
+<span class="fc" id="L228">		fieldS = doc.getFieldS();</span>
+<span class="fc" id="L229">		fieldT = doc.getFieldT();</span>
+
+<span class="fc" id="L231">		requireSsl = doc.isRequireSsl();</span>
+
+<span class="fc" id="L233">		syncId = doc.getSyncId();</span>
+<span class="fc" id="L234">	}</span>
+
+	public DocDetails toDocDetails()
+	{
+<span class="fc" id="L238">		DocDetails doc = new DocDetails();</span>
+
+<span class="fc" id="L240">		doc.setTitle(title);</span>
+<span class="fc" id="L241">		doc.setDocId(docId);</span>
+<span class="fc" id="L242">		doc.setExternalLink(externalLink);</span>
+<span class="fc" id="L243">		doc.setData(data);</span>
+<span class="fc" id="L244">		doc.setNavbar(navbar);</span>
+		//doc.setDateCreatedString(dateCreated);
+<span class="fc" id="L246">		doc.setPublishStartString(publishStart);</span>
+<span class="fc" id="L247">		doc.setPublishStartTimeString(publishStartTime);</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">		if (Tools.isNotEmpty(publishStart)) doc.setPublishStart(DB.getTimestamp(publishStart, publishStartTime));</span>
+<span class="fc" id="L249">		doc.setPublishEndString(publishEnd);</span>
+<span class="fc" id="L250">		doc.setPublishEndTimeString(publishEndTime);</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(publishEnd)) doc.setPublishEnd(DB.getTimestamp(publishEnd, publishEndTime));</span>
+<span class="fc" id="L252">		doc.setSearchable(searchable);</span>
+<span class="fc" id="L253">		doc.setAvailable(available);</span>
+<span class="fc" id="L254">		doc.setCacheable(cacheable);</span>
+<span class="fc" id="L255">		doc.setPublicable(publicable);</span>
+<span class="fc" id="L256">		doc.setGroupId(groupId);</span>
+<span class="fc" id="L257">		doc.setTempId(tempId);</span>
+<span class="fc" id="L258">		doc.setSortPriority(sortPriority);</span>
+<span class="fc" id="L259">		doc.setHeaderDocId(headerDocId);</span>
+<span class="fc" id="L260">		doc.setFooterDocId(footerDocId);</span>
+<span class="fc" id="L261">		doc.setMenuDocId(menuDocId);</span>
+<span class="fc" id="L262">		doc.setRightMenuDocId(rightMenuDocId);</span>
+<span class="fc" id="L263">		doc.setAuthorId(authorId);</span>
+		//TODO: osetrit password protected
+<span class="fc" id="L265">		doc.setPasswordProtected(getPasswordProtectedString());</span>
+<span class="fc" id="L266">		doc.setHtmlHead(htmlHead);</span>
+<span class="fc" id="L267">		doc.setHtmlData(htmlData);</span>
+<span class="fc" id="L268">		doc.setPerexImage(perexImage);</span>
+<span class="fc" id="L269">		doc.setPerexPlace(perexPlace);</span>
+<span class="fc" id="L270">		doc.setPerexGroupString(getPerexGroupString());</span>
+<span class="fc" id="L271">		doc.setShowInMenu(showInMenu);</span>
+<span class="fc" id="L272">		doc.setEventDateString(eventDate);</span>
+<span class="fc" id="L273">		doc.setEventTimeString(eventTime);</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(eventDate)) doc.setEventDate(DB.getTimestamp(eventDate, eventTime));</span>
+<span class="fc" id="L275">		doc.setVirtualPath(virtualPath);</span>
+
+<span class="fc" id="L277">		doc.setFieldA(fieldA);</span>
+<span class="fc" id="L278">		doc.setFieldB(fieldB);</span>
+<span class="fc" id="L279">		doc.setFieldC(fieldC);</span>
+<span class="fc" id="L280">		doc.setFieldD(fieldD);</span>
+<span class="fc" id="L281">		doc.setFieldE(fieldE);</span>
+<span class="fc" id="L282">		doc.setFieldF(fieldF);</span>
+<span class="fc" id="L283">		doc.setFieldG(fieldG);</span>
+<span class="fc" id="L284">		doc.setFieldH(fieldH);</span>
+<span class="fc" id="L285">		doc.setFieldI(fieldI);</span>
+<span class="fc" id="L286">		doc.setFieldJ(fieldJ);</span>
+<span class="fc" id="L287">		doc.setFieldK(fieldK);</span>
+<span class="fc" id="L288">		doc.setFieldL(fieldL);</span>
+
+<span class="fc" id="L290">		doc.setDisableAfterEnd(disableAfterEnd);</span>
+
+<span class="fc" id="L292">		doc.setFieldM(fieldM);</span>
+<span class="fc" id="L293">		doc.setFieldN(fieldN);</span>
+<span class="fc" id="L294">		doc.setFieldO(fieldO);</span>
+<span class="fc" id="L295">		doc.setFieldP(fieldP);</span>
+<span class="fc" id="L296">		doc.setFieldQ(fieldQ);</span>
+<span class="fc" id="L297">		doc.setFieldR(fieldR);</span>
+<span class="fc" id="L298">		doc.setFieldS(fieldS);</span>
+<span class="fc" id="L299">		doc.setFieldT(fieldT);</span>
+
+<span class="fc" id="L301">		doc.setRequireSsl(requireSsl);</span>
+
+<span class="fc" id="L303">		doc.setVirtualPath(getVirtualPath());</span>
+
+<span class="fc" id="L305">		doc.setSyncId(syncId);</span>
+
+<span class="fc" id="L307">		return doc;</span>
+	}
+
+	private GroupDetails getLocalSystemGroup() {
+<span class="nc bnc" id="L311" title="All 4 branches missed.">		if (localSystemGroup == null &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
+<span class="nc" id="L312">			localSystemGroup = GroupsDB.getInstance().getLocalSystemGroup();</span>
+		}
+
+<span class="nc" id="L315">		return localSystemGroup;</span>
+	}
+
+	private TemplateDetails getTemplate() {
+<span class="fc bfc" id="L319" title="All 2 branches covered.">		if (template == null) {</span>
+<span class="fc" id="L320">			template = TemplatesDB.getInstance().getTemplate(getTempId());</span>
+		}
+
+<span class="fc" id="L323">		return template;</span>
+	}
+
+	private String getLanguage() {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (language == null) {</span>
+<span class="nc" id="L328">			TemplateDetails temp = getTemplate();</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">			language = temp != null ? temp.getLng() : &quot;sk&quot;;</span>
+		}
+
+<span class="nc" id="L332">		return language;</span>
+	}
+
+
+
+	public GroupDetails getGroup() {
+<span class="nc" id="L338">		return GroupsDB.getInstance().getGroup(getGroupId());</span>
+	}
+
+	public void setGroup(GroupDetails group) {
+<span class="nc" id="L342">		this.group = group;</span>
+<span class="nc" id="L343">	}</span>
+
+	public void setLocalSystemGroup(GroupDetails localSystemGroup) {
+<span class="nc" id="L346">		this.localSystemGroup = localSystemGroup;</span>
+<span class="nc" id="L347">	}</span>
+
+	public String getDomainName() {
+<span class="fc" id="L350">		return domainName;</span>
+	}
+
+	public void setDomainName(String domainName) {
+<span class="fc" id="L354">		this.domainName = domainName;</span>
+<span class="fc" id="L355">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  input  Description of the Parameter
+	 *@return        Description of the Return Value
+	 */
+	private String recode(String input)
+	{
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">		if (input == null)</span>
+		{
+<span class="nc" id="L367">			return (&quot;&quot;);</span>
+		}
+		//Logger.println(this,&quot;Recoding: &quot;+input);
+<span class="fc" id="L370">		return (input.trim());</span>
+	}
+
+	/**
+	 *  Gets the title attribute of the EditorForm object
+	 *
+	 *@return    The title value
+	 */
+	public String getTitle()
+	{
+<span class="fc" id="L380">		return title;</span>
+	}
+
+	/**
+	 *  Sets the title attribute of the EditorForm object
+	 *
+	 *@param  newTitle  The new title value
+	 */
+	public void setTitle(String newTitle)
+	{
+<span class="pc bpc" id="L390" title="2 of 4 branches missed.">		if (newTitle == null || newTitle.length() &lt; 1)</span>
+		{
+<span class="nc" id="L392">			title = &quot;unknown&quot;;</span>
+		}
+		else
+		{
+<span class="fc" id="L396">			title = recode(newTitle);</span>
+		}
+<span class="fc" id="L398">	}</span>
+
+	/**
+	 *  Gets the theFile attribute of the EditorForm object
+	 *
+	 *@return    The theFile value
+	 */
+	public FormFile getTheFile()
+	{
+<span class="fc" id="L407">		return theFile;</span>
+	}
+
+	/**
+	 *  Sets the theFile attribute of the EditorForm object
+	 *
+	 *@param  theFile  The new theFile value
+	 */
+	public void setTheFile(FormFile theFile)
+	{
+<span class="nc" id="L417">		this.theFile = theFile;</span>
+<span class="nc" id="L418">	}</span>
+
+	/**
+	 *  Sets the docId attribute of the EditorForm object
+	 *
+	 *@param  newDocId  The new docId value
+	 */
+	public void setDocId(int newDocId)
+	{
+<span class="fc" id="L427">		docId = newDocId;</span>
+<span class="fc" id="L428">	}</span>
+
+	/**
+	 *  Gets the docId attribute of the EditorForm object
+	 *
+	 *@return    The docId value
+	 */
+	public int getDocId()
+	{
+<span class="fc" id="L437">		return docId;</span>
+	}
+
+	/**
+	 *  Sets the copyMediaFrom attribute of the EditorForm object
+	 *
+	 *@param  copyMediaFrom  The new value
+	 */
+	public void setCopyMediaFrom(int copyMediaFrom)
+	{
+<span class="nc" id="L447">		this.copyMediaFrom = copyMediaFrom;</span>
+<span class="nc" id="L448">	}</span>
+
+	/**
+	 *  Gets the docId attribute of the EditorForm object
+	 *
+	 *@return    The docId value
+	 */
+	public int getCopyMediaFrom()
+	{
+<span class="nc" id="L457">		return copyMediaFrom;</span>
+	}
+
+	/**
+	 *  Sets the externalLink attribute of the EditorForm object
+	 *
+	 *@param  newExternalLink  The new externalLink value
+	 */
+	public void setExternalLink(String newExternalLink)
+	{
+<span class="fc" id="L467">		externalLink = recode(newExternalLink);</span>
+<span class="fc" id="L468">	}</span>
+
+	/**
+	 *  Gets the externalLink attribute of the EditorForm object
+	 *
+	 *@return    The externalLink value
+	 */
+	public String getExternalLink()
+	{
+<span class="fc" id="L477">		return externalLink;</span>
+	}
+
+	/**
+	 *  Sets the data attribute of the EditorForm object
+	 *
+	 *@param  newData  The new data value
+	 */
+	public void setData(String newData)
+	{
+<span class="fc" id="L487">		data = recode(newData);</span>
+<span class="fc" id="L488">	}</span>
+
+	/**
+	 *  Gets the data attribute of the EditorForm object
+	 *
+	 *@return    The data value
+	 */
+	@JsonIgnore
+	public String getDataUntouched()
+	{
+
+		// owrapovanie  pre cloud
+
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+		{
+<span class="nc bnc" id="L503" title="All 8 branches missed.">			if (getDocId() &lt; 1 &amp;&amp; (Tools.isEmpty(data) || &quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;.equals(data)) &amp;&amp; &quot;Footer&quot;.equals(getTitle())==false)</span>
+			{
+<span class="nc" id="L505">				data = &quot;&lt;section&gt;&quot;+</span>
+				 &quot;&lt;div class=\&quot;container\&quot;&gt;&quot;+
+				&quot;&lt;article&gt;&quot;+
+<span class="nc" id="L508">				&quot;&lt;h1&gt;&quot;+getTitle()+&quot;&lt;/h1&gt;\n&lt;p&gt;Text&lt;/p&gt;&quot;+</span>
+				&quot;&lt;/article&gt;&quot;+
+				&quot;&lt;/div&gt;&quot;+
+				&quot;&lt;/section&gt;&quot;+
+				&quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;; // medzera pre pripad ze si uzivatel odstrani sekciu
+			}
+		}
+
+
+
+<span class="fc" id="L518">		return data;</span>
+	}
+
+	public String getData() {
+<span class="fc" id="L522">		return recodeChars(getDataUntouched());</span>
+	}
+
+	private String recodeChars(String docData){
+<span class="fc" id="L526">		String result = docData;</span>
+
+		/* toto pre rest sluzbu uz nepotrebujeme
+		result = Tools.replace(result, &quot;&lt;textarea&quot;, &quot;|textarea&quot;);
+		result = Tools.replace(result, &quot;&lt;/textarea&quot;, &quot;|/textarea&quot;);
+		result = Tools.replace(result, &quot;&lt;TEXTAREA&quot;, &quot;|textarea&quot;);
+		result = Tools.replace(result, &quot;&lt;/TEXTAREA&quot;, &quot;|/textarea&quot;);
+		result = Tools.replace(result, &quot;&lt;TextArea&quot;, &quot;|textarea&quot;);
+		result = Tools.replace(result, &quot;&lt;/TextArea&quot;, &quot;|/textarea&quot;);
+		result = Tools.replace(result, &quot;&amp;lt;&quot;, &quot;|lt;|&quot;);
+		result = Tools.replace(result, &quot;&amp;LT;&quot;, &quot;|LT;|&quot;);
+		result = Tools.replace(result, &quot;&amp;gt;&quot;, &quot;|gt;|&quot;);
+		result = Tools.replace(result, &quot;&amp;GT;&quot;, &quot;|GT;|&quot;);
+		*/
+
+<span class="pc bpc" id="L541" title="1 of 2 branches missed.">		if (result .indexOf(&quot;!INCLUDE(&quot;)!=-1)</span>
+		{
+<span class="nc" id="L543">			result  = Tools.replace(result , &quot;&lt;article&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L544">			result  = Tools.replace(result , &quot;&lt;/article&gt;&quot;, &quot;&quot;);</span>
+		}
+
+<span class="fc" id="L547">		return result;</span>
+	}
+
+	/**
+	 *  Sets the recode attribute of the EditorForm object
+	 *
+	 *@param  newRecode  The new recode value
+	 */
+	public void setRecode(boolean newRecode)
+	{
+<span class="fc" id="L557">		recode = newRecode;</span>
+<span class="fc" id="L558">	}</span>
+
+	/**
+	 *  Gets the recode attribute of the EditorForm object
+	 *
+	 *@return    The recode value
+	 */
+	public boolean isRecode()
+	{
+<span class="nc" id="L567">		return recode;</span>
+	}
+
+	/**
+	 *  Sets the navbar attribute of the EditorForm object
+	 *
+	 *@param  newNavbar  The new navbar value
+	 */
+	public void setNavbar(String newNavbar)
+	{
+<span class="fc" id="L577">		navbar = recode(newNavbar);</span>
+<span class="fc" id="L578">	}</span>
+
+	/**
+	 *  Gets the navbar attribute of the EditorForm object
+	 *
+	 *@return    The navbar value
+	 */
+	public String getNavbar()
+	{
+<span class="pc bpc" id="L587" title="2 of 4 branches missed.">		if (navbar == null || navbar.length() &lt; 1)</span>
+		{
+<span class="nc" id="L589">			return (getTitle());</span>
+		}
+<span class="fc" id="L591">		return navbar;</span>
+	}
+
+	/**
+	 *  Sets the dateCreated attribute of the EditorForm object
+	 *
+	 *@param  newDateCreated  The new dateCreated value
+	 */
+	public void setDateCreated(String newDateCreated)
+	{
+<span class="fc" id="L601">		dateCreated = newDateCreated;</span>
+<span class="fc" id="L602">	}</span>
+
+	/**
+	 *  Gets the dateCreated attribute of the EditorForm object
+	 *
+	 *@return    The dateCreated value
+	 */
+	public String getDateCreated()
+	{
+<span class="nc" id="L611">		return dateCreated;</span>
+	}
+
+	/**
+	 *  Sets the publishStart attribute of the EditorForm object
+	 *
+	 *@param  newPublishStart  The new publishStart value
+	 */
+	public void setPublishStart(String newPublishStart)
+	{
+<span class="fc" id="L621">		publishStart = newPublishStart;</span>
+<span class="fc" id="L622">	}</span>
+
+	/**
+	 *  Gets the publishStart attribute of the EditorForm object
+	 *
+	 *@return    The publishStart value
+	 */
+	public String getPublishStart()
+	{
+<span class="pc bpc" id="L631" title="1 of 4 branches missed.">		if (Tools.isEmpty(publishStart) &amp;&amp; Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;))</span>
+		{
+<span class="fc" id="L633">			setPublishStart(Tools.formatDate(Tools.getNow()));</span>
+		}
+
+<span class="fc" id="L636">		return publishStart;</span>
+	}
+
+	/**
+	 *
+	 * @param newPublishStartTime
+	 */
+
+	public void setPublishStartTime(String newPublishStartTime)
+	{
+<span class="fc" id="L646">		publishStartTime = newPublishStartTime;</span>
+<span class="fc" id="L647">	}</span>
+
+	/**
+	 *
+	 * @return The publishStartTime Value
+	 */
+
+	 public String getPublishStartTime()
+	 {
+<span class="pc bpc" id="L656" title="2 of 6 branches missed.">		 if (Tools.isEmpty(publishStartTime) &amp;&amp; Tools.isNotEmpty(publishStart) &amp;&amp; Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;))</span>
+		 {
+<span class="fc" id="L658">			 publishStartTime = Tools.formatTime(Tools.getNow());</span>
+		 }
+
+<span class="pc bpc" id="L661" title="3 of 4 branches missed.">		 if (Tools.isEmpty(publishStartTime) &amp;&amp; Tools.isNotEmpty(publishStart)) {</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">		 	if (Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;)) {</span>
+<span class="nc" id="L663">				publishStartTime = Tools.formatTime(Tools.getNow());</span>
+			}
+			else {
+<span class="nc" id="L666">				publishStartTime = &quot;6:00&quot;;</span>
+			}
+		 }
+
+<span class="fc" id="L670">		 return publishStartTime;</span>
+	 }
+	/**
+	 *  Sets the publishEnd attribute of the EditorForm object
+	 *
+	 *@param  newPublishEnd  The new publishEnd value
+	 */
+	public void setPublishEnd(String newPublishEnd)
+	{
+<span class="fc" id="L679">		publishEnd = newPublishEnd;</span>
+<span class="fc" id="L680">	}</span>
+
+	/**
+	 *  Gets the publishEnd attribute of the EditorForm object
+	 *
+	 *@return    The publishEnd value
+	 */
+	public String getPublishEnd()
+	{
+<span class="fc" id="L689">		return publishEnd;</span>
+	}
+
+	/**
+	 *  Sets the groupId attribute of the EditorForm object
+	 *
+	 *@param  newGroupId  The new groupId value
+	 */
+	public void setGroupId(int newGroupId)
+	{
+<span class="fc" id="L699">		groupId = newGroupId;</span>
+<span class="fc" id="L700">	}</span>
+
+	/**
+	 *  Gets the groupId attribute of the EditorForm object
+	 *
+	 *@return    The groupId value
+	 */
+	public int getGroupId()
+	{
+<span class="fc" id="L709">		return groupId;</span>
+	}
+
+	/**
+	 *  Sets the tempId attribute of the EditorForm object
+	 *
+	 *@param  newTempId  The new tempId value
+	 */
+	public void setTempId(int newTempId)
+	{
+<span class="fc" id="L719">		tempId = newTempId;</span>
+<span class="fc" id="L720">	}</span>
+
+	/**
+	 *  Gets the tempId attribute of the EditorForm object
+	 *
+	 *@return    The tempId value
+	 */
+	public int getTempId()
+	{
+<span class="fc" id="L729">		return tempId;</span>
+	}
+
+	/**
+	 *  Sets the searchable attribute of the EditorForm object
+	 *
+	 *@param  newSearchable  The new searchable value
+	 */
+	public void setSearchable(boolean newSearchable)
+	{
+<span class="fc" id="L739">		searchable = newSearchable;</span>
+<span class="fc" id="L740">	}</span>
+
+	/**
+	 *  Gets the searchable attribute of the EditorForm object
+	 *
+	 *@return    The searchable value
+	 */
+	public boolean isSearchable()
+	{
+<span class="fc" id="L749">		return searchable;</span>
+	}
+
+	/**
+	 *  Sets the available attribute of the EditorForm object
+	 *
+	 *@param  newAvailable  The new available value
+	 */
+	public void setAvailable(boolean newAvailable)
+	{
+<span class="fc" id="L759">		available = newAvailable;</span>
+<span class="fc" id="L760">	}</span>
+
+	/**
+	 *  Gets the available attribute of the EditorForm object
+	 *
+	 *@return    The available value
+	 */
+	public boolean isAvailable()
+	{
+<span class="fc" id="L769">		return available;</span>
+	}
+
+	/**
+	 *  Sets the cacheable attribute of the EditorForm object
+	 *
+	 *@param  newCacheable  The new cacheable value
+	 */
+	public void setCacheable(boolean newCacheable)
+	{
+<span class="fc" id="L779">		cacheable = newCacheable;</span>
+<span class="fc" id="L780">	}</span>
+
+	/**
+	 *  Gets the cacheable attribute of the EditorForm object
+	 *
+	 *@return    The cacheable value
+	 */
+	public boolean isCacheable()
+	{
+<span class="fc" id="L789">		return cacheable;</span>
+	}
+
+	/**
+	 *
+	 * @param newPublicable
+	 */
+
+	public void setPublicable(boolean newPublicable)
+	{
+<span class="fc" id="L799">		publicable = newPublicable;</span>
+<span class="fc" id="L800">	}</span>
+
+	/**
+	 *
+	 * @return publicable
+	 */
+	public boolean isPublicable()
+	{
+<span class="fc" id="L808">		return publicable;</span>
+	}
+
+	/**
+	 *  Sets the saveAsNew attribute of the EditorForm object
+	 *
+	 *@param  newSaveAsNew  The new saveAsNew value
+	 */
+	public void setSaveAsNew(int newSaveAsNew)
+	{
+<span class="nc" id="L818">		saveAsNew = newSaveAsNew;</span>
+<span class="nc" id="L819">	}</span>
+
+	/**
+	 *  Gets the saveAsNew attribute of the EditorForm object
+	 *
+	 *@return    The saveAsNew value
+	 */
+	public int getSaveAsNew()
+	{
+<span class="nc" id="L828">		return saveAsNew;</span>
+	}
+
+	/**
+	 *  Sets the fileName attribute of the EditorForm object
+	 *
+	 *@param  newFileName  The new fileName value
+	 */
+	public void setFileName(String newFileName)
+	{
+<span class="fc" id="L838">		fileName = newFileName;</span>
+<span class="fc" id="L839">	}</span>
+
+	/**
+	 *  Gets the fileName attribute of the EditorForm object
+	 *
+	 *@return    The fileName value
+	 */
+	public String getFileName()
+	{
+<span class="fc" id="L848">		return fileName;</span>
+	}
+
+	/**
+	 *  Sets the groupName attribute of the EditorForm object
+	 *
+	 *@param  groupName  The new groupName value
+	 */
+	public void setGroupName(String groupName)
+	{
+<span class="fc" id="L858">		this.groupName = recode(groupName);</span>
+<span class="fc" id="L859">	}</span>
+
+	/**
+	 *  Gets the groupName attribute of the EditorForm object
+	 *
+	 *@return    The groupName value
+	 */
+	public String getGroupName()
+	{
+<span class="nc" id="L868">		return groupName;</span>
+	}
+
+	/**
+	 *  Sets the groupIdString attribute of the EditorForm object
+	 *
+	 *@param  groupIdString  The new groupIdString value
+	 */
+	public void setGroupIdString(String groupIdString)
+	{
+		try
+		{
+<span class="nc" id="L880">			int id = Integer.parseInt(groupIdString.trim());</span>
+<span class="nc" id="L881">			groupId = id;</span>
+			//Logger.println(this,&quot;groupIdString=&quot;+groupIdString+&quot; id=&quot;+id);
+		}
+<span class="nc" id="L884">		catch (Exception ex)</span>
+		{
+
+<span class="nc" id="L887">		}</span>
+<span class="nc" id="L888">	}</span>
+
+	/**
+	 *  Gets the groupIdString attribute of the EditorForm object
+	 *
+	 *@return    The groupIdString value
+	 */
+	public String getGroupIdString()
+	{
+<span class="nc" id="L897">		return (Integer.toString(groupId));</span>
+	}
+
+	/**
+	 *  Sets the sortPriority attribute of the EditorForm object
+	 *
+	 *@param  sortPriority  The new sortPriority value
+	 */
+	public void setSortPriority(int sortPriority)
+	{
+<span class="fc" id="L907">		this.sortPriority = sortPriority;</span>
+<span class="fc" id="L908">	}</span>
+
+	/**
+	 *  Gets the sortPriority attribute of the EditorForm object
+	 *
+	 *@return    The sortPriority value
+	 */
+	public int getSortPriority()
+	{
+<span class="fc" id="L917">		return sortPriority;</span>
+	}
+
+	/**
+	 *  Sets the headerDocId attribute of the EditorForm object
+	 *
+	 *@param  headerDocId  The new headerDocId value
+	 */
+	public void setHeaderDocId(int headerDocId)
+	{
+<span class="fc" id="L927">		this.headerDocId = headerDocId;</span>
+<span class="fc" id="L928">	}</span>
+
+	/**
+	 *  Gets the headerDocId attribute of the EditorForm object
+	 *
+	 *@return    The headerDocId value
+	 */
+	public int getHeaderDocId()
+	{
+<span class="fc" id="L937">		return headerDocId;</span>
+	}
+
+	/**
+	 *  Sets the footerDocId attribute of the EditorForm object
+	 *
+	 *@param  footerDocId  The new footerDocId value
+	 */
+	public void setFooterDocId(int footerDocId)
+	{
+<span class="fc" id="L947">		this.footerDocId = footerDocId;</span>
+<span class="fc" id="L948">	}</span>
+
+	/**
+	 *  Gets the footerDocId attribute of the EditorForm object
+	 *
+	 *@return    The footerDocId value
+	 */
+	public int getFooterDocId()
+	{
+<span class="fc" id="L957">		return footerDocId;</span>
+	}
+
+	/**
+	 *  Sets the publish attribute of the EditorForm object
+	 *
+	 *@param  publish  The new publish value
+	 */
+	public void setPublish(String publish)
+	{
+<span class="fc" id="L967">		this.publish = publish;</span>
+<span class="fc" id="L968">	}</span>
+
+	/**
+	 *  Gets the publish attribute of the EditorForm object
+	 *
+	 *@return    The publish value
+	 */
+	public String getPublish()
+	{
+<span class="fc" id="L977">		return publish;</span>
+	}
+
+	/**
+	 *  Sets the menuDocId attribute of the EditorForm object
+	 *
+	 *@param  menuDocId  The new menuDocId value
+	 */
+	public void setMenuDocId(int menuDocId)
+	{
+<span class="fc" id="L987">		this.menuDocId = menuDocId;</span>
+<span class="fc" id="L988">	}</span>
+
+	/**
+	 *  Gets the menuDocId attribute of the EditorForm object
+	 *
+	 *@return    The menuDocId value
+	 */
+	public int getMenuDocId()
+	{
+<span class="fc" id="L997">		return menuDocId;</span>
+	}
+
+	/**
+	 *  Sets the authorId attribute of the EditorForm object
+	 *
+	 *@param  authorId  The new authorId value
+	 */
+	public void setAuthorId(int authorId)
+	{
+<span class="fc" id="L1007">		this.authorId = authorId;</span>
+<span class="fc" id="L1008">	}</span>
+
+	/**
+	 *  Gets the authorId attribute of the EditorForm object
+	 *
+	 *@return    The authorId value
+	 */
+	public int getAuthorId()
+	{
+<span class="fc" id="L1017">		return authorId;</span>
+	}
+
+	/**
+	 *  Sets the approveHistoryId attribute of the EditorForm object
+	 *
+	 *@param  approveHistoryId  The new approveHistoryId value
+	 */
+	public void setApproveHistoryId(int approveHistoryId)
+	{
+<span class="nc" id="L1027">		this.approveHistoryId = approveHistoryId;</span>
+<span class="nc" id="L1028">	}</span>
+
+	/**
+	 *  Gets the approveHistoryId attribute of the EditorForm object
+	 *
+	 *@return    The approveHistoryId value
+	 */
+	public int getApproveHistoryId()
+	{
+<span class="fc" id="L1037">		return approveHistoryId;</span>
+	}
+
+	/**
+	 *  Sets the passwordProtected attribute of the EditorForm object
+	 *
+	 *@param  passwordProtected  The new passwordProtected value
+	 */
+	public void setPasswordProtected(int[] passwordProtected)
+	{
+<span class="nc" id="L1047">		this.passwordProtected = passwordProtected;</span>
+<span class="nc" id="L1048">	}</span>
+
+	/**
+	 *  Sets the passwordProtectedString attribute of the EditorForm object
+	 *
+	 *@param  passwordProtectedString  The new passwordProtectedString value
+	 */
+	public void setPasswordProtectedString(String passwordProtectedString)
+	{
+<span class="fc bfc" id="L1057" title="All 4 branches covered.">		if (passwordProtectedString == null || passwordProtectedString.length() &lt; 1)</span>
+		{
+<span class="fc" id="L1059">			passwordProtected = new int[0];</span>
+<span class="fc" id="L1060">			return;</span>
+		}
+		//najskor zisti pocet
+		try
+		{
+<span class="fc" id="L1065">			StringTokenizer st = new StringTokenizer(passwordProtectedString, &quot;,&quot;);</span>
+<span class="fc" id="L1066">			int len = st.countTokens();</span>
+<span class="fc" id="L1067">			passwordProtected = new int[len];</span>
+<span class="fc" id="L1068">			int i = 0;</span>
+<span class="fc bfc" id="L1069" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L1071">				passwordProtected[i] = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L1072">				i++;</span>
+			}
+		}
+<span class="nc" id="L1075">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1077">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1078">		}</span>
+<span class="fc" id="L1079">	}</span>
+
+	/**
+	 *  Gets the passwordProtected attribute of the EditorForm object
+	 *
+	 *@return    The passwordProtected value
+	 */
+	public int[] getPasswordProtected()
+	{
+<span class="nc" id="L1088">		return passwordProtected;</span>
+	}
+
+	/**
+	 *  Gets the passwordProtectedString attribute of the EditorForm object
+	 *
+	 *@return    The passwordProtectedString value
+	 */
+	public String getPasswordProtectedString()
+	{
+<span class="pc bpc" id="L1098" title="1 of 2 branches missed.">		if (passwordProtected == null)</span>
+		{
+<span class="nc" id="L1100">			return(null);</span>
+		}
+<span class="fc" id="L1102">		int size = passwordProtected.length;</span>
+<span class="pc bpc" id="L1103" title="1 of 2 branches missed.">		if (size == 0)</span>
+		{
+<span class="fc" id="L1105">			return (null);</span>
+		}
+<span class="nc" id="L1107">		String out = null;</span>
+		int i;
+<span class="nc bnc" id="L1109" title="All 2 branches missed.">		for (i = 0; i &lt; size; i++)</span>
+		{
+<span class="nc bnc" id="L1111" title="All 2 branches missed.">			if (out == null)</span>
+			{
+<span class="nc" id="L1113">				out = Integer.toString(passwordProtected[i]);</span>
+			}
+			else
+			{
+<span class="nc" id="L1117">				out = out + &quot;,&quot; + passwordProtected[i];</span>
+			}
+		}
+<span class="nc" id="L1120">		return (out);</span>
+	}
+
+	public void setHtmlHead(String htmlHead)
+	{
+<span class="fc" id="L1125">		this.htmlHead = htmlHead;</span>
+<span class="fc" id="L1126">	}</span>
+
+	/**
+	 *  Gets the htmlHeader attribute of the EditorForm object
+	 *
+	 *@return    The htmlHeader value
+	 */
+	public String getHtmlHead()
+	{
+<span class="fc" id="L1135">		return htmlHead;</span>
+	}
+
+	/**
+	 *  Sets the htmlData attribute of the EditorForm object
+	 *
+	 *@param  htmlData  The new htmlData value
+	 */
+	public void setHtmlData(String htmlData)
+	{
+<span class="fc" id="L1145">		this.htmlData = htmlData;</span>
+<span class="fc" id="L1146">	}</span>
+
+	/**
+	 *  Gets the htmlData attribute of the EditorForm object
+	 *
+	 *@return    The htmlData value
+	 */
+	public String getHtmlData()
+	{
+<span class="fc" id="L1155">		return htmlData;</span>
+	}
+
+	public void setPublicableToZero(int newPublicableToZero)
+	{
+<span class="fc" id="L1160">		 publicableToZero = newPublicableToZero;</span>
+<span class="fc" id="L1161">	}</span>
+
+	public int getPublicableToZero()
+	{
+<span class="fc" id="L1165">		 return publicableToZero;</span>
+	}
+	public void setPublishEndTime(String publishEndTime)
+	{
+<span class="fc" id="L1169">		this.publishEndTime = publishEndTime;</span>
+<span class="fc" id="L1170">	}</span>
+	public String getPublishEndTime()
+	{
+<span class="nc bnc" id="L1173" title="All 4 branches missed.">		if (Tools.isEmpty(publishEndTime) &amp;&amp; Tools.isNotEmpty(publishEnd)) return &quot;23:59&quot;;</span>
+<span class="nc" id="L1174">		return publishEndTime;</span>
+	}
+	public void setPerexImage(String perexImage)
+	{
+<span class="pc bpc" id="L1178" title="1 of 2 branches missed.">		if (perexImage == null) perexImage = &quot;&quot;;</span>
+		//pluskari tam veselo davali nieco ako /thumb/images/gallery/aktuality/domov/2009/03/perex/tatryvysokenebezpecenstvolavin.t.15.3.jpg?w=310&amp;h=310&amp;ip=6
+		try
+		{
+<span class="pc bpc" id="L1182" title="1 of 2 branches missed.">			if (perexImage.startsWith(&quot;/thumb/&quot;))</span>
+			{
+<span class="nc" id="L1184">				perexImage = perexImage.substring(6);</span>
+<span class="nc" id="L1185">				int i = perexImage.indexOf('?');</span>
+<span class="nc bnc" id="L1186" title="All 2 branches missed.">				if (i&gt;0) perexImage = perexImage.substring(0, i);</span>
+			}
+<span class="fc bfc" id="L1188" title="All 2 branches covered.">			if (perexImage.startsWith(&quot;/images/&quot;))</span>
+			{
+<span class="fc" id="L1190">				int i = perexImage.indexOf('?');</span>
+<span class="pc bpc" id="L1191" title="1 of 2 branches missed.">				if (i&gt;0) perexImage = perexImage.substring(0, i);</span>
+			}
+		}
+<span class="nc" id="L1194">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1196">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1197">		}</span>
+
+<span class="fc" id="L1199">		this.perexImage = perexImage;</span>
+<span class="fc" id="L1200">	}</span>
+	public String getPerexImage()
+	{
+<span class="fc" id="L1203">		return perexImage;</span>
+	}
+	public void setPerexPlace(String perexPlace)
+	{
+<span class="fc" id="L1207">		this.perexPlace = perexPlace;</span>
+<span class="fc" id="L1208">	}</span>
+	public String getPerexPlace()
+	{
+<span class="fc" id="L1211">		return perexPlace;</span>
+	}
+	public void setPerexGroup(String[] perexGroup)
+	{
+<span class="nc" id="L1215">		this.perexGroup = perexGroup;</span>
+<span class="nc" id="L1216">	}</span>
+	public String[] getPerexGroup()
+	{
+<span class="nc" id="L1219">		return perexGroup;</span>
+	}
+
+	public String getPerexGroupString()
+	{
+<span class="fc" id="L1224">		String ret = null;</span>
+		try
+		{
+<span class="pc bpc" id="L1227" title="1 of 2 branches missed.">			if (perexGroup!=null)</span>
+			{
+<span class="fc" id="L1229">				int size = perexGroup.length;</span>
+				int i;
+<span class="pc bpc" id="L1231" title="1 of 2 branches missed.">				for (i=0; i&lt;size; i++)</span>
+				{
+<span class="nc bnc" id="L1233" title="All 2 branches missed.">					if (ret==null) ret = &quot;,&quot; + perexGroup[i];</span>
+<span class="nc" id="L1234">					else ret += &quot;,&quot; + perexGroup[i];</span>
+				}
+<span class="pc bpc" id="L1236" title="1 of 2 branches missed.">				if (ret != null)</span>
+				{
+<span class="nc" id="L1238">					ret += &quot;,&quot;;</span>
+				}
+			}
+		}
+<span class="nc" id="L1242">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1244">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1245">		}</span>
+		//Logger.println(this,&quot;getPerexGroupString=&quot;+ret);
+<span class="fc" id="L1247">		return(ret);</span>
+	}
+
+	public void setPerexGroupString(String perexGroupString)
+	{
+<span class="pc bpc" id="L1252" title="1 of 2 branches missed.">		if (perexGroupString == null)</span>
+		{
+<span class="nc" id="L1254">			perexGroupString = &quot;&quot;;</span>
+		}
+<span class="fc" id="L1256">		StringTokenizer st = new StringTokenizer(perexGroupString, &quot;,&quot;);</span>
+		try
+		{
+<span class="fc" id="L1259">			perexGroup = new String[st.countTokens()];</span>
+<span class="fc" id="L1260">			int i=0;</span>
+<span class="fc bfc" id="L1261" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L1263">				int pGroupId = Tools.getIntValue(st.nextToken().trim(), -1);</span>
+<span class="fc" id="L1264">				perexGroup[i++] = Integer.toString(pGroupId);</span>
+<span class="fc" id="L1265">			}</span>
+		}
+<span class="nc" id="L1267">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1269">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1270">		}</span>
+<span class="fc" id="L1271">	}</span>
+
+	public boolean isShowInMenu()
+	{
+<span class="fc" id="L1275">		return showInMenu;</span>
+	}
+	public void setShowInMenu(boolean showInMenu)
+	{
+<span class="fc" id="L1279">		this.showInMenu = showInMenu;</span>
+<span class="fc" id="L1280">	}</span>
+	public void setEventDate(String eventDate)
+	{
+<span class="fc" id="L1283">		this.eventDate = eventDate;</span>
+<span class="fc" id="L1284">	}</span>
+	public String getEventDate()
+	{
+<span class="fc" id="L1287">		return eventDate;</span>
+	}
+	public void setEventTime(String eventTime)
+	{
+<span class="fc" id="L1291">		this.eventTime = eventTime;</span>
+<span class="fc" id="L1292">	}</span>
+	public String getEventTime()
+	{
+<span class="fc" id="L1295">		return eventTime;</span>
+	}
+	public String getVirtualPath()
+	{
+<span class="pc bpc" id="L1299" title="1 of 2 branches missed.">		if (virtualPath == null) virtualPath = &quot;&quot;;</span>
+<span class="fc" id="L1300">		return virtualPath;</span>
+	}
+	public void setVirtualPath(String virtualPath)
+	{
+<span class="fc" id="L1304">		this.virtualPath = virtualPath;</span>
+<span class="fc" id="L1305">	}</span>
+
+	public int getRightMenuDocId()
+	{
+<span class="fc" id="L1309">		return rightMenuDocId;</span>
+	}
+	public void setRightMenuDocId(int rightMenuDocId)
+	{
+<span class="fc" id="L1313">		this.rightMenuDocId = rightMenuDocId;</span>
+<span class="fc" id="L1314">	}</span>
+	public String getFieldA()
+	{
+<span class="fc" id="L1317">		return fieldA;</span>
+	}
+	public void setFieldA(String fieldA)
+	{
+<span class="fc" id="L1321">		this.fieldA = fieldA;</span>
+<span class="fc" id="L1322">	}</span>
+	public String getFieldB()
+	{
+<span class="fc" id="L1325">		return fieldB;</span>
+	}
+	public void setFieldB(String fieldB)
+	{
+<span class="fc" id="L1329">		this.fieldB = fieldB;</span>
+<span class="fc" id="L1330">	}</span>
+	public String getFieldC()
+	{
+<span class="fc" id="L1333">		return fieldC;</span>
+	}
+	public void setFieldC(String fieldC)
+	{
+<span class="fc" id="L1337">		this.fieldC = fieldC;</span>
+<span class="fc" id="L1338">	}</span>
+	public String getFieldD()
+	{
+<span class="fc" id="L1341">		return fieldD;</span>
+	}
+	public void setFieldD(String fieldD)
+	{
+<span class="fc" id="L1345">		this.fieldD = fieldD;</span>
+<span class="fc" id="L1346">	}</span>
+	public String getFieldE()
+	{
+<span class="fc" id="L1349">		return fieldE;</span>
+	}
+	public void setFieldE(String fieldE)
+	{
+<span class="fc" id="L1353">		this.fieldE = fieldE;</span>
+<span class="fc" id="L1354">	}</span>
+	public String getFieldF()
+	{
+<span class="fc" id="L1357">		return fieldF;</span>
+	}
+	public void setFieldF(String fieldF)
+	{
+<span class="fc" id="L1361">		this.fieldF = fieldF;</span>
+<span class="fc" id="L1362">	}</span>
+	/**
+	 * @return Returns the fieldG.
+	 */
+	public String getFieldG()
+	{
+<span class="fc" id="L1368">		return fieldG;</span>
+	}
+	/**
+	 * @param fieldG The fieldG to set.
+	 */
+	public void setFieldG(String fieldG)
+	{
+<span class="fc" id="L1375">		this.fieldG = fieldG;</span>
+<span class="fc" id="L1376">	}</span>
+	/**
+	 * @return Returns the fieldH.
+	 */
+	public String getFieldH()
+	{
+<span class="fc" id="L1382">		return fieldH;</span>
+	}
+	/**
+	 * @param fieldH The fieldH to set.
+	 */
+	public void setFieldH(String fieldH)
+	{
+<span class="fc" id="L1389">		this.fieldH = fieldH;</span>
+<span class="fc" id="L1390">	}</span>
+	/**
+	 * @return Returns the fieldI.
+	 */
+	public String getFieldI()
+	{
+<span class="fc" id="L1396">		return fieldI;</span>
+	}
+	/**
+	 * @param fieldI The fieldI to set.
+	 */
+	public void setFieldI(String fieldI)
+	{
+<span class="fc" id="L1403">		this.fieldI = fieldI;</span>
+<span class="fc" id="L1404">	}</span>
+	/**
+	 * @return Returns the fieldJ.
+	 */
+	public String getFieldJ()
+	{
+<span class="fc" id="L1410">		return fieldJ;</span>
+	}
+	/**
+	 * @param fieldJ The fieldJ to set.
+	 */
+	public void setFieldJ(String fieldJ)
+	{
+<span class="fc" id="L1417">		this.fieldJ = fieldJ;</span>
+<span class="fc" id="L1418">	}</span>
+	/**
+	 * @return Returns the fieldK.
+	 */
+	public String getFieldK()
+	{
+<span class="fc" id="L1424">		return fieldK;</span>
+	}
+	/**
+	 * @param fieldK The fieldK to set.
+	 */
+	public void setFieldK(String fieldK)
+	{
+<span class="fc" id="L1431">		this.fieldK = fieldK;</span>
+<span class="fc" id="L1432">	}</span>
+	/**
+	 * @return Returns the fieldL.
+	 */
+	public String getFieldL()
+	{
+<span class="fc" id="L1438">		return fieldL;</span>
+	}
+	/**
+	 * @param fieldL The fieldL to set.
+	 */
+	public void setFieldL(String fieldL)
+	{
+<span class="fc" id="L1445">		this.fieldL = fieldL;</span>
+<span class="fc" id="L1446">	}</span>
+
+	public boolean isDisableAfterEnd()
+	{
+<span class="fc" id="L1450">		return disableAfterEnd;</span>
+	}
+
+	public void setDisableAfterEnd(boolean disableAfterEnd)
+	{
+<span class="fc" id="L1455">		this.disableAfterEnd = disableAfterEnd;</span>
+<span class="fc" id="L1456">	}</span>
+
+	public String getFieldM()
+	{
+<span class="fc" id="L1460">		return fieldM;</span>
+	}
+
+	public void setFieldM(String fieldM)
+	{
+<span class="fc" id="L1465">		this.fieldM = fieldM;</span>
+<span class="fc" id="L1466">	}</span>
+
+	public String getFieldN()
+	{
+<span class="fc" id="L1470">		return fieldN;</span>
+	}
+
+	public void setFieldN(String fieldN)
+	{
+<span class="fc" id="L1475">		this.fieldN = fieldN;</span>
+<span class="fc" id="L1476">	}</span>
+
+	public String getFieldO()
+	{
+<span class="fc" id="L1480">		return fieldO;</span>
+	}
+
+	public void setFieldO(String fieldO)
+	{
+<span class="fc" id="L1485">		this.fieldO = fieldO;</span>
+<span class="fc" id="L1486">	}</span>
+
+	public String getFieldP()
+	{
+<span class="fc" id="L1490">		return fieldP;</span>
+	}
+
+	public void setFieldP(String fieldP)
+	{
+<span class="fc" id="L1495">		this.fieldP = fieldP;</span>
+<span class="fc" id="L1496">	}</span>
+
+	public String getFieldQ()
+	{
+<span class="fc" id="L1500">		return fieldQ;</span>
+	}
+
+	public void setFieldQ(String fieldQ)
+	{
+<span class="fc" id="L1505">		this.fieldQ = fieldQ;</span>
+<span class="fc" id="L1506">	}</span>
+
+	public String getFieldR()
+	{
+<span class="fc" id="L1510">		return fieldR;</span>
+	}
+
+	public void setFieldR(String fieldR)
+	{
+<span class="fc" id="L1515">		this.fieldR = fieldR;</span>
+<span class="fc" id="L1516">	}</span>
+
+	public String getFieldS()
+	{
+<span class="fc" id="L1520">		return fieldS;</span>
+	}
+
+	public void setFieldS(String fieldS)
+	{
+<span class="fc" id="L1525">		this.fieldS = fieldS;</span>
+<span class="fc" id="L1526">	}</span>
+
+	public String getFieldT()
+	{
+<span class="fc" id="L1530">		return fieldT;</span>
+	}
+
+	public void setFieldT(String fieldT)
+	{
+<span class="fc" id="L1535">		this.fieldT = fieldT;</span>
+<span class="fc" id="L1536">	}</span>
+
+	public boolean isRequireSsl()
+	{
+<span class="fc" id="L1540">		return requireSsl;</span>
+	}
+
+	public void setRequireSsl(boolean requireSsl)
+	{
+<span class="fc" id="L1545">		this.requireSsl = requireSsl;</span>
+<span class="fc" id="L1546">	}</span>
+
+	public int getLastDocId()
+	{
+<span class="nc bnc" id="L1550" title="All 2 branches missed.">		if (lastDocId &lt; 1) return docId;</span>
+<span class="nc" id="L1551">		return lastDocId;</span>
+	}
+
+	public void setLastDocId(int lastDocId)
+	{
+<span class="fc" id="L1556">		this.lastDocId = lastDocId;</span>
+<span class="fc" id="L1557">	}</span>
+
+	public String getNote()
+	{
+<span class="fc" id="L1561">		return ResponseUtils.filter(getNoteUntouched());</span>
+	}
+
+	@JsonIgnore
+	public String getNoteUntouched()
+	{
+<span class="fc" id="L1567">		return note;</span>
+	}
+
+	public void setNote(String note)
+	{
+<span class="fc" id="L1572">		this.note = note;</span>
+<span class="fc" id="L1573">	}</span>
+
+	public int getHistoryId() {
+<span class="nc" id="L1576">		return historyId;</span>
+	}
+
+	public void setHistoryId(int historyId) {
+<span class="fc" id="L1580">		this.historyId = historyId;</span>
+<span class="fc" id="L1581">	}</span>
+
+	public String getPathForTree() {
+<span class="nc" id="L1584">		int lastGroupId = 0;</span>
+
+<span class="nc bnc" id="L1586" title="All 2 branches missed.">		if(getDocId() != getLastDocId()) {</span>
+<span class="nc" id="L1587">			lastGroupId = DocDB.getInstance().getBasicDocDetails(getLastDocId(), true).getGroupId();</span>
+		}
+		else {
+<span class="nc" id="L1590">			lastGroupId = getGroupId();</span>
+		}
+
+<span class="nc" id="L1593">		return GroupsDB.getInstance().getParents(lastGroupId);</span>
+	}
+
+	public boolean showInMenuHide() {
+<span class="nc bnc" id="L1597" title="All 2 branches missed.">		return GroupsDB.getInstance().getGroup(getGroupId()).getMenuType() != GroupDetails.MENU_TYPE_NORMAL;</span>
+	}
+
+	public List&lt;Map&lt;String, Object&gt;&gt; getDocAtrs() {
+<span class="nc" id="L1601">		return docAtrs;</span>
+	}
+
+	public void setDocAtrs(List&lt;Map&lt;String, Object&gt;&gt; docAtrs) {
+<span class="fc" id="L1605">		this.docAtrs = docAtrs;</span>
+<span class="fc" id="L1606">	}</span>
+
+	public List&lt;Map&lt;String, Object&gt;&gt; getMedia() {
+<span class="nc" id="L1609">		return media;</span>
+	}
+
+	public void setMedia(List&lt;Map&lt;String, Object&gt;&gt; media) {
+<span class="fc" id="L1613">		this.media = media;</span>
+<span class="fc" id="L1614">	}</span>
+
+	public boolean isRefreshCss() {
+<span class="nc" id="L1617">		return refreshCss;</span>
+	}
+
+	public void setRefreshCss(boolean refreshCss) {
+<span class="fc" id="L1621">		this.refreshCss = refreshCss;</span>
+<span class="fc" id="L1622">	}</span>
+
+	public String getContextPath() {
+<span class="nc" id="L1625">		return contextPath;</span>
+	}
+
+	public void setContextPath(String contextPath) {
+<span class="fc" id="L1629">		this.contextPath = contextPath;</span>
+<span class="fc" id="L1630">	}</span>
+
+	public List&lt;Field&gt; getFields() {
+		//tu musi byt getInstance aby sa prebral jazyk podla prihlaseneho usera
+<span class="nc" id="L1634">		Prop prop = Prop.getInstance();</span>
+<span class="nc bnc" id="L1635" title="All 2 branches missed.">		if (fields == null) {</span>
+<span class="nc" id="L1636">			fields = new ArrayList&lt;&gt;();</span>
+			Method method;
+<span class="nc bnc" id="L1638" title="All 2 branches missed.">			for (char alphabet = 'A'; alphabet &lt;= 'T'; alphabet++) {</span>
+
+				try {
+<span class="nc" id="L1641">					Field field = new Field();</span>
+<span class="nc" id="L1642">					method = this.getClass().getMethod(&quot;getField&quot; + alphabet);</span>
+
+<span class="nc" id="L1644">					String labelKey = &quot;editor.field_&quot; + Character.toLowerCase(alphabet);</span>
+<span class="nc" id="L1645">					String label = prop.getText(labelKey);</span>
+
+<span class="nc" id="L1647">					String typeKey = labelKey + &quot;.type&quot;;</span>
+<span class="nc" id="L1648">					String type = prop.getText(typeKey);</span>
+
+<span class="nc" id="L1650">					FieldType fieldType = FieldType.asFieldType(type);</span>
+<span class="nc" id="L1651">					List&lt;FieldValue&gt; fieldValues = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1653" title="All 2 branches missed.">					if (!type.equals(typeKey)) {</span>
+<span class="nc bnc" id="L1654" title="All 2 branches missed.">						if (type.contains(&quot;|&quot;)) {</span>
+<span class="nc" id="L1655">							String values = type.substring(type.indexOf(&quot;:&quot;) + 1);</span>
+<span class="nc bnc" id="L1656" title="All 2 branches missed.">							for (String value : Tools.getTokens(values, &quot;|&quot;)) {</span>
+<span class="nc" id="L1657">								fieldValues.add(new FieldValue(value, value));</span>
+							}
+						}
+
+<span class="nc bnc" id="L1661" title="All 2 branches missed.">						if (type.startsWith(&quot;docsIn_&quot;)) {</span>
+							//JICH - add
+<span class="nc" id="L1663">							boolean isNull = false;</span>
+<span class="nc bnc" id="L1664" title="All 2 branches missed.">							if (type.endsWith(&quot;_null&quot;)) {</span>
+<span class="nc" id="L1665">								isNull = true;</span>
+<span class="nc" id="L1666">								type = type.replace(&quot;_null&quot;, &quot;&quot;);</span>
+							}
+							//JICH - add end
+<span class="nc" id="L1669">							String groupId = type.substring(type.indexOf(&quot;_&quot;) + 1);</span>
+<span class="nc" id="L1670">							int groupIdInt = Tools.getIntValue(groupId, 0);</span>
+<span class="nc bnc" id="L1671" title="All 2 branches missed.">							if (groupIdInt &gt; 0) {</span>
+<span class="nc" id="L1672">								GroupDetails group = GroupsDB.getInstance().getGroup(groupIdInt);</span>
+<span class="nc" id="L1673">								List&lt;DocDetails&gt; listOfDocs = DocDB.getInstance().getDocByGroup(groupIdInt);</span>
+<span class="nc bnc" id="L1674" title="All 2 branches missed.">								if (listOfDocs != null) {</span>
+									//JICH - add
+<span class="nc bnc" id="L1676" title="All 2 branches missed.">									if (isNull) {</span>
+<span class="nc" id="L1677">										fieldValues.add(new FieldValue(&quot;&quot;, &quot;&quot;));</span>
+									}
+									//JICH - add end
+<span class="nc bnc" id="L1680" title="All 2 branches missed.">									for (DocDetails d : listOfDocs) {</span>
+<span class="nc bnc" id="L1681" title="All 4 branches missed.">										if (group != null &amp;&amp; group.getDefaultDocId() != d.getDocId()) {</span>
+<span class="nc" id="L1682">											fieldValues.add(new FieldValue(d.getTitle(), d.getDocId()));</span>
+										}
+<span class="nc" id="L1684">									}</span>
+								}
+							}
+						}
+
+<span class="nc bnc" id="L1689" title="All 2 branches missed.">						if (type.startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="nc" id="L1690">							boolean isNull = false;</span>
+<span class="nc bnc" id="L1691" title="All 2 branches missed.">							if (type.endsWith(&quot;_null&quot;)) {</span>
+<span class="nc" id="L1692">								isNull = true;</span>
+<span class="nc" id="L1693">								type = type.replace(&quot;_null&quot;, &quot;&quot;);</span>
+							}
+
+<span class="nc" id="L1696">							int enumerationId = Tools.getIntValue(type.substring(type.indexOf(&quot;_&quot;) + 1), 0);</span>
+<span class="nc bnc" id="L1697" title="All 2 branches missed.">							if (enumerationId &gt; 0) {</span>
+<span class="nc" id="L1698">								List&lt;EnumerationDataBean&gt; enumerationDataList = EnumerationDataDB.getEnumerationDataByType(enumerationId);</span>
+<span class="nc bnc" id="L1699" title="All 2 branches missed.">								if (enumerationDataList != null) {</span>
+<span class="nc bnc" id="L1700" title="All 2 branches missed.">									if (isNull) {</span>
+<span class="nc" id="L1701">										fieldValues.add(new FieldValue(&quot;&quot;, &quot;&quot;));</span>
+									}
+<span class="nc bnc" id="L1703" title="All 2 branches missed.">									for (EnumerationDataBean enumData : enumerationDataList) {</span>
+<span class="nc" id="L1704">										fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));</span>
+<span class="nc" id="L1705">									}</span>
+								}
+							}
+						}
+
+						//JICH - add
+<span class="nc bnc" id="L1711" title="All 2 branches missed.">						if (type.startsWith(&quot;custom-dialog&quot;)) {</span>
+							//System.out.println(type);
+<span class="nc" id="L1713">							String[] typeArray = type.split(&quot;,&quot;);</span>
+<span class="nc" id="L1714">							String dialogScript = &quot;&quot;;</span>
+<span class="nc" id="L1715">							String displayScript = &quot;&quot;;</span>
+<span class="nc bnc" id="L1716" title="All 2 branches missed.">							if (typeArray.length &gt; 1) dialogScript = typeArray[1];</span>
+<span class="nc bnc" id="L1717" title="All 2 branches missed.">							if (typeArray.length &gt; 2) displayScript = typeArray[2];</span>
+
+<span class="nc" id="L1719">							fieldValues.add(new FieldValue(dialogScript, displayScript));</span>
+<span class="nc" id="L1720">						}</span>
+						//JICH - add end
+<span class="nc bnc" id="L1722" title="All 2 branches missed.">						else if (type.startsWith(&quot;file_archiv_link_insert_new&quot;)) {</span>
+							// PRA: Zobrazi link na vyber suboru z archivu
+<span class="nc" id="L1724">							FieldValue val = new FieldValue();</span>
+<span class="nc" id="L1725">							val.setType(&quot;file_archiv_link_insert_new&quot;);</span>
+<span class="nc" id="L1726">							fieldValues.add(val);</span>
+						}
+					}
+
+<span class="nc bnc" id="L1730" title="All 2 branches missed.">					if (fieldType == null) {</span>
+<span class="nc" id="L1731">						fieldType = FieldType.TEXT;</span>
+					}
+
+<span class="nc" id="L1734">					String value = (String) method.invoke(this);</span>
+
+                    //	TAN: textovym retazcom je mozne zadat maximalnu dlzku znakov v inpute alebo validaciu s odporucanym maximalnym poctom znakov inputu
+                    // priklad zadania textoveho kluca: text-120, warningLength-80
+<span class="nc" id="L1738">					int maxlength = 255;</span>
+<span class="nc" id="L1739">					int warninglength = 0;</span>
+					try
+                    {
+<span class="nc bnc" id="L1742" title="All 2 branches missed.">                        if (type.startsWith(&quot;text-&quot;)) {</span>
+
+<span class="nc bnc" id="L1744" title="All 2 branches missed.">                            if (type.contains(&quot;,&quot;)) {</span>
+<span class="nc" id="L1745">                                String[] typeArray = type.split(&quot;,&quot;);</span>
+<span class="nc" id="L1746">                                String maxlengthstring = typeArray[0];</span>
+<span class="nc" id="L1747">                                String warninglengthstring = typeArray[1];</span>
+
+<span class="nc" id="L1749">                                maxlengthstring.substring(maxlengthstring.lastIndexOf(&quot;-&quot;) + 1);</span>
+<span class="nc" id="L1750">                                warninglengthstring.substring(warninglengthstring.lastIndexOf(&quot;-&quot;) + 1);</span>
+
+<span class="nc" id="L1752">                                maxlength = Integer.parseInt(maxlengthstring.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;));</span>
+<span class="nc" id="L1753">                                warninglength = Integer.parseInt(warninglengthstring.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;));</span>
+<span class="nc" id="L1754">                            } else {</span>
+<span class="nc" id="L1755">                                int pomlcka = type.indexOf(&quot;-&quot;);</span>
+<span class="nc bnc" id="L1756" title="All 2 branches missed.">                                if (pomlcka &gt; 0) maxlength = Tools.getIntValue(type.substring(pomlcka + 1), 255);</span>
+                            }
+                        }
+                    }
+<span class="nc" id="L1760">					catch (Exception ex)</span>
+                    {
+<span class="nc" id="L1762">                        sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1763">                    }</span>
+
+<span class="nc" id="L1765">					field.setKey(Character.toLowerCase(alphabet) + &quot;&quot;);</span>
+<span class="nc" id="L1766">					field.setLabel(label);</span>
+<span class="nc" id="L1767">					field.setValue(value);</span>
+<span class="nc" id="L1768">					field.setType(fieldType.name().toLowerCase());</span>
+<span class="nc" id="L1769">					field.setMaxlength(maxlength);</span>
+<span class="nc" id="L1770">					field.setWarninglength(warninglength);</span>
+<span class="nc bnc" id="L1771" title="All 2 branches missed.">                    if (warninglength&gt;0) {</span>
+<span class="nc" id="L1772">						field.setWarningMessage( prop.getText(&quot;editor.field_&quot; + Character.toUpperCase(alphabet)+&quot;.warningText&quot;, String.valueOf(warninglength)));</span>
+					}
+<span class="nc bnc" id="L1774" title="All 2 branches missed.">					if (fieldType != FieldType.TEXT) {</span>
+<span class="nc" id="L1775">						field.setTypeValues(fieldValues);</span>
+					}
+
+<span class="nc" id="L1778">					fields.add(field);</span>
+<span class="nc" id="L1779">				} catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L1780">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1781">				} catch (IllegalAccessException e) {</span>
+<span class="nc" id="L1782">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1783">				} catch (InvocationTargetException e) {</span>
+<span class="nc" id="L1784">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1785">				}</span>
+			}
+		}
+
+<span class="nc" id="L1789">		return fields;</span>
+	}
+
+	public List&lt;Map&lt;String, Object&gt;&gt; getTemplates() {
+<span class="nc bnc" id="L1793" title="All 2 branches missed.">		if (templates == null) {</span>
+<span class="nc" id="L1794">			templates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1795">			List&lt;TemplateDetails&gt; templatesBeans = TemplatesDB.filterDeviceTemplates(TemplatesDB.getInstance().getTemplates(getGroupId(), getTempId()));;</span>
+
+<span class="nc bnc" id="L1797" title="All 2 branches missed.">			for (TemplateDetails templateDetails : templatesBeans) {</span>
+<span class="nc" id="L1798">				Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L1799">				map.put(&quot;id&quot;, templateDetails.getTempId());</span>
+<span class="nc" id="L1800">				map.put(&quot;name&quot;, templateDetails.getTempName());</span>
+<span class="nc" id="L1801">				templates.add(map);</span>
+<span class="nc" id="L1802">			}</span>
+		}
+
+<span class="nc" id="L1805">		return templates;</span>
+	}
+
+	public List&lt;String&gt; getDocList() {
+
+<span class="nc bnc" id="L1810" title="All 2 branches missed.">		if (getLocalSystemGroup() != null)</span>
+		{
+<span class="nc" id="L1812">			List&lt;DocDetails&gt; localDocsInGroup = DocDB.getInstance().getBasicDocDetailsByGroup(getLocalSystemGroup().getGroupId(), -1);</span>
+<span class="nc" id="L1813">			return getDocDetailItems(addFromTemlateDoc(localDocsInGroup));</span>
+		}
+
+<span class="nc" id="L1816">		return getDocDetailItems(addFromTemlateDoc(DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;headerFooterGroupId&quot;))));</span>
+	}
+
+	public List&lt;String&gt; getMenuList() {
+<span class="nc bnc" id="L1820" title="All 2 branches missed.">		if (getLocalSystemGroup() != null)</span>
+		{
+<span class="nc" id="L1822">			List&lt;DocDetails&gt; localDocsInGroup = DocDB.getInstance().getBasicDocDetailsByGroup(getLocalSystemGroup().getGroupId(), -1);</span>
+<span class="nc" id="L1823">			return getDocDetailItems(addFromTemlateDoc(localDocsInGroup));</span>
+		}
+
+<span class="nc" id="L1826">		return getDocDetailItems(addFromTemlateDoc(DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;menuGroupId&quot;))));</span>
+	}
+
+	public String getCssStyle() {
+<span class="nc bnc" id="L1830" title="All 2 branches missed.">		if (cssStyle == null) {</span>
+<span class="nc" id="L1831">			cssStyle = getEditorCssStyle();</span>
+		}
+
+<span class="nc" id="L1834">		return cssStyle;</span>
+	}
+
+	private List&lt;Map&lt;String, String&gt;&gt; sessionCssParsed;
+	public List&lt;Map&lt;String, String&gt;&gt; getSessionCssParsed() {
+<span class="nc bnc" id="L1839" title="All 2 branches missed.">		if (sessionCssParsed == null)</span>
+		{
+<span class="nc" id="L1841">			sessionCssParsed = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L1843">			StringTokenizer stCss = new StringTokenizer(getBaseCssPath(), &quot;,\n&quot;);</span>
+<span class="nc bnc" id="L1844" title="All 2 branches missed.">			while (stCss.hasMoreTokens())</span>
+			{
+<span class="nc" id="L1846">				String cssFile = stCss.nextToken();</span>
+				//bootstrap neparsujeme, to by bol masaker
+<span class="nc bnc" id="L1848" title="All 4 branches missed.">				if (cssFile.contains(&quot;bootstrap.min.css&quot;) || cssFile.contains(&quot;bootstrap.css&quot;)) continue;</span>
+
+				//PathFilter.getRealPath je pouzity z dovodu najdenia custom_path pre vyvoj
+<span class="nc" id="L1851">				IwcmFile file = new IwcmFile(PathFilter.getCustomPathRealPath(cssFile));</span>
+<span class="nc bnc" id="L1852" title="All 2 branches missed.">				if (!file.exists()) {</span>
+					//skus najst subor s pridanym InstallName
+<span class="nc" id="L1854">					file = new IwcmFile(PathFilter.getCustomPathRealPath(Tools.replace(cssFile, &quot;/templates/&quot;, &quot;/templates/&quot;+Constants.getInstallName()+&quot;/&quot;)));</span>
+				}
+<span class="nc bnc" id="L1856" title="All 2 branches missed.">				if (!file.exists()) {</span>
+<span class="nc" id="L1857">				    Logger.error(EditorForm.class, &quot;Css file &quot; + file.getName() + &quot; not exist&quot;);</span>
+<span class="nc" id="L1858">				    continue;</span>
+            }
+<span class="nc" id="L1860">				sk.iway.css.CssParser cssParser = new sk.iway.css.CssParser(file);</span>
+<span class="nc" id="L1861">				List&lt;Pair&lt;String, String&gt;&gt; editorCss = cssParser.getElements();</span>
+				try
+				{
+					//prehod na json format
+<span class="nc bnc" id="L1865" title="All 2 branches missed.">					for(Pair&lt;String, String&gt; element : editorCss)</span>
+					{
+<span class="nc" id="L1867">						Map&lt;String, String&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L1868">						map.put(&quot;tag&quot;, element.getFirst());</span>
+<span class="nc" id="L1869">						map.put(&quot;class&quot;, element.getSecond());</span>
+<span class="nc" id="L1870">						sessionCssParsed.add(map);</span>
+<span class="nc" id="L1871">					}</span>
+				}
+<span class="nc" id="L1873">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L1875">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1876">				}</span>
+<span class="nc" id="L1877">			}</span>
+		}
+
+<span class="nc" id="L1880">		return sessionCssParsed;</span>
+	}
+
+	private String getEditorCssStyle()
+	{
+<span class="nc" id="L1885">		String cssStyle = getBaseCssPath();</span>
+<span class="nc" id="L1886">		String cssStyle2 = getTempCssPath();</span>
+
+<span class="nc bnc" id="L1888" title="All 2 branches missed.">		if (Tools.isNotEmpty(cssStyle2)) {</span>
+<span class="nc" id="L1889">			cssStyle += &quot;,&quot; + cssStyle2;</span>
+		}
+
+<span class="nc" id="L1892">		String editorCss = getEditorCssPath();</span>
+<span class="nc bnc" id="L1893" title="All 2 branches missed.">		if (editorCss != null) {</span>
+<span class="nc" id="L1894">			cssStyle += &quot;,&quot; + getContextPath() + editorCss;</span>
+		}
+
+<span class="nc" id="L1897">		cssStyle = Tools.replace(cssStyle, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="nc" id="L1898">		cssStyle = Tools.replace(cssStyle, &quot;\r&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L1900">		return cssStyle;</span>
+	}
+
+	public String getEditorCssPath() {
+		String editorCss;
+<span class="fc" id="L1905">		getBaseCssPathImpl();</span>
+<span class="pc bpc" id="L1906" title="2 of 4 branches missed.">		if (baseCssPath.startsWith(&quot;/templates/&quot;) &amp;&amp; baseCssPath.contains(&quot;editor.css&quot;) == false) {</span>
+			// skus automaticky dohladat aj editor.css v danom adresari
+<span class="fc" id="L1908">			editorCss = baseCssPath.substring(0, baseCssPath.lastIndexOf(&quot;/&quot;)) + &quot;/editor.css&quot;;</span>
+<span class="pc bpc" id="L1909" title="1 of 2 branches missed.">			if (FileTools.isFile(editorCss)) {</span>
+<span class="fc" id="L1910">				return editorCss;</span>
+			}
+		}
+
+<span class="nc" id="L1914">		editorCss = &quot;/css/editor.css&quot;;</span>
+<span class="nc bnc" id="L1915" title="All 2 branches missed.">		if (FileTools.isFile(editorCss)) {</span>
+<span class="nc" id="L1916">			return editorCss;</span>
+		}
+
+<span class="nc" id="L1919">		return null;</span>
+	}
+
+	private void getBaseCssPathImpl() {
+<span class="fc" id="L1923">		String defaultBaseCssPath = &quot;/css/page.css&quot;;</span>
+<span class="fc bfc" id="L1924" title="All 2 branches covered.">		if (Tools.isEmpty(baseCssPath)) {</span>
+<span class="pc bpc" id="L1925" title="1 of 2 branches missed.">			if (getTemplate() != null) {</span>
+<span class="fc" id="L1926">				baseCssPath = getTemplate().getBaseCssPath();</span>
+			}
+
+<span class="pc bpc" id="L1929" title="3 of 6 branches missed.">			if (Tools.isNotEmpty(baseCssPath) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;) == true &amp;&amp; Tools.isNotEmpty(getDomainName())) {</span>
+				// baseCssPath = Tools.replace(baseCssPath, &quot;/css/&quot;,
+				// &quot;/css/&quot;+MultiDomainFilter.getDomainAlias(editForm.getDomainName())+&quot;/&quot;);
+<span class="fc" id="L1932">				baseCssPath = MultiDomainFilter.rewriteUrlToLocal(baseCssPath, MultiDomainFilter.getDomainAlias(getDomainName()));</span>
+			}
+		}
+
+<span class="pc bpc" id="L1936" title="1 of 2 branches missed.">		if (Tools.isEmpty(baseCssPath)) {</span>
+<span class="nc" id="L1937">			baseCssPath = defaultBaseCssPath;</span>
+		}
+<span class="fc" id="L1939">	}</span>
+
+	/**
+	 * Vrati cestu k CSS suborom vratane editor.css
+	 * @return
+	 */
+	public String getBaseCssPath()
+	{
+<span class="nc" id="L1947">		getBaseCssPathImpl();</span>
+
+<span class="nc" id="L1949">		String editorCssPath = getEditorCssPath();</span>
+<span class="nc bnc" id="L1950" title="All 8 branches missed.">		if (baseCssPath.startsWith(&quot;/templates/&quot;) &amp;&amp; baseCssPath.contains(&quot;editor.css&quot;) == false &amp;&amp; editorCssPath != null &amp;&amp; editorCssPath.startsWith(&quot;/templates&quot;)) {</span>
+<span class="nc" id="L1951">			baseCssPath += &quot;,&quot; + editorCssPath;</span>
+		}
+
+<span class="nc" id="L1954">		return baseCssPath;</span>
+	}
+
+	private String getTempCssPath()
+	{
+<span class="nc bnc" id="L1959" title="All 2 branches missed.">		if (tempCssPath == null) {</span>
+<span class="nc" id="L1960">			TemplateDetails temp = getTemplate();</span>
+<span class="nc" id="L1961">			String domainName = getDomainName();</span>
+<span class="nc bnc" id="L1962" title="All 6 branches missed.">			if (temp != null &amp;&amp; temp.getCss() != null &amp;&amp; temp.getCss().length() &gt; 1) {</span>
+<span class="nc" id="L1963">				tempCssPath = temp.getCss();</span>
+<span class="nc bnc" id="L1964" title="All 4 branches missed.">				if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) == true &amp;&amp; Tools.isNotEmpty(domainName)) {</span>
+<span class="nc" id="L1965">					String multidomainAlias = MultiDomainFilter.getDomainAlias(domainName);</span>
+<span class="nc bnc" id="L1966" title="All 2 branches missed.">					if (Tools.isNotEmpty(multidomainAlias)) {</span>
+<span class="nc" id="L1967">						tempCssPath = Tools.replace(tempCssPath, &quot;/css/&quot;, &quot;/css/&quot; + multidomainAlias + &quot;/&quot;);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L1972">		return tempCssPath;</span>
+	}
+
+	private List&lt;String&gt; getDocDetailItems(List&lt;DocDetails&gt; list)
+	{
+<span class="nc" id="L1977">		List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1979" title="All 2 branches missed.">		for (DocDetails doc : list) {</span>
+<span class="nc" id="L1980">			StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L1981">			sb.append(doc.getDocId()).append(&quot;|&quot;).append(doc.getTitle());</span>
+<span class="nc" id="L1982">			result.add(sb.toString());</span>
+<span class="nc" id="L1983">		}</span>
+
+<span class="nc" id="L1985">		return result;</span>
+	}
+
+	private List&lt;DocDetails&gt; addFromTemlateDoc(List&lt;DocDetails&gt; list)
+	{
+<span class="nc" id="L1990">		DocDetails fromTemplate = new DocDetails();</span>
+<span class="nc" id="L1991">		fromTemplate.setDocId(-1);</span>
+<span class="nc" id="L1992">		fromTemplate.setTitle(Prop.getInstance(getLanguage()).getText(&quot;editor.fromTemplate&quot;));</span>
+
+<span class="nc" id="L1994">		list.add(0, fromTemplate);</span>
+
+<span class="nc" id="L1996">		return list;</span>
+	}
+
+	public List&lt;LabelValueDetails&gt; getPerexGroups() {
+<span class="nc" id="L2000">		List&lt;LabelValueDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2001">		List&lt;PerexGroupBean&gt; perexGroups =  DocDB.getInstance().getPerexGroups(getGroupId());</span>
+<span class="nc bnc" id="L2002" title="All 2 branches missed.">		for (PerexGroupBean perexGroup : perexGroups) {</span>
+<span class="nc" id="L2003">			LabelValueDetails labelValueDetails = new LabelValueDetails();</span>
+<span class="nc" id="L2004">			labelValueDetails.setLabel(perexGroup.getPerexGroupName());</span>
+<span class="nc" id="L2005">			labelValueDetails.setInt1(perexGroup.getPerexGroupId());</span>
+<span class="nc" id="L2006">			result.add(labelValueDetails);</span>
+<span class="nc" id="L2007">		}</span>
+
+<span class="nc" id="L2009">		return result;</span>
+	}
+
+	public int getSyncId() {
+<span class="fc" id="L2013">		return syncId;</span>
+	}
+
+	public void setSyncId(int syncId) {
+<span class="fc" id="L2017">		this.syncId = syncId;</span>
+<span class="fc" id="L2018">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

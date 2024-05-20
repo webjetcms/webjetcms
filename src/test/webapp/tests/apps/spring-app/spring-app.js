@@ -42,7 +42,7 @@ Scenario('volanie podla URL', async ({I, DataTables}) => {
 /**
  * Test pageParams binding in demoComponent
  */
-Scenario('demo component page params', ({I, DTE, login}) => {
+Scenario('demo component page params', ({I, DTE}) => {
 
     I.relogin('admin');
 

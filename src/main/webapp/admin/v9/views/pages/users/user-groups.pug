@@ -38,7 +38,7 @@ block content
             userGroupsDataTable.button().add(4, {
                 extends: 'remove',
                 editor: userGroupsDataTable.EDITOR,
-                text: '<i class="far fa-user-plus"></i>',
+                text: '<i class="ti ti-user-plus"></i>',
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("addGroupToAllUsers", true, "[[\#{user.admin.addGroupToAll_prompt}]]", "");
                 },
@@ -55,7 +55,7 @@ block content
             userGroupsDataTable.button().add(5, {
                 extends: 'remove',
                 editor: userGroupsDataTable.EDITOR,
-                text: '<i class="far fa-user-minus"></i>',
+                text: '<i class="ti ti-user-minus"></i>',
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("removeGroupFromAllUsers", true, "[[\#{user.admin.removeGroupFromAll_prompt}]]", "");
                 },
@@ -72,7 +72,7 @@ block content
             userGroupsDataTable.button().add(6, {
                 extends: 'remove',
                 editor: userGroupsDataTable.EDITOR,
-                text: '<i class="far fa-user-times"></i>',
+                text: '<i class="ti ti-user-x"></i>',
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("deleteAllUsersOfThisGroup", true, "[[\#{user.admin.removeUsersFromGroup_prompt}]]", "");
                 },

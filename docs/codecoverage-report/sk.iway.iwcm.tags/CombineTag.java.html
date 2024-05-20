@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CombineTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">CombineTag.java</span></div><h1>CombineTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+
+/**
+ *  Trieda pre vygenerovanie linky na /admin/scripts/combine.jsp kde je ako verzia uvedeny timestamp startu servera (kvoli efektivite) a aktualny jazyk
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@created      $Date: 2015/05/11 16:02:38 $
+ */
+
+<span class="fc" id="L27">public final class CombineTag extends BodyTagSupport</span>
+{
+<span class="fc" id="L29">	private static Date VERSION_DATETIME = new Date();</span>
+
+	private static final long serialVersionUID = -7352999434842740830L;
+
+<span class="fc" id="L33">	public static String FILES_ADMIN_JQUERY_JS = &quot;/admin/skins/webjet8/assets/global/plugins/jquery-3.5.1.min.js,&quot;+</span>
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-migrate-3.3.0.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery.browser.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.min.js,&quot;+
+				&quot;/components/_common/javascript/ajax_support.js&quot;;
+
+<span class="fc" id="L39">	public static String FILES_ADMIN_STANDARD_JS =</span>
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/js/popper.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/js/bootstrap.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery.blockui.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery.cokie.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/uniform/jquery.uniform.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jstree/dist/jstree.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modalmanager.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modal.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/datatables/datatables.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/select2/select2.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-select/bootstrap-select.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/locales/bootstrap-datepicker.USERLANG.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/clockface/js/clockface.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-daterangepicker/moment.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.js,&quot;+
+				&quot;/components/_common/minicolors/jquery.minicolors.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/scripts/metronic.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/layout/scripts/layout.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/pages/scripts/components-dropdowns.js&quot;;
+
+<span class="fc" id="L68">	public static String FILES_ADMIN_STANDARD_CSS = &quot;/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,&quot;+</span>
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/uniform/css/uniform.default.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jstree/dist/themes/default/style.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/simple-line-icons/simple-line-icons.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/css/datepicker3.css,&quot;+
+				&quot;/components/_common/minicolors/jquery.minicolors.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/plugins.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/components.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/pages/css/tasks.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/layout/css/layout.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/layout/css/themes/default.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/admin/layout/css/custom.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-multi-select/css/multi-select.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/plugins/datatables/datatables.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/custom.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/chosen-style.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/datatables-editor-style.css,&quot;+
+				&quot;/admin/skins/webjet8/assets/global/css/new-webjet-style.css&quot;;
+
+<span class="fc" id="L91">	public static String FILES_ADMIN_LOGON_JS =</span>
+				&quot;/admin/skins/webjet8/assets/js/zxcvbn/core/zxcvbn-ts.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/js/zxcvbn/language-common/zxcvbn-ts.js,&quot;+
+				&quot;/admin/skins/webjet8/assets/js/zxcvbn/language-en/zxcvbn-ts.js&quot;;
+
+
+<span class="fc" id="L97">	public static String FILES_ADMIN_INLINE_JS = &quot;/admin/skins/webjet8/ckeditor/dist/ckeditor.js,&quot; +</span>
+			&quot;/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.js,&quot; +
+			&quot;/admin/webpages/page-builder/scripts/jquery.minicolors.min.js,&quot; +
+			&quot;/admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp,&quot; +
+			&quot;/admin/webpages/page-builder/scripts/pagesupport.js&quot;;
+
+<span class="fc" id="L103">	public static String FILES_ADMIN_INLINE_CSS = &quot;/components/_common/admin/inline/inline.css,&quot; +</span>
+			&quot;/admin/webpages/page-builder/style/style.css,&quot; +
+			&quot;/admin/webpages/page-builder/style/jquery.minicolors.css,&quot; +
+			&quot;/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css&quot;;
+
+	//set oznacuje schovany zoznam suborov pre kombinovanie
+<span class="fc" id="L109">	private String set = null;</span>
+	//typ kombinovaneho vystupu (js alebo css)
+<span class="fc" id="L111">	private String type = null;</span>
+
+<span class="fc" id="L113">	private String combine = null;</span>
+
+	@Override
+	public int doEndTag() throws JspException
+	{
+<span class="fc" id="L118">		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+
+<span class="fc" id="L120">		String lng = getLng(pageContext, request);</span>
+
+<span class="fc" id="L122">		boolean combineEnabled = true;</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+		{
+<span class="nc" id="L125">			combineEnabled = false;</span>
+<span class="nc" id="L126">			request.getSession().setAttribute(&quot;combineEnabled&quot;, &quot;false&quot;);</span>
+		}
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+		{
+<span class="nc" id="L130">			combineEnabled = true;</span>
+<span class="nc" id="L131">			request.getSession().removeAttribute(&quot;combineEnabled&quot;);</span>
+		}
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (request.getSession().getAttribute(&quot;combineEnabled&quot;)!=null) combineEnabled = false;</span>
+
+		//moznost nastavit len pre jeden request
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = false;</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = true;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		if (&quot;false&quot;.equals(getCombine())) combineEnabled = false;</span>
+
+		try
+		{
+<span class="fc" id="L142">			StringBuilder tag = new StringBuilder();</span>
+<span class="fc" id="L143">			long v = getVersion();</span>
+
+<span class="fc" id="L145">			String set = getSet();</span>
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">			if (Tools.isEmpty(set))</span>
+			{
+<span class="fc" id="L149">				BodyContent bc = getBodyContent();</span>
+<span class="fc" id="L150">				String body = bc.getString();</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(body))</span>
+				{
+<span class="fc" id="L153">					set = body;</span>
+				}
+			}
+
+<span class="fc" id="L157">			set = removeCrLf(set);</span>
+
+<span class="fc" id="L159">			set = Tools.replace(set, &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;));</span>
+
+<span class="fc" id="L161">			String baseCss = (String)request.getAttribute(&quot;base_css_link_nocombine&quot;);</span>
+<span class="fc" id="L162">			String cssLink = (String)request.getAttribute(&quot;css_link_nocombine&quot;);</span>
+
+<span class="pc bpc" id="L164" title="1 of 4 branches missed.">			if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
+			{
+<span class="fc" id="L166">				set = Tools.replace(set, &quot;base_css_link&quot;, removeCrLf(baseCss));</span>
+<span class="fc" id="L167">				set = Tools.replace(set, &quot;css_link&quot;, removeCrLf(cssLink));</span>
+			}
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">			if (combineEnabled)</span>
+			{
+
+
+<span class="fc bfc" id="L174" title="All 2 branches covered.">				if (set.startsWith(&quot;admin&quot;))</span>
+				{
+					//zobrazenie v admin casti
+<span class="fc bfc" id="L177" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
+					{
+<span class="fc" id="L179">						tag.append(&quot;&lt;link href=\&quot;/admin/scripts/combine.jsp?t=css&amp;amp;set=&quot;).append(set).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
+					}
+					else
+					{
+						//MBO: ak vlozi jQuery tak to setne aj do req aby sa uz znova nedal vlozit cez Tool.insertJquery
+<span class="pc bpc" id="L184" title="1 of 4 branches missed.">						if (set!=null &amp;&amp; set.startsWith(&quot;adminJqueryJs&quot;))</span>
+						{
+<span class="fc" id="L186">							Tools.insertJQuery(request);</span>
+						}
+<span class="fc" id="L188">						tag.append(&quot;&lt;script src=\&quot;/admin/scripts/combine.jsp?t=js&amp;amp;set=&quot;).append(set).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
+					}
+				}
+				else
+				{
+					//zobrazenie na beznej web stranke
+<span class="fc bfc" id="L194" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
+					{
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">						if (&quot;tempCss&quot;.equals(set))</span>
+						{
+<span class="nc bnc" id="L198" title="All 4 branches missed.">							if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
+							{
+<span class="nc" id="L200">								set = baseCss;</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">								if (Tools.isEmpty(set)) set = cssLink;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">								else if (Tools.isNotEmpty(cssLink)) set = set + &quot;,&quot;+cssLink;</span>
+							}
+						}
+
+<span class="fc" id="L206">						tag.append(&quot;&lt;link href=\&quot;/components/_common/combine.jsp?t=css&amp;amp;f=&quot;).append(set).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
+					}
+					else
+					{
+<span class="fc" id="L210">						tag.append(&quot;&lt;script src=\&quot;/components/_common/combine.jsp?t=js&amp;amp;f=&quot;).append(set).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
+					}
+				}
+			}
+			else
+			{
+<span class="fc" id="L216">				String files[] = Tools.getTokens( Tools.replace(getFiles(set), &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;)), &quot;,\n&quot;);</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">				for (String file : files)</span>
+				{
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">					if (&quot;css&quot;.equals(getType()))</span>
+					{
+<span class="fc" id="L221">						tag.append(&quot;&lt;link href=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;\n&quot;);</span>
+					}
+					else
+					{
+<span class="nc" id="L225">						tag.append(&quot;&lt;script src=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;\n&quot;);</span>
+					}
+				}
+			}
+
+<span class="fc" id="L230">			pageContext.getOut().write(tag.toString());</span>
+		}
+<span class="nc" id="L232">		catch (Exception e)</span>
+		{
+<span class="nc" id="L234">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L235">		}</span>
+
+<span class="fc" id="L237">		return(EVAL_PAGE);</span>
+	}
+
+	private String removeCrLf(String set)
+	{
+<span class="fc" id="L242">		String newSet = Tools.replace(set, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L243">		newSet = Tools.replace(newSet, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L244">		newSet = Tools.replace(newSet, &quot; &quot;, &quot;&quot;);</span>
+<span class="fc" id="L245">		newSet = Tools.replace(newSet, &quot;\t&quot;, &quot;&quot;);</span>
+<span class="fc" id="L246">		newSet = Tools.replace(newSet, &quot;,,&quot;, &quot;,&quot;);</span>
+		//ked nie je pagefunctions na konci a je to vlozene cez EL tak sa spojja dve dokopy (odstrani sa enter) a vtedy sa to posaha
+<span class="fc" id="L248">		newSet = Tools.replace(newSet, &quot;page_functions.js.jsp/&quot;, &quot;page_functions.js.jsp,/&quot;);</span>
+<span class="fc" id="L249">		return newSet;</span>
+	}
+
+	public static String getFiles(String set)
+	{
+<span class="fc" id="L254">		String files = set;</span>
+
+<span class="fc bfc" id="L256" title="All 2 branches covered.">		if (&quot;adminJqueryJs&quot;.equals(set))</span>
+		{
+<span class="fc" id="L258">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
+		}
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		else if (&quot;adminJqueryJs2&quot;.equals(set))</span>
+		{
+<span class="nc" id="L262">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
+		}
+<span class="fc bfc" id="L264" title="All 2 branches covered.">		else if (&quot;adminStandardJs&quot;.equals(set))</span>
+		{
+<span class="fc" id="L266">			files = CombineTag.FILES_ADMIN_STANDARD_JS;</span>
+		}
+<span class="fc bfc" id="L268" title="All 2 branches covered.">		else if (&quot;adminLogonJs&quot;.equals(set))</span>
+		{
+<span class="fc" id="L270">			files = CombineTag.FILES_ADMIN_LOGON_JS;</span>
+		}
+<span class="fc bfc" id="L272" title="All 2 branches covered.">		else if (&quot;adminStandardCss&quot;.equals(set))</span>
+		{
+<span class="fc" id="L274">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
+		}
+<span class="fc bfc" id="L276" title="All 2 branches covered.">		else if (&quot;adminStandardCssWj9&quot;.equals(set))</span>
+		{
+<span class="fc" id="L278">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
+<span class="fc" id="L279">			files = Tools.replace(files, &quot;/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,&quot;, &quot;/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,&quot;);</span>
+		}
+<span class="fc bfc" id="L281" title="All 2 branches covered.">		else if (&quot;adminInlineJs&quot;.equals(set))</span>
+		{
+<span class="fc" id="L283">			files = CombineTag.FILES_ADMIN_INLINE_JS;</span>
+		}
+<span class="fc bfc" id="L285" title="All 2 branches covered.">		else if (&quot;adminInlineCss&quot;.equals(set))</span>
+		{
+<span class="fc" id="L287">			files = CombineTag.FILES_ADMIN_INLINE_CSS;</span>
+		}
+		else
+		{
+<span class="fc" id="L291">			String constValue = Constants.getString(&quot;combine-&quot;+set);</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(constValue)) files = constValue;</span>
+		}
+
+<span class="fc" id="L295">		return files;</span>
+	}
+
+
+	@Override
+	public void release()
+	{
+<span class="fc" id="L302">		super.release();</span>
+<span class="fc" id="L303">		this.set = null;</span>
+<span class="fc" id="L304">		this.type = null;</span>
+<span class="fc" id="L305">		this.combine = null;</span>
+<span class="fc" id="L306">	}</span>
+
+	public String getSet()
+	{
+<span class="fc" id="L310">		return set;</span>
+	}
+
+	public void setSet(String set)
+	{
+<span class="fc" id="L315">		this.set = set;</span>
+<span class="fc" id="L316">	}</span>
+
+	public String getType()
+	{
+<span class="fc" id="L320">		return type;</span>
+	}
+
+	public void setType(String type)
+	{
+<span class="fc" id="L325">		this.type = type;</span>
+<span class="fc" id="L326">	}</span>
+
+	public String getCombine() {
+<span class="fc" id="L329">		return combine;</span>
+	}
+
+	public void setCombine(String combine) {
+<span class="fc" id="L333">		this.combine = combine;</span>
+<span class="fc" id="L334">	}</span>
+
+	/**
+	 * Vrati jazyk aktualne prihlaseneho usera, aby sa spravne nacitali cachovane subory (sucast parametra)
+	 * @param pageContext
+	 * @param request
+	 * @return
+	 */
+	public static String getLng(PageContext pageContext, HttpServletRequest request)
+	{
+<span class="fc" id="L344">		String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">		if (pageContext.getAttribute(&quot;lng&quot;)!=null)</span>
+		{
+<span class="fc" id="L347">			lng = (String)pageContext.getAttribute(&quot;lng&quot;);</span>
+		}
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">		else if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
+		{
+<span class="nc" id="L351">			lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+		}
+		else
+		{
+<span class="fc" id="L355">			lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">			if (lng == null)</span>
+			{
+<span class="nc" id="L358">				lng = PageLng.getUserLng(request); // sk.iway.iwcm.Constants.getString(&quot;defaultLanguage&quot;);</span>
+			}
+		}
+<span class="fc bfc" id="L361" title="All 2 branches covered.">		if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+<span class="fc" id="L362">		return lng;</span>
+	}
+
+	/**
+	 * Vrati verziu aktualnych suborov, aby sa spravne cachovali subory
+	 * @return
+	 */
+	public static long getVersion()
+	{
+<span class="fc" id="L371">		return VERSION_DATETIME.getTime();</span>
+	}
+
+	public static void setVersion(long version)
+	{
+<span class="fc" id="L376">		VERSION_DATETIME = new Date(version);</span>
+<span class="fc" id="L377">	}</span>
+
+	public static void resetVersion()
+	{
+<span class="nc" id="L381">		VERSION_DATETIME = new Date();</span>
+<span class="nc" id="L382">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

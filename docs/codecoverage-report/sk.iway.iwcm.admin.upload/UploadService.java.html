@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.upload</a> &gt; <span class="el_source">UploadService.java</span></div><h1>UploadService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.upload;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.editor.UploadFileAction;
+import sk.iway.iwcm.editor.UploadFileForm;
+import sk.iway.iwcm.findexer.FileIndexer;
+import sk.iway.iwcm.findexer.ResultBean;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.gallery.VideoConvert;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+
+/**
+ * Sluzby potrebne pre upload suborov, po volani .process() sa vykonaju vsetky WJ operacie typu
+ * - generovania obrazkov galerie
+ * - full text index
+ * - watermarking obrazku
+ * - konverzia CMYK na RGB
+ * - video konverzia
+ */
+public class UploadService {
+
+    private String virtualPath;
+    private HttpServletRequest request;
+
+    //zoznam zmazanych URL adries suborov pocas procesingu (napr. pri konverzii videa)
+    private Set&lt;String&gt; removedUrls;
+    //zoznam pridanych URL adries suborov (napr. pri fotogalerii a generovani s_ obrazka)
+    private Set&lt;String&gt; addedUrls;
+
+
+<span class="fc" id="L38">    public UploadService(String virtualPath, HttpServletRequest request) {</span>
+<span class="fc" id="L39">        this.virtualPath = virtualPath;</span>
+<span class="fc" id="L40">        this.request = request;</span>
+
+<span class="fc" id="L42">        removedUrls = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L43">        addedUrls = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L44">    }</span>
+
+    public UploadService(String fileKey, String destinationFolder, String fileName, HttpServletRequest request) {
+
+<span class="nc" id="L48">        this(checkLastSlash(destinationFolder)+fileName, request);</span>
+
+        try {
+<span class="nc" id="L51">            AdminUploadServlet.moveAndReplaceFile(fileKey, destinationFolder, fileName);</span>
+
+<span class="nc" id="L53">            process();</span>
+        }
+<span class="nc" id="L55">        catch (Exception ex) {</span>
+<span class="nc" id="L56">            Logger.error(UploadService.class, ex);</span>
+<span class="nc" id="L57">        }</span>
+<span class="nc" id="L58">    }</span>
+
+    private static String checkLastSlash(String folderUrl)
+    {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (folderUrl.endsWith(&quot;/&quot;)==false) return folderUrl + &quot;/&quot;;</span>
+<span class="nc" id="L63">        return folderUrl;</span>
+    }
+
+    /**
+     * vykonaj vsetky potrebne operacie po uploade suborov
+     * - full text index
+     * - galeria
+     */
+    public void process()
+    {
+<span class="fc" id="L73">        IwcmFile uploadedFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (uploadedFile.exists()==false) return;</span>
+
+<span class="fc" id="L76">        Identity user = UsersDB.getCurrentUser(request);</span>
+
+<span class="fc" id="L78">        String fileName = uploadedFile.getName();</span>
+<span class="fc" id="L79">        String dir = uploadedFile.getVirtualParent();</span>
+
+        //ak je treba, aplikujem vodotlac na obrazky
+<span class="fc" id="L82">        GalleryDB.applyWatermarkOnUpload(uploadedFile);</span>
+
+        // ak je to povolene, pokusime sa skonvertovat CMYK obrazok na RGB
+<span class="fc" id="L85">        ImageTools.convertCmykToRgb(uploadedFile.getAbsolutePath());</span>
+
+        //ak je to JPG obrazok, skusime ziskat datum vytvorenia fotografie na zaklade EXIF metadat
+<span class="fc" id="L88">        Date dateCreated = GalleryDB.getExifDateOriginal(uploadedFile);</span>
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (VideoConvert.isVideoFile(virtualPath))</span>
+        {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (virtualPath.endsWith(&quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;))==false)</span>
+            {
+                //nie je to mp4, treba skonvertovat
+<span class="nc" id="L95">                UploadFileForm my_form = new UploadFileForm();</span>
+<span class="nc" id="L96">                my_form.setBitRate(Constants.getInt(&quot;defaultVideoBitrate&quot;));</span>
+<span class="nc" id="L97">                my_form.setVideoWidth(Constants.getInt(&quot;defaultVideoWidth&quot;));</span>
+<span class="nc" id="L98">                my_form.setVideoHeight(Constants.getInt(&quot;defaultVideoHeight&quot;));</span>
+<span class="nc" id="L99">                my_form.setKeepOriginalVideo(false);</span>
+
+                /* TODO: integracia do UploadCommandExecutor
+                //zmaz povodny added mpg subor
+                for (FsItemEx item : added)
+                {
+                    if (item.getPath().endsWith(fileName))
+                    {
+                        added.remove(item);
+                        break;
+                    }
+                }
+                */
+
+<span class="nc" id="L113">                removedUrls.add(virtualPath);</span>
+
+<span class="nc" id="L115">                String fileURL = VideoConvert.convert(my_form, virtualPath, request);</span>
+<span class="nc" id="L116">                Logger.debug(UploadService.class, &quot;Converted video: &quot;+fileURL);</span>
+<span class="nc bnc" id="L117" title="All 4 branches missed.">                if (Tools.isNotEmpty(fileURL) &amp;&amp; fileURL.lastIndexOf(&quot;/&quot;)&gt;1)</span>
+                {
+<span class="nc" id="L119">                    String videoFileName = fileURL.substring(fileURL.lastIndexOf(&quot;/&quot;) + 1);</span>
+
+<span class="nc" id="L121">                    addedUrls.add(videoFileName);</span>
+<span class="nc" id="L122">                    addedUrls.add(Tools.replace(videoFileName, &quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;), &quot;.jpg&quot;));</span>
+
+                    /* TODO: integracia do UploadCommandExecutor
+                    added.add(new FsItemEx(dir, videoFileName));
+                    added.add(new FsItemEx(dir, Tools.replace(videoFileName, &quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;), &quot;.jpg&quot;)));
+                    */
+                }
+<span class="nc" id="L129">            }</span>
+            else
+            {
+                try {
+                    //pre mp4 vytvorime len screenshot
+<span class="nc" id="L134">                    String image = VideoConvert.makeScreenshot(Tools.getRealPath(virtualPath), null);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                    if (image != null)</span>
+                    {
+<span class="nc" id="L137">                        IwcmFile thumb = new IwcmFile(image);</span>
+<span class="nc" id="L138">                        virtualPath = dir + &quot;/&quot; + thumb.getName(); //NOSONAR</span>
+<span class="nc" id="L139">                        addedUrls.add(virtualPath);</span>
+
+
+                        /* TODO: integracia do UploadCommandExecutor
+                        String imageFilename = new IwcmFile(image).getName();
+                        if (Tools.isEmpty(directory))
+                        {
+                            added.add(new FsItemEx(dir, imageFilename));
+                        }
+                        */
+                    }
+<span class="nc" id="L150">                } catch (Exception ex) {</span>
+<span class="nc" id="L151">                    Logger.error(UploadService.class, ex);</span>
+<span class="nc" id="L152">                }</span>
+            }
+        }
+
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (GalleryDB.isGalleryFolder(dir))</span>
+        {
+            //zmaz exif aj z originalneho suboru
+<span class="fc" id="L159">            GalleryDB.stripExif(Tools.getRealPath(virtualPath));</span>
+
+            //schvalne musime pouzit prefix, pretoze tak sa nam nevrati original virtualPath ak subor neexistuje
+<span class="fc" id="L162">            String imageSmall = GalleryToolsForCore.getImagePathPrefix(&quot;s_&quot;, virtualPath);</span>
+<span class="fc" id="L163">            String imageOriginal = GalleryToolsForCore.getImagePathPrefix(&quot;o_&quot;, virtualPath);</span>
+
+<span class="fc" id="L165">            IwcmFile originalGalleryFile = new IwcmFile(Tools.getRealPath(imageOriginal));</span>
+<span class="pc bpc" id="L166" title="2 of 4 branches missed.">            if (originalGalleryFile.exists() &amp;&amp; virtualPath.equals(imageOriginal)==false) {</span>
+                //musime skopirovat obsah do o_ suboru, pretoze nasledne sa resize robi z o_ obrazku (ak existuje)
+<span class="fc" id="L168">                FileTools.copyFile(uploadedFile, originalGalleryFile);</span>
+            }
+
+            //zmaz o_ obrazok ak existuje
+
+<span class="fc" id="L173">            GalleryDB.resizePicture(Tools.getRealPath(virtualPath), dir);</span>
+
+<span class="fc" id="L175">            addedUrls.add(imageSmall);</span>
+<span class="fc" id="L176">            addedUrls.add(imageOriginal);</span>
+
+            /* TODO: integracia do UploadCommandExecutor
+            added.add(new FsItemEx(dir, &quot;s_&quot;+fileName));
+            added.add(new FsItemEx(dir, &quot;o_&quot;+fileName));
+            */
+<span class="fc" id="L182">        }</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;))</span>
+        {
+<span class="nc" id="L185">            GalleryDB.setImage(dir, fileName);</span>
+        }
+
+        //zapise datum vytvorenia fotografie (ak vieme ziskat)
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (dateCreated != null) {</span>
+<span class="nc" id="L190">            GalleryDB.setUploadDateImage(dir, fileName, dateCreated.getTime());</span>
+        }
+
+        //ak existuje adresar files, treba indexovat
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (FileIndexer.isFileIndexerConfigured())</span>
+        {
+<span class="fc" id="L196">            List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L197">            FileIndexer.indexFile(dir + &quot;/&quot; + fileName, indexedFiles, request);</span>
+        }
+
+<span class="fc" id="L200">        UploadFileAction.reflectionLoader(request, user, dir + &quot;/&quot; + fileName);</span>
+<span class="fc" id="L201">    }</span>
+
+    /**
+     * Najde meno pre subor pre zvolenu moznost ponechat obe. Novy subor bude mat nazov subor-xxx.jpg pricom xxx je inkrementalne cislo
+     * @param destinationFolder
+     * @param fileName
+     * @return - nove meno suboru (bez cesty)
+     */
+    public static synchronized String getKeppBothFileName(String destinationFolder, String fileName) {
+
+<span class="nc" id="L211">        int dot = fileName.lastIndexOf(&quot;.&quot;);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (dot &gt; 0) {</span>
+<span class="nc" id="L213">            String nameBeforeDot = fileName.substring(0, dot);</span>
+<span class="nc" id="L214">            String suffix = fileName.substring(dot);</span>
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            for (int i=1; i&lt;999; i++) {</span>
+<span class="nc" id="L217">                String testVirtualPath = nameBeforeDot + &quot;-&quot; + i + suffix;</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                if (FileTools.isFile(destinationFolder + testVirtualPath)==false) return testVirtualPath;</span>
+            }
+        }
+
+<span class="nc" id="L222">        return null;</span>
+    }
+
+    /**
+     * Vrati set URL adries suborov, ktore boli pocas procesingu uploadu zmazane (napr. mpg subor pri konverzii do mp4)
+     */
+    public Set&lt;String&gt; getRemovedUrls() {
+<span class="fc" id="L229">        return removedUrls;</span>
+    }
+
+    /**
+     * Vrati set URL adries suborov, ktore boli pocas procesingu pridane (napr. s_ a o_ obrazky vo foto galerii)
+     * @return
+     */
+    public Set&lt;String&gt; getAddedUrls() {
+<span class="fc" id="L237">        return addedUrls;</span>
+    }
+
+    public String getVirtualPath() {
+<span class="nc" id="L241">        return virtualPath;</span>
+    }
+
+    public boolean processDelete() {
+<span class="nc" id="L245">        IwcmFile uploadedFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        if (!uploadedFile.exists()) {</span>
+<span class="nc" id="L247">            return false;</span>
+        }
+
+        // maze z galerie video a thumbnail
+<span class="nc" id="L251">        removeVideo(uploadedFile.getVirtualPath());</span>
+
+        // maze z galerie obrazky
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (GalleryDB.isGalleryFolder(uploadedFile.getVirtualParent())) {</span>
+<span class="nc" id="L255">            removeOriginalBigAndSmallImage();</span>
+        }
+
+        //ak existuje adresar files, maze index
+<span class="nc bnc" id="L259" title="All 2 branches missed.">        if (FileIndexer.isFileIndexerConfigured()) {</span>
+<span class="nc" id="L260">            FileIndexerTools.deleteIndexedFile(virtualPath);</span>
+        }
+
+<span class="nc" id="L263">        return true;</span>
+    }
+
+    private void removeVideo(String virtualPath) {
+<span class="nc" id="L267">        IwcmFile file = new IwcmFile(Tools.getRealPath(changeExtension(virtualPath, Constants.getString(&quot;defaultVideoFormat&quot;, &quot;mp4&quot;))));</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (file.exists()) {</span>
+<span class="nc" id="L269">            Logger.debug(UploadService.class, String.format(&quot;File to delete: video, path: %s&quot;, file.getVirtualPath()));</span>
+<span class="nc" id="L270">            file.delete();</span>
+        }
+<span class="nc" id="L272">    }</span>
+
+    private void removeOriginalBigAndSmallImage() {
+        //schvalne musime pouzit prefix, pretoze tak sa nam nevrati original virtualPath ak subor neexistuje
+<span class="nc" id="L276">        String imageSmall = GalleryToolsForCore.getImagePathPrefix(&quot;s_&quot;, virtualPath);</span>
+<span class="nc" id="L277">        String imageOriginal = GalleryToolsForCore.getImagePathPrefix(&quot;o_&quot;, virtualPath);</span>
+
+<span class="nc" id="L279">        IwcmFile originalGalleryFile = new IwcmFile(Tools.getRealPath(imageOriginal));</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        if (originalGalleryFile.exists()) {</span>
+<span class="nc" id="L281">            Logger.debug(UploadService.class, String.format(&quot;File to delete: image original, path: %s&quot;, originalGalleryFile.getVirtualPath()));</span>
+<span class="nc" id="L282">            originalGalleryFile.delete();</span>
+        }
+
+<span class="nc" id="L285">        IwcmFile smallGalleryFile = new IwcmFile(Tools.getRealPath(imageSmall));</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (smallGalleryFile.exists()) {</span>
+<span class="nc" id="L287">            Logger.debug(UploadService.class, String.format(&quot;File to delete: small original, path: %s&quot;, smallGalleryFile.getVirtualPath()));</span>
+<span class="nc" id="L288">            smallGalleryFile.delete();</span>
+        }
+
+<span class="nc" id="L291">        IwcmFile bigGalleryFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (bigGalleryFile.exists()) {</span>
+<span class="nc" id="L293">            Logger.debug(UploadService.class, String.format(&quot;File to delete: big original, path: %s&quot;, bigGalleryFile.getVirtualPath()));</span>
+<span class="nc" id="L294">            bigGalleryFile.delete();</span>
+        }
+<span class="nc" id="L296">    }</span>
+
+    private String changeExtension(String virtualPath, String newExtension) {
+<span class="nc" id="L299">        return virtualPath.substring(0, virtualPath.lastIndexOf(&quot;.&quot;) + 1) + newExtension;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

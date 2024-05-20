@@ -44,9 +44,9 @@ export function typeWysiwyg() {
                     </select>
                     <br/>
                     ${WJ.translate("pagebuilder.modal.tab.size")}:
-                    <a href="javascript:pbSetWindowSize('phone')" title="${WJ.translate('pagebuilder.modal.visibility.sm')}" data-toggle="tooltip"><span class="fa-regular fa-mobile"></span></a>
-                    <a href="javascript:pbSetWindowSize('tablet')" title="${WJ.translate('pagebuilder.modal.visibility.md')}" data-toggle="tooltip"><span class="fa-regular fa-tablet"></a>
-                    <a href="javascript:pbSetWindowSize('desktop')" title="${WJ.translate('pagebuilder.modal.visibility.xl')}" data-toggle="tooltip"><span class="fa-regular fa-desktop"></a>
+                    <a href="javascript:pbSetWindowSize('phone')" title="${WJ.translate('pagebuilder.modal.visibility.sm')}" data-toggle="tooltip"><span class="ti ti-device-mobile"></span></a>
+                    <a href="javascript:pbSetWindowSize('tablet')" title="${WJ.translate('pagebuilder.modal.visibility.md')}" data-toggle="tooltip"><span class="ti ti-device-tablet"></a>
+                    <a href="javascript:pbSetWindowSize('desktop')" title="${WJ.translate('pagebuilder.modal.visibility.xl')}" data-toggle="tooltip"><span class="ti ti-device-desktop"></a>
                 </div>
                 `;
             let htmlCodeElement = $(htmlCode);

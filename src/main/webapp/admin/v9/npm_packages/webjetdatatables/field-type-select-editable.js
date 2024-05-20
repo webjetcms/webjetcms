@@ -79,8 +79,8 @@ export function typeSelectEditable() {
             let htmlCode = $(`
                 <div class="input-group">
                     <select></select>
-                    <button class="btn btn-outline-secondary btn-edit" type="button" data-toggle="tooltip" title="${WJ.translate('button.edit')}"><i class="far fa-pencil"></i></button>
-                    <button class="btn btn-outline-secondary btn-add" type="button" data-toggle="tooltip" title="${WJ.translate('button.createNew')}"><i class="far fa-plus"></i></button>
+                    <button class="btn btn-outline-secondary btn-edit" type="button" data-toggle="tooltip" title="${WJ.translate('button.edit')}"><i class="ti ti-pencil"></i></button>
+                    <button class="btn btn-outline-secondary btn-add" type="button" data-toggle="tooltip" title="${WJ.translate('button.createNew')}"><i class="ti ti-plus"></i></button>
                 </div>
             `);
 

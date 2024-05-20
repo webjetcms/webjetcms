@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.calendar.rest;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,7 +24,7 @@ import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
 @RestController
-@RequestMapping("/admin/rest/calendar_events")
+@RequestMapping("/admin/rest/calendar/events")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_calendar')")
 @Datatable
 public class CalendarEventsRestController extends DatatableRestControllerV2<CalendarEventsEntity, Long> {
@@ -58,13 +59,16 @@ public class CalendarEventsRestController extends DatatableRestControllerV2<Cale
 
     @Override
     public CalendarEventsEntity getOneItem(long id) {
-        CalendarEventsEntity entity;
-        if(id == -1) entity = new CalendarEventsEntity();
-        else entity = calendarEventsRepository.findByIdAndDomainId(id, CloudToolsForCore.getDomainId());
+        if(id == -1) {
+            CalendarEventsEntity entity = new CalendarEventsEntity();
+            return processFromEntity(entity, ProcessItemAction.CREATE);
+        }
+        else { 
+            Optional<CalendarEventsEntity> optEntity = calendarEventsRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId());
+            if(!optEntity.isPresent()) return null;
 
-        processFromEntity(entity, ProcessItemAction.CREATE);
-
-        return entity;
+            return processFromEntity(optEntity.get(), ProcessItemAction.CREATE);
+        }
     }
 
     @Override
@@ -85,7 +89,7 @@ public class CalendarEventsRestController extends DatatableRestControllerV2<Cale
         if(entity != null) {
             //Call toUserDetailsEntity to set new entity values from EditorFields
             CalendarEventsEditorFields ceef = entity.getEditorFields();
-            ceef.toCalendarEventsEntity(entity, calendarTypesRepository, getProp(), calendarEventsRepository, getRequest());
+            ceef.toCalendarEventsEntity(entity, calendarTypesRepository, getProp(), calendarEventsRepository, getRequest(), action);
         }
 
         return entity;

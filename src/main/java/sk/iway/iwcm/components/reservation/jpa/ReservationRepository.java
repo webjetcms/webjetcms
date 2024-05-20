@@ -3,16 +3,12 @@ package sk.iway.iwcm.components.reservation.jpa;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface ReservationRepository extends JpaRepository<ReservationEntity, Long>, JpaSpecificationExecutor<ReservationEntity> {
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
-    Page<ReservationEntity> findAllByDomainId(Integer domainId, Pageable pageable);
+@Repository
+public interface ReservationRepository extends DomainIdRepository<ReservationEntity, Long> {
 
     List<ReservationEntity> findAllByReservationObjectIdAndDomainId(Integer reservationObjectId, Integer domainId);
 

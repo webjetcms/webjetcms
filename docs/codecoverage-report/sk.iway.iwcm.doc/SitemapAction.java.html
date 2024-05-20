@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SitemapAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">SitemapAction.java</span></div><h1>SitemapAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+
+/**
+ *  Vylistuje zoznam groups a dokumenty v danej grupe (pre groupslist.jsp)
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.7 $
+ *@created      $Date: 2004/02/16 16:44:23 $
+ *@modified     $Date: 2004/02/16 16:44:23 $
+ */
+<span class="nc" id="L27">public class SitemapAction</span>
+{
+	public static final String SESSION_LINK_GROUPID=&quot;session_link_groupid&quot;;
+
+	public static String doTree(HttpServletRequest request)
+	{
+<span class="nc" id="L33">		int groupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
+		try
+		{
+<span class="nc bnc" id="L36" title="All 2 branches missed.">			if (request.getParameter(&quot;rootId&quot;) != null)</span>
+			{
+<span class="nc" id="L38">				groupId = Integer.parseInt(request.getParameter(&quot;rootId&quot;));</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L42" title="All 2 branches missed.">				if (request.getAttribute(&quot;groupid&quot;) != null)</span>
+				{
+<span class="nc" id="L44">					groupId = Integer.parseInt((String) request.getAttribute(&quot;groupid&quot;));</span>
+				}
+<span class="nc bnc" id="L46" title="All 2 branches missed.">				else if (request.getParameter(&quot;groupid&quot;) != null)</span>
+				{
+<span class="nc" id="L48">					groupId = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
+				}
+			}
+		}
+<span class="nc" id="L52">		catch (Exception ex)</span>
+		{
+
+<span class="nc" id="L55">		}</span>
+
+<span class="nc" id="L57">		String forward=&quot;sk&quot;;</span>
+<span class="nc" id="L58">		String pForward = request.getParameter(&quot;forward&quot;);</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">		if (pForward!=null &amp;&amp; pForward.endsWith(&quot;.jsp&quot;))</span>
+		{
+<span class="nc" id="L61">			forward = &quot;/templates/&quot;+pForward;</span>
+		}
+
+<span class="nc" id="L64">		request.setAttribute(&quot;group_id&quot;, Integer.toString(groupId));</span>
+
+<span class="nc" id="L66">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc" id="L68">		List&lt;GroupDetails&gt; myGroups = new ArrayList&lt;&gt;();</span>
+
+		//prekopirovanie zoznamu a vykonanie uprav
+
+<span class="nc" id="L72">		int rootGroup = groupsDB.getRoot(groupId);</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (request.getAttribute(&quot;groupid&quot;)!=null)</span>
+		{
+			//je to nastavene z JSP stranky, takze toto je aj ROOT skupina
+<span class="nc" id="L77">			rootGroup = Integer.parseInt((String) request.getAttribute(&quot;groupid&quot;));</span>
+		}
+<span class="nc" id="L79">		Logger.println(SitemapAction.class,&quot;Action: rootGroup = &quot; + rootGroup);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for (GroupDetails groupOrig : groupsDB.getGroupsTree(rootGroup, true, false))</span>
+		{
+<span class="nc bnc" id="L82" title="All 6 branches missed.">			if (groupOrig == null || groupOrig.getMenuType(request.getSession())==GroupDetails.MENU_TYPE_HIDDEN || groupOrig.isInternal() == true)</span>
+			{
+<span class="nc" id="L84">				continue;</span>
+			}
+<span class="nc" id="L86">			GroupDetails parentGroup = groupsDB.getGroup(groupOrig.getParentGroupId());</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">			if (parentGroup != null &amp;&amp; parentGroup.getMenuType(request.getSession())==GroupDetails.MENU_TYPE_NOSUB) continue;</span>
+
+<span class="nc" id="L89">			GroupDetails groupNew = new GroupDetails();</span>
+<span class="nc" id="L90">			groupNew.setGroupId(groupOrig.getGroupId());</span>
+<span class="nc" id="L91">			groupNew.setParentGroupId(groupOrig.getParentGroupId());</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (groupNew.getGroupId()==rootGroup)</span>
+			{
+<span class="nc" id="L94">				groupNew.setParentGroupId(0);</span>
+			}
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (groupNew.getGroupId()==groupId)</span>
+			{
+<span class="nc" id="L98">				groupNew.setGroupName(&quot;&lt;span class=sitemap-selected-dir&gt;&quot;+groupOrig.getGroupName()+&quot;&lt;/span&gt;&quot;);</span>
+			}
+			else
+			{
+<span class="nc" id="L102">				groupNew.setGroupName(groupOrig.getGroupName());</span>
+			}
+			//groupNew.setGroupName(Tools.replace(groupNew.getGroupName(), &quot;'&quot;, &quot;&amp;#39;&quot;));
+<span class="nc" id="L105">			groupNew.setGroupName(groupNew.getGroupName().replace('\'', '´'));</span>
+<span class="nc" id="L106">			myGroups.add(groupNew);</span>
+<span class="nc" id="L107">		}</span>
+
+		//set data for group tree
+<span class="nc" id="L110">		request.setAttribute(&quot;groups&quot;, myGroups);</span>
+
+<span class="nc" id="L112">		request.setAttribute(&quot;path&quot;, groupsDB.getPath(groupId));</span>
+<span class="nc" id="L113">		GroupDetails actualGroup = groupsDB.getGroup(groupId);</span>
+
+<span class="nc" id="L115">		List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
+
+		//select documents within given group
+<span class="nc" id="L118">		Connection db_conn = null;</span>
+<span class="nc" id="L119">		PreparedStatement ps = null;</span>
+<span class="nc" id="L120">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L123">			db_conn = DBPool.getConnection(request);</span>
+			String sql;
+			DocDetails doc;
+
+
+<span class="nc" id="L128">			sql = &quot;SELECT d.* FROM documents d WHERE group_id=? AND available=? AND show_in_menu=? ORDER BY sort_priority, title&quot;;</span>
+<span class="nc" id="L129">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L130">			ps.setInt(1, groupId);</span>
+<span class="nc" id="L131">			ps.setBoolean(2, true);</span>
+<span class="nc" id="L132">			ps.setBoolean(3, true);</span>
+<span class="nc" id="L133">			rs = ps.executeQuery();</span>
+
+<span class="nc" id="L135">			boolean at_least_one = false;</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L139">				doc = new DocDetails();</span>
+<span class="nc" id="L140">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+				//doc.setData(dbUtil.getDbString(rs, &quot;data&quot;));
+<span class="nc" id="L142">				doc.setDateCreated(DB.getDbTimestamp(rs, &quot;date_created&quot;));</span>
+<span class="nc" id="L143">				doc.setPublishStart(DB.getDbTimestamp(rs, &quot;publish_start&quot;));</span>
+<span class="nc" id="L144">				doc.setPublishEnd(DB.getDbTimestamp(rs, &quot;publish_end&quot;));</span>
+<span class="nc" id="L145">				doc.setAuthorId(rs.getInt(&quot;author_id&quot;));</span>
+<span class="nc" id="L146">				doc.setSearchable(rs.getBoolean(&quot;searchable&quot;));</span>
+<span class="nc" id="L147">				doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="nc" id="L148">				doc.setAvailable(rs.getBoolean(&quot;available&quot;));</span>
+<span class="nc" id="L149">				doc.setPasswordProtected(DB.getDbString(rs, &quot;password_protected&quot;));</span>
+				/** @todo NACITAJ PRISTUPOVE PRAVA */
+
+<span class="nc" id="L152">				doc.setCacheable(rs.getBoolean(&quot;cacheable&quot;));</span>
+<span class="nc" id="L153">				doc.setExternalLink(DB.getDbString(rs, &quot;external_link&quot;));</span>
+<span class="nc" id="L154">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="nc" id="L155">				doc.setTempId(rs.getInt(&quot;temp_id&quot;));</span>
+<span class="nc" id="L156">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L157">				doc.setNavbar(DB.getDbString(rs, &quot;navbar&quot;));</span>
+<span class="nc" id="L158">				doc.setSortPriority(rs.getInt(&quot;sort_priority&quot;));</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">				if (actualGroup.getMenuType(request.getSession())==GroupDetails.MENU_TYPE_NORMAL ||</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">							(actualGroup.getMenuType(request.getSession())==GroupDetails.MENU_TYPE_ONLYDEFAULT &amp;&amp;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">										doc.getDocId() == actualGroup.getDefaultDocId())</span>
+				)
+				{
+<span class="nc" id="L165">					docs.add(doc);</span>
+<span class="nc" id="L166">					at_least_one = true;</span>
+				}
+
+			}
+<span class="nc" id="L170">			rs.close();</span>
+<span class="nc" id="L171">			ps.close();</span>
+<span class="nc" id="L172">			db_conn.close();</span>
+<span class="nc" id="L173">			rs = null;</span>
+<span class="nc" id="L174">			ps = null;</span>
+<span class="nc" id="L175">			db_conn = null;</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if (at_least_one == false)</span>
+			{
+<span class="nc" id="L179">				request.setAttribute(&quot;ziadne_dokumenty&quot;, &quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;V tejto skupine nie sú žiadne dokumenty.&lt;/b&gt;&lt;br&gt;&quot;);</span>
+			}
+		}
+<span class="nc" id="L182">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L184">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L190" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L191">					rs.close();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L193">					ps.close();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L195">					db_conn.close();</span>
+			}
+<span class="nc" id="L197">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L199">			}</span>
+		}
+
+<span class="nc" id="L202">		request.setAttribute(&quot;docs&quot;, docs);</span>
+
+<span class="nc" id="L204">		return (forward);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

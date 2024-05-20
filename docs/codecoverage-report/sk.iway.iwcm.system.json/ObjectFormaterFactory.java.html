@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ObjectFormaterFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.json</a> &gt; <span class="el_source">ObjectFormaterFactory.java</span></div><h1>ObjectFormaterFactory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.json;
+
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="nc" id="L6">public class ObjectFormaterFactory</span>
+{
+<span class="nc" id="L8">	private Map&lt;Class&lt;?&gt;, ObjectFormater&gt; formaters = new HashMap&lt;Class&lt;?&gt;, ObjectFormater&gt;();</span>
+	
+<span class="nc" id="L10">	private static final ObjectFormater DEFAULT_FORMATER = new ObjectFormater() {</span>
+		
+		@Override
+		public Object format(Object object)
+		{
+<span class="nc" id="L15">			return object;</span>
+		}
+	};
+	
+	public void setFormater(Class&lt;?&gt; className, ObjectFormater formatter)
+	{
+<span class="nc" id="L21">		formaters.put(className, formatter);</span>
+<span class="nc" id="L22">	}</span>
+	
+	public Object format(Object object)
+	{
+<span class="nc" id="L26">		Class&lt;?&gt; clazz = object.getClass();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">		if (formaters.containsKey(clazz))</span>
+		{
+<span class="nc" id="L29">			return formaters.get(clazz).format(object);</span>
+		}
+<span class="nc" id="L31">		return DEFAULT_FORMATER.format(object);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

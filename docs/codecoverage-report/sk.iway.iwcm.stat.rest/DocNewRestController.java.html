@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocNewRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">DocNewRestController.java</span></div><h1>DocNewRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.abtesting.ABTesting;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.jpa.DocNewDTO;
+import sk.iway.iwcm.stat.jpa.InOutDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/doc-new&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat')&quot;)
+@Datatable
+public class DocNewRestController extends DatatableRestControllerV2&lt;DocNewDTO, Long&gt; {
+
+    @Autowired
+    public DocNewRestController() {
+<span class="fc" id="L43">        super(null);</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public void beforeSave(DocNewDTO entity) {
+<span class="nc" id="L48">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L49">    }</span>
+
+    @Override
+    public Page&lt;DocNewDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="fc" id="L54">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="fc" id="L55">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+
+<span class="fc" id="L57">        List&lt;Column&gt; aVariantColumns = getAvariantColumns(docId, filter);</span>
+<span class="fc" id="L58">        DatatablePageImpl&lt;DocNewDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(aVariantColumns, filter));</span>
+<span class="fc" id="L59">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;DocNewDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, DocNewDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L65">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+<span class="fc" id="L66">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+
+<span class="fc" id="L68">        List&lt;Column&gt; aVariantColumns = getAvariantColumns(docId, filter);</span>
+<span class="fc" id="L69">        DatatablePageImpl&lt;DocNewDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(aVariantColumns, filter));</span>
+<span class="fc" id="L70">        return page;</span>
+    }
+
+    private List&lt;Column&gt; getAvariantColumns(int docId, FilterHeaderDto filter) {
+<span class="fc" id="L74">        return StatNewDB.getPageViews(docId, filter.getDateFrom(), filter.getDateTo());</span>
+    }
+
+    private List&lt;DocNewDTO&gt; columnsToItems(List&lt;Column&gt; columns, FilterHeaderDto filter) {
+<span class="fc" id="L78">        List&lt;DocNewDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L80">        int order = 1;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L82">            DocNewDTO item = new DocNewDTO();</span>
+<span class="fc" id="L83">            item.setOrder(order);</span>
+<span class="fc" id="L84">            item.setYear(column.getIntColumn1());</span>
+<span class="fc" id="L85">            item.setMonth(column.getIntColumn2());</span>
+<span class="fc" id="L86">            item.setDay(column.getIntColumn3());</span>
+<span class="fc" id="L87">            item.setVisits(column.getIntColumn4());</span>
+<span class="fc" id="L88">            item.setSessions(column.getIntColumn5());</span>
+<span class="fc" id="L89">            item.setUniqueUsers(column.getIntColumn6());</span>
+<span class="fc" id="L90">            items.add(item);</span>
+<span class="fc" id="L91">            order++;</span>
+<span class="fc" id="L92">        }</span>
+
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if(filter.getChartType() == ChartType.LINE) {</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            for(DocNewDTO item : items) {</span>
+<span class="fc" id="L97">                item.setDayDate(</span>
+                    new Date(
+<span class="fc" id="L99">                        DB.getTimestamp(item.getDay() + &quot;.&quot; + item.getMonth() + &quot;.&quot; + item.getYear())</span>
+                    )
+                );
+<span class="fc" id="L102">            }</span>
+        }
+<span class="fc" id="L104">        return items;</span>
+    }
+
+    //Compute date from column values
+    private Date getColumnDate(Column c) {
+<span class="fc" id="L109">        return new Date(DB.getTimestamp(c.getIntColumn3() + &quot;.&quot; + c.getIntColumn2() + &quot;.&quot; + c.getIntColumn1()));</span>
+    }
+
+    private List&lt;DocNewDTO&gt; getBvariantData(int docId, Boolean returnPercentual, FilterHeaderDto filter) {
+<span class="fc" id="L113">        List&lt;Integer&gt; variantsDocIds = ABTesting.getAllVariantsDocIds(docId);</span>
+
+        //Return Variant B data as they are, dont do percentual computation
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if(!returnPercentual.booleanValue()) {</span>
+<span class="fc" id="L117">            List&lt;Column&gt; variantColumns = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            for(int variantDocId : variantsDocIds) {</span>
+<span class="nc" id="L119">                variantColumns.addAll(StatNewDB.getPageViews(variantDocId, filter.getDateFrom(), filter.getDateTo()));</span>
+<span class="nc" id="L120">            }</span>
+
+<span class="fc" id="L122">            return columnsToItems(variantColumns, filter);</span>
+        }
+
+<span class="fc" id="L125">        List&lt;Map&lt;Date, Column&gt;&gt; variantsDates = new ArrayList&lt;&gt;(); //kvoli datam do tabulky</span>
+<span class="fc" id="L126">        Map&lt;Date, Column&gt; mainDocs = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L127">        TreeSet&lt;Date&gt; dates = new TreeSet&lt;&gt;(); //usporiadany zoznam unikatnych datumov hlavnej stranky a vsetkych variant</span>
+<span class="fc" id="L128">        Map&lt;Date, Column&gt; map = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L130">        List&lt;Column&gt; aVariantColumns = getAvariantColumns(docId, filter);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for(Column aVariantColumn : aVariantColumns) {</span>
+<span class="fc" id="L132">            dates.add(getColumnDate(aVariantColumn));</span>
+<span class="fc" id="L133">            mainDocs.put(getColumnDate(aVariantColumn), aVariantColumn);</span>
+<span class="fc" id="L134">        }</span>
+
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        for(int variantDocId : variantsDocIds) {</span>
+<span class="nc" id="L137">            List&lt;Column&gt; bVariantColumns = StatNewDB.getPageViews(variantDocId, filter.getDateFrom(), filter.getDateTo());</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            for(Column bVariantColumn : bVariantColumns) {</span>
+<span class="nc" id="L139">                map.put(getColumnDate(bVariantColumn), bVariantColumn);</span>
+<span class="nc" id="L140">                dates.add(getColumnDate(bVariantColumn));</span>
+<span class="nc" id="L141">            }</span>
+<span class="nc" id="L142">            variantsDates.add(map);</span>
+<span class="nc" id="L143">        }</span>
+
+<span class="fc" id="L145">        List&lt;DocNewDTO&gt; chartData = valuesToChartData(dates, mainDocs, variantsDates);</span>
+<span class="fc" id="L146">        return chartData;</span>
+    }
+
+    private List&lt;DocNewDTO&gt; valuesToChartData(TreeSet&lt;Date&gt; dates, Map&lt;Date, Column&gt; mainDocs, List&lt;Map&lt;Date, Column&gt;&gt; variantsDates) {
+<span class="fc" id="L150">        List&lt;DocNewDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L151" title="6 of 10 branches missed.">	    if(dates == null || mainDocs == null || variantsDates == null || variantsDates.isEmpty() || dates.isEmpty())</span>
+<span class="fc" id="L152">            return new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        for(Date date : dates) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            for(int i = 0; i &lt; variantsDates.size(); i++) {</span>
+<span class="nc" id="L156">                DocNewDTO itemB = new DocNewDTO();</span>
+<span class="nc" id="L157">                itemB.setDayDate(date);</span>
+
+<span class="nc" id="L159">                String[] ratios = Constants.getString(&quot;ABTestingRatio&quot;).split(&quot;:&quot;);</span>
+<span class="nc" id="L160">                float ratio = 1;</span>
+
+                try {
+<span class="nc" id="L163">                    ratio = (float) Tools.getIntValue(ratios[0], 1) / Tools.getIntValue(ratios[i + 1], 1);</span>
+<span class="nc" id="L164">                } catch(Exception e){</span>
+                    //
+<span class="nc" id="L166">                }</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                itemB.setVisits(variantsDates.get(i).get(date) != null ? (int) (variantsDates.get(i).get(date).getIntColumn4() * ratio) : 0 );</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                itemB.setSessions(variantsDates.get(i).get(date) != null ? (int) (variantsDates.get(i).get(date).getIntColumn5() * ratio) : 0 );</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                itemB.setUniqueUsers(variantsDates.get(i).get(date) != null ? (int) (variantsDates.get(i).get(date).getIntColumn6() * ratio) : 0 );</span>
+
+<span class="nc" id="L172">                items.add(itemB);</span>
+            }
+<span class="nc" id="L174">        }</span>
+<span class="nc" id="L175">        return items;</span>
+    }
+
+    @RequestMapping(value=&quot;/b-variant&quot;, params={&quot;docId&quot;, &quot;dayDate&quot;, &quot;percentual&quot;})
+    @ResponseBody
+    public List&lt;DocNewDTO&gt; getBvariantChartData(
+                        @RequestParam(&quot;docId&quot;) String docId,
+                        @RequestParam(&quot;dayDate&quot;) String stringRange,
+                        @RequestParam(&quot;percentual&quot;) Boolean percentual) {
+
+<span class="fc" id="L185">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L186">        FilterHeaderDto filter = new FilterHeaderDto();</span>
+<span class="fc" id="L187">        filter.setDateFrom(dateRangeArr[0]);</span>
+<span class="fc" id="L188">        filter.setDateTo(dateRangeArr[1]);</span>
+<span class="fc" id="L189">        filter.setChartType(ChartType.LINE);</span>
+<span class="fc" id="L190">        List&lt;DocNewDTO&gt; bVariantChartData = getBvariantData(Integer.valueOf(docId), percentual, filter);</span>
+<span class="fc" id="L191">        return bVariantChartData;</span>
+    }
+
+    @RequestMapping(value=&quot;/incoming&quot;, params={&quot;docId&quot;, &quot;dayDate&quot;})
+    @ResponseBody
+    public Page&lt;InOutDTO&gt; getInLineChartData(
+                        @RequestParam(&quot;docId&quot;) String docId,
+                        @RequestParam(&quot;dayDate&quot;) String stringRange) {
+<span class="fc" id="L199">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L200">        List&lt;Column&gt; incomingStats = StatNewDB.getIncomingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1], null, getRequest());</span>
+<span class="fc" id="L201">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
+<span class="fc" id="L202">        return page;</span>
+    }
+
+    @RequestMapping(value=&quot;/outgoing&quot;, params={&quot;docId&quot;, &quot;dayDate&quot;})
+    @ResponseBody
+    public Page&lt;InOutDTO&gt; getOutLineChartData(
+                        @RequestParam(&quot;docId&quot;) String docId,
+                        @RequestParam(&quot;dayDate&quot;) String stringRange) {
+<span class="fc" id="L210">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L211">        List&lt;Column&gt; incomingStats = StatNewDB.getOutgoingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1]);</span>
+<span class="fc" id="L212">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
+<span class="fc" id="L213">        return page;</span>
+    }
+
+    private List&lt;InOutDTO&gt; columnsToInOutItems(List&lt;Column&gt; columns) {
+<span class="fc" id="L217">        List&lt;InOutDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L219">        int order = 1;</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L221">            InOutDTO item = new InOutDTO();</span>
+<span class="fc" id="L222">            item.setOrder(order);</span>
+<span class="fc" id="L223">            item.setName(column.getColumn1());</span>
+<span class="fc" id="L224">            item.setCount(column.getIntColumn2());</span>
+<span class="fc" id="L225">            items.add(item);</span>
+<span class="fc" id="L226">            order++;</span>
+<span class="fc" id="L227">        }</span>
+<span class="fc" id="L228">        return items;</span>
+    }
+
+    @RequestMapping(value=&quot;/doc-title&quot;, params={&quot;docId&quot;}, produces = &quot;text/plain;charset=UTF-8&quot;)
+    @ResponseBody
+    public String getDocTitle(@RequestParam(&quot;docId&quot;) int docId) {
+
+<span class="fc" id="L235">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L236">        DocDetails doc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (doc != null) return doc.getTitle();</span>
+<span class="nc" id="L238">        else return &quot;Page &quot;+docId;</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

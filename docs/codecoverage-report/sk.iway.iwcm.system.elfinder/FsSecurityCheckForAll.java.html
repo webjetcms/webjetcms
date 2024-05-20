@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsSecurityCheckForAll.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FsSecurityCheckForAll.java</span></div><h1>FsSecurityCheckForAll.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsSecurityChecker;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="fc" id="L10">public class FsSecurityCheckForAll implements FsSecurityChecker</span>
+{
+<span class="fc" id="L12">	boolean _locked = false;</span>
+
+<span class="fc" id="L14">	boolean _readable = true;</span>
+
+<span class="fc" id="L16">	boolean _writable = true;</span>
+
+	public boolean isLocked()
+	{
+<span class="nc" id="L20">		return _locked;</span>
+	}
+
+	@Override
+	public boolean isLocked(FsService fsService, FsItem fsi)
+	{
+<span class="fc" id="L26">		return _locked;</span>
+	}
+
+	public boolean isReadable()
+	{
+<span class="nc" id="L31">		return _readable;</span>
+	}
+
+	@Override
+	public boolean isReadable(FsService fsService, FsItem fsi)
+	{
+<span class="fc" id="L37">		return _readable;</span>
+	}
+
+	public boolean isWritable()
+	{
+<span class="nc" id="L42">		return _writable;</span>
+	}
+
+	@Override
+	public boolean isWritable(FsService fsService, FsItem fsi)
+	{
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		if (fsi.getVolume() instanceof IwcmActualPageFsVolume)</span>
+		{
+<span class="fc" id="L50">			return ((IwcmActualPageFsVolume)fsi.getVolume()).isWritable(fsi);</span>
+		}
+		//zistim ci ma user pravo na zapis do tohto adresara
+<span class="fc bfc" id="L53" title="All 2 branches covered.">		if (fsi instanceof IwcmFsItem)</span>
+		{
+<span class="pc bpc" id="L55" title="2 of 4 branches missed.">			if (SetCharacterEncodingFilter.getCurrentRequestBean()!=null&amp;&amp;SetCharacterEncodingFilter.getCurrentRequestBean().getUserId()&gt;0)</span>
+			{
+<span class="fc" id="L57">				Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">				if (user!=null)</span>
+				{
+<span class="fc" id="L60">					String virtualPath = ((IwcmFsItem)fsi).getFile().getVirtualPath();</span>
+<span class="fc bfc" id="L61" title="All 4 branches covered.">					if (&quot;/&quot;.equals(virtualPath) &amp;&amp; fsi.getVolume() instanceof IwcmLibraryFsVolume)</span>
+					{
+						//pre library nie je mozne zapisovat do rootu
+<span class="fc" id="L64">						return false;</span>
+					}
+					
+<span class="fc" id="L67">					return UsersDB.isFolderWritable(user.getWritableFolders(), virtualPath);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L72">		return _writable;</span>
+	}
+
+	public void setLocked(boolean locked)
+	{
+<span class="nc" id="L77">		_locked = locked;</span>
+<span class="nc" id="L78">	}</span>
+
+	public void setReadable(boolean readable)
+	{
+<span class="nc" id="L82">		_readable = readable;</span>
+<span class="nc" id="L83">	}</span>
+
+	public void setWritable(boolean writable)
+	{
+<span class="nc" id="L87">		_writable = writable;</span>
+<span class="nc" id="L88">	}</span>
+
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

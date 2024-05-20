@@ -315,3 +315,7 @@ Scenario('Slash in group name', ({ I, DT, DTE }) => {
     //$(function() { $("#unescapedTitle").text("!REQUEST(doc_title)!"); });
     I.waitForText("Lomka&#47;v nazve", "#unescapedTitle");
 });
+
+Scenario('reset 2', ({ I }) => {
+    I.jstreeReset();
+});

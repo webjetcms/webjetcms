@@ -1145,7 +1145,7 @@ private static String combineCss(String cssStyle)
             boolean canEdit = BlogTools.isEditable(group.getGroupId(), user);
             if (canEdit)
             {
-                request.setAttribute("doc_data", "!INCLUDE(/components/blog/blog_user_toolbar.jsp)!");
+                //request.setAttribute("doc_data", "!INCLUDE(/components/blog/blog_user_toolbar.jsp)!");
                 request.setAttribute("doc_data_blog", doc.getData());
             }
         }

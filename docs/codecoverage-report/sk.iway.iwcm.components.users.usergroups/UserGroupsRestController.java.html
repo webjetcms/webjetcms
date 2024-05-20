@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGroupsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.usergroups</a> &gt; <span class="el_source">UserGroupsRestController.java</span></div><h1>UserGroupsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.usergroups;
+
+import java.util.List;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Skupiny pouzivatelov, udaje zapisuje do DB ale pri zmene vola
+ * UserGroupsDB.getInstance(true), kedze skupiny pouzivatelov su cachovane
+ */
+@RestController
+@Datatable
+@RequestMapping(&quot;/admin/rest/user-groups&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('user.admin.userGroups')&quot;)
+public class UserGroupsRestController extends DatatableRestControllerV2&lt;UserGroupsEntity, Long&gt; {
+
+    public UserGroupsRestController(UserGroupsRepository userGroupsRepository) {
+<span class="fc" id="L28">        super(userGroupsRepository);</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public void afterSave(UserGroupsEntity entity, UserGroupsEntity saved) {
+<span class="fc" id="L33">        UserGroupsDB.getInstance(true);</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public void afterDelete(UserGroupsEntity entity, long id) {
+<span class="fc" id="L38">        UserGroupsDB.getInstance(true);</span>
+<span class="fc" id="L39">    }</span>
+
+    @Override
+    public boolean processAction(UserGroupsEntity entity, String action) {
+
+<span class="nc bnc" id="L44" title="All 4 branches missed.">        if (entity.getId()!=null &amp;&amp; entity.getId().intValue()&gt;0) {</span>
+<span class="nc" id="L45">            int groupId = entity.getId().intValue();</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if (&quot;addGroupToAllUsers&quot;.equals(action)) {</span>
+<span class="nc" id="L48">                List&lt;UserDetails&gt; users = UsersDB.getUsers();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                for (UserDetails user : users)</span>
+                {
+<span class="nc" id="L51">                    user.addToGroup(groupId);</span>
+<span class="nc" id="L52">                    UsersDB.saveUser(user);</span>
+<span class="nc" id="L53">                }</span>
+
+<span class="nc" id="L55">                return true;</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            } else if(&quot;removeGroupFromAllUsers&quot;.equals(action)) {</span>
+<span class="nc" id="L57">                List&lt;UserDetails&gt; users = UsersDB.getUsers();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">                for (UserDetails user : users)</span>
+                {
+<span class="nc" id="L60">                    user.removeFromGroup(groupId);</span>
+<span class="nc" id="L61">                    UsersDB.saveUser(user);</span>
+<span class="nc" id="L62">                }</span>
+<span class="nc" id="L63">                return true;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            } else if(&quot;deleteAllUsersOfThisGroup&quot;.equals(action)) {</span>
+<span class="nc" id="L65">                List&lt;UserDetails&gt; users = UsersDB.getUsersByGroup(groupId);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                for (UserDetails user : users) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                    if (user.isInUserGroup(groupId))</span>
+					{
+<span class="nc" id="L69">                        user.removeFromGroup(groupId);</span>
+
+<span class="nc bnc" id="L71" title="All 6 branches missed.">						if (Tools.isEmpty(user.getUserGroupsIds()) &amp;&amp; user.isAdmin() == false &amp;&amp; &quot;delete&quot;.equals(Constants.getString(&quot;dmailUnsubscribeMode&quot;))) {</span>
+<span class="nc" id="L72">							UsersDB.deleteUser(user.getUserId());</span>
+<span class="nc bnc" id="L73" title="All 6 branches missed.">                        } else if (Tools.isEmpty(user.getUserGroupsIds()) &amp;&amp; user.isAdmin() == false &amp;&amp; &quot;disable&quot;.equals(Constants.getString(&quot;dmailUnsubscribeMode&quot;))) {</span>
+<span class="nc" id="L74">							user.setAuthorized(false);</span>
+                            //v rezime disable ma zostat posledne nastavena user skupina pre neskorsie ucely, takze mu ju znova musime vratit
+<span class="nc" id="L76">                            user.addToGroup(groupId);</span>
+<span class="nc" id="L77">                            UsersDB.saveUser(user);</span>
+<span class="nc bnc" id="L78" title="All 6 branches missed.">                        } else if (Tools.isEmpty(user.getUserGroupsIds()) &amp;&amp; user.isAdmin() == false &amp;&amp; &quot;removeGroups&quot;.equals(Constants.getString(&quot;dmailUnsubscribeMode&quot;))) {</span>
+<span class="nc" id="L79">							user.setAuthorized(false);</span>
+<span class="nc" id="L80">                            UsersDB.saveUser(user);</span>
+                        } else {
+<span class="nc" id="L82">							UsersDB.saveUser(user);</span>
+                        }
+					}
+<span class="nc" id="L85">                }</span>
+<span class="nc" id="L86">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L90">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

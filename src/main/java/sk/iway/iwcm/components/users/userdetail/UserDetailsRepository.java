@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,11 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
 
     @Query(value = "SELECT api_key FROM users WHERE user_id=?1", nativeQuery=true)
     String getApiKeyByUserId(Long userId);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE UserDetailsEntity SET editableGroups = :editableGroups, writableFolders = :writableFolders WHERE id = :userId")
+    void updateEditableGroupsWritableFolders(@Param("editableGroups") String editableGroups, @Param("writableFolders") String writableFolders, @Param("userId") Long userId);
 
     @Query(value = "SELECT mobile_device FROM users WHERE user_id=?1", nativeQuery=true)
     String getMobileDeviceByUserId(Long userId);

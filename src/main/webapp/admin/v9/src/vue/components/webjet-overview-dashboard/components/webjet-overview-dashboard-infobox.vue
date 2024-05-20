@@ -39,7 +39,7 @@ export default {
         if (WJ.hasPermission("cmp_stat") && window.statMode !== "none") items.push({
             title: window.vueOverviewApp.config.globalProperties.$overviewViews,
             itemClass: "navstevy",
-            icon: "fas fa-chart-line",
+            icon: "ti ti-chart-area-line fs-1",
             iconColor: "#0063fb",
             number: this.$props.overviewbackdata.statViewsNumber,
             link: "/apps/stat/admin/"
@@ -48,8 +48,8 @@ export default {
         if (WJ.hasPermission("cmp_form")) items.push({
             title: window.vueOverviewApp.config.globalProperties.$overviewForms,
             itemClass: "formulare",
-            icon: "fas fa-server",
-            iconColor: "#d90575",
+            icon: "ti ti-forms fs-1",
+            iconColor: "#007f5e",
             number: "+"+this.$props.overviewbackdata.fillFormsNumber,
             link: "/apps/form/admin/"
         });
@@ -57,7 +57,7 @@ export default {
         if (WJ.hasPermission("cmp_diskusia")) items.push({
             title: window.vueOverviewApp.config.globalProperties.$overviewForum,
             itemClass: "foto",
-            icon: "fas fa-images",
+            icon: "ti ti-messages fs-1",
             iconColor: "#c000d5",
             number: "+"+this.$props.overviewbackdata.documentForumNumber,
             link: "/apps/forum/admin/"
@@ -66,8 +66,8 @@ export default {
         if (WJ.hasPermission("cmp_stat") && window.statMode !== "none") items.push({
             title: window.vueOverviewApp.config.globalProperties.$overviewErrors,
             itemClass: "dokumenty",
-            icon: "fas fa-file-alt",
-            iconColor: "#007f5e",
+            icon: "ti ti-face-id-error fs-1",
+            iconColor: "#d90575",
             number: "+"+this.$props.overviewbackdata.statErrorNumber,
             link: "/apps/stat/admin/error/"
         });
@@ -111,6 +111,10 @@ export default {
         @media screen and (max-width: 575px) {
             padding: 25px 10px 20px;
             background: transparent;
+            p {
+                max-width: 100%;
+                text-align: justify;
+            }
         }
     }
     &__item {

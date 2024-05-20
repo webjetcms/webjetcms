@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebpagesRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">WebpagesRestController.java</span></div><h1>WebpagesRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+
+import java.util.*;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.blog.rest.BlogService;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.HistoryDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyButton;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.users.UserDetails;
+
+/**
+ * Rest controller pre datatabulku v administracii web stranky #44836
+ */
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/web-pages&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('Constants:webpagesFunctionsPerms')&quot;)
+public class WebpagesRestController extends DatatableRestControllerV2&lt;DocDetails, Long&gt; {
+
+    private final DocDetailsRepository docDetailsRepository;
+    private final EditorFacade editorFacade;
+    private final DocAtrDefRepository docAtrDefRepository;
+
+    @Autowired
+    public WebpagesRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+<span class="fc" id="L65">        super(docDetailsRepository);</span>
+<span class="fc" id="L66">        this.docDetailsRepository = docDetailsRepository;</span>
+<span class="fc" id="L67">        this.editorFacade = editorFacade;</span>
+<span class="fc" id="L68">        this.docAtrDefRepository = docAtrDefRepository;</span>
+<span class="fc" id="L69">    }</span>
+
+    @Override
+    public Page&lt;DocDetails&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L74">        GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());</span>
+
+<span class="fc" id="L76">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="fc" id="L77">        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));</span>
+
+<span class="fc" id="L79">        options.setGroupId(groupId);</span>
+<span class="fc" id="L80">        options.setUserGroupId(Tools.getIntValue(getRequest().getParameter(&quot;userGroupId&quot;), -1));</span>
+<span class="fc" id="L81">        options.setPageable(pageable);</span>
+
+<span class="fc" id="L83">        options.setDocDetailsRepository(docDetailsRepository);</span>
+<span class="fc" id="L84">        options.setDocAtrDefRepository(docAtrDefRepository);</span>
+
+<span class="fc" id="L86">        options.setTempId(Tools.getIntValue(getRequest().getParameter(&quot;tempId&quot;), -1));</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if(&quot;true&quot;.equals(getRequest().getParameter(&quot;recursive&quot;))) options.setRecursiveSubfolders(true);</span>
+
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">        if(isBlogVersion() &amp;&amp; BlogService.isUserBloggerOrBloggerAdmin(getUser())) {</span>
+            //its blogger user
+        } else {
+           //Original control
+<span class="pc bpc" id="L94" title="1 of 6 branches missed.">           if (options.getGroupId()!=Constants.getInt(&quot;systemPagesRecentPages&quot;) &amp;&amp; GroupsDB.isGroupEditable(getUser(), options.getGroupId())==false &amp;&amp; GroupsDB.isGroupViewable(getUser(), options.getGroupId())==false) {</span>
+<span class="nc" id="L95">                throwError(&quot;components.jstree.access_denied__group&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L99">        return WebpagesService.getAllItems(options);</span>
+    }
+
+    @Override
+    public void beforeSave(DocDetails entity) {
+        //In abtesting version user cant edit/insert/duplicate page's
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if(isAbTestingVersion()) {</span>
+<span class="nc" id="L106">            throwError(getProp().getText(&quot;admin.editPage.error&quot;));</span>
+        }
+<span class="fc" id="L108">    }</span>
+
+    @Override
+    public DocDetails editItem(DocDetails entity, long id) {
+
+<span class="fc" id="L113">        DocDetails original = DocDB.getInstance().getDoc(entity.getDocId(), -1, false);</span>
+<span class="fc" id="L114">        DocDetails saved = editorFacade.save(entity);</span>
+
+<span class="fc" id="L116">        List&lt;UserDetails&gt; approveByUsers = editorFacade.getApprovers();</span>
+<span class="fc" id="L117">        addInsertEditNotify(false, approveByUsers);</span>
+
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        if (editorFacade.isForceReload()) setForceReload(true);</span>
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (isRefreshMenuRequired(original, saved)) setForceReload(true);</span>
+
+<span class="fc" id="L123">        addNotify(editorFacade.getNotify());</span>
+
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) setForceReload(true);</span>
+
+<span class="fc" id="L127">        return saved;</span>
+    }
+
+    @Override
+    public DocDetails insertItem(DocDetails entity) {
+        //Is this blog version
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if(isBlogVersion()) {</span>
+            //Check user perms
+<span class="fc" id="L135">            boolean isBloggerAdmin = BlogService.isUserBloggerAdmin( getUser() );</span>
+<span class="fc" id="L136">            boolean isBlogger = BlogService.isUserBlogger( getUser() );</span>
+
+            //If user is not blogger admin or blogger, throw error
+<span class="pc bpc" id="L139" title="2 of 4 branches missed.">            if(isBloggerAdmin==false &amp;&amp; isBlogger==false) throwError(getProp().getText(&quot;components.blog.basic_perm_error&quot;));</span>
+
+            //There must be selected groupId
+<span class="fc" id="L142">            int selectedGroup = entity.getEditorFields().getGroupDetails().getGroupId();</span>
+
+            //Check that default group is not selected
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if(selectedGroup == Constants.getInt(&quot;rootGroupId&quot;)) throwError(getProp().getText(&quot;components.blog.add_page.error&quot;));</span>
+
+            //If user is blogger admin, check if group is blogger group
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">            if(isBloggerAdmin) {</span>
+<span class="nc" id="L149">                List&lt;Integer&gt; allBloggersGroupIds = BlogService.getAllBloggersGroupIds();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                if(false==allBloggersGroupIds.contains(selectedGroup)) throwError(getProp().getText(&quot;components.blog.basic_perm_error&quot;));</span>
+<span class="nc" id="L151">            } //If user is blogger, check if he has perm to selected group</span>
+<span class="pc bpc" id="L152" title="2 of 4 branches missed.">            else if(isBlogger &amp;&amp; false == GroupsDB.isGroupEditable(getUser(), selectedGroup)) throwError(getProp().getText(&quot;components.blog.basic_perm_error&quot;));</span>
+
+            //For safety, cant set this
+<span class="fc" id="L155">            entity.getEditorFields().setGroupCopyDetails(null);</span>
+        }
+
+<span class="fc" id="L158">        DocDetails saved = editorFacade.save(entity);</span>
+<span class="fc" id="L159">        addNotify(editorFacade.getNotify());</span>
+
+        //ak je zapnute zobrazenie zoznamu stranok pre novu stranku musim spravit reload
+        //ostatne ako zmena adresara vyvolava reload uz standardne
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (WebpagesService.isTreeShowPages(getUser())) setForceReload(true);</span>
+
+<span class="fc" id="L165">        List&lt;UserDetails&gt; approveByUsers = editorFacade.getApprovers();</span>
+<span class="fc" id="L166">        addInsertEditNotify(true, approveByUsers);</span>
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) setForceReload(true);</span>
+
+<span class="fc" id="L170">        return saved;</span>
+    }
+
+    @Override
+    public DocDetails getOneItem(long id) {
+<span class="fc" id="L175">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="fc" id="L176">        int historyId = Tools.getIntValue(getRequest().getParameter(&quot;historyId&quot;), -1);</span>
+
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (isBlogVersion()) {</span>
+<span class="pc bpc" id="L179" title="1 of 4 branches missed.">            if (groupId &lt; 1 || groupId == Constants.getInt(&quot;rootGroupId&quot;)) {</span>
+<span class="fc" id="L180">                String unclassifiedGroupName = getProp().getText(&quot;components.blog.default_group_name&quot;);</span>
+<span class="fc" id="L181">                int unclassifiedGroupId = -1;</span>
+<span class="fc" id="L182">                int userRootGroupId = WebpagesService.getUserFirstEditableGroup(getUser());</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                if (userRootGroupId&gt;0) {</span>
+<span class="fc" id="L184">                    GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L185">                    List&lt;GroupDetails&gt; subgroups = groupsDB.getGroups(userRootGroupId);</span>
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">                    for (GroupDetails group : subgroups) {</span>
+<span class="pc bpc" id="L188" title="2 of 4 branches missed.">                        if (group != null &amp;&amp; group.getGroupName().equals(unclassifiedGroupName)) unclassifiedGroupId = group.getGroupId();</span>
+<span class="fc" id="L189">                    }</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">                    if (unclassifiedGroupId &gt; 0) {</span>
+<span class="fc" id="L191">                        groupId = unclassifiedGroupId;</span>
+                    } else {
+<span class="nc" id="L193">                        groupId = userRootGroupId;</span>
+                    }
+                }
+            }
+        }
+        //news version get group ID in groupIdList parameter
+<span class="fc" id="L199">        String groupIdList = getRequest().getParameter(&quot;groupIdList&quot;);</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (Tools.isNotEmpty(groupIdList)) {</span>
+<span class="pc bpc" id="L201" title="2 of 4 branches missed.">            if (groupId &lt; 1 || groupId == Constants.getInt(&quot;rootGroupId&quot;)) {</span>
+                try {
+<span class="fc" id="L203">                    groupIdList = Tools.replace(groupIdList, &quot;*&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                    if (groupIdList.indexOf(&quot;,&quot;)!=-1) groupIdList=groupIdList.substring(0, groupIdList.indexOf(&quot;,&quot;));</span>
+
+<span class="fc" id="L206">                    int groupIdParser = Tools.getIntValue(groupIdList, -1);</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">                    if (groupIdParser &gt; 0) groupId = groupIdParser;</span>
+<span class="nc" id="L208">                } catch (Exception e) {</span>
+                    //do nothing - failsafe
+<span class="fc" id="L210">                }</span>
+            }
+        }
+
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if (groupId == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
+            //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
+<span class="nc" id="L216">            historyId = (int)id;</span>
+            //ziskaj docid podla historyid
+<span class="nc" id="L218">            id = (new SimpleQuery()).forInt(&quot;SELECT doc_id FROM documents_history WHERE history_id=?&quot;, historyId);</span>
+        }
+
+<span class="fc" id="L221">        Prop prop = Prop.getInstance(getRequest());</span>
+
+<span class="fc" id="L223">        DocDetails doc = editorFacade.getDocForEditor((int) id, historyId, groupId);</span>
+
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        if(id == -1) {</span>
+<span class="fc" id="L226">            doc.setGenerateUrlFromTitle(true);</span>
+        }
+
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">        if (ContextFilter.isRunning(getRequest())) {</span>
+            // do editoru nahrame texty s pridanymi linkami
+<span class="nc" id="L231">            doc.setData(ContextFilter.addContextPath(getRequest().getContextPath(), doc.getData()));</span>
+        }
+
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">        if (groupId == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
+<span class="nc" id="L235">			int docId = doc.getDocId();</span>
+<span class="nc" id="L236">			doc.setDocId(historyId);</span>
+<span class="nc" id="L237">			doc.setHistoryId(docId);</span>
+        }
+
+        //over, ci existuju neschvalene/rozpracovane verzie, ak ano, zobraz notifikaciu
+<span class="fc" id="L241">        HistoryDB historyDB = new HistoryDB(&quot;iwcm&quot;);</span>
+<span class="fc" id="L242">        List&lt;DocDetails&gt; history = historyDB.getHistory(doc.getDocId(), false, true);</span>
+<span class="pc bpc" id="L243" title="1 of 4 branches missed.">        if (history != null &amp;&amp; history.isEmpty()==false) {</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">            if (historyId &lt; 1) {</span>
+                //ak nemame zadane historyId pridaj notifikaciu o tom, ze existuje novsia verzia
+<span class="fc" id="L246">                NotifyBean notify = new NotifyBean(prop.getText(&quot;text.warning&quot;), prop.getText(&quot;editor.notify.checkHistory&quot;), NotifyBean.NotifyType.WARNING, 15000);</span>
+<span class="fc" id="L247">                notify.addButton(new NotifyButton(prop.getText(&quot;editor.notify.editFromHistory&quot;), &quot;btn btn-primary&quot;, &quot;far fa-pencil&quot;, &quot;editFromHistory(&quot;+history.get(0).getDocId()+&quot;, &quot;+history.get(0).getHistoryId()+&quot;)&quot;));</span>
+<span class="fc" id="L248">                addNotify(notify);</span>
+            }
+<span class="fc" id="L250">            getRequest().getSession().removeAttribute(&quot;docHistory&quot;);</span>
+        }
+
+<span class="fc" id="L253">        List&lt;DocAtrDefEntity&gt; atrDefs = docAtrDefRepository.findAllByDocId(MultigroupMappingDB.getMasterDocId(doc.getDocId(), true), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L254">        atrDefs.forEach(f -&gt; {</span>
+<span class="pc bpc" id="L255" title="1 of 4 branches missed.">            if (f.getDocAtrEntities()!=null &amp;&amp; f.getDocAtrEntities().isEmpty()==false) {</span>
+                //normally in JSON we don't want to send all DocAtrEntity relationship (it's lazy loaded ant it will be populated), it's JsonIgnored,
+                //we just need first entity to be sent, so set it here for this specific case
+<span class="fc" id="L258">                f.setDocAtrEntityFirst(f.getDocAtrEntities().get(0));</span>
+            }
+<span class="fc" id="L260">        });</span>
+<span class="fc" id="L261">        doc.getEditorFields().setAttrs(atrDefs);</span>
+
+<span class="fc" id="L263">        String newPageTitleKey = getRequest().getParameter(&quot;newPageTitleKey&quot;);</span>
+<span class="fc bfc" id="L264" title="All 4 branches covered.">        if (Tools.isNotEmpty(newPageTitleKey) &amp;&amp; doc.getDocId()&lt;1) {</span>
+<span class="fc" id="L265">            doc.setTitle(prop.getText(newPageTitleKey));</span>
+        }
+
+<span class="fc" id="L268">        return doc;</span>
+    }
+
+    @Override
+    public boolean deleteItem(DocDetails entity, long id) {
+        //In abtesting version user cant edit page's
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">        if(isAbTestingVersion()) {</span>
+<span class="nc" id="L275">            throwError(getProp().getText(&quot;admin.editPage.error&quot;));</span>
+        }
+
+<span class="fc" id="L278">        boolean deleted = editorFacade.delete(entity);</span>
+<span class="fc" id="L279">        addNotify(editorFacade.getNotify());</span>
+
+        //ak je zapnute zobrazenie zoznamu stranok pre novu stranku musim spravit reload
+        //ostatne ako zmena adresara vyvolava reload uz standardne
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        if (WebpagesService.isTreeShowPages(getUser())) setForceReload(true);</span>
+
+<span class="fc" id="L285">        return deleted;</span>
+    }
+
+    /**
+     * Vrati zoznam parent adresarov pre zadane docid, nastavi aj domenu ak je odlisna
+     * a kartu (System/Kos) v ktorej sa nachadza koren adresarov
+     * @param docId
+     * @return
+     */
+    @RequestMapping(path=&quot;/parents/{id}&quot;)
+    public ParentGroupsResult parentGroups(@PathVariable(&quot;id&quot;) int docId) {
+<span class="fc" id="L296">        ParentGroupsResult result = new ParentGroupsResult();</span>
+
+<span class="fc" id="L298">        DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (doc != null) {</span>
+<span class="fc" id="L300">            List&lt;GroupDetails&gt; parentGroups = GroupsDB.getInstance().getParentGroups(doc.getGroupId());</span>
+<span class="fc" id="L301">            result.setParentGroups(doc.getGroup(), parentGroups);</span>
+        }
+
+<span class="fc" id="L304">        return result;</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;DocDetails&gt; root, CriteriaBuilder builder) {
+
+<span class="fc" id="L310">        WebpagesService.addSpecSearch(params, predicates, root, builder, getUser());</span>
+
+<span class="fc" id="L312">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L313">    }</span>
+
+    @Override
+    public DocDetails processFromEntity(DocDetails entity, ProcessItemAction action) {
+<span class="fc" id="L317">        return (DocDetails)WebpagesService.processFromEntity(entity, action, getRequest());</span>
+    }
+
+    @Override
+    public Page&lt;DocDetails&gt; findByColumns(@RequestParam Map&lt;String, String&gt; params, Pageable pageable, DocDetails search) {
+
+<span class="fc" id="L323">        Integer groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+
+        //ak chcem zobrazit recentPages
+<span class="fc bfc" id="L326" title="All 2 branches covered.">        if(groupId == Constants.getInt(&quot;systemPagesRecentPages&quot;)) {</span>
+
+            //Key groupId (and other) must be removed because we set this params in special way inside getAllItems method
+<span class="fc" id="L329">            params.remove(&quot;groupId&quot;);</span>
+<span class="fc" id="L330">            params.remove(&quot;size&quot;);</span>
+<span class="fc" id="L331">            params.remove(&quot;page&quot;);</span>
+<span class="fc" id="L332">            params.remove(&quot;sort&quot;);</span>
+
+<span class="fc" id="L334">            BeanWrapperImpl searchWrapped = new BeanWrapperImpl(search);</span>
+<span class="fc" id="L335">            final Map&lt;String, String&gt; searchProperties = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L336">            getSearchProperties(params, searchProperties, searchWrapped, null, false);</span>
+
+            //Get specification from columns params
+<span class="fc" id="L339">            Specification&lt;DocDetails&gt; columnsSpecification = getSearchConditions(searchProperties, params, search);</span>
+
+<span class="fc" id="L341">            GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());</span>
+
+<span class="fc" id="L343">            options.setGroupId(groupId);</span>
+<span class="fc" id="L344">            options.setUserGroupId(Tools.getIntValue(getRequest().getParameter(&quot;userGroupId&quot;), -1));</span>
+<span class="fc" id="L345">            options.setPageable(pageable);</span>
+<span class="fc" id="L346">            options.setDocDetailsRepository(docDetailsRepository);</span>
+<span class="fc" id="L347">            options.setDocAtrDefRepository(docAtrDefRepository);</span>
+<span class="fc" id="L348">            options.setColumnsSpecification(columnsSpecification);</span>
+
+            //If second param columnsSpecification is set, method will join columnsSpecification to created specification by method
+<span class="fc" id="L351">            Page&lt;DocDetails&gt; page = WebpagesService.getAllItems(options);</span>
+
+<span class="fc" id="L353">            return page;</span>
+        }
+
+<span class="fc" id="L356">        return super.findByColumns(params, pageable, search);</span>
+    }
+
+    /**
+     * Ulozi do session DocDetails vytvoreny z JSON objektu, ktory sa nasledne pouzije
+     * v PreviewController pre vytvorenie nahladu web stranky
+     * Je to takto, lebo inak som nevedel preniest JSON data z editora priamo do
+     * PreviewControllera
+     */
+    @PostMapping(value=&quot;/preview/&quot;, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
+
+<span class="fc" id="L368">        entity.getEditorFields().toDocDetails(entity);</span>
+
+<span class="fc" id="L370">        setPreviewObject(entity, request);</span>
+<span class="fc" id="L371">        return &quot;{\&quot;ok\&quot;: true}&quot;;</span>
+    }
+
+    @Override
+    public void afterSave(DocDetails entity, DocDetails saved) {
+<span class="fc" id="L376">        setPreviewObject(saved, getRequest());</span>
+<span class="fc" id="L377">    }</span>
+
+    /**
+     * Ulozi do session DocDetails objekt pre nahlad stranky
+     * @param entity
+     * @param request
+     */
+    private void setPreviewObject(DocDetails entity, HttpServletRequest request) {
+<span class="fc" id="L385">        request.getSession().setAttribute(&quot;ShowdocAction.showDocData&quot;, entity);</span>
+<span class="fc" id="L386">    }</span>
+
+    @Override
+    public boolean processAction(DocDetails entity, String action) {
+<span class="fc bfc" id="L390" title="All 2 branches covered.">        if (&quot;saveAsAbTest&quot;.equals(action)) {</span>
+            //sprav kopiu entity a uloz ako B variant
+<span class="fc" id="L392">            DocDetails saved = editorFacade.saveAsBVariant(entity);</span>
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">            if (saved != null) setForceReload(true);</span>
+
+<span class="fc" id="L395">            addNotify(editorFacade.getNotify());</span>
+
+<span class="fc" id="L397">            return true;</span>
+<span class="fc bfc" id="L398" title="All 2 branches covered.">        } else if(&quot;recoverDoc&quot;.equals(action)) {</span>
+<span class="fc" id="L399">            editorFacade.recoverWebpageFromTrash(entity);</span>
+
+<span class="fc" id="L401">            addNotify(editorFacade.getNotify());</span>
+
+<span class="fc" id="L403">            return true;</span>
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">        } else if(&quot;addBloggerGroup&quot;.equals(action)) {</span>
+<span class="fc" id="L405">            String customData = getRequest().getParameter(&quot;customData&quot;);</span>
+<span class="fc" id="L406">            boolean success = BlogService.addNewBloggerGroup(editorFacade, getUser(), customData);</span>
+
+<span class="fc bfc" id="L408" title="All 2 branches covered.">            if(success)</span>
+<span class="fc" id="L409">                addNotify( new NotifyBean(getProp().getText(&quot;components.blog.add_folder.title&quot;), getProp().getText(&quot;components.blog.add_new_group.success&quot;), NotifyBean.NotifyType.SUCCESS, 60000) );</span>
+            else
+<span class="fc" id="L411">                addNotify( new NotifyBean(getProp().getText(&quot;components.blog.add_folder.title&quot;), getProp().getText(&quot;components.blog.add_new_group.failed&quot;), NotifyBean.NotifyType.ERROR, 60000) );</span>
+
+<span class="fc" id="L413">            return true;</span>
+        }
+
+<span class="nc" id="L416">        return false;</span>
+    }
+
+
+    /**
+     * Overi, ci je potrebne obnovit aj stromovu strukturu (ak su zobrazene aj stranky) v jstree
+     * @param entity
+     * @param saved
+     * @return
+     */
+    private boolean isRefreshMenuRequired(DocDetails entity, DocDetails saved) {
+<span class="fc bfc" id="L427" title="All 2 branches covered.">        if (WebpagesService.isTreeShowPages(getUser())==false) return false;</span>
+
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">		if (entity.getDocId() &lt; 1) return true;</span>
+
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">		if (saved != null) {</span>
+<span class="fc bfc" id="L432" title="All 2 branches covered.">			if (saved.getTitle().equals(entity.getTitle()) == false) return true;</span>
+<span class="pc bpc" id="L433" title="1 of 2 branches missed.">			if (saved.getExternalLink().equals(entity.getExternalLink()) == false) return true;</span>
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">			if (saved.getVirtualPath().equals(entity.getVirtualPath()) == false) return true;</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">			if (saved.isAvailable() != entity.isAvailable()) return true;</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">			if (saved.getGroupId() != entity.getGroupId()) return true;</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">			if (saved.getSortPriority() != entity.getSortPriority()) return true;</span>
+		}
+
+<span class="fc" id="L440">		return false;</span>
+	}
+
+    @Override
+    public void afterDuplicate(DocDetails entity, Long originalId) {
+<span class="nc bnc" id="L445" title="All 4 branches missed.">        if (originalId!=null &amp;&amp; entity.getDocId()&gt;0) editorFacade.duplicateMedia(originalId.intValue(), entity.getDocId());</span>
+<span class="nc" id="L446">    }</span>
+
+    /**
+     * Show notification to user if action need to be appoved by approver by sending email ( + approver full name).
+     * @param isInsert - true if its insert, false if its edit (change notify text)
+     * @param approveByUsers - list of users that one of them need approve this action
+     */
+    private void addInsertEditNotify(boolean isInsert, List&lt;UserDetails&gt; approveByUsers) {
+<span class="fc bfc" id="L454" title="All 2 branches covered.">        String needApproveText = isInsert ? &quot;editor.approveRequestInsert&quot; : &quot;editor.approveRequestGet&quot;;</span>
+
+<span class="pc bpc" id="L456" title="1 of 4 branches missed.">        if(approveByUsers != null &amp;&amp; approveByUsers.isEmpty()==false) {</span>
+<span class="fc" id="L457">            StringBuilder userNames = new StringBuilder();</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">            for (UserDetails approveUser : approveByUsers) {</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">                if (userNames.length()&gt;0) userNames.append(&quot;, &quot;);</span>
+<span class="fc" id="L460">                userNames.append(approveUser.getFullName());</span>
+<span class="fc" id="L461">            }</span>
+
+<span class="fc" id="L463">            NotifyBean notify = new NotifyBean(getProp().getText(&quot;editor.approve.notifyTitle&quot;), getProp().getText(needApproveText)+&quot;: &quot;+userNames.toString(), NotifyBean.NotifyType.INFO, 60000);</span>
+<span class="fc" id="L464">            addNotify(notify);</span>
+<span class="fc" id="L465">        } else {</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">            if (editorFacade.isPageSavedAsWorkVersion()) {</span>
+<span class="fc" id="L467">                NotifyBean notify = new NotifyBean(getProp().getText(&quot;text.info&quot;), getProp().getText(&quot;editor.pageSaved&quot;), NotifyBean.NotifyType.INFO, 15000);</span>
+<span class="fc" id="L468">                addNotify(notify);</span>
+            }
+
+<span class="fc bfc" id="L471" title="All 2 branches covered.">            if (editorFacade.getPublihStart() != null) {</span>
+<span class="fc" id="L472">                String publishDateTime = Tools.formatDateTimeSeconds(editorFacade.getPublihStart());</span>
+<span class="fc" id="L473">                NotifyBean notify = new NotifyBean(getProp().getText(&quot;text.warning&quot;), getProp().getText(&quot;editor.publish.pagesaved&quot;)+&quot; &quot;+publishDateTime, NotifyBean.NotifyType.WARNING, 30000);</span>
+<span class="fc" id="L474">                addNotify(notify);</span>
+            }
+        }
+<span class="fc" id="L477">    }</span>
+
+    @RequestMapping(value=&quot;/blogger-groups&quot;)
+    public Map&lt;Integer, String&gt; getActualBloggerGroups() {
+<span class="fc" id="L481">        Map&lt;Integer, String&gt; groupsMap = new HashMap&lt;&gt;();</span>
+
+        //Check if it's blogger ADMIN
+<span class="fc bfc" id="L484" title="All 2 branches covered.">        if(BlogService.isUserBloggerAdmin( getUser() )) {</span>
+            //Return all bloggers groups
+<span class="fc" id="L486">            List&lt;Integer&gt; bloggersRootGroupsIds = BlogService.getAllBloggersRootGroupIds();</span>
+
+<span class="fc bfc" id="L488" title="All 2 branches covered.">            for(Integer rootGroupId : bloggersRootGroupsIds) {</span>
+                //Get groups tree from user editable root group
+<span class="fc" id="L490">				List&lt;GroupDetails&gt; groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc bfc" id="L491" title="All 2 branches covered.">                for(GroupDetails group : groopsTree)</span>
+<span class="fc" id="L492">                    groupsMap.put(group.getGroupId(), group.getFullPath());</span>
+<span class="fc" id="L493">            }</span>
+<span class="fc" id="L494">            return groupsMap;</span>
+        }
+
+        //Check if it's blogger with perm
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">        if(BlogService.isUserBlogger( getUser() )) {</span>
+            //Root group id
+<span class="fc" id="L500">            int rootGroupId = Tools.getTokensInt(getUser().getEditableGroups(), &quot;,&quot;)[0];</span>
+<span class="fc" id="L501">            List&lt;GroupDetails&gt; groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">            for(GroupDetails group : groopsTree)</span>
+<span class="fc" id="L503">                groupsMap.put(group.getGroupId(), group.getFullPath());</span>
+
+<span class="fc" id="L505">            return groupsMap;</span>
+        }
+
+        //Else return empty map
+<span class="nc" id="L509">        return groupsMap;</span>
+    }
+
+    private boolean isBlogVersion() {
+<span class="fc" id="L513">        return &quot;true&quot;.equals(getRequest().getParameter(&quot;isBlogVersion&quot;));</span>
+    }
+
+    private boolean isAbTestingVersion() {
+<span class="fc" id="L517">        return &quot;true&quot;.equals(getRequest().getParameter(&quot;isABtestingVersion&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

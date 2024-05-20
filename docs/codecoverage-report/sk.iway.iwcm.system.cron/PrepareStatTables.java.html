@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrepareStatTables.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cron</a> &gt; <span class="el_source">PrepareStatTables.java</span></div><h1>PrepareStatTables.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cron;
+
+import java.util.Calendar;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.PartitionedTable;
+import sk.iway.iwcm.stat.StatNewDB;
+
+/**
+ *  PrepareStatTables.java
+ *  
+ *  Zisti ci existuju generovane tabulky pre statistiky pre aktualny mesiac + args[0] mesiacov dopredu
+ *  ak neexistuju tak ich vytvori a grantne prava na ne userovi z Constants &quot;publicWebDbUserName&quot;
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: Marián Halaš $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 6.8.2012 10:43:38
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L25">public class PrepareStatTables</span>
+{
+	public static void main(String[] args)
+	{	
+<span class="nc" id="L29">		Logger.debug(PrepareStatTables.class, &quot;Preparing tables for StatDB&quot;);</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		if(!Constants.getBoolean(&quot;statEnableTablePartitioning&quot;))</span>
+		{
+<span class="nc" id="L32">			Logger.debug(PrepareStatTables.class,&quot;Partitioning disabled. Prepare not needed. Exit.&quot;);</span>
+<span class="nc" id="L33">			return;</span>
+		}
+<span class="nc bnc" id="L35" title="All 2 branches missed.">		if(args !=null)</span>
+		{
+<span class="nc" id="L37">			int monthsForward = Tools.getIntValue(args[0], 3); //pocet mesiacov na ktore sa dopredu budu testovat tabulky</span>
+<span class="nc" id="L38">			Calendar now = Calendar.getInstance();</span>
+<span class="nc" id="L39">			Calendar statTo = Calendar.getInstance();</span>
+<span class="nc" id="L40">			statTo.add(Calendar.MONTH, monthsForward);</span>
+			
+<span class="nc" id="L42">			String publicWebDbUserName = Constants.getString(&quot;publicWebDbUserName&quot;);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">			if(Tools.isEmpty(publicWebDbUserName))</span>
+			{
+<span class="nc" id="L45">				Logger.debug(PrepareStatTables.class,&quot;publicWebDbUserName not defined, don't know whom to grant rights! Exit.&quot;);</span>
+<span class="nc" id="L46">				return;</span>
+			}
+<span class="nc" id="L48">			String [] suffixes = StatNewDB.getTableSuffix(now.getTimeInMillis(), statTo.getTimeInMillis());</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">			for(String suffix : suffixes)</span>
+			{
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				for(PartitionedTable table : PartitionedTable.values())</span>
+				{
+<span class="nc bnc" id="L53" title="All 2 branches missed.">					if(!StatNewDB.tableExists(table.getTableName()+suffix))</span>
+					{
+<span class="nc" id="L55">						StatNewDB.createStatTable(table.getTableName(), suffix);</span>
+<span class="nc" id="L56">						StatNewDB.grantRightsToUser(table.getTableName(), suffix, publicWebDbUserName);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L61">		Logger.debug(PrepareStatTables.class, &quot;Tables are prepared&quot;);</span>
+<span class="nc" id="L62">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

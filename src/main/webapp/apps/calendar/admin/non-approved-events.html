@@ -1,0 +1,83 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/calendar/non-approved-events";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.calendar.jpa.NonApprovedEventEntity")})]*/ [];
+</script>
+
+<script type="text/javascript" data-th-inline="javascript">
+    var nonApprovedEventsDataTable;
+
+    window.redirect = function (id) {
+        window.location.href = "/apps/calendar/admin/?id=" + id;
+    }
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "nonApprovedEvents",
+            tabs: [
+                {
+                    url: '/apps/calendar/admin/',
+                    title: /*[[#{menu.calendar}]]*/ 'title',
+                    active: false
+                },
+                {
+                    url: '/apps/calendar/admin/non-approved-events/',
+                    title: /*[[#{calendar.non_approved_events}]]*/ 'title',
+                    active: true
+                }
+            ]
+        });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatLinkTemplate: "javascript:redirect({{id}});" });
+        window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatPrefix: "" });
+
+        nonApprovedEventsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: ChartTools.filterColumns(["id", "title", "dateFrom", "dateTo", "typeId"], columns),
+            id: "nonApprovedEventsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        nonApprovedEventsDataTable.hideButton("create");
+        nonApprovedEventsDataTable.hideButton("edit");
+        nonApprovedEventsDataTable.hideButton("remove");
+        nonApprovedEventsDataTable.hideButton("celledit");
+        nonApprovedEventsDataTable.hideButton("import");
+        nonApprovedEventsDataTable.hideButton("duplicate");
+
+        var buttonCounter = 1;
+        nonApprovedEventsDataTable.button().add(buttonCounter++, {
+            text: '<i class="ti ti-circle-check"></i>',
+            action: function (e, dt, node) {
+                nonApprovedEventsDataTable.executeAction("approveEvent");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-success buttons-approve',
+            attr: {
+                'title': '[[#{calendar.approve_event}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        nonApprovedEventsDataTable.button().add(buttonCounter++, {
+            text: '<i class="ti ti-circle-x"></i>',
+            action: function (e, dt, node) {
+                nonApprovedEventsDataTable.executeAction("rejectEvent");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-danger buttons-reject buttons-divider',
+            attr: {
+                'title': '[[#{calendar.disapprove_event}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+    });
+</script>
+
+<table id="nonApprovedEventsDataTable" class="datatableInit table"></table>

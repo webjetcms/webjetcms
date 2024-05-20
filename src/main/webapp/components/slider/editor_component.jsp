@@ -745,7 +745,7 @@ input[type="number"] {
 							<%if (transition_fade)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="FADE" src="/components/slider/transitions/fade.gif" class="tooltipContent">
 						</span>
 
@@ -760,7 +760,7 @@ input[type="number"] {
 							<%if (transition_cross_fade)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="CROSS FADE" src="/components/slider/transitions/cross_fade.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -774,7 +774,7 @@ input[type="number"] {
 							<%if (transition_slide)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="SLIDE" src="/components/slider/transitions/slide.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -788,7 +788,7 @@ input[type="number"] {
 							<%if (transition_elastic)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="ELASTIC" src="/components/slider/transitions/elastic.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -802,7 +802,7 @@ input[type="number"] {
 							<%if (transition_slice)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="SLICE" src="/components/slider/transitions/slice.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -816,7 +816,7 @@ input[type="number"] {
 							<%if (transition_blinds)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="BLINDS" src="/components/slider/transitions/blinds.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -830,7 +830,7 @@ input[type="number"] {
 							<%if (transition_blocks)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="BLOCKS" src="/components/slider/transitions/blocks.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -844,7 +844,7 @@ input[type="number"] {
 							<%if (transition_shuffle)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="SHUFFLE" src="/components/slider/transitions/shuffle.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -858,7 +858,7 @@ input[type="number"] {
 							<%if (transition_tiles)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="TILES" src="/components/slider/transitions/tiles.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -872,7 +872,7 @@ input[type="number"] {
 							<%if (transition_flip)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="FLIP" src="/components/slider/transitions/flip.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -888,7 +888,7 @@ input[type="number"] {
 							<%if (transition_flip_with_zoom)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="FLIP WITH ZOOM" src="/components/slider/transitions/flipWithZoom.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -902,7 +902,7 @@ input[type="number"] {
 							<%if (transition_threed)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D" src="/components/slider/transitions/3D.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -916,7 +916,7 @@ input[type="number"] {
 							<%if (transition_threed_horizontal)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D HORIZONTAL" src="/components/slider/transitions/3Dhorizontal.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -930,7 +930,7 @@ input[type="number"] {
 							<%if (transition_threed_with_zoom)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D WITH ZOOM" src="/components/slider/transitions/3DwithZoom.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -945,7 +945,7 @@ input[type="number"] {
 							<%if (transition_threed_horizontal_with_zoom)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D HORIZONTAL WITH ZOOM" src="/components/slider/transitions/3DhorizontalWithZoom.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -959,7 +959,7 @@ input[type="number"] {
 							<%if (transition_threed_flip)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D FLIP" src="/components/slider/transitions/3Dflip.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -973,7 +973,7 @@ input[type="number"] {
 							<%if (transition_threed_flip_with_zoom)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D FLIP WITH ZOOM" src="/components/slider/transitions/3DflipWithZoom.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -987,7 +987,7 @@ input[type="number"] {
 							<%if (transition_threed_tiles)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="3D TILES" src="/components/slider/transitions/3Dtiles.gif" class="tooltipContent">
 						</span>
 					</div>
@@ -1001,7 +1001,7 @@ input[type="number"] {
 							<%if (transition_ken_burns)
 				out.print("checked='checked'");%>>
 						<span class="tooltipHoverMe">
-							<i class="fa fa-question-circle" aria-hidden="true" style="margin-left:4px;"></i>
+							<i class="ti ti-info-circle" aria-hidden="true" style="margin-left:4px;"></i>
 							<img alt="KEN BURNS" src="/components/slider/transitions/kenBurns.gif" class="tooltipContent">
 						</span>
 					</div>

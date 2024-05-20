@@ -1,16 +1,12 @@
 <template>
     <div :class="'overview-logged feedback'">
         <div class="overview-logged__head">
-            <div
-                @click="showModal()"
-                class="overview-logged__head__icon"
-                v-tooltip:top="this.$WJ.translate('admin.welcome.feedback.sendButton.js')"
-            >
-                <i class="fas fa-comments"></i>
+            <div class="overview-logged__head__icon">
+                <i class="ti ti-message-2 fs-4"></i>
             </div>
             <span> {{ this.$WJ.translate('admin.welcome.feedback.title.js') }}</span>
             <div class="overview-logged__head__more">
-                <i class="far fa-ellipsis-v" style="display: none;"></i>
+                <i @click="showModal()" v-tooltip:top="this.$WJ.translate('admin.welcome.feedback.sendButton.js')" class="ti ti-writing"></i>
             </div>
         </div>
 
@@ -63,15 +59,6 @@ export default {
     &.feedback {
         .overview-logged__head__icon {
             background: lighten(#c000d5, 20%);
-            &:hover {
-                cursor: pointer;
-                background: #c000d5;
-                color: #fff;
-                transition: all 0.3s ease;
-            }
-            &:hover > i:before {
-                content: '\f067';
-            }
         }
     }
     &.feedback {

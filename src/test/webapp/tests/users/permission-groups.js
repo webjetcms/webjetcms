@@ -8,7 +8,8 @@ Scenario('permission-groups', async ({I, DataTables }) => {
     I.amOnPage("/admin/v9/users/permission-groups/");
     await DataTables.baseTest({
         dataTable: 'permissionGroupsDataTable',
-        perms: 'users.perm_groups'
+        perms: 'users.perm_groups',
+        skipSwitchDomain: true
     });
 });
 

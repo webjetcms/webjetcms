@@ -144,11 +144,11 @@ function Ok()
 
 							<div class="col-sm-1" style="    padding-top: 60px;">
 								<button type="button" onclick="moveLeft(this.form, 'mediaGroup', 'disabledItems');" title="Zrušiť" class="btn green">
-									<i class="fa fa-arrow-circle-left"></i>
+									<i class="ti ti-circle-arrow-left"></i>
 								</button>
 
 								<button type="button" onclick="moveRight(this.form, 'mediaGroup', 'disabledItems');" title="Zvoliť" class="btn green" style="margin-top: 8px;">
-									<i class="fa fa-arrow-circle-right"></i>
+									<i class="ti ti-circle-arrow-right"></i>
 								</button>
 
 							</div>
@@ -173,7 +173,7 @@ function Ok()
 							<input id="docid" name="docid" class="form-control" value="${docId}">
 							<span class="input-group-btn">
 								<span onclick="popup('/admin/user_adddoc.jsp', 450, 340);" class="input-group-addon btn green">
-									<i class="fa fa-link"></i>
+									<i class="ti ti-focus-2"></i>
 								</span>
 							</span>
 						</div>

@@ -282,9 +282,6 @@ public class CloudToolsForCore {
      */
     public static void setPermissions(Identity user, RequestBean rb)
     {
-        GroupsDB groupsDB = GroupsDB.getInstance();
-        List<GroupDetails> rootGroups = groupsDB.getGroups(0);
-
         user.setEditablePages("");
         if ("cloud".equals(Constants.getInstallName()))
         {
@@ -293,17 +290,6 @@ public class CloudToolsForCore {
         else if (Tools.isNotEmpty(user.getEditableGroups()))
         {
             user.setEditableGroups(filterGroupIds(user.getEditableGroups()));
-        }
-
-        if (Tools.isEmpty(user.getEditableGroups()))
-        {
-            for (GroupDetails g : rootGroups)
-            {
-                if (g.getDomainName().equalsIgnoreCase(rb.getDomain()))
-                {
-                    user.setEditableGroups(String.valueOf(g.getGroupId()));
-                }
-            }
         }
 
         String defaultFolders = "/images/*\n/files/*";
@@ -353,10 +339,16 @@ public class CloudToolsForCore {
 
             user.addDisabledItem("menuGDPRregexp");
             user.addDisabledItem("menuGDPRDelete");
+
+            user.addDisabledItem("menu.users");
+            user.addDisabledItem("user.admin.userGroups");
+            user.addDisabledItem("users.perm_groups");
+            user.addDisabledItem("menu.fbrowser");
+            user.addDisabledItem("menu.templates");
         }
         else
         {
-            if (CloudToolsForCore.getDomainId()==1 && (user.getEmail().indexOf("@interway.sk")!=-1 || user.getEmail().indexOf("@webactive.cz")!=-1))
+            if (isControllerDomain())
             {
                 //prvemu hostu a iway || webactive user povolime niektore systemove moduly
             }
@@ -374,14 +366,22 @@ public class CloudToolsForCore {
 
                 user.addDisabledItem("menuGDPRregexp");
                 user.addDisabledItem("menuGDPRDelete");
+
+                //domain limits allow only for first domain
+                user.addDisabledItem("cmp_dmail_domainlimits");
+                user.addDisabledItem("cmp_response-header");
+                user.addDisabledItem("cmp_adminlog_logging");
+                user.addDisabledItem("cmp_in-memory-logging");
+
+                user.addDisabledItem("user.admin.userGroups");
+                user.addDisabledItem("users.perm_groups");
             }
 
             user.addDisabledItem("make_zip_archive");
             user.addDisabledItem("cmp_attributes");
             user.addDisabledItem("export_offline");
             user.addDisabledItem("cmp_clone_structure");
-            //statistika uz je v multiwebe dostupna
-            //user.addDisabledItem("cmp_stat");
+            user.addDisabledItem("cmp_stat_seeallgroups");
 
             String specialPerms = Constants.getString("multiwebSpecialPerms-"+user.getUserId());
             if (Tools.isNotEmpty(specialPerms))
@@ -394,6 +394,15 @@ public class CloudToolsForCore {
 
             UsersDB.loadDisabledItemsFromDB(user);
         }
+    }
+
+    /**
+     * In MultiWeb returns true for the first domain (controller) with more permissions
+     * @return
+     */
+    public static boolean isControllerDomain() {
+        if (InitServlet.isTypeCloud() == false) return false;
+        return CloudToolsForCore.getDomainId() == 1;
     }
 
     /**
@@ -780,5 +789,43 @@ public class CloudToolsForCore {
 	{
 		return Constants.getString("cloudSupportEmail");
 	}
+
+    /**
+     * Returns ID of root groups for current domain, eg. 10,15
+     * @return
+     */
+    public static String getRootGroupIds() {
+        List<GroupDetails> rootGroups = GroupsDB.getRootGroups();
+        StringBuilder sb = new StringBuilder();
+        String domain = CloudToolsForCore.getDomainName();
+        for (GroupDetails group : rootGroups) {
+            if (domain.equals(group.getDomainName())) {
+                if (sb.isEmpty()==false) sb.append(",");
+                sb.append(group.getGroupId());
+            }
+        }
+        //safety check
+        if (sb.isEmpty()) sb.append(Integer.MAX_VALUE);
+        return sb.toString();
+    }
+
+    /**
+     * In MultiWeb for null/-1 groupId returns domainId
+     * @param rootGroupId
+     * @return
+     */
+    public static Integer fixRootGroupId(Integer rootGroupId) {
+        if (InitServlet.isTypeCloud()) {
+            if (rootGroupId==null || rootGroupId<1) {
+                return CloudToolsForCore.getDomainId();
+            } else {
+                GroupDetails group = GroupsDB.getInstance().getGroup(rootGroupId);
+                if (group==null || group.getDomainName().equals(CloudToolsForCore.getDomainName())==false) {
+                    return CloudToolsForCore.getDomainId();
+                }
+            }
+        }
+        return rootGroupId;
+    }
 }
 

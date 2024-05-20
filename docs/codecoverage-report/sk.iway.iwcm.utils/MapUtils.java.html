@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MapUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.utils</a> &gt; <span class="el_source">MapUtils.java</span></div><h1>MapUtils.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.utils;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.beanutils.PropertyUtils;
+
+/**
+ *  MapUtils.java
+ *
+ *  Library class designed to ease off creating and
+ *  populating {@link Map}s.
+ *
+ *  Unless specified otherwise, all methods in this class
+ *  return instances of {@link LinkedHashMap}
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.10.2010 15:33:36
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@SuppressWarnings(&quot;unchecked&quot;)
+public final class MapUtils
+{
+	private MapUtils(){}
+
+	public static &lt;K, V, T&gt; Map&lt;K, V&gt; toMap(Collection&lt;T&gt; source, PairMaker&lt;K, V, T&gt; pairMaker)
+	{
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">		if (source == null || source.isEmpty())</span>
+<span class="nc" id="L40">			return Collections.EMPTY_MAP;</span>
+
+<span class="fc" id="L42">		Map&lt;K, V&gt; map = new LinkedHashMap&lt;K, V&gt;();</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">		for (T member : source)</span>
+		{
+<span class="fc" id="L46">			Pair&lt;K, V&gt; pair = pairMaker.makePair(member);</span>
+<span class="fc" id="L47">			map.put(pair.first, pair.second);</span>
+<span class="fc" id="L48">		}</span>
+
+<span class="fc" id="L50">		return map;</span>
+	}
+
+	public static &lt;K, V, T&gt; Map&lt;K, V&gt; toMap(T[] source, PairMaker&lt;K, V, T&gt; pairMaker)
+	{
+<span class="nc bnc" id="L55" title="All 4 branches missed.">		if (source == null || source.length == 0)</span>
+<span class="nc" id="L56">			return Collections.EMPTY_MAP;</span>
+
+<span class="nc" id="L58">		return toMap(Arrays.asList(source), pairMaker);</span>
+	}
+
+	public static &lt;K, V&gt; Map&lt;K,V&gt; toMap(List&lt;K&gt; keys, List&lt;V&gt; values)
+	{
+<span class="nc bnc" id="L63" title="All 8 branches missed.">		if (keys == null || keys.isEmpty() || values == null || values.isEmpty())</span>
+<span class="nc" id="L64">			return Collections.EMPTY_MAP;</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (keys.size() != values.size())</span>
+<span class="nc" id="L67">			throw new IllegalArgumentException(&quot;Cannot create map. More keys than values or vice versa. &quot;+keys+&quot; =&gt;&quot;+values);</span>
+
+<span class="nc" id="L69">		Map&lt;K, V&gt; map = new LinkedHashMap&lt;K, V&gt;();</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (int keyIndex = 0; keyIndex &lt; keys.size(); keyIndex++)</span>
+<span class="nc" id="L72">			map.put(keys.get(keyIndex), values.get(keyIndex));</span>
+
+<span class="nc" id="L74">		return map;</span>
+	}
+
+	public static &lt;K, V&gt; Map&lt;K,V&gt; toMap(K[] keys, V[] values)
+	{
+<span class="nc" id="L79">		return toMap(Arrays.asList(keys), Arrays.asList(values));</span>
+	}
+
+	public static &lt;K, V&gt; Map&lt;K, V&gt; toMapWithPropertyAsKey(Collection&lt;V&gt; source, String property)
+	{
+<span class="pc bpc" id="L84" title="2 of 4 branches missed.">		if (source == null || source.size() == 0)</span>
+<span class="nc" id="L85">			return Collections.EMPTY_MAP;</span>
+
+		try
+		{
+<span class="fc" id="L89">			Map&lt;K, V&gt; map = new LinkedHashMap&lt;K, V&gt;();</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">			for (V element : source){</span>
+<span class="fc" id="L92">				K key = (K)PropertyUtils.getProperty(element, property);</span>
+<span class="fc" id="L93">				map.put(key, element);</span>
+<span class="fc" id="L94">			}</span>
+
+<span class="fc" id="L96">			return map;</span>
+<span class="nc" id="L97">		}catch (IllegalAccessException e){}</span>
+<span class="nc" id="L98">		catch (InvocationTargetException e){}</span>
+<span class="nc" id="L99">		catch (NoSuchMethodException e){}</span>
+<span class="nc" id="L100">		throw unknownPropertyException(property);</span>
+	}
+
+	private static IllegalArgumentException unknownPropertyException(String property)
+	{
+<span class="nc" id="L105">		throw new IllegalArgumentException(&quot;Property &quot;+property+&quot; is not contained in passed objects&quot;);</span>
+	}
+
+	public static &lt;K&gt; Map&lt;K,K&gt; asMap(K...keysAndValues)
+	{
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (keysAndValues == null)</span>
+<span class="nc" id="L111">			return Collections.EMPTY_MAP;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">		if (keysAndValues.length % 2 != 0)</span>
+<span class="nc" id="L113">			throw new IllegalArgumentException(&quot;Cannot create map. Number of elements is not divisible by 2, cannot create key =&gt; value pairs&quot;);</span>
+
+<span class="fc" id="L115">		Map&lt;K, K&gt; map = new LinkedHashMap&lt;K, K&gt;();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">		for (int i = 0; i &lt; keysAndValues.length; i+= 2)</span>
+<span class="fc" id="L117">			map.put(keysAndValues[i], keysAndValues[i+1]);</span>
+
+<span class="fc" id="L119">		return map;</span>
+	}
+
+	public static &lt;K, V&gt; Map&lt;K, V&gt; merge(Map&lt;K, V&gt; important, Map&lt;K, V&gt; defaults)
+	{
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">		if (defaults == null)</span>
+<span class="nc" id="L125">			defaults = new HashMap&lt;K, V&gt;();</span>
+<span class="fc" id="L126">		Map&lt;K, V&gt; merged = new LinkedHashMap&lt;K, V&gt;(defaults);</span>
+
+<span class="fc" id="L128">		Set&lt;Map.Entry&lt;K, V&gt;&gt; set = important.entrySet();</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">		for(Map.Entry&lt;K, V&gt; me : set)</span>
+<span class="fc" id="L130">			merged.put(me.getKey(), me.getValue());</span>
+
+<span class="fc" id="L132">		return merged;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

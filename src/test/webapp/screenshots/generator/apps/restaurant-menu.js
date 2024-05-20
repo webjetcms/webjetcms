@@ -13,8 +13,14 @@ Scenario('meals screens', ({ I, DTE, Document }) => {
 
     Document.screenshotElement("div.DTE_Action_Create", "/redactor/apps/restaurant-menu/meals-editor.png");
 
-    DTE.selectOption('editorFields\\.alergensArr', '1 - Obilniny');
-    I.click(locate('div.dropdown-menu.show .dropdown-item').withText("7 - Mlieko"));
+    let confLng = I.getConfLng();
+    if("sk" === confLng) {
+        DTE.selectOption('editorFields\\.alergensArr', '1 - Obilniny');
+        I.click(locate('div.dropdown-menu.show .dropdown-item').withText("7 - Mlieko"));
+    } else if("en" === confLng) { 
+        DTE.selectOption('editorFields\\.alergensArr', '1 - Cereals');
+        I.click(locate('div.dropdown-menu.show .dropdown-item').withText("7 - Milk"));
+    }
 
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/restaurant-menu/meals-allergens-list.png");
 });
@@ -22,7 +28,12 @@ Scenario('meals screens', ({ I, DTE, Document }) => {
 Scenario('menu screens', async ({ I, DT, Document }) => {  
     I.amOnPage("/apps/restaurant-menu/admin/");
 
-    await setDate(I, DT, "28.11.2023");
+    let confLng = I.getConfLng();
+    if("sk" === confLng) {
+        await setDate(I, DT, '28.11.2023');
+    } else if("en" === confLng) { 
+        await setDate(I, DT, '11/28/2023');
+    }
 
     Document.screenshot("/redactor/apps/restaurant-menu/menu-data-table.png", 1400, 400);
     Document.screenshotElement("#pills-meals", "/redactor/apps/restaurant-menu/menu-external-filter.png");
@@ -40,17 +51,17 @@ Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=74621");
     DTE.waitForEditor();
 
-    I.waitForElement(".cke_wysiwyg_frame.cke_reset", 30);
-    I.switchTo("iframe.cke_reset");
-
-    I.waitForElement("iframe.wj_component", 10);
+    I.switchTo("iframe.cke_wysiwyg_frame");
+    I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
+    I.seeElement("div.inlineComponentButtons > a:nth-child(1)");
+    I.wait(2);
+    I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
+    
+    I.switchTo();
+    I.switchTo();
 
-    I.forceClick("div.inlineComponentButtons > a:nth-child(1)");
-    I.switchTo("");
-    I.switchTo("");
-
-    I.waitForElement("div.cke_dialog_body");
+    I.waitForVisible("div.cke_dialog_body");
 
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog.png");
 
@@ -72,13 +83,14 @@ Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
 
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog-menu.png");
 
-    I.amOnPage("/apps/restaurant-menu/");
-    I.waitForText("RESTAURANT MENU", 30);
-    I.waitForElement("div.restaurant-menu", 30);
-    I.fillField("#datepicker2_input", "48-2023");
-    I.click("#wjInline-docdata > section > div > input.button50");
+    if("sk" === I.getConfLng()) { 
+        I.amOnPage("/apps/restaurant-menu/?week=2023-W48");
+        I.waitForElement(locate("h2.menu").withText("Pondelok (27.11.2023)"));
+    } else if("en" === I.getConfLng()) { 
+        I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=en");
+        I.waitForElement(locate("h2.menu").withText("Monday (27.11.2023)"));
+    }
 
-    I.waitForElement(locate("h2.menu").withText("Pondelok (27.11.2023)"));
     Document.screenshot("/redactor/apps/restaurant-menu/menu-app-frontend.png", 1000, 1100);
 });
 

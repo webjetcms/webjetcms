@@ -1,0 +1,157 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.quiz.jpa.QuizEntity")})]*/ '';
+    let url = "/admin/rest/quiz";
+    let quizType;
+</script>
+<script type="text/javascript">
+
+var quizDataTable;
+var quizQuestionsDataTable = null;
+var quizResultDataTable = null;
+
+window.domReady.add(function () {
+
+    //window.helpLink = "/redactor/apps/qa/README";
+
+    WJ.breadcrumb({
+        id: "quiz",
+        tabs: [
+            {
+                url: '/apps/quiz/admin/',
+                title: '[[#{components.quiz.title}]]',
+                active: true
+            }
+        ]
+    });
+
+    var tabs = [
+        { id: 'main', title: '[[#{components.quiz.main_tab}]]', selected: true },
+        { id: 'questions', title: '[[#{components.quiz.questions_tab}]]', selected: false },
+        { id: 'results', title: '[[#{components.quiz.results_tab}]]', selected: false }
+    ];
+
+    quizDataTable = WJ.DataTable({
+        url: url,
+        serverSide: true,
+        columns: columns,
+        tabs: tabs,
+        id: "quizDataTable",
+        fetchOnCreate: true,
+        fetchOnEdit: true,
+    });
+
+    quizDataTable.button().add(4, {
+        text: '<i class="ti ti-chart-line"></i>',
+        action: function (e, dt, node) {
+            let selectedRows = dt.rows({ selected: true }).data();
+            for(var i = 0; i < selectedRows.length; i++) {
+                window.location.href= "/apps/quiz/admin/stat/?id=" + selectedRows[i].id;
+            }
+        },
+        init: function ( dt, node, config ) {
+            $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+        },
+        className: 'buttons-statistics btn btn-outline-secondary',
+        attr: {
+            'title': '[[#{components.quiz.statistics.title}]]',
+            'data-toggle': 'tooltip'
+        }
+    });
+
+    var eventsBinded = false;
+    quizDataTable.EDITOR.on('open', function (e, mode, action) {
+        quizType = $("#DTE_Field_quizType").val();
+        if (eventsBinded == false) {
+            eventsBinded = true;
+            $("#DTE_Field_quizType").on("change", function() {
+                //Save last selected quiz type
+                quizType = $("#DTE_Field_quizType").val();
+            });
+
+            $("#pills-dt-quizDataTable-questions-tab").on("click", function(e) {
+                //By quiz type show/hide columns
+                setColumnsVisibility();
+            });
+        }
+    });
+
+    //Catch event when inner table is initialized
+    window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+        setColumnsVisibility();
+
+        if (event.detail.conf.id=="DTE_Field_quizQuestions") {
+            //Save instance of inner table
+            quizQuestionsDataTable = event.detail.conf.datatable;
+            setColumnsVisibility();
+
+            quizQuestionsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+                if("0" == quizType) {
+                    quizQuestionsDataTable.EDITOR.field("rightAnswer").show();
+
+                    quizQuestionsDataTable.EDITOR.field("rate1").hide();
+                    quizQuestionsDataTable.EDITOR.field("rate2").hide();
+                    quizQuestionsDataTable.EDITOR.field("rate3").hide();
+                    quizQuestionsDataTable.EDITOR.field("rate4").hide();
+                    quizQuestionsDataTable.EDITOR.field("rate5").hide();
+                    quizQuestionsDataTable.EDITOR.field("rate6").hide();
+                } else {
+                    quizQuestionsDataTable.EDITOR.field("rightAnswer").hide();
+
+                    quizQuestionsDataTable.EDITOR.field("rate1").show();
+                    quizQuestionsDataTable.EDITOR.field("rate2").show();
+                    quizQuestionsDataTable.EDITOR.field("rate3").show();
+                    quizQuestionsDataTable.EDITOR.field("rate4").show();
+                    quizQuestionsDataTable.EDITOR.field("rate5").show();
+                    quizQuestionsDataTable.EDITOR.field("rate6").show();
+                }
+
+                if(action == 'create') {
+                    quizQuestionsDataTable.EDITOR.field("position").hide();
+                } else {
+                    quizQuestionsDataTable.EDITOR.field("position").show();
+                }
+            });
+        }
+
+        if (event.detail.conf.id=="DTE_Field_quizResults") {
+            //Save instance of inner table
+            quizResultDataTable = event.detail.conf.datatable;
+
+            quizResultDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+                if(action == 'create') {
+                    quizResultDataTable.EDITOR.field("position").hide();
+                } else {
+                    quizResultDataTable.EDITOR.field("position").show();
+                }
+            });
+        }
+    });
+
+    function setColumnsVisibility() {
+        if(quizQuestionsDataTable != null) {
+            if("0" == quizType) {
+                quizQuestionsDataTable.column(2).visible(true);
+
+                quizQuestionsDataTable.column(6).visible(false);
+                quizQuestionsDataTable.column(8).visible(false);
+                quizQuestionsDataTable.column(10).visible(false);
+                quizQuestionsDataTable.column(12).visible(false);
+                quizQuestionsDataTable.column(14).visible(false);
+                quizQuestionsDataTable.column(16).visible(false);
+            } else {
+                quizQuestionsDataTable.column(2).visible(false);
+
+                quizQuestionsDataTable.column(6).visible(true);
+                quizQuestionsDataTable.column(8).visible(true);
+                quizQuestionsDataTable.column(10).visible(true);
+                quizQuestionsDataTable.column(12).visible(true);
+                quizQuestionsDataTable.column(14).visible(true);
+                quizQuestionsDataTable.column(16).visible(true);
+            }
+        }
+    }
+
+});
+</script>
+
+<table id="quizDataTable" class="datatableInit table"></table>

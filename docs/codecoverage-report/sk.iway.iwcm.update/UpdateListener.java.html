@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UpdateListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.update</a> &gt; <span class="el_source">UpdateListener.java</span></div><h1>UpdateListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.update;
+
+import javax.validation.Validator;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.admin.AbstractUploadListener;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+@Component
+public class UpdateListener extends AbstractUploadListener&lt;UpdateForm&gt; {
+
+    protected UpdateListener(Validator validator) {
+<span class="fc" id="L20">        super(validator);</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='settings' &amp;&amp; event.source.subpage=='update'&quot;)
+    public void processForm(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+
+        // sprocesovanie dat formularu do objektu a validacia tohto objektu
+<span class="fc" id="L28">        super.processForm(event);</span>
+
+<span class="fc" id="L30">        ModelMap model = event.getSource().getModel();</span>
+        // ziskanie objektu a vlozenie do modelu
+<span class="fc" id="L32">        UpdateForm form = getForm();</span>
+<span class="fc" id="L33">        model.addAttribute(&quot;form&quot;, form);</span>
+
+<span class="fc" id="L35">        model.addAttribute(&quot;actualVersion&quot;, InitServlet.getActualVersion());</span>
+
+<span class="fc" id="L37">        Logger.debug(UpdateListener.class, &quot;Is post: &quot; + isPost());</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (!isPost()) {</span>
+            // ak nie je request typu post, tak dalej nic nerobime
+<span class="fc" id="L40">            return;</span>
+        }
+
+<span class="fc" id="L43">        BindingResult errors = getBindingResult();</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (errors.hasErrors()) {</span>
+<span class="fc" id="L45">            Logger.debug(UpdateListener.class, &quot;We have errors: &quot;+errors.getErrorCount());</span>
+<span class="fc" id="L46">            model.addAttribute(&quot;updateFileName&quot;, &quot;ERROR&quot;);</span>
+<span class="fc" id="L47">            return;</span>
+        }
+
+        try {
+            //
+<span class="nc" id="L52">            String fileVersionName = UpdateService.prepareUpdateFile(form.getDocument());</span>
+<span class="nc" id="L53">            model.addAttribute(&quot;updateFileName&quot;, fileVersionName);</span>
+<span class="nc" id="L54">        }  catch (Exception ex) {</span>
+<span class="nc" id="L55">            sk.iway.iwcm.Logger.error(UpdateListener.class, ex);</span>
+            //
+<span class="nc" id="L57">            model.addAttribute(&quot;importedFileNameFail&quot;, &quot;ERROR&quot;);</span>
+        } finally {
+            //
+<span class="nc" id="L60">            model.addAttribute(&quot;importedFileNameSucc&quot;, form.getDocument().getOriginalFilename());</span>
+        }
+<span class="nc" id="L62">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

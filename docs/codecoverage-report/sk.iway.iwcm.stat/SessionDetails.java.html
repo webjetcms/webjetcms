@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SessionDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">SessionDetails.java</span></div><h1>SessionDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import java.util.Date;
+/**
+ *  drzi data o last doc id
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1.1.1 $
+ *@created      Piatok, 2002, máj 31
+ *@modified     $Date: 2003/01/28 11:30:13 $
+ */
+<span class="fc" id="L15">public class SessionDetails</span>
+{
+<span class="fc" id="L17">   private int lastDocId=-1;</span>
+<span class="fc" id="L18">   private String lastURL = &quot;&quot;;</span>
+   private String remoteAddr;
+   private long logonTime;
+   private long lastActivity;
+<span class="fc" id="L22">   private String loggedUserName = null;</span>
+<span class="fc" id="L23">   private int loggedUserId = -1;</span>
+<span class="fc" id="L24">   private boolean admin = false;</span>
+
+	public String getRemoteAddr()
+	{
+<span class="fc" id="L28">		return remoteAddr;</span>
+	}
+	public void setRemoteAddr(String remoteAddr)
+	{
+<span class="fc" id="L32">		this.remoteAddr = remoteAddr;</span>
+<span class="fc" id="L33">	}</span>
+	public long getLastActivity()
+	{
+<span class="fc" id="L36">		return lastActivity;</span>
+	}
+	public Date getLastActivityAsDate()
+	{
+<span class="fc" id="L40">		return new Date(lastActivity);</span>
+	}
+	public void setLastActivity(long lastActivity)
+	{
+<span class="fc" id="L44">		this.lastActivity = lastActivity;</span>
+<span class="fc" id="L45">	}</span>
+	public long getLogonTime()
+	{
+<span class="nc" id="L48">		return logonTime;</span>
+	}
+	public Date getLogonTimeAsDate()
+	{
+<span class="fc" id="L52">		return new Date(logonTime);</span>
+	}
+	public void setLogonTime(long logonTime)
+	{
+<span class="fc" id="L56">		this.logonTime = logonTime;</span>
+<span class="fc" id="L57">	}</span>
+	public String getLastURL()
+	{
+<span class="fc" id="L60">		return lastURL;</span>
+	}
+	public void setLastURL(String lastURL)
+	{
+<span class="fc" id="L64">		this.lastURL = lastURL;</span>
+<span class="fc" id="L65">	}</span>
+	public int getLastDocId()
+	{
+<span class="nc" id="L68">		return lastDocId;</span>
+	}
+	public void setLastDocId(int lastDocId)
+	{
+<span class="fc" id="L72">		this.lastDocId = lastDocId;</span>
+<span class="fc" id="L73">	}</span>
+	public String getLoggedUserName()
+	{
+<span class="fc" id="L76">		return loggedUserName;</span>
+	}
+	public void setLoggedUserName(String loggedUserName)
+	{
+<span class="fc" id="L80">		this.loggedUserName = loggedUserName;</span>
+<span class="fc" id="L81">	}</span>
+	public int getLoggedUserId()
+	{
+<span class="fc" id="L84">		return loggedUserId;</span>
+	}
+	public void setLoggedUserId(int loggedUserId)
+	{
+<span class="fc" id="L88">		this.loggedUserId = loggedUserId;</span>
+<span class="fc" id="L89">	}</span>
+	public boolean isAdmin()
+	{
+<span class="fc" id="L92">		return admin;</span>
+	}
+	public void setAdmin(boolean admin)
+	{
+<span class="fc" id="L96">		this.admin = admin;</span>
+<span class="fc" id="L97">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

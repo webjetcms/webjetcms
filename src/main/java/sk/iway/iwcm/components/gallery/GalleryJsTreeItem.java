@@ -19,7 +19,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
     public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository, Identity user) {
         setId(f.getVirtualPath());
         setChildren(f.listFiles(IwcmFile::isDirectory).length > 0);
-        setIcon("fas fa-folder");
+        setIcon("ti ti-folder-filled");
         setVirtualPath(f.getVirtualPath());
         JsTreeItemState jsTreeItemState = new JsTreeItemState();
 
@@ -44,7 +44,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
             galleryDimension = GalleryDimenstionRestController.getNewEntity(f.getVirtualPath());
 
 
-            setIcon("far fa-folder");
+            setIcon("ti ti-folder");
         }
         if (Tools.isEmpty(galleryDimension.getName())) {
             galleryDimension.setName(f.getName());
@@ -54,7 +54,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
         setText(galleryDimension.getName());
 
         if (GalleryDimenstionRestController.isFolderEditable(galleryDimension.getPath(), user)==false) {
-            setIcon("fas fa-folder-times");
+            setIcon("ti ti-folder-x");
         }
     }
 

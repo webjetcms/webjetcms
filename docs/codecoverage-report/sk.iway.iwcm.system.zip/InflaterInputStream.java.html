@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InflaterInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.zip</a> &gt; <span class="el_source">InflaterInputStream.java</span></div><h1>InflaterInputStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.zip;
+
+import java.io.EOFException;
+
+/**
+ *  InflaterInputStream.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 14.3.2005 13:29:13
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+/*
+ * @(#)InflaterInputStream.java	1.32 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
+import java.util.zip.ZipException;
+
+/**
+ * This class implements a stream filter for uncompressing data in the
+ * &quot;deflate&quot; compression format. It is also used as the basis for other
+ * decompression filters, such as GZIPInputStream.
+ *
+ * @see		Inflater
+ * @version 	1.32, 01/23/03
+ * @author 	David Connelly
+ */
+public class InflaterInputStream extends FilterInputStream {
+    /**
+     * Decompressor for this stream.
+     */
+    protected Inflater inf;
+
+    /**
+     * Input buffer for decompression.
+     */
+    protected byte[] buf;
+
+    /**
+     * Length of input buffer.
+     */
+    protected int len;
+
+<span class="fc" id="L56">    private boolean closed = false;</span>
+    // this flag is set to true after EOF has reached
+<span class="fc" id="L58">    private boolean reachEOF = false;</span>
+
+    /**
+     * Check to make sure that this stream has not been closed
+     */
+    private void ensureOpen() throws IOException {
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">	if (closed) {</span>
+<span class="nc" id="L65">	    throw new IOException(&quot;Stream closed&quot;);</span>
+        }
+<span class="fc" id="L67">    }</span>
+
+
+    /**
+     * Creates a new input stream with the specified decompressor and
+     * buffer size.
+     * @param in the input stream
+     * @param inf the decompressor (&quot;inflater&quot;)
+     * @param size the input buffer size
+     * @exception IllegalArgumentException if size is &lt;= 0
+     */
+    public InflaterInputStream(InputStream in, Inflater inf, int size) {
+<span class="fc" id="L79">	super(in);</span>
+<span class="pc bpc" id="L80" title="2 of 4 branches missed.">        if (in == null || inf == null) {</span>
+<span class="nc" id="L81">            throw new NullPointerException();</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        } else if (size &lt;= 0) {</span>
+<span class="nc" id="L83">            throw new IllegalArgumentException(&quot;buffer size &lt;= 0&quot;);</span>
+        }
+<span class="fc" id="L85">	this.inf = inf;</span>
+<span class="fc" id="L86">	buf = new byte[size];</span>
+<span class="fc" id="L87">    }</span>
+
+    /**
+     * Creates a new input stream with the specified decompressor and a
+     * default buffer size.
+     * @param in the input stream
+     * @param inf the decompressor (&quot;inflater&quot;)
+     */
+    public InflaterInputStream(InputStream in, Inflater inf) {
+<span class="nc" id="L96">	this(in, inf, 512);</span>
+<span class="nc" id="L97">    }</span>
+
+<span class="fc" id="L99">    boolean usesDefaultInflater = false;</span>
+
+    /**
+     * Creates a new input stream with a default decompressor and buffer size.
+     * @param in the input stream
+     */
+    public InflaterInputStream(InputStream in) {
+<span class="nc" id="L106">	this(in, new Inflater());</span>
+<span class="nc" id="L107">        usesDefaultInflater = true;</span>
+<span class="nc" id="L108">    }</span>
+
+<span class="fc" id="L110">    private byte[] singleByteBuf = new byte[1];</span>
+
+    /**
+     * Reads a byte of uncompressed data. This method will block until
+     * enough input is available for decompression.
+     * @return the byte read, or -1 if end of compressed input is reached
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public int read() throws IOException {
+<span class="nc" id="L120">	ensureOpen();</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">	return read(singleByteBuf, 0, 1) == -1 ? -1 : singleByteBuf[0] &amp; 0xff;</span>
+    }
+
+    /**
+     * Reads uncompressed data into an array of bytes. This method will
+     * block until some input can be decompressed.
+     * @param b the buffer into which the data is read
+     * @param off the start offset of the data
+     * @param len the maximum number of bytes read
+     * @return the actual number of bytes read, or -1 if the end of the
+     *         compressed input is reached or a preset dictionary is needed
+     * @exception ZipException if a ZIP format error has occurred
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public int read(byte[] b, int off, int len) throws IOException {
+<span class="fc" id="L137">	ensureOpen();</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if ((off | len | (off + len) | (b.length - (off + len))) &lt; 0) {</span>
+<span class="nc" id="L139">	    throw new IndexOutOfBoundsException();</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">	} else if (len == 0) {</span>
+<span class="nc" id="L141">	    return 0;</span>
+	}
+	try {
+	    int n;
+<span class="fc bfc" id="L145" title="All 2 branches covered.">	    while ((n = inf.inflate(b, off, len)) == 0) {</span>
+<span class="pc bpc" id="L146" title="1 of 4 branches missed.">		if (inf.finished() || inf.needsDictionary()) {</span>
+<span class="fc" id="L147">                    reachEOF = true;</span>
+<span class="fc" id="L148">		    return -1;</span>
+		}
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (inf.needsInput()) {</span>
+<span class="fc" id="L151">		    fill();</span>
+		}
+	    }
+<span class="fc" id="L154">	    return n;</span>
+<span class="nc" id="L155">	} catch (DataFormatException e) {</span>
+<span class="nc" id="L156">	    String s = e.getMessage();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">	    throw new ZipException(s != null ? s : &quot;Invalid ZLIB data format&quot;);</span>
+	}
+    }
+
+    /**
+     * Returns 0 after EOF has reached, otherwise always return 1.
+     * &lt;p&gt;
+     * Programs should not count on this method to return the actual number
+     * of bytes that could be read without blocking.
+     *
+     * @return     1 before EOF and 0 after EOF.
+     * @exception  IOException  if an I/O error occurs.
+     *
+     */
+    @Override
+	public int available() throws IOException {
+<span class="nc" id="L173">        ensureOpen();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (reachEOF) {</span>
+<span class="nc" id="L175">            return 0;</span>
+        } else {
+<span class="nc" id="L177">            return 1;</span>
+        }
+    }
+
+<span class="fc" id="L181">    private byte[] b = new byte[512];</span>
+
+    /**
+     * Skips specified number of bytes of uncompressed data.
+     * @param n the number of bytes to skip
+     * @return the actual number of bytes skipped.
+     * @exception IOException if an I/O error has occurred
+     * @exception IllegalArgumentException if n &lt; 0
+     */
+    @Override
+	public long skip(long n) throws IOException {
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (n &lt; 0) {</span>
+<span class="nc" id="L193">            throw new IllegalArgumentException(&quot;negative skip length&quot;);</span>
+        }
+<span class="nc" id="L195">	ensureOpen();</span>
+<span class="nc" id="L196">	int max = (int)Math.min(n, Integer.MAX_VALUE);</span>
+<span class="nc" id="L197">	int total = 0;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">	while (total &lt; max) {</span>
+<span class="nc" id="L199">	    int len = max - total;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">	    if (len &gt; b.length) {</span>
+<span class="nc" id="L201">		len = b.length;</span>
+	    }
+<span class="nc" id="L203">	    len = read(b, 0, len);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">	    if (len == -1) {</span>
+<span class="nc" id="L205">                reachEOF = true;</span>
+<span class="nc" id="L206">		break;</span>
+	    }
+<span class="nc" id="L208">	    total += len;</span>
+<span class="nc" id="L209">	}</span>
+<span class="nc" id="L210">	return total;</span>
+    }
+
+    /**
+     * Closes the input stream.
+     * @exception IOException if an I/O error has occurred
+     */
+    @Override
+	public void close() throws IOException {
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (!closed) {</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            if (usesDefaultInflater)</span>
+<span class="fc" id="L221">                inf.end();</span>
+<span class="fc" id="L222">	    in.close();</span>
+<span class="fc" id="L223">            closed = true;</span>
+        }
+<span class="fc" id="L225">    }</span>
+
+    /**
+     * Fills input buffer with more data to decompress.
+     * @exception IOException if an I/O error has occurred
+     */
+    protected void fill() throws IOException {
+<span class="fc" id="L232">	ensureOpen();</span>
+<span class="fc" id="L233">	len = in.read(buf, 0, buf.length);</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">	if (len == -1) {</span>
+<span class="nc" id="L235">	    throw new EOFException(&quot;Unexpected end of ZLIB input stream&quot;);</span>
+	}
+<span class="fc" id="L237">	inf.setInput(buf, 0, len);</span>
+<span class="fc" id="L238">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

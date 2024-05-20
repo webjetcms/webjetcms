@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultipartFileSender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">MultipartFileSender.java</span></div><h1>MultipartFileSender.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+
+/**
+ * Multipart odosielanie suboru (potrebne pre mp3 na Apple zariadeniach - tiket #30013)
+ * https://stackoverflow.com/questions/28427339/how-to-implement-http-byte-range-requests-in-spring-mvc
+ */
+public class MultipartFileSender {
+
+   private static final int DEFAULT_BUFFER_SIZE = 20480; // ..bytes = 20KB.
+   private static final String MULTIPART_BOUNDARY = &quot;MULTIPART_BYTERANGES&quot;;
+
+   IwcmFile file;
+   HttpServletRequest request;
+   HttpServletResponse response;
+
+<span class="fc" id="L33">   public MultipartFileSender() {</span>
+<span class="fc" id="L34">   }</span>
+
+   public static MultipartFileSender fromFile(IwcmFile file) {
+<span class="fc" id="L37">      return new MultipartFileSender().setFile(file);</span>
+   }
+
+   //** internal setter **//
+   private MultipartFileSender setFile(IwcmFile file) {
+<span class="fc" id="L42">      this.file = file;</span>
+<span class="fc" id="L43">      return this;</span>
+   }
+
+   public MultipartFileSender with(HttpServletRequest httpRequest) {
+<span class="fc" id="L47">      request = httpRequest;</span>
+<span class="fc" id="L48">      return this;</span>
+   }
+
+   public MultipartFileSender with(HttpServletResponse httpResponse) {
+<span class="fc" id="L52">      response = httpResponse;</span>
+<span class="fc" id="L53">      return this;</span>
+   }
+
+   public void serveResource() throws Exception {
+<span class="pc bpc" id="L57" title="2 of 4 branches missed.">      if (response == null || request == null) {</span>
+<span class="nc" id="L58">         return;</span>
+      }
+
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">      if (!file.exists()) {</span>
+<span class="nc" id="L62">         Logger.error(MultipartFileSender.class, &quot;File doesn't exist at URI : &quot;+file.getAbsolutePath());</span>
+<span class="nc" id="L63">         response.sendError(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="nc" id="L64">         return;</span>
+      }
+
+<span class="fc" id="L67">      Long length = file.length();</span>
+<span class="fc" id="L68">      String fileName = file.getName();</span>
+<span class="fc" id="L69">      long lastModified = file.lastModified();</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">      if (Tools.isEmpty(fileName)) {</span>
+<span class="nc" id="L72">         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);</span>
+<span class="nc" id="L73">         return;</span>
+      }
+
+<span class="fc" id="L76">      String contentType = Constants.getServletContext().getMimeType(file.getName());</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">      if (Tools.isEmpty(contentType)) contentType = &quot;application/octet-stream&quot;;</span>
+
+      // Validate request headers for caching ---------------------------------------------------
+
+      // If-None-Match header should contain &quot;*&quot; or ETag. If so, then return 304.
+<span class="fc" id="L82">      String ifNoneMatch = request.getHeader(&quot;If-None-Match&quot;);</span>
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">      if (ifNoneMatch != null &amp;&amp; HttpUtils.matches(ifNoneMatch, fileName)) {</span>
+<span class="fc" id="L84">         response.setHeader(&quot;ETag&quot;, fileName); // Required in 304.</span>
+<span class="fc" id="L85">         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);</span>
+<span class="fc" id="L86">         return;</span>
+      }
+
+      // If-Modified-Since header should be greater than LastModified. If so, then return 304.
+      // This header is ignored if any If-None-Match header is specified.
+<span class="fc" id="L91">      long ifModifiedSince = request.getDateHeader(&quot;If-Modified-Since&quot;);</span>
+<span class="pc bpc" id="L92" title="4 of 6 branches missed.">      if (ifNoneMatch == null &amp;&amp; ifModifiedSince != -1 &amp;&amp; ifModifiedSince + 1000 &gt; lastModified) {</span>
+<span class="nc" id="L93">         response.setHeader(&quot;ETag&quot;, fileName); // Required in 304.</span>
+<span class="nc" id="L94">         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);</span>
+<span class="nc" id="L95">         return;</span>
+      }
+
+      // Validate request headers for resume ----------------------------------------------------
+
+      // If-Match header should contain &quot;*&quot; or ETag. If not, then return 412.
+<span class="fc" id="L101">      String ifMatch = request.getHeader(&quot;If-Match&quot;);</span>
+<span class="pc bpc" id="L102" title="3 of 4 branches missed.">      if (ifMatch != null &amp;&amp; !HttpUtils.matches(ifMatch, fileName)) {</span>
+<span class="nc" id="L103">         response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);</span>
+<span class="nc" id="L104">         return;</span>
+      }
+
+      // If-Unmodified-Since header should be greater than LastModified. If not, then return 412.
+<span class="fc" id="L108">      long ifUnmodifiedSince = request.getDateHeader(&quot;If-Unmodified-Since&quot;);</span>
+<span class="pc bpc" id="L109" title="3 of 4 branches missed.">      if (ifUnmodifiedSince != -1 &amp;&amp; ifUnmodifiedSince + 1000 &lt;= lastModified) {</span>
+<span class="nc" id="L110">         response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);</span>
+<span class="nc" id="L111">         return;</span>
+      }
+
+      // Validate and process range -------------------------------------------------------------
+
+      // Prepare some variables. The full Range represents the complete file.
+<span class="fc" id="L117">      Range full = new Range(0, length - 1, length);</span>
+<span class="fc" id="L118">      List&lt;Range&gt; ranges = new ArrayList&lt;&gt;();</span>
+
+      // Validate and process Range and If-Range headers.
+<span class="fc" id="L121">      String range = request.getHeader(&quot;Range&quot;);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">      if (range != null) {</span>
+
+         // Range header should match format &quot;bytes=n-n,n-n,n-n...&quot;. If not, then return 416.
+<span class="nc bnc" id="L125" title="All 2 branches missed.">         if (!range.matches(&quot;^bytes=\\d*-\\d*(,\\d*-\\d*)*$&quot;)) {</span>
+<span class="nc" id="L126">            response.setHeader(&quot;Content-Range&quot;, &quot;bytes */&quot; + length); // Required in 416.</span>
+<span class="nc" id="L127">            response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);</span>
+<span class="nc" id="L128">            return;</span>
+         }
+
+<span class="nc" id="L131">         String ifRange = request.getHeader(&quot;If-Range&quot;);</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">         if (ifRange != null &amp;&amp; !ifRange.equals(fileName)) {</span>
+            try {
+<span class="nc" id="L134">               long ifRangeTime = request.getDateHeader(&quot;If-Range&quot;); // Throws IAE if invalid.</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">               if (ifRangeTime != -1) {</span>
+<span class="nc" id="L136">                  ranges.add(full);</span>
+               }
+<span class="nc" id="L138">            } catch (IllegalArgumentException ignore) {</span>
+<span class="nc" id="L139">               ranges.add(full);</span>
+<span class="nc" id="L140">            }</span>
+         }
+
+         // If any valid If-Range header, then process each part of byte range.
+<span class="nc bnc" id="L144" title="All 2 branches missed.">         if (ranges.isEmpty()) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            for (String part : range.substring(6).split(&quot;,&quot;)) {</span>
+               // Assuming a file with length of 100, the following examples returns bytes at:
+               // 50-80 (50 to 80), 40- (40 to length=100), -20 (length-20=80 to length=100).
+<span class="nc" id="L148">               long start = Range.sublong(part, 0, part.indexOf(&quot;-&quot;));</span>
+<span class="nc" id="L149">               long end = Range.sublong(part, part.indexOf(&quot;-&quot;) + 1, part.length());</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">               if (start == -1) {</span>
+<span class="nc" id="L152">                  start = length - end;</span>
+<span class="nc" id="L153">                  end = length - 1;</span>
+<span class="nc bnc" id="L154" title="All 4 branches missed.">               } else if (end == -1 || end &gt; length - 1) {</span>
+<span class="nc" id="L155">                  end = length - 1;</span>
+               }
+
+               // Check if Range is syntactically valid. If not, then return 416.
+<span class="nc bnc" id="L159" title="All 2 branches missed.">               if (start &gt; end) {</span>
+<span class="nc" id="L160">                  response.setHeader(&quot;Content-Range&quot;, &quot;bytes */&quot; + length); // Required in 416.</span>
+<span class="nc" id="L161">                  response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);</span>
+<span class="nc" id="L162">                  return;</span>
+               }
+
+               // Add range.
+<span class="nc" id="L166">               ranges.add(new Range(start, end, length));</span>
+            }
+         }
+      }
+
+      // Prepare and initialize response --------------------------------------------------------
+
+      // Get content type by file name and set content disposition.
+<span class="fc" id="L174">      String disposition = &quot;inline&quot;;</span>
+
+      // If content type is unknown, then set the default value.
+      // For all content types, see: http://www.w3schools.com/media/media_mimeref.asp
+      // To add new content types, add new mime-mapping entry in web.xml.
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">      if (contentType == null) {</span>
+<span class="nc" id="L180">         contentType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">      } else if (!contentType.startsWith(&quot;image&quot;)) {</span>
+         // Else, expect for images, determine content disposition. If content type is supported by
+         // the browser, then set to inline, else attachment which will pop a 'save as' dialogue.
+<span class="fc" id="L184">         String accept = request.getHeader(&quot;Accept&quot;);</span>
+<span class="pc bpc" id="L185" title="2 of 4 branches missed.">         disposition = accept != null &amp;&amp; HttpUtils.accepts(accept, contentType) ? &quot;inline&quot; : &quot;attachment&quot;;</span>
+      }
+      //Logger.debug(MultipartFileSender.class, &quot;Content-Type : &quot; + contentType);
+      // Initialize response.
+      //response.reset();
+      //response.setBufferSize(DEFAULT_BUFFER_SIZE);
+
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">      if(PathFilter.isForceDownload(fileName)) {</span>
+<span class="nc" id="L193">         disposition = &quot;attachment&quot;;</span>
+      }
+
+<span class="fc" id="L196">      response.setHeader(&quot;Content-Type&quot;, contentType);</span>
+<span class="fc" id="L197">      response.setHeader(&quot;Content-Disposition&quot;, disposition + &quot;;filename=\&quot;&quot; + fileName + &quot;\&quot;&quot;);</span>
+      //Logger.debug(MultipartFileSender.class, &quot;Content-Disposition : &quot;+disposition);
+<span class="fc" id="L199">      response.setHeader(&quot;Accept-Ranges&quot;, &quot;bytes&quot;);</span>
+<span class="fc" id="L200">      response.setHeader(&quot;ETag&quot;, fileName);</span>
+<span class="fc" id="L201">      response.setDateHeader(&quot;Last-Modified&quot;, lastModified);</span>
+
+      // Send requested file (part(s)) to client ------------------------------------------------
+
+      // Prepare streams.
+<span class="fc" id="L206">      try (IwcmInputStream input = new IwcmInputStream(file);</span>
+<span class="fc" id="L207">           OutputStream output = response.getOutputStream())</span>
+      {
+
+<span class="pc bpc" id="L210" title="3 of 4 branches missed.">         if (ranges.isEmpty() || ranges.get(0) == full) {</span>
+            // Return full file.
+<span class="fc" id="L212">            Logger.debug(MultipartFileSender.class,&quot;Return full file&quot;);</span>
+<span class="fc" id="L213">            response.setContentType(contentType);</span>
+<span class="fc" id="L214">            response.setHeader(&quot;Content-Range&quot;, &quot;bytes &quot; + full.start + &quot;-&quot; + full.end + &quot;/&quot; + full.total);</span>
+<span class="fc" id="L215">            response.setHeader(&quot;Content-Length&quot;, String.valueOf(full.length));</span>
+<span class="fc" id="L216">            Range.copy(input, output, length, full.start, full.length);</span>
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">         } else if (ranges.size() == 1) {</span>
+
+            // Return single part of file.
+<span class="nc" id="L221">            Range r = ranges.get(0);</span>
+<span class="nc" id="L222">            Logger.debug(MultipartFileSender.class, &quot;Return 1 part of file : from (&quot;+r.start+&quot;) to (&quot;+r.end+&quot;)&quot;);</span>
+<span class="nc" id="L223">            response.setContentType(contentType);</span>
+<span class="nc" id="L224">            response.setHeader(&quot;Content-Range&quot;, &quot;bytes &quot; + r.start + &quot;-&quot; + r.end + &quot;/&quot; + r.total);</span>
+<span class="nc" id="L225">            response.setHeader(&quot;Content-Length&quot;, String.valueOf(r.length));</span>
+<span class="nc" id="L226">            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.</span>
+            // Copy single part range.
+<span class="nc" id="L228">            Range.copy(input, output, length, r.start, r.length);</span>
+
+<span class="nc" id="L230">         } else {</span>
+
+            // Return multiple parts of file.
+<span class="nc" id="L233">            response.setContentType(&quot;multipart/byteranges; boundary=&quot; + MULTIPART_BOUNDARY);</span>
+<span class="nc" id="L234">            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.</span>
+
+            // Cast back to ServletOutputStream to get the easy println methods.
+            @SuppressWarnings(&quot;resource&quot;)
+<span class="nc" id="L238">            ServletOutputStream sos = (ServletOutputStream) output;</span>
+
+            // Copy multi part range.
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            for (Range r : ranges) {</span>
+<span class="nc" id="L242">               Logger.debug(MultipartFileSender.class, &quot;Return multi part of file : from (&quot;+r.start+&quot;) to (&quot;+r.end+&quot;)&quot;);</span>
+               // Add multipart boundary and header fields for every range.
+<span class="nc" id="L244">               sos.println();</span>
+<span class="nc" id="L245">               sos.println(&quot;--&quot; + MULTIPART_BOUNDARY);</span>
+<span class="nc" id="L246">               sos.println(&quot;Content-Type: &quot; + contentType);</span>
+<span class="nc" id="L247">               sos.println(&quot;Content-Range: bytes &quot; + r.start + &quot;-&quot; + r.end + &quot;/&quot; + r.total);</span>
+               // Copy single part range of multi part range.
+<span class="nc" id="L249">               Range.copy(input, output, length, r.start, r.length);</span>
+<span class="nc" id="L250">            }</span>
+
+            // End with multipart boundary.
+<span class="nc" id="L253">            sos.println();</span>
+<span class="nc" id="L254">            sos.println(&quot;--&quot; + MULTIPART_BOUNDARY + &quot;--&quot;);</span>
+         }
+      }
+
+<span class="fc" id="L258">   }</span>
+
+   private static class Range {
+      long start;
+      long end;
+      long length;
+      long total;
+
+      /**
+       * Construct a byte range.
+       * @param start Start of the byte range.
+       * @param end End of the byte range.
+       * @param total Total length of the byte source.
+       */
+<span class="fc" id="L272">      public Range(long start, long end, long total) {</span>
+<span class="fc" id="L273">         this.start = start;</span>
+<span class="fc" id="L274">         this.end = end;</span>
+<span class="fc" id="L275">         this.length = end - start + 1;</span>
+<span class="fc" id="L276">         this.total = total;</span>
+<span class="fc" id="L277">      }</span>
+
+      public static long sublong(String value, int beginIndex, int endIndex) {
+<span class="nc" id="L280">         String substring = value.substring(beginIndex, endIndex);</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">         return (substring.length() &gt; 0) ? Long.parseLong(substring) : -1;</span>
+      }
+
+      /*private static void copy(RandomAccessFile input, OutputStream output, long inputSize, long start, long length) throws IOException {
+         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+         int read;
+
+         if (inputSize == length) {
+            // Write full range.
+            while ((read = input.read(buffer)) &gt; 0) {
+               output.write(buffer, 0, read);
+               output.flush();
+            }
+         } else {
+            input.seek(start);
+            long toRead = length;
+
+            while ((read = input.read(buffer)) &gt; 0) {
+               if ((toRead -= read) &gt; 0) {
+                  output.write(buffer, 0, read);
+                  output.flush();
+               } else {
+                  output.write(buffer, 0, (int) toRead + read);
+                  output.flush();
+                  break;
+               }
+            }
+         }
+      }*/
+
+      private static void copy(IwcmInputStream input, OutputStream output, long inputSize, long start, long length) throws IOException {
+<span class="fc" id="L312">         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];</span>
+         int read;
+
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">         if (inputSize == length) {</span>
+            // Write full range.
+<span class="fc bfc" id="L317" title="All 2 branches covered.">            while ((read = input.read(buffer)) &gt; 0) {</span>
+<span class="fc" id="L318">               output.write(buffer, 0, read);</span>
+<span class="fc" id="L319">               output.flush();</span>
+            }
+         } else {
+<span class="nc" id="L322">            input.skip(start);</span>
+<span class="nc" id="L323">            long toRead = length;</span>
+
+<span class="nc bnc" id="L325" title="All 2 branches missed.">            while ((read = input.read(buffer)) &gt; 0) {</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">               if ((toRead -= read) &gt; 0) {</span>
+<span class="nc" id="L327">                  output.write(buffer, 0, read);</span>
+<span class="nc" id="L328">                  output.flush();</span>
+               } else {
+<span class="nc" id="L330">                  output.write(buffer, 0, (int) toRead + read);</span>
+<span class="nc" id="L331">                  output.flush();</span>
+<span class="nc" id="L332">                  break;</span>
+               }
+            }
+         }
+<span class="fc" id="L336">      }</span>
+   }
+   private static class HttpUtils {
+
+      /**
+       * Returns true if the given accept header accepts the given value.
+       * @param acceptHeader The accept header.
+       * @param toAccept The value to be accepted.
+       * @return True if the given accept header accepts the given value.
+       */
+      public static boolean accepts(String acceptHeader, String toAccept) {
+<span class="fc" id="L347">         String[] acceptValues = acceptHeader.split(&quot;\\s*(,|;)\\s*&quot;);</span>
+<span class="fc" id="L348">         Arrays.sort(acceptValues);</span>
+
+<span class="fc bfc" id="L350" title="All 2 branches covered.">         return Arrays.binarySearch(acceptValues, toAccept) &gt; -1</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">         || Arrays.binarySearch(acceptValues, toAccept.replaceAll(&quot;/.*$&quot;, &quot;/*&quot;)) &gt; -1</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">         || Arrays.binarySearch(acceptValues, &quot;*/*&quot;) &gt; -1;</span>
+      }
+
+      /**
+       * Returns true if the given match header matches the given value.
+       * @param matchHeader The match header.
+       * @param toMatch The value to be matched.
+       * @return True if the given match header matches the given value.
+       */
+      public static boolean matches(String matchHeader, String toMatch) {
+<span class="fc" id="L362">         String[] matchValues = matchHeader.split(&quot;\\s*,\\s*&quot;);</span>
+<span class="fc" id="L363">         Arrays.sort(matchValues);</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">         return Arrays.binarySearch(matchValues, toMatch) &gt; -1</span>
+<span class="pc bnc" id="L365" title="All 2 branches missed.">         || Arrays.binarySearch(matchValues, &quot;*&quot;) &gt; -1;</span>
+      }
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

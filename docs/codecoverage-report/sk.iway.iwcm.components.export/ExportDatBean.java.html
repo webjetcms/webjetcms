@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportDatBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.export</a> &gt; <span class="el_source">ExportDatBean.java</span></div><h1>ExportDatBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.export;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+/**
+ * ExportDatBean.java
+ *
+ * Ticket: Export dat (#16902)
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2010
+ * @author $Author: mkolejak $
+ * @version $Revision: 1.3 $
+ * @created Date: 05.11.2014 13:48:15
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name = &quot;export_dat&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_EXPORT)
+<span class="fc" id="L42">public class ExportDatBean extends ActiveRecordRepository implements Serializable</span>
+{
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator = &quot;WJGen_export_dat&quot;)
+	@TableGenerator(name = &quot;WJGen_export_dat&quot;, pkColumnValue = &quot;export_dat&quot;)
+	@Column(name = &quot;export_dat_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title=&quot;editor.cell.id&quot;,
+        renderFormat = &quot;dt-format-selector&quot;
+    )
+	private Long id;
+
+	@Column(name = &quot;url_address&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.export.urlAddress&quot;,
+        tab=&quot;basic&quot;
+    )
+	private String urlAddress;
+
+	@Column(name = &quot;format&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.export.format&quot;,
+        tab=&quot;basic&quot;
+    )
+	private String format;
+
+	@Column(name = &quot;number_items&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.export.numberItems&quot;,
+        tab=&quot;basic&quot;
+    )
+	private Integer numberItems;
+
+	@Column(name = &quot;group_ids&quot;)
+	private String groupIds;
+
+	@Column(name = &quot;expand_group_ids&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.export.expandGroupIds&quot;,
+        tab=&quot;filter&quot;
+    )
+	private boolean expandGroupIds;
+
+	@Column(name = &quot;publish_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.export.publishType&quot;,
+        tab=&quot;filter&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;components.news.PUBLISH_NEW&quot;, value = &quot;new&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.PUBLISH_OLD&quot;, value = &quot;old&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.PUBLISH_ALL&quot;, value = &quot;all&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.PUBLISH_NEXT&quot;, value = &quot;next&quot;)
+                }
+            )
+        }
+    )
+	private String publishType;
+
+	@Column(name = &quot;perex_group&quot;)
+	private String perexGroup;
+
+	@Column(name = &quot;no_perex_check&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.news.noPerexCheck&quot;,
+        tab=&quot;filter&quot;
+    )
+	private boolean noPerexCheck;
+
+	@Column(name = &quot;order_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.export.orderType&quot;,
+        tab=&quot;sort&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_PRIORITY&quot;, value = &quot;priority&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_DATE&quot;, value = &quot;date&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_EVENT_DATE&quot;, value = &quot;eventDate&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_SAVE_DATE&quot;, value = &quot;saveDate&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_TITLE&quot;, value = &quot;title&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_PLACE&quot;, value = &quot;place&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.news.ORDER_ID&quot;, value = &quot;id&quot;),
+
+                }
+            )
+        }
+    )
+	private String orderType;
+
+	@Column(name = &quot;asc_order&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.export.asc&quot;,
+        tab=&quot;sort&quot;
+    )
+	private boolean asc;
+
+<span class="fc" id="L152">    @Transient</span>
+    @DataTableColumnNested
+    private ExportDatEditorFields editorFields = null;
+
+    public Long getId() {
+<span class="fc" id="L157">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="fc" id="L161">        this.id = id;</span>
+<span class="fc" id="L162">    }</span>
+
+    @JsonIgnore
+    public int getExportDatId() {
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if(this.id == null) return 0;</span>
+<span class="fc" id="L167">        return id.intValue();</span>
+    }
+
+    @JsonIgnore
+    public void setExportDatId(int exportDatId) {
+<span class="fc" id="L172">        this.id = Long.valueOf(exportDatId);</span>
+<span class="fc" id="L173">    }</span>
+
+    public String getUrlAddress() {
+<span class="fc" id="L176">        return urlAddress;</span>
+    }
+
+    public void setUrlAddress(String urlAddress) {
+<span class="fc" id="L180">        this.urlAddress = urlAddress;</span>
+<span class="fc" id="L181">    }</span>
+
+    public String getFormat() {
+<span class="fc" id="L184">        return format;</span>
+    }
+
+    public void setFormat(String format) {
+<span class="fc" id="L188">        this.format = format;</span>
+<span class="fc" id="L189">    }</span>
+
+    public Integer getNumberItems() {
+<span class="fc" id="L192">        return numberItems;</span>
+    }
+
+    public void setNumberItems(Integer numberItems) {
+<span class="fc" id="L196">        this.numberItems = numberItems;</span>
+<span class="fc" id="L197">    }</span>
+
+    public String getGroupIds() {
+<span class="fc" id="L200">        return groupIds;</span>
+    }
+
+    public void setGroupIds(String groupIds) {
+<span class="fc" id="L204">        this.groupIds = groupIds;</span>
+<span class="fc" id="L205">    }</span>
+
+    public boolean isExpandGroupIds() {
+<span class="fc" id="L208">        return expandGroupIds;</span>
+    }
+
+    public boolean getExpandGroupIds() { //NOSONAR
+<span class="fc" id="L212">        return expandGroupIds;</span>
+    }
+
+    public void setExpandGroupIds(boolean expandGroupIds) {
+<span class="fc" id="L216">        this.expandGroupIds = expandGroupIds;</span>
+<span class="fc" id="L217">    }</span>
+
+    public String getPublishType() {
+<span class="fc" id="L220">        return publishType;</span>
+    }
+
+    public void setPublishType(String publishType) {
+<span class="fc" id="L224">        this.publishType = publishType;</span>
+<span class="fc" id="L225">    }</span>
+
+    public String getPerexGroup() {
+<span class="fc" id="L228">        return perexGroup;</span>
+    }
+
+    public void setPerexGroup(String perexGroup) {
+<span class="fc" id="L232">        this.perexGroup = perexGroup;</span>
+<span class="fc" id="L233">    }</span>
+
+    public boolean isNoPerexCheck() {
+<span class="fc" id="L236">        return noPerexCheck;</span>
+    }
+
+    public boolean getNoPerexCheck() { //NOSONAR
+<span class="fc" id="L240">        return noPerexCheck;</span>
+    }
+
+    public void setNoPerexCheck(boolean noPerexCheck) {
+<span class="fc" id="L244">        this.noPerexCheck = noPerexCheck;</span>
+<span class="fc" id="L245">    }</span>
+
+    public String getOrderType() {
+<span class="fc" id="L248">        return orderType;</span>
+    }
+
+    public void setOrderType(String orderType) {
+<span class="fc" id="L252">        this.orderType = orderType;</span>
+<span class="fc" id="L253">    }</span>
+
+    public boolean isAsc() {
+<span class="fc" id="L256">        return asc;</span>
+    }
+
+    public boolean getAsc() { //NOSONAR
+<span class="fc" id="L260">        return asc;</span>
+    }
+
+    public void setAsc(boolean asc) {
+<span class="fc" id="L264">        this.asc = asc;</span>
+<span class="fc" id="L265">    }</span>
+
+    public ExportDatEditorFields getEditorFields() {
+<span class="fc" id="L268">        return editorFields;</span>
+    }
+
+    public void setEditorFields(ExportDatEditorFields editorFields) {
+<span class="fc" id="L272">        this.editorFields = editorFields;</span>
+<span class="fc" id="L273">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

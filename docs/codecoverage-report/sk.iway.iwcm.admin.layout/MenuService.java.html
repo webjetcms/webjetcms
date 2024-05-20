@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">MenuService.java</span></div><h1>MenuService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
+
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.PermissionGroupDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * MenuService - generovanie menu pre admin cast z dat v objekte Modules
+ */
+public class MenuService {
+
+    List&lt;MenuBean&gt; menu;
+
+    Identity user;
+    Prop prop;
+    String lng;
+    List&lt;ModuleInfo&gt; customItems;
+
+    //mapovanie mi.getItemKey na skupinu vo WJ9
+    static final Map&lt;String, String&gt; groupsMap;
+    //mapovanie mi.getItemKey na ikonu vo WJ9
+    static final Map&lt;String, String&gt; iconsMap;
+    //mapovanie mi.getItemKey na Sort order
+    static final Map&lt;String, Integer&gt; menuOrderMap;
+    //mapovanie mi.getNameKey na mapu
+    static final Map&lt;String, String&gt; leftMenuNameKeyMap;
+
+    //mapovanie starej a novej URL
+    static final Map&lt;String, String&gt; menuLinkReplaces;
+
+    static {
+<span class="fc" id="L54">        groupsMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L55">        iconsMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L56">        menuOrderMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L57">        menuLinkReplaces = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">        leftMenuNameKeyMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L59">        String[][] groups = {</span>
+            //welcome
+            { &quot;cmp_stat&quot;, &quot;welcome&quot; },
+            { &quot;cmp_server_monitoring&quot;, &quot;welcome&quot; },
+            { &quot;cmp_adminlog&quot;, &quot;welcome&quot; },
+            { &quot;menuMessages&quot;, &quot;welcome&quot; },
+            //website
+            { &quot;cmp_clone_structure&quot;, &quot;website&quot; },
+            { &quot;cmp_attributes&quot;, &quot;website&quot; },
+            { &quot;cmp_redirects&quot;, &quot;website&quot; },
+            { &quot;export_offline&quot;, &quot;website&quot; },
+            //news
+            { &quot;cmp_blog&quot;, &quot;news&quot; },
+            { &quot;cmp_news&quot;, &quot;news&quot; },
+            { &quot;cmp_diskusia&quot;, &quot;news&quot; },
+            //files
+            { &quot;cmp_file_archiv&quot;, &quot;files&quot; },
+            { &quot;make_zip_archive&quot;, &quot;files&quot; }
+        };
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (String[] pair : groups) {</span>
+<span class="fc" id="L79">            groupsMap.put(pair[0], pair[1]);</span>
+        }
+<span class="fc" id="L81">        String[][] icons = {</span>
+            //welcome
+            { &quot;welcome&quot;, &quot;far fa-chart-pie-alt&quot; },
+            { &quot;cmp_stat&quot;, &quot;far fa-chart-bar&quot; },
+            { &quot;cmp_server_monitoring&quot;, &quot;far fa-chart-line&quot; },
+            { &quot;cmp_adminlog&quot;, &quot;far fa-file-search&quot; },
+            { &quot;cmp_in-memory-logging&quot;, &quot;far fa-fast-backward&quot; },
+            { &quot;cmp_adminlog_logging&quot;, &quot;far fa-files&quot; },
+            { &quot;menuMessages&quot;, &quot;far fa-envelope-open-text&quot; },
+            { &quot;welcomeShowLoggedAdmins&quot;, &quot;far fa-user-shield&quot; },
+            //website
+            { &quot;menuWebpages&quot;, &quot;far fa-file-alt&quot; },
+            { &quot;cmp_clone_structure&quot;, &quot;far fa-copy&quot; },
+            { &quot;cmp_attributes&quot;, &quot;far fa-file-invoice&quot; },
+            { &quot;cmp_redirects&quot;, &quot;far fa-file-upload&quot; },
+            { &quot;export_offline&quot;, &quot;far fa-download&quot; },
+            { &quot;editorMiniEdit&quot;, &quot;far fa-filter&quot; },
+            { &quot;editorFullMenu&quot;, &quot;far fa-box-full&quot; },
+            { &quot;addPage&quot;, &quot;far fa-plus&quot; },
+            { &quot;pageSave&quot;, &quot;far fa-save&quot; },
+            { &quot;pageSaveAs&quot;, &quot;far fa-copy&quot; },
+            { &quot;deletePage&quot;, &quot;far fa-trash-alt&quot; },
+            { &quot;editDir&quot;, &quot;far fa-pencil&quot; },
+            { &quot;addSubdir&quot;, &quot;far fa-plus&quot; },
+            { &quot;deleteDir&quot;, &quot;far fa-trash-alt&quot; },
+            { &quot;editor_edit_perex&quot;, &quot;far fa-hashtag&quot; },
+            { &quot;editor_edit_media_all&quot;, &quot;fa fa-file-medical&quot;},
+            { &quot;editor_edit_media_group&quot;, &quot;far fa-file-medical&quot; },
+            { &quot;editor_show_hidden_folders&quot;, &quot;fad fa-folders&quot; },
+            { &quot;cmp_sync&quot;, &quot;far fa-sync&quot; },
+            { &quot;imageEditor&quot;, &quot;far fa-image-polaroid&quot; },
+            //news
+            { &quot;cmp_blog&quot;, &quot;far fa-comment-alt-lines&quot; },
+            { &quot;cmp_news&quot;, &quot;far fa-newspaper&quot; },
+            { &quot;cmp_diskusia&quot;, &quot;far fa-comments-alt&quot; },
+            { &quot;components.news.edit_templates&quot;, &quot;fal fa-layer-group&quot; },
+            //apps
+            { &quot;cmp_abtesting&quot;, &quot;far fa-analytics&quot; },
+            { &quot;menuEmail&quot;, &quot;far fa-envelope&quot; },
+            { &quot;cmp_calendar&quot;, &quot;far fa-calendar&quot; },
+            { &quot;cmp_form&quot;, &quot;far fa-book&quot; },
+            { &quot;menuInquiry&quot;, &quot;far fa-poll&quot; },
+            { &quot;menuQa&quot;, &quot;far fa-question-circle&quot; },
+            { &quot;menuGallery&quot;, &quot;far fa-photo-video&quot; },
+            { &quot;menuGDPR&quot;, &quot;far fa-shield-alt&quot; },
+            { &quot;menuGDPRDelete&quot;, &quot;far fa-trash-alt&quot; },
+            { &quot;menuGDPRregexp&quot;, &quot;far fa-print-search&quot; },
+            { &quot;menuBanner&quot;, &quot;far fa-ad&quot; },
+            { &quot;cmp_insert_script&quot;, &quot;far fa-file-code&quot; },
+            { &quot;cmp_basket&quot;, &quot;far fa-shopping-basket&quot; },
+            { &quot;cmp_enumerations&quot;, &quot;far fa-th-list&quot; },
+            { &quot;cmp_proxy&quot;, &quot;far fa-dungeon&quot; },
+            { &quot;cmp_reservation&quot;, &quot;far fa-calendar-check&quot; },
+            { &quot;cmp_restaurant_menu&quot;, &quot;far fa-utensils&quot; },
+            { &quot;cmp_seo&quot;, &quot;fab fa-searchengin&quot; },
+            { &quot;cmp_tooltip&quot;, &quot;far fa-question-circle&quot; },
+            { &quot;cmp_export&quot;, &quot;far fa-cloud-download&quot; },
+            { &quot;cmp_quiz&quot;, &quot;far fa-question-square&quot; },
+            { &quot;cmp_calendar_approve&quot;, &quot;far fa-thumbs-up&quot; },
+            { &quot;cmp_banner_add&quot;, &quot;far fa-plus&quot; },
+            { &quot;cmp_banner_seeall&quot;, &quot;far fa-ballot&quot; },
+            { &quot;cmp_insert_script&quot;, &quot;far fa-file-code&quot; },
+            { &quot;cmp_menu&quot;, &quot;far fa-ellipsis-v&quot; },
+            { &quot;sharedIcons&quot;, &quot;far fa-share-square&quot; },
+            { &quot;cmp_content-block&quot;, &quot;far fa-shapes&quot; },
+            //files
+            { &quot;menuFbrowser&quot;, &quot;far fa-folder-tree&quot; },
+            { &quot;cmp_file_archiv&quot;, &quot;far fa-archive&quot; },
+            { &quot;make_zip_archive&quot;, &quot;far fa-cabinet-filing&quot; },
+            { &quot;fbrowser_delete_directory&quot;, &quot;far fa-trash-alt&quot; },
+            { &quot;menuFileArchivExportFiles&quot;, &quot;far fa-upload&quot; },
+            { &quot;menuFileArchivImportFiles&quot;, &quot;far fa-download&quot; },
+            { &quot;menuFileArchivManagerCategory&quot;, &quot;far fa-tasks-alt&quot; },
+            { &quot;cmp_fileArchiv_edit_del_rollback&quot;, &quot;far fa-pencil&quot; },
+            { &quot;cmp_fileArchiv_advanced_settings&quot;, &quot;far fa-wrench&quot; },
+            { &quot;editor_unlimited_upload&quot;, &quot;far fa-infinity&quot; },
+            //templates
+            { &quot;menuTemplates&quot;, &quot;far fa-window-maximize&quot; },
+            { &quot;menuTemplatesGroup&quot;, &quot;far fa-layer-group&quot; },
+            //users
+            { &quot;menuUsers&quot;, &quot;far fa-user-friends&quot; },
+            { &quot;user.admin.userGroups&quot;, &quot;far fa-users&quot; },
+            { &quot;users.perm_groups&quot;, &quot;far fa-gavel&quot; },
+            { &quot;users.edit_admins&quot;, &quot;far fa-user-shield&quot; },
+            { &quot;users.edit_public_users&quot;, &quot;far fa-user-friends&quot; },
+            //config
+            { &quot;menuConfig&quot;, &quot;far fa-sliders-v-square&quot; },
+            { &quot;edit_text&quot;, &quot;far fa-key&quot; },
+            { &quot;cmp_data_deleting&quot;, &quot;far fa-database&quot; },
+            { &quot;cmp_crontab&quot;, &quot;far fa-repeat&quot; },
+            { &quot;modUpdate&quot;, &quot;far fa-cloud-download&quot; },
+            { &quot;modRestart&quot;, &quot;far fa-power-off&quot; },
+            { &quot;conf.show_all_variables&quot;, &quot;far fa-user-shield&quot; },
+            { &quot;prop.show_all_texts&quot;, &quot;far fa-user-shield&quot; },
+            { &quot;replaceAll&quot;, &quot;far fa-search&quot; }
+        };
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        for (String[] pair : icons) {</span>
+<span class="fc" id="L178">            iconsMap.put(pair[0], pair[1]);</span>
+        }
+<span class="fc" id="L180">        String[][] order = {</span>
+            //welcome
+            { &quot;cmp_adminlog&quot;, &quot;7041&quot; },
+            //website
+            { &quot;cmp_clone_structure&quot;, &quot;2040&quot; },
+            { &quot;cmp_attributes&quot;, &quot;2050&quot; },
+            { &quot;cmp_redirects&quot;, &quot;2060&quot; },
+            //news
+            { &quot;cmp_blog&quot;, &quot;3030&quot; }
+        };
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        for (String[] pair : order) {</span>
+<span class="fc" id="L191">            menuOrderMap.put(pair[0], Tools.getIntValue(pair[1], 0));</span>
+        }
+<span class="fc" id="L193">        String[][] linkReplaces = {</span>
+            //{ &quot;&quot;, &quot;&quot;},
+            //welcome
+            { &quot;/admin/&quot;, &quot;/admin/v9/&quot;},
+            //apps
+            { &quot;/admin/photogallery.do?gpage=1&quot;, &quot;/admin/v9/apps/gallery/&quot;},
+            { &quot;/admin/photogallery.do&quot;, &quot;/admin/v9/apps/gallery/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/gallery/admin_new_dir.jsp');&quot;, &quot;&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/gallery/admin_settings.jsp');&quot;, &quot;&quot;},
+            { &quot;/components/gallery/admin_gallery_stats.jsp&quot;, &quot;&quot;},
+            { &quot;/components/tooltip/admin_list.jsp&quot;, &quot;/apps/tooltip/admin/&quot;},
+            { &quot;/components/qa/admin_list.jsp&quot;, &quot;/apps/qa/admin/&quot;},
+            { &quot;/components/export/admin_list.jsp&quot;, &quot;/apps/export-dat/admin/&quot;},
+            { &quot;/components/enumerations/admin_enum_list.jsp&quot;, &quot;/apps/enumeration/admin/&quot;},
+            { &quot;/components/enumerations/admin_enum_type_list.jsp&quot;, &quot;/apps/enumeration/admin/enumeration-type/&quot;},
+            { &quot;/components/banner/banner_stat.jsp&quot;, &quot;/apps/banner/admin/banner-stat/&quot;},
+            { &quot;/components/proxy/admin_list.jsp&quot;, &quot;/apps/proxy/admin/&quot;},
+            { &quot;/components/news/admin_news_list.jsp&quot;, &quot;/apps/news/admin/&quot;},
+            { &quot;/components/quiz/admin_list.jsp&quot;, &quot;/apps/quiz/admin/&quot;},
+            { &quot;/components/restaurant_menu/admin_list_meals.jsp&quot;, &quot;/apps/restaurant-menu/admin/meals/&quot;},
+            { &quot;/components/restaurant_menu/admin_new_menu.jsp&quot;, &quot;/apps/restaurant-menu/admin/&quot;},
+            { &quot;/components/restaurant_menu/admin_list_menu.jsp&quot;, &quot;&quot;},
+
+            //dmail
+            { &quot;/components/dmail/admin_campaigns.jsp&quot;, &quot;/apps/dmail/admin/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/admin/email.do');&quot;, &quot;&quot;},
+            { &quot;/components/dmail/admin-domainlimits-list.jsp&quot;, &quot;/apps/dmail/admin/domain-limits/&quot;},
+            { &quot;/components/dmail/admin_unsubscribed.jsp&quot;, &quot;/apps/dmail/admin/unsubscribed/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/dmail/admin-domainlimits-edit.jsp');&quot;, &quot;&quot;},
+            { &quot;/components/inquiry/admin_inquiry_list.jsp&quot;, &quot;/apps/inquiry/admin/&quot;},
+
+            //calendar
+            { &quot;/admin/listevents.do&quot;, &quot;/apps/calendar/admin/&quot;},
+            { &quot;/components/calendar/admin_edit_type.jsp&quot;, &quot;/apps/calendar/admin/calendar-types/&quot;},
+            { &quot;/components/calendar/admin_neschvalene_udalosti.jsp&quot;, &quot;/apps/calendar/admin/non-approved-events/&quot;},
+            { &quot;/components/calendar/admin_suggest_evens.jsp&quot;, &quot;/apps/calendar/admin/suggest-events/&quot;},
+
+            { &quot;/components/insert_script/admin_insert_script_list.jsp&quot;, &quot;/admin/v9/apps/insert-script/&quot;},
+            //ovladaci panel
+            { &quot;/components/adminlog/adminlog.jsp&quot;, &quot;/admin/v9/apps/audit-search/&quot;},
+            { &quot;/components/adminlog/adminlog_notify_list.jsp&quot;, &quot;/admin/v9/apps/audit-notifications/&quot;},
+            { &quot;/admin/conf_editor.jsp&quot;, &quot;/admin/v9/settings/configuration/&quot;},
+            { &quot;/components/crontab/crontab_list.jsp&quot;, &quot;/admin/v9/settings/cronjob/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/crontab/crontab_edit.jsp?crontabId=-1');&quot;, &quot;&quot;},
+            { &quot;/components/adminlog/web_pages.jsp&quot;, &quot;/admin/v9/apps/audit-changed-webpages/&quot;},
+            { &quot;/components/adminlog/adminlog_wait_publishing.jsp&quot;, &quot;/admin/v9/apps/audit-awaiting-publish-webpages/&quot;},
+
+            { &quot;/components/redirects/admin_list.jsp?url=&amp;kategoria=1&amp;searchSubmit=&quot;, &quot;/admin/v9/settings/redirect/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/redirects/admin_edit.jsp?urlRedirect.urlRedirectId=-1');&quot;, &quot;&quot;},
+            { &quot;/components/redirects/admin_domainredir_list.jsp?url=&amp;kategoria=1&amp;searchSubmit=&quot;, &quot;/admin/v9/settings/domain-redirect/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/redirects/admin_domainredir_edit.jsp?urlRedirect.urlRedirectId=-1');&quot;, &quot;&quot;},
+
+            { &quot;/components/data_deleting/admin_deleting_stats.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_emails.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_history.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_monitoring.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_audit.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_cache.jsp&quot;, &quot;/admin/v9/settings/cache-objects/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_persistentcache.jsp&quot;, &quot;/admin/v9/settings/persistent-cache-objects/&quot;},
+            { &quot;/admin/prop_search.jsp&quot;, &quot;/admin/v9/settings/translation-keys/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/admin/prop_edit.jsp?key=&amp;lng=&amp;value=');&quot;, &quot;&quot;},
+            { &quot;/admin/prop_export-import.jsp&quot;, &quot;&quot;},
+            { &quot;/admin/prop_missing.jsp&quot;, &quot;/admin/v9/settings/missing-keys/&quot;},
+            //sablony
+            { &quot;/admin/temps_group_list.jsp&quot;, &quot;/admin/v9/templates/temps-groups-list/&quot;},
+            { &quot;/admin/temps_list.jsp&quot;, &quot;/admin/v9/templates/temps-list/&quot;},
+            //web stranky
+            { &quot;/admin/webpages/&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;},
+            { &quot;/components/attributes/admin_list.jsp&quot;, &quot;/admin/v9/webpages/attributes/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/attributes/admin_add.jsp')&quot;, &quot;&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/attributes/admin_import_excel.jsp')&quot;, &quot;&quot;},
+            //pouzivatelia
+            { &quot;/admin/listusers.do&quot;, &quot;/admin/v9/users/user-list/&quot;},
+            { &quot;/admin/listusers.do?groups=true&quot;, &quot;/admin/v9/users/user-groups/&quot;},
+            { &quot;/admin/user_management/admin_user_perm_groups.jsp&quot;, &quot;/admin/v9/users/permission-groups/&quot;},
+            //GDPR
+            { &quot;/components/gdpr/admin_list_regexp.jsp&quot;, &quot;/apps/gdpr/admin/regexps/&quot;},
+            { &quot;/components/gdpr/admin_gdpr_data_deleting.jsp&quot;, &quot;/apps/gdpr/admin/data-deleting/&quot;},
+            { &quot;/components/gdpr/admin_cookie_list.jsp&quot;, &quot;/apps/gdpr/admin/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/gdpr/admin_add_new_cookie.jsp');&quot;, &quot;&quot;},
+            { &quot;/components/gdpr/admin_list.jsp&quot;, &quot;/apps/gdpr/admin/search/&quot;},
+            //banner
+            { &quot;/components/banner/banner_editor.jsp&quot;, &quot;/apps/banner/admin/&quot;},
+            { &quot;javascript:WJ.openPopupDialog('/components/banner/banner_editor_popup.jsp');&quot;, &quot;&quot;},
+            //forms
+            { &quot;/admin/formlist.do?showArchived=false&quot;, &quot;/apps/form/admin/&quot;},
+            { &quot;/admin/formlist.do?showArchived=true&quot;, &quot;/apps/form/admin/archived/&quot;},
+            { &quot;/components/form/admin_reg_exp_list.jsp&quot;, &quot;/apps/form/admin/regexps/&quot;},
+            //Reservation
+            { &quot;/components/reservation/admin_object_list.jsp&quot;, &quot;/apps/reservation/admin/reservation-objects/&quot;},
+            { &quot;/components/reservation/admin_reservation_list.jsp&quot;, &quot;/apps/reservation/admin/&quot;},
+            //stat
+            {&quot;/components/stat/stat_days_new.jsp&quot;, &quot;/apps/stat/admin/&quot;},
+            {&quot;/components/stat/stat_weeks_new.jsp&quot;, &quot;&quot;},
+            {&quot;/components/stat/stat_months_new.jsp&quot;, &quot;&quot;},
+            {&quot;/components/stat/stat_hours_new.jsp&quot;, &quot;&quot;},
+            { &quot;/components/stat/stat_top_new.jsp&quot;, &quot;/apps/stat/admin/top/&quot;},
+            { &quot;/components/stat/stat_country.jsp&quot;, &quot;/apps/stat/admin/country/&quot;},
+            { &quot;/components/stat/stat_referer.jsp&quot;, &quot;/apps/stat/admin/referer/&quot;},
+            { &quot;/components/stat/stat_browser.jsp&quot;, &quot;/apps/stat/admin/browser/&quot;},
+            { &quot;/components/stat/stat_errors.jsp&quot;, &quot;/apps/stat/admin/error/&quot;},
+            { &quot;/components/stat/stat_userlogon.jsp&quot;, &quot;/apps/stat/admin/logon-user/&quot;},
+            { &quot;/components/stat/stat_searchengines.jsp&quot;, &quot;/apps/stat/admin/search-engines/&quot;},
+            { &quot;/components/stat/stat_complete.jsp&quot;, &quot;&quot;},
+            { &quot;/components/stat/admin_heat_map.jsp&quot;, &quot;&quot;},
+            //seo
+            { &quot;/components/seo/admin_bots.jsp&quot;, &quot;/apps/seo/admin/&quot;},
+            { &quot;/components/seo/admin_management_keywords.jsp&quot;, &quot;/apps/seo/admin/management-keywords/&quot;},
+            { &quot;/components/seo/admin_number_keywords.jsp&quot;, &quot;/apps/seo/admin/number-keywords/&quot;},
+            { &quot;/components/seo/admin_positions.jsp&quot;, &quot;/apps/seo/admin/positions/&quot;},
+            { &quot;/components/seo/admin_stat_keywords.jsp&quot;, &quot;/apps/seo/admin/stat-keywords/&quot;},
+            //server monitoring
+            { &quot;/components/server_monitoring/admin_basic_info.jsp&quot;, &quot;/apps/server_monitoring/admin/&quot;},
+            { &quot;/components/server_monitoring/admin_monitoring_all.jsp&quot;, &quot;/apps/server_monitoring/admin/records/&quot;},
+            { &quot;/components/server_monitoring/admin_components_monitoring.jsp&quot;, &quot;/apps/server_monitoring/admin/components/&quot;},
+            { &quot;/components/server_monitoring/admin_documents_monitoring.jsp&quot;, &quot;/apps/server_monitoring/admin/documents/&quot;},
+            { &quot;/components/server_monitoring/admin_sql_monitoring.jsp&quot;, &quot;/apps/server_monitoring/admin/sql/&quot;},
+
+            //
+            { &quot;/components/forum/admin_diskusia_zoznam.jsp&quot;, &quot;/apps/forum/admin/&quot;},
+            { &quot;/components/blog/blog_comments.jsp&quot;, &quot;/apps/blog/admin/&quot;},
+            { &quot;/components/blog/blog_admin.jsp&quot;, &quot;/apps/blog/admin/bloggers/&quot;},
+
+            { &quot;/components/abtesting/admin_abtesting.jsp&quot;, &quot;/apps/abtesting/admin/&quot;},
+        };
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        for (String[] pair : linkReplaces) {</span>
+<span class="fc" id="L319">            menuLinkReplaces.put(pair[0], pair[1]);</span>
+        }
+<span class="fc" id="L321">        String[][] leftMenuNameKeyReplaces = {</span>
+            {&quot;stat_menu.days&quot;, &quot;components.stat.visits&quot;}
+        };
+<span class="fc bfc" id="L324" title="All 2 branches covered.">        for (String[] pair : leftMenuNameKeyReplaces) {</span>
+<span class="fc" id="L325">            leftMenuNameKeyMap.put(pair[0], pair[1]);</span>
+        }
+<span class="fc" id="L327">    }</span>
+
+<span class="fc" id="L329">    public MenuService(HttpServletRequest request) {</span>
+
+<span class="fc" id="L331">        this.user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">        if (this.user == null) return;</span>
+<span class="fc" id="L333">        this.prop = Prop.getInstance(request);</span>
+<span class="fc" id="L334">        this.lng = Prop.getLng(request, false);</span>
+
+        //ziskaj standardny zoznam modulov
+<span class="fc" id="L337">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getUserMenuItems(user);</span>
+<span class="fc" id="L338">        customItems = Modules.filterDomain(allModules, DocDB.getDomain(request));</span>
+
+<span class="fc" id="L340">        sortModules(customItems);</span>
+
+<span class="fc" id="L342">        generateMenu();</span>
+<span class="fc" id="L343">    }</span>
+
+    /**
+     * Usporiada zoznam ModuleInfo podla WJ9 menuOrder (volanim getMenuOrder)
+     * @param customItems
+     */
+    private static void sortModules(List&lt;ModuleInfo&gt; customItems) {
+        //usortuj ich podla noveho sortingu
+<span class="fc" id="L351">        Collections.sort(customItems, new Comparator&lt;ModuleInfo&gt;()</span>
+<span class="fc" id="L352">        {</span>
+            @Override
+            public int compare(ModuleInfo m1, ModuleInfo m2)
+            {
+<span class="fc" id="L356">                int order = getMenuOrder(m1) - getMenuOrder(m2);</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">                if (order == 0)</span>
+                {
+<span class="fc" id="L359">                   order = m1.getNameKey().compareTo(m2.getNameKey());</span>
+                }
+<span class="fc" id="L361">                return (order);</span>
+            }
+        });
+<span class="fc" id="L364">    }</span>
+
+    public List&lt;MenuBean&gt; getMenu() {
+<span class="fc" id="L367">        return menu;</span>
+    }
+
+    /**
+     * Vrati skupinu pre WJ9 z povodnej skupiny
+     */
+    private static String getGroup9(ModuleInfo m)
+    {
+<span class="fc" id="L375">        String group = groupsMap.get(m.getItemKey());</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (group == null) group = m.getGroup();</span>
+
+        //Logger.debug(MenuService.class, &quot;getGroupV9, key: &quot;+m.getItemKey()+&quot; group:&quot;+group+&quot; sort:&quot;+m.getMenuOrder());
+
+<span class="fc" id="L380">        return group;</span>
+    }
+
+    /**
+     * Vrati ikonu pre WJ9 podla povodneho modulu
+     */
+    private static String getIcon9(ModuleInfo m)
+    {
+<span class="fc" id="L388">        return getIcon9(m.getItemKey(), m.getMenuIcon());</span>
+    }
+
+    /**
+     * Vrati ikonu pre WJ9 podla mena modulu
+     * @param itemKey - kluc modulu, napr. cmp_media
+     * @param defaultIcon - ikona, ked nie je definovana
+     * @return
+     */
+    private static String getIcon9(String itemKey, String defaultIcon)
+    {
+<span class="fc" id="L399">        String icon = iconsMap.get(itemKey);</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        if (icon == null) icon = &quot;fa fa-&quot;+defaultIcon;</span>
+
+<span class="fc" id="L402">        return icon;</span>
+    }
+
+    /**
+     * Vrati poradie usporiadania pre WJ9
+     * @param m
+     * @return
+     */
+    private static int getMenuOrder(ModuleInfo m)
+    {
+<span class="fc" id="L412">        Integer sortOrder = menuOrderMap.get(m.getItemKey());</span>
+<span class="fc bfc" id="L413" title="All 2 branches covered.">        if (sortOrder != null) return sortOrder.intValue();</span>
+
+<span class="fc" id="L415">        return m.getMenuOrder();</span>
+    }
+
+    /**
+     * Vrati linku na kliknutie v menu pre WJ9
+     * @param m
+     * @return
+     */
+    private static String getMenuLinkV9(ModuleInfo m)
+    {
+<span class="fc" id="L425">        String href = m.getLeftMenuLink();</span>
+<span class="fc" id="L426">        href = Tools.replace(href, &quot;openPopupDialogFromLeftMenu(&quot;, &quot;WJ.openPopupDialog(&quot;);</span>
+<span class="fc" id="L427">        href = replaceV9MenuLink(href);</span>
+<span class="fc" id="L428">        return href;</span>
+    }
+
+    /**
+     * Na zaklade zadanej linky vrati upravenu linku pre WJ9
+     * @param v8link
+     * @return
+     */
+    public static String replaceV9MenuLink(String v8link) {
+<span class="fc" id="L437">        String link = menuLinkReplaces.get(v8link);</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">        if (link != null) return link;</span>
+<span class="fc" id="L439">        return v8link;</span>
+    }
+
+    /**
+     * Na zaklade prekladoveho kluca vrati upraveny kluv pre WJ9
+     * @param nameKey
+     * @return
+     */
+    public static String getLeftMenuNameKeyV9(String nameKey) {
+<span class="fc" id="L448">        String key = leftMenuNameKeyMap.get(nameKey);</span>
+<span class="fc bfc" id="L449" title="All 2 branches covered.">        if (key != null) return key;</span>
+<span class="fc" id="L450">        return nameKey;</span>
+    }
+
+    /**
+     * Vrati zoznam korenovych menu poloziek
+     * @param prop
+     * @return
+     */
+    public static List&lt;MenuBean&gt; getRootItems(Prop prop) {
+<span class="fc" id="L459">        List&lt;MenuBean&gt; roots = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L461">        roots.add((new MenuBean()).setGroup(&quot;welcome&quot;).setText(prop.getText(&quot;menu.root.welcome&quot;)).setIcon(&quot;fa far fa-home&quot;));</span>
+<span class="fc" id="L462">        roots.add((new MenuBean()).setGroup(&quot;website&quot;).setText(prop.getText(&quot;menu.root.websites&quot;)).setIcon(&quot;fa fal fa-copy&quot;));</span>
+<span class="fc" id="L463">        roots.add((new MenuBean()).setGroup(&quot;news&quot;).setText(prop.getText(&quot;menu.root.news&quot;)).setIcon(&quot;fa fal fa-edit&quot;));</span>
+<span class="fc" id="L464">        roots.add((new MenuBean()).setGroup(&quot;components&quot;).setText(prop.getText(&quot;components.modules.title&quot;)).setIcon(&quot;fa fal fa-cube&quot;));</span>
+<span class="fc" id="L465">        roots.add((new MenuBean()).setGroup(&quot;files&quot;).setText(prop.getText(&quot;menu.root.files&quot;)).setIcon(&quot;fa fal fa-folder-open&quot;));</span>
+<span class="fc" id="L466">        roots.add((new MenuBean()).setGroup(&quot;templates&quot;).setText(prop.getText(&quot;menu.root.templates&quot;)).setIcon(&quot;fa fal fa-layer-group&quot;));</span>
+<span class="fc" id="L467">        roots.add((new MenuBean()).setGroup(&quot;users&quot;).setText(prop.getText(&quot;menu.root.users&quot;)).setIcon(&quot;fa fal fa-user&quot;));</span>
+<span class="fc" id="L468">        roots.add((new MenuBean()).setGroup(&quot;config&quot;).setText(prop.getText(&quot;menu.root.config&quot;)).setIcon(&quot;fa fal fa-cog&quot;));</span>
+
+<span class="fc" id="L470">        return roots;</span>
+    }
+
+    /**
+     * Vygeneruje menu do menu objektu
+     */
+    private void generateMenu() {
+<span class="fc" id="L477">        menu = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L479">        menu.addAll(getRootItems(prop));</span>
+
+<span class="fc bfc" id="L481" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
+            // out.println(renderLeftMenu(group, customItems, actualMenuPath, user, prop));
+<span class="fc" id="L483">            addMenuItems(rootItem);</span>
+<span class="fc" id="L484">        }</span>
+
+<span class="fc" id="L486">        List&lt;MenuBean&gt; filtered = new ArrayList&lt;&gt;();</span>
+        //remove empty root items
+<span class="fc bfc" id="L488" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
+<span class="fc bfc" id="L489" title="All 2 branches covered.">            if (rootItem.getChildrens().isEmpty()==false) {</span>
+<span class="fc" id="L490">                filtered.add(rootItem);</span>
+            }
+<span class="fc" id="L492">        }</span>
+<span class="fc" id="L493">        menu = filtered;</span>
+<span class="fc" id="L494">    }</span>
+
+    /**
+     * K root polozke doplnit 2. a 3. uroven menu
+     * @param rootItem
+     */
+    private void addMenuItems(MenuBean rootItem) {
+
+<span class="fc" id="L502">        List&lt;MenuBean&gt; childrens = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L504" title="All 2 branches covered.">        for (ModuleInfo m : customItems) {</span>
+<span class="fc bfc" id="L505" title="All 2 branches covered.">            if (rootItem.getGroup().equals(getGroup9(m)) == false) continue;</span>
+
+<span class="fc bfc" id="L507" title="All 2 branches covered.">            if (m.getItemKey().equalsIgnoreCase(&quot;menuTemplates&quot;)) {</span>
+                //tohto subpolozky vynasame ako hlavne polozky menu
+<span class="fc" id="L509">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">                for (ModuleInfo sub : subMenus) {</span>
+<span class="fc" id="L511">                    MenuBean children = (new MenuBean())</span>
+<span class="fc" id="L512">                        .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L513">                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
+<span class="fc" id="L514">                        .setHref(getMenuLinkV9(sub))</span>
+<span class="fc" id="L515">                        .setIcon(getIcon9(sub.getItemKey(), m.getMenuIcon()));</span>
+
+<span class="fc" id="L517">                        List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L518">                        children.setChildrens(thirdChildrens);</span>
+
+<span class="fc" id="L520">                        childrens.add(children);</span>
+<span class="fc" id="L521">                }</span>
+<span class="fc" id="L522">            } else {</span>
+<span class="fc" id="L523">                MenuBean children = (new MenuBean())</span>
+<span class="fc" id="L524">                .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L525">                .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))</span>
+<span class="fc" id="L526">                .setHref(getMenuLinkV9(m))</span>
+<span class="fc" id="L527">                .setIcon(getIcon9(m));</span>
+//                .setCustom(m.isCustom());
+
+<span class="fc" id="L530">                List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L531">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
+
+<span class="fc bfc" id="L533" title="All 4 branches covered.">                if (subMenus.size()==1 &amp;&amp; children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {</span>
+                    //v submenu je len 1 polozka a zhoduje sa s parentom, toto nebudeme renderovat
+                } else {
+<span class="fc bfc" id="L536" title="All 2 branches covered.">                    for (ModuleInfo sub : subMenus) {</span>
+<span class="fc" id="L537">                        MenuBean third = (new MenuBean())</span>
+<span class="fc" id="L538">                            .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L539">                            .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
+<span class="fc" id="L540">                            .setHref(getMenuLinkV9(sub));</span>
+
+<span class="fc" id="L542">                        thirdChildrens.add(third);</span>
+<span class="fc" id="L543">                    }</span>
+                }
+
+<span class="fc bfc" id="L546" title="All 4 branches covered.">                if (children.getHref().contains(&quot;void()&quot;) &amp;&amp; thirdChildrens.isEmpty()) {</span>
+                    //ak hlavny item ma javascript:void linku a nema ziadnych childov nezobrazime
+                } else {
+<span class="fc" id="L549">                    childrens.add(children);</span>
+                }
+<span class="fc" id="L551">                children.setChildrens(thirdChildrens);</span>
+            }
+<span class="fc" id="L553">        }</span>
+
+<span class="fc bfc" id="L555" title="All 2 branches covered.">        if (rootItem.getGroup().equals(&quot;components&quot;)) {</span>
+            //aplikacie sortni podla abecedy
+<span class="fc" id="L557">            Locale loc = LayoutService.getUserLocale(lng);</span>
+<span class="fc" id="L558">            Collator coll = Collator.getInstance(loc);</span>
+<span class="fc" id="L559">            childrens = childrens.stream().sorted(Comparator.comparing(MenuBean::isCustom).reversed().thenComparing(MenuBean::getText, coll)).collect(Collectors.toList());</span>
+        }
+
+<span class="fc" id="L562">        rootItem.setChildrens(childrens);</span>
+<span class="fc" id="L563">    }</span>
+
+    /**
+     * Odfiltruje menu polozky, ktore obsahuju prazdne javascript:void() alebo na ktore pouzivatel nema pravo
+     * @param list
+     * @param user
+     * @return
+     */
+    private static List&lt;ModuleInfo&gt; filterNoLink(List&lt;ModuleInfo&gt; list, Identity user) {
+<span class="fc" id="L572">        List&lt;ModuleInfo&gt; filtered = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L574" title="1 of 2 branches missed.">        if (list == null)</span>
+<span class="nc" id="L575">            return filtered;</span>
+
+<span class="fc bfc" id="L577" title="All 2 branches covered.">        for (ModuleInfo m : list) {</span>
+<span class="pc bpc" id="L578" title="1 of 2 branches missed.">            if (Tools.isEmpty(m.getLeftMenuLink()))</span>
+<span class="nc" id="L579">                continue;</span>
+<span class="pc bpc" id="L580" title="2 of 4 branches missed.">            if (m.getLeftMenuLink().contains(&quot;javascript:void()&quot;) || getMenuLinkV9(m).contains(&quot;javascript:void()&quot;))</span>
+<span class="nc" id="L581">                continue;</span>
+
+<span class="fc bfc" id="L583" title="All 4 branches covered.">            if (Tools.isNotEmpty(m.getItemKey()) &amp;&amp; user.isEnabledItem(m.getItemKey())==false)</span>
+<span class="fc" id="L584">                continue;</span>
+
+<span class="fc bfc" id="L586" title="All 2 branches covered.">            if (Tools.isEmpty(getMenuLinkV9(m))) continue;</span>
+
+<span class="fc" id="L588">            filtered.add(m);</span>
+<span class="fc" id="L589">        }</span>
+
+<span class="fc" id="L591">        return filtered;</span>
+    }
+
+    // -------------- ZOBRAZENIE PRAV --------------------------------------------------------
+
+    /**
+     * Vrati zoznam VSETKYCH prav pre editaciu pouzivatela (vsetky prava)
+     * Je to tu v MenuService nestastne, ale kedze sa robi viac operacii (zmena ikon, skupiny)
+     * tak sa mi to zdalo lepsie
+     * @param allModules
+     * @return
+     */
+    public static List&lt;JsTreeItem&gt; getAllPermissions() {
+<span class="fc" id="L604">        List&lt;JsTreeItem&gt; perms = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L605">        Prop prop = Prop.getInstance();</span>
+
+<span class="fc" id="L607">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getAvailableModules();</span>
+<span class="fc" id="L608">        sortModules(allModules);</span>
+
+        //ziskaj zoznam skupin prav a sprav hashtabulku CSS tried
+<span class="fc" id="L611">        List&lt;PermissionGroupBean&gt; permGroups = (new PermissionGroupDB()).getAll();</span>
+<span class="fc" id="L612">        HashMap&lt;String, StringBuilder&gt; permGroupsClasses = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L613" title="All 2 branches covered.">        for (PermissionGroupBean group : permGroups) {</span>
+<span class="fc bfc" id="L614" title="All 2 branches covered.">            for (String permName : group.getPermissionNames()) {</span>
+<span class="fc" id="L615">                permName = getPermsIdWithPrefix(permName);</span>
+<span class="fc" id="L616">                StringBuilder classes = permGroupsClasses.get(permName);</span>
+<span class="fc bfc" id="L617" title="All 2 branches covered.">                if (classes == null) {</span>
+<span class="fc" id="L618">                    classes = new StringBuilder();</span>
+<span class="fc" id="L619">                    classes.append(&quot; permgroup&quot;);</span>
+<span class="fc" id="L620">                    permGroupsClasses.put(permName, classes);</span>
+                }
+<span class="fc" id="L622">                classes.append(&quot; permgroup-&quot;).append(group.getId());</span>
+<span class="fc" id="L623">            }</span>
+<span class="fc" id="L624">        }</span>
+
+<span class="fc" id="L626">        List&lt;MenuBean&gt; roots = MenuService.getRootItems(prop);</span>
+<span class="fc bfc" id="L627" title="All 2 branches covered.">        for (MenuBean root : roots) {</span>
+<span class="fc" id="L628">            JsTreeItem rootItem = new JsTreeItem();</span>
+<span class="fc" id="L629">            rootItem.setId(getPermsIdWithPrefix(root.getGroup())+&quot;-leaf&quot;);</span>
+<span class="fc" id="L630">            rootItem.setText(root.getText());</span>
+<span class="fc" id="L631">            rootItem.setIcon(root.getIcon());</span>
+<span class="fc" id="L632">            rootItem.setParent(&quot;#&quot;);</span>
+
+<span class="fc" id="L634">            perms.add(rootItem);</span>
+
+<span class="fc" id="L636">            perms.addAll(getAllPermissionsChildren(rootItem, allModules, permGroupsClasses, prop));</span>
+<span class="fc" id="L637">        }</span>
+
+<span class="fc" id="L639">        return perms;</span>
+    }
+
+    /**
+     * Prida 2. a 3. uroven prav pre zobrazenie vsetkych prav v editacii pouzivatela
+     */
+    private static List&lt;JsTreeItem&gt; getAllPermissionsChildren(JsTreeItem rootItem, List&lt;ModuleInfo&gt; allModules, HashMap&lt;String, StringBuilder&gt; permGroupsClasses, Prop prop) {
+<span class="fc" id="L646">        List&lt;JsTreeItem&gt; childs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L647">        Set&lt;String&gt; checkDuplicity = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L649" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
+<span class="pc bpc" id="L650" title="2 of 8 branches missed.">            if ((m.isUserItem()==false &amp;&amp; (m.getSubmenus()==null || m.getSubmenus().isEmpty())) || m.getItemKey().length()&lt;3) continue;</span>
+
+<span class="fc bfc" id="L652" title="All 2 branches covered.">            if (rootItem.getId().equals(getPermsIdWithPrefix(getGroup9(m))+&quot;-leaf&quot;) == false) continue;</span>
+
+<span class="fc" id="L654">            JsTreeItem child = new JsTreeItem();</span>
+<span class="fc" id="L655">            child.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
+<span class="fc" id="L656">            child.setParent(rootItem.getId());</span>
+<span class="fc" id="L657">            child.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
+<span class="fc" id="L658">            child.setIcon(getIcon9(m));</span>
+
+<span class="fc" id="L660">            childs.add(child);</span>
+
+<span class="pc bpc" id="L662" title="1 of 4 branches missed.">            if (m.getSubmenus()!=null &amp;&amp; m.getSubmenus().isEmpty()==false)</span>
+			{
+                //pridaj subemnu polozky
+<span class="fc" id="L665">                boolean hasItem = false;</span>
+<span class="fc bfc" id="L666" title="All 2 branches covered.">                for (ModuleInfo sub : m.getSubmenus()) {</span>
+<span class="pc bpc" id="L667" title="2 of 8 branches missed.">                    if (sub.isAvailable()==false || sub.isUserItem()==false || sub.getItemKey()==null || sub.getItemKey().length()&lt;3) continue;</span>
+
+                    //v Zoznam web stranok preskakujeme Editacia media skupin, lebo to mame separatne ako polozku
+<span class="fc bfc" id="L670" title="All 4 branches covered.">                    if (&quot;editor_edit_media_group&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
+                    //v Zoznam web stranok preskakujeme Editacia znaciek, lebo to mame separatne ako polozku
+<span class="pc bpc" id="L672" title="1 of 4 branches missed.">                    if (&quot;editor_edit_perex&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
+
+                    //skratene menu v editore - editorMiniEdit je inverzne pravo, otacame ho na iny typ
+<span class="fc bfc" id="L675" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(sub.getItemKey())) {</span>
+<span class="fc" id="L676">                        ModuleInfo subNew = new ModuleInfo();</span>
+<span class="fc" id="L677">                        subNew.setItemKey(&quot;editorFullMenu&quot;);</span>
+<span class="fc" id="L678">                        subNew.setLeftMenuNameKey(&quot;user.editorFullMenu&quot;);</span>
+<span class="fc" id="L679">                        sub = subNew;</span>
+                    }
+
+<span class="fc bfc" id="L682" title="All 2 branches covered.">                    if (hasItem==false) {</span>
+                        //mame aspon jednu polozku, child teda nie je pouzivany ako vyber ale ako uzol stromu
+                        //pridame ho znova akoby prvu polozku submenu
+<span class="fc" id="L685">                        child.setId(child.getId()+&quot;-leaf&quot;);</span>
+<span class="fc" id="L686">                        child.setText(child.getText());</span>
+<span class="fc" id="L687">                        addPermGroupClasses(child, permGroupsClasses);</span>
+
+                        //pridaj povodnu polozku ako prvy child (ak to je userItem)
+<span class="fc bfc" id="L690" title="All 2 branches covered.">                        if (m.isUserItem()) {</span>
+<span class="fc" id="L691">                            JsTreeItem subItem = new JsTreeItem();</span>
+<span class="fc" id="L692">                            subItem.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
+<span class="fc" id="L693">                            subItem.setParent(child.getId());</span>
+<span class="fc" id="L694">                            subItem.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
+<span class="fc" id="L695">                            subItem.setIcon(getIcon9(m));</span>
+<span class="fc" id="L696">                            addPermGroupClasses(subItem, permGroupsClasses);</span>
+
+<span class="fc" id="L698">                            childs.add(subItem);</span>
+                        }
+
+<span class="fc" id="L701">                        hasItem = true;</span>
+                    }
+<span class="fc" id="L703">                    JsTreeItem subItem = new JsTreeItem();</span>
+<span class="fc" id="L704">                    subItem.setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())));</span>
+<span class="fc" id="L705">                    subItem.setParent(child.getId());</span>
+<span class="fc" id="L706">                    subItem.setId(getPermsIdWithPrefix(sub.getItemKey()));</span>
+<span class="fc" id="L707">                    subItem.setIcon(getIcon9(sub));</span>
+<span class="fc" id="L708">                    addPermGroupClasses(subItem, permGroupsClasses);</span>
+
+<span class="fc bfc" id="L710" title="All 2 branches covered.">                    if (checkDuplicity.contains(subItem.getId())==false) {</span>
+<span class="fc" id="L711">                        childs.add(subItem);</span>
+<span class="fc" id="L712">                        checkDuplicity.add(subItem.getId());</span>
+                    } else {
+<span class="fc" id="L714">                        Logger.debug(MenuService.class, &quot;duplicity: &quot;+subItem.getId());</span>
+                    }
+<span class="fc" id="L716">                }</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">                if (hasItem==false) addPermGroupClasses(child, permGroupsClasses);</span>
+<span class="fc" id="L718">            } else {</span>
+<span class="fc" id="L719">                addPermGroupClasses(child, permGroupsClasses);</span>
+            }
+<span class="fc" id="L721">        }</span>
+<span class="fc" id="L722">        return childs;</span>
+    }
+
+    /**
+     * prida do liClass polozky CSS styly indikujuce skupinu prav
+     * @param item
+     * @param permGroupsClasses
+     */
+    private static void addPermGroupClasses(JsTreeItem item, HashMap&lt;String, StringBuilder&gt; permGroupsClasses) {
+<span class="fc" id="L731">        StringBuilder classes = permGroupsClasses.get(item.getId());</span>
+<span class="fc bfc" id="L732" title="All 2 branches covered.">        if (classes != null) {</span>
+<span class="fc" id="L733">            item.addLiClass(classes.toString());</span>
+        }
+<span class="fc" id="L735">    }</span>
+
+    private static final String PERM_PREFIX = &quot;perms_&quot;;
+    /**
+     * Technicky len prida unikatny prefix pred ID modulu, aby sa nahodou niekde neopakoval
+     * @param id
+     * @return
+     */
+    public static String getPermsIdWithPrefix(String id) {
+<span class="fc" id="L744">        return PERM_PREFIX+id;</span>
+    }
+
+    /**
+     * Odstrani perms_ prefix z mena prava (ten pridavame aby nebola kolizia ID elementov)
+     * @param perms
+     * @return
+     */
+    public static String removePermsIdPrefix(String perms) {
+<span class="pc bpc" id="L753" title="1 of 2 branches missed.">        if (perms.startsWith(PERM_PREFIX)) return perms.substring(PERM_PREFIX.length());</span>
+<span class="nc" id="L754">        return perms;</span>
+    }
+
+    /**
+     * Vrati pravo pre zadanu URL adresu (linku)
+     * @param url
+     * @return
+     */
+    public static String getPerms(String url) {
+
+        //normalizuj linku
+<span class="fc" id="L765">        String normalized = url;</span>
+<span class="fc bfc" id="L766" title="All 2 branches covered.">        if (normalized.startsWith(&quot;/&quot;)==false) normalized = &quot;/&quot;+normalized;</span>
+<span class="fc" id="L767">        normalized = Tools.replace(normalized, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L768">        normalized = Tools.replace(normalized, &quot;/dist/views/&quot;, &quot;/&quot;);</span>
+
+<span class="fc" id="L770">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getModules();</span>
+<span class="fc bfc" id="L771" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
+<span class="fc bfc" id="L772" title="All 2 branches covered.">            if (checkLink(m, normalized)) return m.getItemKey();</span>
+
+<span class="fc bfc" id="L774" title="All 2 branches covered.">            if (m.getSubmenus()!=null) {</span>
+<span class="fc bfc" id="L775" title="All 2 branches covered.">                for (ModuleInfo sm : m.getSubmenus()) {</span>
+<span class="fc bfc" id="L776" title="All 2 branches covered.">                    if (checkLink(sm, normalized)) {</span>
+<span class="fc bfc" id="L777" title="All 2 branches covered.">                        if (Tools.isNotEmpty(sm.getItemKey())) return sm.getItemKey();</span>
+<span class="fc" id="L778">                        return m.getItemKey();</span>
+                    }
+<span class="fc" id="L780">                }</span>
+            }
+<span class="fc" id="L782">        }</span>
+
+<span class="fc" id="L784">        return null;</span>
+    }
+
+    /**
+     * Overi, ci sa zadana URL adresa zhoduje s linkou v module
+     * @param m
+     * @param normalized
+     * @return
+     */
+    private static boolean checkLink(ModuleInfo m, String normalized) {
+
+<span class="fc bfc" id="L795" title="All 4 branches covered.">        if (m.getLeftMenuLink().equalsIgnoreCase(normalized) || m.getLeftMenuLink().equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
+
+        //pre prehlad
+<span class="fc bfc" id="L798" title="All 4 branches covered.">        if (getMenuLinkV9(m).equalsIgnoreCase(normalized) || getMenuLinkV9(m).equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
+
+<span class="fc" id="L800">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

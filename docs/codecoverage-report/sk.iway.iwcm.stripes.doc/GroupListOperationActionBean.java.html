@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupListOperationActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes.doc</a> &gt; <span class="el_source">GroupListOperationActionBean.java</span></div><h1>GroupListOperationActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes.doc;
+
+import java.util.Arrays;
+import java.util.List;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.HandlesEvent;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DeleteServlet;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  GroupListOperationActionBean.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 1.7.2008 11:00:55
+ *@modified     $Date: 2009/09/11 06:52:05 $
+ */
+
+<span class="nc" id="L38">public class GroupListOperationActionBean implements ActionBean</span>
+{
+	private ActionBeanContext context;
+	private Integer grouplist_operacie;
+	private String operacieId;
+	private String newGroupId;
+	private boolean available;
+<span class="nc" id="L45">	private Integer tempId = -1;</span>
+	private boolean applyToAllDocs;
+	@Override
+	public ActionBeanContext getContext()
+	{
+<span class="nc" id="L50">		return context;</span>
+	}
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+<span class="nc" id="L55">		this.context = context;</span>
+<span class="nc" id="L56">	}</span>
+
+	public Integer getGrouplist_operacie()
+	{
+<span class="nc" id="L60">		return grouplist_operacie;</span>
+	}
+
+	public void setGrouplist_operacie(Integer grouplist_operacie)
+	{
+<span class="nc" id="L65">		this.grouplist_operacie = grouplist_operacie;</span>
+<span class="nc" id="L66">	}</span>
+
+	public String getOperacieId()
+	{
+<span class="nc" id="L70">		return operacieId;</span>
+	}
+
+	public void setOperacieId(String operacieId)
+	{
+<span class="nc" id="L75">		this.operacieId = operacieId;</span>
+<span class="nc" id="L76">	}</span>
+
+
+	public String getNewGroupId() {
+<span class="nc" id="L80">		return newGroupId;</span>
+	}
+
+	public void setNewGroupId(String newGroupId) {
+<span class="nc" id="L84">		this.newGroupId = newGroupId;</span>
+<span class="nc" id="L85">	}</span>
+
+	public boolean isAvailable() {
+<span class="nc" id="L88">		return available;</span>
+	}
+
+	public void setAvailable(boolean available) {
+<span class="nc" id="L92">		this.available = available;</span>
+<span class="nc" id="L93">	}</span>
+
+	public Integer getTempId() {
+<span class="nc" id="L96">		return tempId;</span>
+	}
+
+	public void setTempId(Integer tempId) {
+<span class="nc" id="L100">		this.tempId = tempId;</span>
+<span class="nc" id="L101">	}</span>
+
+	public boolean isApplyToAllDocs()
+	{
+<span class="nc" id="L105">		return applyToAllDocs;</span>
+	}
+
+	public void setApplyToAllDocs(boolean applyToAllDocs)
+	{
+<span class="nc" id="L110">		this.applyToAllDocs = applyToAllDocs;</span>
+<span class="nc" id="L111">	}</span>
+
+	/**
+	 * ziska aktualny adresar
+	 * @return
+	 */
+	private int getGroupId()
+	{
+<span class="nc" id="L119">		int groupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
+		try
+		{
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (context.getRequest().getParameter(&quot;groupid&quot;) != null)</span>
+<span class="nc" id="L123">				groupId = Tools.getIntValue(context.getRequest().getParameter(&quot;groupid&quot;), -1);</span>
+			else
+			{
+				//skus ziskat data zo session
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (context.getRequest().getSession().getAttribute(Constants.SESSION_GROUP_ID) != null)</span>
+<span class="nc" id="L128">					groupId = Tools.getIntValue((String)context.getRequest().getSession().getAttribute(Constants.SESSION_GROUP_ID), -1);</span>
+			}
+		}
+<span class="nc" id="L131">		catch (Exception ex){}</span>
+<span class="nc" id="L132">		return groupId;</span>
+	}
+
+	/**
+	 * nastavi hodnoty (Object... arguments) stlpcov (String[] columns) pre stranky (List&lt;DocDetails&gt; docList)
+	 * @param user
+	 * @param docList
+	 * @param columns
+	 * @param arguments
+	 * @return
+	 */
+	private boolean updateDocFields(Identity user, List&lt;DocDetails&gt; docList, String[] columns, Object... arguments)
+	{
+<span class="nc" id="L145">		boolean ok = true;</span>
+
+		try
+		{
+<span class="nc" id="L149">			StringBuilder sql = new StringBuilder(&quot;&quot;);</span>
+<span class="nc bnc" id="L150" title="All 4 branches missed.">			if(docList != null &amp;&amp; docList.size() &gt; 0)</span>
+			{
+<span class="nc" id="L152">				sql.append(&quot;UPDATE documents SET&quot;);</span>
+<span class="nc" id="L153">				boolean first = true;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				for(String c : columns)</span>
+				{
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					sql.append(&quot; &quot;+(!first ? &quot;, &quot; : &quot;&quot;)+c+&quot; = ?&quot;);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">					if(first)</span>
+<span class="nc" id="L158">						first = false;</span>
+				}
+<span class="nc" id="L160">				sql.append(&quot; WHERE doc_id = ?&quot;);</span>
+<span class="nc" id="L161">				Object[] newArguments = new Object[arguments.length+1];</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				for(int i=0; i&lt;arguments.length; i++)</span>
+<span class="nc" id="L163">					newArguments[i] = arguments[i];</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				for (DocDetails dd : docList)</span>
+				{
+<span class="nc" id="L166">					newArguments[arguments.length] = Integer.valueOf(dd.getDocId());</span>
+<span class="nc" id="L167">					EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), dd.getDocId(), -1, -1);</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">					if (editorForm != null &amp;&amp; EditorDB.isPageEditable(user, editorForm))</span>
+					{
+<span class="nc" id="L170">						DB.execute(sql.toString(), newArguments);</span>
+<span class="nc" id="L171">						Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+dd.getDocId()+&quot;): Zmena stlpcov stranky &quot;+Arrays.toString(columns)+&quot; na &quot;+Arrays.toString(arguments), dd.getDocId(), -1);</span>
+					}
+<span class="nc" id="L173">				}</span>
+			}
+		}
+<span class="nc" id="L176">		catch (Exception e)</span>
+		{
+<span class="nc" id="L178">			ok = false;</span>
+<span class="nc" id="L179">		}</span>
+
+<span class="nc" id="L181">		return ok;</span>
+	}
+
+	/**
+	 * nastavi hodnotu (value) stlpca (column) v tabulke documents pre vsetky id[]
+	 * @param id
+	 * @param column
+	 * @param value
+	 * @return
+	 */
+	private boolean updateDocFields(Identity user, String id[], String column, Object value)
+	{
+<span class="nc" id="L193">		boolean ok = true;</span>
+
+		try
+		{
+<span class="nc" id="L197">			String sql = &quot;&quot;;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">			for (int i = 0; i &lt; id.length; i++)</span>
+			{
+<span class="nc" id="L200">				int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">				if(idTmp != -1)</span>
+				{
+<span class="nc" id="L203">					EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">					if (EditorDB.isPageEditable(user, editorForm))</span>
+					{
+<span class="nc" id="L206">						sql = &quot;UPDATE documents SET &quot;+column+&quot; = ? WHERE doc_id = ?&quot;;</span>
+<span class="nc" id="L207">						DB.execute(sql, value, Integer.valueOf(editorForm.getDocId()));</span>
+
+<span class="nc" id="L209">						Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Zmena stlpca stranky &quot;+column+&quot; na &quot;+value, idTmp, -1);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L214">		catch (Exception e)</span>
+		{
+<span class="nc" id="L216">			ok = false;</span>
+<span class="nc" id="L217">		}</span>
+
+<span class="nc" id="L219">		return ok;</span>
+	}
+
+	@DefaultHandler
+	@HandlesEvent(&quot;gloperacie&quot;)
+	public Resolution gloperacie(){
+		try
+		{
+<span class="nc" id="L227">			Identity currUser = UsersDB.getCurrentUser(context.getRequest().getSession());</span>
+
+<span class="nc bnc" id="L229" title="All 4 branches missed.">			if (currUser == null || currUser.isAdmin()==false)</span>
+			{
+<span class="nc" id="L231">				return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+			}
+
+			//aby sa nezmazali rozpracovane verzie stranky pri posune hore/dole atd
+<span class="nc" id="L235">			context.getRequest().setAttribute(&quot;doNotDeleteHistoryOnPublish&quot;, &quot;true&quot;);</span>
+
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if(Tools.isNotEmpty(this.operacieId))</span>
+			{
+<span class="nc" id="L239">				String[] id = this.operacieId.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">				if(this.grouplist_operacie == 0)</span>
+				{
+					//vymazanie stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L245" title="All 2 branches missed.">					if(currUser.isDisabledItem(&quot;deletePage&quot;))</span>
+<span class="nc" id="L246">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L248">					String deleteOK = null;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc bnc" id="L251" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++) {</span>
+<span class="nc" id="L252">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L255">								deleteOK = DeleteServlet.deleteDoc(context.getRequest(), idTmp);</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">								if(&quot;success&quot;.equals(deleteOK) == false)</span>
+<span class="nc" id="L257">									break;</span>
+								else
+<span class="nc" id="L259">									Adminlog.add(Adminlog.TYPE_PAGE_DELETE, &quot;(DocID: &quot;+idTmp+&quot;): Stranka vymazana&quot;, idTmp, 0);</span>
+							}
+						}
+					}
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">					if(&quot;success&quot;.equals(deleteOK)){</span>
+<span class="nc" id="L265">						context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+					}
+<span class="nc" id="L267">				}</span>
+<span class="nc bnc" id="L268" title="All 4 branches missed.">				else if(this.grouplist_operacie == 1 &amp;&amp; this.tempId != -1)</span>
+				{
+					//zmena sablony stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L273" title="All 4 branches missed.">					if(currUser.isDisabledItem(&quot;addPage&quot;) || currUser.isEnabledItem(&quot;editorMiniEdit&quot;))</span>
+<span class="nc" id="L274">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc" id="L278">						int groupId = getGroupId();</span>
+						//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L280" title="All 4 branches missed.">						if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+						{
+<span class="nc" id="L282">							GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">							if(groupsDB != null)</span>
+							{
+<span class="nc" id="L285">								List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L286" title="All 4 branches missed.">								if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+								{
+<span class="nc" id="L288">									DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">									for(GroupDetails gd : groupsTree)</span>
+									{
+<span class="nc" id="L291">										List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc" id="L292">										updateDocFields(currUser, docList, Tools.getTokens(&quot;author_id,temp_id&quot;,&quot;,&quot;, true), Integer.valueOf(currUser.getUserId()), this.tempId);</span>
+<span class="nc" id="L293">									}</span>
+<span class="nc" id="L294">									DocDB.getInstance(true);</span>
+								}
+							}
+						}
+<span class="nc bnc" id="L298" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++) {</span>
+<span class="nc" id="L299">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L302">								EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">								if (editorForm != null)</span>
+								{
+<span class="nc" id="L305">									editorForm.setAuthorId(currUser.getUserId());</span>
+<span class="nc" id="L306">									editorForm.setTempId(this.tempId);</span>
+<span class="nc" id="L307">									editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L308">									EditorDB.saveEditorForm(editorForm, context.getRequest());</span>
+
+<span class="nc" id="L310">									EditorDB.cleanSessionData(context.getRequest());</span>
+
+<span class="nc" id="L312">									Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Zmenena sablona na &quot;+this.tempId, idTmp, -1);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L317">					context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+				}
+<span class="nc bnc" id="L319" title="All 4 branches missed.">				else if(this.grouplist_operacie == 2 &amp;&amp; this.available == false)</span>
+				{
+					//vypnutie zobrazovania stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L324" title="All 4 branches missed.">					if(currUser.isDisabledItem(&quot;addPage&quot;) || currUser.isEnabledItem(&quot;editorMiniEdit&quot;))</span>
+<span class="nc" id="L325">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc bnc" id="L327" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc" id="L329">						int groupId = getGroupId();</span>
+						//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L331" title="All 4 branches missed.">						if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+						{
+<span class="nc" id="L333">							GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">							if(groupsDB != null)</span>
+							{
+<span class="nc" id="L336">								List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L337" title="All 4 branches missed.">								if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+								{
+<span class="nc" id="L339">									DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">									for(GroupDetails gd : groupsTree)</span>
+									{
+<span class="nc" id="L342">										List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc" id="L343">										updateDocFields(currUser, docList, Tools.getTokens(&quot;author_id,available&quot;,&quot;,&quot;, true), Integer.valueOf(currUser.getUserId()), Boolean.FALSE);</span>
+<span class="nc" id="L344">									}</span>
+<span class="nc" id="L345">									DocDB.getInstance(true);</span>
+								}
+							}
+						}
+<span class="nc bnc" id="L349" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++) {</span>
+<span class="nc" id="L350">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L353">								EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">								if (editorForm != null)</span>
+								{
+<span class="nc" id="L356">									editorForm.setAuthorId(currUser.getUserId());</span>
+<span class="nc" id="L357">									editorForm.setAvailable(false);</span>
+<span class="nc" id="L358">									editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L359">									EditorDB.saveEditorForm(editorForm, context.getRequest());</span>
+
+<span class="nc" id="L361">									EditorDB.cleanSessionData(context.getRequest());</span>
+
+<span class="nc" id="L363">									Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Vypnute zobrazovanie stranky&quot;, idTmp, -1);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L368">					context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+				}
+<span class="nc bnc" id="L370" title="All 4 branches missed.">				else if(this.grouplist_operacie == 3 &amp;&amp; Tools.isNotEmpty(this.newGroupId))</span>
+				{
+					//presun stranok do ineho adresara
+
+					//kontrola prav
+<span class="nc bnc" id="L375" title="All 4 branches missed.">					if(currUser.isDisabledItem(&quot;addPage&quot;) || currUser.isEnabledItem(&quot;editorMiniEdit&quot;))</span>
+<span class="nc" id="L376">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L378">					this.newGroupId = this.newGroupId.trim();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc bnc" id="L381" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++) {</span>
+<span class="nc" id="L382">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L385">								EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">								if (editorForm != null)</span>
+								{
+<span class="nc" id="L388">									editorForm.setAuthorId(currUser.getUserId());</span>
+<span class="nc" id="L389">									editorForm.setGroupId(Integer.parseInt(this.newGroupId));</span>
+<span class="nc" id="L390">									editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L391">									EditorDB.saveEditorForm(editorForm, context.getRequest());</span>
+
+<span class="nc" id="L393">									EditorDB.cleanSessionData(context.getRequest());</span>
+
+<span class="nc" id="L395">									Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Stranka presunuta do adresara &quot;+this.newGroupId, idTmp, -1);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L400">					context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+				}
+<span class="nc bnc" id="L402" title="All 4 branches missed.">				else if(this.grouplist_operacie == 4 &amp;&amp; this.available == true)</span>
+				{
+					//zapnutie zobrazovania stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L407" title="All 4 branches missed.">					if(currUser.isDisabledItem(&quot;addPage&quot;) || currUser.isEnabledItem(&quot;editorMiniEdit&quot;))</span>
+<span class="nc" id="L408">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc bnc" id="L410" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc" id="L412">						int groupId = getGroupId();</span>
+						//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L414" title="All 4 branches missed.">						if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+						{
+<span class="nc" id="L416">							GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">							if(groupsDB != null)</span>
+							{
+<span class="nc" id="L419">								List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L420" title="All 4 branches missed.">								if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+								{
+<span class="nc" id="L422">									DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">									for(GroupDetails gd : groupsTree)</span>
+									{
+<span class="nc" id="L425">										List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc" id="L426">										updateDocFields(currUser, docList, Tools.getTokens(&quot;author_id,available&quot;,&quot;,&quot;, true), Integer.valueOf(currUser.getUserId()), Boolean.TRUE);</span>
+<span class="nc" id="L427">									}</span>
+<span class="nc" id="L428">									DocDB.getInstance(true);</span>
+								}
+							}
+						}
+<span class="nc bnc" id="L432" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++)</span>
+						{
+<span class="nc" id="L434">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L437">								EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">								if (editorForm != null)</span>
+								{
+<span class="nc" id="L440">									editorForm.setAuthorId(currUser.getUserId());</span>
+<span class="nc" id="L441">									editorForm.setAvailable(true);</span>
+<span class="nc" id="L442">									editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L443">									EditorDB.saveEditorForm(editorForm, context.getRequest());</span>
+
+<span class="nc" id="L445">									EditorDB.cleanSessionData(context.getRequest());</span>
+
+<span class="nc" id="L447">									Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Zapnute zobrazovanie stranky&quot;, idTmp, -1);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L452">					context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+				}
+<span class="nc bnc" id="L454" title="All 4 branches missed.">				else if(this.grouplist_operacie == 5 &amp;&amp; Tools.isNotEmpty(this.newGroupId))</span>
+				{
+					//kopirovanie stranok do ineho adresara
+
+					//kontrola prav
+<span class="nc bnc" id="L459" title="All 4 branches missed.">					if(currUser.isDisabledItem(&quot;addPage&quot;) || currUser.isEnabledItem(&quot;editorMiniEdit&quot;))</span>
+<span class="nc" id="L460">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L462">					this.newGroupId = this.newGroupId.trim();</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">					if(id != null)</span>
+					{
+<span class="nc bnc" id="L465" title="All 2 branches missed.">						for (int i = 0; i &lt; id.length; i++)</span>
+						{
+<span class="nc" id="L467">							int idTmp = Tools.getIntValue(id[i], -1);</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">							if(idTmp != -1)</span>
+							{
+<span class="nc" id="L470">								EditorForm editorForm = EditorDB.getEditorForm(context.getRequest(), idTmp, -1, -1);</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">								if (editorForm != null)</span>
+								{
+<span class="nc" id="L473">									editorForm.setDocId(-1);</span>
+<span class="nc" id="L474">									editorForm.setVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L475">									editorForm.setAuthorId(currUser.getUserId());</span>
+<span class="nc" id="L476">									editorForm.setGroupId(Integer.parseInt(this.newGroupId));</span>
+<span class="nc" id="L477">									editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L478">									EditorDB.saveEditorForm(editorForm, context.getRequest());</span>
+
+<span class="nc" id="L480">									EditorDB.cleanSessionData(context.getRequest());</span>
+
+<span class="nc" id="L482">									Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;(DocID: &quot;+idTmp+&quot;): Stranka skopirovana do adresara &quot;+this.newGroupId, idTmp, -1);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L487">					context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+				}
+<span class="nc bnc" id="L489" title="All 6 branches missed.">				else if((this.grouplist_operacie == 6 || this.grouplist_operacie == 7) &amp;&amp; id != null)</span>
+				{
+					//zapnut/vypnut zobrazovania stranok v menu
+
+					//kontrola prav
+<span class="nc bnc" id="L494" title="All 2 branches missed.">					if(currUser.isDisabledItem(&quot;menuWebpages&quot;))</span>
+<span class="nc" id="L495">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L497">					int groupId = getGroupId();</span>
+					//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L499" title="All 4 branches missed.">					if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+					{
+<span class="nc" id="L501">						GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">						if(groupsDB != null)</span>
+						{
+<span class="nc" id="L504">							List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L505" title="All 4 branches missed.">							if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+							{
+<span class="nc" id="L507">								DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">								for(GroupDetails gd : groupsTree)</span>
+								{
+<span class="nc" id="L510">									List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc bnc" id="L511" title="All 4 branches missed.">									if(updateDocFields(currUser, docList, Tools.getTokens(&quot;show_in_menu&quot;,&quot;,&quot;, true), Boolean.valueOf(this.grouplist_operacie == 6)))</span>
+<span class="nc" id="L512">										context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+<span class="nc" id="L513">								}</span>
+<span class="nc" id="L514">								DocDB.getInstance(true);</span>
+							}
+						}
+					}
+<span class="nc bnc" id="L518" title="All 4 branches missed.">					if(updateDocFields(currUser, id, &quot;show_in_menu&quot;, this.grouplist_operacie == 6))</span>
+					{
+<span class="nc" id="L520">						context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+					}
+<span class="nc" id="L522">				}</span>
+<span class="nc bnc" id="L523" title="All 6 branches missed.">				else if((this.grouplist_operacie == 8 || this.grouplist_operacie == 9) &amp;&amp; id != null)</span>
+				{
+					//zapnut/vypnut prehladavatelnost stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L528" title="All 2 branches missed.">					if(currUser.isDisabledItem(&quot;menuWebpages&quot;))</span>
+<span class="nc" id="L529">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L531">					int groupId = getGroupId();</span>
+					//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L533" title="All 4 branches missed.">					if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+					{
+<span class="nc" id="L535">						GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">						if(groupsDB != null)</span>
+						{
+<span class="nc" id="L538">							List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L539" title="All 4 branches missed.">							if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+							{
+<span class="nc" id="L541">								DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">								for(GroupDetails gd : groupsTree)</span>
+								{
+<span class="nc" id="L544">									List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc bnc" id="L545" title="All 4 branches missed.">									if(updateDocFields(currUser, docList, Tools.getTokens(&quot;searchable&quot;,&quot;,&quot;, true), Boolean.valueOf(this.grouplist_operacie == 8)))</span>
+<span class="nc" id="L546">										context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+<span class="nc" id="L547">								}</span>
+<span class="nc" id="L548">								DocDB.getInstance(true);</span>
+							}
+						}
+					}
+<span class="nc bnc" id="L552" title="All 4 branches missed.">					if(updateDocFields(currUser, id, &quot;searchable&quot;, this.grouplist_operacie == 8))</span>
+					{
+<span class="nc" id="L554">						context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+					}
+<span class="nc" id="L556">				}</span>
+<span class="nc bnc" id="L557" title="All 6 branches missed.">				else if((this.grouplist_operacie == 10 || this.grouplist_operacie == 11) &amp;&amp; id != null)</span>
+				{
+					//zapnut/vypnut cachovanie stranok
+
+					//kontrola prav
+<span class="nc bnc" id="L562" title="All 2 branches missed.">					if(currUser.isDisabledItem(&quot;menuWebpages&quot;))</span>
+<span class="nc" id="L563">						return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L565">					int groupId = getGroupId();</span>
+					//ak aplikujem na vsetky stranky vsetkych podadresaroch
+<span class="nc bnc" id="L567" title="All 4 branches missed.">					if(applyToAllDocs &amp;&amp; groupId != -1)</span>
+					{
+<span class="nc" id="L569">						GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">						if(groupsDB != null)</span>
+						{
+<span class="nc" id="L572">							List&lt;GroupDetails&gt; groupsTree = groupsDB.getGroupsTree(groupId, false, true);</span>
+<span class="nc bnc" id="L573" title="All 4 branches missed.">							if(groupsTree != null &amp;&amp; groupsTree.size() &gt; 0)</span>
+							{
+<span class="nc" id="L575">								DocDB docDb = DocDB.getInstance();</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">								for(GroupDetails gd : groupsTree)</span>
+								{
+<span class="nc" id="L578">									List&lt;DocDetails&gt; docList = docDb.getBasicDocDetailsByGroup(gd.getGroupId(),DocDB.ORDER_TITLE);</span>
+<span class="nc bnc" id="L579" title="All 4 branches missed.">									if(updateDocFields(currUser, docList, Tools.getTokens(&quot;cacheable&quot;,&quot;,&quot;, true), Boolean.valueOf(this.grouplist_operacie == 10)))</span>
+<span class="nc" id="L580">										context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+<span class="nc" id="L581">								}</span>
+<span class="nc" id="L582">								DocDB.getInstance(true);</span>
+							}
+						}
+					}
+<span class="nc bnc" id="L586" title="All 4 branches missed.">					if(updateDocFields(currUser, id, &quot;cacheable&quot;, this.grouplist_operacie == 10))</span>
+					{
+<span class="nc" id="L588">						context.getRequest().setAttribute(&quot;Ok&quot;, &quot;&quot;);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L593">		catch (Exception e)</span>
+		{
+<span class="nc" id="L595">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L596">		}</span>
+<span class="nc" id="L597">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

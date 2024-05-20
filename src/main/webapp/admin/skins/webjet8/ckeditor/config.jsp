@@ -2,7 +2,7 @@
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/ckeditor/custom/config.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" %><%@
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 CKEDITOR.editorConfig = function( config )
 {
 	<% if ("false".equals(request.getSession().getAttribute("combineEnabled"))) { %>

@@ -12,10 +12,17 @@ Scenario('users', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/users/user-list");
 
     DT.waitForLoader();
-    I.click({css: "button.buttons-create"});
+
+    //TODO - need to open, close and then reopen -> problem with loading icons of permission in first open 
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor();
+    DTE.cancel();
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor();
+
     I.click("#pills-dt-datatableInit-rightsTab-tab");
-    I.click("Áno", "div.DTE_Field_Name_admin");
+    I.checkOption("#DTE_Field_admin_0");
+
     I.scrollTo("#perms_welcome-leaf_anchor");
     I.pressKey("ArrowUp");
     I.click("label[for=DTE_Field_editorFields-permGroups_3]");
@@ -33,6 +40,13 @@ Scenario('users', ({ I, DT, DTE, Document }) => {
 
 Scenario('password-strength-login', ({ I, Document }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
+
+    let language = I.getConfLng();
+    if("sk" !== language) {
+        if("en" == language) { 
+            I.selectOption("language", "English");
+        }
+    }
 
     I.fillField("#username", "admin");
     I.fillField("#password", "admin");
@@ -94,9 +108,10 @@ Scenario('users-docs-screens', ({ I, Document }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
 });
 
-Scenario('users-docs-screens-adminuser', ({ I , DTE, Document }) => {
+Scenario('users-docs-screens-adminuser', ({ I , DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/users/user-list");
-    I.click("Administrátor");
+    DT.filter("login", "admin");
+    I.click("admin");
     DTE.waitForEditor();
 
     //Tab free items
@@ -114,7 +129,7 @@ Scenario('users-docs-existing-user', ({ I, DTE, Document }) => {
     DTE.waitForEditor();
 
     I.click("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
-    I.click("Áno", "div.DTE_Field_Name_admin");
+    I.checkOption("#DTE_Field_admin_0");
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
@@ -127,13 +142,19 @@ Scenario('users-docs-permsfilter', ({ I , DTE, Document}) => {
     DTE.waitForEditor();
 
     I.click("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
-    I.click("Áno", "div.DTE_Field_Name_admin");
+    I.checkOption("#DTE_Field_admin_0");
 
     I.scrollTo("#perms_welcome-leaf_anchor");
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
-    I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "adresár");
+
+    if("sk" === I.getConfLng()) {
+        I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "adresár");
+    } else if("en" === I.getConfLng()) { 
+        I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "director");
+    }
+
     I.click("div.DTE_Field_Type_jsTree div.input-group button.btn-search")
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-right-search.png");
 });

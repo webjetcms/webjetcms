@@ -29,6 +29,11 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class GdprDataDeletingRestController extends DatatableRestControllerV2<GdprDataDeletingEntity, Long> {
 
     private final HttpServletRequest request;
+    private static final String DELETE_USER_AFTER_DAYS = "gdprDeleteUserAfterDays";
+    private static final String DELETE_EMAILS_AFTER_DAYS = "gdprDeleteEmailsAfterDays";
+    private static final String DELETE_FORM_DATA_AFTER_DAYS = "gdprDeleteFormDataAfterDays";
+    private static final String DELETE_USER_BASKET_ORDERS_AFTER_YEARS = "gdprDeleteUserBasketOrdersAfterYears";
+    private static final String DAYS_KEY = "welcome.statBackTime.days";
 
     @Autowired
     public GdprDataDeletingRestController(HttpServletRequest request) {
@@ -49,8 +54,7 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
         items.add(getDataDeleteEntityById(3));
         items.add(getDataDeleteEntityById(4));
 
-        DatatablePageImpl<GdprDataDeletingEntity> page = new DatatablePageImpl<>(items);
-        return page;
+        return new DatatablePageImpl<>(items);
     }
 
     @Override
@@ -67,19 +71,19 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
 
         if(id == 1) {
 
-            ConfDB.setName("gdprDeleteUserAfterDays", entity.getStatTime() + "");
-            newStatTimeString = entity.getStatTime() + " " + prop.getText("welcome.statBackTime.days");
+            ConfDB.setName(DELETE_USER_AFTER_DAYS, entity.getStatTime() + "");
+            newStatTimeString = entity.getStatTime() + " " + prop.getText(DAYS_KEY);
         } else if(id == 2) {
 
-            ConfDB.setName("gdprDeleteEmailsAfterDays", entity.getStatTime() + "");
-            newStatTimeString = entity.getStatTime() + " " + prop.getText("welcome.statBackTime.days");
+            ConfDB.setName(DELETE_EMAILS_AFTER_DAYS, entity.getStatTime() + "");
+            newStatTimeString = entity.getStatTime() + " " + prop.getText(DAYS_KEY);
         } else if(id == 3) {
 
-            ConfDB.setName("gdprDeleteFormDataAfterDays", entity.getStatTime() + "");
-            newStatTimeString = entity.getStatTime() + " " + prop.getText("welcome.statBackTime.days");
+            ConfDB.setName(DELETE_FORM_DATA_AFTER_DAYS, entity.getStatTime() + "");
+            newStatTimeString = entity.getStatTime() + " " + prop.getText(DAYS_KEY);
         } else if(id == 4) {
 
-            ConfDB.setName("gdprDeleteUserBasketOrdersAfterYears", entity.getStatTime() + "");
+            ConfDB.setName(DELETE_USER_BASKET_ORDERS_AFTER_YEARS, entity.getStatTime() + "");
             newStatTimeString = entity.getStatTime() + " " + prop.getText("components.gdpr.rokov");
         }
 
@@ -127,32 +131,32 @@ public class GdprDataDeletingRestController extends DatatableRestControllerV2<Gd
 
             entity.setId(Long.valueOf(1));
             entity.setType(prop.getText("components.gdpr.type.users"));
-            entity.setStatTime(Constants.getInt("gdprDeleteUserAfterDays"));
-            entity.setStatTimeString(Constants.getInt("gdprDeleteUserAfterDays") + " " + prop.getText("welcome.statBackTime.days"));
+            entity.setStatTime(Constants.getInt(DELETE_USER_AFTER_DAYS));
+            entity.setStatTimeString(Constants.getInt(DELETE_USER_AFTER_DAYS) + " " + prop.getText(DAYS_KEY));
             entity.setRecordCnt(GdprDataDeleting.getUnusedUsers().size());
             entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.zmazat_uzivatelov_za_dane_obdobie"));
         } else if(id == 2) {
 
             entity.setId(Long.valueOf(2));
             entity.setType(prop.getText("components.gdpr.type.emails"));
-            entity.setStatTime(Constants.getInt("gdprDeleteEmailsAfterDays"));
-            entity.setStatTimeString(Constants.getInt("gdprDeleteEmailsAfterDays") + " " + prop.getText("welcome.statBackTime.days"));
+            entity.setStatTime(Constants.getInt(DELETE_EMAILS_AFTER_DAYS));
+            entity.setStatTimeString(Constants.getInt(DELETE_EMAILS_AFTER_DAYS) + " " + prop.getText(DAYS_KEY));
             entity.setRecordCnt(gdprdd.getSendedEmailsCount());
             entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.zmazat_vsetky_odoslane_emaily"));
         } else if(id == 3) {
 
             entity.setId(Long.valueOf(3));
             entity.setType(prop.getText("components.gdpr.type.forms"));
-            entity.setStatTime(Constants.getInt("gdprDeleteFormDataAfterDays"));
-            entity.setStatTimeString(Constants.getInt("gdprDeleteFormDataAfterDays") + " " + prop.getText("welcome.statBackTime.days"));
+            entity.setStatTime(Constants.getInt(DELETE_FORM_DATA_AFTER_DAYS));
+            entity.setStatTimeString(Constants.getInt(DELETE_FORM_DATA_AFTER_DAYS) + " " + prop.getText(DAYS_KEY));
             entity.setRecordCnt(gdprdd.getOldFormDataCount());
             entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.zmazat_data_vo_formularoch_za_dane_obdobie"));
         } else if(id == 4) {
 
             entity.setId(Long.valueOf(4));
             entity.setType(prop.getText("components.gdpr.type.eshop"));
-            entity.setStatTime(Constants.getInt("gdprDeleteUserBasketOrdersAfterYears"));
-            entity.setStatTimeString(Constants.getInt("gdprDeleteUserBasketOrdersAfterYears") + " " + prop.getText("components.gdpr.rokov"));
+            entity.setStatTime(Constants.getInt(DELETE_USER_BASKET_ORDERS_AFTER_YEARS));
+            entity.setStatTimeString(Constants.getInt(DELETE_USER_BASKET_ORDERS_AFTER_YEARS) + " " + prop.getText("components.gdpr.rokov"));
             entity.setRecordCnt((int)gdprdd.getOldBasketOrdersCount());
             entity.setAction(prop.getText("components.gdpr.admin_gdpr_data_deleting.zmazat_objednavky_z_modulu_elektorincky_obchod_za_dane_obdobie"));
         }

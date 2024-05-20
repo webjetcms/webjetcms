@@ -49,7 +49,7 @@ public class DocumentsDB extends JpaDB<DocumentsBean> implements GdprDB
         List<String> or = new ArrayList<>();
         for (String property : properties) {
 
-            if (Constants.DB_TYPE == Constants.DB_MSSQL)
+            if (Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
                 or.add("o." + property + " LIKE :regexp{index}");
 //            else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 //                or.add("o." + property + " LIKE :regexp{index}");

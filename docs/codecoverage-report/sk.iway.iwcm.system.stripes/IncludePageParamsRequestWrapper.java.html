@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IncludePageParamsRequestWrapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.stripes</a> &gt; <span class="el_source">IncludePageParamsRequestWrapper.java</span></div><h1>IncludePageParamsRequestWrapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.stripes;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ * upravuje parametre ktore vracia na zaklade zoznamu PPOnly nazov a mapy PP
+ * @author mbocko
+ *
+ */
+public class IncludePageParamsRequestWrapper extends HttpServletRequestWrapper
+{
+	private Map&lt;String, String&gt; includeParams;
+	private List&lt;String&gt; includeParamsOnly;
+<span class="fc" id="L21">	private Map&lt;String, String[]&gt; paramMap=null;</span>
+
+	public IncludePageParamsRequestWrapper(HttpServletRequest req, Map&lt;String, String&gt; includeParams, List&lt;String&gt; includeParamsOnly)
+	{
+<span class="fc" id="L25">		super(req);</span>
+<span class="fc" id="L26">		this.includeParams = includeParams;</span>
+<span class="fc" id="L27">		this.includeParamsOnly = includeParamsOnly;</span>
+<span class="fc" id="L28">	}</span>
+
+	@Override
+	public String getParameter(String name)
+	{
+<span class="nc bnc" id="L33" title="All 2 branches missed.">		if (getParameterMap().containsKey(name))</span>
+		{
+<span class="nc" id="L35">			String[] values = getParameterMap().get(name);</span>
+<span class="nc" id="L36">			return values[0];</span>
+		}
+<span class="nc" id="L38">		return null;</span>
+	}
+
+	/**
+	 * vrati mapu parametrov, parametre ktore su anotovane ako includeParamsOnly vyhodi uplne, potom tam hodi parametre z original rq,
+	 * a potom prepise tie ktore su v PP
+	 */
+	@Override
+	public Map&lt;String, String[]&gt; getParameterMap()
+	{
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		if (paramMap!=null)</span>
+		{
+<span class="fc" id="L50">			return paramMap;</span>
+		}
+		else
+		{
+<span class="fc" id="L54">			Map&lt;String, String[]&gt; original = new HashMap&lt;String, String[]&gt;();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">			for (Object originalParamName : super.getParameterMap().keySet())</span>
+			{
+<span class="fc" id="L57">				String lName = (String)originalParamName;</span>
+
+				//ak by posielal property nejakeho objekty user.name
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">				if (lName.contains(&quot;.&quot;))</span>
+<span class="nc" id="L61">					lName = lName.substring(0, lName.indexOf(&quot;.&quot;));</span>
+
+				//ak by posielal indexovany parameter nazovParametra[1] alebo user[1].name
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">				if (lName.contains(&quot;[&quot;))</span>
+<span class="nc" id="L65">					lName = lName.substring(0, lName.indexOf(&quot;[&quot;));</span>
+
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">				if (!includeParamsOnly.contains(lName))</span>
+				{
+<span class="fc" id="L69">					original.put((String)originalParamName, super.getParameterValues((String)originalParamName));</span>
+				}
+<span class="fc" id="L71">			}</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">			for (String name : includeParams.keySet())</span>
+			{
+<span class="fc" id="L74">				String maybeArrayValue = includeParams.get(name);</span>
+				//ak je to pluskami deleny string, daj to ako pole hodnot, v actionbeane sa potom ziskava ako pole, list alebo set
+				// toto je mozno diskutabilne, zvazil by som zna pipe namiesto plus ako delimiter
+<span class="pc bpc" id="L77" title="2 of 6 branches missed.">				if (maybeArrayValue.contains(&quot;+&quot;) &amp;&amp; !maybeArrayValue.startsWith(&quot;+&quot;) &amp;&amp; !maybeArrayValue.endsWith(&quot;+&quot;))</span>
+				{
+<span class="fc" id="L79">					String values[] = Tools.getTokens(maybeArrayValue, &quot;+&quot;, true);</span>
+<span class="fc" id="L80">					original.put(name, values);</span>
+<span class="fc" id="L81">				}</span>
+				else
+				{
+<span class="fc" id="L84">					String values[] = new String[1];</span>
+<span class="fc" id="L85">					values[0] = includeParams.get(name);</span>
+<span class="fc" id="L86">					original.put(name, values);</span>
+				}
+<span class="fc" id="L88">			}</span>
+<span class="fc" id="L89">			paramMap = original;</span>
+<span class="fc" id="L90">			return original;</span>
+		}
+	}
+
+	@Override
+	public String[] getParameterValues(String name)
+	{
+<span class="nc" id="L97">		return getParameterMap().get(name);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

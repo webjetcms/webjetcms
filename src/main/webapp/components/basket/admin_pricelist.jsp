@@ -51,7 +51,7 @@
 </script>
 
 <div class="row title">
-    <h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="fa fa-angle-right"></i><iwcm:text key="components.basket.pricelist.dialog_title"/></h1>
+    <h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="ti ti-chevron-right"></i><iwcm:text key="components.basket.pricelist.dialog_title"/></h1>
 </div>
 
 <div class="tabbable tabbable-custom tabbable-full-width">

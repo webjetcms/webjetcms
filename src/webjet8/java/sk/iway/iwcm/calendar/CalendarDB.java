@@ -200,7 +200,8 @@ public class CalendarDB
 			}
 			if(request.getAttribute("showApprove") != null)
 			{
-				ps.setBoolean(psIndex++, "1".equals(getParamAttribute("showApprove", request)));
+				int showApprove = "1".equals(getParamAttribute("showApprove", request)) ? 1 : 0;
+				ps.setInt(psIndex++, showApprove);
 			}
 			if(request.getAttribute("suggest") != null)
 				ps.setBoolean(psIndex++, (Boolean)request.getAttribute("suggest"));
@@ -2389,7 +2390,8 @@ public class CalendarDB
 			}
 			if(request.getAttribute("showApprove") != null)
 			{
-				ps.setBoolean(psIndex++, "1".equals(getParamAttribute("showApprove", request)));
+				int showApprove = "1".equals(getParamAttribute("showApprove", request)) ? 1 : 0;
+				ps.setInt(psIndex++, showApprove);
 			}
 			if(request.getAttribute("suggest") != null)
 				ps.setBoolean(psIndex++, (Boolean)request.getAttribute("suggest"));

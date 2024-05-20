@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.jpa</a> &gt; <span class="el_source">TranslationKeyEntity.java</span></div><h1>TranslationKeyEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.jpa;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import org.apache.struts.util.ResponseUtils;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name = &quot;_properties_&quot;)
+//auditujeme manualne, kvoli importu a poctu zaznamov @EntityListeners(AuditEntityListener.class)
+//@EntityListenersType(Adminlog.TYPE_PROP_UPDATE)
+@Setter
+@Getter
+<span class="fc" id="L32">public class TranslationKeyEntity {</span>
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_webjet_properties&quot;)
+    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = &quot;not-export&quot;)
+    private Long id;
+
+    @Column(name = &quot;prop_key&quot;)
+    @NotBlank
+    @DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR})
+    private String key;
+
+    //Field is not showed but used to get translation key value from DB
+    @Column(name = &quot;prop_value&quot;)
+    private String value;
+
+    //Field is not showed but used to get translation key language
+    @Column(name = &quot;lng&quot;)
+    private String lng;
+
+    @Column(name = &quot;update_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(renderFormat = &quot;dt-format-date-time&quot;, editor = {
+            @DataTableColumnEditor(
+                    type = &quot;datetime&quot;,
+                    attr = {
+                            @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+                    }
+            )
+    })
+    private Date updateDate;
+
+<span class="fc" id="L63">    @Transient</span>
+    @DataTableColumnNested
+    private TranslationKeyEditorFields editorFields = null;
+
+    /*
+     * CUSTOM-FIELDS representing translation key value in specific language.
+     * fieldA is ALWAYS representing default language and NEVER null or empty
+     * originalValue's represent's original value of transation key load from file (can be same)
+    */
+
+<span class="fc" id="L73">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+    )
+    private String fieldA = &quot;&quot;; //aby sme pri exporte nemali Nevyplnene ale prazdnu hodnotu v jazykoch kde kluc nie je zadany
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueA;
+
+<span class="fc" id="L95">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+    )
+    private String fieldB = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueB;
+
+<span class="fc" id="L117">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldC = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueC;
+
+<span class="fc" id="L139">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldD = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueD;
+
+<span class="fc" id="L161">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldE = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueE;
+
+<span class="fc" id="L183">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldF = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueF;
+
+<span class="fc" id="L205">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldG = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueG;
+
+<span class="fc" id="L227">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldH = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueH;
+
+<span class="fc" id="L249">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldI = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueI;
+
+<span class="fc" id="L271">    @Transient</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;wrap&quot;,
+        filter = true
+        )
+    private String fieldJ = &quot;&quot;;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        className = &quot;hideOnCreate not-export&quot;,
+        filter = true,
+        visible = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private String originalValueJ;
+
+    public String getKey() {
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (key==null) return null;</span>
+        //ochrana pred XSS ak kluc nie je citany z DB nie je chraneny
+<span class="pc bpc" id="L296" title="2 of 4 branches missed.">        if (key.contains(&quot;&lt;&quot;) || key.contains(&quot;&gt;&quot;)) return ResponseUtils.filter(key).trim();</span>
+<span class="fc" id="L297">        return key.trim();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

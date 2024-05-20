@@ -1,16 +1,19 @@
 package sk.iway.iwcm.ebanking.epayments;
 
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Base64;
 
-import org.apache.commons.lang.ArrayUtils;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
-import cryptix.provider.key.RawSecretKey;
-import xjava.security.Cipher;
-import xjava.security.IllegalBlockSizeException;
+import org.apache.commons.lang.ArrayUtils;
 
 /**
  *  TripleDesHashCalculator.java
@@ -25,6 +28,10 @@ import xjava.security.IllegalBlockSizeException;
  */
 public class TripleDesHashCalculator
 {
+	private TripleDesHashCalculator() {
+		//utility class
+	}
+
 	public static String calculateHash(String stringToEncrypt, String privateKey)
 	{
 		String sign="";
@@ -38,17 +45,16 @@ public class TripleDesHashCalculator
 			byte[] shaDigest = sha.digest(stringToEncrypt.getBytes());
 			shaDigest = ArrayUtils.addAll(shaDigest, new byte[]{(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF});
 
-			Cipher ecipher = Cipher.getInstance("DES-EDE3/CBC", "Cryptix");
-			RawSecretKey desKey = new RawSecretKey("DES-EDE3", key);
-			ecipher.initEncrypt(desKey);
-			byte[] desCrypt  = ecipher.crypt(shaDigest);
+			byte[] iv = new byte[8];
+			IvParameterSpec ivSpec = new IvParameterSpec(iv); //NOSONAR
+
+			Cipher ecipher = Cipher.getInstance("DESede/CBC/NoPadding"); //NOSONAR
+			ecipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "DESede"), ivSpec);
+			byte[] desCrypt  = ecipher.doFinal(shaDigest);
 
 			sign = Base64.getEncoder().encodeToString(desCrypt);
 		}
-		catch (NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}
-		catch (NoSuchProviderException e){sk.iway.iwcm.Logger.error(e);}
-		catch (KeyException e){sk.iway.iwcm.Logger.error(e);}
-		catch (IllegalBlockSizeException e){sk.iway.iwcm.Logger.error(e);}
+		catch (NoSuchPaddingException|IllegalBlockSizeException|BadPaddingException|KeyException|NoSuchAlgorithmException|InvalidAlgorithmParameterException e){sk.iway.iwcm.Logger.error(e);}
 
 		return sign.trim();
 	}

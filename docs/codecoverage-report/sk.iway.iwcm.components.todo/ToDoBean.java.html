@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDoBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.todo</a> &gt; <span class="el_source">ToDoBean.java</span></div><h1>ToDoBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.todo;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecord;
+
+/**
+ * ToDoBean.java - Co treba urobit, Rozlisujeme ulohy pre prihlaseneho usera a
+ * ulohy vseobecne pomocou atributu isGlobal. Vyriesene a nevyriesene ulohy
+ * rozlisujeme podla atributy isResolved.
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2010
+ * @author $Author: mkolejak $
+ * @version $Revision: 1.3 $
+ * @created Date: 01.07.2014 14:54:26
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+
+@Entity
+@Table(name = &quot;todo&quot;)
+<span class="fc" id="L34">public class ToDoBean extends ActiveRecord implements Serializable</span>
+{
+	private static final long serialVersionUID = -1L;
+	@Id
+	@GeneratedValue(generator = &quot;WJGen_todo&quot;)
+	@TableGenerator(name = &quot;WJGen_todo&quot;, pkColumnValue = &quot;todo&quot;)
+	@Column(name = &quot;todo_id&quot;)
+	private int todoId;
+	@Column(name = &quot;user_id&quot;)
+	private int userId;
+	@Column(name = &quot;create_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date createDate;
+	@Column(name = &quot;modif_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date modifDate;
+	@Column(name = &quot;text&quot;)
+	private String text;
+	@Column(name = &quot;is_global&quot;)
+	private boolean isGlobal;
+	@Column(name = &quot;is_resolved&quot;)
+	private boolean isResolved;
+	@Column(name = &quot;sort_priority&quot;)
+	private int priority;
+	@Column(name = &quot;dead_line&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date deadLine;
+	@Column(name = &quot;note&quot;)
+	private String note;
+	@Column(name = &quot;group_id&quot;)
+	private int groupId;
+
+	public int getTodoId()
+	{
+<span class="fc" id="L68">		return todoId;</span>
+	}
+
+	public void setTodoId(int todoId)
+	{
+<span class="nc" id="L73">		this.todoId = todoId;</span>
+<span class="nc" id="L74">	}</span>
+
+	@Override
+	public void setId(int id)
+	{
+<span class="nc" id="L79">		setTodoId(id);</span>
+<span class="nc" id="L80">	}</span>
+
+	@Override
+	public int getId()
+	{
+<span class="fc" id="L85">		return getTodoId();</span>
+	}
+
+	public int getUserId()
+	{
+<span class="fc" id="L90">		return userId;</span>
+	}
+
+	public void setUserId(int userId)
+	{
+<span class="fc" id="L95">		this.userId = userId;</span>
+<span class="fc" id="L96">	}</span>
+
+	public Date getCreateDate()
+	{
+<span class="fc" id="L100">		return createDate;</span>
+	}
+
+	public void setCreateDate(Date createDate)
+	{
+<span class="fc" id="L105">		this.createDate = createDate;</span>
+<span class="fc" id="L106">	}</span>
+
+	public Date getModifDate()
+	{
+<span class="fc" id="L110">		return modifDate;</span>
+	}
+
+	public void setModifDate(Date modifDate)
+	{
+<span class="nc" id="L115">		this.modifDate = modifDate;</span>
+<span class="nc" id="L116">	}</span>
+
+	public String getText()
+	{
+<span class="fc" id="L120">		return text;</span>
+	}
+
+	public void setText(String text)
+	{
+<span class="fc" id="L125">		this.text = text;</span>
+<span class="fc" id="L126">	}</span>
+
+	public boolean getIsGlobal()
+	{
+<span class="fc" id="L130">		return isGlobal;</span>
+	}
+
+	public void setIsGlobal(boolean isGlobal)
+	{
+<span class="fc" id="L135">		this.isGlobal = isGlobal;</span>
+<span class="fc" id="L136">	}</span>
+
+	public boolean getIsResolved()
+	{
+<span class="fc" id="L140">		return isResolved;</span>
+	}
+
+	public void setIsResolved(boolean isResolved)
+	{
+<span class="fc" id="L145">		this.isResolved = isResolved;</span>
+<span class="fc" id="L146">	}</span>
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L151">		return &quot;ToDoBean [&quot; + &quot;todoId=&quot; + Integer.toString(todoId) + &quot;, userId=&quot; + Integer.toString(userId) + &quot;, isGlobal=&quot;</span>
+<span class="nc" id="L152">					+ Boolean.toString(isGlobal) + &quot;, createDate=&quot; + Tools.formatDateTime(createDate) + &quot;, text=&quot; + text</span>
+<span class="nc" id="L153">					+ &quot;, isResolved=&quot; + Boolean.toString(isResolved) + &quot;]&quot;;</span>
+	}
+
+	public boolean getResolved() { //NOSONAR
+<span class="fc" id="L157">		return isResolved;</span>
+	}
+
+	public void setResolved(boolean resolved) {
+<span class="nc" id="L161">		isResolved = resolved;</span>
+<span class="nc" id="L162">	}</span>
+
+	public int getPriority() {
+<span class="fc" id="L165">		return priority;</span>
+	}
+
+	public void setPriority(int priority) {
+<span class="nc" id="L169">		this.priority = priority;</span>
+<span class="nc" id="L170">	}</span>
+
+	public Date getDeadLine() {
+<span class="fc" id="L173">		return deadLine;</span>
+	}
+
+	public void setDeadLine(Date deadLine) {
+<span class="nc" id="L177">		this.deadLine = deadLine;</span>
+<span class="nc" id="L178">	}</span>
+
+	public String getNote() {
+<span class="fc" id="L181">		return note;</span>
+	}
+
+	public void setNote(String note) {
+<span class="nc" id="L185">		this.note = note;</span>
+<span class="nc" id="L186">	}</span>
+
+	public int getGroupId() {
+<span class="fc" id="L189">		return groupId;</span>
+	}
+
+	public void setGroupId(int groupId) {
+<span class="nc" id="L193">		this.groupId = groupId;</span>
+<span class="nc" id="L194">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -25,6 +25,7 @@ import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.AuthorizeUserService;
@@ -94,6 +95,10 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             //DTED 2.0.5 ma bug kedy padne, ak takyto option nema ziadnu hodnotu, museli sme nastavit
             one.setSexMale(true);
             one.setAuthorized(Boolean.TRUE);
+        } else {
+            if (UserDetailsService.isUsersSplitByDomain()) {
+                if (one.getDomainId()!=CloudToolsForCore.getDomainId()) return null;
+            }
         }
         return one;
     }
@@ -154,7 +159,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         //update current user if editing self
         if (userDetailsService.updateSelf(saved, getUser(), getRequest())) {
             NotifyBean notify = new NotifyBean(getProp().getText("user.profile.save.title.js"), getProp().getText("user.profile.save.notifyText.js"), NotifyType.INFO, 10000);
-            notify.addButton(new NotifyButton(getProp().getText("menu.logout"), "btn btn-primary", "far fa-sign-out", "window.location.href=$('.js-logout-toggler').attr('href')"));
+            notify.addButton(new NotifyButton(getProp().getText("menu.logout"), "btn btn-primary", "ti ti-logout", "window.location.href=$('.js-logout-toggler').attr('href')"));
             addNotify(notify);
         }
     }
@@ -190,9 +195,13 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             specSearch.addSpecSearchPasswordProtected(userGroupId, "userGroupsIds", predicates, root, builder);
         }
 
-        String permGroups = params.get("searchEditorFields.permGroups");
-        if(permGroups != null) {
-            specSearch.addSpecSearchIdInForeignTable(permGroups, "users_in_perm_groups", "user_id", "perm_group_id", "id", predicates, root, builder);
+        int permGroup = Tools.getIntValue(params.get("searchEditorFields.permGroups"), -1);
+        if(permGroup > 0) {
+            specSearch.addSpecSearchIdInForeignTableInteger(permGroup, "users_in_perm_groups", "user_id", "perm_group_id", "id", predicates, root, builder);
+        }
+
+        if (UserDetailsService.isUsersSplitByDomain()) {
+            predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
         }
 
         super.addSpecSearch(params, predicates, root, builder);

@@ -52,7 +52,10 @@ module.exports = {
           } else {
                I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn-close-editor" });
           }
-          this.waitForLoader(name);
+
+          if (typeof name == "undefined") { name = "datatableInit"; }
+          I.waitForInvisible("#" + name + "_modal", 200);
+
           //wait for fade animation
           I.wait(0.5);
      },

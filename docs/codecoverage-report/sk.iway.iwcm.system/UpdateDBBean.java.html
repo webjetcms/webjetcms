@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UpdateDBBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">UpdateDBBean.java</span></div><h1>UpdateDBBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+/**
+ *  UpdateDBBean.java - bean s informaciami o aktualizacii databazy
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      $Date: 2005/07/15 10:06:26 $
+ *@modified     $Date: 2005/07/15 10:06:26 $
+ */
+<span class="fc" id="L14">public class UpdateDBBean</span>
+{
+	String author;
+	String desc;
+	String date;
+	String mysql;
+	String mssql;
+	String oracle;
+	String pgsql;
+	/**
+	 * @return Returns the author.
+	 */
+	public String getAuthor()
+	{
+<span class="nc" id="L28">		return author;</span>
+	}
+	/**
+	 * @param author The author to set.
+	 */
+	public void setAuthor(String author)
+	{
+<span class="fc" id="L35">		this.author = author;</span>
+<span class="fc" id="L36">	}</span>
+	/**
+	 * @return Returns the date.
+	 */
+	public String getDate()
+	{
+<span class="nc" id="L42">		return date;</span>
+	}
+	/**
+	 * @param date The date to set.
+	 */
+	public void setDate(String date)
+	{
+<span class="fc" id="L49">		this.date = date;</span>
+<span class="fc" id="L50">	}</span>
+	/**
+	 * @return Returns the desc.
+	 */
+	public String getDesc()
+	{
+<span class="nc" id="L56">		return desc;</span>
+	}
+	/**
+	 * @param desc The desc to set.
+	 */
+	public void setDesc(String desc)
+	{
+<span class="fc" id="L63">		this.desc = desc;</span>
+<span class="fc" id="L64">	}</span>
+	/**
+	 * @return Returns the mssql.
+	 */
+	public String getMssql()
+	{
+<span class="nc" id="L70">		return mssql;</span>
+	}
+	/**
+	 * @param mssql The mssql to set.
+	 */
+	public void setMssql(String mssql)
+	{
+<span class="fc" id="L77">		this.mssql = mssql;</span>
+<span class="fc" id="L78">	}</span>
+	/**
+	 * @return Returns the mysql.
+	 */
+	public String getMysql()
+	{
+<span class="nc" id="L84">		return mysql;</span>
+	}
+	/**
+	 * @param mysql The mysql to set.
+	 */
+	public void setMysql(String mysql)
+	{
+<span class="fc" id="L91">		this.mysql = mysql;</span>
+<span class="fc" id="L92">	}</span>
+
+	public String getNote()
+	{
+<span class="fc" id="L96">		return(date + &quot; [&quot; + author + &quot;] &quot; + desc);</span>
+	}
+	/**
+	 * @return Returns the oracle.
+	 */
+	public String getOracle()
+	{
+<span class="nc" id="L103">		return oracle;</span>
+	}
+	/**
+	 * @param oracle The oracle to set.
+	 */
+	public void setOracle(String oracle)
+	{
+<span class="fc" id="L110">		this.oracle = oracle;</span>
+<span class="fc" id="L111">	}</span>
+	public String getPgsql() {
+<span class="nc" id="L113">		return pgsql;</span>
+	}
+	public void setPgsql(String pgsql) {
+<span class="nc" id="L116">		this.pgsql = pgsql;</span>
+<span class="nc" id="L117">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

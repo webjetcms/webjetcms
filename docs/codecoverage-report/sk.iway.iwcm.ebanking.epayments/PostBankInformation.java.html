@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PostBankInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">PostBankInformation.java</span></div><h1>PostBankInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  PostBankInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 26.8.2009 14:12:54
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+public class PostBankInformation extends PaymentInformation
+{
+
+	public PostBankInformation()
+<span class="nc" id="L24">	{</span>
+<span class="nc" id="L25">		this.merchantId = Constants.getString(&quot;basketPaymentPostBankMid&quot;);</span>
+<span class="nc" id="L26">	}</span>
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L30">		String confUrl = Constants.getString(&quot;basketPaymentPostBankUrl&quot;);</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L32">			return confUrl;</span>
+		else
+<span class="nc" id="L34">			return &quot;https://ibpb2.pabk.sk/inbank/gateposk.asp&quot;;</span>
+	}
+	
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L40">		return true;</span>
+	}
+	
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{			
+<span class="nc" id="L46">		StringBuilder action = new StringBuilder(getUrlString()).append('?');</span>
+<span class="nc" id="L47">		action.append(&quot;P1=&quot;).append(payment.getAmount());</span>
+<span class="nc" id="L48">		action.append(&quot;&amp;P2=0&amp;P3=0&amp;P7=&quot;).append(payment.getVariableSymbol()).append(&quot;&amp;P8=&quot;).append(getMerchantId());</span>
+<span class="nc" id="L49">		String form = &quot;&lt;form method=\&quot;post\&quot; action=\&quot;&quot;+action.toString()+&quot;\&quot; name=\&quot;cardPayForm\&quot;/&gt;&quot;;</span>
+<span class="nc" id="L50">		return form;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

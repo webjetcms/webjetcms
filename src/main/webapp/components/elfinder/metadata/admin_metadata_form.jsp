@@ -99,8 +99,8 @@ request.setAttribute("userGroupsList", userGroupsDB.getUserGroups());
 	<input type="hidden" class="ids" name="ids" value="<%= Tools.join((ArrayList) ids, ",") %>" />
 
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-		<iwcm:forEach items="${documents}" var="entry" varStatus="status">
-			<% DocDetails document = ((Entry<String, DocDetails>) entry).getValue(); %>
+		<c:forEach items="${documents}" var="entry" varStatus="status">
+			<% DocDetails document = ((Entry<String, DocDetails>) pageContext.getAttribute("entry")).getValue(); %>
 			<c:set var="document" value="${entry.value}" />
 			<c:set var="id" value="${document.docId}" />
 
@@ -183,7 +183,7 @@ request.setAttribute("userGroupsList", userGroupsDB.getUserGroups());
 					</div>
 				</div>
 			</div>
-		</iwcm:forEach>
+		</c:forEach>
 	</div>
 </form>
 <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>

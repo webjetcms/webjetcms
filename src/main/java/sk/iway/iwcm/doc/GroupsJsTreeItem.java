@@ -34,10 +34,10 @@ public class GroupsJsTreeItem extends JsTreeItem {
     }
 
     private String getIconPrivate(UserDetails user, boolean checkGroupsPerms) {
-        String faPrefix = "fas";
+        String tiSufix = "-filled";
 
         if (group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN) {
-            faPrefix = "far";
+            tiSufix = "";
         }
 
         if (group.isInternal()) {
@@ -45,15 +45,15 @@ public class GroupsJsTreeItem extends JsTreeItem {
         }
 
         if (Tools.isNotEmpty(group.getPasswordProtected())) {
-            addTextIcon("fas fa-lock");
+            addTextIcon("ti ti-lock-filled");
         }
 
         //If user have allgroupPerm (for example cmp_stat_seeallgroups in stat section) we are showing all groups as editable
         if (checkGroupsPerms && GroupsDB.isGroupEditable(user, group.getGroupId())==false) {
-            return faPrefix+" fa-folder-times";
+            return "ti ti-folder-x";
         }
 
-        return faPrefix+" fa-folder";
+        return "ti ti-folder"+tiSufix;
     }
 
     private JsTreeItemState getStatePrivate() {

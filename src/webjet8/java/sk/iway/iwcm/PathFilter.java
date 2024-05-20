@@ -2065,6 +2065,7 @@ public class PathFilter implements Filter
 		if (path.contains("assets")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
 		if (path.contains("_common")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
 		if (path.contains("/admin/images/")) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;
+		if (path.contains("/admin/v9/dist/") && myCacheStaticContentSeconds<301) myCacheStaticContentSeconds = 60 * 30;
 
 		if (myCacheStaticContentSeconds < cacheStaticContentSeconds) myCacheStaticContentSeconds = cacheStaticContentSeconds;
 

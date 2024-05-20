@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminMessageBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.msg</a> &gt; <span class="el_source">AdminMessageBean.java</span></div><h1>AdminMessageBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.msg;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+
+@Entity
+@Table(name=&quot;admin_message&quot;)
+<span class="fc" id="L18">public class AdminMessageBean implements Serializable </span>
+{
+
+	private static final long serialVersionUID = -3300244402731194831L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_admin_message&quot;)
+	@TableGenerator(name=&quot;WJGen_admin_message&quot;,pkColumnValue=&quot;admin_message&quot;)	
+   @Column(name=&quot;admin_message_id&quot;)
+	private int adminMessageId;
+	
+   @Column(name=&quot;create_by_user_id&quot;)
+	private Integer createByUserId;
+	
+   @Column(name=&quot;create_date&quot;)
+   @Temporal(TemporalType.TIMESTAMP)
+	private Date createDate;
+	
+   @Column(name=&quot;is_readed&quot;)
+	private Boolean isReaded;
+	
+   @Column(name=&quot;message_text&quot;)
+	private String messageText;
+	
+   @Column(name=&quot;only_for_logged&quot;)
+	private Boolean onlyForLogged;
+	
+   @Column(name=&quot;recipient_user_id&quot;)
+	private Integer recipientUserId;
+
+	public int getAdminMessageId()
+	{
+<span class="nc" id="L50">		return adminMessageId;</span>
+	}
+
+	public void setAdminMessageId(int adminMessageId)
+	{
+<span class="nc" id="L55">		this.adminMessageId = adminMessageId;</span>
+<span class="nc" id="L56">	}</span>
+
+	public Integer getCreateByUserId()
+	{
+<span class="nc" id="L60">		return createByUserId;</span>
+	}
+
+	public void setCreateByUserId(Integer createByUserId)
+	{
+<span class="nc" id="L65">		this.createByUserId = createByUserId;</span>
+<span class="nc" id="L66">	}</span>
+
+	public Date getCreateDate()
+	{
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		return createDate == null ? null : (Date) createDate.clone();</span>
+	}
+
+	public void setCreateDate(Date createDate)
+	{
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		this.createDate = createDate == null ? null : (Date) createDate.clone();</span>
+<span class="nc" id="L76">	}</span>
+
+	public Boolean isReaded()
+	{
+<span class="nc" id="L80">		return isReaded;</span>
+	}
+
+	public void setReaded(Boolean isReaded)
+	{
+<span class="nc" id="L85">		this.isReaded = isReaded;</span>
+<span class="nc" id="L86">	}</span>
+
+	public String getMessageText()
+	{
+<span class="nc" id="L90">		return messageText;</span>
+	}
+
+	public void setMessageText(String messageText)
+	{
+<span class="nc" id="L95">		this.messageText = messageText;</span>
+<span class="nc" id="L96">	}</span>
+
+	public Boolean isOnlyForLogged()
+	{
+<span class="nc" id="L100">		return onlyForLogged;</span>
+	}
+
+	public void setOnlyForLogged(Boolean onlyForLogged)
+	{
+<span class="nc" id="L105">		this.onlyForLogged = onlyForLogged;</span>
+<span class="nc" id="L106">	}</span>
+
+	public Integer getRecipientUserId()
+	{
+<span class="nc" id="L110">		return recipientUserId;</span>
+	}
+
+	public void setRecipientUserId(Integer recipientUserId)
+	{
+<span class="nc" id="L115">		this.recipientUserId = recipientUserId;</span>
+<span class="nc" id="L116">	}</span>
+
+}
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

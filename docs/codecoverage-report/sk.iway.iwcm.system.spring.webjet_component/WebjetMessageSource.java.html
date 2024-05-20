@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetMessageSource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component</a> &gt; <span class="el_source">WebjetMessageSource.java</span></div><h1>WebjetMessageSource.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component;
+
+import java.util.Locale;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.NoSuchMessageException;
+
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.i18n.Prop;
+
+// trieda pre preklady
+<span class="fc" id="L16">public class WebjetMessageSource implements MessageSource {</span>
+
+    @Override
+    public String getMessage(String s, Object[] objects, String s1, Locale locale) {
+<span class="nc" id="L20">        return getProp(locale).getText(s);</span>
+    }
+
+    @Override
+    public String getMessage(String s, Object[] objects, Locale locale) throws NoSuchMessageException {
+
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if(!InitServlet.isWebjetConfigured()) {</span>
+<span class="nc" id="L27">            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc" id="L28">            return Prop.getInstance(rb.getLng()).getText(s);</span>
+        }
+
+        try {
+<span class="fc bfc" id="L32" title="All 4 branches covered.">                if (objects != null &amp;&amp; objects.length&gt;0) {</span>
+<span class="fc" id="L33">                String[] objString = new String[objects.length];</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">                for (int i=0; i&lt;objects.length; i++) {</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">                    if (objects[i] != null) objString[i] = objects[i].toString();</span>
+                }
+<span class="fc" id="L37">                return getProp(locale).getTextWithParams(s, objString);</span>
+            }
+<span class="nc" id="L39">        } catch (Exception ex) {</span>
+<span class="nc" id="L40">            Logger.error(WebjetMessageSource.class, ex);</span>
+<span class="fc" id="L41">        }</span>
+<span class="fc" id="L42">        return getProp(locale).getText(s);</span>
+    }
+
+    @Override
+    public String getMessage(MessageSourceResolvable messageSourceResolvable, Locale locale) throws NoSuchMessageException {
+<span class="fc" id="L47">        return getProp(locale).getText(messageSourceResolvable.getDefaultMessage());</span>
+    }
+
+    private Prop getProp(Locale locale) {
+<span class="fc" id="L51">        return Prop.getInstance(locale.getLanguage());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

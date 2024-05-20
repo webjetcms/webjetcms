@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Amp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.ninja</a> &gt; <span class="el_source">Amp.java</span></div><h1>Amp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.ninja;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Tag;
+import org.jsoup.select.Elements;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.helpers.RequestHelper;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Amp {
+    private final HttpServletRequest request;
+
+<span class="nc" id="L29">    public Amp(HttpServletRequest request) {</span>
+<span class="nc" id="L30">        this.request = request;</span>
+<span class="nc" id="L31">        request.setAttribute(&quot;jQueryInserted&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L32">    }</span>
+
+    private void replaceInObject(String object) {
+<span class="nc" id="L35">        String html = (String) request.getAttribute(object);</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (Tools.isNotEmpty(html)) {</span>
+<span class="nc" id="L37">            html = replaceInString(html);</span>
+<span class="nc" id="L38">            request.setAttribute(object, html);</span>
+        }
+<span class="nc" id="L40">    }</span>
+
+    public void replaceInRequest() {
+<span class="nc" id="L43">        String[] objects = Tools.getTokens(Constants.getString(&quot;ampObjects&quot;,&quot;doc_data&quot;), &quot;,&quot;);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        for (String object : objects) {</span>
+<span class="nc" id="L45">            replaceInObject(object);</span>
+        }
+<span class="nc" id="L47">    }</span>
+
+    public String replaceInString(String html) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (Tools.isNotEmpty(html)) {</span>
+<span class="nc" id="L51">            Document document = Jsoup.parseBodyFragment(html);</span>
+<span class="nc" id="L52">            replaceImages(document);</span>
+<span class="nc" id="L53">            removeScripts(document);</span>
+<span class="nc" id="L54">            removeIncludes(document);</span>
+
+<span class="nc" id="L56">            return document.body().html();</span>
+        }
+
+<span class="nc" id="L59">        return &quot;&quot;;</span>
+    }
+
+    private void replaceImages(Document document) {
+<span class="nc" id="L63">        Elements elements = document.select(&quot;img&quot;);</span>
+<span class="nc" id="L64">        boolean ampImageRealDimensions = Constants.getBoolean(&quot;ampImageRealDimensions&quot;);</span>
+<span class="nc" id="L65">        int ampImageRealDimensionsCache = Constants.getInt(&quot;ampImageRealDimensionsCache&quot;, 0);</span>
+
+<span class="nc" id="L67">        Attributes attributes = getAttributes();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        for (Element element : elements) {</span>
+<span class="nc" id="L69">            Element ampImg = new Element(Tag.valueOf(&quot;amp-img&quot;), &quot;&quot;, attributes.clone());</span>
+<span class="nc" id="L70">            int width = 0;</span>
+<span class="nc" id="L71">            int height = 0;</span>
+<span class="nc" id="L72">            String src = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            for (Attribute attribute : element.attributes()) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                if (&quot;width&quot;.equalsIgnoreCase(attribute.getKey())) {</span>
+<span class="nc" id="L76">                    width = Tools.getIntValue(attribute.getValue(), 0);</span>
+<span class="nc" id="L77">                    continue;</span>
+                }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (&quot;height&quot;.equalsIgnoreCase(attribute.getKey())) {</span>
+<span class="nc" id="L80">                    height = Tools.getIntValue(attribute.getValue(), 0);</span>
+<span class="nc" id="L81">                    continue;</span>
+                }
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                if (&quot;src&quot;.equalsIgnoreCase(attribute.getKey())) {</span>
+<span class="nc" id="L85">                    src = attribute.getValue();</span>
+                }
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                if (&quot;style&quot;.equalsIgnoreCase(attribute.getKey())) {</span>
+<span class="nc" id="L89">                    continue;</span>
+                }
+
+<span class="nc" id="L92">                ampImg.attr(attribute.getKey(), attribute.getValue());</span>
+<span class="nc" id="L93">            }</span>
+
+<span class="nc bnc" id="L95" title="All 4 branches missed.">            if (ampImageRealDimensions &amp;&amp; Tools.isNotEmpty(src)) {</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (ampImageRealDimensionsCache &gt; 0) {</span>
+<span class="nc" id="L98">                    Cache c = Cache.getInstance();</span>
+<span class="nc" id="L99">                    String dimensions = c.getObject(&quot;ampImageCache-&quot; + src, String.class);</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">                    if (Tools.isNotEmpty(dimensions) &amp;&amp; dimensions.contains(&quot;x&quot;)) {</span>
+<span class="nc" id="L101">                        String[] dimesnionsTokens = Tools.getTokens(dimensions, &quot;x&quot;);</span>
+<span class="nc" id="L102">                        width = Tools.getIntValue(dimesnionsTokens[0], 0);</span>
+<span class="nc" id="L103">                        height = Tools.getIntValue(dimesnionsTokens[1], 0);</span>
+                    }
+                }
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">                if (width == 0 || height == 0) {</span>
+                    try {
+<span class="nc" id="L109">                        BufferedImage bimg = ImageIO.read(new File(Tools.getRealPath(src)));</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                        if (bimg != null) {</span>
+<span class="nc" id="L111">                            width = bimg.getWidth();</span>
+<span class="nc" id="L112">                            height = bimg.getHeight();</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                            if (ampImageRealDimensionsCache &gt; 0) {</span>
+<span class="nc" id="L115">                                Cache c = Cache.getInstance();</span>
+<span class="nc" id="L116">                                c.setObject(&quot;ampImageCache-&quot; + src, width + &quot;x&quot; + height, ampImageRealDimensionsCache);</span>
+                            }
+                        }
+<span class="nc" id="L119">                    } catch (IOException e) {</span>
+<span class="nc" id="L120">                        sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L121">                    }</span>
+                }
+            }
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (width &gt; 0) {</span>
+<span class="nc" id="L126">                ampImg.attr(&quot;width&quot;, &quot;&quot; + width);</span>
+            }
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if (height &gt; 0) {</span>
+<span class="nc" id="L130">                ampImg.attr(&quot;height&quot;, &quot;&quot; + height);</span>
+            }
+
+<span class="nc" id="L133">            element.replaceWith(ampImg);</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">    }</span>
+
+    private void removeScripts(Document document) {
+<span class="nc" id="L138">        document.select(&quot;script&quot;).remove();</span>
+<span class="nc" id="L139">    }</span>
+
+    private void removeIncludes(Document document) {
+<span class="nc" id="L142">        List&lt;String&gt; allowedIncludes = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;ampAllowedIncludes&quot;, &quot;/components/news/news-velocity.jsp&quot;), &quot;,&quot;));</span>
+<span class="nc" id="L143">        String html = document.body().html();</span>
+
+<span class="nc" id="L145">        final String regex = &quot;\\!INCLUDE.*\\)!&quot;;</span>
+<span class="nc" id="L146">        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);</span>
+<span class="nc" id="L147">        final Matcher matcher = pattern.matcher(html);</span>
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        outerloop: while (matcher.find()) {</span>
+<span class="nc" id="L150">            String match = matcher.group(0);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (!allowedIncludes.isEmpty()) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                for (String allowedInclude : allowedIncludes) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                    if (match.contains(allowedInclude)) {</span>
+<span class="nc" id="L154">                        Logger.debug(Amp.class, String.format(&quot;Nechavam include: %s&quot;, match));</span>
+<span class="nc" id="L155">                        continue outerloop;</span>
+                    }
+<span class="nc" id="L157">                }</span>
+            }
+
+<span class="nc" id="L160">            Logger.debug(Amp.class, String.format(&quot;Odstranujem include: %s&quot;, match));</span>
+<span class="nc" id="L161">            html = Tools.replace(html, match, &quot;&quot;);</span>
+<span class="nc" id="L162">        }</span>
+
+<span class="nc" id="L164">        document.body().html(html);</span>
+<span class="nc" id="L165">    }</span>
+
+    private Attributes getAttributes() {
+<span class="nc" id="L168">        Attributes attributes = new Attributes();</span>
+<span class="nc" id="L169">        RequestHelper requestHelper = new RequestHelper(request);</span>
+<span class="nc" id="L170">        TemplateDetails template = requestHelper.getTemplate();</span>
+
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (template == null) {</span>
+<span class="nc" id="L173">            return attributes;</span>
+        }
+<span class="nc" id="L175">        int templateId = template.getTempId();</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (templateId &lt; 1) {</span>
+<span class="nc" id="L178">            return attributes;</span>
+        }
+
+<span class="nc" id="L181">        String constantKey = &quot;ampImgAttributes&quot;;</span>
+<span class="nc" id="L182">        String[] attributesArray = getAttributesArray(Constants.getString(constantKey + templateId, &quot;&quot;));</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if (attributesArray.length == 0) {</span>
+<span class="nc" id="L185">            attributesArray = getAttributesArray(Constants.getString(constantKey, &quot;&quot;));</span>
+        }
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (attributesArray.length &gt; 0) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            for (String s : attributesArray) {</span>
+<span class="nc" id="L190">                String[] tokens = Tools.getTokens(s, &quot;=&quot;);</span>
+<span class="nc" id="L191">                attributes.put(tokens[0], Tools.replace(tokens[1], &quot;\&quot;&quot;, &quot;&quot;));</span>
+            }
+        }
+
+<span class="nc" id="L195">        return attributes;</span>
+    }
+
+    private String[] getAttributesArray(String att) {
+<span class="nc" id="L199">        String attPmd = att;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (attPmd.contains(&quot;\n&quot;)) {</span>
+<span class="nc" id="L201">            attPmd = Tools.replace(attPmd, &quot;\n&quot;, &quot; &quot;);</span>
+        }
+<span class="nc" id="L203">        return Tools.getTokens(attPmd, &quot; &quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

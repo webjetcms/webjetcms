@@ -1,0 +1,773 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmFile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">IwcmFile.java</span></div><h1>IwcmFile.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+
+/**
+ * IwcmFile.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.19 $
+ * @created Date: 24.6.2008 17:05:58
+ * @modified $Date: 2010/01/20 11:14:46 $
+ */
+public class IwcmFile
+{
+<span class="fc" id="L37">	private int fatId = -1;</span>
+<span class="fc" id="L38">	private String fileName = null;</span>
+<span class="fc" id="L39">	private String virtualPath = null;</span>
+<span class="fc" id="L40">	private File file = null;</span>
+<span class="fc" id="L41">	private boolean isDBStorage = false; // ak je false zapisuje sa na disk,ak</span>
+<span class="fc" id="L42">	private boolean isJarPackaging = false; //ak je true je subor v JAR archive</span>
+
+	// true do db storage
+	/**
+	 * filename je skutocna cesta napr. C:\foo\bar.jpg
+	 */
+	public IwcmFile(String filename)
+<span class="fc" id="L49">	{</span>
+<span class="fc" id="L50">		this.fileName = filename;</span>
+<span class="fc" id="L51">		virtualPath = IwcmFsDB.getVirtualPath(filename);</span>
+<span class="fc" id="L52">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="fc" id="L53">		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">		if (!isDBStorage)</span>
+		{
+<span class="fc" id="L56">			file = new File(filename);</span>
+		}
+<span class="fc" id="L58">	}</span>
+
+	public IwcmFile(String basename, String filename)
+<span class="fc" id="L61">	{</span>
+<span class="fc" id="L62">		this.fileName = basename + File.separator + filename;</span>
+<span class="fc" id="L63">		virtualPath = IwcmFsDB.getVirtualPath(basename + File.separator + filename);</span>
+<span class="fc" id="L64">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="fc" id="L65">		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (!isDBStorage)</span>
+		{
+<span class="fc" id="L68">			file = new File(basename + File.separator + filename);</span>
+		}
+<span class="fc" id="L70">	}</span>
+
+	public IwcmFile(File file)
+<span class="fc" id="L73">	{</span>
+<span class="fc" id="L74">		fileName = file.getPath();</span>
+<span class="fc" id="L75">		virtualPath = IwcmFsDB.getVirtualPath(file.getPath());</span>
+<span class="fc" id="L76">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="fc" id="L77">		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (!isDBStorage)</span>
+		{
+<span class="fc" id="L80">			this.file = file;</span>
+		}
+<span class="fc" id="L82">	}</span>
+
+	public IwcmFile(IwcmFile parent,String child)
+	{
+<span class="fc" id="L86">		this(parent.getAbsolutePath(),child);</span>
+<span class="fc" id="L87">	}</span>
+
+	public static IwcmFile fromVirtualPath(String path)
+	{
+<span class="fc" id="L91">		return new IwcmFile(Tools.getRealPath(path));</span>
+	}
+
+	public static IwcmFile fromVirtualPath(String path, String fileName)
+	{
+<span class="nc" id="L96">		return new IwcmFile(Tools.getRealPath(path), fileName);</span>
+	}
+
+	public boolean createNewFile() throws IOException
+	{
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (isDirectory())</span>
+			{
+<span class="nc" id="L105">				delete();</span>
+<span class="nc" id="L106">				IwcmFsDB.createDirectory(virtualPath);</span>
+<span class="nc" id="L107">				return true;</span>
+			}
+<span class="nc" id="L109">			delete();</span>
+			// createnewFile() sa vola v pripadoch kedy nie je obsah suboru
+			// dolezity a necita sa z neho, lebo bude o chvilu prepisany,
+			// ale potrebujeme aby existoval.
+<span class="nc" id="L113">			IwcmFsDB.getFatIdTable().put(virtualPath, 0);</span>
+<span class="nc" id="L114">			IwcmFsDB.getModifiedTable().put(virtualPath, (long) 0);</span>
+<span class="nc" id="L115">			ClusterDB.addRefresh(IwcmFsDB.class);</span>
+
+<span class="nc" id="L117">			return true;</span>
+		}
+		else
+		{
+<span class="fc" id="L121">			return file.createNewFile();</span>
+		}
+	}
+
+	public boolean isDirectory()
+	{
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L129" title="All 4 branches missed.">			if (exists() &amp;&amp; IwcmFsDB.getModifiedTable().get(virtualPath) == 0)</span>
+			{
+<span class="nc" id="L131">				return true;</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				if (fileName.substring(fileName.lastIndexOf(File.separator), fileName.length()).contains(&quot;.prilohy&quot;) 	//v tomto pripade je to adresar -&gt; WebDav integracia do dokument manazmentu (#8185)</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">							|| !fileName.substring(fileName.lastIndexOf(File.separator), fileName.length()).contains(&quot;.&quot;))</span>
+				{
+<span class="nc" id="L138">					return true;</span>
+				}
+<span class="nc" id="L140">				return false;</span>
+			}
+		}
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L145">			return JarPackaging.isDirectory(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L149">			return file.isDirectory();</span>
+		}
+	}
+
+	public boolean delete()
+	{
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (Tools.isEmpty(fileName))</span>
+<span class="nc" id="L158">				return true;</span>
+
+<span class="nc" id="L160">			Integer fatIdToDelete = IwcmFsDB.getFatIdTable().get(virtualPath);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (fatIdToDelete == null)</span>
+			{
+<span class="nc" id="L163">				return true;</span>
+			}
+<span class="nc" id="L165">			Connection db_conn = null;</span>
+<span class="nc" id="L166">			PreparedStatement ps = null;</span>
+			try
+			{
+<span class="nc" id="L169">				db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">				if (IwcmFsDB.useVersioning() &amp;&amp; IwcmFsDB.useDBStorage())</span>
+				{
+<span class="nc" id="L172">					ps = db_conn.prepareStatement(&quot;update file_fat set is_deleted = ?, last_modified = ?  where file_fat_id = ? &quot;); // nastavi</span>
+																																					// sa
+																																					// priznak
+																																					// zmazaneho
+																																					// suboru
+<span class="nc" id="L177">					ps.setBoolean(1, true);</span>
+<span class="nc" id="L178">					ps.setLong(2, new java.util.Date().getTime());</span>
+<span class="nc" id="L179">					ps.setInt(3, fatIdToDelete.intValue());</span>
+<span class="nc" id="L180">					ps.execute();</span>
+<span class="nc" id="L181">					ps.close();</span>
+				}
+				else
+				{
+<span class="nc" id="L185">					ps = db_conn.prepareStatement(&quot;delete from file_fat where file_fat_id = ? &quot;); // zmaze</span>
+																															// sa
+																															// z
+																															// tabuliek
+<span class="nc" id="L189">					ps.setInt(1, fatIdToDelete.intValue());</span>
+<span class="nc" id="L190">					ps.execute();</span>
+<span class="nc" id="L191">					ps.close();</span>
+
+<span class="nc" id="L193">					ps = db_conn.prepareStatement(&quot;delete from file_data where file_fat_id = ? &quot;);</span>
+<span class="nc" id="L194">					ps.setInt(1, IwcmFsDB.getFatIdTable().get(virtualPath));</span>
+<span class="nc" id="L195">					ps.execute();</span>
+<span class="nc" id="L196">					ps.close();</span>
+				}
+<span class="nc" id="L198">				db_conn.close();</span>
+<span class="nc" id="L199">				ps = null;</span>
+<span class="nc" id="L200">				db_conn = null;</span>
+			}
+<span class="nc" id="L202">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L204">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L210" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L211">						ps.close();</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L213">						db_conn.close();</span>
+				}
+<span class="nc" id="L215">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L217">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L218">				}</span>
+			}
+
+<span class="nc" id="L221">			IwcmFsDB.getModifiedTable().remove(virtualPath);</span>
+<span class="nc" id="L222">			IwcmFsDB.getFatIdTable().remove(virtualPath);</span>
+
+			//ak je to adresar tak rekuzivne zmazeme podadresare
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (isDirectory())</span>
+			{
+<span class="nc bnc" id="L227" title="All 2 branches missed.">				for (IwcmFile f:this.listFiles())</span>
+				{
+<span class="nc" id="L229">					f.delete();</span>
+				}
+			}
+
+
+<span class="nc" id="L234">			ClusterDB.addRefresh(IwcmFsDB.class);</span>
+<span class="nc" id="L235">			return true;</span>
+		}
+		else
+		{
+<span class="pc bpc" id="L239" title="4 of 6 branches missed.">			if (file.exists() &amp;&amp; IwcmFsDB.useVersioning() &amp;&amp; IwcmFsDB.useDBStorage())</span>
+			{
+<span class="nc" id="L241">				IwcmFsDB.writeFileToDB(file);</span>
+			}
+<span class="fc" id="L243">			return file.delete();</span>
+		}
+	}
+
+	public boolean exists()
+	{
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (IwcmFsDB.getFatIdTable().get(virtualPath) != null)</span>
+			{
+<span class="nc" id="L253">				return true;</span>
+			}
+			else
+			{
+<span class="nc" id="L257">				return false;</span>
+			}
+		}
+<span class="fc bfc" id="L260" title="All 2 branches covered.">		else if (isJarPackaging)</span>
+		{
+<span class="fc" id="L262">			return JarPackaging.exists(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L266">			return file.exists();</span>
+		}
+	}
+
+	public String getPath()
+	{
+<span class="fc" id="L272">		return fileName;</span>
+	}
+
+	public int getFatId()
+	{
+<span class="nc" id="L277">		return fatId;</span>
+	}
+
+	public void setFatId(int fatId)
+	{
+<span class="nc" id="L282">		this.fatId = fatId;</span>
+<span class="nc" id="L283">	}</span>
+
+	public String getVirtualPath()
+	{
+<span class="fc" id="L287">		return Tools.replace(virtualPath, &quot;//&quot;, &quot;/&quot;);</span>
+	}
+
+	public void setVirtualPath(String virtualPath)
+	{
+<span class="nc" id="L292">		this.virtualPath = virtualPath;</span>
+<span class="nc" id="L293">	}</span>
+
+	public IwcmFile[] listFiles(final IwcmFileFilter filter)
+	{
+<span class="fc bfc" id="L297" title="All 2 branches covered.">		if (!this.isDirectory())</span>
+<span class="fc" id="L298">			return new IwcmFile[0];</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L301">			List&lt;IwcmFile&gt; resultList = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L303">			Set&lt;String&gt; paths = IwcmFsDB.getFatIdTable().keySet();</span>
+
+<span class="nc" id="L305">			int slashesInParent = StringUtils.countMatches(virtualPath, &quot;/&quot;);</span>
+
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			for (String s:paths)</span>
+			{
+<span class="nc bnc" id="L309" title="All 2 branches missed.">				if (s.startsWith(virtualPath))</span>
+				{
+<span class="nc" id="L311">					int slashesInSubfile = StringUtils.countMatches(s, &quot;/&quot;);</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">					if (slashesInParent +1 != slashesInSubfile)</span>
+<span class="nc" id="L313">						continue;</span>
+<span class="nc" id="L314">					IwcmFile f = new IwcmFile(Tools.getRealPath(s));</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">					if (filter.accept(f))</span>
+					{
+<span class="nc" id="L317">						resultList.add(f);</span>
+					}
+				}
+<span class="nc" id="L320">			}</span>
+<span class="nc" id="L321">			return resultList.toArray(new IwcmFile[0]);</span>
+		}
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L325">			IwcmFile[] files = JarPackaging.listFiles(virtualPath);</span>
+<span class="nc" id="L326">			List&lt;IwcmFile&gt; resultList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			for (IwcmFile f : files) {</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">				if (filter.accept(f)) resultList.add(f);</span>
+			}
+
+<span class="nc" id="L331">			return resultList.toArray(new IwcmFile[0]);</span>
+		}
+		else
+		{
+
+<span class="fc" id="L336">			File[] files = file.listFiles(new FileFilter()</span>
+<span class="fc" id="L337">			{</span>
+				@Override
+				public boolean accept(File pathname)
+				{
+<span class="fc bfc" id="L341" title="All 2 branches covered.">				if (filter.accept(new IwcmFile(pathname)))</span>
+				{
+<span class="fc" id="L343">					return true;</span>
+				}
+<span class="fc" id="L345">				return false;</span>
+				}
+			});
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">			if (files==null) return null;</span>
+<span class="fc" id="L349">			IwcmFile[] result = new IwcmFile[files.length];</span>
+<span class="fc" id="L350">			int i = 0;</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">			for (File f : files)</span>
+			{
+<span class="fc" id="L353">				result[i++] = new IwcmFile(f);</span>
+			}
+<span class="fc" id="L355">			return result;</span>
+		}
+	}
+
+	public IwcmFile[] listFiles()
+	{
+<span class="fc" id="L361">		return listFiles(new IwcmFileFilter(){</span>
+			@Override
+			public boolean accept(IwcmFile pathname)
+			{
+<span class="fc" id="L365">				return true;</span>
+			}
+		});
+	}
+
+	public String getName()
+	{
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L374">			return fileName.substring(fileName.lastIndexOf(File.separator) + 1);</span>
+		}
+		else
+		{
+<span class="fc" id="L378">			return file.getName();</span>
+		}
+	}
+
+	public boolean isFile()
+	{
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L386" title="All 4 branches missed.">			if (exists() &amp;&amp; IwcmFsDB.getModifiedTable().get(virtualPath) &gt; 0)</span>
+			{
+<span class="nc" id="L388">				return true;</span>
+			}
+			else
+			{
+<span class="nc" id="L392">				return false;</span>
+			}
+		}
+<span class="pc bpc" id="L395" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L397">			return JarPackaging.isFile(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L401">			return file.isFile();</span>
+		}
+	}
+
+	public boolean mkdir()
+	{
+<span class="nc" id="L407">		return mkdirs();</span>
+	}
+
+	public String getParent()
+	{
+<span class="nc" id="L412">		String fName = fileName;</span>
+<span class="nc bnc" id="L413" title="All 4 branches missed.">		if (isDirectory() &amp;&amp; !fName.endsWith(File.separator))</span>
+		{
+<span class="nc" id="L415">			fName += File.separator;</span>
+		}
+
+<span class="nc" id="L418">		return fName.substring(0, fName.lastIndexOf(File.separatorChar));</span>
+	}
+
+	/**
+	 * Vrati virtualnu cestu k suboru, bez mena suboru
+	 * doplnene 5.2. 2009 - kmarton - kvoli rekurzivnej kontrole pouzitia suborov, vo funkcii priamo pouzite &quot;/&quot; ako file
+	 * separator kvoli tomu, ze predtym to prechadza cez getVirtualPath a tam su vsetky &quot;\&quot; nahradzane &quot;/&quot; ako cesta v prehliadacoch
+	 * @author kmarton
+	 * @return String  napr. ak je virtualna path /templates/webjet/temp_2.jsp, tak funkcia vrati /templates/webjet
+	 * 					 ak je to adresar napr. /templates/webjet/, vrati /templates
+	 */
+	public String getVirtualParent()
+	{
+<span class="fc" id="L431">		String fName = this.getVirtualPath();</span>
+
+<span class="pc bpc" id="L433" title="5 of 6 branches missed.">		if (isDirectory() &amp;&amp; fName.endsWith(&quot;/&quot;) &amp;&amp; fName.length()&gt;1)</span>
+		{
+<span class="nc" id="L435">			fName = fName.substring(0, (fName.length()-1));</span>
+		}
+<span class="fc" id="L437">		String result = fName.substring(0, fName.lastIndexOf('/'));</span>
+		//ak cesta obsahovala len jedlo '/' napr. /images tak z toho spravi prazdny string, pritom parent je /
+<span class="pc bpc" id="L439" title="1 of 2 branches missed.">		if (result.length()==0)</span>
+		{
+<span class="nc" id="L441">			return &quot;/&quot;;</span>
+		}
+		else
+		{
+<span class="fc" id="L445">			return result;</span>
+		}
+	}
+
+	@JsonIgnore
+	public IwcmFile getParentFile()
+	{
+<span class="pc bpc" id="L452" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L454">			return new IwcmFile(fileName.substring(0, fileName.lastIndexOf(File.separatorChar)));</span>
+		}
+		else
+		{
+<span class="fc" id="L458">			return new IwcmFile(file.getParentFile());</span>
+		}
+	}
+
+	public boolean mkdirs()
+	{
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">		if (!isDBStorage)</span>
+		{
+<span class="fc" id="L466">			return file.mkdirs();</span>
+		}
+		else
+		{
+<span class="nc" id="L470">			String path = virtualPath;</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">			if (!path.endsWith(&quot;/&quot;))</span>
+			{
+<span class="nc" id="L473">				path += &quot;/&quot;;</span>
+			}
+			//int length = path.split(&quot;/&quot;).length;
+<span class="nc" id="L476">			StringBuilder rootBuf = new StringBuilder();</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">			for (String dir : path.split(&quot;/&quot;))</span>
+			{
+<span class="nc bnc" id="L479" title="All 2 branches missed.">				if (Tools.isEmpty(dir))</span>
+<span class="nc" id="L480">					continue;</span>
+<span class="nc" id="L481">				rootBuf.append('/').append(dir);</span>
+
+<span class="nc" id="L483">				IwcmFsDB.createDirectory(rootBuf.toString());</span>
+			}
+<span class="nc" id="L485">			return true;</span>
+		}
+	}
+
+	public String getAbsolutePath()
+	{
+<span class="pc bpc" id="L491" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L493">			return getPath();</span>
+		}
+		else
+		{
+<span class="fc" id="L497">			return file.getAbsolutePath();</span>
+		}
+	}
+
+	public long getLength() {
+<span class="nc" id="L502">		return length();</span>
+	}
+
+	public long length()
+	{
+<span class="pc bpc" id="L507" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+			try
+			{
+<span class="nc" id="L511">				long size = new SimpleQuery().forLong(&quot;select fsize from file_fat where file_fat_id  = ? &quot;,</span>
+<span class="nc" id="L512">						IwcmFsDB.getFatIdTable().get(virtualPath));</span>
+<span class="nc" id="L513">				return size;</span>
+			}
+<span class="nc" id="L515">			catch (Exception e)</span>
+			{
+<span class="nc" id="L517">				return -1;</span>
+			}
+		}
+<span class="pc bpc" id="L520" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L522">			return JarPackaging.getSize(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L526">			return file.length();</span>
+		}
+	}
+
+	public long lastModified()
+	{
+<span class="pc bpc" id="L532" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L534" title="All 2 branches missed.">			if (IwcmFsDB.getModifiedTable().get(virtualPath) == null)</span>
+			{
+<span class="nc" id="L536">				return 0;</span>
+			}
+<span class="nc" id="L538">			return IwcmFsDB.getModifiedTable().get(virtualPath);</span>
+		}
+<span class="pc bpc" id="L540" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L542">			return JarPackaging.getLastMofified(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L546">			return file.lastModified();</span>
+		}
+	}
+
+	public boolean setLastModified(long time)
+	{
+<span class="pc bpc" id="L552" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L554">			return IwcmFsDB.updateLastModified(virtualPath, time);</span>
+		}
+		else
+		{
+<span class="fc" id="L558">			return file.setLastModified(time);</span>
+		}
+	}
+
+	public boolean renameTo(IwcmFile out)
+	{
+<span class="pc bpc" id="L564" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		if (out.isDBStorage)</span>
+		{
+<span class="nc bnc" id="L568" title="All 2 branches missed.">			if (exists())</span>
+			{
+<span class="nc" id="L570">				Connection db_conn = null;</span>
+<span class="nc" id="L571">				PreparedStatement ps = null;</span>
+<span class="nc" id="L572">				ResultSet rs = null;</span>
+				try
+				{
+<span class="nc" id="L575">					db_conn = DBPool.getConnection();</span>
+					//premenujeme adresar samotny
+<span class="nc" id="L577">					ps = db_conn.prepareStatement(&quot;update file_fat  set virtual_path = ? where virtual_path = ? &quot;);</span>
+<span class="nc" id="L578">					ps.setString(1, out.getVirtualPath());</span>
+<span class="nc" id="L579">					ps.setString(2, virtualPath);</span>
+<span class="nc" id="L580">					ps.execute();</span>
+<span class="nc" id="L581">					ps.close();</span>
+
+
+					//mysql oracle
+<span class="nc bnc" id="L585" title="All 6 branches missed.">					if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+					{
+<span class="nc" id="L587">						ps = db_conn</span>
+<span class="nc" id="L588">									.prepareStatement(&quot;update file_fat set virtual_path =CONCAT( ?,SUBSTR(virtual_path,?)) where virtual_path like ? &quot;);</span>
+<span class="nc" id="L589">						int index = 1;</span>
+<span class="nc" id="L590">						ps.setString(index++, out.getVirtualPath());</span>
+<span class="nc" id="L591">						ps.setInt(index++, virtualPath.length()+1);</span>
+<span class="nc" id="L592">						ps.setString(index++, virtualPath +&quot;/&quot;+ &quot;%&quot;);</span>
+<span class="nc" id="L593">						ps.executeUpdate();</span>
+<span class="nc" id="L594">						ps.close();</span>
+<span class="nc" id="L595">					}</span>
+					else
+					{
+						//ina syntax substring a concat
+<span class="nc bnc" id="L599" title="All 2 branches missed.">						if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+						{
+<span class="nc" id="L601">							ps = db_conn</span>
+<span class="nc" id="L602">										.prepareStatement(&quot;update file_fat set virtual_path =  ? + SUBSTRING(virtual_path,?,LEN(virtual_path)-?) where virtual_path like ? &quot;);</span>
+<span class="nc" id="L603">							int index = 1;</span>
+<span class="nc" id="L604">							ps.setString(index++, out.getVirtualPath());</span>
+<span class="nc" id="L605">							ps.setInt(index++, virtualPath.length()+1);</span>
+<span class="nc" id="L606">							ps.setInt(index++, virtualPath.length());</span>
+<span class="nc" id="L607">							ps.setString(index++, virtualPath+&quot;/&quot; + &quot;%&quot;);</span>
+<span class="nc" id="L608">							ps.executeUpdate();</span>
+<span class="nc" id="L609">							ps.close();</span>
+						}
+					}
+
+<span class="nc" id="L613">					ps = fixDepth(out.getVirtualPath(),db_conn);</span>
+
+					// vyberieme vsetky subory a podadresare
+<span class="nc" id="L616">					ps = db_conn.prepareStatement(&quot;select * from file_fat where virtual_path like ? &quot;);</span>
+<span class="nc" id="L617">					ps.setString(1,out.getVirtualPath()+&quot;/&quot;+&quot;%&quot;);</span>
+<span class="nc" id="L618">					rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L620" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L622">						final String newVirtualPath = rs.getString(&quot;virtual_path&quot;);</span>
+
+<span class="nc" id="L624">						final String oldPath = virtualPath+newVirtualPath.substring(out.getVirtualPath().length());</span>
+						// odstranime stare cesty a vlozime nove
+<span class="nc" id="L626">						IwcmFsDB.getFatIdTable().remove(oldPath);</span>
+<span class="nc" id="L627">						IwcmFsDB.getModifiedTable().remove(oldPath);</span>
+
+<span class="nc" id="L629">						IwcmFsDB.getFatIdTable().put(newVirtualPath,rs.getInt(&quot;file_fat_id&quot;));</span>
+<span class="nc" id="L630">						IwcmFsDB.getModifiedTable().put(newVirtualPath,rs.getLong(&quot;last_modified&quot;) );</span>
+
+<span class="nc" id="L632">					}</span>
+
+<span class="nc" id="L634">					int dataId = IwcmFsDB.getFatIdTable().get(virtualPath);</span>
+<span class="nc" id="L635">					long lastModified = IwcmFsDB.getModifiedTable().get(virtualPath);</span>
+					//ulozime do hash table novu cestu pre adresar
+<span class="nc" id="L637">					IwcmFsDB.getFatIdTable().remove(virtualPath);</span>
+<span class="nc" id="L638">					IwcmFsDB.getModifiedTable().remove(virtualPath);</span>
+<span class="nc" id="L639">					virtualPath = out.getVirtualPath();</span>
+<span class="nc" id="L640">					fileName = out.getPath();</span>
+<span class="nc" id="L641">					IwcmFsDB.getFatIdTable().put(virtualPath, dataId);</span>
+<span class="nc" id="L642">					IwcmFsDB.getModifiedTable().put(virtualPath, lastModified);</span>
+<span class="nc" id="L643">					ClusterDB.addRefresh(IwcmFsDB.class);</span>
+
+
+<span class="nc" id="L646">					rs.close();</span>
+<span class="nc" id="L647">					ps.close();</span>
+<span class="nc" id="L648">					db_conn.close();</span>
+<span class="nc" id="L649">					rs = null;</span>
+<span class="nc" id="L650">					ps = null;</span>
+<span class="nc" id="L651">					db_conn = null;</span>
+				}
+<span class="nc" id="L653">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L655">					sk.iway.iwcm.Logger.error(ex);</span>
+				}
+				finally
+				{
+					try
+					{
+<span class="nc bnc" id="L661" title="All 2 branches missed.">						if (rs != null)</span>
+<span class="nc" id="L662">							rs.close();</span>
+<span class="nc bnc" id="L663" title="All 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L664">							ps.close();</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L666">							db_conn.close();</span>
+					}
+<span class="nc" id="L668">					catch (Exception ex2)</span>
+					{
+<span class="nc" id="L670">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L671">					}</span>
+				}
+<span class="nc" id="L673">			}</span>
+		}
+		else
+		{
+<span class="nc" id="L677">			IwcmFsDB.writeFileToDisk(new File(this.getAbsolutePath()), new File(out.getAbsolutePath()));</span>
+<span class="nc" id="L678">			this.delete();</span>
+		}
+		}
+		else
+		{
+<span class="pc bpc" id="L683" title="1 of 2 branches missed.">			if (out.isDBStorage)</span>
+			{
+<span class="nc" id="L685">				IwcmFsDB.writeFileToDB(file,new File(out.getAbsolutePath()));</span>
+<span class="nc" id="L686">				this.delete();</span>
+			}
+			else
+			{
+<span class="pc bpc" id="L690" title="1 of 2 branches missed.">				if(file.renameTo(new File(out.getPath())) == false) return false;</span>
+			}
+		}
+<span class="fc" id="L693">		return true;</span>
+	}
+
+	private static PreparedStatement fixDepth(String path, Connection db_conn) throws SQLException
+	{
+		PreparedStatement ps;
+
+		//opravime depth
+
+		//mysql oracle
+<span class="nc bnc" id="L703" title="All 6 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L705">			ps = db_conn</span>
+<span class="nc" id="L706">						.prepareStatement(&quot;update file_fat set depth = length(virtual_path) - length(replace(virtual_path,'/','')) where virtual_path like ? &quot;);</span>
+<span class="nc" id="L707">			ps.setString(1, path + &quot;%&quot;);</span>
+<span class="nc" id="L708">			ps.execute();</span>
+<span class="nc" id="L709">			ps.close();</span>
+		}
+		else
+		{
+<span class="nc" id="L713">			ps = db_conn</span>
+<span class="nc" id="L714">						.prepareStatement(&quot;update file_fat set depth = LEN(virtual_path) - LEN(replace(virtual_path,'/','')) where virtual_path like ? &quot;);</span>
+<span class="nc" id="L715">			ps.setString(1, path + &quot;%&quot;);</span>
+<span class="nc" id="L716">			ps.execute();</span>
+<span class="nc" id="L717">			ps.close();</span>
+		}
+
+<span class="nc" id="L720">		return ps;</span>
+	}
+
+	public boolean canRead()
+	{
+<span class="pc bpc" id="L725" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L727">			return true;</span>
+		}
+<span class="pc bpc" id="L729" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L731">			return exists();</span>
+		}
+		else
+		{
+<span class="fc" id="L735">			return file.canRead();</span>
+		}
+	}
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L742">		return getVirtualPath();</span>
+	}
+
+	/**
+	 * @return
+	 */
+	public String getCanonicalPath()
+	{
+<span class="nc bnc" id="L750" title="All 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc" id="L752">			return getAbsolutePath();</span>
+		}
+		else
+		{
+			try
+			{
+<span class="nc" id="L758">				return file.getCanonicalPath();</span>
+			}
+<span class="nc" id="L760">			catch (IOException e)</span>
+			{
+<span class="nc" id="L762">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+		}
+<span class="nc" id="L765">		return null;</span>
+	}
+
+	public boolean isJarPackaging()
+	{
+<span class="fc" id="L770">		return isJarPackaging;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

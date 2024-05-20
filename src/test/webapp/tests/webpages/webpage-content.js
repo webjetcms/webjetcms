@@ -18,6 +18,9 @@ Before(({ I, login }) => {
 });
 
 Scenario('Priprav strukturu', ({ I }) => {
+
+     I.openNewTab();
+     I.closeOtherTabs();
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
 
      // vytvorenie hlavneho priecinka a jeho dvoch podpriecinkov

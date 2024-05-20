@@ -352,7 +352,7 @@
 
         let buttonCounter = 3;
         reservationDataTable.button().add(buttonCounter++, {
-            text: '<i class="far fa-trash-alt"></i>',
+            text: '<i class="ti ti-trash"></i>',
             action: function (e, dt, node) {
                 deleteReservation();
             },
@@ -367,7 +367,7 @@
         });
 
         reservationDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-check"></i>',
+            text: '<i class="ti ti-check"></i>',
             action: function (e, dt, node) {
                 reservationDataTable.executeAction("approve", true, "[[#{reservation.reservations.accept}]]", "[[#{reservation.reservations.accept_areYouSure}]]");
             },
@@ -382,7 +382,7 @@
         });
 
         reservationDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-xmark" style="width: 14px;"></i>',
+            text: '<i class="ti ti-x" style="width: 14px;"></i>',
             action: function (e, dt, node) {
                 reservationDataTable.executeAction("reject", true, "[[#{reservation.reservations.reject}]]", "[[#{reservation.reservations.reject_areYouSure}]]");
             },
@@ -397,7 +397,7 @@
         });
 
         reservationDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-rotate-right"></i>',
+            text: '<i class="ti ti-restore"></i>',
             action: function (e, dt, node) {
                 reservationDataTable.executeAction("reset", true, "[[#{reservation.reservations.reset}]]", "[[#{reservation.reservations.reset_areYouSure}]]");
             },

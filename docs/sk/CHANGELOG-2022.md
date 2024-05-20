@@ -207,7 +207,7 @@ Významné zmeny v tejto verzii:
   - Doplnené dynamické počítanie počtu riadkov na stranu podľa veľkosti okna prehliadača.
   - Pridaná možnosť presúvať okno editora.
   - Pridané zapamätanie [poradia stĺpcov a spôsobu usporiadania](redactor/datatables/README.md#pamätanie-usporiadania) tabuľky.
-  - Pridaná [klávesová skratka](redactor/datatables/README.md#klávesové-skratky) ```CTRL+S/CMD+S``` pre uloženie záznamu do databázy bez zatvorenia okna editora pre pokračovanie v práci.
+  - Pridaná [klávesová skratka](redactor/datatables/README.md#klávesové-skratky), ```CTRL+S/CMD+S``` pre uloženie záznamu do databázy bez zatvorenia okna editora pre pokračovanie v práci.
 - Web stránky
   - Page Builder - doplnené [prepínanie veľkosti obrazovky](redactor/webpages/pagebuilder.md#nastavenie-šírky-stĺpcov) pre nastavenie šírky stĺpca pre desktop, tablet a mobilný telefón.
   - Pridaná možnosť zobraziť [náhľad kompletnej web stránky](redactor/webpages/editor.md#náhľad-stránky) bez jej uloženia.
@@ -348,7 +348,7 @@ Aplikácia prerobená do nového vizuálu. Pridaná možnosť nastavenia začiat
 
 ![](redactor/datatables/dt-pagelength.png)
 
-- Pridaná [klávesová skratka](redactor/datatables/README.md#klávesové-skratky) ```CTRL+S/CMD+S```, ktorá vykoná uloženie záznamu do databázy, ale zároveň ponechá otvorené okno editora (#54273-26).
+- Pridaná [klávesová skratka](redactor/datatables/README.md#klávesové-skratky), ```CTRL+S/CMD+S```, ktorá vykoná uloženie záznamu do databázy, ale zároveň ponechá otvorené okno editora (#54273-26).
 - Import - pri chybe importu sa v chybovej správe zobrazí číslo riadku a aj podrobný zoznam chýb (#39751-39).
 - Doplnená možnosť ```tab.hideOnCreate``` a ```tab.hideOnEdit``` pre schovanie [karty v editore](developer/datatables-editor/README.md#karty-v-editore) pre nový záznam a editáciu existujúceho záznamu (#54749).
 - Doplnený [názov editovanej položky](redactor/datatables/README.md#zobrazenie-názvu-v-hlavičke-okna) v hlavičke editora a zoznam položiek v dialógovom okne potvrdenia zmazania (#54753).
@@ -370,7 +370,7 @@ Aplikácia prerobená do nového vizuálu. Pridaná možnosť nastavenia začiat
 ### Bezpečnosť
 
 - Aktualizované knižnice spring na 5.6.5 a thymeleaf na 3.0.15.
-- Zmenený algoritmus ```hashovania``` [hesiel na bcrypt](sysadmin/pentests/README.md#algoritmus-hashovania-hesiel).
+- Zmenený algoritmus ```hashovania```, [hesiel na bcrypt](sysadmin/pentests/README.md#algoritmus-hashovania-hesiel).
 - Doplnená [kontrola práv pri zobrazení stránky](developer/frameworks/thymeleaf.md#kontrola-práv) v administrácii (pôvodne sa kontrolovalo len volanie REST služby). Založené je na vyhľadaní URL adresy v menu a následnom získaní práva pre danú URL adresu. To sa následne overí s právami prihláseného používateľa (#54649).
 - Pri [teste datatabuliek](developer/testing/datatable.md#testovanie-práv) je povinné zadanie možnosti ```perms``` pre testovanie práv.
 - Volanie skriptu ```/admin/mem.jsp``` je povolené len pre IP adresy nastavené v konf. premennej ```serverMonitoringEnableIPs```. Pôvodne bol skript dostupný vždy (používal sa na základné monitorovanie), ale zobrazuje potencionálne citlivé údaje.
@@ -454,7 +454,7 @@ Aplikácia prerobená do nového vizuálu. Pridaná možnosť nastavenia začiat
 - PageBuilder - doplnené odstránenie CSS tried a HTML kódu PageBuilder ak je kód nekorektný (napr. vnorené ```div.section``` do ```div.section```), alebo zostal otvorený niektorý nástroj (napr. nastavenie šírky stĺpca) (#39751).
 - Skripty - opravené vkladanie skriptov do stránky, ktoré nemajú nastavené obmedzenia (#39751).
 - Firefox - doplnené držanie pozície okna pri kliknutí na aplikáciu v editore v režime Page Builder (Firefox chybne posunul okno na úplný spodok, alebo na miesto kde je kurzor) (#39751).
-- Web stránky - opravené zacyklenie otvorenia web stránky ak je hodnota ```domainName``` ```NULL``` (#39751).
+- Web stránky - opravené zacyklenie otvorenia web stránky ak je hodnota ```domainName```, ```NULL``` (#39751).
 - Galéria - opravená možnosť zatvoriť dialóg nahrávania súborov, opravená chyba uloženia obrázka, kedy sa aj po kliknutí na zrušiť uložila zmena v editore (#39751).
 - Galéria - opravené duplikovanie záznamu - korektne sa skopíruje aj súbor/fotografia. Meno sa nastaví podľa názvu v karte Popis, alebo sa testuje existencia súboru pridaním čísla 1-100 na koniec mena súboru.
 - Web stránky - doplnené obnovenie stromovej štruktúry ak sú zobrazené aj web stránky pri zmene názvu, poradia, stavu zobrazenia, priečinku a externého odkazu (#39751).

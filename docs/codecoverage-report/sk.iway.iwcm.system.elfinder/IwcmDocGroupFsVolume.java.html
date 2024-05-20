@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmDocGroupFsVolume.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmDocGroupFsVolume.java</span></div><h1>IwcmDocGroupFsVolume.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsVolume;
+import cn.bluejoe.elfinder.util.MimeTypesUtils;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DeleteServlet;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  IwcmFsVolume.java - volume objekt pre elFinder (cn.bluejoe.elfinder)
+ *  Zobrazuje strukturu web stranok
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2015
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 19.2.2015 19:09:46
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class IwcmDocGroupFsVolume implements FsVolume
+{
+	public static final String VOLUME_ID = &quot;iwcm_doc_group_volume&quot;;
+
+	protected String _name;
+
+	public IwcmDocGroupFsVolume(String name)
+<span class="fc" id="L51">	{</span>
+<span class="fc" id="L52">		this._name = name;</span>
+<span class="fc" id="L53">	}</span>
+
+	protected IwcmDocGroupItem asDocGroup(FsItem fsi)
+	{
+<span class="fc" id="L57">		return ((IwcmDocGroupItem) fsi);</span>
+	}
+
+	private HttpServletRequest getRequest()
+	{
+<span class="fc" id="L62">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if (rb != null) return rb.getRequest();</span>
+
+<span class="nc" id="L65">		return null;</span>
+	}
+
+	private boolean canWrite(int groupId)
+	{
+<span class="nc" id="L70">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (user == null) return false;</span>
+
+<span class="nc" id="L73">		return GroupsDB.isGroupEditable(user, groupId);</span>
+	}
+
+	@Override
+	public void createFile(FsItem fsi) throws IOException
+	{
+<span class="nc" id="L79">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="nc" id="L81">		HttpServletRequest request = getRequest();</span>
+<span class="nc bnc" id="L82" title="All 10 branches missed.">		if (item != null &amp;&amp; item.getGroup()!=null &amp;&amp; Tools.isNotEmpty(item.getGroup().getGroupName()) &amp;&amp; item.getGroup().getGroupId()&lt;1 &amp;&amp; request!=null)</span>
+		{
+<span class="nc" id="L84">			GroupDetails parentGroup = GroupsDB.getInstance().getGroup(item.getGroup().getParentGroupId());</span>
+<span class="nc" id="L85">			String newTitle = item.getGroup().getGroupName();</span>
+
+			//odstran txt priponu ktoru tam prida elfinder
+<span class="nc" id="L88">			newTitle = Tools.replace(newTitle, &quot;.txt&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L90">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L91" title="All 12 branches missed.">			if (user != null &amp;&amp; user.isAdmin() &amp;&amp; Tools.isNotEmpty(newTitle) &amp;&amp; parentGroup!=null &amp;&amp; parentGroup.getGroupId()&gt;0 &amp;&amp; canWrite(parentGroup.getGroupId()))</span>
+			{
+<span class="nc" id="L93">				int newDocId = AdminTools.createWebPage(parentGroup, user, request, newTitle);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (newDocId &gt; 0)</span>
+				{
+<span class="nc" id="L96">					DocDetails doc = DocDB.getInstance().getBasicDocDetails(newDocId, false);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					if (doc != null)</span>
+					{
+<span class="nc" id="L99">						item.setDoc(doc);</span>
+<span class="nc" id="L100">						item.setGroup(null);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L105">	}</span>
+
+	@Override
+	public void createFolder(FsItem fsi) throws IOException
+	{
+		//asFile(fsi).mkdirs();
+<span class="nc" id="L111">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+<span class="nc bnc" id="L112" title="All 10 branches missed.">		if (item != null &amp;&amp; item.getGroup()!=null &amp;&amp; Tools.isNotEmpty(item.getGroup().getGroupName()) &amp;&amp; item.getGroup().getGroupId()&lt;1 &amp;&amp; canWrite(item.getGroup().getParentGroupId()))</span>
+		{
+			try
+			{
+<span class="nc" id="L116">				String newGroupName = item.getGroup().getGroupName();</span>
+
+<span class="nc" id="L118">				GroupDetails ctxGroup = GroupsDB.getInstance().addNewGroup(newGroupName, item.getGroup().getParentGroupId());</span>
+
+<span class="nc" id="L120">				item.setGroup(ctxGroup);</span>
+			}
+<span class="nc" id="L122">			catch (Exception e)</span>
+			{
+<span class="nc" id="L124">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L125">			}</span>
+		}
+<span class="nc" id="L127">	}</span>
+
+	@Override
+	public boolean deleteFile(FsItem fsi) throws IOException
+	{
+<span class="nc" id="L132">		boolean deleted = false;</span>
+
+<span class="nc" id="L134">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+<span class="nc" id="L135">		HttpServletRequest request = getRequest();</span>
+<span class="nc bnc" id="L136" title="All 10 branches missed.">		if (item != null &amp;&amp; item.getDoc()!=null &amp;&amp; Tools.isNotEmpty(item.getDoc().getTitle()) &amp;&amp; item.getDoc().getDocId()&gt;0 &amp;&amp; canWrite(item.getDoc().getGroupId()))</span>
+		{
+			try
+			{
+<span class="nc" id="L140">				String status = DeleteServlet.deleteDoc(request, item.getDoc().getDocId());</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (&quot;success&quot;.equals(status)) deleted = true;</span>
+			}
+<span class="nc" id="L143">			catch (Exception e)</span>
+			{
+<span class="nc" id="L145">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L146">			}</span>
+		}
+
+<span class="nc" id="L149">		return deleted;</span>
+	}
+
+	@Override
+	public boolean deleteFolder(FsItem fsi) throws IOException
+	{
+<span class="nc" id="L155">		boolean deleted = false;</span>
+
+<span class="nc" id="L157">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+<span class="nc" id="L158">		HttpServletRequest request = getRequest();</span>
+<span class="nc bnc" id="L159" title="All 10 branches missed.">		if (item != null &amp;&amp; item.getGroup()!=null &amp;&amp; Tools.isNotEmpty(item.getGroup().getGroupName()) &amp;&amp; item.getGroup().getGroupId()&gt;0 &amp;&amp; canWrite(item.getGroup().getGroupId()))</span>
+		{
+<span class="nc" id="L161">			deleted = GroupsDB.deleteGroup(item.getGroup().getGroupId(), request);</span>
+		}
+
+<span class="nc" id="L164">		return deleted;</span>
+	}
+
+	@Override
+	public boolean exists(FsItem newFile)
+	{
+<span class="nc" id="L170">		return asDocGroup(newFile).exists();</span>
+	}
+
+	/**
+	 * Vyparsuje cislo z cesty /group:146 alebo /group:146/Novy adresar
+	 * @param path
+	 * @return
+	 */
+	private int getNumberFromPath(String path)
+	{
+<span class="fc" id="L180">		int dvojbodka = path.indexOf(&quot;:&quot;);</span>
+<span class="fc" id="L181">		int lomka = path.indexOf(&quot;/&quot;, dvojbodka);</span>
+
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">		if (lomka &lt; 1) return Tools.getIntValue(path.substring(dvojbodka+1), -1);</span>
+<span class="nc" id="L184">		else return Tools.getIntValue(path.substring(dvojbodka+1, lomka), -1);</span>
+	}
+
+	/**
+	 * Ak cesta obsahuje nazov noveho adresara vrati jeho hodnotu
+	 * @param path - /group:146/Novy adresar
+	 * @return Novy adresar alebo null
+	 */
+	private String getNewItemName(String path)
+	{
+<span class="fc" id="L194">		int dvojbodka = path.indexOf(&quot;:&quot;);</span>
+<span class="fc" id="L195">		int lomka = path.indexOf(&quot;/&quot;, dvojbodka);</span>
+
+<span class="pc bpc" id="L197" title="3 of 4 branches missed.">		if (lomka &gt; dvojbodka &amp;&amp; lomka &gt; 1) return path.substring(lomka+1);</span>
+<span class="fc" id="L198">		return null;</span>
+	}
+
+	protected IwcmDocGroupItem fromDoc(String path)
+	{
+<span class="fc" id="L203">		DocDetails doc = null;</span>
+
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">		if (path.startsWith(&quot;/doc:&quot;))</span>
+		{
+<span class="fc" id="L207">			int docId = getNumberFromPath(path);</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (docId &gt; 0)</span>
+			{
+<span class="fc" id="L210">				doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+			}
+		}
+
+<span class="fc" id="L214">		return new IwcmDocGroupItem(this, doc);</span>
+	}
+
+	protected IwcmDocGroupItem fromGroup(String path)
+	{
+<span class="fc" id="L219">		GroupDetails group = null;</span>
+
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">		if (path.startsWith(&quot;/group:&quot;))</span>
+		{
+<span class="fc" id="L223">			int groupId = getNumberFromPath(path);</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">			if (groupId &gt; 0)</span>
+			{
+<span class="fc" id="L226">				group = GroupsDB.getInstance().getGroup(groupId);</span>
+			}
+		}
+
+<span class="fc bfc" id="L230" title="All 2 branches covered.">		if (group != null)</span>
+		{
+			try
+			{
+<span class="fc" id="L234">				String newFolderName = getNewItemName(path);</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(newFolderName))</span>
+				{
+<span class="nc" id="L237">					GroupDetails newGroup = GroupsDB.getInstance().getGroup(newFolderName, group.getGroupId());</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">					if (newGroup == null)</span>
+					{
+<span class="nc" id="L240">						newGroup = new GroupDetails();</span>
+<span class="nc" id="L241">						newGroup.setGroupId(-1);</span>
+<span class="nc" id="L242">						newGroup.setParentGroupId(group.getGroupId());</span>
+<span class="nc" id="L243">						newGroup.setGroupName(newFolderName);</span>
+					}
+
+<span class="nc" id="L246">					group = newGroup;</span>
+				}
+			}
+<span class="nc" id="L249">			catch (Exception e)</span>
+			{
+<span class="nc" id="L251">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L252">			}</span>
+		}
+
+<span class="fc" id="L255">		return new IwcmDocGroupItem(this, group);</span>
+	}
+
+	@Override
+	public FsItem fromPath(String relativePath)
+	{
+<span class="fc bfc" id="L261" title="All 2 branches covered.">		if (relativePath.startsWith(&quot;/doc:&quot;)) return fromDoc(relativePath);</span>
+<span class="fc" id="L262">		else return fromGroup(relativePath);</span>
+	}
+
+	@Override
+	public String getDimensions(FsItem fsi)
+	{
+<span class="nc" id="L268">		return null;</span>
+	}
+
+	@Override
+	public long getLastModified(FsItem fsi)
+	{
+<span class="fc" id="L274">		long lastModified = asDocGroup(fsi).lastModified();</span>
+		//prepocet na JavaScript timestamp
+<span class="fc" id="L276">		lastModified = Math.round((double)lastModified / 1000);</span>
+
+<span class="fc" id="L278">		return lastModified;</span>
+	}
+
+	@Override
+	public String getMimeType(FsItem fsi)
+	{
+<span class="fc" id="L284">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">		if (item.getGroup()!=null)</span>
+<span class="fc" id="L286">			return &quot;directory&quot;;</span>
+
+		//JEEFF String ext = FileUtils.getExtension(file.getName());
+<span class="fc" id="L289">		String ext = &quot;html&quot;;</span>
+<span class="fc" id="L290">		String mimeType = MimeTypesUtils.getMimeType(ext);</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		return mimeType == null ? MimeTypesUtils.UNKNOWN_MIME_TYPE : mimeType;</span>
+	}
+
+	public String getName()
+	{
+<span class="fc" id="L296">		return _name;</span>
+	}
+
+	@Override
+	public String getName(FsItem fsi)
+	{
+<span class="fc" id="L302">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+<span class="fc" id="L303">		return item.getName();</span>
+	}
+
+	@Override
+	public FsItem getParent(FsItem fsi)
+	{
+<span class="fc" id="L309">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc bfc" id="L311" title="All 2 branches covered.">		if (item.getGroup()!=null)</span>
+		{
+			//int groupId = item.getGroupId();
+<span class="fc" id="L314">			GroupDetails group = item.getGroup(); //  GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L315" title="1 of 4 branches missed.">			if (group != null &amp;&amp; group.getParentGroupId()&gt;0)</span>
+			{
+<span class="fc" id="L317">				GroupDetails parentGroup = GroupsDB.getInstance().getGroup(group.getParentGroupId());</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">				if (parentGroup != null)</span>
+				{
+<span class="fc" id="L320">					return new IwcmDocGroupItem(this, parentGroup);</span>
+				}
+			}
+<span class="fc" id="L323">		}</span>
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">		else if (item.getDoc()!=null)</span>
+		{
+<span class="fc" id="L326">			int groupId = item.getDoc().getGroupId();</span>
+<span class="fc" id="L327">			GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">			if (group != null)</span>
+			{
+<span class="fc" id="L330">				return new IwcmDocGroupItem(this, group);</span>
+			}
+		}
+
+<span class="fc" id="L334">		return getRoot();</span>
+	}
+
+	@Override
+	public String getPath(FsItem fsi) throws IOException
+	{
+<span class="fc" id="L340">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc" id="L342">		return item.getPath();</span>
+	}
+
+	public int getSortPriority(FsItemEx fsi) throws IOException
+	{
+<span class="fc" id="L347">		IwcmDocGroupItem item = asDocGroup(fromPath(fsi.getPath()));</span>
+
+<span class="fc" id="L349">		return item.getSortPriority();</span>
+	}
+
+	@Override
+	public FsItem getRoot()
+	{
+<span class="fc" id="L355">		GroupDetails fakeRootGroup = new GroupDetails();</span>
+<span class="fc" id="L356">		fakeRootGroup.setGroupId(0);</span>
+<span class="fc" id="L357">		fakeRootGroup.setGroupName(&quot;FAKE ROOT GROUP&quot;);</span>
+
+<span class="fc" id="L359">		return new IwcmDocGroupItem(this, fakeRootGroup);</span>
+	}
+
+	@Override
+	public long getSize(FsItem fsi)
+	{
+		//vraciame sort priority aby sa dalo usporiadat podla velkosti ako podla priority
+<span class="fc" id="L366">		return asDocGroup(fsi).getSortPriority();</span>
+	}
+
+	@Override
+	public String getThumbnailFileName(FsItem fsi)
+	{
+<span class="nc" id="L372">		return null;</span>
+	}
+
+	@Override
+	public boolean hasChildFolder(FsItem fsi)
+	{
+<span class="fc" id="L378">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc" id="L380">		int groupId = item.getGroupId();</span>
+
+<span class="fc" id="L382">		List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(groupId);</span>
+
+<span class="fc bfc" id="L384" title="All 2 branches covered.">		if (subGroups.size()&gt;0) return true;</span>
+
+<span class="fc" id="L386">		return false;</span>
+	}
+
+	@Override
+	public boolean isFolder(FsItem fsi)
+	{
+<span class="fc" id="L392">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc bfc" id="L394" title="All 2 branches covered.">		if (item.getGroup()!=null) return true;</span>
+
+<span class="fc" id="L396">		return false;</span>
+	}
+
+	@Override
+	public boolean isRoot(FsItem fsi)
+	{
+<span class="fc" id="L402">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc bfc" id="L404" title="All 4 branches covered.">		if (item.getGroup()!=null &amp;&amp; item.getGroup().getGroupId()&lt;1) return true;</span>
+
+<span class="fc" id="L406">		return false;</span>
+	}
+
+	@Override
+	public FsItem[] listChildren(FsItem fsi)
+	{
+<span class="fc" id="L412">		HttpServletRequest request = getRequest();</span>
+<span class="fc" id="L413">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L414" title="2 of 4 branches missed.">		if (user == null || user.isAdmin()==false) return new FsItem[0];</span>
+
+<span class="fc" id="L416">		List&lt;FsItem&gt; list = new ArrayList&lt;FsItem&gt;();</span>
+
+<span class="fc" id="L418">		IwcmDocGroupItem item = asDocGroup(fsi);</span>
+
+<span class="fc" id="L420">		Logger.debug(IwcmDocGroupFsVolume.class, &quot;listChildrens, virtualPath=&quot;+item.getPath());</span>
+
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">		if (item.getDoc()==null)</span>
+		{
+			List&lt;GroupDetails&gt; subGroups;
+
+<span class="fc bfc" id="L426" title="All 2 branches covered.">			if (item.getGroupId()==0)</span>
+			{
+<span class="fc" id="L428">				subGroups = new ArrayList&lt;GroupDetails&gt;();</span>
+<span class="fc" id="L429">				List&lt;GroupDetails&gt; subGroupsAll = GroupsDB.getInstance().getRootGroups(user.getEditableGroups());</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">				for (GroupDetails group : subGroupsAll)</span>
+				{
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">					if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+						//check domain name
+<span class="fc" id="L434">						String currentDomain = CloudToolsForCore.getDomainName();</span>
+<span class="pc bpc" id="L435" title="1 of 4 branches missed.">						if (Tools.isNotEmpty(currentDomain) &amp;&amp; currentDomain.equals(group.getDomainName())==false) continue;</span>
+					}
+
+<span class="pc bpc" id="L438" title="1 of 2 branches missed.">					if (group.getParentGroupId()&gt;0)</span>
+					{
+						//musime naklonovat a nastavit parenta na 0, inak sa nezobrazi
+<span class="nc" id="L441">						GroupDetails clone = new GroupDetails(group);</span>
+<span class="nc" id="L442">						clone.setParentGroupId(0);</span>
+<span class="nc" id="L443">						subGroups.add(clone);</span>
+<span class="nc" id="L444">					}</span>
+					else
+					{
+<span class="fc" id="L447">						subGroups.add(group);</span>
+					}
+<span class="fc" id="L449">				}</span>
+<span class="fc" id="L450">			}</span>
+			else
+			{
+<span class="fc" id="L453">				subGroups = GroupsDB.getInstance().getGroups(item.getGroupId());</span>
+			}
+
+<span class="fc bfc" id="L456" title="All 2 branches covered.">			for (GroupDetails group : subGroups)</span>
+			{
+<span class="fc bfc" id="L458" title="All 2 branches covered.">				if (group.getParentGroupId() &lt; 1)</span>
+				{
+<span class="pc bpc" id="L460" title="2 of 4 branches missed.">					if (&quot;images&quot;.equalsIgnoreCase(group.getGroupName()) || &quot;files&quot;.equalsIgnoreCase(group.getGroupName()))</span>
+					{
+<span class="nc" id="L462">						continue;</span>
+					}
+				}
+
+<span class="fc" id="L466">				list.add(new IwcmDocGroupItem(this, group));</span>
+<span class="fc" id="L467">			}</span>
+
+<span class="fc" id="L469">			List&lt;DocDetails&gt; subDocs = DocDB.getInstance().getBasicDocDetailsByGroup(item.getGroupId(), DocDB.ORDER_PRIORITY);</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">			for (DocDetails doc : subDocs)</span>
+			{
+<span class="fc" id="L472">				list.add(new IwcmDocGroupItem(this, doc));</span>
+<span class="fc" id="L473">			}</span>
+		}
+
+<span class="fc bfc" id="L476" title="All 2 branches covered.">		if (list.size()&lt;1) return new FsItem[0];</span>
+
+<span class="fc" id="L478">		return list.toArray(new FsItem[0]);</span>
+	}
+
+	@Override
+	public IwcmInputStream openInputStream(FsItem fsi) throws IOException
+	{
+		//TODO: NOT IMPLEMENTED YET
+		//return new IwcmInputStream(asFile(fsi));
+<span class="nc" id="L486">		return null;</span>
+	}
+
+	@Override
+	public IwcmOutputStream openOutputStream(FsItem fsi) throws IOException
+	{
+		//TODO: NOT IMPLEMENTED YET
+		//return new IwcmOutputStream(asFile(fsi));
+<span class="nc" id="L494">		return null;</span>
+	}
+
+	@Override
+	public void rename(FsItem src, FsItem dst) throws IOException
+	{
+<span class="nc" id="L500">		IwcmDocGroupItem itemSrc = asDocGroup(src);</span>
+<span class="nc" id="L501">		IwcmDocGroupItem itemDst = asDocGroup(dst);</span>
+
+<span class="nc" id="L503">		HttpServletRequest request = getRequest();</span>
+<span class="nc" id="L504">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L505" title="All 6 branches missed.">		if (user == null || user.isAdmin()==false || user.isDisabledItem(&quot;editDir&quot;)) return;</span>
+
+<span class="nc" id="L507">		String newName = null;</span>
+<span class="nc bnc" id="L508" title="All 4 branches missed.">		if (itemDst!=null &amp;&amp; itemDst.getGroup()!=null) newName = itemDst.getGroup().getGroupName();</span>
+
+<span class="nc bnc" id="L510" title="All 6 branches missed.">		if (itemSrc.getDoc()!=null &amp;&amp; itemSrc.getDoc().getDocId()&gt;0 &amp;&amp; Tools.isNotEmpty(newName))</span>
+		{
+<span class="nc" id="L512">			int ctxDocId = itemSrc.getDoc().getDocId();</span>
+
+<span class="nc" id="L514">			EditorForm editorForm = EditorDB.getEditorForm(request, ctxDocId, -1, -1);</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			if (editorForm != null)</span>
+			{
+<span class="nc" id="L517">				editorForm.setAuthorId(user.getUserId());</span>
+<span class="nc" id="L518">				editorForm.setTitle(newName);</span>
+<span class="nc" id="L519">				editorForm.setNavbar(newName);</span>
+<span class="nc" id="L520">				editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc" id="L521">				editorForm.setVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L522">				EditorDB.saveEditorForm(editorForm, request);</span>
+
+<span class="nc" id="L524">				EditorDB.cleanSessionData(request);</span>
+
+<span class="nc" id="L526">				int newDocId = editorForm.getDocId();</span>
+<span class="nc" id="L527">				DocDetails doc = DocDB.getInstance().getBasicDocDetails(newDocId, false);</span>
+<span class="nc bnc" id="L528" title="All 4 branches missed.">				if (doc != null &amp;&amp; itemDst!=null)</span>
+				{
+<span class="nc" id="L530">					itemDst.setDoc(doc);</span>
+<span class="nc" id="L531">					itemDst.setGroup(null);</span>
+				}
+			}
+
+<span class="nc" id="L535">			return;</span>
+		}
+
+<span class="nc bnc" id="L538" title="All 8 branches missed.">		if (itemSrc.getGroup()!=null &amp;&amp; itemSrc.getDoc()==null &amp;&amp; itemSrc.getGroup().getGroupId()&gt;0 &amp;&amp; Tools.isNotEmpty(newName))</span>
+		{
+<span class="nc" id="L540">			itemSrc.getGroup().setGroupName(newName);</span>
+<span class="nc" id="L541">			itemSrc.getGroup().setNavbar(newName);</span>
+<span class="nc" id="L542">			GroupsDB.getInstance().setGroup(itemSrc.getGroup());</span>
+
+<span class="nc bnc" id="L544" title="All 2 branches missed.">			if (itemDst!=null) itemDst.setGroup(itemSrc.getGroup());</span>
+		}
+<span class="nc" id="L546">	}</span>
+
+	public void setName(String name)
+	{
+<span class="nc" id="L550">		_name = name;</span>
+<span class="nc" id="L551">	}</span>
+
+	protected void createAndCopyGroups(FsItemEx src, FsItemEx dst) throws IOException
+	{
+		//dst.createFolder();
+		//tu je to trocha ine ako povodne, dst je existujuci folder do ktoreho kopirujeme, nie uz ten akoze novy (este neexistujuci)
+<span class="nc" id="L557">		IwcmDocGroupItem itemSrc = asDocGroup(fromPath(src.getPath()));</span>
+<span class="nc" id="L558">		IwcmDocGroupItem itemDst = asDocGroup(fromPath(dst.getPath()));</span>
+
+<span class="nc bnc" id="L560" title="All 6 branches missed.">		if (itemSrc.getDoc()!=null || itemSrc.getGroup()==null || itemSrc.getGroup().getGroupId()&lt;1) return;</span>
+<span class="nc bnc" id="L561" title="All 6 branches missed.">		if (itemDst.getDoc()!=null || itemDst.getGroup()==null || itemDst.getGroup().getGroupId()&lt;1) return;</span>
+
+<span class="nc" id="L563">		GroupDetails newGroup = new GroupDetails();</span>
+<span class="nc" id="L564">		newGroup.setParentGroupId(itemDst.getGroup().getGroupId());</span>
+<span class="nc" id="L565">		newGroup.setGroupName(itemSrc.getGroup().getGroupName());</span>
+
+<span class="nc" id="L567">		IwcmDocGroupItem itemNewGroup = new IwcmDocGroupItem(this, newGroup);</span>
+<span class="nc" id="L568">		createFolder((FsItem)itemNewGroup);</span>
+
+<span class="nc bnc" id="L570" title="All 2 branches missed.">		for (FsItemEx c : src.listChildren())</span>
+		{
+<span class="nc bnc" id="L572" title="All 2 branches missed.">			if (c.isFolder())</span>
+			{
+<span class="nc" id="L574">				FsItemEx newDest = new FsItemEx((FsItem)itemNewGroup, src.getService());</span>
+<span class="nc" id="L575">				createAndCopyGroups(c, newDest);</span>
+<span class="nc" id="L576">			}</span>
+			else
+			{
+				//createAndCopyDocs(c, new FsItemEx(dst, itemSrc.getGroup().getGroupName()));
+<span class="nc" id="L580">				IwcmDocGroupItem docSrc = asDocGroup(fromPath(c.getPath()));</span>
+<span class="nc" id="L581">				moveOrCopyPageToFolder(docSrc.getDoc(), itemNewGroup.getGroupId(), true);</span>
+			}
+<span class="nc" id="L583">		}</span>
+<span class="nc" id="L584">	}</span>
+
+	protected void createAndCopyDocs(FsItemEx src, FsItemEx dst) throws IOException
+	{
+<span class="nc" id="L588">		IwcmDocGroupItem itemSrc = asDocGroup(fromPath(src.getPath()));</span>
+<span class="nc" id="L589">		IwcmDocGroupItem itemDst = asDocGroup(fromPath(dst.getPath()));</span>
+
+<span class="nc bnc" id="L591" title="All 6 branches missed.">		if (itemSrc.getDoc()==null || itemSrc.getDoc().getDocId()&lt;1 || Tools.isEmpty(itemSrc.getDoc().getTitle())) return;</span>
+<span class="nc bnc" id="L592" title="All 6 branches missed.">		if (itemDst.getDoc()!=null || itemDst.getGroup()==null || itemDst.getGroup().getGroupId()&lt;1) return;</span>
+
+		//skopiruj stranku do dest foldra
+<span class="nc" id="L595">		moveOrCopyPageToFolder(itemSrc.getDoc(), itemDst.getGroupId(), true);</span>
+<span class="nc" id="L596">	}</span>
+
+	/**
+	 * JEEFF: doplnena metoda volana z pasteCommandExecutoru pre skopirovanie dat
+	 * @param src
+	 * @param dst
+	 * @param cut
+	 * @throws IOException
+	 */
+	public void createAndCopy(FsItemEx src, FsItemEx dst, boolean cut) throws IOException
+	{
+<span class="nc bnc" id="L607" title="All 2 branches missed.">		if (cut)</span>
+		{
+			//ked robime move staci nam vo WebJETe zmenit ID parenta
+<span class="nc" id="L610">			IwcmDocGroupItem itemSrc = asDocGroup(fromPath(src.getPath()));</span>
+<span class="nc" id="L611">			IwcmDocGroupItem itemDst = asDocGroup(fromPath(dst.getPath()));</span>
+
+<span class="nc bnc" id="L613" title="All 2 branches missed.">			if (itemSrc.getDoc()!=null)</span>
+			{
+<span class="nc bnc" id="L615" title="All 6 branches missed.">				if (itemDst.getDoc()==null &amp;&amp; itemDst.getGroup()!=null &amp;&amp; itemDst.getGroup().getGroupId()&gt;0)</span>
+				{
+					//presun stranku do adresara dst
+<span class="nc" id="L618">					moveOrCopyPageToFolder(itemSrc.getDoc(), itemDst.getGroup().getGroupId(), false);</span>
+<span class="nc" id="L619">					return;</span>
+				}
+			}
+<span class="nc bnc" id="L622" title="All 4 branches missed.">			if (itemSrc.getDoc()==null &amp;&amp; itemSrc.getGroup()!=null)</span>
+			{
+<span class="nc bnc" id="L624" title="All 6 branches missed.">				if (itemDst.getDoc()==null &amp;&amp; itemDst.getGroup()!=null &amp;&amp; itemDst.getGroup().getGroupId()&gt;0)</span>
+				{
+<span class="nc" id="L626">					moveFolderToFolder(itemSrc.getGroup(), itemDst.getGroup().getGroupId());</span>
+<span class="nc" id="L627">					return;</span>
+				}
+			}
+<span class="nc" id="L630">		}</span>
+		else
+		{
+<span class="nc bnc" id="L633" title="All 2 branches missed.">			if (src.isFolder())</span>
+			{
+<span class="nc" id="L635">				createAndCopyGroups(src, dst);</span>
+			}
+			else
+			{
+<span class="nc" id="L639">				createAndCopyDocs(src, dst);</span>
+			}
+		}
+<span class="nc" id="L642">	}</span>
+
+	/**
+	 * Presunie web stranku do daneho adresara
+	 * @param doc
+	 * @param newGroupId
+	 */
+	private void moveOrCopyPageToFolder(DocDetails doc, int newGroupId, boolean copy)
+	{
+<span class="nc" id="L651">		HttpServletRequest request = getRequest();</span>
+<span class="nc" id="L652">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L653" title="All 6 branches missed.">		if (user == null || user.isAdmin()==false || user.isDisabledItem(&quot;editDir&quot;)) return;</span>
+
+<span class="nc" id="L655">		EditorForm editorForm = EditorDB.getEditorForm(request, doc.getDocId(), -1, -1);</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">		if (editorForm != null)</span>
+		{
+<span class="nc" id="L658">			editorForm.setAuthorId(user.getUserId());</span>
+<span class="nc" id="L659">			editorForm.setGroupId(newGroupId);</span>
+<span class="nc" id="L660">			editorForm.setVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L661">			editorForm.setPublish(&quot;1&quot;);</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">			if (copy) editorForm.setDocId(-1);</span>
+
+<span class="nc" id="L664">			EditorDB.saveEditorForm(editorForm, request);</span>
+<span class="nc" id="L665">			EditorDB.cleanSessionData(request);</span>
+		}
+<span class="nc" id="L667">	}</span>
+
+	/**
+	 * Presunie adresar do noveho adresara
+	 * @param group
+	 * @param destinationGroupId
+	 */
+	private void moveFolderToFolder(GroupDetails group, int destinationGroupId)
+	{
+<span class="nc" id="L676">		HttpServletRequest request = getRequest();</span>
+<span class="nc" id="L677">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L678" title="All 6 branches missed.">		if (user == null || user.isAdmin()==false || user.isDisabledItem(&quot;editDir&quot;)) return;</span>
+
+<span class="nc" id="L680">		GroupDetails src = GroupsDB.getInstance().getGroup(group.getGroupId());</span>
+<span class="nc" id="L681">		src.setParentGroupId(destinationGroupId);</span>
+<span class="nc" id="L682">		GroupsDB.getInstance().save(src);</span>
+<span class="nc" id="L683">	}</span>
+
+	/**
+	 * Vrati URL adresu pre stranku / adresar
+	 * @param item
+	 * @return
+	 */
+	public String getVirtualPath(FsItemEx item) throws IOException
+	{
+<span class="fc" id="L692">		IwcmDocGroupItem itemSrc = asDocGroup(fromPath(item.getPath()));</span>
+
+<span class="fc" id="L694">		int docId = -1;</span>
+<span class="fc" id="L695">		String externalLink = null;</span>
+<span class="pc bpc" id="L696" title="1 of 4 branches missed.">		if (itemSrc != null &amp;&amp; itemSrc.getDoc()!=null)</span>
+		{
+<span class="fc" id="L698">			docId = itemSrc.getDoc().getDocId();</span>
+<span class="fc" id="L699">			externalLink = itemSrc.getDoc().getExternalLink();</span>
+		}
+<span class="pc bpc" id="L701" title="1 of 4 branches missed.">		else if (itemSrc != null &amp;&amp; itemSrc.getGroup()!=null)</span>
+		{
+<span class="fc" id="L703">			docId = itemSrc.getGroup().getDefaultDocId();</span>
+		}
+
+<span class="fc" id="L706">		HttpServletRequest request = getRequest();</span>
+
+<span class="fc" id="L708">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L709">		return docDB.getDocLink(docId, externalLink, request);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileDirBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.filebrowser</a> &gt; <span class="el_source">FileDirBean.java</span></div><h1>FileDirBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.filebrowser;
+
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+
+
+<span class="fc" id="L11">public class FileDirBean</span>
+{
+   protected String name;
+   protected String path;
+   protected String icon;
+<span class="fc" id="L16">   protected String imagesInDir=&quot;&quot;;</span>
+<span class="fc" id="L17">   protected String lastModified = &quot;&quot;;</span>
+   protected String length;
+   private static final DecimalFormat decimalFormat;
+   private static final SimpleDateFormat sdf;
+   private boolean dirProtected;
+
+   static
+   {
+<span class="fc" id="L25">      decimalFormat = new DecimalFormat(&quot;0.##&quot;);</span>
+<span class="fc" id="L26">      sdf = new SimpleDateFormat(Constants.getString(&quot;dateTimeFormat&quot;));</span>
+<span class="fc" id="L27">   }</span>
+
+   public String getName()
+   {
+<span class="fc" id="L31">      return name;</span>
+   }
+   public void setName(String name)
+   {
+<span class="fc" id="L35">      this.name = name;</span>
+<span class="fc" id="L36">   }</span>
+
+   public boolean isDirProtected() {
+<span class="fc" id="L39">      return dirProtected;</span>
+   }
+
+   public void setDirProtected(boolean dirProtected) {
+<span class="fc" id="L43">      this.dirProtected = dirProtected;</span>
+<span class="fc" id="L44">   }</span>
+
+   public void setPath(String path)
+   {
+<span class="fc" id="L48">   	path = Tools.replace(path, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L49">      this.path = path;</span>
+<span class="fc" id="L50">   }</span>
+   public String getPath()
+   {
+<span class="fc" id="L53">      return path;</span>
+   }
+   public void setIcon(String icon)
+   {
+<span class="fc" id="L57">      this.icon = icon;</span>
+<span class="fc" id="L58">   }</span>
+   public String getIcon()
+   {
+<span class="fc" id="L61">      return icon;</span>
+   }
+   public String getImagesInDir()
+   {
+<span class="nc" id="L65">      return imagesInDir;</span>
+   }
+   public void setImagesInDir(String imagesInDir)
+   {
+<span class="nc" id="L69">      this.imagesInDir = imagesInDir;</span>
+<span class="nc" id="L70">   }</span>
+   //TODO: ulozit aj long
+   public void setLastModified(long lastModifiedLong)
+   {
+<span class="fc" id="L74">      this.lastModified = sdf.format(new java.util.Date(lastModifiedLong)).replace(&quot; &quot;,&quot;&amp;nbsp;&quot;);</span>
+<span class="fc" id="L75">   }</span>
+   public String getLastModified()
+   {
+<span class="fc" id="L78">      return lastModified;</span>
+   }
+   public String getLastModifiedHtml()
+   {
+<span class="nc" id="L82">      return lastModified;</span>
+   }
+   //TODO: ulozit aj double
+   public void setLength(double lengthDouble)
+   {
+<span class="fc" id="L87">      this.length = &quot;&quot;;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">      if (lengthDouble &gt; (1024 * 1024))</span>
+      {
+<span class="nc" id="L90">         length = decimalFormat.format(lengthDouble / (1024 * 1024))+ &quot;&amp;nbsp;&lt;span class='lenMB'&gt;MB&lt;/span&gt;&quot;;</span>
+      }
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">      else if (lengthDouble &gt; 1024)</span>
+      {
+<span class="fc" id="L94">         length = decimalFormat.format(lengthDouble / 1024)+ &quot;&amp;nbsp;&lt;span class='lenKB'&gt;kB&lt;/span&gt;&quot;;</span>
+      }
+      else
+      {
+<span class="nc" id="L98">         length = decimalFormat.format(lengthDouble)+ &quot;&amp;nbsp;&lt;span class='lenB'&gt;B&lt;/span&gt;&quot;;</span>
+      }
+<span class="fc" id="L100">   }</span>
+   public String getLength()
+   {
+<span class="fc" id="L103">      return length;</span>
+   }
+   public String getLengthHtml()
+   {
+<span class="nc" id="L107">      return length;</span>
+   }
+
+   public boolean isImageEditable()
+   {
+<span class="nc" id="L112">   	boolean ret = false;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">   	if (name == null)</span>
+   	{
+<span class="nc" id="L115">   		return(false);</span>
+   	}
+<span class="nc" id="L117">   	String nameLC = name.toLowerCase();</span>
+<span class="nc bnc" id="L118" title="All 6 branches missed.">   	if (nameLC.endsWith(&quot;.jpg&quot;) || nameLC.endsWith(&quot;.gif&quot;) || nameLC.endsWith(&quot;.png&quot;))</span>
+   	{
+<span class="nc" id="L120">   		ret = true;</span>
+   	}
+   	
+<span class="nc" id="L123">   	return(ret);</span>
+   }
+
+   public String getFileType() {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">      if (name != null)</span>
+<span class="nc" id="L128">         return FileTools.getFileExtension(getName());</span>
+      else
+<span class="nc" id="L130">         return &quot;&quot;;</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

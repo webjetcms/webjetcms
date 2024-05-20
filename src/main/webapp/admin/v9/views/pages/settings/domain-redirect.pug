@@ -21,6 +21,7 @@ block content
                 columns: columns,
                 serverSide: false,
                 editorId: "redirectId",
+                fetchOnCreate: true,
                 onRowCallback: function(TABLE, row, data) {
                     if (data.active === false) $(row).addClass("is-not-public");
                 }

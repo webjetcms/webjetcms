@@ -474,9 +474,9 @@ public class SearchAction
 				}
 				else
 				{
-               //ak mame viac slov pre LIKE command nahradime medzeru za percento pre hladanie viac slov
-               String wordsForLike = Tools.replace(words, " ", "%");
-               String wordsAsciiForLike = Tools.replace(wordsAscii, " ", "%");
+					//ak mame viac slov pre LIKE command nahradime medzeru za percento pre hladanie viac slov
+					String wordsForLike = Tools.replace(words, " ", "%");
+					String wordsAsciiForLike = Tools.replace(wordsAscii, " ", "%");
 
 					sql.append("SELECT ").append(D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE (data_asc LIKE '%").append(DB.removeSlashes(wordsAsciiForLike.toLowerCase())).append("%' ");
 					//	teraz hladame zaroven aj v title
@@ -491,6 +491,36 @@ public class SearchAction
 
 				//Logger.println(SearchAction.class,"search ORA sql:\n"+sql);
 				//Logger.println(SearchAction.class,"search ORA sqlTotalResults:\n"+sqlTotalResults);
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				//PostgreSQL
+				sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE ( to_tsvector(data_asc) @@ to_tsquery(?) ");
+
+				if (searchDetaultInTitle)
+				{
+					sql.append(" OR data_asc ILIKE ? ");
+					//	teraz hladame zaroven aj v title
+					if (request.getParameter("words")!=null) sql.append(" OR title ILIKE ? ");
+				}
+				sql.append(") ");
+
+				sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE ( to_tsvector(data_asc) @@ to_tsquery(?) ";
+
+				if (searchDetaultInTitle)
+				{
+					sqlTotalResults += " OR data_asc ILIKE ? ";
+					//	teraz hladame zaroven aj v title
+					if (request.getParameter("words")!=null) sqlTotalResults += " OR title ILIKE ? ";
+				}
+				sqlTotalResults += ") ";
+
+				if (words.length()==0)
+				{
+					sql.delete(0, sql.length());
+					sql.append("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+D_DOCUMENT_FIELDS).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ");
+					sqlTotalResults = "SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) AS totalr " + " FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE title IS NOT NULL ";
+				}
 			}
 			else
 			{
@@ -562,7 +592,7 @@ public class SearchAction
 			sql.append(addInputParamsSQL(request));
 			sqlTotalResults += addInputParamsSQL(request);
 
-			sql.append(" AND searchable=1 AND available=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ");
+			sql.append(" AND searchable="+DB.getBooleanSql(true)+" AND available="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ");
 
 			String searchWhereSql = (String)request.getAttribute("searchWhereSql");
 			if (Tools.isNotEmpty(searchWhereSql))
@@ -666,11 +696,14 @@ public class SearchAction
 				}
 			}
 
-			sqlTotalResults += " AND searchable=1 AND available=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
-			if (Constants.DB_TYPE == Constants.DB_MYSQL)
+			sqlTotalResults += " AND searchable="+DB.getBooleanSql(true)+" AND available="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
+			if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 			{
 				//vsetky normalne DB okrem MSSQL nieco taketo poznaju
-				sql.append(" LIMIT ").append(index).append(", ").append((perPage * 3 + 1)).append(' ');
+				if (Constants.DB_TYPE == Constants.DB_PGSQL) sql.append(" OFFSET ").append(index).append(" LIMIT ").append((perPage * 3 + 1));
+				else sql.append(" LIMIT ").append(index).append(", ").append((perPage * 3 + 1));
+
+				sql.append(' ');
 				//ps.setInt(3, index);
 				//ps.setInt(4, perPage + 1);
 			}
@@ -718,6 +751,20 @@ public class SearchAction
 				//ps.setInt(3, index);
 				//ps.setInt(4, perPage + 1);
 
+				psIndex = addInputParamsSQL(request, ps, psIndex);
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				//Logger.println(this,"nastavujem params: " + wordsMysql + " " + index + " " + perPage);
+				if (words.length()>0)
+				{
+					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words.trim()).toLowerCase(), " ", " & "));
+					if (searchDetaultInTitle)
+					{
+						ps.setString(psIndex++, wordsAscii);
+						if (request.getParameter("words")!=null) ps.setString(psIndex++, words);
+					}
+				}
 				psIndex = addInputParamsSQL(request, ps, psIndex);
 			}
 			else
@@ -1189,6 +1236,19 @@ public class SearchAction
 				if (words.length()>0)
 				{
 					ps.setString(psIndex++, wordsMysql);
+					if (Constants.getBoolean("searchDetaultInTitle") || "true".equals(request.getParameter("searchDetaultInTitle")))
+					{
+						ps.setString(psIndex++, "%"+wordsAscii+"%");
+						if (request.getParameter("words")!=null) ps.setString(psIndex++, "%"+words+"%");
+					}
+				}
+				psIndex = addInputParamsSQL(request, ps, psIndex);
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				if (words.length()>0)
+				{
+					ps.setString(psIndex++, Tools.replace(DB.internationalToEnglish(words).toLowerCase(), " ", " & "));
 					if (Constants.getBoolean("searchDetaultInTitle") || "true".equals(request.getParameter("searchDetaultInTitle")))
 					{
 						ps.setString(psIndex++, "%"+wordsAscii+"%");

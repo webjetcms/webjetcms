@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerStatClicks.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner.model</a> &gt; <span class="el_source">BannerStatClicks.java</span></div><h1>BannerStatClicks.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner.model;
+
+import java.io.Serializable;
+import java.util.Date;
+
+
+<span class="nc" id="L7">public class BannerStatClicks implements Serializable </span>
+{
+
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = -6933610647078677429L;
+
+   private int id;
+	private Integer bannerId;
+   private Integer clicks;
+   private String host;
+<span class="nc" id="L19">   private Date insertDate = null;</span>
+   private String ip;
+   
+	public int getId()
+	{
+<span class="nc" id="L24">		return id;</span>
+	}
+	public void setId(int id)
+	{
+<span class="nc" id="L28">		this.id = id;</span>
+<span class="nc" id="L29">	}</span>
+	public Integer getBannerId()
+	{
+<span class="nc" id="L32">		return bannerId;</span>
+	}
+	public void setBannerId(Integer bannerId)
+	{
+<span class="nc" id="L36">		this.bannerId = bannerId;</span>
+<span class="nc" id="L37">	}</span>
+	public Integer getClicks()
+	{
+<span class="nc" id="L40">		return clicks;</span>
+	}
+	public void setClicks(Integer clicks)
+	{
+<span class="nc" id="L44">		this.clicks = clicks;</span>
+<span class="nc" id="L45">	}</span>
+	public String getHost()
+	{
+<span class="nc" id="L48">		return host;</span>
+	}
+	public void setHost(String host)
+	{
+<span class="nc" id="L52">		this.host = host;</span>
+<span class="nc" id="L53">	}</span>
+	public Date getInsertDate()
+	{
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		return insertDate == null ? null : (Date) insertDate.clone();</span>
+	}
+	public void setInsertDate(Date insertDate)
+	{
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		this.insertDate = insertDate == null ? null : (Date) insertDate.clone();</span>
+<span class="nc" id="L61">	}</span>
+	public String getIp()
+	{
+<span class="nc" id="L64">		return ip;</span>
+	}
+	public void setIp(String ip)
+	{
+<span class="nc" id="L68">		this.ip = ip;</span>
+<span class="nc" id="L69">	}</span>
+	
+   
+}
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

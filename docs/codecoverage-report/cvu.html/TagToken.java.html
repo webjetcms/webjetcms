@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TagToken.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cvu.html</a> &gt; <span class="el_source">TagToken.java</span></div><h1>TagToken.java</h1><pre class="source lang-java linenums">/*
+ * HTML Parser
+ * Copyright (C) 1997 David McNicol
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * file COPYING for more details.
+ */
+
+package cvu.html;
+
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+
+/**
+ * This represents a single HTML tag. Each TagToken has a name and a
+ * list of attributes and values.
+ * @see HTMLTokenizer
+ * @author &lt;a href=&quot;http://www.strath.ac.uk/~ras97108/&quot;&gt;David McNicol&lt;/a&gt;
+ */
+@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+public class TagToken {
+
+	/** Identifies the escape character. */
+	public static final char ESCAPE = '\\';
+
+	/** Identifies the quotation character. */
+	public static final char QUOTE = '\'';
+   public static final char QUOTE2 = '&quot;';
+
+	/** Stores the name of the TagToken. */
+	private String name;
+
+	/** Indicates whether the TagToken is an end-token. */
+<span class="fc" id="L49">	private boolean end = false;</span>
+
+	/** Stores a list of attributes and their values. */
+	private AttributeList attr;
+   private String line;
+
+<span class="fc" id="L55">   protected static final Map&lt;String, String&gt; skipTag = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L56">   protected static final Map&lt;String, String&gt; skipStartTag = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L57">   protected static final Map&lt;String, String&gt; skipEndTag = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L58">   protected static final Map&lt;String, String&gt; formTag = new Hashtable&lt;&gt;();</span>
+
+   static
+   {
+      //tagy, ktore sa v HTML vystupe preskakuju (ich obsah je ignorovany)
+<span class="fc" id="L63">      skipTag.put(&quot;option&quot;, &quot;&quot;);</span>
+      //skipTag.put(&quot;a&quot;, &quot;&quot;);
+<span class="fc" id="L65">      skipTag.put(&quot;textarea&quot;, &quot;always&quot;);</span>
+<span class="fc" id="L66">      skipTag.put(&quot;button&quot;, &quot;&quot;);</span>
+
+      //otvaracie tagy, ktore preskakujeme, ako hodnota moze byt podmienka na atribut
+<span class="fc" id="L69">      skipStartTag.put(&quot;input&quot;, &quot;type=hidden,type=button,type=submit,type=reset&quot;);</span>
+<span class="fc" id="L70">      skipStartTag.put(&quot;option&quot;, &quot;&quot;);</span>
+      //skipStartTag.put(&quot;a&quot;, &quot;&quot;);
+
+      //uzatvaracie tagy, ktore preskakujeme
+<span class="fc" id="L74">      skipEndTag.put(&quot;input&quot;, &quot;&quot;);</span>
+<span class="fc" id="L75">      skipEndTag.put(&quot;option&quot;, &quot;&quot;);</span>
+<span class="fc" id="L76">      skipEndTag.put(&quot;textarea&quot;, &quot;&quot;);</span>
+<span class="fc" id="L77">      skipEndTag.put(&quot;select&quot;, &quot;&quot;);</span>
+<span class="fc" id="L78">      skipEndTag.put(&quot;radio&quot;, &quot;&quot;);</span>
+<span class="fc" id="L79">      skipEndTag.put(&quot;checkbox&quot;, &quot;&quot;);</span>
+      //skipEndTag.put(&quot;button&quot;, &quot;&quot;);
+      //skipEndTag.put(&quot;a&quot;, &quot;&quot;);
+
+      //tagy, ktore sa pridavaju do databazy a su povazovane za formular
+<span class="fc" id="L84">      formTag.put(&quot;input&quot;, &quot;&quot;);</span>
+<span class="fc" id="L85">      formTag.put(&quot;textarea&quot;, &quot;&quot;);</span>
+<span class="fc" id="L86">      formTag.put(&quot;select&quot;, &quot;&quot;);</span>
+<span class="fc" id="L87">      formTag.put(&quot;checkbox&quot;, &quot;&quot;);</span>
+<span class="fc" id="L88">      formTag.put(&quot;radio&quot;, &quot;&quot;);</span>
+<span class="fc" id="L89">   }</span>
+
+	/**
+	 * Constructs a new TagToken converting the specified string
+	 * into a token name and a list of attributes with values.
+	 * @param line the raw data.
+	 */
+<span class="fc" id="L96">	public TagToken (String line) {</span>
+<span class="fc" id="L97">		name = null;</span>
+<span class="fc" id="L98">      this.line = Tools.replace(line, &quot;/&gt;&quot;, &quot;&gt;&quot;);</span>
+<span class="fc" id="L99">		attr = new AttributeList();</span>
+<span class="fc" id="L100">		tokenizeAttributes(this.line);</span>
+<span class="fc" id="L101">	}</span>
+
+	/**
+	 * Returns the name of the TagToken.
+	 */
+	public String getName () {
+<span class="fc" id="L107">		return name;</span>
+	}
+
+	/**
+	 * Returns the attribute list of the TagToken.
+	 */
+	public AttributeList getAttributes () {
+<span class="nc" id="L114">		return attr;</span>
+	}
+
+	/**
+	 * Indicates whether this token is an end tag.
+	 */
+	public boolean isEndTag () {
+<span class="fc" id="L121">		return end;</span>
+	}
+
+	/**
+	 * Returns true if the given attribute exists.
+	 * @param name the name of the attribute.
+	 */
+	public boolean isAttribute (String name) {
+<span class="nc" id="L129">		return attr.exists(name);</span>
+	}
+
+	/**
+	 * Returns the value of the specified attribute or null if the
+	 * attribute does not exist.
+	 * @param name the name of the attribute.
+	 */
+	public String getAttribute (String name) {
+<span class="fc" id="L138">		return attr.get(name);</span>
+	}
+
+	/**
+	 * Returns an attribute with all double quote characters
+	 * escaped with a backslash.
+	 * @param name the name of the attribute.
+	 */
+	public String getQuotedAttribute (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (attr == null) return null;</span>
+
+		// Return the quoted version.
+<span class="nc" id="L152">		return attr.getQuoted(name);</span>
+	}
+
+	/**
+	 * Returns a string version of the attribute and its value.
+	 * @param name the name of the attribute.
+	 */
+	public String getAttributeToString (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (attr == null) return null;</span>
+
+		// Return the string version.
+<span class="nc" id="L165">		return attr.toString(name);</span>
+	}
+
+	/**
+	 * Returns a string version of the TagToken.
+	 */
+	@Override
+	public String toString () {
+
+		StringBuffer sb;  // Stores the string to be returned.
+		//Enumeration list; // List of node's arguments or children.
+
+		// Get a new StringBuffer.
+<span class="nc" id="L178">		sb = new StringBuffer();</span>
+
+		// Write the opening of the tag.
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (end)</span>
+<span class="nc" id="L182">			sb.append(&quot;&lt;/&quot; + name);</span>
+		else
+<span class="nc" id="L184">			sb.append('&lt;' + name);</span>
+
+		// Check if there are any attributes.
+<span class="nc bnc" id="L187" title="All 4 branches missed.">		if (attr != null &amp;&amp; attr.size() &gt; 0) {</span>
+
+			// Print string version of the attributes.
+<span class="nc" id="L190">			sb.append(' ').append(attr.toString());</span>
+		}
+
+		// Finish off the tag.
+<span class="nc" id="L194">		sb.append('&gt;');</span>
+
+		// Return the string version.
+<span class="nc" id="L197">		return sb.toString();</span>
+	}
+
+	/**
+	 * Sets the name of the token and also whether it is a begin
+	 * or an end token.
+	 * @param name the name of the token.
+	 */
+	private void setName (String name) {
+
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">		if (name == null) {</span>
+<span class="nc" id="L208">			this.name = null;</span>
+<span class="nc" id="L209">			return;</span>
+		}
+
+<span class="fc" id="L212">		String lcname = name.toLowerCase();</span>
+
+		try
+		{
+<span class="pc bpc" id="L216" title="1 of 4 branches missed.">			if (lcname.length()&gt;0 &amp;&amp; lcname.charAt(0) == '/') {</span>
+<span class="fc" id="L217">				this.name = lcname.substring(1);</span>
+<span class="fc" id="L218">				end = true;</span>
+			} else {
+<span class="fc" id="L220">				this.name = lcname;</span>
+			}
+		}
+<span class="nc" id="L223">		catch (RuntimeException e)</span>
+		{
+<span class="nc" id="L225">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L226">		}</span>
+<span class="fc" id="L227">	}</span>
+
+	/**
+	 * Adds a attribute and value to the list.
+	 * @param name the name of the attribute.
+	 * @param value the value of the attribute.
+	 */
+	private void setAttribute (String name, String value) {
+<span class="fc" id="L235">		attr.set(name, value);</span>
+<span class="fc" id="L236">	}</span>
+
+	/**
+	 * Adds a attribute to the list using the given string. The string
+	 * may either be in the form 'attribute' or 'attribute=value'.
+	 * @param s contains the attribute information.
+ 	 */
+	private void setAttribute (String s)
+   {
+		int idx;	// The index of the = sign in the string.
+		String attrName;	// Stores the name of the attribute.
+		String value;	// Stores the value of the attribute.
+
+		// Check if the string is null.
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">		if (s == null) return;</span>
+
+		// Get the index of = within the string.
+<span class="fc" id="L253">		idx = s.indexOf('=');</span>
+
+		// Check if there was '=' character present.
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">		if (idx &lt; 0) {</span>
+
+			// If not, add the whole string as the attribute
+			// name with a null value.
+<span class="nc" id="L260">			setAttribute(s, &quot;&quot;);</span>
+		} else {
+
+			// If so, split the string into a name and value.
+
+
+
+<span class="fc" id="L267">			attrName = s.substring(0, idx);</span>
+<span class="fc" id="L268">			value = s.substring(idx + 1);</span>
+
+         try
+         {
+            //odstran apostrofy z value
+<span class="fc" id="L273">            value = value.replace('\'', ' ').trim();</span>
+         }
+<span class="nc" id="L275">         catch (Exception ex)</span>
+         {
+<span class="nc" id="L277">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L278">         }</span>
+
+			// Add the name and value to the attribute list.
+<span class="fc" id="L281">			setAttribute(attrName, value);</span>
+		}
+<span class="fc" id="L283">	}</span>
+
+	/**
+	 * Tokenizes the given string and uses the resulting vector
+	 * to to build up the TagToken's attribute list.
+	 * @param args the string to tokenize.
+	 */
+	private void tokenizeAttributes (String args) {
+
+		Vector v;		// Vector of tokens from the string.
+		Enumeration e;		// Enumeration of vector elements.
+<span class="fc" id="L294">		String[] tokens = null;	// Array of tokens from vector.</span>
+		int length;		// Size of the vector.
+		int i;			// Loop variable.
+
+		// Get the vector of tokens.
+<span class="fc" id="L299">		v = tokenizeString(args);</span>
+
+		// Check it is not null.
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">		if (v == null) return;</span>
+
+		// Create a new String array.
+<span class="fc" id="L305">		length = v.size() - 1;</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">		if (length &gt; 0) tokens = new String[length];</span>
+<span class="fc" id="L307">		else tokens = new String[0];</span>
+
+		// Get an enumeration of the vector's elements.
+<span class="fc" id="L310">		e = v.elements();</span>
+
+		// Store the first element as the TagToken's name.
+<span class="fc" id="L313">		setName((String) e.nextElement());</span>
+
+		// Stop processing now if there are no more elements.
+<span class="fc bfc" id="L316" title="All 2 branches covered.">		if (! e.hasMoreElements()) return;</span>
+
+		// Put the rest of the elements into the string array.
+<span class="fc" id="L319">		i = 0;</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">		while (e.hasMoreElements())</span>
+<span class="fc" id="L321">			tokens[i++] = (String) e.nextElement();</span>
+
+		// Deal with the name/value pairs with separate = signs.
+<span class="fc bfc" id="L324" title="All 2 branches covered.">		for (i = 1; i &lt; (length - 1); i++) {</span>
+
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">			if (tokens[i] == null) continue;</span>
+
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">			if (tokens[i].equals(&quot;=&quot;)) {</span>
+<span class="nc" id="L329">				setAttribute(tokens[i - 1], tokens[i + 1]);</span>
+<span class="nc" id="L330">				tokens[i] = null;</span>
+<span class="nc" id="L331">				tokens[i - 1] = null;</span>
+<span class="nc" id="L332">				tokens[i + 1] = null;</span>
+			}
+		}
+
+		// Deal with lone attributes and joined name/value pairs.
+<span class="fc bfc" id="L337" title="All 2 branches covered.">		for (i = 0; i &lt; length; i++)</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">			if (tokens[i] != null) setAttribute(tokens[i]);</span>
+<span class="fc" id="L339">	}</span>
+
+	/**
+	 * This method tokenizes the given string and returns a vector
+	 * of its constituent tokens. It understands quoting and character
+	 * escapes.
+	 * @param s the string to tokenize.
+	 */
+	private Vector tokenizeString (String s) {
+
+		// First check that the args are not null or zero-length.
+<span class="pc bpc" id="L350" title="2 of 4 branches missed.">		if (s == null || s.length() == 0) return null;</span>
+
+<span class="fc" id="L352">		boolean whitespace = false; // True if we are reading w/space.</span>
+<span class="fc" id="L353">		boolean escaped = false;    // True if next char is escaped.</span>
+<span class="fc" id="L354">		boolean quoted = false;	    // True if we are in quotes.</span>
+		int length;		    // Length of attribute string.
+<span class="fc" id="L356">		int i = 0;		    // Loop variable.</span>
+
+		// Create a vector to store the complete tokens.
+<span class="fc" id="L359">		Vector tokens = new Vector();</span>
+
+		// Create a buffer to store an individual token.
+<span class="fc" id="L362">		StringBuffer buffer = new StringBuffer(80);</span>
+
+		// Convert the String to a character array;
+<span class="fc" id="L365">		char[] array = s.toCharArray();</span>
+
+<span class="fc" id="L367">		length = array.length;</span>
+
+		// Loop over the character array.
+<span class="fc bfc" id="L370" title="All 2 branches covered.">		while (i &lt; length) {</span>
+
+			// Check if we are currently removing whitespace.
+<span class="fc bfc" id="L373" title="All 2 branches covered.">			if (whitespace) {</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">				if (isWhitespace(array[i])) {</span>
+<span class="fc" id="L375">					i++;</span>
+<span class="fc" id="L376">					continue;</span>
+				} else {
+<span class="fc" id="L378">					whitespace = false;</span>
+				}
+			}
+
+			// Check if we are currently escaped.
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">			if (escaped) {</span>
+
+				// Add the next character to the array.
+<span class="nc" id="L386">				buffer.append(array[i++]);</span>
+
+				// Turn off the character escape.
+<span class="nc" id="L389">				escaped = false;</span>
+			} else {
+
+				// Check for the escape character.
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">				if (array[i] == ESCAPE) {</span>
+<span class="nc" id="L394">					escaped = true;</span>
+<span class="nc" id="L395">					i++;</span>
+<span class="nc" id="L396">					continue;</span>
+				}
+
+				// Check for the quotation character.
+<span class="fc bfc" id="L400" title="All 4 branches covered.">				if (array[i] == QUOTE || array[i] == QUOTE2)</span>
+            	{
+<span class="fc bfc" id="L402" title="All 2 branches covered.">					quoted = !quoted;</span>
+<span class="fc" id="L403">					i++;</span>
+<span class="fc" id="L404">					continue;</span>
+				}
+
+				// Check for the end of the token.
+<span class="fc bfc" id="L408" title="All 4 branches covered.">				if (!quoted &amp;&amp; isWhitespace(array[i])) {</span>
+
+					// Add the token and refresh the buffer.
+<span class="fc" id="L411">					tokens.addElement(buffer.toString());</span>
+<span class="fc" id="L412">					buffer = new StringBuffer(80);</span>
+
+					// Stop reading the token.
+<span class="fc" id="L415">					whitespace = true;</span>
+
+<span class="fc" id="L417">					continue;</span>
+				}
+
+				// Otherwise add the character to the buffer.
+<span class="fc" id="L421">				buffer.append(array[i++]);</span>
+			}
+		}
+
+		// Add the last token to the vector if there is one.
+<span class="fc bfc" id="L426" title="All 2 branches covered.">		if (! whitespace) tokens.addElement(buffer.toString());</span>
+
+<span class="fc" id="L428">		return tokens;</span>
+	}
+
+	/**
+	 * Returns true if the given character is considered to be
+	 * whitespace.
+	 * @param c the character to test.
+	 */
+	private boolean isWhitespace (char c) {
+<span class="pc bpc" id="L437" title="2 of 6 branches missed.">		return (c == ' ' || c == '\t' || c == '\n');</span>
+	}
+
+   private boolean isSkip()
+   {
+      String data;
+<span class="fc bfc" id="L443" title="All 2 branches covered.">      if (end)</span>
+      {
+<span class="fc" id="L445">         data = skipEndTag.get(name.toLowerCase());</span>
+      }
+      else
+      {
+<span class="fc" id="L449">         data = skipStartTag.get(name.toLowerCase());</span>
+      }
+<span class="fc bfc" id="L451" title="All 2 branches covered.">      if (data==null) return(false);</span>
+
+<span class="fc bfc" id="L453" title="All 2 branches covered.">      if (data.length()==0) return(true);</span>
+
+      //inak je v data podmienka na field
+
+      String attribute;
+	  String value;
+
+<span class="fc" id="L460">      StringTokenizer stMain = new StringTokenizer(data, &quot;,&quot;);</span>
+      String condition;
+      StringTokenizer st;
+<span class="fc bfc" id="L463" title="All 2 branches covered.">      while (stMain.hasMoreTokens())</span>
+      {
+<span class="fc" id="L465">         condition = stMain.nextToken();</span>
+<span class="fc" id="L466">         st = new StringTokenizer(condition, &quot;=&quot;);</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">         if (st.countTokens()==2)</span>
+         {
+<span class="fc" id="L469">            attribute = st.nextToken();</span>
+<span class="fc" id="L470">            value = st.nextToken();</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">            if (value.equalsIgnoreCase(getAttribute(attribute)))</span>
+            {
+<span class="fc" id="L473">               return(true);</span>
+            }
+         }
+      }
+<span class="fc" id="L477">      return(false);</span>
+   }
+
+   public void setLine(String line)
+   {
+<span class="nc" id="L482">      this.line = line;</span>
+<span class="nc" id="L483">   }</span>
+   public String getLine()
+   {
+<span class="nc" id="L486">      return line;</span>
+   }
+   public String getLineForm(HttpServletRequest request)
+   {
+   	try
+		{
+
+<span class="fc bfc" id="L493" title="All 2 branches covered.">	      if (isSkip()) return(&quot;&quot;);</span>
+<span class="fc" id="L494">	      String type = getAttribute(&quot;type&quot;);</span>
+<span class="fc bfc" id="L495" title="All 2 branches covered.">	      if (&quot;checkbox&quot;.equalsIgnoreCase(type))</span>
+	      {
+<span class="fc" id="L497">	          String attrName = getAttribute(&quot;name&quot;);</span>
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">	          if (Tools.isEmpty(attrName)) attrName = getAttribute(&quot;id&quot;);</span>
+
+<span class="fc" id="L500">	          StringBuffer ret = new StringBuffer(&quot;&lt;input type='checkbox' name='&quot;).append(attrName).append('\'');</span>
+<span class="fc" id="L501">	          String[] params = request.getParameterValues(attrName);</span>
+<span class="fc" id="L502">	          String value = normalizeValue(getAttribute(&quot;value&quot;));</span>
+
+<span class="fc" id="L504">	          int size = 0;</span>
+<span class="fc bfc" id="L505" title="All 2 branches covered.">	          if (params!=null) {</span>
+<span class="fc" id="L506">				size = params.length;</span>
+
+<span class="fc" id="L508">				String param = null;</span>
+				int i;
+<span class="fc bfc" id="L510" title="All 2 branches covered.">				for (i=0; i&lt;size; i++)</span>
+				{
+<span class="fc" id="L512">					param = normalizeValue(params[i]);</span>
+<span class="pc bpc" id="L513" title="2 of 4 branches missed.">					if (param!=null &amp;&amp; param.equals(value))</span>
+					{
+						//povodne tu bol test na size==1 || value, to ale nefunguje pri multicheckboxe ak sa zvoli len jedna hodnota (a cb maju rovnaky nazov)
+<span class="fc" id="L516">						ret.append(&quot; checked&quot;);</span>
+					}
+				}
+			  }
+<span class="fc" id="L520">	          ret.append('&gt;');</span>
+
+<span class="pc bpc" id="L522" title="1 of 2 branches missed.">	          if (Constants.getBoolean(&quot;formMailRenderRadioCheckboxText&quot;))</span>
+	          {
+<span class="fc bfc" id="L524" title="All 2 branches covered.">	         	 if (ret.indexOf(&quot;checked&quot;)!=-1) ret = new StringBuffer(&quot;&lt;span class='inputcheckbox emailinput-cb input-checked'&gt;[X]&lt;/span&gt;&quot;);</span>
+<span class="fc" id="L525">	         	 else ret = new StringBuffer(&quot;&lt;span class='inputcheckbox emailinput-cb input-unchecked'&gt;[ ]&lt;/span&gt;&quot;);</span>
+	          }
+
+<span class="fc" id="L528">	          return(ret.toString());</span>
+	      }
+<span class="pc bpc" id="L530" title="1 of 2 branches missed.">	      if (&quot;radio&quot;.equalsIgnoreCase(type))</span>
+	      {
+<span class="nc" id="L532">	          String attrName = getAttribute(&quot;name&quot;);</span>
+<span class="nc bnc" id="L533" title="All 2 branches missed.">	          if (Tools.isEmpty(attrName)) attrName = getAttribute(&quot;id&quot;);</span>
+
+<span class="nc" id="L535">	          String ret = &quot;&lt;input type='radio' name='&quot;+attrName+&quot;'&quot;;</span>
+<span class="nc" id="L536">	          String param = normalizeValue(request.getParameter(attrName));</span>
+<span class="nc" id="L537">	          String value = normalizeValue(getAttribute(&quot;value&quot;));</span>
+<span class="nc bnc" id="L538" title="All 4 branches missed.">	          if (param!=null &amp;&amp; param.equals(value))</span>
+	          {
+<span class="nc" id="L540">	             ret+=&quot; checked&quot;;</span>
+	          }
+<span class="nc" id="L542">	          ret +=&quot;&gt;&quot;;</span>
+
+<span class="nc bnc" id="L544" title="All 2 branches missed.">	          if (Constants.getBoolean(&quot;formMailRenderRadioCheckboxText&quot;))</span>
+	          {
+<span class="nc bnc" id="L546" title="All 2 branches missed.">	         	 if (ret.indexOf(&quot;checked&quot;)!=-1) ret = &quot;&lt;span class='inputradio emailinput-radio input-checked'&gt;[X]&lt;/span&gt;&quot;;</span>
+<span class="nc" id="L547">	         	 else ret = &quot;&lt;span class='inputradio emailinput-radio input-unchecked'&gt;[ ]&lt;/span&gt;&quot;;</span>
+	          }
+
+<span class="nc" id="L550">	          return(ret);</span>
+	      }
+
+<span class="fc" id="L553">	      String ret = formTag.get(name);</span>
+<span class="fc bfc" id="L554" title="All 2 branches covered.">	      if (ret!=null)</span>
+	      {
+<span class="fc bfc" id="L556" title="All 2 branches covered.">	         if (name.equalsIgnoreCase(&quot;input&quot;))</span>
+	         {
+<span class="fc" id="L558">	            type = &quot;text&quot;;</span>
+	         }
+
+<span class="fc" id="L561">	         ret = &quot;&quot;;</span>
+
+<span class="fc" id="L563">	         String cssType = type;</span>
+<span class="fc bfc" id="L564" title="All 2 branches covered.">	         if (cssType==null) cssType = name;</span>
+<span class="pc bpc" id="L565" title="1 of 2 branches missed.">	         if (cssType!=null)</span>
+	         {
+<span class="fc" id="L567">					ret = &quot;&lt;span class='form-control emailInput-&quot;+cssType.toLowerCase()+&quot;'&quot;;</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">					if (&quot;textarea&quot;.equalsIgnoreCase(cssType)) ret += &quot; style='height: auto;'&quot;;</span>
+<span class="fc" id="L569">					ret += &quot;&gt;&quot;;</span>
+	         }
+
+<span class="fc" id="L572">	         String myName = getAttribute(&quot;name&quot;);</span>
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">	         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
+
+<span class="fc" id="L575">	         ret += &quot;!&quot; + myName + &quot;!&quot;;</span>
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">	         if (cssType!=null)</span>
+	         {
+<span class="fc" id="L578">	            ret += &quot;&lt;/span&gt;&quot;;</span>
+	         }
+<span class="fc" id="L580">	         return(ret);</span>
+	      }
+
+<span class="fc" id="L583">	      ret = &quot;&lt;&quot; + line + &quot;&gt;&quot;;</span>
+<span class="fc" id="L584">	      return(ret);</span>
+		}
+<span class="nc" id="L586">   	catch (Exception ex)</span>
+		{
+<span class="nc" id="L588">   		sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L589">   		return(&quot;ERROR: &quot; + ex.getMessage());</span>
+		}
+   }
+
+   /**
+    * Upravi hodnoty z requestu / atributu na normalizovany tvar (trim, tvrde medzery, &amp;nbsp;)
+    * @param value
+    * @return
+    */
+   private static String normalizeValue(String value)
+   {
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">   	if (value == null) return value;</span>
+   	//nbsp tam pridava uprava nerozdelovania spojok
+<span class="fc" id="L602">   	value = Tools.replace(value, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L603">  	 	value = Tools.replace(value, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
+<span class="fc" id="L604">  	 	value = value.trim();</span>
+<span class="fc" id="L605">   	return value;</span>
+   }
+
+   public String getFormField()
+   {
+<span class="fc bfc" id="L610" title="All 2 branches covered.">      if (isSkip()) return(null);</span>
+
+<span class="fc" id="L612">      String ret = formTag.get(name);</span>
+<span class="fc bfc" id="L613" title="All 2 branches covered.">      if (ret!=null)</span>
+      {
+<span class="fc" id="L615">      	String myName = getAttribute(&quot;name&quot;);</span>
+<span class="pc bpc" id="L616" title="1 of 2 branches missed.">         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
+<span class="fc" id="L617">         return(myName);</span>
+      }
+
+<span class="fc" id="L620">      return(null);</span>
+   }
+   /**
+    * vrati meno tagu, na ktory cakame, alebo null, ak sme ho prave nasli
+    * @param skipToTag - aktualne meno
+    * @return
+    */
+   public String getSkipToTag(String skipToTag)
+   {
+      //ak uz na nieco cakame
+<span class="fc bfc" id="L630" title="All 2 branches covered.">      if (skipToTag!=null)</span>
+      {
+<span class="pc bpc" id="L632" title="2 of 4 branches missed.">         if (end &amp;&amp; name.equals(skipToTag))</span>
+         {
+            //ak sme cakali na tento tag, tak uz cakat netreba
+<span class="fc" id="L635">            return(null);</span>
+         }
+         else
+         {
+<span class="nc" id="L639">            return(skipToTag);</span>
+         }
+      }
+
+<span class="fc" id="L643">      String ret = skipTag.get(name.toLowerCase());</span>
+<span class="fc bfc" id="L644" title="All 2 branches covered.">      if (ret!=null)</span>
+      {
+<span class="pc bpc" id="L646" title="3 of 4 branches missed.">         if (&quot;always&quot;.equals(ret) || isSkip()) return(name);</span>
+      }
+<span class="fc" id="L648">      return(null);</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

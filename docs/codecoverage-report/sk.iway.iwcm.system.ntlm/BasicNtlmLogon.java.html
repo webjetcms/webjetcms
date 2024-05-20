@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasicNtlmLogon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.ntlm</a> &gt; <span class="el_source">BasicNtlmLogon.java</span></div><h1>BasicNtlmLogon.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.ntlm;
+
+import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.List;
+
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
+
+import org.apache.commons.collections.CollectionUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.PermissionGroupDB;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  BasicNtlmLogon.java - univerzalne overenie pouzivatela v ActiveDirectory (LDAP)
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.2.2012 13:54:31
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class BasicNtlmLogon
+{
+<span class="nc" id="L49">	protected BasicNtlmLogon() {</span>
+		//utility class
+<span class="nc" id="L51">	}</span>
+	/**
+	 * LDAP dotaz pre autorizaciu v ActiveDirectory
+	 * @param user
+	 */
+	public static void doLdapQuery(UserDetails user)
+	{
+<span class="nc" id="L58">		doLdapQuery(user, AuthenticationFilter.getLdapProvider(), AuthenticationFilter.getLdapUsername(), AuthenticationFilter.getLdapPassword());</span>
+<span class="nc" id="L59">	}</span>
+
+	/**
+	 * LDAP dotaz pre autorizaciu
+	 * @param user
+	 * @param ldapProviderUrl
+	 * @param ldapUsername
+	 * @param ldapPassword
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void doLdapQuery(UserDetails user, String ldapProviderUrl, String ldapUsername, String ldapPassword)
+	{
+<span class="nc" id="L71">		DirContext ctx = null;</span>
+
+		try
+		{
+<span class="nc" id="L75">			Logger.debug(BasicNtlmLogon.class, &quot;Logging user: &quot;+ user.getLogin());</span>
+
+<span class="nc" id="L77">			Hashtable&lt;String, Object&gt; env = new Hashtable&lt;&gt;(); //NOSONAR</span>
+
+<span class="nc" id="L79">			String ldapDomainAppend = Constants.getString(&quot;ldapDomainAppend&quot;);</span>
+
+<span class="nc" id="L81">			boolean ldapUseSslProtocol = Constants.getBoolean(&quot;ldapUseSslProtocol&quot;);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if(ldapUseSslProtocol) env.put(Context.SECURITY_PROTOCOL, &quot;ssl&quot;);</span>
+<span class="nc" id="L83">			env.put(Context.INITIAL_CONTEXT_FACTORY, &quot;com.sun.jndi.ldap.LdapCtxFactory&quot;);</span>
+<span class="nc" id="L84">			env.put(Context.STATE_FACTORIES, &quot;PersonStateFactory&quot;);</span>
+<span class="nc" id="L85">			env.put(Context.OBJECT_FACTORIES, &quot;PersonObjectFactory&quot;);</span>
+<span class="nc" id="L86">			env.put(Context.PROVIDER_URL, ldapProviderUrl);  // SET YOUR SERVER AND STARTING CONTEXT HERE</span>
+<span class="nc" id="L87">			String ldapSecurityPrincipalDn = Constants.getString(&quot;ldapSecurityPrincipalDn&quot;); //napr. cn=!USERNAME!,dc=ad,dc=interway,dc=sk</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if(Tools.isEmpty(ldapSecurityPrincipalDn)) ldapSecurityPrincipalDn = ldapUsername+ldapDomainAppend;</span>
+<span class="nc" id="L89">			else ldapSecurityPrincipalDn = Tools.replace(ldapSecurityPrincipalDn, &quot;!USERNAME!&quot;, ldapUsername+ldapDomainAppend);</span>
+<span class="nc" id="L90">			env.put(Context.SECURITY_PRINCIPAL, ldapSecurityPrincipalDn); //&quot;cn=Administrator, o=oracle.local&quot;);  // SET USER THAT CAN SEARCH AND MODIFY FULL NAME HERE</span>
+<span class="nc" id="L91">			env.put(Context.SECURITY_CREDENTIALS, ldapPassword);  // SET PASSWORD HERE</span>
+<span class="nc" id="L92">			env.put(Context.REFERRAL, &quot;follow&quot;);</span>
+<span class="nc" id="L93">			env.put(Context.LANGUAGE, &quot;sk-SK&quot;);</span>
+<span class="nc" id="L94">			env.put(LdapContext.CONTROL_FACTORIES, &quot;com.sun.jndi.ldap.ControlFactory&quot;);</span>
+
+<span class="nc" id="L96">			Logger.debug(BasicNtlmLogon.class, &quot;ldap: ldapProviderUrl=&quot;+ldapProviderUrl+&quot; ldapSecurityPrincipalDn=&quot;+ldapSecurityPrincipalDn+&quot; ldapUsername=&quot;+ldapUsername+ldapDomainAppend);</span>
+
+<span class="nc" id="L98">			ctx = new InitialDirContext(env);</span>
+
+			// Specify the search filter to match all users with no full name
+<span class="nc" id="L101">			String filter = Constants.getString(&quot;ldapFilter&quot;);  //&quot;(&amp;(objectClass=Person) (&amp;(sAMAccountName=&quot;+user.getLogin()+&quot;)))&quot;; // &quot;DC=oracle, (&amp;(objectClass=Person) (&amp;(sn=priezvisko)))&quot;;</span>
+<span class="nc" id="L102">			filter = Tools.replace(filter, &quot;!USERNAME!&quot;, user.getLogin()+ldapDomainAppend);</span>
+
+			// limit returned attributes to those we care about
+			//String[] attrIDs = {&quot;sn&quot;, &quot;givenName&quot;, &quot;mail&quot;};
+<span class="nc" id="L106">			SearchControls ctls = new SearchControls();</span>
+			//ctls.setReturningAttributes(attrIDs);
+			// comment out next line to limit to one container otherwise it'll walk down the tree
+<span class="nc" id="L109">			ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);</span>
+
+<span class="nc" id="L111">			String[] retAttrs = Tools.getTokens(Constants.getString(&quot;basicNtlmLogonAttrs&quot;), &quot;,&quot;);</span>
+<span class="nc" id="L112">			ctls.setReturningAttributes(retAttrs);</span>
+
+			// Search for objects using filter and controls
+<span class="nc" id="L115">			NamingEnumeration&lt;SearchResult&gt; answer = ctx.search(&quot;&quot;, filter, ctls);</span>
+
+<span class="nc" id="L117">			StringBuilder ldapGroups = new StringBuilder();</span>
+			// cycle through result set
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (answer.hasMore())</span>
+			{
+<span class="nc" id="L121">				SearchResult sr = answer.next();</span>
+<span class="nc" id="L122">				Attributes attrs = sr.getAttributes();</span>
+
+				//DEBUG: treba vymazat
+				/*
+				NamingEnumeration allAttrs = attrs.getAll();
+				Logger.debug(BasicNtlmLogon.class,&quot;POCET: &quot; + attrs.size());
+				while (allAttrs.hasMoreElements())
+				{
+					Attribute a = (Attribute)allAttrs.next();
+					Logger.debug(BasicNtlmLogon.class,&quot;ENUM: &quot; + a);
+				}
+				*/
+
+<span class="nc" id="L135">				String origFirstName = user.getFirstName();</span>
+<span class="nc" id="L136">				String origLastName = user.getLastName();</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;mail&quot;)) user.setEmail(NtlmLogonAction.getAtrValue(attrs, &quot;mail&quot;, user.getEmail()));</span>
+				//user.setTitle(NtlmLogonAction.getAtrValue(attrs, &quot;title&quot;, user.getTitle()));
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;cn&quot;))</span>
+				{
+<span class="nc" id="L143">					String cn = NtlmLogonAction.getAtrValue(attrs, &quot;cn&quot;, null);</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">					if (Tools.isNotEmpty(cn) &amp;&amp; cn.indexOf(&quot;,&quot;)!=-1)</span>
+					{
+						try
+						{
+<span class="nc" id="L148">							user.setTitle(cn.substring(cn.indexOf(&quot;,&quot;)).trim());</span>
+						}
+<span class="nc" id="L150">						catch (Exception e)</span>
+						{
+<span class="nc" id="L152">							sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L153">						}</span>
+					}
+				}
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;givenName&quot;)) user.setFirstName(NtlmLogonAction.getAtrValue(attrs, &quot;givenName&quot;, user.getFirstName()));</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;sn&quot;)) user.setLastName(NtlmLogonAction.getAtrValue(attrs, &quot;sn&quot;, user.getLastName()));</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;streetAddress&quot;)) user.setAdress(NtlmLogonAction.getAtrValue(attrs, &quot;streetAddress&quot;, user.getAdress()));</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;l&quot;)) user.setCity(NtlmLogonAction.getAtrValue(attrs, &quot;l&quot;, user.getCity()));</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;postalCode&quot;)) user.setPSC(NtlmLogonAction.getAtrValue(attrs, &quot;postalCode&quot;, user.getPSC()));</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;co&quot;)) user.setCountry(NtlmLogonAction.getAtrValue(attrs, &quot;co&quot;, user.getCountry()));</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;company&quot;)) user.setCompany(NtlmLogonAction.getAtrValue(attrs, &quot;company&quot;, user.getCompany()));</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;telephoneNumber&quot;)) user.setPhone(NtlmLogonAction.getAtrValue(attrs, &quot;telephoneNumber&quot;, user.getPhone()));</span>
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (Tools.isEmpty(user.getLastName())) user.setLastName(origLastName);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				if (Tools.isEmpty(user.getFirstName())) user.setFirstName(origFirstName);</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;department&quot;)) user.setFieldC(NtlmLogonAction.getAtrValue(attrs, &quot;department&quot;, user.getFieldC()));</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;description&quot;)) user.setSignature(NtlmLogonAction.getAtrValue(attrs, &quot;description&quot;, user.getSignature()));</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;title&quot;)) user.setPosition(NtlmLogonAction.getAtrValue(attrs, &quot;title&quot;, user.getPosition()));</span>
+
+				//CNUserName = NtlmLogonAction.getAtrValue(attrs, &quot;cn&quot;, &quot;&quot;);
+
+				//ldapGroups = NtlmLogonAction.getAtrValue(attrs, &quot;memberOf&quot;, null) + &quot;, &quot;;
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;memberOf&quot;))</span>
+				{
+<span class="nc" id="L179">					Attribute memberOf = attrs.get(&quot;memberOf&quot;);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">					if (memberOf != null)</span>
+					{
+<span class="nc" id="L182">						NamingEnumeration&lt;?&gt; all = memberOf.getAll();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">						while (all.hasMoreElements())</span>
+						{
+<span class="nc" id="L185">							Object o = all.next();</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">							if (o == null) continue;</span>
+
+<span class="nc" id="L189">							Logger.debug(BasicNtlmLogon.class, &quot;memberOf: &quot;+o.toString());</span>
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">							if (ldapGroups.length()&gt;0) ldapGroups.append(&quot;\n&quot;);</span>
+<span class="nc" id="L192">							ldapGroups.append(o.toString());</span>
+<span class="nc" id="L193">						}</span>
+					}
+				}
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;distinguishedName&quot;))</span>
+				{
+					//: OU=2,OU=1,OU=mzpsr,DC=mzp,DC=enviro,DC=gov,DC=sk
+					//distinguishedName: CN=Cerovska,OU=2,OU=1,OU=mzpsr,DC=mzp,DC=enviro,DC=gov,DC=sk
+<span class="nc" id="L201">					String distinguishedName = NtlmLogonAction.getAtrValue(attrs, &quot;distinguishedName&quot;, null);</span>
+					try
+					{
+						//ziskaj info o adresari v ktorom je
+<span class="nc" id="L205">						String ldapDNSuffix = Constants.getString(&quot;ldapDNSuffix&quot;);</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">						if (Tools.isNotEmpty(ldapDNSuffix) &amp;&amp; Tools.isNotEmpty(distinguishedName))</span>
+						{
+<span class="nc" id="L208">							int start = distinguishedName.indexOf(&quot;,&quot;);</span>
+<span class="nc" id="L209">							int end = distinguishedName.indexOf(ldapDNSuffix);</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">							if (start &gt; 0 &amp;&amp; end &gt; start)</span>
+							{
+<span class="nc" id="L212">								String groupDN = distinguishedName.substring(start+1, end-1);</span>
+<span class="nc" id="L213">								Logger.debug(BasicNtlmLogon.class, &quot;Getting groupDN=&quot;+groupDN);</span>
+<span class="nc" id="L214">								Attributes groupAtrs = ctx.getAttributes(groupDN);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">								if (groupAtrs != null)</span>
+								{
+<span class="nc" id="L217">									String description = NtlmLogonAction.getAtrValue(groupAtrs, &quot;description&quot;, null);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">									if (Tools.isNotEmpty(description))</span>
+									{
+<span class="nc" id="L220">										user.setFieldA(description);</span>
+									}
+								}
+							}
+						}
+					}
+<span class="nc" id="L226">					catch (Exception e)</span>
+					{
+<span class="nc" id="L228">						sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L229">					}</span>
+				}
+
+<span class="nc bnc" id="L232" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+				{
+<span class="nc" id="L234">					user.setPasswordPlain(user.getLogin());</span>
+				}
+
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				if (isAtrAvailable(retAttrs, &quot;thumbnailPhoto&quot;))</span>
+				{
+<span class="nc" id="L239">					Attribute photo = attrs.get(&quot;thumbnailPhoto&quot;);</span>
+<span class="nc" id="L240">					Logger.debug(BasicNtlmLogon.class, &quot;thumbnailPhoto=&quot;+photo);</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">					if (photo != null)</span>
+					{
+<span class="nc" id="L243">						byte[] photoBytes = (byte[])photo.get();</span>
+<span class="nc" id="L244">						Logger.debug(BasicNtlmLogon.class, &quot;photoBytes.length=&quot;+photoBytes.length);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">						if (photoBytes.length &gt; 100)</span>
+						{
+<span class="nc" id="L247">							String BASE_DIR = &quot;/images/gallery/user/&quot;;</span>
+<span class="nc" id="L248">							String photoURL = BASE_DIR+ DocTools.removeChars(user.getLogin(), true)+&quot;.jpg&quot;;</span>
+
+<span class="nc" id="L250">							Logger.debug(BasicNtlmLogon.class, &quot;Saving user photo: &quot;+photoURL);</span>
+
+<span class="nc" id="L252">							IwcmFile photoFile = new IwcmFile(Tools.getRealPath(photoURL));</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">							if(!photoFile.exists())</span>
+							{
+								//zapis do suboru
+<span class="nc" id="L256">								IwcmOutputStream ios = new IwcmOutputStream(photoFile);</span>
+<span class="nc" id="L257">								ios.write(photoBytes);</span>
+<span class="nc" id="L258">								ios.close();</span>
+
+								//zmaz o_ a s_ fotku
+<span class="nc" id="L261">								IwcmFile oPhotoFile = new IwcmFile(Tools.getRealPath(GalleryDB.getImagePathOriginal(photoURL)));</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">								if (oPhotoFile.exists()) oPhotoFile.delete();</span>
+
+<span class="nc" id="L264">								IwcmFile sPhotoFile = new IwcmFile(Tools.getRealPath(GalleryDB.getImagePathSmall(photoURL)));</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">								if (sPhotoFile.exists()) sPhotoFile.delete();</span>
+
+								//resizni
+<span class="nc" id="L268">								Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L269">								Dimension[] dims = GalleryDB.getDimension(BASE_DIR);</span>
+<span class="nc" id="L270">								GalleryDB.resizePictureImpl(dims, photoFile.getAbsolutePath(), null, prop, GalleryDB.getResizeMode(BASE_DIR));</span>
+<span class="nc" id="L271">							}</span>
+							else
+							{
+<span class="nc" id="L274">								Logger.debug(BasicNtlmLogon.class, &quot;User photo: &quot;+photoURL + &quot; already exists, using existing file&quot;);</span>
+							}
+<span class="nc" id="L276">							user.setPhoto(photoURL);</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L280" title="All 4 branches missed.">				if (Tools.isNotEmpty(Constants.getString(&quot;ntlmDefaultUserPhoto&quot;)) &amp;&amp; Tools.isEmpty(user.getPhoto()))</span>
+				{
+<span class="nc" id="L282">					user.setPhoto(Constants.getString(&quot;ntlmDefaultUserPhoto&quot;));</span>
+				}
+
+				// eDir returns &quot;attribute name : attribute value on get method so strip off up to &quot;: &quot;
+				//attrs.put(&quot;fullName&quot;, givenName.substring(givenName.indexOf(':')+2) + ' ' + surName.substring(surName.indexOf(':')+2));
+				//ctx.modifyAttributes(sr.getName(), DirContext.REPLACE_ATTRIBUTE, attrs);
+<span class="nc" id="L288">			}</span>
+			else
+			{
+<span class="nc" id="L291">				user.setLogin(null);</span>
+<span class="nc" id="L292">				return;</span>
+			}
+
+			// Close the context when we're done
+<span class="nc" id="L296">			ctx.close();</span>
+<span class="nc" id="L297">			ctx = null;</span>
+
+			//moznost mat viac administratorskych AD skupin
+<span class="nc" id="L300">			String[] ntlmAdminGroupNames = Tools.getTokens(Constants.getString(&quot;NTLMAdminGroupName&quot;), &quot;,&quot;);</span>
+<span class="nc bnc" id="L301" title="All 4 branches missed.">			if (ntlmAdminGroupNames != null &amp;&amp; ntlmAdminGroupNames.length &gt; 0)</span>
+			{
+<span class="nc" id="L303">				user.setAdmin(false);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">				for(String groupName : ntlmAdminGroupNames)</span>
+				{
+<span class="nc bnc" id="L306" title="All 2 branches missed.">					if (ldapGroups.indexOf(&quot;CN=&quot;+groupName+&quot;,&quot;)!=-1)</span>
+					{
+<span class="nc" id="L308">						Logger.debug(BasicNtlmLogon.class,&quot;Je clenom skupiny '&quot;+groupName+&quot;', USER JE ADMIN&quot;);</span>
+<span class="nc" id="L309">						user.setAdmin(true);</span>
+<span class="nc" id="L310">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L313" title="All 2 branches missed.">				if(user.isAdmin() == false) Logger.debug(BasicNtlmLogon.class,&quot;USER NIE JE ADMIN&quot;);</span>
+			}
+
+<span class="nc bnc" id="L316" title="All 2 branches missed.">			if (retAttrs.length&gt;0)</span>
+			{
+<span class="nc" id="L318">				Logger.debug(BasicNtlmLogon.class,&quot;Nastavujem skupiny:\n&quot;+ldapGroups.toString());</span>
+
+				//porovnavam najprv nazvy skupin prav
+<span class="nc" id="L321">				List&lt;PermissionGroupBean&gt; permissionGroupsAll = (new PermissionGroupDB()).getAll();</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				if(permissionGroupsAll != null)</span>
+				{
+<span class="nc" id="L324">					List&lt;PermissionGroupBean&gt; permissionGroupsAfter = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L326" title="All 2 branches missed.">					for (PermissionGroupBean pg : permissionGroupsAll)</span>
+					{
+<span class="nc" id="L328">						Logger.debug(BasicNtlmLogon.class, &quot;testujem skupinu prav: &quot; + pg.getTitle());</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">						if (ldapGroups.indexOf(&quot;CN=&quot; + pg.getTitle() + &quot;,&quot;) != -1)</span>
+						{
+<span class="nc" id="L331">							Logger.debug(BasicNtlmLogon.class, &quot;JE clenom skupiny prav&quot;);</span>
+<span class="nc" id="L332">							permissionGroupsAfter.add(pg);</span>
+						}
+<span class="nc" id="L334">					}</span>
+
+					//potrebujem userId
+<span class="nc bnc" id="L337" title="All 2 branches missed.">					if(user.getUserId() &lt; 1) UsersDB.saveUser(user);</span>
+<span class="nc" id="L338">					List&lt;PermissionGroupBean&gt; permissionGroupsBefore = UserGroupsDB.getPermissionGroupsFor(user.getUserId());</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">					for (PermissionGroupBean permGroup : (Collection&lt;PermissionGroupBean&gt;)CollectionUtils.subtract(permissionGroupsAfter, permissionGroupsBefore))</span>
+<span class="nc" id="L340">						UsersDB.addUserToPermissionGroup(user.getUserId(), permGroup.getUserPermGroupId());</span>
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					for (PermissionGroupBean permGroup : (Collection&lt;PermissionGroupBean&gt;)CollectionUtils.subtract(permissionGroupsBefore, permissionGroupsAfter))</span>
+<span class="nc" id="L343">						UsersDB.deleteUserFromPermissionGroup(user.getUserId(), permGroup.getUserPermGroupId());</span>
+				}
+
+				//porovnavam aj pouzivatelske skupiny
+<span class="nc" id="L347">				StringBuilder groupsString = new StringBuilder(Constants.getString(&quot;passwordProtectedAutoId&quot;));</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">				for (UserGroupDetails ugd : UserGroupsDB.getInstance().getUserGroups())</span>
+				{
+<span class="nc" id="L350">					Logger.debug(BasicNtlmLogon.class, &quot;testujem pouzivatelsku skupinu: &quot; + ugd.getUserGroupName());</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">					if (ldapGroups.indexOf(&quot;CN=&quot; + ugd.getUserGroupName() + &quot;,&quot;) != -1)</span>
+					{
+<span class="nc" id="L353">						Logger.debug(BasicNtlmLogon.class, &quot;je clenom pouzivatelskej skupiny&quot;);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">						if (Tools.isNotEmpty(groupsString)) groupsString.append(&quot;,&quot;);</span>
+<span class="nc" id="L355">						groupsString.append(&quot;&quot; + ugd.getUserGroupId());</span>
+					}
+<span class="nc" id="L357">				}</span>
+<span class="nc" id="L358">				Logger.debug(BasicNtlmLogon.class,&quot;nastavujem skupinyIDS: &quot; + groupsString.toString());</span>
+<span class="nc" id="L359">				user.setUserGroupsIds(groupsString.toString());</span>
+			}
+		}
+<span class="nc" id="L362">		catch(Exception ne)</span>
+		{
+<span class="nc" id="L364">			Logger.error(BasicNtlmLogon.class,ne.getMessage());</span>
+<span class="nc" id="L365">			sk.iway.iwcm.Logger.error(ne);</span>
+<span class="nc" id="L366">			user.setLogin(null);</span>
+		}
+		finally
+		{
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (ctx != null)</span>
+			{
+				try
+				{
+<span class="nc" id="L374">					ctx.close();</span>
+				}
+<span class="nc" id="L376">				catch (Exception e2)</span>
+				{
+<span class="nc" id="L378">				}</span>
+			}
+		}
+<span class="nc" id="L381">	}</span>
+
+	/**
+	 * Otestuje, ci dany atribut mame nacitany (a mozeme ho nastavit)
+	 * @param atrs
+	 * @param name
+	 * @return
+	 */
+	private static boolean isAtrAvailable(String[] atrs, String name)
+	{
+<span class="nc bnc" id="L391" title="All 4 branches missed.">		if (atrs == null || atrs.length&lt;1) return false;</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		for (String atr : atrs)</span>
+		{
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			if (atr.equals(name)) return true;</span>
+		}
+<span class="nc" id="L396">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

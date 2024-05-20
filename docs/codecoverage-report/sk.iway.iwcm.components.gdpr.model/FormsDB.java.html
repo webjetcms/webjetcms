@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormsDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr.model</a> &gt; <span class="el_source">FormsDB.java</span></div><h1>FormsDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+public class FormsDB extends JpaDB&lt;FormsBean&gt; implements GdprDB
+{
+    private final Class&lt;FormsBean&gt; clazz;
+    private final List&lt;String&gt; properties;
+<span class="fc" id="L20">    private static FormsDB instance = new FormsDB();</span>
+
+    public FormsDB()
+    {
+<span class="fc" id="L24">        super(FormsBean.class);</span>
+<span class="fc" id="L25">        clazz = FormsBean.class;</span>
+
+<span class="fc" id="L27">        properties = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L28">        properties.add(&quot;formName&quot;);</span>
+<span class="fc" id="L29">        properties.add(&quot;data&quot;);</span>
+<span class="fc" id="L30">        properties.add(&quot;html&quot;);</span>
+<span class="fc" id="L31">    }</span>
+
+    public static FormsDB getInstance()
+    {
+<span class="fc" id="L35">        return instance;</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public List&lt;GdprResult&gt; search(List&lt;GdprRegExpBean&gt; regexps, HttpServletRequest request) {
+<span class="fc" id="L40">        JpaEntityManager jpaEntityManager = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+
+<span class="fc" id="L42">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L43">        sb.append(&quot;SELECT o FROM &quot; + clazz.getSimpleName() + &quot; o WHERE &quot;);</span>
+<span class="fc" id="L44">        sb.append(&quot; o.domainId = :domainId AND (&quot;);</span>
+
+<span class="fc" id="L46">        List&lt;String&gt; or = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (String property : properties) {</span>
+<span class="fc" id="L48">            or.add(&quot;o.&quot; + property + &quot; REGEXP :regexp{index}&quot;);</span>
+<span class="fc" id="L49">        }</span>
+
+
+<span class="fc" id="L52">        int i = 0;</span>
+<span class="fc" id="L53">        List&lt;String&gt; or2 = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (GdprRegExpBean regexp : regexps) {</span>
+<span class="fc" id="L55">            String str = Tools.join(or, &quot; OR &quot;);</span>
+<span class="fc" id="L56">            or2.add(Tools.replace(str, &quot;{index}&quot;, &quot;&quot; + (++i)));</span>
+<span class="fc" id="L57">        }</span>
+<span class="fc" id="L58">        sb.append(Tools.join(or2, &quot; OR &quot;)+&quot;)&quot;);</span>
+
+
+<span class="fc" id="L61">        Query query = jpaEntityManager.createQuery(sb.toString());</span>
+
+<span class="fc" id="L63">        query.setParameter(&quot;domainId&quot;,CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L65">        i = 0;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (GdprRegExpBean regexp : regexps) {</span>
+<span class="fc" id="L67">            query.setParameter(&quot;regexp&quot; + (++i), regexp.getRegexpValue());</span>
+<span class="fc" id="L68">        }</span>
+
+<span class="fc" id="L70">        List&lt;FormsBean&gt; rows = new ArrayList&lt;&gt;();</span>
+        try
+        {
+<span class="fc" id="L73">            rows = JpaDB.getResultList(query);</span>
+        }
+<span class="nc" id="L75">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L77">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L78">        }</span>
+
+<span class="fc" id="L80">        List&lt;GdprResult&gt; results = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        for (FormsBean row : rows) {</span>
+<span class="fc" id="L83">            results.add(new GdprResult(row, regexps, request));</span>
+<span class="fc" id="L84">        }</span>
+
+<span class="fc" id="L86">        return results;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

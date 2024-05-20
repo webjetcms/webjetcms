@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETImageCaptchaEngine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.captcha</a> &gt; <span class="el_source">WebJETImageCaptchaEngine.java</span></div><h1>WebJETImageCaptchaEngine.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.captcha;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.image.ImageFilter;
+import java.util.List;
+
+import com.octo.captcha.component.image.backgroundgenerator.BackgroundGenerator;
+import com.octo.captcha.component.image.backgroundgenerator.EllipseBackgroundGenerator;
+import com.octo.captcha.component.image.backgroundgenerator.FunkyBackgroundGenerator;
+import com.octo.captcha.component.image.backgroundgenerator.MultipleShapeBackgroundGenerator;
+import com.octo.captcha.component.image.backgroundgenerator.UniColorBackgroundGenerator;
+import com.octo.captcha.component.image.color.ColorGenerator;
+import com.octo.captcha.component.image.color.RandomRangeColorGenerator;
+import com.octo.captcha.component.image.color.SingleColorGenerator;
+import com.octo.captcha.component.image.deformation.ImageDeformation;
+import com.octo.captcha.component.image.deformation.ImageDeformationByFilters;
+import com.octo.captcha.component.image.fontgenerator.FontGenerator;
+import com.octo.captcha.component.image.fontgenerator.RandomFontGenerator;
+import com.octo.captcha.component.image.textpaster.DecoratedRandomTextPaster;
+import com.octo.captcha.component.image.textpaster.DoubleRandomTextPaster;
+import com.octo.captcha.component.image.textpaster.DoubleTextPaster;
+import com.octo.captcha.component.image.textpaster.LineRandomTextPaster;
+import com.octo.captcha.component.image.textpaster.NonLinearTextPaster;
+import com.octo.captcha.component.image.textpaster.RandomTextPaster;
+import com.octo.captcha.component.image.textpaster.TextPaster;
+import com.octo.captcha.component.image.textpaster.textdecorator.BaffleTextDecorator;
+import com.octo.captcha.component.image.textpaster.textdecorator.TextDecorator;
+import com.octo.captcha.component.image.wordtoimage.DeformedComposedWordToImage;
+import com.octo.captcha.component.image.wordtoimage.WordToImage;
+import com.octo.captcha.component.word.wordgenerator.WordGenerator;
+import com.octo.captcha.engine.image.ListImageCaptchaEngine;
+import com.octo.captcha.image.gimpy.GimpyFactory;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  WebJETImageCaptchaEngine.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 26.8.2011 16:31:31
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@SuppressWarnings(&quot;deprecation&quot;)
+<span class="nc" id="L50">public class WebJETImageCaptchaEngine extends ListImageCaptchaEngine</span>
+{
+   @Override
+	protected void buildInitialFactories()
+   {
+<span class="nc" id="L55">      WordGenerator wgen = CaptchaWordGeneratorFactory.getWordGenerator();</span>
+<span class="nc" id="L56">      ColorGenerator colorGen=null;</span>
+<span class="nc" id="L57">      boolean isColorSet=false;</span>
+<span class="nc" id="L58">      String fontcolor = Constants.getString(&quot;captchaFontColorRGB&quot;);</span>
+      //skusim setnut farbu pisma na konstantnu, ak by to nevyslo pouzijem povodne pouzivany randomcolorgen
+<span class="nc bnc" id="L60" title="All 4 branches missed.">      if (Tools.isNotEmpty(fontcolor) &amp;&amp; fontcolor.indexOf(&quot;,&quot;)!=-1)</span>
+      {
+    	  try
+    	  {
+<span class="nc" id="L64">    		  int[] rgb = Tools.getTokensInt(fontcolor, &quot;,&quot;);</span>
+<span class="nc" id="L65">    		  Color color = new Color(rgb[0],rgb[1],rgb[2]);</span>
+<span class="nc" id="L66">    		  colorGen = new SingleColorGenerator(color);</span>
+<span class="nc" id="L67">    		  isColorSet=true;</span>
+    	  }
+<span class="nc" id="L69">    	  catch (Exception ex)</span>
+    	  {
+    		  //ak by to zlyhalo
+<span class="nc" id="L72">    		  isColorSet=false;</span>
+<span class="nc" id="L73">    	  }</span>
+      }
+<span class="nc bnc" id="L75" title="All 2 branches missed.">      if (!isColorSet)</span>
+      {
+<span class="nc" id="L77">    	  colorGen =  new RandomRangeColorGenerator( new int[] {0, 100}, new int[] {0, 100}, new int[] {0, 100});</span>
+      }
+
+
+
+<span class="nc" id="L82">      TextPaster textPaster = null;</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">      if (Constants.getBoolean(&quot;captchaDictionaryEnabled&quot;))</span>
+      {
+<span class="nc" id="L86">    	  CaptchaDictionaryDB cddb = new CaptchaDictionaryDB();</span>
+<span class="nc" id="L87">    	  List&lt;CaptchaDictionaryBean&gt; slova = cddb.getAll();</span>
+<span class="nc" id="L88">    	  Integer minLen=Integer.MAX_VALUE;</span>
+<span class="nc" id="L89">    	  Integer maxLen=Integer.MIN_VALUE;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">    	  for (CaptchaDictionaryBean slovo : slova)</span>
+    	  {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">    		  if (slovo.getWord().length()&lt;minLen)</span>
+<span class="nc" id="L93">    			  minLen = Integer.valueOf(slovo.getWord().length());</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">    		  if (slovo.getWord().length()&gt;maxLen)</span>
+<span class="nc" id="L95">    			  maxLen = Integer.valueOf(slovo.getWord().length());</span>
+<span class="nc" id="L96">    	  }</span>
+<span class="nc" id="L97">    	  textPaster = new RandomTextPaster(minLen, maxLen, colorGen, true);</span>
+<span class="nc" id="L98">      }</span>
+      else
+<span class="nc" id="L100">    	  textPaster = new RandomTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true);</span>
+
+<span class="nc" id="L102">      isColorSet=false;</span>
+<span class="nc" id="L103">      BackgroundGenerator backgroundGenerator=null;</span>
+<span class="nc" id="L104">      String background = Constants.getString(&quot;captchaBackgroundColorRGB&quot;);</span>
+      // skusim setnut farbu pozadia na konstantnu, ak by sa to niekde zosypalo, pouzije sa povodne pouzivany funkyback.....
+<span class="nc bnc" id="L106" title="All 4 branches missed.">      if (Tools.isNotEmpty(background) &amp;&amp; background.indexOf(&quot;,&quot;)!=-1)</span>
+      {
+    	  try
+    	  {
+<span class="nc" id="L110">    		  int[] rgb = Tools.getTokensInt(background, &quot;,&quot;);</span>
+<span class="nc" id="L111">    		  Color color = new Color(rgb[0],rgb[1],rgb[2]);</span>
+
+<span class="nc" id="L113">    		  backgroundGenerator = new UniColorBackgroundGenerator(Integer.valueOf(200), Integer.valueOf(60), color);</span>
+<span class="nc" id="L114">    		  isColorSet=true;</span>
+    	  }
+<span class="nc" id="L116">    	  catch (Exception ex)</span>
+    	  {
+    		  //ak by to zlyhalo
+<span class="nc" id="L119">    		  isColorSet=false;</span>
+<span class="nc" id="L120">    	  }</span>
+      }
+<span class="nc bnc" id="L122" title="All 2 branches missed.">      if (!isColorSet)</span>
+      {
+<span class="nc" id="L124">      	String captchaBackgroundMode = Constants.getString(&quot;captchaBackgroundMode&quot;);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">      	if (&quot;multishape&quot;.equals(captchaBackgroundMode))</span>
+      	{
+<span class="nc" id="L127">      		backgroundGenerator = new MultipleShapeBackgroundGenerator(Integer.valueOf(200), Integer.valueOf(60));</span>
+      	}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">      	else if (&quot;elipse&quot;.equals(captchaBackgroundMode))</span>
+      	{
+<span class="nc" id="L131">      		backgroundGenerator = new EllipseBackgroundGenerator(Integer.valueOf(200), Integer.valueOf(60));</span>
+      	}
+      	else
+      	{
+<span class="nc" id="L135">      		backgroundGenerator = new FunkyBackgroundGenerator(Integer.valueOf(200), Integer.valueOf(60), new RandomRangeColorGenerator( new int[] {100, 255}, new int[] {100, 255}, new int[] {100, 255}));</span>
+      	}
+
+
+
+      }
+<span class="nc" id="L141">      Font[] fontsList = new Font[] {</span>
+               new Font(Font.SANS_SERIF, Font.PLAIN, 10),
+               new Font(Font.SERIF, Font.BOLD, 10)
+            };
+
+<span class="nc" id="L146">      FontGenerator fontGenerator = new RandomFontGenerator(Integer.valueOf(20), Integer.valueOf(30), fontsList);</span>
+
+      //WordToImage wordToImage = new ComposedWordToImage(fontGenerator, backgroundGenerator, textPaster);
+<span class="nc" id="L149">      com.jhlabs.image.WaterFilter water = new com.jhlabs.image.WaterFilter();</span>
+
+<span class="nc" id="L151">      water.setAmplitude(3f);</span>
+      //water.setAntialias(true);
+<span class="nc" id="L153">      water.setPhase(20f);</span>
+<span class="nc" id="L154">      water.setWavelength(Float.valueOf(Constants.getInt(&quot;captchaWaveSize&quot;)));</span>
+
+<span class="nc" id="L156">      ImageDeformation backDef = new ImageDeformationByFilters(</span>
+               new ImageFilter[]{}); //water
+<span class="nc" id="L158">       ImageDeformation textDef = new ImageDeformationByFilters(</span>
+               new ImageFilter[]{});
+<span class="nc" id="L160">       ImageDeformation postDef = new ImageDeformationByFilters(</span>
+               new ImageFilter[]{}); //water
+
+       //fontGenerator = new TwistedAndShearedRandomFontGenerator(Integer.valueOf(25), Integer.valueOf(30));
+<span class="nc" id="L164">       String captchaMode = Constants.getString(&quot;captchaMode&quot;);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">       if (&quot;line&quot;.equals(captchaMode))</span>
+       {
+<span class="nc" id="L167">      	 textPaster = new LineRandomTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true, Integer.valueOf(2), colorGen);</span>
+       }
+<span class="nc bnc" id="L169" title="All 2 branches missed.">       else if (&quot;double&quot;.equals(captchaMode))</span>
+       {
+<span class="nc" id="L171">      	 textPaster = new DoubleTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true);</span>
+       }
+<span class="nc bnc" id="L173" title="All 2 branches missed.">       else if (&quot;doubleRandom&quot;.equals(captchaMode))</span>
+       {
+<span class="nc" id="L175">      	 textPaster = new DoubleRandomTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true);</span>
+       }
+<span class="nc bnc" id="L177" title="All 2 branches missed.">       else if (&quot;decorated&quot;.equals(captchaMode))</span>
+       {
+<span class="nc" id="L179">      	 textPaster = new DecoratedRandomTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true, new TextDecorator[]{new BaffleTextDecorator(Integer.valueOf(3), colorGen)});</span>
+       }
+<span class="nc bnc" id="L181" title="All 2 branches missed.">       else if (&quot;baffle&quot;.equals(captchaMode))</span>
+       {
+      	 //textPaster = new BaffleRandomTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true, 3, colorGen);
+       }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">       else if (&quot;nonlinear&quot;.equals(captchaMode))</span>
+       {
+<span class="nc" id="L187">      	 textPaster = new NonLinearTextPaster(Integer.valueOf(Constants.getInt(&quot;captchaMinLength&quot;)), Integer.valueOf(Constants.getInt(&quot;captchaMaxLength&quot;)), colorGen, true);</span>
+       }
+
+
+<span class="nc" id="L191">      WordToImage wordToImage = new DeformedComposedWordToImage(fontGenerator, backgroundGenerator, textPaster,</span>
+               backDef,
+               textDef,
+               postDef);
+
+<span class="nc" id="L196">      this.addFactory(new GimpyFactory(wgen, wordToImage));</span>
+<span class="nc" id="L197">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

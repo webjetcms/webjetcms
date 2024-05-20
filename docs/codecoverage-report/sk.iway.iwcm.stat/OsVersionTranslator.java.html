@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OsVersionTranslator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">OsVersionTranslator.java</span></div><h1>OsVersionTranslator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+
+import java.util.Map;
+
+import sk.iway.iwcm.utils.MapUtils;
+
+/**
+ *  OsVersionTranslator.java
+ *  
+ *  Translates cryptic OS names and version into
+ *  human readable format
+ *  
+ *  All OS X isntances are mapped to &quot;Macintosh&quot;
+ *  All Linux / Solaris instances are mapped to &quot;Unix&quot;
+ *  Windows versions are translated into their respective names
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 12.5.2011 16:54:26
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+class OsVersionTranslator
+{
+	private final Product os;
+<span class="fc" id="L30">	private static final Map&lt;String, String&gt; windowsVersions = MapUtils.asMap(</span>
+			&quot;10.0&quot;,&quot;10&quot;,
+				&quot;6.3&quot;, &quot;8&quot;,
+				&quot;6.2&quot;, &quot;8&quot;,
+				&quot;6.1&quot;, &quot;7&quot;,
+				&quot;6.0&quot;, &quot;Vista&quot;,
+				&quot;5.2&quot;, &quot;XP x64 Edition&quot;,
+				&quot;5.1&quot;, &quot;XP&quot;,
+				&quot;5.01&quot;,&quot;2000&quot;,
+				&quot;5.0&quot;, &quot;2000&quot;,
+				&quot;4.90&quot;, &quot;Millenium&quot;
+	);
+	
+<span class="fc" id="L43">	private static final Map&lt;String, String&gt; macVersions = MapUtils.asMap(</span>
+
+				&quot;10.15&quot;,&quot;Catalina&quot;,
+				&quot;10.14&quot;,&quot;Mojave&quot;,
+				&quot;10.13&quot;,&quot;High Sierra&quot;,
+				&quot;10.12&quot;,&quot;Sierra&quot;,
+				&quot;10.11&quot;,&quot;El Capitan&quot;,
+				&quot;10.10&quot;,&quot;Yosemite&quot;,
+				&quot;10.9&quot;,&quot;Mavericks&quot;,
+				&quot;10.8&quot;,&quot;Mountain Lion&quot;,
+				&quot;10.7&quot;, &quot;Lion&quot;,
+				&quot;10.6&quot;, &quot;Snow Leopard&quot;,
+				&quot;10.5&quot;, &quot;Leopard&quot;,
+				&quot;10.4&quot;, &quot;Tiger&quot;
+			);
+
+	public OsVersionTranslator(Product os)
+<span class="fc" id="L60">	{</span>
+<span class="fc" id="L61">		this.os = os;</span>
+<span class="fc" id="L62">	}</span>
+
+	public String getVersion()
+	{
+<span class="fc" id="L66">		String name = getOsName();</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">		if (name.contains(&quot;unknown&quot;))</span>
+<span class="nc" id="L68">			return &quot;&quot;;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">		if (name.equals(&quot;macOS&quot;))</span>
+<span class="fc" id="L70">			return translateMacVersion(os.version);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">		if (name.equals(&quot;Windows&quot;))</span>
+<span class="fc" id="L72">			return translateMicrosoftVersion(os.version);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (name.equals(&quot;Unix&quot;))</span>
+<span class="nc" id="L74">			return os.name;</span>
+<span class="nc" id="L75">		return &quot;&quot;;	</span>
+	}
+	
+	private String translateMacVersion(String version)
+	{
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (isEmpty(version))</span>
+<span class="nc" id="L81">			return &quot;&quot;;</span>
+		//replace all non numbers by dots 
+<span class="fc" id="L83">		version = version.trim().replaceAll(&quot;[^0-9]&quot;, &quot;.&quot;);</span>
+<span class="fc" id="L84">		String[] versionParts = version.split(&quot;[.]+&quot;);</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (versionParts.length &lt; 2)</span>
+<span class="nc" id="L86">			return &quot;&quot;;</span>
+		
+<span class="fc" id="L88">		String dottedVersion = versionParts[0]+'.'+versionParts[1];</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if (macVersions.containsKey(dottedVersion))</span>
+<span class="fc" id="L90">			return macVersions.get(dottedVersion);</span>
+<span class="nc" id="L91">		return dottedVersion.trim();</span>
+	}
+
+	public String translateMicrosoftVersion(String version){
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">		if (isEmpty(version))</span>
+<span class="nc" id="L96">			return &quot;&quot;;</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">		if (windowsVersions.containsKey(version.trim()))</span>
+<span class="fc" id="L98">			return windowsVersions.get(version.trim());</span>
+<span class="nc" id="L99">		return version.trim();</span>
+	}
+
+	public String getOsName()
+	{
+<span class="fc" id="L104">		String lowCaseName = os.name.toLowerCase();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">		if (lowCaseName.contains(&quot;unknown&quot;))</span>
+<span class="fc" id="L106">			return &quot;unknown&quot;;</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		if (lowCaseName.contains(&quot;mac&quot;))</span>
+<span class="fc" id="L108">			return &quot;macOS&quot;;</span>
+<span class="pc bpc" id="L109" title="1 of 4 branches missed.">		if (lowCaseName.contains(&quot;windows nt&quot;) || lowCaseName.contains(&quot;win&quot;))</span>
+<span class="fc" id="L110">			return &quot;Windows&quot;;</span>
+<span class="fc" id="L111">		return &quot;Unix&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

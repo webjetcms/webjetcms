@@ -3,6 +3,7 @@
 - [:point_left: Späť na Úvod](/?back)
 
 - Konfigurácia
+  - [Konfigurácia](/admin/setup/configuration/README.md)
   - [Jazyky](/admin/setup/languages.md)
   - [Prekladač](/admin/setup/translation.md)
 

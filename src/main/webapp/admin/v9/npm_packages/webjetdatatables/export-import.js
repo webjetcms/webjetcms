@@ -413,7 +413,7 @@ export function bindImportButton(TABLE, DATA) {
 
         $('#submit-import').prop('disabled', true);
         $("#import-status").html("0%");
-        $('#submit-import i').attr("class", "fas fa-sync fa-spin");
+        $('#submit-import i').attr("class", "ti ti-refresh ti-spin");
 
         function sendAjax() {
             var fixedUrl = url;
@@ -484,7 +484,7 @@ export function bindImportButton(TABLE, DATA) {
                         }
 
                         $("#datatableImportModal div.DTE_Form_Error").html(errorMessage);
-                        $('#submit-import i').attr("class", "fal fa-check");
+                        $('#submit-import i').attr("class", "ti ti-check");
 
                         throw new Error(response.error);
                     }
@@ -502,7 +502,7 @@ export function bindImportButton(TABLE, DATA) {
                         $('#datatableImportModal').modal('hide');
                         //console.log("Reloading datatable");
                         TABLE.ajax.reload();
-                        $('#submit-import i').attr("class", "fal fa-check");
+                        $('#submit-import i').attr("class", "ti ti-check");
                     }
                     //console.log("Reseting countedData");
                     countedData = new Array();
@@ -591,7 +591,7 @@ export function bindImportButton(TABLE, DATA) {
         $('#insert-file-name').val('');
         $('#insert-file').val('');
         $("#import-status").html("");
-        $('#submit-import i').attr("class", "fal fa-check");
+        $('#submit-import i').attr("class", "ti ti-check");
 
         if (importModalListenersBinded == false) {
             $('#dt-settings-new-data').on('change', () => {
@@ -636,7 +636,7 @@ export function bindImportButton(TABLE, DATA) {
                 };
                 fileReader.readAsBinaryString(selectedFile);
                 $('#submit-import').prop('disabled', false);
-                $('#submit-import i').attr("class", "fal fa-check");
+                $('#submit-import i').attr("class", "ti ti-check");
             });
 
             $( document ).on('file-reader-done', () => {

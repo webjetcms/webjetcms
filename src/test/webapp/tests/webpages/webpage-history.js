@@ -101,7 +101,7 @@ function contentTab(I) {
 // Kontrola tabu Zakladne
 function basicTab(I) {
      I.say('Skontroluj zalozku Zakladne');
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.dontSeeCheckboxIsChecked('#DTE_Field_available_0');
      I.dontSeeCheckboxIsChecked('#DTE_Field_searchable_0');
      I.seeInField('#DTE_Field_editorFields-redactorNote', 'webpages history autotest'); // poznamka redaktora tu ostala z najnovsej verzie (neuklada sa historicky)
@@ -132,9 +132,9 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
 
      // Pridanie textu do obsahu a ulozenie udajov
      I.say('Pridanie textu do obsahu a ulozenie udajov');
-     I.click('#pills-dt-datatableInit-content-tab');
+     I.clickCss('#pills-dt-datatableInit-content-tab');
      I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      I.pressKey('Enter');
      I.type('<h1>Testujem historiu webstranky</h1>');
      DTE.save();
@@ -144,14 +144,14 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // Kontrola ulozenia udajov v zalozke Zakladne
      I.say('Zalozka Zakladne');
      I.checkEditedWebPage(randomNumber);
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.seeCheckboxIsChecked('#DTE_Field_available_0');
      I.seeCheckboxIsChecked('#DTE_Field_searchable_0');
      I.seeInField('#DTE_Field_editorFields-redactorNote', 'webpages history autotest');
 
      // Kontrola v zalozke Obsah
      I.say('Zalozka Obsah');
-     I.click('#pills-dt-datatableInit-content-tab');
+     I.clickCss('#pills-dt-datatableInit-content-tab');
      I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
      I.switchTo('.cke_wysiwyg_frame.cke_reset');
      I.seeElement(locate('#WebJETEditorBody').withDescendant('p').withText('<h1>Testujem historiu webstranky</h1>'));
@@ -160,8 +160,8 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // ----------------------------------- 3. KONTROLA HISTORIE --------------------------------------------------------------------------------------
      // 1.KONTROLA HISTORIE NA ZALOZKE HISTORIA
      I.say('3.Kontrola historie na zalozke Historia');
-     I.click('.toast-close-button');
-     I.click('#pills-dt-datatableInit-history-tab');
+     I.toastrClose();
+     I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
      I.waitForVisible('#datatableFieldDTE_Field_editorFields-history_wrapper');
 
      // V tabulke vidim 2 zaznamy s dnesnym datumom
@@ -265,14 +265,14 @@ Scenario('history from multigroup mapping', ({ I, DT, DTE }) => {
      I.see("Druhy odstavec");
 
      I.switchTo();
-     I.click("#pills-dt-datatableInit-history-tab");
+     I.clickCss("#pills-dt-datatableInit-history-tab");
      DT.waitForLoader("#datatableFieldDTE_Field_editorFields-history_processing");
      I.fillField("#datatableFieldDTE_Field_editorFields-history_wrapper input.filter-input-id", "687");
-     I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.dt-filtrujem-id");
+     I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.dt-filtrujem-id");
      DT.waitForLoader("#datatableFieldDTE_Field_editorFields-history_processing");
 
-     I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all");
-     I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-history-edit");
+     I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all");
+     I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-history-edit");
 
      I.waitForElement("#pills-dt-datatableInit-content-tab.nav-link.active", 20);
      I.switchTo(".cke_wysiwyg_frame");

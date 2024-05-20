@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocMirroringServiceV9.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.structuremirroring</a> &gt; <span class="el_source">DocMirroringServiceV9.java</span></div><h1>DocMirroringServiceV9.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.structuremirroring;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.system.translation.TranslationService;
+
+/**
+ * Zabezpecuje zrkadlenie web stranky podla sync_id v databaze
+ * EUSTREAMNW-84
+ */
+<span class="fc" id="L30">public class DocMirroringServiceV9 {</span>
+
+   public void handleDocSave(DocDetails doc, WebjetEventType type) {
+
+<span class="fc bfc" id="L34" title="All 2 branches covered.">      if (MirroringService.isEnabled(doc.getGroupId())==false) return;</span>
+
+<span class="fc" id="L36">      Logger.debug(DocMirroringServiceV9.class, &quot;handleDocSave DOC type=&quot; + type + &quot;, doc=&quot; + doc + &quot; thread=&quot;+Thread.currentThread().getName());</span>
+
+<span class="fc" id="L38">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L39">      DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L40">      Prop prop = Prop.getInstance();</span>
+<span class="pc bpc" id="L41" title="2 of 4 branches missed.">      if (&quot;Nový podadresár&quot;.equals(doc.getTitle()) || prop.getText(&quot;editor.dir.new_dir&quot;).equals(doc.getTitle())) return;</span>
+
+      //editor form nema nastavene syncId, takze musime nastavit podla existujucej stranky v DB
+<span class="fc bfc" id="L44" title="All 2 branches covered.">      if (doc.getDocId()&gt;0) {</span>
+<span class="fc" id="L45">         doc.setSyncId(getSyncId(doc.getDocId()));</span>
+      }
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">      if (type == WebjetEventType.ON_START) {</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">         if (doc.getSyncId()&lt;1) {</span>
+            //jedna sa o novy adresar, vygenerujeme mu syncId
+<span class="fc" id="L51">            doc.setSyncId(PkeyGenerator.getNextValue(&quot;structuremirroring&quot;));</span>
+         }
+<span class="fc bfc" id="L53" title="All 2 branches covered.">      } else if (type == WebjetEventType.AFTER_SAVE) {</span>
+
+<span class="fc" id="L55">         int autoTranslatorUserId = getAutoTranslatorUserId();</span>
+
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">         if (doc.getSyncId()&gt;1) {</span>
+            //najdi k tomu mirror verziu
+<span class="fc" id="L59">            List&lt;DocDetails&gt; syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());</span>
+<span class="fc" id="L60">            List&lt;GroupDetails&gt; mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());</span>
+<span class="fc" id="L61">            List&lt;GroupDetails&gt; mappedGroupsListNotExisting = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (mappedGroupsList.size()&gt;syncedDocs.size()) {</span>
+               //there is new mapping group created in allready synced groups, we must create missing one
+<span class="fc bfc" id="L65" title="All 2 branches covered.">               for (GroupDetails mappedGroup : mappedGroupsList) {</span>
+<span class="fc" id="L66">                  boolean containGroup = false;</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">                  for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                     if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {</span>
+                        //ok, this group is allready synced
+<span class="nc" id="L70">                        containGroup = true;</span>
+<span class="nc" id="L71">                        break;</span>
+                     }
+<span class="nc" id="L73">                  }</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);</span>
+<span class="fc" id="L75">               }</span>
+<span class="fc" id="L76">               mappedGroupsList = mappedGroupsListNotExisting;</span>
+            }
+
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">            if (syncedDocs.isEmpty() || mappedGroupsListNotExisting.isEmpty()==false) {</span>
+               //este neexistuje mirror doc, musime vytvorit novy (kopiu)
+               //este neexistuje, musime vytvorit novu grupu (kopiu)
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">               if (MirroringService.isEnabled(doc.getGroupId())==false) return;</span>
+
+<span class="fc" id="L85">               GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+               //vytvor kopie adresara v ostatnych mapovanych adresaroch
+
+<span class="fc" id="L88">               TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), null);</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">               for (GroupDetails mappedGroup : mappedGroupsList) {</span>
+<span class="fc" id="L91">                  translator.setToLanguage(GroupMirroringServiceV9.getLanguage(mappedGroup));</span>
+<span class="fc" id="L92">                  String translatedTitle = translator.translate(doc.getTitle());</span>
+
+<span class="fc" id="L94">                  DocDetails existing = docDB.getDocByTitle(translatedTitle, mappedGroup.getGroupId());</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                  if (existing != null) {</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                     if (existing.getSyncId()==doc.getSyncId()) {</span>
+                        //uz existuje, takze toto je len mirror
+<span class="nc" id="L98">                        continue;</span>
+                     }
+                     //uz existuje, nema nastavene syncId, takze ho nastavime
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                     if (existing.getSyncId()&lt;1) {</span>
+<span class="nc" id="L102">                        existing.setSyncId(doc.getSyncId());</span>
+<span class="nc" id="L103">                        existing.setSortPriority(doc.getSortPriority());</span>
+<span class="nc" id="L104">                        DocDB.saveDoc(existing, false);</span>
+<span class="nc" id="L105">                        continue;</span>
+                     }
+                  }
+
+<span class="fc" id="L109">                  DocDetails mirror = new DocDetails();</span>
+<span class="fc" id="L110">                  NullAwareBeanUtils.copyProperties(doc, mirror);</span>
+<span class="fc" id="L111">                  mirror.setDocId(-1);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                  if (Constants.getBoolean(&quot;structureMirroringDisabledOnCreate&quot;)) mirror.setAvailable(false);</span>
+<span class="fc" id="L113">                  mirror.setGroupId(mappedGroup.getGroupId());</span>
+<span class="fc" id="L114">                  mirror.setSyncId(doc.getSyncId());</span>
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                  if (autoTranslatorUserId &gt; 0) mirror.setAuthorId(autoTranslatorUserId);</span>
+
+<span class="fc" id="L118">                  tranlateDoc(doc, mirror, translator);</span>
+
+                  //Save created mirror DOC
+<span class="fc" id="L121">                  DocDB.saveDoc(mirror, false);</span>
+
+                  //nastav hlavnu stranku adresara
+<span class="fc bfc" id="L124" title="All 2 branches covered.">                  if (mappedGroup.getDefaultDocId()&lt;1) {</span>
+<span class="fc" id="L125">                     GroupDetails groupToSave = groupsDB.getGroup(mappedGroup.getGroupId());</span>
+<span class="fc" id="L126">                     groupToSave.setDefaultDocId(mirror.getDocId());</span>
+<span class="fc" id="L127">                     groupsDB.setGroup(groupToSave, false);</span>
+                  }
+<span class="fc" id="L129">                  MirroringService.forceReloadTree();</span>
+<span class="fc" id="L130">               }</span>
+            }
+
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (syncedDocs.size()&gt;0) {</span>
+               //uz existuje, skontroluj ostatne kopie ci sa nepresunuli a podobne
+
+               //overenie zmeny parent adresara
+<span class="fc" id="L137">               GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">               if (group != null) {</span>
+<span class="fc" id="L139">                  List&lt;GroupDetails&gt; syncedGroups = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());</span>
+                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                  for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="fc" id="L142">                     GroupDetails syncedGroup = groupsDB.getGroup(syncedDoc.getGroupId());</span>
+<span class="fc" id="L143">                     GroupDetails syncedCorrectGroup = MirroringService.selectMappedGroup(syncedGroup, syncedGroups);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                     if (syncedCorrectGroup != null) {</span>
+                        //porovnaj IDecko voci aktualnemu parentu
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                        if (syncedGroup.getGroupId()!=syncedCorrectGroup.getGroupId()) {</span>
+<span class="nc" id="L147">                           Logger.debug(DocMirroringServiceV9.class, &quot;NESEDI PARENT GROUP, syncedGroup=&quot;+syncedGroup.toString()+&quot; syncedCorrectGroup=&quot;+syncedCorrectGroup.toString());</span>
+                           //presun web stranku do spravneho adresara
+<span class="nc" id="L149">                           DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());</span>
+<span class="nc" id="L150">                           docToSave.setGroupId(syncedCorrectGroup.getGroupId());</span>
+<span class="nc" id="L151">                           docToSave.setAuthorId(doc.getAuthorId());</span>
+<span class="nc" id="L152">                           DocDB.saveDoc(docToSave, false);</span>
+<span class="nc" id="L153">                           MirroringService.forceReloadTree();</span>
+                        }
+                     }
+<span class="fc" id="L156">                  }</span>
+               }
+
+               //overenie sort priority
+<span class="fc bfc" id="L160" title="All 2 branches covered.">               for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                  if (syncedDoc.getSortPriority()!=doc.getSortPriority()) {</span>
+<span class="fc" id="L162">                     Logger.debug(DocMirroringServiceV9.class, &quot;NESEDI SORT PRIORITY, syncedDoc=&quot;+syncedDoc.getTitle()+&quot; &quot;+syncedDoc.getDocId()+&quot; sort=&quot;+syncedDoc.getSortPriority()+&quot; doc=&quot;+doc.getTitle()+&quot; &quot;+doc.getDocId()+&quot; sort=&quot;+doc.getSortPriority());</span>
+<span class="fc" id="L163">                     DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());</span>
+<span class="fc" id="L164">                     docToSave.setSortPriority(doc.getSortPriority());</span>
+<span class="fc" id="L165">                     docToSave.setAuthorId(doc.getAuthorId());</span>
+<span class="fc" id="L166">                     DocDB.saveDoc(docToSave, false);</span>
+<span class="fc" id="L167">                     MirroringService.forceReloadTree();</span>
+                  }
+<span class="fc" id="L169">               }</span>
+
+               //Set same, but translated data text to syncedDoc's
+<span class="fc bfc" id="L172" title="All 2 branches covered.">               for (DocDetails syncedDoc : syncedDocs) {</span>
+                  //Indicate if we will translate body (data) of doc
+<span class="fc" id="L174">                  boolean doTranslate = false;</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                  if(autoTranslatorUserId &gt; 0) { //auto translator exist in DB</span>
+                     //Check that he is the one who made the change (do autoTranslate)
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                     if(autoTranslatorUserId == syncedDoc.getAuthorId())</span>
+<span class="fc" id="L179">                        doTranslate = true;</span>
+                  } else { //auto translator DOES NOT exist in DB
+                     //Decide by available status, doTranslate only if available = false
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                     doTranslate = !syncedDoc.isAvailable();</span>
+                  }
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                  if(doTranslate) {</span>
+                     //Get mapped group of syncedDoc
+<span class="fc" id="L187">                     GroupDetails mappedGroup = groupsDB.getGroup(syncedDoc.getGroupId());</span>
+                     //Translate data of changed doc
+
+<span class="fc" id="L190">                     TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), GroupMirroringServiceV9.getLanguage(mappedGroup));</span>
+
+<span class="fc" id="L192">                     DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">                     if (autoTranslatorUserId&gt;0) docToSave.setAuthorId(autoTranslatorUserId);</span>
+<span class="fc" id="L194">                     tranlateDoc(doc, docToSave, translator);</span>
+<span class="fc" id="L195">                     DocDB.saveDoc(docToSave, false);</span>
+<span class="fc" id="L196">                     MirroringService.forceReloadTree();</span>
+
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                     if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;))</span>
+                     {
+<span class="fc" id="L200">                        DocDB.changeGroupTitle(docToSave.getGroupId(), docToSave.getDocId(), docToSave.getTitle(), true);</span>
+                     }
+                  }
+<span class="fc" id="L203">               }</span>
+            }
+         }
+<span class="fc bfc" id="L206" title="All 2 branches covered.">      } else if (type == WebjetEventType.ON_DELETE) {</span>
+         //musi byt ON_DELETE, pretoze AFTER je uz v kosi
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">         if (doc.getSyncId()&gt;1) {</span>
+            //najdi k tomu mirror verzie
+<span class="fc" id="L210">            List&lt;DocDetails&gt; syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="fc" id="L212">               Logger.debug(DocMirroringServiceV9.class, &quot;MAZEM, syncedDoc=&quot;+syncedDoc.getTitle()+&quot; &quot;+syncedDoc.getDocId()+&quot; doc=&quot;+doc.getTitle()+&quot; &quot;+doc.getDocId());</span>
+
+<span class="fc" id="L214">               EditorService editorService = Tools.getSpringBean(&quot;editorService&quot;, EditorService.class);</span>
+<span class="fc" id="L215">               editorService.deleteWebpage(syncedDoc, false);</span>
+
+               //DeleteServlet.deleteDoc(null, syncedDoc.getDocId(), false);
+<span class="fc" id="L218">               MirroringService.forceReloadTree();</span>
+<span class="fc" id="L219">            }</span>
+         }
+      }
+<span class="fc" id="L222">   }</span>
+
+   /**
+    * Translate doc fields like title, navbar, data
+    * @param source - source doc (translated from)
+    * @param doc - target doc
+    * @param translator
+    */
+   private static void tranlateDoc(DocDetails source, DocDetails doc, TranslationService translator) {
+
+<span class="fc" id="L232">      doc.setTitle(translator.translate(source.getTitle()));</span>
+
+<span class="fc" id="L234">      doc.setNavbar(translator.translate(source.getNavbar()));</span>
+
+      //regenerate URL based on title
+<span class="fc" id="L237">      doc.setVirtualPath(&quot;&quot;);</span>
+
+<span class="fc" id="L239">      doc.setData(translator.translate(source.getData()));</span>
+<span class="fc" id="L240">   }</span>
+
+   /**
+    * Gets the userId for autotranslations (login defined in confing structureMirroringAutoTranslatorLogin)
+    * @return
+    */
+   private static int getAutoTranslatorUserId() {
+      //Id of auto translator user
+<span class="fc" id="L248">      int autoTranslatorId = -1;</span>
+
+      //Check that there is a login set up for the autoTranslator user
+<span class="fc bfc" id="L251" title="All 2 branches covered.">      if(Tools.isNotEmpty( Constants.getString(&quot;structureMirroringAutoTranslatorLogin&quot;) )) {</span>
+         try {
+<span class="fc" id="L253">            autoTranslatorId = (new SimpleQuery()).forInt(&quot;SELECT user_id FROM users WHERE login=?&quot;, Constants.getString(&quot;structureMirroringAutoTranslatorLogin&quot;));</span>
+<span class="nc" id="L254">         } catch(IllegalStateException ex) {</span>
+            //User does not exist in DB
+<span class="fc" id="L256">         }</span>
+      }
+
+<span class="fc" id="L259">      return autoTranslatorId;</span>
+   }
+
+   /**
+    * Ziska zoznam DocDetails podla zadaneho syncId
+    * @param syncId
+    * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
+    * @return
+    */
+   public static List&lt;DocDetails&gt; getDocBySyncId(int syncId, int skipDocId)
+	{
+<span class="fc" id="L270">      StringBuilder sql = new StringBuilder();</span>
+<span class="fc" id="L271">      sql.append(&quot;SELECT &quot;).append(DocDB.getDocumentFields()).append(&quot; FROM documents d WHERE d.sync_id=?&quot;);</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">      if (skipDocId&gt;0) sql.append(&quot; AND d.doc_id!=? &quot;);</span>
+<span class="fc" id="L273">      sql.append(&quot; ORDER BY d.doc_id ASC&quot;);</span>
+
+<span class="fc" id="L275">      ComplexQuery cq = new ComplexQuery();</span>
+<span class="fc" id="L276">      cq.setSql(sql.toString());</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">      if (skipDocId&gt;0) cq.setParams(syncId, skipDocId);</span>
+<span class="nc" id="L278">      else cq.setParams(syncId);</span>
+
+<span class="fc" id="L280">		List&lt;DocDetails&gt; docs = cq.list(new Mapper&lt;DocDetails&gt;()</span>
+<span class="fc" id="L281">		{</span>
+			public DocDetails map(ResultSet rs) throws SQLException
+			{
+            try {
+<span class="fc" id="L285">				   return DocDB.getDocDetails(rs, true, true);</span>
+<span class="nc" id="L286">            } catch (Exception ex) {</span>
+<span class="nc" id="L287">               Logger.error(DocMirroringServiceV9.class, ex);</span>
+            }
+<span class="nc" id="L289">            return null;</span>
+			}
+
+		});
+
+<span class="fc" id="L294">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+      //filter groups which is not synced anymore
+<span class="fc" id="L297">      List&lt;DocDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">      for (DocDetails doc : docs) {</span>
+<span class="fc" id="L299">         List&lt;GroupDetails&gt; parents = groupsDB.getParentGroups(doc.getGroupId(), true);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">         for (GroupDetails parent : parents) {</span>
+<span class="fc" id="L301">            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">            if (rootIds != null) {</span>
+<span class="fc" id="L303">               filtered.add(doc);</span>
+<span class="fc" id="L304">               break;</span>
+            }
+<span class="fc" id="L306">         }</span>
+<span class="fc" id="L307">      }</span>
+
+<span class="fc" id="L309">      return filtered;</span>
+	}
+
+   public static int getSyncId(int docId) {
+<span class="fc" id="L313">      int syncId = new SimpleQuery().forInt(&quot;SELECT sync_id FROM documents WHERE doc_id=?&quot;, docId);</span>
+<span class="fc" id="L314">      return syncId;</span>
+   }
+
+   /**
+    * Vrati list inych jazykov ako je aktualne zadana stranka pre zobrazenie prepinaca jazykov
+    * - ak je stranka v inom jazyky dostupna vrati jej URL
+    * - ak nie je vrati URL homepage ineho jazyka (linka na hlavnu stranku hlavneho adresara daneho jazyka)
+    * @param currentDoc
+    * @return
+    */
+   public static List&lt;LabelValueDetails&gt; getOtherLanguages(DocDetails currentDoc) {
+<span class="nc" id="L325">      List&lt;LabelValueDetails&gt; languages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">      if (currentDoc == null) return languages;</span>
+
+<span class="nc" id="L328">      List&lt;DocDetails&gt; syncedDocs = getDocBySyncId(currentDoc.getSyncId(), 0);</span>
+<span class="nc" id="L329">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L330">      DocDB docDB = DocDB.getInstance();</span>
+
+      //najdi root adresar nastavenej konfiguracie pre currentDoc
+      //je to taky, ktoreho parent uz nema nastavene syncId
+<span class="nc" id="L334">      List&lt;GroupDetails&gt; parentDirs = groupsDB.getParentGroups(currentDoc.getGroupId(), true);</span>
+<span class="nc" id="L335">      GroupDetails mirroringRootGroup = null;</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">      for (GroupDetails parent : parentDirs) {</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">         if (parent.getSyncId()&gt;0) mirroringRootGroup = parent;</span>
+<span class="nc" id="L338">      }</span>
+
+      //root sa nenasiel, asi sme v inom ako zrkadlenom adresari
+<span class="nc bnc" id="L341" title="All 2 branches missed.">      if (mirroringRootGroup==null) return languages;</span>
+
+      //vygeneruj zoznam prepinaca jazykov podla ROOT adresarov,
+      //ak existuje v syncedDocs stranka pre dany adresar, tak sprav odkaz na nu
+      //ak neexistuje (je vypnuta) tak sprav odkaz na hlavnu stranku z daneho root adresara
+<span class="nc" id="L346">      int rootIds[] = MirroringService.getRootIds(mirroringRootGroup.getGroupId());</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">      for (int rootId : rootIds) {</span>
+<span class="nc" id="L348">         GroupDetails group = groupsDB.getGroup(rootId);</span>
+
+<span class="nc bnc" id="L350" title="All 2 branches missed.">         if (group != null) {</span>
+<span class="nc" id="L351">            LabelValueDetails link = new LabelValueDetails();</span>
+<span class="nc" id="L352">            link.setLabel(group.getNavbarName());</span>
+
+<span class="nc" id="L354">            DocDetails groupDefaultDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+<span class="nc bnc" id="L355" title="All 4 branches missed.">            if (groupDefaultDoc==null || groupDefaultDoc.isAvailable()==false) continue;</span>
+<span class="nc" id="L356">            link.setValue(docDB.getDocLink(groupDefaultDoc.getDocId(), groupDefaultDoc.getExternalLink(), null));</span>
+
+            //skus overit, ci mame linku na stranku v tomto adresari namiesto odkazu na root stranku
+<span class="nc bnc" id="L359" title="All 2 branches missed.">            for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">               if (syncedDoc.isAvailable()==false) continue;</span>
+<span class="nc" id="L361">               GroupDetails syncedDocGroup = groupsDB.getGroup(syncedDoc.getGroupId());</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">               if (syncedDocGroup != null) {</span>
+                  //ak zacina cesta syncedGroup na cestu aktualneho adresara je to spravna vetva
+<span class="nc bnc" id="L364" title="All 2 branches missed.">                  if (syncedDocGroup.getFullPath().startsWith(group.getFullPath())) {</span>
+<span class="nc" id="L365">                     link.setValue(docDB.getDocLink(syncedDoc.getDocId(), syncedDoc.getExternalLink(), null));</span>
+                  }
+               }
+<span class="nc" id="L368">            }</span>
+
+<span class="nc" id="L370">            languages.add(link);</span>
+         }
+      }
+
+<span class="nc" id="L374">      return languages;</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

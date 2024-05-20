@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminUploadServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.upload</a> &gt; <span class="el_source">AdminUploadServlet.java</span></div><h1>AdminUploadServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.upload;
+
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
+import javax.imageio.stream.ImageOutputStream;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+
+import org.apache.commons.lang.RandomStringUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.system.stripes.MultipartWrapper;
+import sk.iway.iwcm.users.UsersDB;
+
+@WebServlet(&quot;/admin/upload/chunk&quot;)
+@MultipartConfig
+<span class="fc" id="L49">public class AdminUploadServlet extends HttpServlet</span>
+{
+	private static final long serialVersionUID = 1L;
+<span class="fc" id="L52">	private static final Map&lt;String,PathHolder&gt; temporary = new ConcurrentHashMap&lt;&gt;();</span>
+
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+	{
+<span class="fc" id="L57">        String name = request.getParameter(&quot;name&quot;);</span>
+<span class="fc" id="L58">        String destinationFolder = request.getParameter(&quot;destinationFolder&quot;);</span>
+<span class="pc bpc" id="L59" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(destinationFolder) &amp;&amp; destinationFolder.endsWith(&quot;/&quot;)==false) destinationFolder = destinationFolder + &quot;/&quot;;</span>
+<span class="fc" id="L60">        boolean writeDirectlyToDestination = &quot;true&quot;.equals(request.getParameter(&quot;writeDirectlyToDestination&quot;));</span>
+<span class="fc" id="L61">        String overwriteMode = request.getParameter(&quot;overwriteMode&quot;);</span>
+<span class="fc" id="L62">        boolean isBase64 = &quot;base64&quot;.equals(request.getParameter(&quot;encoding&quot;));</span>
+
+<span class="fc" id="L64">        JSONObject output = new JSONObject();</span>
+
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (name == null) {</span>
+			//dropzone.js kompatibilita
+<span class="nc" id="L68">			Part filePart = request.getPart(&quot;file&quot;);</span>
+<span class="nc" id="L69">			name = filePart.getSubmittedFileName();</span>
+        }
+
+<span class="pc bpc" id="L72" title="5 of 8 branches missed.">        if (destinationFolder!=null &amp;&amp; (destinationFolder.startsWith(&quot;/files&quot;) || destinationFolder.startsWith(&quot;/images&quot;) || destinationFolder.startsWith(&quot;/shared&quot;))) {</span>
+<span class="fc" id="L73">            name = DB.internationalToEnglish(name);</span>
+<span class="fc" id="L74">            name = DocTools.removeCharsDir(name, true).toLowerCase();</span>
+        }
+
+<span class="fc" id="L77">		Logger.debug(AdminUploadServlet.class, &quot;doPost, name=&quot;+name);</span>
+
+<span class="fc" id="L79">        Identity user = UsersDB.getCurrentUser(request);</span>
+
+<span class="fc" id="L81">        long fileSize = Tools.getLongValue(request.getHeader(&quot;Content-Length&quot;), Long.MAX_VALUE);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (request.getParameter(&quot;dztotalfilesize&quot;)!=null) fileSize = Tools.getLongValue(request.getParameter(&quot;dztotalfilesize&quot;), fileSize);</span>
+
+<span class="fc" id="L84">        String uploadType = Tools.getStringValue(request.getParameter(&quot;uploadType&quot;), &quot;&quot;); //typ uploadu (image/file)</span>
+<span class="fc" id="L85">        String extension = FileTools.getFileExtension(name);</span>
+
+<span class="fc" id="L87">        String errorKey = null;</span>
+<span class="pc bpc" id="L88" title="2 of 4 branches missed.">        if (user == null || user.isAdmin()==false) {</span>
+<span class="nc" id="L89">            errorKey = &quot;admin.logon.timeoutTitle&quot;;</span>
+        }
+<span class="pc bpc" id="L91" title="3 of 6 branches missed.">        else if (Tools.isNotEmpty(destinationFolder) &amp;&amp; &quot;/files/protected/feedback-form/&quot;.equals(destinationFolder)==false &amp;&amp; user.isFolderWritable(destinationFolder)==false) {</span>
+            // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
+<span class="nc" id="L93">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
+        }
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        else if (UploadFileTools.isFileAllowed(uploadType, name, fileSize, user, request)==false) {</span>
+<span class="nc" id="L96">            errorKey = &quot;components.forum.new.upload_not_allowed_filetype&quot;;</span>
+        }
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (destinationFolder == null) {</span>
+<span class="nc" id="L100">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
+<span class="pc bpc" id="L101" title="5 of 6 branches missed.">        } else if (destinationFolder.startsWith(&quot;/images&quot;) || destinationFolder.startsWith(&quot;/files&quot;) || destinationFolder.startsWith(&quot;/shared&quot;)) {</span>
+            //pre bezpecnost povolujeme len tieto priecinky na upload, kedze ten sa definuje cez parameter destinationFolder
+        } else {
+<span class="nc" id="L104">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
+        }
+
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		if (errorKey != null) {</span>
+			try {
+<span class="nc" id="L109">				Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L110">				output.put(&quot;error&quot;, prop.getText(errorKey));</span>
+<span class="nc" id="L111">				output.put(&quot;file&quot;, name);</span>
+<span class="nc" id="L112">				output.put(&quot;success&quot;, false);</span>
+			}
+<span class="nc" id="L114">			catch (JSONException e) {</span>
+<span class="nc" id="L115">                Logger.error(AdminUploadServlet.class, e);</span>
+<span class="nc" id="L116">			}</span>
+		}
+        else {
+<span class="fc" id="L119">            int chunk = Tools.getIntValue(request.getParameter(&quot;chunk&quot;), 0);</span>
+<span class="fc" id="L120">            int chunks = Tools.getIntValue(request.getParameter(&quot;chunks&quot;), 0);</span>
+
+            //dropzone.js kompatibilita
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">            if (request.getParameter(&quot;dzchunkindex&quot;)!=null) chunk = Tools.getIntValue(request.getParameter(&quot;dzchunkindex&quot;), 0);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (request.getParameter(&quot;dztotalchunkcount&quot;)!=null) chunks = Tools.getIntValue(request.getParameter(&quot;dztotalchunkcount&quot;), 0);</span>
+
+<span class="fc" id="L126">            Logger.debug(AdminUploadServlet.class, &quot;doPost, chunk=&quot;+chunk+&quot; chunks=&quot;+chunks);</span>
+
+<span class="fc" id="L128">            Part filePart = request.getPart(&quot;file&quot;);</span>
+
+<span class="fc" id="L130">            HttpSession session = request.getSession();</span>
+<span class="fc" id="L131">            PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute(&quot;partialUploadFile-&quot;+name);</span>
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">            if (holder==null || chunk == 0)</span>
+            {
+<span class="fc" id="L134">                holder = new PartialUploadHolder(chunks, name);</span>
+<span class="fc" id="L135">                session.setAttribute(&quot;partialUploadFile-&quot;+name, holder);</span>
+            }
+<span class="fc" id="L137">            boolean isLast = false;</span>
+<span class="pc bpc" id="L138" title="1 of 4 branches missed.">            if (holder.getPartPaths().size()+1 == holder.getChunks() || holder.getChunks()==0)</span>
+            {
+                //je to posledny alebo jediny chunk
+<span class="fc" id="L141">                isLast = true;</span>
+            }
+
+            //zapisem data do docasneho suboru
+<span class="fc" id="L145">            File tempFolder = new File(Tools.getRealPath(&quot;/WEB-INF/tmp/&quot;));</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (tempFolder.exists()==false) tempFolder.mkdirs();</span>
+<span class="fc" id="L147">            File tempUploadFile = File.createTempFile(name, &quot;.&quot;+extension, tempFolder);</span>
+<span class="fc" id="L148">            Logger.debug(AdminUploadServlet.class, &quot;Storing uploaded file, tempFile=&quot; + tempUploadFile.getAbsolutePath());</span>
+
+<span class="fc" id="L150">            FileOutputStream tempFos = new FileOutputStream(tempUploadFile);</span>
+<span class="fc" id="L151">            InputStream tempIs = filePart.getInputStream();</span>
+<span class="fc" id="L152">            int read=0;</span>
+<span class="fc" id="L153">            byte[] bytes = new byte[1024];</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            while ((read = tempIs.read(bytes)) != -1)</span>
+            {
+<span class="fc" id="L156">                tempFos.write(bytes, 0, read);</span>
+            }
+<span class="fc" id="L158">            tempIs.close();</span>
+<span class="fc" id="L159">            tempFos.close();</span>
+
+<span class="fc" id="L161">            String filePartName = tempUploadFile.getAbsolutePath();//filePart.get//getName();</span>
+<span class="fc" id="L162">            holder.getPartPaths().add(chunk, filePartName);</span>
+            try {
+<span class="fc" id="L164">                output.put(&quot;chunk-uploaded&quot;, chunk);</span>
+<span class="fc" id="L165">                output.put(&quot;size&quot;, new File(filePartName).length());</span>
+<span class="fc" id="L166">                output.put(&quot;success&quot;, true);</span>
+<span class="nc" id="L167">            } catch (JSONException e) {</span>
+                //
+<span class="fc" id="L169">            }</span>
+
+<span class="fc bfc" id="L171" title="All 2 branches covered.">            if (isLast)</span>
+            {
+<span class="fc" id="L173">                session.removeAttribute(&quot;partialUploadFile-&quot;+name);</span>
+                // mam posledny, spojim ich do jedneho
+
+<span class="fc" id="L176">                IwcmOutputStream fos = null;</span>
+                FileInputStream fis;
+                byte[] fileBytes;
+<span class="fc" id="L179">                String random = RandomStringUtils.random(15, true, true);</span>
+<span class="fc" id="L180">                boolean destinationFileExists = false;</span>
+                try
+                {
+<span class="fc" id="L183">                    IwcmFile outputFile = null;</span>
+<span class="fc" id="L184">                    String destinationVirtualPath = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L186" title="3 of 6 branches missed.">                    if (writeDirectlyToDestination &amp;&amp; Tools.isNotEmpty(destinationFolder) &amp;&amp; FileBrowserTools.hasForbiddenSymbol(destinationFolder)==false)</span>
+                    {
+<span class="fc" id="L188">                        IwcmFile dirFile = new IwcmFile(Tools.getRealPath(destinationFolder));</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                        if (dirFile.exists()==false) dirFile.mkdirs();</span>
+
+                        //over, ci subor v destinacii existuje
+<span class="fc" id="L192">                        destinationVirtualPath = destinationFolder + name;</span>
+<span class="fc" id="L193">                        outputFile = new IwcmFile(Tools.getRealPath(destinationVirtualPath));</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                        if (outputFile.exists()) {</span>
+
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                            if (&quot;keepboth&quot;.equals(overwriteMode)) {</span>
+                                //ziskaj meno noveho suboru
+<span class="nc" id="L198">                                name = UploadService.getKeppBothFileName(destinationFolder, name);</span>
+
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                                if (name != null) {</span>
+<span class="nc" id="L201">                                    destinationVirtualPath = destinationFolder + name;</span>
+<span class="nc" id="L202">                                    outputFile = new IwcmFile(Tools.getRealPath(destinationVirtualPath));</span>
+                                } else {
+<span class="nc" id="L204">                                    destinationFileExists = true;</span>
+                                }
+
+                            }
+                            else {
+<span class="fc" id="L209">                                destinationFileExists = true;</span>
+                            }
+                        }
+
+                        //ak subor neexistuje mozeme ho rovno zapisat
+<span class="pc bpc" id="L214" title="2 of 4 branches missed.">                        if (destinationFileExists==false || &quot;overwrite&quot;.equals(overwriteMode)) {</span>
+<span class="fc" id="L215">                            fos = new IwcmOutputStream(outputFile);</span>
+<span class="fc" id="L216">                            destinationFileExists = false;</span>
+                        } else {
+<span class="nc" id="L218">                            destinationVirtualPath = &quot;&quot;;</span>
+                        }
+                    }
+
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                    if (fos == null) {</span>
+<span class="nc" id="L223">                        outputFile = new IwcmFile(File.createTempFile(random, &quot;.&quot;+extension, tempFolder));</span>
+<span class="nc" id="L224">                        fos = new IwcmOutputStream(outputFile);</span>
+                    }
+<span class="fc bfc" id="L226" title="All 2 branches covered.">                    for (String chunkPath : holder.getPartPaths())</span>
+                    {
+<span class="fc" id="L228">                        File inputFile = new File(chunkPath);</span>
+<span class="fc" id="L229">                        fis = new FileInputStream(inputFile);</span>
+<span class="fc" id="L230">                        fileBytes = new byte[(int) inputFile.length()];</span>
+<span class="fc" id="L231">                        fis.read(fileBytes, 0,(int)  inputFile.length());</span>
+<span class="fc" id="L232">                        fos.write(fileBytes);</span>
+<span class="fc" id="L233">                        fos.flush();</span>
+<span class="fc" id="L234">                        fis.close();</span>
+<span class="fc" id="L235">                        inputFile.delete();</span>
+<span class="fc" id="L236">                    }</span>
+<span class="fc" id="L237">                    fos.close();</span>
+
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                    if (isBase64) {</span>
+<span class="fc" id="L240">                        decodeBase64File(outputFile);</span>
+                    }
+
+                    //output = &quot;{\&quot;name\&quot;:\&quot;&quot;+name+&quot;\&quot;,\&quot;key\&quot;:\&quot;&quot;+random+&quot;\&quot;}&quot;;
+                    try
+                    {
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">                        if (Tools.isNotEmpty(destinationVirtualPath))</span>
+                        {
+<span class="fc" id="L248">                            UploadService uploadService = new UploadService(destinationVirtualPath, request);</span>
+<span class="fc" id="L249">                            uploadService.process();</span>
+<span class="fc" id="L250">                            Logger.debug(AdminUploadServlet.class, &quot;upload processed, removed=&quot;+uploadService.getRemovedUrls()+&quot; added=&quot;+uploadService.getAddedUrls());</span>
+
+<span class="fc" id="L252">                            Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + destinationVirtualPath, -1, -1);</span>
+                        }
+
+<span class="pc bpc" id="L255" title="3 of 4 branches missed.">                        if (&quot;skip&quot;.equals(overwriteMode) &amp;&amp; destinationFileExists)  {</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">                            if (outputFile != null) outputFile.delete();</span>
+<span class="nc" id="L257">                            destinationFileExists = false;</span>
+                        }
+
+<span class="fc" id="L260">                        output.put(&quot;name&quot;, name);</span>
+<span class="fc" id="L261">                        output.put(&quot;destinationFolder&quot;, destinationFolder);</span>
+<span class="fc" id="L262">                        output.put(&quot;uploadType&quot;, uploadType);</span>
+<span class="fc" id="L263">                        output.put(&quot;virtualPath&quot;, destinationVirtualPath);</span>
+<span class="fc" id="L264">                        output.put(&quot;key&quot;, random);</span>
+<span class="fc" id="L265">                        output.put(&quot;exists&quot;, destinationFileExists);</span>
+                    }
+<span class="nc" id="L267">                    catch (JSONException e) {</span>
+<span class="nc" id="L268">                        Logger.error(AdminUploadServlet.class, e);</span>
+<span class="fc" id="L269">                    }</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">                    if (outputFile != null) temporary.put(random, new PathHolder(name, outputFile.getAbsolutePath(), Tools.getNow()));</span>
+                }
+<span class="nc" id="L272">                catch (IOException ioe)</span>
+                {
+<span class="nc" id="L274">                    Logger.error(AdminUploadServlet.class, ioe);</span>
+<span class="fc" id="L275">                }</span>
+<span class="fc" id="L276">            }</span>
+            else
+            {
+<span class="fc" id="L279">                MultipartWrapper.slowdownUpload();</span>
+            }
+        }
+
+<span class="fc" id="L283">		response.setContentType(&quot;application/json&quot;);</span>
+<span class="fc" id="L284">		response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L285">		response.getWriter().write(output.toString());</span>
+<span class="fc" id="L286">	}</span>
+
+    /**
+     * Presunie uploadnuty subor z docasneho umiestnenia do cieloveho adresara
+     * @param fileKey
+     * @param destinationFolder - URL adresa cieloveho adresara, napr. /images/gallery/
+     * @param fileNameParam
+     * @return - meno suboru po presune, alebo null ak sa subor nepresunul
+     * @throws IOException
+     */
+    public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
+    {
+<span class="nc" id="L298">        String fileName = fileNameParam;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (temporary.containsKey(fileKey))</span>
+        {
+<span class="nc" id="L301">            IwcmFile dirFile = new IwcmFile(Tools.getRealPath(destinationFolder));</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">            if (dirFile.exists()==false) dirFile.mkdirs();</span>
+
+<span class="nc bnc" id="L304" title="All 6 branches missed.">            if (destinationFolder.startsWith(&quot;/images&quot;) || destinationFolder.startsWith(&quot;/files&quot;) || destinationFolder.startsWith(&quot;/shared&quot;))</span>
+            {
+<span class="nc" id="L306">                fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L307">                fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
+            }
+
+<span class="nc" id="L310">            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">            if (!file.exists()) return null;</span>
+<span class="nc" id="L312">            IwcmFile dest = new IwcmFile(dirFile.getAbsolutePath(), fileName);</span>
+
+<span class="nc bnc" id="L314" title="All 2 branches missed.">            if (dest.exists()) {</span>
+<span class="nc" id="L315">                dest.delete();</span>
+            }
+
+<span class="nc" id="L318">            Logger.debug(AdminUploadServlet.class, &quot;Moving file &quot;+file.getAbsolutePath()+&quot; to &quot;+dest.getAbsolutePath());</span>
+<span class="nc" id="L319">            FileTools.moveFile(file, dest);</span>
+<span class="nc" id="L320">            Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + dest.getVirtualPath(), -1, 1);</span>
+
+<span class="nc" id="L322">            return fileName;</span>
+        }
+<span class="nc" id="L324">        return null;</span>
+    }
+
+    /**
+     * Zmaze docasny subor (ak napr. user klikol na moznost neprepisat subor)
+     * @param fileKey
+     * @return - true ak subor existoval a zmazal sa
+     */
+    public static boolean deleteTempFile(String fileKey) {
+<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (temporary.containsKey(fileKey)) {</span>
+<span class="nc" id="L334">            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">            if (file.exists()) return file.delete();</span>
+        }
+
+<span class="nc" id="L338">        return false;</span>
+    }
+
+    private void decodeBase64File(IwcmFile f) {
+        try {
+<span class="pc bpc" id="L343" title="2 of 4 branches missed.">            if (f.exists() &amp;&amp; f.canRead()) {</span>
+<span class="fc" id="L344">                InputStream is = new IwcmInputStream(f);</span>
+<span class="fc" id="L345">                InputStreamReader isr = new InputStreamReader(is, StandardCharsets.ISO_8859_1);</span>
+<span class="fc" id="L346">                char buff[] = new char[64000];</span>
+                int len;
+<span class="fc" id="L348">                StringBuilder buffer = new StringBuilder();</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                while ((len = isr.read(buff))!=-1) {</span>
+                    //Logger.debug(FileTools.class, &quot;Reading: &quot;+len+&quot; total: &quot;+contextFile.length());
+<span class="fc" id="L351">                    buffer.append(buff, 0, len);</span>
+                }
+<span class="fc" id="L353">                isr.close();</span>
+<span class="fc" id="L354">                is.close();</span>
+
+                //zdekoduj data
+<span class="fc" id="L357">                byte[] decodedImg = Base64.getDecoder().decode(buffer.toString().getBytes(StandardCharsets.ISO_8859_1));</span>
+<span class="fc" id="L358">                IwcmOutputStream fos = new IwcmOutputStream(f);</span>
+<span class="fc" id="L359">                fos.write(decodedImg);</span>
+<span class="fc" id="L360">                fos.close();</span>
+
+                //skonvertuj PNG na JPG/format povodneho obrazku
+<span class="fc" id="L363">                String extension = FileTools.getFileExtension(f.getName());</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (&quot;png&quot;.equals(extension)==false) {</span>
+<span class="fc" id="L365">                    IwcmInputStream iwStream =  new IwcmInputStream(f);</span>
+<span class="fc" id="L366">					BufferedImage pngImage = ImageIO.read(iwStream);</span>
+<span class="fc" id="L367">                    iwStream.close();</span>
+<span class="fc" id="L368">                    BufferedImage resultImage = new BufferedImage(</span>
+<span class="fc" id="L369">                        pngImage.getWidth(),</span>
+<span class="fc" id="L370">                        pngImage.getHeight(),</span>
+                        BufferedImage.TYPE_INT_RGB
+                    );
+
+<span class="fc" id="L374">                    resultImage.createGraphics().drawImage(pngImage, 0, 0, Color.WHITE, null);</span>
+
+<span class="fc" id="L376">                    ImageWriteParam iwparam = null;</span>
+<span class="fc" id="L377">                    ImageWriter writer = null;</span>
+
+<span class="fc bfc" id="L379" title="All 2 branches covered.">                    if (&quot;jpg&quot;.equals(extension)) {</span>
+<span class="fc" id="L380">                        iwparam = new JPEGImageWriteParam(null);</span>
+<span class="fc" id="L381">                        iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);</span>
+<span class="fc" id="L382">                        iwparam.setCompressionQuality(0.9F);</span>
+                    }
+
+<span class="fc" id="L385">                    Iterator&lt;ImageWriter&gt; iter = ImageIO.getImageWritersByFormatName(extension);</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">                    if (iter.hasNext()) {</span>
+<span class="fc" id="L387">                        writer = iter.next();</span>
+                    }
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">                    if (writer != null) {</span>
+                        // Prepare output file
+<span class="fc" id="L391">                        IwcmOutputStream out = new IwcmOutputStream(f);</span>
+<span class="fc" id="L392">                        ImageOutputStream ios = ImageIO.createImageOutputStream(out);</span>
+<span class="fc" id="L393">                        writer.setOutput(ios);</span>
+                        // Write the image
+<span class="fc" id="L395">                        writer.write(null, new IIOImage(resultImage, null, null), iwparam);</span>
+                        // Cleanup
+<span class="fc" id="L397">                        ios.flush();</span>
+<span class="fc" id="L398">                        writer.dispose();</span>
+<span class="fc" id="L399">                        ios.close();</span>
+<span class="fc" id="L400">                        out.close();</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L405">		catch (Exception ex) {</span>
+<span class="nc" id="L406">            Logger.error(AdminUploadServlet.class, ex);</span>
+<span class="fc" id="L407">		}</span>
+<span class="fc" id="L408">    }</span>
+
+    /**
+	 * Vrati cestu k temp suboru, pozuiva sa vo FormMail na detekciu ci subor vyhovuje poziadavkam
+	 * @param fileKey
+	 * @return
+	 */
+	public static String getTempFilePath(String fileKey)
+	{
+<span class="nc bnc" id="L417" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
+		{
+<span class="nc" id="L419">			return temporary.get(fileKey).getTempPath();</span>
+		}
+<span class="nc" id="L421">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

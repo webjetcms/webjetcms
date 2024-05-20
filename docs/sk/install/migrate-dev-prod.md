@@ -11,7 +11,7 @@ Skontrolujte nasledovné konf. premenné:
 - `smtpServer` - adresa SMTP servera + premenné `smtpUsername, smtpPassword, smtpPort, smtpUseTLS` a podobne.
 - `emailProtectionSenderEmail` - nastavte email adresu, ktorá sa použije ako email odosielateľa, môže byť rozdielna pre jednotlivé prostredia, musí byť povolená na SMTP serveri.
 - `proxyHost/proxyPort` - nastavenie proxy
-- `webEnabledIPs` - zoznam IP adries z ktorých je dostupný web, na DEV prostredí nastaviť predvolene na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
+- `webEnabledIPs` - zoznam IP adries z ktorých je dostupný web, na DEV prostredí nastaviť predvolene na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,62.168.118.90,62.168.118.67,#klient,`
 - `adminEnabledIPs` - zoznam IP adries z ktorých je možné pristupovať do administrácie, predvolene nastaviť na `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
 - `multidomainAdminHost` - ak je nastavená overte doménu, používa sa na nastavenie domény pre CMS na viac doménovej inštalácii.
 - `serverBeyoundProxy` - nastavenie umiestnenia aplikačného servera za proxy/load balancer.

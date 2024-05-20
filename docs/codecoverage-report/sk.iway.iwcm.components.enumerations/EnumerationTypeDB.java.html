@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationTypeDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations</a> &gt; <span class="el_source">EnumerationTypeDB.java</span></div><h1>EnumerationTypeDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations;
+
+import java.util.List;
+
+import javax.persistence.Query;
+
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.utils.Pair;
+
+/**
+ * EnumerationTypeDB.java
+ *
+ * Class EnumerationTypeDB is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * @author       $Author: mhruby $
+ * @version      $Revision: 1.0 $
+ * created      9.4.2018 12:00
+ * modified     6.4.2018 12:06
+ */
+
+public class EnumerationTypeDB extends JpaDB&lt;EnumerationTypeBean&gt; {
+
+<span class="fc" id="L35">    private static EnumerationTypeDB INSTANCE = new EnumerationTypeDB();</span>
+
+    public static EnumerationTypeDB getInstance() {
+<span class="nc" id="L38">        return INSTANCE;</span>
+    }
+
+    public EnumerationTypeDB() {
+<span class="fc" id="L42">        super(EnumerationTypeBean.class);</span>
+<span class="fc" id="L43">    }</span>
+
+
+    public static EnumerationTypeBean getEnumerationById(int id) {
+<span class="nc" id="L47">        return new JpaDB&lt;&gt;(EnumerationTypeBean.class).getById(id);</span>
+    }
+
+    public static boolean saveEnumerationType(EnumerationTypeBean enumerationTypeBean) {
+<span class="nc" id="L51">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="nc" id="L52">        return new JpaDB&lt;&gt;(EnumerationTypeBean.class).save(enumerationTypeBean);</span>
+    }
+
+    /**
+     * Skryje zadany typ ciselnika.
+     * @param id
+     * @return
+     */
+    public static boolean softDelete(int id) {
+<span class="nc" id="L61">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="nc" id="L62">        EnumerationTypeBean enumerationTypeBean = getEnumerationById(id);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (enumerationTypeBean != null) {</span>
+<span class="nc" id="L64">            enumerationTypeBean.setHidden(true);</span>
+<span class="nc" id="L65">            return saveEnumerationType(enumerationTypeBean);</span>
+        }
+<span class="nc" id="L67">        return false;</span>
+    }
+
+    public static boolean deleteEnumeration(int id) {
+<span class="nc" id="L71">        return JpaTools.delete(EnumerationTypeBean.class, id);</span>
+    }
+
+    public static List&lt;EnumerationTypeBean&gt; getAllEnumerationType() {
+<span class="nc" id="L75">        return JpaTools.getAll(EnumerationTypeBean.class);</span>
+    }
+
+    public static EnumerationTypeBean getEnumerationByName(String name) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L80">        EnumerationTypeBean ret = new JpaDB&lt;&gt;(EnumerationTypeBean.class).findFirstByProperties(Pair.of(&quot;typeName&quot;, name));</span>
+<span class="nc" id="L81">        return ret;</span>
+    }
+
+    /**
+     * Return string of all types in format {a, b, c}.
+     * @return
+     */
+    public static String getStringTypes() {
+<span class="nc" id="L89">        String string = &quot;&quot;;</span>
+<span class="nc" id="L90">        string += &quot;{ &quot;;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        for (EnumerationTypeBean item : EnumerationTypeDB.getAllEnumerationType()) {</span>
+<span class="nc" id="L92">            string += &quot;\&quot;&quot; + item.getTypeName() + &quot;\&quot;: &quot; + item.getEnumerationTypeId() + &quot;,&quot;;</span>
+<span class="nc" id="L93">        }</span>
+<span class="nc" id="L94">        string += &quot; }&quot;;</span>
+<span class="nc" id="L95">        return string;</span>
+    }
+
+    public static void deleteAll() {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for(EnumerationTypeBean item : getAllEnumerationType()) {</span>
+<span class="nc" id="L100">            deleteEnumeration(item.getEnumerationTypeId());</span>
+<span class="nc" id="L101">        }</span>
+<span class="nc" id="L102">    }</span>
+
+    public static List&lt;EnumerationTypeBean&gt; getAllSorted(boolean ascending) {
+<span class="nc" id="L105">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+        try {
+<span class="nc" id="L107">            ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L108">            ReadAllQuery dbQuery = new ReadAllQuery(EnumerationTypeBean.class, builder);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (ascending)</span>
+<span class="nc" id="L110">                dbQuery.addAscendingOrdering(&quot;typeName&quot;);</span>
+            else
+<span class="nc" id="L112">                dbQuery.addDescendingOrdering(&quot;typeName&quot;);</span>
+<span class="nc" id="L113">            Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L114">            List&lt;EnumerationTypeBean&gt; enumerationDataBeanList = JpaDB.getResultList(query);</span>
+<span class="nc" id="L115">            return enumerationDataBeanList;</span>
+<span class="nc" id="L116">        }catch (Exception e) {</span>
+<span class="nc" id="L117">            sk.iway.iwcm.Logger.error(e);</span>
+        } finally {
+<span class="nc" id="L119">            em.close();</span>
+        }
+<span class="nc" id="L121">        return null;</span>
+    }
+
+    public static int getEnumerationIdFromString(String enumerationIdString) {
+<span class="fc" id="L125">        return Tools.getIntValue(enumerationIdString.substring(enumerationIdString.indexOf(&quot;_&quot;) + 1), -1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultTimeValueConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">DefaultTimeValueConverter.java</span></div><h1>DefaultTimeValueConverter.java</h1><pre class="source lang-java linenums"> package sk.iway.iwcm.system.jpa;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+
+@Converter
+<span class="fc" id="L10">public class DefaultTimeValueConverter implements AttributeConverter&lt;Date, Date&gt; {</span>
+
+    @Override
+    public Date convertToDatabaseColumn(Date oldDate) {
+<span class="fc" id="L14">        return getValidTimeValue(oldDate);</span>
+    }
+
+    @Override
+    public Date convertToEntityAttribute(Date oldDate) {
+<span class="fc" id="L19">        return getValidTimeValue(oldDate);</span>
+    }
+
+    // All Date values of type DataTableColumnType.TIME_HM or DataTableColumnType.TIME_HMS must have same day/month/year (01.01.2000)
+
+    /**
+     * If input oldValue is null, it will be returned default Date 01-01-2000 00:00:00. If input oldValue isnt null, 
+     * value of hours/minutes/seconds will remain, but 
+     * value of day/month/year will be set on default value 01-01-2000 (rest is same).
+     * @param oldDate value of date we need to correct
+     * @return valid date for TIME_HM and TIME_HMS DataTableColumnTypes
+     */
+    public static Date getValidTimeValue(Date oldDate) {
+
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if(oldDate == null) {</span>
+<span class="nc" id="L34">            Calendar newInstance = Calendar.getInstance();</span>
+<span class="nc" id="L35">            newInstance.set(2000, 0, 1, 0, 0, 0);</span>
+<span class="nc" id="L36">            newInstance.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L37">            return newInstance.getTime();</span>
+        }
+
+<span class="fc" id="L40">        Calendar oldInstance = Calendar.getInstance();</span>
+<span class="fc" id="L41">        oldInstance.setTime(oldDate);</span>
+
+<span class="fc" id="L43">        Calendar newInstance = Calendar.getInstance();</span>
+<span class="fc" id="L44">        newInstance.set(2000, 0, 1, oldInstance.get(Calendar.HOUR_OF_DAY), oldInstance.get(Calendar.MINUTE), oldInstance.get(Calendar.SECOND));</span>
+<span class="fc" id="L45">        newInstance.set(Calendar.MILLISECOND, 0);</span>
+        //Return valid date time
+<span class="fc" id="L47">        return newInstance.getTime();</span>
+    }
+
+    /**
+     * Create valid date where day/month/year is set to 01.01.2000, seconds are set at 0 and 
+     * hours/minutes are set using input values.
+     * @param hours number of hours we want to set into date
+     * @param minutes number of minutes we want to set into date
+     * @return valid date for TIME_HM and TIME_HMS DataTableColumnTypes
+     */
+    public static Date getValidTimeValue(int hours, int minutes) { 
+<span class="fc" id="L58">        return getValidTimeValue(hours, minutes, 0);</span>
+    }
+
+    /**
+     * Create valid date where day/month/year is set to 01.01.2000 and
+     * seconds/hours/minutes are set using input values.
+     * @param hours number of hours we want to set into date
+     * @param minutes number of minutes we want to set into date
+     * @param seconds number of seconds we want to set into date
+     * @return valid date for TIME_HM and TIME_HMS DataTableColumnTypes
+     */
+    public static Date getValidTimeValue(int hours, int minutes, int seconds) { 
+<span class="fc" id="L70">        Calendar newInstance = Calendar.getInstance();</span>
+<span class="fc" id="L71">        newInstance.set(2000, 0, 1, hours, minutes, seconds);</span>
+<span class="fc" id="L72">        newInstance.set(Calendar.MILLISECOND, 0);</span>
+        //Return valid date time
+<span class="fc" id="L74">        return newInstance.getTime();</span>
+    }
+
+    /**
+     * Combine yyyy-mm-dd from input &quot;date&quot; with hh:mm:ss from input &quot;time&quot;
+     * and return new date. Milliseconds are default set to 0. 
+     * If any of iput values is null, null will be returned. 
+     * @param date date value representing yyyy-mm-dd in new date
+     * @param time date value representing hh:mm:ss  in new date
+     * @return date value represent date time combination
+     */
+    public static Date combineDateWithTime(Date date, Date time) {
+<span class="pc bpc" id="L86" title="2 of 4 branches missed.">        if(date == null || time == null)  return null;</span>
+
+<span class="fc" id="L88">        Calendar dateInstance = Calendar.getInstance();</span>
+<span class="fc" id="L89">        dateInstance.setTime(date);</span>
+<span class="fc" id="L90">        Calendar timeInstance = Calendar.getInstance();</span>
+<span class="fc" id="L91">        timeInstance.setTime(time);</span>
+
+        //Move hh:mm:ss from time to date
+<span class="fc" id="L94">        dateInstance.set(Calendar.HOUR_OF_DAY, timeInstance.get(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L95">        dateInstance.set(Calendar.MINUTE, timeInstance.get(Calendar.MINUTE));</span>
+<span class="fc" id="L96">        dateInstance.set(Calendar.SECOND, timeInstance.get(Calendar.SECOND));</span>
+<span class="fc" id="L97">        dateInstance.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="fc" id="L99">        return dateInstance.getTime();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

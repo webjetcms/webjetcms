@@ -1,0 +1,188 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.quiz.jpa.QuizStatDTO")})]*/ '';
+    let url = "/admin/rest/quiz/stat";
+    let quizId = -1;
+    let quizType = "0";
+</script>
+<script type="text/javascript">
+    var quizStatDataTable;
+    let barChartQuizStat;
+    let lineChartQuizStatAll;
+    let lineChartQuizStatRated;
+    let lineChartQuizStatRight;
+    let lineChartQuizStatWrong;
+
+    WJ.selectMenuItem("/apps/quiz/admin/");
+
+    WJ.breadcrumb({
+        id: "quizStat",
+        tabs: [
+            {
+                url: '/apps/quiz/admin/',
+                title: '[[#{components.quiz.title}]]',
+                active: true
+            },
+            {
+                url: '/apps/quiz/admin/',
+                title: '<span class="statPageTitle"></span>',
+                active: false
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#quizStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        //
+        setQuizId();
+        if (quizId == null || quizId == "" || quizId < 1) window.location.href="/apps/quiz/admin/";
+
+        //Customize showed columns by quiz type
+        $.get({
+            url: "/admin/rest/quiz/quizInfo?quizId=" + quizId,
+            success: function(result) {
+                $("span.statPageTitle").text(result["name"]);
+                quizType = result["quizType"];
+                if("0" == quizType) {
+                    quizStatDataTable.column(5).visible(false);
+                    quizStatDataTable.column(6).visible(false);
+                }
+            }
+        });
+
+        quizStatDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false, //false lebo sa nevyužíva repositár
+            columns: columns,
+            id: "quizStatDataTable",
+            idAutoOpener: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                data.fixed_quizId = quizId;
+            }
+        });
+        quizStatDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
+
+        //Create and set amcharts
+        createAmcharts();
+
+        //Onchange events - update amcharts
+        $("#quizStatDataTable_extfilter").on("click", "button.filtrujem", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
+                $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar, success: function(result) {
+                    barChartQuizStat = new ChartTools.BarChartForm("question", "percentageOfRightAnswers", '[[#{components.quiz.stat.percentualGraph}]]', "quizStat-correctAnswers", result['content']);
+                    ChartTools.createAmchart(barChartQuizStat);
+
+
+                    $.ajax({url: url + "/lineChartDataRight?quizId=" + quizId + "&dayDate=", success: function(result) {
+                        lineChartQuizStatAll = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["chartValue"], [undefined]), "dayDate", '[[#{components.quiz.stat.answersGraph}]]', "quizStat-answersInTime", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                        ChartTools.createAmchart(lineChartQuizStatAll);
+
+                        //Do SHIT
+                        $.ajax({url: url + "/lineChartDataRated?quizId=" + quizId + "&dayDate=", success: function(result) {
+
+                            //One source of data - 3 different graphs. That's a success
+                            if(quizType == "0") {
+                                lineChartQuizStatRight = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["numberOfRightAnswers"], [undefined]), "dayDate", '[[#{components.quiz.stat.right_answersGraph}]]', "quizStat-rightInTime", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                                ChartTools.createAmchart(lineChartQuizStatRight);
+
+                                lineChartQuizStatWrong = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["numberOfWrongAnswers"], [undefined]), "dayDate", '[[#{components.quiz.stat.wrong_answersGraph}]]', "quizStat-wrongInTime", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                                ChartTools.createAmchart(lineChartQuizStatWrong);
+
+                                $("#quizStat-pointsInTime").css('display', 'none');
+                                $("#quizStat-rightInTime").css('display', '');
+                                $("#quizStat-wrongInTime").css('display', '');
+
+                                WJ.hideLoader();
+                            } else {
+                                lineChartQuizStatRated = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["chartValue"], [undefined]), "dayDate", '[[#{components.quiz.stat.pointsGraph}]]', "quizStat-pointsInTime", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                                ChartTools.createAmchart(lineChartQuizStatRated);
+
+                                $("#quizStat-pointsInTime").css('display', '');
+                                $("#quizStat-rightInTime").css('display', 'none');
+                                $("#quizStat-wrongInTime").css('display', 'none');
+
+                                WJ.hideLoader();
+                            }
+                        }});
+                    }});
+                }});
+            });
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            WJ.showLoader();
+
+            console.log("SOm tu ");
+
+            let dateRangeValue = ChartTools.getDateRange(null);
+
+            await $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar + "&dayDate=" + dateRangeValue, success: function(result) {
+                barChartQuizStat.chartData = result['content'];
+                ChartTools.updateChart(barChartQuizStat);
+            }});
+
+            await $.ajax({url: url + "/lineChartDataRight?quizId=" + quizId + "&dayDate=" +dateRangeValue, success: function(result) {
+                lineChartQuizStatAll.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChartQuizStatAll);
+            }});
+
+            await $.ajax({url: url + "/lineChartDataRated?quizId=" + quizId + "&dayDate=" + dateRangeValue, success: function(result) {
+                //One source of data - 3 different graphs. That's a success
+                if(quizType == "0") {
+                    lineChartQuizStatRight.chartData = ChartTools.convertDataForLineChart(result);
+                    ChartTools.updateChart(lineChartQuizStatRight);
+
+                    lineChartQuizStatWrong.chartData = ChartTools.convertDataForLineChart(result);
+                    ChartTools.updateChart(lineChartQuizStatWrong);
+                } else {
+                    lineChartQuizStatRated.chartData = ChartTools.convertDataForLineChart(result);
+                    ChartTools.updateChart(lineChartQuizStatRated);
+                }
+            }});
+
+            WJ.hideLoader();
+
+            //reload table values
+            quizStatDataTable.ajax.reload();
+        }
+
+        function setQuizId() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const quizIdUrl = urlParams.get('id');
+            quizId = quizIdUrl;
+        }
+    });
+</script>
+
+<div id="quizStatDataTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter-title-dayDate"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="quizStat-correctAnswers" class="amcharts"></div>
+    <div id="quizStat-answersInTime" class="amcharts"></div>
+    <div id="quizStat-pointsInTime" class="amcharts" style="display: none;"></div>
+    <div id="quizStat-rightInTime" class="amcharts" style="display: none;"></div>
+    <div id="quizStat-wrongInTime" class="amcharts" style="display: none;"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="quizStatDataTable" class="datatableInit table"></table>
+</div>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryAnswerBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.inquirySimple</a> &gt; <span class="el_source">InquiryAnswerBean.java</span></div><h1>InquiryAnswerBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.inquirySimple;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import sk.iway.iwcm.database.ActiveRecord;
+
+@Entity
+@Table(name = &quot;inquirysimple_answers&quot;)
+<span class="fc" id="L16">public class InquiryAnswerBean extends ActiveRecord implements Serializable {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY, generator = &quot;S_inquirysimple_answers&quot;)
+    private int id;
+
+    @Column(name=&quot;form_id&quot;)
+    String formId;
+
+    @Column(name=&quot;question_id&quot;)
+    String questionId;
+
+    @Column(name=&quot;user_id&quot;)
+    String userId;
+
+    @Override
+    public int getId() {
+<span class="nc" id="L35">        return id;</span>
+    }
+
+    @Override
+    public void setId(int id) {
+<span class="nc" id="L40">        this.id = id;</span>
+<span class="nc" id="L41">    }</span>
+
+    public String getFormId() {
+<span class="nc" id="L44">        return formId;</span>
+    }
+
+    public void setFormId(String formId) {
+<span class="nc" id="L48">        this.formId = formId;</span>
+<span class="nc" id="L49">    }</span>
+
+    public String getQuestionId() {
+<span class="nc" id="L52">        return questionId;</span>
+    }
+
+    public void setQuestionId(String questionId) {
+<span class="nc" id="L56">        this.questionId = questionId;</span>
+<span class="nc" id="L57">    }</span>
+
+    public String getUserId() {
+<span class="nc" id="L60">        return userId;</span>
+    }
+
+    public void setUserId(String userId) {
+<span class="nc" id="L64">        this.userId = userId;</span>
+<span class="nc" id="L65">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

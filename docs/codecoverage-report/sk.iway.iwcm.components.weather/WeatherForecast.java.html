@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WeatherForecast.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather</a> &gt; <span class="el_source">WeatherForecast.java</span></div><h1>WeatherForecast.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather;
+
+import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.List;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.database.SimpleQuery;
+
+/**
+ * WeatherForecast.java
+ *
+ * Class WeatherForecast is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * @author      $Author: mhruby $
+ * @version     $Revision: 1.0 $
+ * created      15.8.2018 13:12
+ * modified     15.8.2018 13:12
+ */
+
+public class WeatherForecast {
+
+    private List&lt;DayForecastBean&gt; dayForecastBeanList;
+    private List&lt;HourForecastBean&gt; hourForecastBeanList;    // zoradene 2-hodinove predpovede pocasia (na dnesok a zajtrasok) kedze o polnoci vyprsi tato predpoved z cache
+    private EnumerationDataBean city;
+
+    private static final String WEATHER_CACHE_PREFIX = &quot;WEATHER_&quot;;
+    private static final String HOUR = &quot;HOUR_&quot;;
+
+    /**
+     * Konstruktor, pocas ktoreho sa inicializuje objekt z cache pamate alebo nanovo z xml suboru ktory nasledne ulozi do cache.
+     * @param id dat ciselnika ktore reprezentuju mesto s GPS suradnicami
+     */
+<span class="nc" id="L40">    public WeatherForecast(int id) {</span>
+        // ak nenajde ziaden setting pouzi toto mesto
+<span class="nc" id="L42">        EnumerationDataBean cityBean = EnumerationDataDB.getInstance().getById(id);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (cityBean == null) {</span>
+<span class="nc" id="L44">            cityBean = EnumerationDataDB.getInstance().getById(new SimpleQuery().forInt(&quot;SELECT enumeration_data_id FROM enumeration_data WHERE string1 LIKE 'Bratislava'&quot;));</span>
+        }
+
+<span class="nc" id="L47">        initialize(cityBean);</span>
+<span class="nc" id="L48">    }</span>
+
+    public WeatherForecast(String cityName, BigDecimal lat, BigDecimal lon)
+<span class="nc" id="L51">    {</span>
+<span class="nc" id="L52">        EnumerationDataBean cityBean = new EnumerationDataBean();</span>
+<span class="nc" id="L53">        cityBean.setString1(cityName);</span>
+<span class="nc" id="L54">        cityBean.setDecimal1(lat);</span>
+<span class="nc" id="L55">        cityBean.setDecimal2(lon);</span>
+
+<span class="nc" id="L57">        initialize(cityBean);</span>
+<span class="nc" id="L58">    }</span>
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void initialize(EnumerationDataBean city)
+    {
+<span class="nc" id="L63">        this.city = city;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (this.city == null) return;</span>
+
+<span class="nc" id="L66">        Cache c = Cache.getInstance();</span>
+
+<span class="nc" id="L68">        BigDecimal lat = city.getDecimal1();</span>
+<span class="nc" id="L69">        BigDecimal lon = city.getDecimal2();</span>
+
+<span class="nc" id="L71">        String CACHE_KEY_SUFFIX = lat.toString()+&quot;,&quot;+lon.toString();</span>
+
+<span class="nc" id="L73">        this.dayForecastBeanList = (List&lt;DayForecastBean&gt;)c.getObject(WEATHER_CACHE_PREFIX + CACHE_KEY_SUFFIX);</span>
+<span class="nc" id="L74">        this.hourForecastBeanList = (List&lt;HourForecastBean&gt;)c.getObject(WEATHER_CACHE_PREFIX + HOUR + CACHE_KEY_SUFFIX);</span>
+
+<span class="nc bnc" id="L76" title="All 4 branches missed.">        if (this.dayForecastBeanList == null || this.hourForecastBeanList == null) {</span>
+<span class="nc" id="L77">            ImportWeather importWeather = new ImportWeather();</span>
+<span class="nc" id="L78">            this.dayForecastBeanList = importWeather.readWeather(city.getDecimal1(), city.getDecimal2());// lat, lon</span>
+<span class="nc" id="L79">            c.setObjectByExpiry(WEATHER_CACHE_PREFIX + CACHE_KEY_SUFFIX, dayForecastBeanList, dayForecastBeanList.get(1).getDate().getTime(),false);</span>
+<span class="nc" id="L80">            this.hourForecastBeanList = importWeather.getHourForecastBeanList();</span>
+<span class="nc" id="L81">            c.setObjectByExpiry(WEATHER_CACHE_PREFIX + HOUR + CACHE_KEY_SUFFIX, hourForecastBeanList, dayForecastBeanList.get(1).getDate().getTime(),false);</span>
+        }
+<span class="nc" id="L83">    }</span>
+
+
+    public List&lt;DayForecastBean&gt; getDayForecastBeanList() {
+<span class="nc" id="L87">        return dayForecastBeanList;</span>
+    }
+
+    public List&lt;HourForecastBean&gt; getHourForecastBeanList() {
+<span class="nc" id="L91">        return hourForecastBeanList;</span>
+    }
+
+    public EnumerationDataBean getCity() {
+<span class="nc" id="L95">        return city;</span>
+    }
+
+    public void setCity(EnumerationDataBean city) {
+<span class="nc" id="L99">        this.city = city;</span>
+<span class="nc" id="L100">    }</span>
+
+    /**
+     * Vrati 8 dvojhodinovych predpovedi podla aktualneho casu.
+     * @return
+     */
+    public List&lt;HourForecastBean&gt; getCurrentHourForecast() {
+<span class="nc" id="L107">        Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L108">        cal.add(Calendar.HOUR_OF_DAY,3);</span>
+<span class="nc" id="L109">        HourForecastBean start = null;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        for (HourForecastBean item : this.hourForecastBeanList) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (cal.getTime().after(item.getDateFrom())) { // cas sedi</span>
+<span class="nc" id="L112">                start = item;</span>
+<span class="nc" id="L113">                break;</span>
+            }
+<span class="nc" id="L115">        }</span>
+<span class="nc" id="L116">        int i = this.hourForecastBeanList.indexOf(start);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (i+8&lt;this.hourForecastBeanList.size())</span>
+<span class="nc" id="L118">            return this.hourForecastBeanList.subList(i, i+8);</span>
+        else
+<span class="nc" id="L120">            return this.hourForecastBeanList.subList(i, this.hourForecastBeanList.size()-1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

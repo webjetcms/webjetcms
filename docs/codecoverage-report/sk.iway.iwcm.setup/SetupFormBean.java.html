@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupFormBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.setup</a> &gt; <span class="el_source">SetupFormBean.java</span></div><h1>SetupFormBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.setup;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionMapping;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.common.DocTools;
+
+@Getter
+@Setter
+<span class="nc" id="L14">public class SetupFormBean {</span>
+
+<span class="nc" id="L16">	private String dbDriver = &quot;org.mariadb.jdbc.Driver&quot;;</span>
+<span class="nc" id="L17">	private String dbDomain = &quot;localhost&quot;;</span>
+<span class="nc" id="L18">	private String dbPort = &quot;&quot;;</span>
+<span class="nc" id="L19">	private String dbUsername = &quot;&quot;;</span>
+<span class="nc" id="L20">	private String dbPassword = &quot;&quot;;</span>
+<span class="nc" id="L21">	private String dbParameters = &quot;&quot;;</span>
+<span class="nc" id="L22">	private String dbName = &quot;webjet_web&quot;;</span>
+<span class="nc" id="L23">	private boolean dbUseSuperuser = false;</span>
+<span class="nc" id="L24">	private String dbSuperuserUsername = &quot;&quot;;</span>
+<span class="nc" id="L25">	private String dbSuperuserPassword = &quot;&quot;;</span>
+
+<span class="nc" id="L27">	private String conf_installName = &quot;webjet&quot;;</span>
+<span class="nc" id="L28">	private String conf_license = &quot;&quot;;</span>
+<span class="nc" id="L29">	private String conf_smtpServer = &quot;smtp.local&quot;;</span>
+<span class="nc" id="L30">	private String conf_defaultLanguage = &quot;&quot;;</span>
+<span class="nc" id="L31">	private String encoding = &quot;utf-8&quot;;</span>
+
+	//Param just to inform BE what language is used in FE
+<span class="nc" id="L34">	private String pageLngIndicator = &quot;sk&quot;;</span>
+
+	public void reset(ActionMapping arg0, HttpServletRequest arg1)
+	{
+<span class="nc" id="L38">		dbUseSuperuser = false;</span>
+<span class="nc" id="L39">	}</span>
+
+	/**
+	 * @param conf_installName The conf_installName to set.
+	 */
+	public void setConf_installName(String conf_installName)
+	{
+<span class="nc" id="L46">		this.conf_installName = DocTools.removeChars(DB.internationalToEnglish(conf_installName));</span>
+<span class="nc" id="L47">	}</span>
+
+	/**
+	 * @param dbName The dbName to set.
+	 */
+	public void setDbName(String dbName)
+	{
+<span class="nc" id="L54">		this.dbName = dbName.toLowerCase();</span>
+<span class="nc" id="L55">	}</span>
+
+	/**
+	 * @return Returns the dbUseSuperuser.
+	 */
+	public boolean isDbUseSuperuser()
+	{
+<span class="nc" id="L62">		return dbUseSuperuser;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

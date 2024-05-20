@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAjaxAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationAjaxAction.java</span></div><h1>ReservationAjaxAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.RedirectResolution;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.validation.Validate;
+import net.sourceforge.stripes.validation.ValidateNestedProperties;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * ReservationAjaxAction.java - editacia ReservationBean a ReservationObjectBean
+ * zaznamu
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.6 $
+ * @created Date: 20.12.2008 14:55:51
+ * @modified $Date: 2009/10/23 13:35:39 $
+ */
+<span class="nc" id="L41">public class ReservationAjaxAction extends WebJETActionBean</span>
+{
+	@ValidateNestedProperties({@Validate(field = &quot;reservationId&quot;, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;reservationObjectId&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;dateFrom&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;startTime&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;dateTo&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;finishTime&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;name&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;surname&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;email&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;purpose&quot;, required = true, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;accepted&quot;, on = &quot;saveReservation&quot;), @Validate(field = &quot;hashValue&quot;, on = &quot;saveReservation&quot;),
+				@Validate(field = &quot;phoneNumber&quot;, on = &quot;saveReservation&quot;)})
+	private ReservationBean reservation;
+	@ValidateNestedProperties({@Validate(field = &quot;reservationObjectId&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;name&quot;, required = true, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;mustAccepted&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;emailAccepter&quot;, on = &quot;bSaveReservationObject&quot;), @Validate(field = &quot;passwd&quot;),
+				@Validate(field = &quot;priceForDay&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;priceForHour&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;reservationForAllDay&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;photoLink&quot;, on = &quot;bSaveReservationObject&quot;),
+				@Validate(field = &quot;description&quot;, on = &quot;bSaveReservationObject&quot;)})
+	private ReservationObjectBean reservationObject;
+	int reservationObjectId;
+
+	//rzapach: rozsah casov pre jednotlive zvolene dni
+<span class="nc" id="L69">	boolean chooseDays = false;</span>
+<span class="nc" id="L70">	boolean[] days = new boolean[7];</span>
+<span class="nc" id="L71">	String[] casyOd = {&quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;};</span>
+<span class="nc" id="L72">	String[] casyDo = {&quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;};</span>
+<span class="nc" id="L73">	List&lt;ReservationObjectTimesBean&gt; times = new ArrayList&lt;&gt;();</span>
+
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+<span class="nc" id="L78">		super.setContext(context);</span>
+<span class="nc" id="L79">		reservationObjectId = Tools.getIntValue(context.getRequest().getParameter(&quot;reservationObject.reservationObjectId&quot;), -1);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (reservationObjectId &gt; 0)</span>
+		{
+<span class="nc" id="L82">			reservationObject = ReservationManager.getReservationObjectById(reservationObjectId);</span>
+
+<span class="nc" id="L84">			times = ReservationObjectTimesDB.getInstance().getByReservationObjectId(reservationObjectId);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if(times.size()&gt;0)</span>
+<span class="nc" id="L86">				chooseDays = true;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			for(ReservationObjectTimesBean rotb : times)</span>
+			{
+<span class="nc" id="L89">				days[rotb.getDen()-1] = true;</span>
+<span class="nc" id="L90">				casyOd[rotb.getDen()-1] = rotb.getCasOd();</span>
+<span class="nc" id="L91">				casyDo[rotb.getDen()-1] = rotb.getCasDo();</span>
+<span class="nc" id="L92">			}</span>
+
+			//20897 - pridana editacia konkretnej rezervacie
+<span class="nc" id="L95">			int reservationId = Tools.getIntValue(Tools.getParameter(getRequest(), &quot;reservation.reservationId&quot;), -1);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if(reservationId&gt;0)</span>
+<span class="nc" id="L97">				reservation = ReservationManager.getReservationById(reservationId);</span>
+<span class="nc" id="L98">		}</span>
+		else
+		{
+<span class="nc" id="L101">			reservationObject = new ReservationObjectBean();</span>
+<span class="nc" id="L102">			reservationObject.setTimeUnit(&quot;30&quot;);</span>
+		}
+<span class="nc" id="L104">		Identity user = UsersDB.getCurrentUser(context.getRequest());</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">		if (getReservation() == null || getReservation().getReservationId() &lt; 1)</span>
+		{
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (getReservation() == null)</span>
+<span class="nc" id="L108">				setReservation(new ReservationBean());</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (user != null)</span>
+			{
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getName()))</span>
+<span class="nc" id="L112">					getReservation().setName(user.getFirstName());</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getSurname()))</span>
+<span class="nc" id="L114">					getReservation().setSurname(user.getLastName());</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getEmail()))</span>
+<span class="nc" id="L116">					getReservation().setEmail(user.getEmail());</span>
+			}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (getReservation().getDateFrom() == null)</span>
+<span class="nc" id="L119">				getReservation().setDateFrom(new Date());</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (getReservation().getDateTo() == null)</span>
+<span class="nc" id="L121">				getReservation().setDateTo(new Date());</span>
+		}
+<span class="nc" id="L123">	}</span>
+
+	public ReservationBean getReservation()
+	{
+<span class="nc" id="L127">		return reservation;</span>
+	}
+
+	public void setReservation(ReservationBean reservation)
+	{
+<span class="nc" id="L132">		this.reservation = reservation;</span>
+<span class="nc" id="L133">	}</span>
+
+<span class="nc" id="L135">	private Date filterDateFrom = null;</span>
+<span class="nc" id="L136">	private Date filterDateTo = null;</span>
+	private int filterObjectId;
+	private String filterEmail;
+
+	public int getFilterObjectId()
+	{
+<span class="nc" id="L142">		return filterObjectId;</span>
+	}
+
+	public void setFilterObjectId(int filterObjectId)
+	{
+<span class="nc" id="L147">		this.filterObjectId = filterObjectId;</span>
+<span class="nc" id="L148">	}</span>
+
+	public Date getFilterDateFrom()
+	{
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		return filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
+	}
+
+	public void setFilterDateFrom(Date filterDateFrom)
+	{
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		this.filterDateFrom = filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
+<span class="nc" id="L158">	}</span>
+
+	public Date getFilterDateTo()
+	{
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		return filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
+	}
+
+	public void setFilterDateTo(Date filterDateTo)
+	{
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		this.filterDateTo = filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
+<span class="nc" id="L168">	}</span>
+
+	public String getFilterEmail()
+	{
+<span class="nc" id="L172">		return filterEmail;</span>
+	}
+
+	public void setFilterEmail(String filterEmail)
+	{
+<span class="nc" id="L177">		this.filterEmail = filterEmail;</span>
+<span class="nc" id="L178">	}</span>
+
+	/**
+	 * Vrati zoznam vsetkych sucasnych rezervacii podla ID a datumov
+	 *
+	 * @return
+	 */
+	public List&lt;ReservationBean&gt; getAllReservations()
+	{
+<span class="nc" id="L187">		return Collections.unmodifiableList(ReservationManager.getReservations(filterDateFrom, filterDateTo, filterObjectId));</span>
+	}
+
+	/**
+	 * Vrati zoznam vsetkych sucasnych rezervacnych objektov vyfiltrovanych podla
+	 * emailu
+	 *
+	 * @return
+	 */
+	public List&lt;ReservationObjectBean&gt; getAllReservationObjects()
+	{
+<span class="nc" id="L198">		return Collections.unmodifiableList(ReservationManager.getReservationObjects(filterEmail));</span>
+	}
+
+	/**
+	 * Vrati zoznam rezervacii vyfiltrovany podla objektov, vrati tie rezervacie
+	 * ktorych objekty sa nachadzaju v popskytnutom zozname
+	 *
+	 * @param objects
+	 *           rezervacne objekty
+	 * @return
+	 */
+	public List&lt;ReservationBean&gt; getAllReservationsByObjects(List&lt;ReservationObjectBean&gt; objects)
+	{
+<span class="nc" id="L211">		List&lt;ReservationBean&gt; original = getAllReservations();</span>
+<span class="nc" id="L212">		List&lt;ReservationBean&gt; filtered = new ArrayList&lt;&gt;(original.size());</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		for (ReservationBean rb : original)</span>
+		{
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			for (ReservationObjectBean o : objects)</span>
+			{
+<span class="nc bnc" id="L217" title="All 2 branches missed.">				if (o.getReservationObjectId() == rb.getReservationObjectId())</span>
+				{
+<span class="nc" id="L219">					filtered.add(rb);</span>
+<span class="nc" id="L220">					break;</span>
+				}
+<span class="nc" id="L222">			}</span>
+<span class="nc" id="L223">		}</span>
+<span class="nc" id="L224">		original = filtered;</span>
+<span class="nc" id="L225">		return original;</span>
+	}
+
+	/**
+	 * Vrati zoznam vsetkych emailovych adries schvalovatelov
+	 *
+	 * @return
+	 */
+	public List&lt;String&gt; getAllEmails()
+	{
+<span class="nc" id="L235">		return Collections.unmodifiableList(ReservationManager.getAccepterEmails());</span>
+	}
+
+	@DefaultHandler
+	public Resolution index()
+	{
+<span class="nc" id="L241">		return new RedirectResolution(&quot;/components/reservation/reservation_list.jsp&quot;);</span>
+	}
+
+	/**
+	 * Ulozenie rezervacie do databazy
+	 *
+	 * @return
+	 * @throws ParseException
+	 */
+	public Resolution bSaveReservation() throws ParseException
+	{
+<span class="nc" id="L252">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L253">		ReservationObjectBean rob = ReservationManager.getReservationObject(reservation.getReservationObjectId());</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (ReservationManager.isConflict(reservation) &gt;= rob.getMaxReservations())</span>
+		{
+<span class="nc" id="L256">			getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L257">						prop.getText(&quot;components.reservation.reservation_manager.addReservation.conflict&quot;));</span>
+<span class="nc" id="L258">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		if (!isStartBeforeEnd())</span>
+		{
+<span class="nc" id="L262">			getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L263">						prop.getText(&quot;components.reservation.reservation_manager.addReservation.endBeforeStart&quot;));</span>
+<span class="nc" id="L264">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+		// otesujem ci nezadava mimo cas na to urceny
+<span class="nc" id="L267">		long compareDateStart = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getStartTime());</span>
+<span class="nc" id="L268">		long compareDateEnd = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getFinishTime());</span>
+
+<span class="nc" id="L270">		List&lt;ReservationObjectTimesBean&gt; reservationTimes = ReservationObjectTimesDB.getInstance().getByReservationObjectId(reservation.getReservationObjectId());</span>
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		if(reservationTimes.size()&gt;0)</span>
+		{
+<span class="nc" id="L274">			Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L275">	      calendar.setTime(reservation.getDateFrom());</span>
+<span class="nc" id="L276">	      int day = calendar.get(Calendar.DAY_OF_WEEK)-1;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">	      if(day==0)</span>
+<span class="nc" id="L278">	      	day=7;</span>
+<span class="nc" id="L279">	      boolean emptyDay = true;</span>
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			for(ReservationObjectTimesBean rotb : reservationTimes)</span>
+			{
+<span class="nc bnc" id="L283" title="All 2 branches missed.">				if(day==rotb.getDen())</span>
+				{
+<span class="nc" id="L285">					long resTimeFrom = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rotb.getCasOd());</span>
+<span class="nc" id="L286">					long resTimeTo = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rotb.getCasDo());</span>
+
+<span class="nc bnc" id="L288" title="All 8 branches missed.">					if (compareDateStart &lt; resTimeFrom || compareDateStart &gt; resTimeTo || compareDateEnd &lt; resTimeFrom || compareDateEnd &gt; resTimeTo)</span>
+					{
+<span class="nc" id="L290">						getRequest().setAttribute(</span>
+									&quot;errorText&quot;,
+<span class="nc" id="L292">									prop.getText(&quot;components.reservation.reservation_manager.addReservation.addOutsideOfTime&quot;,</span>
+<span class="nc" id="L293">												rotb.getCasOd(), rotb.getCasDo()));</span>
+<span class="nc" id="L294">						return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+					}
+<span class="nc" id="L296">					emptyDay=false;</span>
+				}
+<span class="nc" id="L298">			}</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			if(emptyDay)</span>
+			{
+<span class="nc" id="L301">				getRequest().setAttribute(</span>
+							&quot;errorText&quot;,
+<span class="nc" id="L303">							prop.getText(&quot;components.reservation.reservation_manager.addReservation.emptyDay&quot;));</span>
+<span class="nc" id="L304">				return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+			}
+<span class="nc" id="L306">		}</span>
+		else
+		{
+<span class="nc" id="L309">			long resTimeFrom = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeFrom());</span>
+<span class="nc" id="L310">			long resTimeTo = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeTo());</span>
+
+<span class="nc bnc" id="L312" title="All 8 branches missed.">			if (compareDateStart &lt; resTimeFrom || compareDateStart &gt; resTimeTo || compareDateEnd &lt; resTimeFrom</span>
+						|| compareDateEnd &gt; resTimeTo)
+			{
+<span class="nc" id="L315">				getRequest().setAttribute(</span>
+							&quot;errorText&quot;,
+<span class="nc" id="L317">							prop.getText(&quot;components.reservation.reservation_manager.addReservation.addOutsideOfTime&quot;,</span>
+<span class="nc" id="L318">										rob.getReservationTimeFrom(), rob.getReservationTimeTo()));</span>
+<span class="nc" id="L319">				return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+			}
+		}
+
+<span class="nc" id="L323">		String lng = PageLng.getUserLng(getRequest());</span>
+
+		//20897 - pridana editacia konkretnej rezervacie
+<span class="nc bnc" id="L326" title="All 4 branches missed.">		if (reservation.getReservationId()&gt;0 &amp;&amp; isAdminLogged()==false)</span>
+<span class="nc" id="L327">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+
+<span class="nc" id="L329">		int approvalStatusChange = getReservationStatusChange(reservation);</span>
+<span class="nc" id="L330">		int saveOK = ReservationManager.addReservation(reservation, Tools.getServerName(getRequest()), prop, lng);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (saveOK &gt; 0)</span>
+		{
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (saveOK == 1)</span>
+<span class="nc" id="L334">				getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.reservation_manager.addReservation.one&quot;));</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			if (saveOK == 2)</span>
+<span class="nc" id="L336">				getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.reservation_manager.addReservation.two&quot;));</span>
+<span class="nc" id="L337">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+
+		//poslanie emailu zakaznikovy o zmene stavu schvalenia rezervacie
+<span class="nc bnc" id="L341" title="All 2 branches missed.">		if(approvalStatusChange&gt;0)</span>
+		{
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			if(approvalStatusChange==1)</span>
+<span class="nc" id="L344">				ReservationManager.sendApprovalStatusChangedEmail(reservation, true, getRequest());</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			else if(approvalStatusChange==2)</span>
+<span class="nc" id="L346">				ReservationManager.sendApprovalStatusChangedEmail(reservation, false, getRequest());</span>
+		}
+
+<span class="nc bnc" id="L349" title="All 2 branches missed.">		if (getRequest().getParameter(&quot;rezobjid&quot;) != null)</span>
+		{
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			if (saveOK == 0)</span>
+<span class="nc" id="L352">				getRequest().setAttribute(&quot;saveOK&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L353">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+<span class="nc" id="L355">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+	}
+
+	/**
+	 * Zisti ci je zaciatok rezervacie
+	 *
+	 * @return
+	 */
+	private boolean isStartBeforeEnd()
+	{
+<span class="nc" id="L365">		boolean ret = false;</span>
+<span class="nc" id="L366">		String dateFrom = &quot;&quot;;</span>
+<span class="nc" id="L367">		String dateTo = &quot;&quot;;</span>
+<span class="nc" id="L368">		DateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L369">		dateFrom = formatter.format(reservation.getDateFrom());</span>
+<span class="nc" id="L370">		dateTo = formatter.format(reservation.getDateTo());</span>
+<span class="nc" id="L371">		dateFrom = dateFrom + &quot; &quot; + reservation.getStartTime();</span>
+<span class="nc" id="L372">		dateTo = dateTo + &quot; &quot; + reservation.getFinishTime();</span>
+<span class="nc" id="L373">		SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+		try
+		{
+<span class="nc" id="L376">			Date from = sdf.parse(dateFrom);</span>
+<span class="nc" id="L377">			Date to = sdf.parse(dateTo);</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			ret = from.compareTo(to) &gt;= 0 ? false : true;</span>
+		}
+<span class="nc" id="L380">		catch (ParseException e)</span>
+		{
+<span class="nc" id="L382">			Logger.debug(getClass(), &quot;Failed to parse reservation time! &quot; + e.getMessage());</span>
+<span class="nc" id="L383">		}</span>
+<span class="nc" id="L384">		return ret;</span>
+	}
+
+	/**
+	 * Editovanie existujuceho rezervacneho objektu
+	 *
+	 * @return
+	 */
+	public Resolution editReservationObject()
+	{
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (isAdminLogged() == false)</span>
+<span class="nc" id="L395">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+<span class="nc" id="L396">		return (new ForwardResolution(&quot;/components/reservation/admin_addObject.jsp?isnew=true&quot;));</span>
+	}
+
+	/**
+	 * Ulozenie rezervacneho abjektu do databazy
+	 *
+	 * @return
+	 */
+	public Resolution bSaveReservationObject()
+	{
+<span class="nc bnc" id="L406" title="All 2 branches missed.">		if (isAdminLogged() == false)</span>
+<span class="nc" id="L407">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+<span class="nc" id="L408">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L409">		String pattern = &quot;^[\\d]{1,2}:[\\d]{1,2}$&quot;;</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">		if (Tools.isNotEmpty(reservationObject.getReservationTimeFrom())</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">					&amp;&amp; !reservationObject.getReservationTimeFrom().matches(pattern))</span>
+		{
+<span class="nc" id="L413">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.admin_addObject.cas_od_zly_format&quot;));</span>
+<span class="nc" id="L414">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		if (Tools.isNotEmpty(reservationObject.getReservationTimeTo())</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">					&amp;&amp; !reservationObject.getReservationTimeTo().matches(pattern))</span>
+		{
+<span class="nc" id="L419">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.admin_addObject.cas_do_zly_format&quot;));</span>
+<span class="nc" id="L420">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+<span class="nc" id="L422">		int saveOK = ReservationManager.addEditReservationObject(reservationObject, reservationObjectId);</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">		if (saveOK &gt; 0)</span>
+		{
+<span class="nc bnc" id="L425" title="All 2 branches missed.">			if (saveOK == 1)</span>
+<span class="nc" id="L426">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L427">							prop.getText(&quot;components.reservation.reservation_manager.addReservationObject.one&quot;));</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">			if (saveOK == 2)</span>
+<span class="nc" id="L429">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L430">							prop.getText(&quot;components.reservation.reservation_manager.addReservationObject.two&quot;));</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if (saveOK == 3)</span>
+<span class="nc" id="L432">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L433">							prop.getText(&quot;components.reservation.reservation_manager.addReservationObject.three&quot;));</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if (saveOK == 4)</span>
+<span class="nc" id="L435">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L436">							prop.getText(&quot;components.reservation.reservation_manager.addReservationObject.four&quot;));</span>
+<span class="nc" id="L437">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+
+		//rzapach: rozsah casov pre jednotlive zvolene dni
+<span class="nc bnc" id="L441" title="All 2 branches missed.">		if(chooseDays)</span>
+		{
+<span class="nc bnc" id="L443" title="All 2 branches missed.">			for(int i=0; i&lt;7; i++)</span>
+			{
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if(days[i])</span>
+				{
+<span class="nc bnc" id="L447" title="All 4 branches missed.">					if(Tools.isEmpty(casyOd[i]) || !casyOd[i].matches(pattern))</span>
+					{
+<span class="nc" id="L449">						getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.admin_addObject.cas_od_zly_format&quot;));</span>
+<span class="nc" id="L450">						return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+					}
+<span class="nc bnc" id="L452" title="All 4 branches missed.">					if(Tools.isEmpty(casyDo[i]) || !casyOd[i].matches(pattern))</span>
+					{
+<span class="nc" id="L454">						getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.admin_addObject.cas_do_zly_format&quot;));</span>
+<span class="nc" id="L455">						return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+					}
+<span class="nc" id="L457">					ReservationObjectTimesBean den = new ReservationObjectTimesBean();</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">					for(ReservationObjectTimesBean rotb : times)</span>
+					{
+<span class="nc bnc" id="L460" title="All 2 branches missed.">						if(rotb.getDen()==i+1)</span>
+<span class="nc" id="L461">							den = rotb;</span>
+<span class="nc" id="L462">					}</span>
+<span class="nc" id="L463">					den.setDen(i+1);</span>
+<span class="nc" id="L464">					den.setCasOd(casyOd[i]);</span>
+<span class="nc" id="L465">					den.setCasDo(casyDo[i]);</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">					if(reservationObjectId&gt;0)</span>
+<span class="nc" id="L467">						den.setObjectId(reservationObjectId);</span>
+					else
+<span class="nc" id="L469">						den.setObjectId(ReservationManager.getReservationObjectId(reservationObject));</span>
+<span class="nc" id="L470">					den.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L471">					den.save();</span>
+<span class="nc" id="L472">				}</span>
+				else
+				{
+<span class="nc bnc" id="L475" title="All 2 branches missed.">					for(ReservationObjectTimesBean rotb : times)</span>
+					{
+<span class="nc bnc" id="L477" title="All 2 branches missed.">						if(rotb.getDen()==i+1)</span>
+<span class="nc" id="L478">							rotb.delete();</span>
+<span class="nc" id="L479">					}</span>
+				}
+			}
+		}
+		else
+		{
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			for(ReservationObjectTimesBean rotb : times)</span>
+			{
+<span class="nc" id="L487">					rotb.delete();</span>
+<span class="nc" id="L488">			}</span>
+		}
+
+<span class="nc" id="L491">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+	}
+
+	/**
+	 * Vymazanie rezervacie z databazy
+	 *
+	 * @return
+	 */
+	public Resolution bDeleteReservation()
+	{
+<span class="nc bnc" id="L501" title="All 2 branches missed.">		if (isAnyUserLogged() == false)</span>
+<span class="nc" id="L502">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+<span class="nc" id="L503">		Identity currUser = getCurrentUser();</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">		int delOK = ReservationManager.deleteReservation(reservation.getReservationId(), (reservationObject == null)</span>
+<span class="nc" id="L505">					? &quot;&quot;</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">					: reservationObject.getPasswd(), currUser != null ? getCurrentUser().getEmail() : &quot;&quot;);</span>
+<span class="nc" id="L507">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">		if (delOK &gt; 0)</span>
+		{
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			if (delOK == 1)</span>
+<span class="nc" id="L511">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L512">							prop.getText(&quot;components.reservation.reservation_manager.deleteReservation.one&quot;));</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">			if (delOK == 2)</span>
+<span class="nc" id="L514">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L515">							prop.getText(&quot;components.reservation.reservation_manager.deleteReservation.two&quot;));</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">			if (delOK == 3)</span>
+<span class="nc" id="L517">				getRequest().setAttribute(</span>
+							&quot;errorText&quot;,
+<span class="nc" id="L519">							prop.getText(&quot;components.reservation.reservation_manager.deleteReservation.three&quot;, String</span>
+<span class="nc" id="L520">										.valueOf(ReservationManager.getReservationObject(</span>
+<span class="nc" id="L521">													ReservationManager.getReservationObjectId(reservation.getReservationId()))</span>
+<span class="nc" id="L522">													.getCancelTimeBefor())));</span>
+<span class="nc" id="L523">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+		else
+		{
+<span class="nc" id="L527">			getRequest().setAttribute(&quot;delText&quot;, prop.getText(&quot;components.reservation.reservation_manager.deleteReservation.zero&quot;));</span>
+		}
+<span class="nc bnc" id="L529" title="All 4 branches missed.">		if (reservationObject != null &amp;&amp; Tools.isNotEmpty(reservationObject.getPasswd()))</span>
+		{
+<span class="nc" id="L531">			return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+		}
+<span class="nc" id="L533">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+	}
+
+	/**
+	 * Vymazanie rezervacneho objektu z databazy
+	 *
+	 * @return
+	 */
+	public Resolution bDeleteReservationObject()
+	{
+<span class="nc bnc" id="L543" title="All 2 branches missed.">		if (isAdminLogged() == false)</span>
+<span class="nc" id="L544">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+<span class="nc" id="L545">		int delOK = ReservationManager.deleteReservationObject(reservationObject.getReservationObjectId());</span>
+<span class="nc" id="L546">		deleteObjectPrices(reservationObject.getReservationObjectId());</span>
+<span class="nc" id="L547">		deleteObjectTimes(reservationObject.getReservationObjectId());</span>
+<span class="nc" id="L548">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">		if (delOK &gt; 0)</span>
+		{
+<span class="nc bnc" id="L551" title="All 2 branches missed.">			if (delOK == 1)</span>
+<span class="nc" id="L552">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L553">							prop.getText(&quot;components.reservation.reservation_manager.deleteReservationObject.one&quot;));</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">			if (delOK == 2)</span>
+<span class="nc" id="L555">				getRequest().setAttribute(&quot;errorText&quot;,</span>
+<span class="nc" id="L556">							prop.getText(&quot;components.reservation.reservation_manager.deleteReservationObject.two&quot;));</span>
+<span class="nc" id="L557">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+		}
+<span class="nc" id="L559">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+	}
+
+	/**
+	 * Vyhladavanie v zozname rezervacii
+	 *
+	 * @return
+	 */
+	public Resolution bFilter()
+	{
+<span class="nc" id="L569">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+	}
+
+	/**
+	 * Akceptacia rezervacie odkazom z mejlu
+	 *
+	 * @return
+	 */
+	public Resolution accept()
+	{
+<span class="nc" id="L579">		boolean acceptOK = ReservationManager.acceptReservation(reservation.getReservationId(), reservation.getHashValue());</span>
+		//posleme mail o schvaleni zakaznikovy
+<span class="nc bnc" id="L581" title="All 2 branches missed.">		if(acceptOK)</span>
+<span class="nc" id="L582">			ReservationManager.sendApprovalStatusChangedEmail(reservation, true, getRequest());</span>
+<span class="nc" id="L583">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L584">		getRequest().setAttribute(&quot;acceptText&quot;,</span>
+<span class="nc" id="L585">					prop.getText(&quot;components.reservation.reservation_manager.acceptReservation.&quot; + acceptOK));</span>
+<span class="nc" id="L586">		return (new ForwardResolution(&quot;/components/reservation/reservation_list.jsp&quot;));</span>
+	}
+
+	private void deleteObjectPrices(int id)
+	{
+		try
+		{
+<span class="nc" id="L593">			List&lt;ReservationObjectPriceBean&gt; pricesList = ReservationObjectPriceDB.getInstance().getByReservationObjectId(id);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">			for(ReservationObjectPriceBean ropb : pricesList)</span>
+			{
+<span class="nc" id="L596">				ropb.delete();</span>
+<span class="nc" id="L597">			}</span>
+		}
+<span class="nc" id="L599">		catch(Exception e)</span>
+<span class="nc" id="L600">		{}</span>
+<span class="nc" id="L601">	}</span>
+
+	private void deleteObjectTimes(int id)
+	{
+		try
+		{
+<span class="nc" id="L607">			List&lt;ReservationObjectTimesBean&gt; timesList = ReservationObjectTimesDB.getInstance().getByReservationObjectId(id);</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">			for(ReservationObjectTimesBean ropb : timesList)</span>
+			{
+<span class="nc" id="L610">				ropb.delete();</span>
+<span class="nc" id="L611">			}</span>
+		}
+<span class="nc" id="L613">		catch(Exception e)</span>
+<span class="nc" id="L614">		{}</span>
+<span class="nc" id="L615">	}</span>
+
+	/**
+	 * porovna staru rezervaciu ulozenu v databaze s novou aktualnou rezervaciou a vrati cislo reprezentujuce zmenu schvalenia rezervacie
+	 * 0 - ziadna zmena, alebo niektora rezervacia je null
+	 * 1 - stara bola neschvalena, nova je schvalena
+	 * 2 - stara bola schvalena, nova je neschvalena
+	 * @param reservation
+	 * @return
+	 */
+	private int getReservationStatusChange(ReservationBean reservation)
+	{
+<span class="nc" id="L627">		int statusChange = 0;</span>
+
+<span class="nc bnc" id="L629" title="All 2 branches missed.">		if(reservation!=null)</span>
+		{
+<span class="nc" id="L631">			ReservationBean oldReservation = ReservationManager.getReservationById(reservation.getReservationId());</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">			if(oldReservation!=null)</span>
+			{
+<span class="nc bnc" id="L634" title="All 4 branches missed.">				if(!oldReservation.isAccepted() &amp;&amp; reservation.isAccepted())</span>
+<span class="nc" id="L635">					statusChange = 1;</span>
+<span class="nc bnc" id="L636" title="All 4 branches missed.">				else if(oldReservation.isAccepted() &amp;&amp; !reservation.isAccepted())</span>
+<span class="nc" id="L637">					statusChange = 2;</span>
+			}
+		}
+
+<span class="nc" id="L641">		return statusChange;</span>
+	}
+
+	public ReservationObjectBean getReservationObject()
+	{
+<span class="nc" id="L646">		return reservationObject;</span>
+	}
+
+	public void setReservationObject(ReservationObjectBean reservationObject)
+	{
+<span class="nc" id="L651">		this.reservationObject = reservationObject;</span>
+<span class="nc" id="L652">	}</span>
+
+	public boolean isChooseDays()
+	{
+<span class="nc" id="L656">		return chooseDays;</span>
+	}
+
+	public void setChooseDays(boolean chooseDays)
+	{
+<span class="nc" id="L661">		this.chooseDays = chooseDays;</span>
+<span class="nc" id="L662">	}</span>
+
+	public boolean[] getDays()
+	{
+<span class="nc" id="L666">		return days;</span>
+	}
+
+	public void setDays(boolean[] days)
+	{
+<span class="nc" id="L671">		this.days = days;</span>
+<span class="nc" id="L672">	}</span>
+
+	public String[] getCasyOd()
+	{
+<span class="nc" id="L676">		return casyOd;</span>
+	}
+
+	public void setCasyOd(String[] casyOd)
+	{
+<span class="nc" id="L681">		this.casyOd = casyOd;</span>
+<span class="nc" id="L682">	}</span>
+
+	public String[] getCasyDo()
+	{
+<span class="nc" id="L686">		return casyDo;</span>
+	}
+
+	public void setCasyDo(String[] casyDo)
+	{
+<span class="nc" id="L691">		this.casyDo = casyDo;</span>
+<span class="nc" id="L692">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

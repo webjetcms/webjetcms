@@ -51,7 +51,7 @@ request.setAttribute("perexGroups", perexGroups);
 	<tr>
 		<td valign="top">
 			<div class="input-icon input-icon-lg right">
-				<i class="fa fa-search"></i>
+				<i class="ti ti-search"></i>
 		   	<input type="text" name="perexGroupSearch" onkeyup="perexGroupSearchChange(this, 'perexGroup', 'disabledItems')" class="form-control" />
 		   </div>
 		</td>
@@ -64,11 +64,11 @@ request.setAttribute("perexGroups", perexGroups);
 		</td>
 			<td style=" text-align: center; vertical-align: middle; width: 6%; padding-left: 8px; padding-right: 8px;">
 				<button type="button" onclick="moveLeft(this.form, 'perexGroup', 'disabledItems');" title="<iwcm:text key="editor.perex_group.unselect"/>" class="btn green">
-					<i class="fa fa-arrow-circle-left"></i>
+					<i class="ti ti-circle-arrow-left"></i>
 				</button>
 
 				<button type="button" onclick="moveRight(this.form, 'perexGroup', 'disabledItems');" title="<iwcm:text key="editor.perex_group.select"/>" class="btn green" style="margin-top: 8px;">
-					<i class="fa fa-arrow-circle-right"></i>
+					<i class="ti ti-circle-arrow-right"></i>
 				</button>
 			</td>
 		<td style="width: 47%; vertical-align: top;">

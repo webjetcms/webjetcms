@@ -19,7 +19,7 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2 AND publicable = ?3 AND author_id = ?4", nativeQuery=true)
-    public List<Integer> findOldHistoryIds(int docId, Long historyId, int publicable, int authorId);
+    public List<Integer> findOldHistoryIds(int docId, Long historyId, boolean publicable, int authorId);
 
     //
     @Transactional
@@ -29,8 +29,8 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM DocHistory WHERE id = :historyIds AND publicable = 1")
-    public void deleteByIdPublicable(@Param("historyIds")Long historyId);
+    @Query(value = "DELETE FROM DocHistory WHERE id = :historyIds AND publicable = :publicable")
+    public void deleteByIdPublicable(@Param("historyIds")Long historyId, @Param("publicable")boolean publicable);
 
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2", nativeQuery=true)

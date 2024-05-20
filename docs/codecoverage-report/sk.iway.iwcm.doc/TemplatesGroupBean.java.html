@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplatesGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">TemplatesGroupBean.java</span></div><h1>TemplatesGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ * TemplatesGroupBean.java
+ *
+ * Class TemplatesGroupBean is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * author       $Author: mhruby $
+ * version      $Revision: 1.0 $
+ * created      12.6.2018 17:24
+ * modified     12.6.2018 17:21
+ */
+
+@Entity
+@Table(name = &quot;templates_group&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_TEMPLATE_GROUP)
+<span class="fc" id="L41">public class TemplatesGroupBean extends ActiveRecordRepository implements Serializable {</span>
+
+    private static final long serialVersionUID = -1L;
+
+    @Id
+    @Column(name = &quot;templates_group_id&quot;)
+    @GeneratedValue(generator = &quot;WJGen_templates_group&quot;)
+    @TableGenerator(name = &quot;WJGen_templates_group&quot;, pkColumnValue = &quot;templates_group&quot;)
+    @DataTableColumn(
+            inputType = {DataTableColumnType.ID},
+            title = &quot;components.template_groups.id&quot;
+    )
+    private Long templatesGroupId;
+
+    @Column(name = &quot;name&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = {DataTableColumnType.OPEN_EDITOR},
+        title = &quot;admin.temp_group_list.name&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String name;
+
+    @Column(name = &quot;directory&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;admin.temp_group_list.directory&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String directory;
+
+    @Column(name = &quot;inline_editing_mode&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;admin.temp_group_list.inline_editing_mode&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String inlineEditingMode;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_name&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String projectName;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_autor&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String projectAuthor;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_copyright&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String projectCopyright;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_developer&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String projectDeveloper;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_generator&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String projectGenerator;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_field_a&quot;,
+        tab = &quot;fields&quot;
+    )
+    private String projectFieldA;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_field_b&quot;,
+        tab = &quot;fields&quot;
+    )
+    private String projectFieldB;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_field_c&quot;,
+        tab = &quot;fields&quot;
+    )
+    private String projectFieldC;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.project_field_d&quot;,
+        tab = &quot;fields&quot;
+    )
+    private String projectFieldD;
+
+    @Transient
+    @DataTableColumn(
+            inputType = DataTableColumnType.DISABLED,
+            tab = &quot;basic&quot;,
+            title = &quot;admin.temps_list.pocet_pouziti&quot;,
+            editor = {
+                @DataTableColumnEditor(
+                        type = &quot;text&quot;,
+                        attr = @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+                )
+            }
+    )
+    private Integer count;
+
+    @Column(name = &quot;key_prefix&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;admin.temp_group_list.key_prefix&quot;,
+        tab = &quot;metadata&quot;
+    )
+    private String keyPrefix;
+
+    public Long getTemplatesGroupId() {
+<span class="fc" id="L175">        return templatesGroupId;</span>
+    }
+
+    public void setTemplatesGroupId(Long groupTemplateId) {
+<span class="fc" id="L179">        this.templatesGroupId = groupTemplateId;</span>
+<span class="fc" id="L180">    }</span>
+
+    public String getName() {
+<span class="fc" id="L183">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="fc" id="L187">        this.name = name;</span>
+<span class="fc" id="L188">    }</span>
+
+    public String getDirectory() {
+<span class="fc" id="L191">        return directory;</span>
+    }
+
+    public void setDirectory(String directory) {
+<span class="fc" id="L195">        this.directory = directory;</span>
+<span class="fc" id="L196">    }</span>
+
+    @Override
+    public Long getId() {
+<span class="fc" id="L200">        return getTemplatesGroupId();</span>
+    }
+
+    @Override
+    public void setId(Long id) {
+<span class="fc" id="L205">        this.setTemplatesGroupId(id);</span>
+<span class="fc" id="L206">    }</span>
+
+    public String getProjectName() {
+<span class="fc" id="L209">        return projectName;</span>
+    }
+
+    public void setProjectName(String projectName) {
+<span class="fc" id="L213">        this.projectName = projectName;</span>
+<span class="fc" id="L214">    }</span>
+
+    public String getProjectAuthor() {
+<span class="fc" id="L217">        return projectAuthor;</span>
+    }
+
+    public void setProjectAuthor(String projectAuthor) {
+<span class="fc" id="L221">        this.projectAuthor = projectAuthor;</span>
+<span class="fc" id="L222">    }</span>
+
+    public String getProjectCopyright() {
+<span class="fc" id="L225">        return projectCopyright;</span>
+    }
+
+    public void setProjectCopyright(String projectCopyright) {
+<span class="fc" id="L229">        this.projectCopyright = projectCopyright;</span>
+<span class="fc" id="L230">    }</span>
+
+    public String getProjectDeveloper() {
+<span class="fc" id="L233">        return projectDeveloper;</span>
+    }
+
+    public void setProjectDeveloper(String projectDeveloper) {
+<span class="fc" id="L237">        this.projectDeveloper = projectDeveloper;</span>
+<span class="fc" id="L238">    }</span>
+
+    public String getProjectGenerator() {
+<span class="fc" id="L241">        return projectGenerator;</span>
+    }
+
+    public void setProjectGenerator(String projectGenerator) {
+<span class="fc" id="L245">        this.projectGenerator = projectGenerator;</span>
+<span class="fc" id="L246">    }</span>
+
+    public String getProjectFieldA() {
+<span class="fc" id="L249">        return projectFieldA;</span>
+    }
+
+    public void setProjectFieldA(String projectFieldA) {
+<span class="fc" id="L253">        this.projectFieldA = projectFieldA;</span>
+<span class="fc" id="L254">    }</span>
+
+    public String getProjectFieldB() {
+<span class="fc" id="L257">        return projectFieldB;</span>
+    }
+
+    public void setProjectFieldB(String projectFieldB) {
+<span class="fc" id="L261">        this.projectFieldB = projectFieldB;</span>
+<span class="fc" id="L262">    }</span>
+
+    public String getProjectFieldC() {
+<span class="fc" id="L265">        return projectFieldC;</span>
+    }
+
+    public void setProjectFieldC(String projectFieldC) {
+<span class="fc" id="L269">        this.projectFieldC = projectFieldC;</span>
+<span class="fc" id="L270">    }</span>
+
+    public String getProjectFieldD() {
+<span class="fc" id="L273">        return projectFieldD;</span>
+    }
+
+    public void setProjectFieldD(String projectFieldD) {
+<span class="fc" id="L277">        this.projectFieldD = projectFieldD;</span>
+<span class="fc" id="L278">    }</span>
+
+    public Integer getCount() {
+<span class="fc" id="L281">        return count;</span>
+    }
+
+    public void setCount(Integer count) {
+<span class="fc" id="L285">        this.count = count;</span>
+<span class="fc" id="L286">    }</span>
+
+    public String getKeyPrefix() {
+<span class="fc" id="L289">        return keyPrefix;</span>
+    }
+
+    public void setKeyPrefix(String keyPrefix) {
+<span class="fc" id="L293">        this.keyPrefix = keyPrefix;</span>
+<span class="fc" id="L294">    }</span>
+
+<span class="fc" id="L296">    public String getInlineEditingMode() { return inlineEditingMode; }</span>
+
+<span class="fc" id="L298">    public void setInlineEditingMode(String inlineEditingMode) { this.inlineEditingMode = inlineEditingMode; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -187,11 +187,11 @@ public class UsersDB
 
 			db_conn = DBPool.getConnection();
 
-			String statement = "SELECT * FROM  users WHERE CONCAT(CONCAT(first_name, ' '), last_name) LIKE ?";
+			String statement = "SELECT * FROM users WHERE "+DB.fixAiCiCol("CONCAT(CONCAT(first_name, ' '), last_name)")+" LIKE ?";
 			//if (Constants.DB_TYPE == Constants.DB_MSSQL) statement = "SELECT * FROM  users WHERE (first_name + ' ' + last_name) Like ?";
 
 			ps = db_conn.prepareStatement(statement);
-			ps.setString(1, "%" + startsWith + "%");
+			ps.setString(1, "%" + DB.fixAiCiValue(startsWith) + "%");
 			rs = ps.executeQuery();
 			UserDetails usr;
 
@@ -359,8 +359,8 @@ public class UsersDB
 		{
 
 			db_conn = DBPool.getConnectionReadUncommited();
-			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE login=?"+UsersDB.getDomainIdSqlWhere(true));
-			ps.setString(1, loginName);
+			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE "+DB.fixAiCiCol("login")+"=?"+UsersDB.getDomainIdSqlWhere(true));
+			ps.setString(1, DB.fixAiCiValue(loginName));
 			rs = ps.executeQuery();
 
 			if (rs.next())
@@ -420,8 +420,8 @@ public class UsersDB
 		{
 
 			db_conn = DBPool.getConnectionReadUncommited();
-			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE email=?"+UsersDB.getDomainIdSqlWhere(true));
-			ps.setString(1, email);
+			ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true));
+			ps.setString(1, DB.fixAiCiValue(email));
 			rs = ps.executeQuery();
 
 			if (rs.next())
@@ -540,13 +540,13 @@ public class UsersDB
 		{
 			String userGroups = null;
 
-			sql = "SELECT * FROM  users WHERE email=?"+UsersDB.getDomainIdSqlWhere(true);
+			sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true);
 			if (loggedUser != null) sql = "SELECT * FROM  users WHERE user_id="+loggedUser.getUserId()+UsersDB.getDomainIdSqlWhere(true);
 
 			String fullName = "";
 			db_conn = DBPool.getConnection(request);
 			ps = db_conn.prepareStatement(sql);
-			if (loggedUser == null) ps.setString(1, user.getEmail());
+			if (loggedUser == null) ps.setString(1, DB.fixAiCiValue(user.getEmail()));
 			rs = ps.executeQuery();
 			//fullName = (title + " " + firstName + " " + lastName).trim();
 
@@ -758,7 +758,7 @@ public class UsersDB
 					//toto tu je keby sa nepodarilo vymazanie (je to napr. admin)
 					ps = db_conn.prepareStatement("UPDATE  users SET user_groups=?, authorized=? WHERE user_id=?"+UsersDB.getDomainIdSqlWhere(true));
 					ps.setString(1, userGroups);
-					//TODO: toto je potencionalne bezpecnostne riziko, ale ked reaktivujem skupiny, musim ho povolit
+					//toto je potencionalne bezpecnostne riziko, ale ked reaktivujem skupiny, musim ho povolit
 					ps.setBoolean(2, true);
 					ps.setInt(3, createdUserId);
 					ps.execute();
@@ -1048,16 +1048,16 @@ public class UsersDB
 			if (login != null && emailParam == null && login.contains("@"))
 				emailParam = login;
 
-			sql = "SELECT * FROM  users WHERE login=?"+UsersDB.getDomainIdSqlWhere(true);
+			sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("login")+"=?"+UsersDB.getDomainIdSqlWhere(true);
 			String param = login;
 			if (Tools.isNotEmpty(emailParam))
 			{
-				sql = "SELECT * FROM  users WHERE email=?"+UsersDB.getDomainIdSqlWhere(true);
+				sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true);
 				param = emailParam;
 			}
 			sql += " ORDER BY user_id ASC, is_admin DESC";
 			ps = db_conn.prepareStatement(sql);
-			ps.setString(1, param);
+			ps.setString(1, DB.fixAiCiValue(param));
 			rs = ps.executeQuery();
 			if(rs.next())
 			{
@@ -1400,8 +1400,8 @@ public class UsersDB
 			{
 				Logger.debug(UsersDB.class, "Getting new userId form login " + user.getLogin());
 
-				ps = db_conn.prepareStatement("SELECT max(user_id) AS user_id FROM  users WHERE login=?"+UsersDB.getDomainIdSqlWhere(true));
-				ps.setString(1, user.getLogin());
+				ps = db_conn.prepareStatement("SELECT max(user_id) AS user_id FROM  users WHERE "+DB.fixAiCiCol("login")+"=?"+UsersDB.getDomainIdSqlWhere(true));
+				ps.setString(1, DB.fixAiCiValue(user.getLogin()));
 				rs = ps.executeQuery();
 				if (rs.next())
 				{
@@ -1429,7 +1429,7 @@ public class UsersDB
 
 			//save password if it's changed
 			if (Tools.isNotEmpty(user.getPassword()) && UserTools.PASS_UNCHANGED.equals(user.getPassword())==false) {
-				UserDetailsService.savePassword(user.getUserId(), user.getPassword());
+				UserDetailsService.savePassword(user.getPassword(), user.getUserId());
 			}
 		}
 		catch (Exception ex)
@@ -1704,7 +1704,7 @@ public class UsersDB
 		{
 
 			java.sql.Connection db_conn = DBPool.getConnection();
-			java.sql.PreparedStatement ps = db_conn.prepareStatement("UPDATE  users SET authorized = 1 WHERE user_id = ?"+UsersDB.getDomainIdSqlWhere(true));
+			java.sql.PreparedStatement ps = db_conn.prepareStatement("UPDATE  users SET authorized = "+DB.getBooleanSql(true)+" WHERE user_id = ?"+UsersDB.getDomainIdSqlWhere(true));
 			ps.setInt(1, userId);
 			ps.executeUpdate();
 			ps.close();
@@ -1729,7 +1729,7 @@ public class UsersDB
 		{
 
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE is_admin = 1 "+UsersDB.getDomainIdSqlWhere(true)+" ORDER BY last_name, first_name");
+			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE is_admin = "+DB.getBooleanSql(true)+" "+UsersDB.getDomainIdSqlWhere(true)+" ORDER BY last_name, first_name");
 			rs = ps.executeQuery();
 			UserDetails usr;
 

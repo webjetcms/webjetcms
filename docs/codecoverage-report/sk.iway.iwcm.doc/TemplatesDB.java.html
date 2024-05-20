@@ -1,0 +1,772 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplatesDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">TemplatesDB.java</span></div><h1>TemplatesDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.beanutils.BeanUtils;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
+import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.users.UserDetails;
+
+/**
+ *  Cachuje v pamati zaznamy z tabulky templates
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      $Date: 2004/01/24 08:05:42 $
+ *@modified     $Date: 2004/01/24 08:05:42 $
+ */
+public class TemplatesDB extends DB
+{
+   private List&lt;TemplateDetails&gt; temps;
+
+   	public static TemplatesDB getInstance() {
+<span class="fc" id="L44">		return getInstance(false);</span>
+	}
+
+   /**
+    *  Gets the instance attribute of the TemplatesDB class
+    *
+    *@param  force_refresh   Description of the Parameter
+    *@return                 The instance value
+    */
+   public static TemplatesDB getInstance(boolean forceRefresh)
+   {
+      //try to get it from server space
+<span class="fc bfc" id="L56" title="All 2 branches covered.">      if (forceRefresh == false)</span>
+      {
+         //Logger.println(this,&quot;TempDB: getting from server space&quot;);
+<span class="fc" id="L59">      	TemplatesDB tempDB = ((TemplatesDB) Constants.getServletContext().getAttribute(Constants.A_TEMP_DB));</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">      	if (tempDB != null)</span>
+      	{
+<span class="fc" id="L62">      		return tempDB;</span>
+      	}
+      }
+<span class="fc" id="L65">      synchronized (TemplatesDB.class)</span>
+		{
+<span class="fc bfc" id="L67" title="All 2 branches covered.">			if (forceRefresh)</span>
+			{
+<span class="fc" id="L69">				TemplatesDB tempDB = new TemplatesDB();</span>
+				//	remove
+<span class="fc" id="L71">				Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);</span>
+				//save us to server space
+<span class="fc" id="L73">				Constants.getServletContext().setAttribute(Constants.A_TEMP_DB, tempDB);</span>
+
+<span class="fc" id="L75">				return tempDB;</span>
+			}
+			else
+			{
+				//double check
+<span class="fc" id="L80">				TemplatesDB tempDB = (TemplatesDB) Constants.getServletContext().getAttribute(Constants.A_TEMP_DB);</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">				if (tempDB == null)</span>
+				{
+<span class="fc" id="L83">					tempDB = new TemplatesDB();</span>
+					//	remove
+<span class="fc" id="L85">					Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);</span>
+					//save us to server space
+<span class="fc" id="L87">					Constants.getServletContext().setAttribute(Constants.A_TEMP_DB, tempDB);</span>
+
+				}
+<span class="fc" id="L90">				return tempDB;</span>
+			}
+		}
+   }
+
+	/**
+	 * Constructor for the TemplatesDB object
+	 *
+	 * @param servletContext Description of the Parameter
+	 * @param serverName     Description of the Parameter
+	 */
+<span class="fc" id="L101">	private TemplatesDB() {</span>
+<span class="fc" id="L102">		DebugTimer dt = new DebugTimer(&quot;TempDB: constructor [&quot; + Constants.getInstallName() + &quot;]&quot;);</span>
+
+		try {
+<span class="fc" id="L105">			reload();</span>
+<span class="nc" id="L106">		} catch (Exception ex) {</span>
+<span class="nc" id="L107">			Logger.error(this, &quot;Can't load templates&quot;);</span>
+<span class="nc" id="L108">			Logger.error(TemplatesDB.class, ex);</span>
+<span class="fc" id="L109">		}</span>
+
+<span class="fc" id="L111">		ClusterDB.addRefresh(TemplatesDB.class);</span>
+
+<span class="fc" id="L113">		dt.diff(&quot;done&quot;);</span>
+<span class="fc" id="L114">	}</span>
+
+	/**
+	 * Description of the Method
+	 *
+	 * @param servletContext Description of the Parameter
+	 * @exception Exception Description of the Exception
+	 */
+	private void reload() throws Exception {
+
+<span class="fc" id="L124">		List&lt;TemplateDetails&gt; loadedTemps = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L125">		java.sql.Connection db_conn = null;</span>
+<span class="fc" id="L126">		java.sql.PreparedStatement ps = null;</span>
+<span class="fc" id="L127">		ResultSet rs = null;</span>
+		try {
+			//Nacitaj zoznam tempGroups
+<span class="fc" id="L130">			List&lt;TemplatesGroupBean&gt; tempGroupsList = TemplatesGroupDB.getAllTemplatesGroups();</span>
+<span class="fc" id="L131">			Map&lt;Long, String&gt; tempGroupsTable = new Hashtable&lt;&gt;();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">			for (TemplatesGroupBean tgb : tempGroupsList) {</span>
+<span class="fc" id="L133">				tempGroupsTable.put(tgb.getId(), tgb.getName());</span>
+<span class="fc" id="L134">			}</span>
+
+<span class="fc" id="L136">			db_conn = DBPool.getConnection();</span>
+
+			String sql;
+<span class="fc" id="L139">			sql = &quot;SELECT * FROM templates order by temp_name&quot;;</span>
+			// sql = &quot;SELECT t.*, COUNT(d.temp_id) as doc_count FROM templates t LEFT JOIN
+			// documents d USING (temp_id) GROUP BY temp_id;&quot;;
+<span class="fc" id="L142">			ps = db_conn.prepareStatement(sql);</span>
+			// ps.setInt(1, user.getUserId());
+			// Logger.println(this,&quot;sql=&quot;+sql);
+
+<span class="fc" id="L146">			rs = ps.executeQuery();</span>
+
+			TemplateDetails tmpDetails;
+
+<span class="fc bfc" id="L150" title="All 2 branches covered.">			while (rs.next()) {</span>
+<span class="fc" id="L151">				tmpDetails = new TemplateDetails();</span>
+<span class="fc" id="L152">				tmpDetails.setTempId(rs.getInt(&quot;temp_id&quot;));</span>
+<span class="fc" id="L153">				tmpDetails.setTempName(getDbString(rs, &quot;temp_name&quot;));</span>
+<span class="fc" id="L154">				tmpDetails.setForward(getDbString(rs, &quot;forward&quot;));</span>
+<span class="fc" id="L155">				tmpDetails.setLng(getDbString(rs, &quot;lng&quot;));</span>
+<span class="fc" id="L156">				tmpDetails.setHeaderDocId(rs.getInt(&quot;header_doc_id&quot;));</span>
+<span class="fc" id="L157">				tmpDetails.setFooterDocId(rs.getInt(&quot;footer_doc_id&quot;));</span>
+<span class="fc" id="L158">				tmpDetails.setMenuDocId(rs.getInt(&quot;menu_doc_id&quot;));</span>
+<span class="fc" id="L159">				tmpDetails.setRightMenuDocId(rs.getInt(&quot;right_menu_doc_id&quot;));</span>
+<span class="fc" id="L160">				tmpDetails.setAfterBodyData(getDbString(rs, &quot;after_body_data&quot;));</span>
+<span class="fc" id="L161">				tmpDetails.setCss(getDbString(rs, &quot;css&quot;));</span>
+<span class="fc" id="L162">				tmpDetails.setBaseCssPath(getDbString(rs, &quot;base_css_path&quot;));</span>
+
+<span class="fc" id="L164">				tmpDetails.setObjectADocId(rs.getInt(&quot;object_a_doc_id&quot;));</span>
+<span class="fc" id="L165">				tmpDetails.setObjectBDocId(rs.getInt(&quot;object_b_doc_id&quot;));</span>
+<span class="fc" id="L166">				tmpDetails.setObjectCDocId(rs.getInt(&quot;object_c_doc_id&quot;));</span>
+<span class="fc" id="L167">				tmpDetails.setObjectDDocId(rs.getInt(&quot;object_d_doc_id&quot;));</span>
+
+<span class="fc" id="L169">				tmpDetails.setAvailableGroups(getDbString(rs, &quot;available_groups&quot;));</span>
+
+<span class="fc" id="L171">				tmpDetails.setTemplateInstallName(getDbString(rs, &quot;template_install_name&quot;));</span>
+<span class="fc" id="L172">				tmpDetails.setDisableSpamProtection(rs.getBoolean(&quot;disable_spam_protection&quot;));</span>
+
+				// tmpDetails.setPocetPouziti(rs.getInt(&quot;doc_count&quot;));
+
+<span class="fc" id="L176">				tmpDetails.setTemplatesGroupId(rs.getLong(&quot;templates_group_id&quot;));</span>
+
+<span class="fc" id="L178">				String tempGroupName = null;</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">				if (tmpDetails.getTemplatesGroupId()!=null) {</span>
+<span class="fc" id="L180">					tempGroupName = tempGroupsTable.get(tmpDetails.getTemplatesGroupId());</span>
+				}
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">				if (tempGroupName==null) tempGroupName = &quot;&quot;;</span>
+<span class="fc" id="L183">				tmpDetails.setTemplatesGroupName(tempGroupName);</span>
+
+<span class="fc" id="L185">				tmpDetails.setInlineEditingMode(getDbString(rs, &quot;inline_editing_mode&quot;));</span>
+
+<span class="fc" id="L187">				loadedTemps.add(tmpDetails);</span>
+<span class="fc" id="L188">			}</span>
+<span class="fc" id="L189">			rs.close();</span>
+<span class="fc" id="L190">			ps.close();</span>
+<span class="fc" id="L191">			db_conn.close();</span>
+<span class="fc" id="L192">			db_conn = null;</span>
+<span class="fc" id="L193">			rs = null;</span>
+<span class="fc" id="L194">			ps = null;</span>
+
+<span class="fc" id="L196">			temps = loadedTemps;</span>
+
+<span class="nc" id="L198">		} catch (Exception ex) {</span>
+<span class="nc" id="L199">			Logger.error(TemplatesDB.class, ex);</span>
+			// backward compatibility - method used to throw an exception
+<span class="nc" id="L201">			throw ex;</span>
+		} finally {
+			try {
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L205">					rs.close();</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L207">					ps.close();</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L209">					db_conn.close();</span>
+<span class="nc" id="L210">			} catch (Exception e) {</span>
+				//
+<span class="fc" id="L212">			}</span>
+		}
+<span class="fc" id="L214">	}</span>
+
+   /**
+    *  vrati sablonu so zadanym id
+    *
+    *@param  temp_id  id sablony
+    *@return          sablona
+    */
+   public TemplateDetails getTemplate(int temp_id)
+   {
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">      for (TemplateDetails details : temps)</span>
+      {
+<span class="fc bfc" id="L226" title="All 2 branches covered.">         if (details.getTempId() == temp_id)</span>
+         {
+<span class="fc" id="L228">            return (details);</span>
+         }
+<span class="fc" id="L230">      }</span>
+<span class="nc" id="L231">      return (null);</span>
+   }
+
+   /**
+    *  vrati sablonu so zadanym menom
+    *
+    *@param tempName id sablony
+    *@return sablona
+    */
+
+   public TemplateDetails getTemplate(String tempName)
+   {
+<span class="pc bpc" id="L243" title="2 of 4 branches missed.">      if (tempName==null || tempName.trim().length()&lt;1) return(null);</span>
+<span class="fc" id="L244">      tempName = tempName.trim();</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">      for (TemplateDetails details : temps)</span>
+      {
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">         if (details.getTempName().equalsIgnoreCase(tempName))</span>
+         {
+<span class="fc" id="L249">            return (details);</span>
+         }
+<span class="nc" id="L251">      }</span>
+<span class="nc" id="L252">      return (null);</span>
+   }
+
+   /**
+    * Vrati sablonu na zaklade nazvu a typu zariadenia (browserDeviceType)
+    * Sablona musi v nazve obsahovat &quot;device=&quot;+bd.getBrowserDeviceType()
+    * @param temp
+    * @param bd
+    * @return
+    */
+   public TemplateDetails getTemplate(TemplateDetails temp, BrowserDetector bd)
+   {
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">   	if (temp==null) return null;</span>
+<span class="fc" id="L265">   	String tempName = temp.getTempName();</span>
+<span class="pc bpc" id="L266" title="3 of 8 branches missed.">      if (tempName==null || tempName.trim().length()&lt;1 || bd == null || bd.getBrowserDeviceType()==null) return(null);</span>
+
+<span class="fc" id="L268">      tempName = tempName.trim();</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">      for (TemplateDetails details : temps)</span>
+      {
+<span class="fc bfc" id="L271" title="All 4 branches covered.">         if (details.getTempName().startsWith(tempName+&quot; device=&quot;) &amp;&amp; details.getTempName().indexOf(&quot;device=&quot;+bd.getBrowserDeviceType())!=-1)</span>
+         {
+<span class="fc" id="L273">            return (details);</span>
+         }
+<span class="fc" id="L275">      }</span>
+
+<span class="pc bpc" id="L277" title="2 of 4 branches missed.">      if (Tools.isNotEmpty(bd.getBrowserDeviceType()) &amp;&amp; &quot;normal&quot;.equals(bd.getBrowserDeviceType())==false)</span>
+      {
+<span class="fc" id="L279">      	synchronized (temps)</span>
+			{
+      		//double check
+<span class="fc bfc" id="L282" title="All 2 branches covered.">      		for (TemplateDetails details : temps)</span>
+            {
+<span class="pc bpc" id="L284" title="1 of 4 branches missed.">               if (details.getTempName().startsWith(tempName+&quot; device=&quot;) &amp;&amp; details.getTempName().toLowerCase().indexOf(&quot;device=&quot;+bd.getBrowserDeviceType())!=-1)</span>
+               {
+<span class="nc" id="L286">                  return (details);</span>
+               }
+<span class="fc" id="L288">            }</span>
+
+	      	try
+	      	{
+<span class="fc" id="L292">	      		Logger.debug(TemplatesDB.class, &quot;Creating device template, name=&quot;+temp.getTempName()+&quot; device=&quot;+bd.getBrowserDeviceType());</span>
+
+		      	//vytvor pseudo sablonu pre dane device
+<span class="fc" id="L295">		      	TemplateDetails deviceTemp = new TemplateDetails();</span>
+<span class="fc" id="L296">		      	BeanUtils.copyProperties(deviceTemp, temp);</span>
+<span class="fc" id="L297">		      	deviceTemp.setTempId(-1);</span>
+<span class="fc" id="L298">		      	deviceTemp.setTempName(temp.getTempName()+&quot; device=&quot;+bd.getBrowserDeviceType());</span>
+
+<span class="fc" id="L300">		      	deviceTemp.setHeaderDocData(getDeviceHeaderFooterMenu(temp.getHeaderDocId(), bd));</span>
+<span class="fc" id="L301">		      	deviceTemp.setMenuDocData(getDeviceHeaderFooterMenu(temp.getMenuDocId(), bd));</span>
+<span class="fc" id="L302">		      	deviceTemp.setRightMenuDocData(getDeviceHeaderFooterMenu(temp.getRightMenuDocId(), bd));</span>
+<span class="fc" id="L303">		      	deviceTemp.setFooterDocData(getDeviceHeaderFooterMenu(temp.getFooterDocId(), bd));</span>
+
+<span class="fc" id="L305">		      	deviceTemp.setObjectADocData(getDeviceHeaderFooterMenu(temp.getObjectADocId(), bd));</span>
+<span class="fc" id="L306">		      	deviceTemp.setObjectBDocData(getDeviceHeaderFooterMenu(temp.getObjectBDocId(), bd));</span>
+<span class="fc" id="L307">		      	deviceTemp.setObjectCDocData(getDeviceHeaderFooterMenu(temp.getObjectCDocId(), bd));</span>
+<span class="fc" id="L308">		      	deviceTemp.setObjectDDocData(getDeviceHeaderFooterMenu(temp.getObjectDDocId(), bd));</span>
+
+		      	//uloz do listu
+<span class="fc" id="L311">		      	temps.add(deviceTemp);</span>
+<span class="fc" id="L312">		      	return deviceTemp;</span>
+	      	}
+<span class="nc" id="L314">	      	catch (Exception ex)</span>
+	      	{
+<span class="nc" id="L316">	      		Logger.error(TemplatesDB.class, ex);</span>
+	      	}
+<span class="nc" id="L318">			}</span>
+      }
+
+<span class="nc" id="L321">      return (null);</span>
+   }
+
+   private String getDeviceHeaderFooterMenu(int origDocId, BrowserDetector bd)
+   {
+<span class="fc bfc" id="L326" title="All 2 branches covered.">   	if (origDocId&lt;1) return null;</span>
+
+<span class="fc" id="L328">   	DocDB docDB = DocDB.getInstance();</span>
+   	//tu nemoze byt BasicDocDetails pretoze dole potrebujem origDoc.getData
+<span class="fc" id="L330">   	DocDetails origDoc = docDB.getDoc(origDocId);</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">   	if (origDoc != null)</span>
+   	{
+<span class="fc" id="L333">   		List&lt;DocDetails&gt; docs = docDB.getBasicDocDetailsByGroup(origDoc.getGroupId(), -1);</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">   		for (DocDetails doc:docs)</span>
+   		{
+   			//Logger.debug(TemplatesDB.class, &quot;Testing: &quot;+origDoc.getTitle()+&quot; d=&quot;+bd.getBrowserDeviceType()+&quot; vs &quot;+doc.getTitle()+&quot; device=&quot;+bd.getBrowserDeviceType()+&quot; p1=&quot;+doc.getTitle().startsWith(origDoc.getTitle())+&quot; p2=&quot;+(doc.getTitle().toLowerCase().indexOf(&quot;device=&quot;+bd.getBrowserDeviceType())));
+<span class="pc bpc" id="L337" title="1 of 4 branches missed.">   			if (doc.getTitle().startsWith(origDoc.getTitle()) &amp;&amp; doc.getTitle().toLowerCase().indexOf(&quot;device=&quot;+bd.getBrowserDeviceType())!=-1)</span>
+            {
+   				//musim ziskat komplet dokument
+<span class="nc" id="L340">   				DocDetails docFull = docDB.getDoc(doc.getDocId());</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">   				if (docFull!=null) return docFull.getData();</span>
+<span class="nc" id="L342">   				return origDoc.getData();</span>
+            }
+<span class="fc" id="L344">   		}</span>
+<span class="fc" id="L345">   		return origDoc.getData();</span>
+   	}
+
+<span class="nc" id="L348">   	return null;</span>
+   }
+
+	/**
+	 * Vrati subor na zaklade jeho mena a browser detector
+	 * subor musi v nazve obsahovat &quot;device=&quot;+bd.getBrowserDeviceType()
+	 * @param rootDir
+	 * @param forward
+	 * @param bd
+	 * @return
+	 */
+	public static File getDeviceTemplateFile(File rootDir, String forward, BrowserDetector bd)
+	{
+<span class="fc" id="L361">		File forwFile = new File(rootDir.getAbsolutePath()+File.separatorChar+forward.replace('/', File.separatorChar));</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">		if (forwFile.exists()==false) return(forwFile);</span>
+
+<span class="pc bpc" id="L364" title="1 of 4 branches missed.">		if (bd!=null &amp;&amp; bd.getBrowserDeviceType()!=null)</span>
+		{
+<span class="fc" id="L366">			String forwName = Tools.replace(forwFile.getName(), &quot;.jsp&quot;, &quot;&quot;);</span>
+<span class="fc" id="L367">			forwName = Tools.replace(forwFile.getName(), &quot;.html&quot;, &quot;&quot;);</span>
+<span class="fc" id="L368">			File[] files = rootDir.listFiles();</span>
+<span class="fc" id="L369">			int size = files.length;</span>
+			int i;
+<span class="fc bfc" id="L371" title="All 2 branches covered.">			for (i=0; i&lt;size; i++)</span>
+			{
+<span class="pc bpc" id="L373" title="3 of 4 branches missed.">				if (files[i].getName().startsWith(forwName) &amp;&amp; files[i].getName().toLowerCase().indexOf(&quot;device=&quot;+bd.getBrowserDeviceType())!=-1)</span>
+				{
+<span class="nc" id="L375">					return(files[i]);</span>
+				}
+			}
+		}
+<span class="fc" id="L379">		return(forwFile);</span>
+	}
+
+
+   /**
+    *  vrati zoznam vsetkych sablon
+    *
+    *@return    sablony
+    */
+   public List&lt;TemplateDetails&gt; getTemplates()
+   {
+<span class="fc" id="L390">      return (temps);</span>
+   }
+
+   /**
+    * Vrati sablony dostupne pre zadane groupId
+    * @param groupId
+    * @return
+    */
+   public List&lt;TemplateDetails&gt; getTemplates(int groupId)
+   {
+<span class="nc" id="L400">   	return getTemplates(groupId, -1);</span>
+   }
+
+   /**
+    * Vrati sablony dostupne pre zadane groupId pricom VZDY bude obsahovat aj sabonu s mustHaveTempId
+    * @param groupId
+    * @param mustHaveTempId
+    * @return
+    */
+   public List&lt;TemplateDetails&gt; getTemplates(int groupId, int mustHaveTempId)
+   {
+   	//najskor potrebujeme zoznam parent skupin
+<span class="fc" id="L412">   	GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L413">   	List&lt;GroupDetails&gt; groups = groupsDB.getParentGroups(groupId);</span>
+
+<span class="fc" id="L415">      List&lt;TemplateDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">      for (TemplateDetails temp : temps)</span>
+      {
+<span class="fc bfc" id="L418" title="All 2 branches covered.">         if (temp.getTempId()&lt;1) continue;</span>
+<span class="fc" id="L419">         int[] availableGroups = temp.getAvailableGroupsInt();</span>
+<span class="pc bpc" id="L420" title="1 of 6 branches missed.">         if (availableGroups.length == 0 || isGroupAvailable(availableGroups, groups) || temp.getTempId()==mustHaveTempId)</span>
+         {
+<span class="fc" id="L422">         	ret.add(temp);</span>
+         }
+<span class="fc" id="L424">      }</span>
+
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">      if (ret.size()==0)</span>
+      {
+<span class="nc" id="L428">      	ret.add(temps.get(0));</span>
+      }
+
+<span class="fc" id="L431">      return (ret);</span>
+   }
+
+   /**
+    * Odfiltruje zo zoznamu sablon tie, ktore su urcene pre specificky device (v nazve obsahuju device=)
+    * viz tiket 7197
+    * @param allTemplates
+    * @return
+    */
+   public static List&lt;TemplateDetails&gt; filterDeviceTemplates(List&lt;TemplateDetails&gt; allTemplates)
+   {
+<span class="fc" id="L442">   	List&lt;TemplateDetails&gt; templates = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L444" title="All 2 branches covered.">   	for (TemplateDetails temp : allTemplates)</span>
+   	{
+<span class="pc bpc" id="L446" title="3 of 6 branches missed.">   		if (temp == null || Tools.isEmpty(temp.getTempName()) || temp.getTempName().indexOf(&quot;device=&quot;)!=-1) continue;</span>
+
+<span class="fc" id="L448">   		templates.add(temp);</span>
+<span class="fc" id="L449">   	}</span>
+
+<span class="fc" id="L451">   	return templates;</span>
+   }
+
+   private boolean isGroupAvailable(int[] availableGroups, List&lt;GroupDetails&gt; groups)
+   {
+<span class="fc bfc" id="L456" title="All 2 branches covered.">   	for (int groupId : availableGroups)</span>
+   	{
+<span class="fc bfc" id="L458" title="All 2 branches covered.">	   	for (GroupDetails group : groups)</span>
+	   	{
+<span class="fc bfc" id="L460" title="All 2 branches covered.">	   		if (group.getGroupId() == groupId) return true;</span>
+<span class="fc" id="L461">	   	}</span>
+   	}
+<span class="fc" id="L463">   	return false;</span>
+   }
+
+   /**
+    * Otestuje, ci sa dana sablona pouziva. Ak je zadane -1 tak vzdy vrati ze ano
+    * @param tempId
+    * @return
+    */
+   public static boolean isTemplateUsed(int tempId)
+   {
+   	//novym vraciame ze ano, aby sa nezobrazilo Delete tlacitko
+<span class="nc bnc" id="L474" title="All 2 branches missed.">   	if (tempId &lt; 0) return(true);</span>
+
+<span class="nc" id="L476">   	boolean used = false;</span>
+
+<span class="nc" id="L478">   	Connection db_conn = null;</span>
+<span class="nc" id="L479">		PreparedStatement ps = null;</span>
+<span class="nc" id="L480">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L483">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L485">			String sql = &quot;SELECT doc_id FROM documents WHERE temp_id=?&quot;;</span>
+<span class="nc bnc" id="L486" title="All 4 branches missed.">			if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) sql += &quot; LIMIT 1&quot;;</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql = &quot;SELECT TOP 1 doc_id FROM documents WHERE temp_id=?&quot;;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			else if (Constants.DB_TYPE==Constants.DB_ORACLE) sql += &quot; AND rownum&lt;2&quot;;</span>
+
+<span class="nc" id="L490">			ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L491">			ps.setInt(1, tempId);</span>
+<span class="nc" id="L492">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L495">				used = true;</span>
+			}
+<span class="nc" id="L497">			rs.close();</span>
+<span class="nc" id="L498">			ps.close();</span>
+<span class="nc" id="L499">			rs = null;</span>
+<span class="nc" id="L500">			ps = null;</span>
+		}
+<span class="nc" id="L502">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L504">			Logger.error(TemplatesDB.class, ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L511">					db_conn.close();</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L513">					rs.close();</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L515">					ps.close();</span>
+			}
+<span class="nc" id="L517">			catch (Exception ex2)</span>
+			{
+				//
+<span class="nc" id="L520">			}</span>
+		}
+<span class="nc" id="L522">		return(used);</span>
+   }
+
+   /**
+    * vrati Hashtable, kde kluc je temp_id a hodnota je pocet stranok, ktore pouzivaju dany template
+    * @return Hashtable
+    */
+   public Map&lt;Integer, Integer&gt; numberOfPages()
+   {
+<span class="fc" id="L531">		Map&lt;Integer, Integer&gt; table = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L533">		List&lt;DocDetails&gt; allDocs = DocDB.getInstance().getBasicDocDetailsAll();</span>
+<span class="fc bfc" id="L534" title="All 2 branches covered.">		for (DocDetails d : allDocs)</span>
+		{
+<span class="fc" id="L536">			Integer tempId = Integer.valueOf(d.getTempId());</span>
+<span class="fc" id="L537">			Integer count = table.get(tempId);</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">			if (count == null) count = Integer.valueOf(1);</span>
+<span class="fc" id="L539">			else count = Integer.valueOf(count.intValue() + 1);</span>
+
+<span class="fc" id="L541">			table.put(tempId, count);</span>
+<span class="fc" id="L542">		}</span>
+
+<span class="fc" id="L544">		return(table);</span>
+   }
+
+   /**
+    * Ulozi sablonu do databazy
+    * @param t_form
+    * @return
+    */
+   public boolean saveTemplate(TemplateDetails t_form)
+   {
+<span class="fc" id="L554">   	Connection db_conn = null;</span>
+<span class="fc" id="L555">		PreparedStatement ps = null;</span>
+<span class="fc" id="L556">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L559">			db_conn = DBPool.getConnection();</span>
+
+			String sql;
+
+<span class="fc bfc" id="L563" title="All 2 branches covered.">			TemplateDetails oldTemplate = t_form.getTempId() &gt; 0 ? getTemplate(t_form.getTempId()) : null;</span>
+
+<span class="fc" id="L565">			sql = &quot;INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, templates_group_id, inline_editing_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+
+<span class="fc bfc" id="L567" title="All 2 branches covered.">			if (t_form.getTempId() &gt; 0)</span>
+<span class="fc" id="L568">				sql = &quot;UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, templates_group_id=?, inline_editing_mode=? WHERE temp_id=?&quot;;</span>
+
+<span class="fc" id="L570">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L571">			ps.setString(1, t_form.getTempName());</span>
+<span class="fc" id="L572">			ps.setString(2, t_form.getForward());</span>
+<span class="fc" id="L573">			ps.setInt(3, t_form.getHeaderDocId());</span>
+<span class="fc" id="L574">			ps.setInt(4, t_form.getFooterDocId());</span>
+<span class="fc" id="L575">			ps.setInt(5, t_form.getMenuDocId());</span>
+<span class="fc" id="L576">			DB.setClob(ps, 6, t_form.getAfterBodyData());</span>
+<span class="fc" id="L577">			ps.setString(7, t_form.getCss());</span>
+<span class="fc" id="L578">			ps.setString(8, t_form.getLng());</span>
+<span class="fc" id="L579">			ps.setInt(9, t_form.getRightMenuDocId());</span>
+<span class="fc" id="L580">			ps.setString(10, t_form.getBaseCssPath());</span>
+<span class="fc" id="L581">			ps.setInt(11, t_form.getObjectADocId());</span>
+<span class="fc" id="L582">			ps.setInt(12, t_form.getObjectBDocId());</span>
+<span class="fc" id="L583">			ps.setInt(13, t_form.getObjectCDocId());</span>
+<span class="fc" id="L584">			ps.setInt(14, t_form.getObjectDDocId());</span>
+<span class="fc" id="L585">			ps.setString(15, t_form.getAvailableGroups());</span>
+<span class="fc" id="L586">			ps.setString(16, t_form.getTemplateInstallName());</span>
+<span class="fc" id="L587">			ps.setBoolean(17, t_form.isDisableSpamProtection());</span>
+<span class="fc" id="L588">			long tempGroupId = 1; //1==nepriradene</span>
+<span class="pc bpc" id="L589" title="1 of 2 branches missed.">			if (t_form.getTemplatesGroupId()!=null) tempGroupId = t_form.getTemplatesGroupId();</span>
+<span class="fc" id="L590">			ps.setLong(18, tempGroupId);</span>
+<span class="fc" id="L591">			ps.setString(19, t_form.getInlineEditingMode());</span>
+
+<span class="fc bfc" id="L593" title="All 2 branches covered.">			if (t_form.getTempId() &gt; 0)</span>
+			{
+<span class="fc" id="L595">				ps.setInt(20, t_form.getTempId());</span>
+			}
+<span class="fc" id="L597">			ps.execute();</span>
+<span class="fc" id="L598">			ps.close();</span>
+
+<span class="fc bfc" id="L600" title="All 2 branches covered.">			if (t_form.getTempId() &lt; 1)</span>
+			{
+<span class="fc" id="L602">				ps = db_conn.prepareStatement(&quot;SELECT max(temp_id) AS temp_id FROM templates WHERE temp_name=?&quot;);</span>
+<span class="fc" id="L603">				ps.setString(1, t_form.getTempName());</span>
+<span class="fc" id="L604">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L605" title="1 of 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="fc" id="L607">					t_form.setTempId(rs.getInt(&quot;temp_id&quot;));</span>
+				}
+<span class="fc" id="L609">				rs.close();</span>
+<span class="fc" id="L610">				ps.close();</span>
+<span class="fc" id="L611">				rs = null;</span>
+			}
+
+<span class="fc" id="L614">			db_conn.close();</span>
+<span class="fc" id="L615">			db_conn = null;</span>
+<span class="fc" id="L616">			ps = null;</span>
+
+			//refreshni DB
+<span class="fc" id="L619">			TemplatesDB.getInstance(true);</span>
+<span class="fc" id="L620">			logChanges(t_form, oldTemplate);</span>
+
+<span class="fc" id="L622">			return true;</span>
+		}
+<span class="nc" id="L624">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L626">			Logger.error(TemplatesDB.class, ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L632" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L633">					rs.close();</span>
+<span class="pc bpc" id="L634" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L635">					ps.close();</span>
+<span class="pc bpc" id="L636" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L637">					db_conn.close();</span>
+			}
+<span class="nc" id="L639">			catch (Exception ex2)</span>
+			{
+				//
+<span class="fc" id="L642">			}</span>
+		}
+<span class="nc" id="L644">		return false;</span>
+   }
+
+	private void logChanges(TemplateDetails t_form, TemplateDetails oldTemplate)
+	{
+<span class="fc" id="L649">		StringBuilder log = new StringBuilder();</span>
+<span class="fc bfc" id="L650" title="All 2 branches covered.">		if (oldTemplate != null)</span>
+		{
+<span class="fc" id="L652">			log.append(&quot;Zmenena sablona: &quot;).append(t_form.getTempName());</span>
+<span class="fc" id="L653">		   BeanDiff diff = new BeanDiff().setNew(t_form).setOriginal(oldTemplate).</span>
+<span class="fc" id="L654">		   	blacklist(&quot;footerDocData&quot;, &quot;pocetPouziti&quot;, &quot;headerDocData&quot;, &quot;menuDocData&quot;, &quot;objectADocData&quot;, &quot;objectBDocData&quot;, &quot;objectCDocData&quot;, &quot;objectDDocData&quot;);</span>
+<span class="fc" id="L655">		   log.append('\n').append(new BeanDiffPrinter(diff));</span>
+
+<span class="fc" id="L657">		   Adminlog.add(Adminlog.TYPE_TEMPLATE_UPDATE, log.toString(), t_form.getTempId(), 0);</span>
+<span class="fc" id="L658">		}</span>
+		else
+		{
+<span class="fc" id="L661">			log.append(&quot;Vytvorena sablona: &quot;).append(t_form.getTempName());</span>
+<span class="fc" id="L662">			Adminlog.add(Adminlog.TYPE_TEMPLATE_INSERT, log.toString(), t_form.getTempId(), 0);</span>
+		}
+<span class="fc" id="L664">	}</span>
+
+   /**
+    * Odfiltruje sablony podla prav pouzivatela (pristupne adresare)
+    * @param user
+    * @param allTemps
+    * @return
+    */
+   public static List&lt;TemplateDetails&gt; filterTemplatesByUser(UserDetails user, List&lt;TemplateDetails&gt; allTemps)
+	{
+<span class="fc" id="L674">		List&lt;TemplateDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L676">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L678">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="pc bpc" id="L679" title="1 of 4 branches missed.">		if ((userEditableGroups == null || userEditableGroups.length&lt;1)) return allTemps;</span>
+
+<span class="fc bfc" id="L681" title="All 2 branches covered.">		for (TemplateDetails temp : allTemps)</span>
+		{
+			//toto je automaticky vytvorena device sablona
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">			if (temp.getTempId()&lt;1) continue;</span>
+
+<span class="fc" id="L686">			boolean pridaj = false;</span>
+<span class="pc bpc" id="L687" title="1 of 2 branches missed.">			if (temp.getAvailableGroupsInt().length==0)</span>
+			{
+<span class="fc" id="L689">				pridaj = true;</span>
+			}
+<span class="nc bnc" id="L691" title="All 2 branches missed.">			else if (userEditableGroups.length&gt;0)</span>
+			{
+<span class="nc bnc" id="L693" title="All 2 branches missed.">				if (Tools.containsOneItem(temp.getAvailableGroupsInt(), userEditableGroups)) pridaj = true;</span>
+			}
+
+<span class="pc bpc" id="L696" title="1 of 2 branches missed.">			if (pridaj) ret.add(temp);</span>
+<span class="fc" id="L697">		}</span>
+
+<span class="fc" id="L699">		return ret;</span>
+	}
+
+    /**
+    * Vrati zoznam pouzitych jazykov v sablonach kvoli filtrovaniu
+    */
+    public static List&lt;String&gt; getDistinctLngs()
+	{
+<span class="nc" id="L707">   		return new SimpleQuery().forListString(&quot;SELECT DISTINCT lng FROM templates&quot;);</span>
+	}
+
+   /**
+    * Vrati zoznam ulozenych sablon, aby sa nezobrazovali automaticky generovane device templaty v zozname sablon
+    * @return
+    */
+   public List&lt;TemplateDetails&gt; getTemplatesSaved()
+   {
+<span class="fc" id="L716">   	List&lt;TemplateDetails&gt; all = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">   	for (TemplateDetails t : getTemplates())</span>
+   	{
+<span class="fc bfc" id="L719" title="All 2 branches covered.">   		if (t.getTempId()&lt;1) continue;</span>
+
+<span class="fc" id="L721">   		all.add(t);</span>
+<span class="fc" id="L722">   	}</span>
+
+<span class="fc" id="L724">   	return all;</span>
+   }
+
+   public boolean remove(int tempId) {
+
+<span class="fc" id="L729">       Connection db_conn = null;</span>
+<span class="fc" id="L730">       PreparedStatement ps = null;</span>
+       try {
+<span class="fc" id="L732">           db_conn = DBPool.getConnection();</span>
+           //over ci existuje
+<span class="fc" id="L734">           TemplateDetails temp1 = TemplatesDB.getInstance().getTemplate(tempId);</span>
+<span class="pc bpc" id="L735" title="1 of 2 branches missed.">           if (temp1 != null) {</span>
+<span class="fc" id="L736">               ps = db_conn.prepareStatement(&quot;DELETE FROM templates WHERE temp_id=?&quot;);</span>
+<span class="fc" id="L737">               ps.setInt(1, tempId);</span>
+<span class="fc" id="L738">               ps.execute();</span>
+<span class="fc" id="L739">               ps.close();</span>
+
+<span class="fc" id="L741">               Adminlog.add(Adminlog.TYPE_TEMPLATE_DELETE, &quot;Delete template :&quot; + &quot; name= &quot; + temp1.getTempName(), temp1.getTempId(), -1);</span>
+<span class="fc" id="L742">               return true;</span>
+           }
+<span class="nc" id="L744">       } catch (Exception ex) {</span>
+<span class="nc" id="L745">           sk.iway.iwcm.Logger.error(ex);</span>
+       } finally {
+           try
+           {
+<span class="pc bpc" id="L749" title="1 of 2 branches missed.">               if (db_conn != null)</span>
+<span class="fc" id="L750">                   db_conn.close();</span>
+<span class="pc bpc" id="L751" title="1 of 2 branches missed.">               if (ps != null)</span>
+<span class="fc" id="L752">                   ps.close();</span>
+           }
+<span class="nc" id="L754">           catch (Exception ex2)</span>
+           {
+			//
+<span class="fc" id="L757">           }</span>
+       }
+<span class="nc" id="L759">       return false;</span>
+   }
+
+	public static String getDocData(int docId) {
+<span class="fc bfc" id="L763" title="All 2 branches covered.">		if (docId &gt; 0) {</span>
+<span class="fc" id="L764">			DocDetails doc = DocDB.getInstance().getDocAndAddToCacheIfNot(docId);</span>
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">			if (doc != null) {</span>
+<span class="fc" id="L766">				return doc.getData();</span>
+			}
+		}
+<span class="fc" id="L769">		return &quot;&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

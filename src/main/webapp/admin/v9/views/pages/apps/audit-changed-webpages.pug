@@ -1,0 +1,38 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-changed-webpages',
+        [
+            [ '/admin/v9/apps/audit-changed-webpages/', '[[#{components.adminlog.changedWebPages}]]', true]
+        ]
+    )
+
+    script.
+        window.helpLink = "/sysadmin/audit/audit-changed-webpages";
+        var changedWebPagesDataTable;
+        window.domReady.add(function () {
+            let url = "/admin/rest/web-pages";
+            let webpageColumns = [(${layout.getDataTableColumns("sk.iway.iwcm.doc.DocDetails")})];
+
+            window.importWebPagesDatatable().then(module => {
+                //Sort by "dateCreated"
+                var order = [];
+                order.push([4, 'desc']);
+
+                //add column visibility
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
+
+                let wpdInstance = new module.WebPagesDatatable({
+                    url:  WJ.urlAddParam(url, "auditVersion", true),
+                    columns: webpageColumns,
+                    id: "changedWebPagesDataTable",
+                    order: order
+                });
+                changedWebPages = wpdInstance.createDatatable();
+            });
+
+        });
+
+    <table id="changedWebPagesDataTable" class="datatableInit table"></table>

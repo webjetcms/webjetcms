@@ -1,0 +1,896 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WriteTagToolsForCore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">WriteTagToolsForCore.java</span></div><h1>WriteTagToolsForCore.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.lang.reflect.Method;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.stripes.CSRF;
+
+public class WriteTagToolsForCore {
+    private static final String CACHE_KEY_FILE_EXISTS = &quot;sk.iway.iwcm.tags.WriteTag.fileExists&quot;;
+
+<span class="nc" id="L31">    protected WriteTagToolsForCore() {</span>
+        //utility class
+<span class="nc" id="L33">    }</span>
+
+    public static StringBuilder fixXhtml(StringBuilder text, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;editorEnableXHTML&quot;)==false) return(text);</span>
+<span class="fc" id="L38">        StringBuilder replacedText = text;</span>
+        //nahrad target=&quot;_blank&quot;
+<span class="fc" id="L40">        replacedText = Tools.replace(replacedText, &quot;target='_blank'&quot;, &quot;onclick=\&quot;return openTargetBlank(this, event)\&quot;&quot;);</span>
+<span class="fc" id="L41">        replacedText = Tools.replace(replacedText, &quot;target=\&quot;_blank\&quot;&quot;, &quot;onclick=\&quot;return openTargetBlank(this, event)\&quot;&quot;);</span>
+<span class="fc" id="L42">        replacedText = Tools.replace(replacedText, &quot;target=\&quot;__blank\&quot;&quot;, &quot;target=\&quot;_blank\&quot;&quot;);</span>
+<span class="fc" id="L43">        replacedText = Tools.replace(replacedText, &quot;target='__blank'&quot;, &quot;target='_blank'&quot;);</span>
+
+        //uprav multi domain linky
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true)</span>
+        {
+<span class="fc" id="L48">            replacedText = MultiDomainFilter.fixDomainPaths(replacedText, request);</span>
+        }
+
+<span class="fc" id="L51">        return(replacedText);</span>
+    }
+
+    /**
+     * Pre domeny nastavene v konfiguracnej premennej formmailHttpsDomains zmeni odoslanie /formmail.do na https://domena/formmail.do
+     * @param text
+     * @param request
+     * @return
+     */
+    public static StringBuilder secureFormmail(StringBuilder text, HttpServletRequest request)
+    {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (Tools.isEmpty(text)) return text;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (text.indexOf(&quot;/formmail.do&quot;)==-1) return text;</span>
+
+<span class="fc" id="L65">        String httpsDomains = Constants.getString(&quot;formmailHttpsDomains&quot;);</span>
+<span class="fc" id="L66">        StringBuilder replacedText = text;</span>
+        //POZOR: takyto kod je aj v JS ochrane formularov
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(httpsDomains))</span>
+        {
+<span class="nc" id="L70">            String actualDomain = DocDB.getDomain(request);</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if ( (&quot;,&quot;+httpsDomains+&quot;,&quot;).indexOf(&quot;,&quot;+actualDomain+&quot;,&quot;)!=-1)</span>
+            {
+<span class="nc" id="L74">                replacedText = Tools.replace(replacedText, &quot;=\&quot;/formmail.do&quot;, &quot;=\&quot;https://&quot;+actualDomain+&quot;/formmail.do&quot;);</span>
+<span class="nc" id="L75">                replacedText = Tools.replace(replacedText, &quot;='/formmail.do&quot;, &quot;='https://&quot;+actualDomain+&quot;/formmail.do&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L79">        return replacedText;</span>
+    }
+
+    public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;spamProtection&quot;) == false)</span>
+<span class="nc" id="L85">            return (text);</span>
+
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (request.getAttribute(&quot;spamProtectionDisable&quot;)!=null)</span>
+<span class="fc" id="L88">            return (text);</span>
+
+<span class="fc" id="L90">        String lng = PageLng.getUserLng(request);</span>
+
+        //vypnutie spam ochrany na urovni sablony
+<span class="fc" id="L93">        TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
+<span class="pc bpc" id="L94" title="2 of 4 branches missed.">        if (temp != null &amp;&amp; temp.isDisableSpamProtection()) return text;</span>
+
+<span class="fc" id="L96">        String dmail = request.getHeader(&quot;dmail&quot;);</span>
+<span class="pc bpc" id="L97" title="3 of 4 branches missed.">        if (dmail!=null &amp;&amp; dmail.equals(EmailToolsForCore.ACTUAL_USER_HASH))</span>
+        {
+            //pre direct mail sa nepozije ochrana
+<span class="nc" id="L100">            return text;</span>
+        }
+
+        //#11325: pre offline export do HTML sa nepouzije ochrana
+<span class="fc" id="L104">        String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="pc bpc" id="L105" title="4 of 6 branches missed.">        if(userAgent != null &amp;&amp; userAgent.indexOf(&quot;WebJET Offline&quot;) != -1 &amp;&amp; &quot;true&quot;.equals(Constants.getString(&quot;disableSpamProtectionForOffline&quot;)))</span>
+<span class="nc" id="L106">            return text;</span>
+
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (PathFilter.getOrigPath(request).endsWith(&quot;spamprotectiondisable.jsp&quot;)) return text;</span>
+
+<span class="fc" id="L110">        StringBuilder replacedText = text;</span>
+        try
+        {
+<span class="fc" id="L113">            int failsafe = 0;</span>
+<span class="fc" id="L114">            int start = replacedText.indexOf(&quot;action=\&quot;/formmail.do?&quot;);</span>
+<span class="pc bpc" id="L115" title="1 of 4 branches missed.">            while (failsafe++ &lt;= 5 &amp;&amp; start != -1)</span>
+            {
+<span class="fc" id="L117">                start = start + &quot;action=\&quot;/formmail.do&quot;.length();</span>
+<span class="fc" id="L118">                int end = replacedText.indexOf(&quot;\&quot;&quot;, start);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">                if (end &gt; start)</span>
+                {
+<span class="fc" id="L121">                    String url = replacedText.substring(start, end);</span>
+<span class="fc" id="L122">                    Logger.debug(WriteTagToolsForCore.class, &quot;preventSpam: url=&quot; + url);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    if (replacedText.indexOf(&quot;useFormDocId&quot;) == -1)</span>
+                    {
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">                        if (url.indexOf('?') != -1)</span>
+<span class="fc" id="L126">                            url += &quot;&amp;amp;useFormDocId=&quot; + request.getParameter(&quot;docid&quot;);</span>
+                        else
+<span class="nc" id="L128">                            url += &quot;?useFormDocId=&quot; + request.getParameter(&quot;docid&quot;);</span>
+                    }
+                    // uprav URL
+<span class="fc" id="L131">                    int recStart = url.indexOf(&quot;recipients=&quot;);</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">                    if (recStart != -1)</span>
+                    {
+<span class="nc" id="L134">                        int recEnd = url.indexOf(&quot;&amp;&quot;, recStart+1);</span>
+                        String recipients;
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                        if (recEnd == -1)</span>
+                        {
+<span class="nc" id="L138">                            recipients = url.substring(recStart + &quot;recipients=&quot;.length());</span>
+                        }
+                        else
+                        {
+<span class="nc" id="L142">                            recipients = url.substring(recStart + &quot;recipients=&quot;.length(), recEnd);</span>
+                        }
+<span class="nc" id="L144">                        String newRecipients = encodeEmailAddress(recipients);</span>
+<span class="nc" id="L145">                        url = url.replace(recipients, newRecipients);</span>
+<span class="nc" id="L146">                        Logger.debug(WriteTagToolsForCore.class, &quot;recipients=&quot; + recipients);</span>
+                    }
+<span class="fc" id="L148">                    replacedText =new StringBuilder().append(replacedText.substring(0, start)).append(url).append(replacedText.substring(end));</span>
+                }
+<span class="fc" id="L150">                start = replacedText.indexOf(&quot;action=\&quot;/formmail.do?&quot;, start + 1);</span>
+<span class="fc" id="L151">            }</span>
+        }
+<span class="nc" id="L153">        catch (RuntimeException e)</span>
+        {
+<span class="nc" id="L155">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L156">        }</span>
+
+        //uprav linky formmail na odoslanie do zabezpecenej zony
+<span class="fc" id="L159">        replacedText = secureFormmail(replacedText, request);</span>
+
+        //vypnutie SPAM ochrany pre danu session - nastavovane v /components/form/spamprotectiondisable.jsp
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(request.getSession().getAttribute(&quot;WriteTag.disableSpamProtectionJavascript&quot;)))</span>
+        {
+            try
+            {
+                //vypis este informaciu o chybe odoslania formularu (ak nejaku mame)
+<span class="nc" id="L167">                String qs = (String)request.getAttribute(&quot;path_filter_query_string&quot;);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                if (qs == null) qs = &quot;&quot;;</span>
+<span class="nc" id="L169">                Prop prop = Prop.getInstance(lng);</span>
+<span class="nc" id="L170">                String writeText = null;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                if (qs.indexOf(&quot;formsend=true&quot;)!=-1)</span>
+                {
+<span class="nc" id="L173">                    writeText = prop.getText(&quot;checkform.sent&quot;);</span>
+                }
+<span class="nc bnc" id="L175" title="All 2 branches missed.">                if (qs.indexOf(&quot;formfail=formIsAllreadySubmitted&quot;)!=-1)</span>
+                {
+<span class="nc" id="L177">                    writeText = prop.getText(&quot;checkform.formIsAllreadySubmitted&quot;);</span>
+                }
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=javascript&quot;)!=-1)</span>
+                {
+<span class="nc" id="L181">                    writeText = prop.getText(&quot;checkform.fail_javascript&quot;);</span>
+                }
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=probablySpamBot&quot;)!=-1)</span>
+                {
+<span class="nc" id="L185">                    writeText = prop.getText(&quot;checkform.fail_probablySpamBot&quot;);</span>
+                }
+<span class="nc bnc" id="L187" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=requiredFields&quot;)!=-1)</span>
+                {
+<span class="nc" id="L189">                    writeText = prop.getText(&quot;stripes.ajax.errors.header&quot;);</span>
+<span class="nc" id="L190">                    String errors = (String)request.getSession().getAttribute(&quot;formMailValidationErrors&quot;);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                    if (Tools.isNotEmpty(errors)) writeText = writeText + errors;</span>
+<span class="nc" id="L192">                }</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=bad_file&quot;)!=-1)</span>
+                {
+<span class="nc" id="L195">                    writeText = prop.getText(&quot;checkform.bad_file&quot;);</span>
+                }
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=captcha&quot;)!=-1)</span>
+                {
+<span class="nc" id="L199">                    writeText = prop.getText(&quot;captcha.textNotCorrect&quot;);</span>
+                }
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                else if (qs.indexOf(&quot;formfail=&quot;)!=-1)</span>
+                {
+<span class="nc" id="L203">                    writeText = prop.getText(&quot;checkform.sendfail&quot;);</span>
+                }
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">                if (Tools.isNotEmpty(writeText))</span>
+                {
+<span class="nc" id="L208">                    int start = replacedText.indexOf(&quot;/formmail.do&quot;);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    if (start &gt; 0)</span>
+                    {
+                        //uprav CSS styly label elementom
+                        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L213">                        Map&lt;String, String&gt; formMailValidationErrorsElementNameTable = (Map&lt;String, String&gt;)request.getSession().getAttribute(&quot;formMailValidationErrorsElementNameTable&quot;);</span>
+
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                        if (formMailValidationErrorsElementNameTable != null)</span>
+                        {
+<span class="nc" id="L217">                            Iterator&lt;String&gt; keys = formMailValidationErrorsElementNameTable.keySet().iterator();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                            while (keys.hasNext())</span>
+                            {
+<span class="nc" id="L220">                                String id = keys.next();</span>
+<span class="nc" id="L221">                                StringBuffer labelText = new StringBuffer();</span>
+<span class="nc" id="L222">                                replacedText = updateLabelClassInvalid(replacedText, id, labelText);</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                                if (labelText.length()&gt;0)</span>
+                                {
+<span class="nc" id="L226">                                    writeText = Tools.replace(writeText, &quot;&lt;li&gt;&quot;+id, &quot;&lt;li&gt;&quot;+labelText.toString());</span>
+                                }
+<span class="nc" id="L228">                            }</span>
+                        }
+
+<span class="nc" id="L231">                        start = replacedText.indexOf(&quot;/formmail.do&quot;);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                        if (start &gt; 0)</span>
+                        {
+<span class="nc" id="L234">                            int formStart = replacedText.lastIndexOf(&quot;&lt;form&quot;, start);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                            if (formStart &gt; 0)</span>
+                            {
+<span class="nc" id="L237">                                replacedText = new StringBuilder().append(replacedText.substring(0, formStart)).append(&quot;&lt;link type='text/css' media='screen' rel='stylesheet' href='/components/form/check_form.css'&gt;&lt;/link&gt;&quot; + prop.getText(&quot;spamprotectiondisable.formmailErrorNotify&quot;, writeText)).append(replacedText.substring(formStart));</span>
+                            }
+                        }
+
+<span class="nc" id="L241">                        request.getSession().removeAttribute(&quot;formMailValidationErrors&quot;);</span>
+<span class="nc" id="L242">                        request.getSession().removeAttribute(&quot;formMailValidationErrorsElementNameTable&quot;);</span>
+                    }
+                }
+            }
+<span class="nc" id="L246">            catch (Exception e)</span>
+            {
+<span class="nc" id="L248">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L249">            }</span>
+<span class="nc" id="L250">            return replacedText;</span>
+        }
+
+<span class="fc" id="L253">        String spamProtectionJavascript = Constants.getString(&quot;spamProtectionJavascript&quot;);</span>
+<span class="pc bpc" id="L254" title="3 of 4 branches missed.">        if (spamProtectionJavascript.indexOf(&quot;all&quot;)!=-1 || spamProtectionJavascript.indexOf(&quot;formmail&quot;)!=-1)</span>
+        {
+<span class="fc" id="L256">            Prop prop = Prop.getInstance(lng);</span>
+            try
+            {
+<span class="fc" id="L259">                int failsafe = 0;</span>
+<span class="fc" id="L260">                int start = replacedText.indexOf(&quot;&lt;form&quot;);</span>
+<span class="pc bpc" id="L261" title="1 of 4 branches missed.">                while (failsafe++ &lt;= 5 &amp;&amp; start != -1)</span>
+                {
+<span class="fc" id="L263">                    int end = replacedText.indexOf(&quot;&gt;&quot;, start);</span>
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">                    if (end &gt; start)</span>
+                    {
+<span class="fc" id="L266">                        String formTag = replacedText.substring(start, end + 1);</span>
+<span class="fc" id="L267">                        boolean isFormMail = formTag.contains(&quot;formmail.do&quot;);</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                        if (formTag.contains(&quot;donotobfuscate&quot;)==false)</span>
+                        {
+<span class="fc" id="L270">                            Logger.debug(WriteTagToolsForCore.class, &quot;preventSpam: formTag=&quot; + formTag);</span>
+<span class="pc bpc" id="L271" title="3 of 4 branches missed.">                            if (spamProtectionJavascript.indexOf(&quot;all&quot;)!=-1 || formTag.indexOf(&quot;formmail.do&quot;) != -1)</span>
+                            {
+                                // uprav tag
+<span class="fc" id="L274">                                String name = &quot;wjFrmJSTag&quot;;</span>
+
+<span class="fc" id="L276">                                String backUrl = PathFilter.getOrigPath(request);</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                                if (ContextFilter.isRunning(request))</span>
+                                {
+<span class="nc" id="L279">                                    backUrl = ContextFilter.addContextPath(request.getContextPath(), backUrl);</span>
+<span class="nc" id="L280">                                    formTag = ContextFilter.addContextPath(request.getContextPath(), formTag);</span>
+                                }
+
+<span class="fc" id="L283">                                String qs = (String)request.getAttribute(&quot;path_filter_query_string&quot;);</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">                                if (Tools.isNotEmpty(qs)) backUrl += &quot;?&quot; + qs;</span>
+
+<span class="fc" id="L286">                                String newTag = prop.getText(&quot;checkform.fail_javascript_formtag&quot;, Tools.URLEncode(backUrl));</span>
+                                //FAKE csrf ochrana
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">                                if (spamProtectionJavascript.contains(&quot;formtagCsrf&quot;)) newTag += CSRF.getCsrfTokenInputFiled(request.getSession(), false);</span>
+
+<span class="fc" id="L290">                                newTag += &quot;&lt;script type=\&quot;text/javascript\&quot;&gt;/* &lt;![CDATA[ */&quot;;</span>
+<span class="fc" id="L291">                                newTag += &quot;var &quot; + name + &quot;=\&quot;\&quot;;&quot;;</span>
+<span class="fc" id="L292">                                formTag = Tools.replace(formTag, &quot;&amp;&quot;, &quot;&amp;amp;&quot;);</span>
+<span class="fc" id="L293">                                formTag = Tools.replace(formTag, &quot;&amp;amp;amp;&quot;, &quot;&amp;amp;&quot;);</span>
+                                // vyiteruj to do premennej
+<span class="fc" id="L295">                                String newTag2 = &quot;&quot;;</span>
+<span class="fc" id="L296">                                int failsafe2 = 0;</span>
+<span class="pc bpc" id="L297" title="1 of 4 branches missed.">                                while (formTag.length() &gt; 4 &amp;&amp; failsafe2 &lt; 100)</span>
+                                {
+<span class="fc" id="L299">                                    failsafe2++;</span>
+<span class="fc" id="L300">                                    String substr = formTag.substring(0, 3);</span>
+<span class="fc" id="L301">                                    formTag = formTag.substring(3);</span>
+<span class="fc" id="L302">                                    substr = Tools.replace(substr, &quot;\&quot;&quot;, &quot;\\\&quot;&quot;);</span>
+<span class="fc" id="L303">                                    newTag2 = name + &quot;=\&quot;&quot; + substr + &quot;\&quot;+&quot; + name + &quot;;&quot; + newTag2; //NOSONAR</span>
+<span class="fc" id="L304">                                }</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">                                if (Tools.isNotEmpty(formTag))</span>
+                                {
+<span class="fc" id="L307">                                    formTag = Tools.replace(formTag, &quot;\&quot;&quot;, &quot;\\\&quot;&quot;);</span>
+<span class="fc" id="L308">                                    newTag2 = name + &quot;=\&quot;&quot; + formTag + &quot;\&quot;+&quot; + name + &quot;;&quot; + newTag2;</span>
+                                }
+
+<span class="fc" id="L311">                                newTag += newTag2;</span>
+<span class="fc" id="L312">                                newTag += name + &quot;=\&quot;m&gt;\&quot;+&quot; + name + &quot;;&quot;;</span>
+<span class="fc" id="L313">                                newTag += name + &quot;=\&quot;&lt;\\/for\&quot;+&quot; + name + &quot;;&quot;;</span>
+<span class="fc" id="L314">                                newTag += &quot;document.write(&quot; + name + &quot;);/* ]]&gt; */&lt;/script&gt;&lt;noscript&gt;&lt;div class='noprint'&gt;&quot; + prop.getText(&quot;checkform.fail_javascript&quot;, Tools.URLEncode(backUrl)) + &quot;&lt;/div&gt;&lt;/noscript&gt;&quot;;</span>
+
+                                //REALNA csrf ochrana
+<span class="pc bpc" id="L317" title="1 of 4 branches missed.">                                if (spamProtectionJavascript.contains(&quot;formmailCsrf&quot;) &amp;&amp; isFormMail)</span>
+                                {
+<span class="fc" id="L319">                                    newTag += CSRF.getCsrfTokenInputFiled(request.getSession(), true);</span>
+<span class="fc" id="L320">                                    newTag += &quot;&lt;input type=\&quot;hidden\&quot; name=\&quot;__lng\&quot; value=\&quot;&quot;+lng+&quot;\&quot;/&gt;&quot;;</span>
+                                }
+
+<span class="fc" id="L323">                                replacedText = new StringBuilder(replacedText.substring(0, start)).append(newTag).append(replacedText.substring(end + 1));</span>
+<span class="fc" id="L324">                                start = start + newTag.length();</span>
+                            }
+                        }
+                    }
+<span class="fc" id="L328">                    start = replacedText.indexOf(&quot;&lt;form&quot;, start + 1);</span>
+<span class="fc" id="L329">                }</span>
+            }
+<span class="nc" id="L331">            catch (RuntimeException e)</span>
+            {
+<span class="nc" id="L333">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L334">            }</span>
+        }
+
+<span class="pc bpc" id="L337" title="3 of 4 branches missed.">        if (spamProtectionJavascript.indexOf(&quot;all&quot;)!=-1 || spamProtectionJavascript.indexOf(&quot;mailto&quot;)!=-1)</span>
+        {
+<span class="fc" id="L339">            int startMailto = replacedText.indexOf(&quot;mailto:&quot;);</span>
+<span class="fc" id="L340">            String inlineJs = &quot;&lt;script src=\&quot;/components/_common/javascript/mail_protection.js\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;;</span>
+<span class="pc bpc" id="L341" title="3 of 6 branches missed.">            if(startMailto != -1 &amp;&amp; request.getAttribute(&quot;mailProtection&quot;) == null &amp;&amp; request.getAttribute(&quot;commonPageFunctionsInserted&quot;)==null)</span>
+            {
+<span class="nc bnc" id="L343" title="All 2 branches missed.">                if (request.getAttribute(&quot;mailProtection&quot;)==null)</span>
+                {
+<span class="nc" id="L345">                    replacedText = new StringBuilder().append(inlineJs).append(replacedText);</span>
+                }
+<span class="nc" id="L347">                request.setAttribute(&quot;mailProtection&quot;, true);</span>
+            }
+            try
+            {
+<span class="fc" id="L351">                int failsafe = 0;</span>
+                int start;
+
+                //nahrada mailto:email@domena.sk na javascript:decodeEmail(&quot;kodovany@email.sk&quot;)
+<span class="fc" id="L355">                start = replacedText.indexOf(&quot;mailto:&quot;);</span>
+<span class="fc" id="L356">                failsafe = 0;</span>
+<span class="pc bpc" id="L357" title="1 of 4 branches missed.">                while(start != -1 &amp;&amp; failsafe++ &lt; 500)</span>
+                {
+<span class="fc bfc" id="L359" title="All 2 branches covered.">                    while(replacedText.charAt(start) != '='){</span>
+<span class="fc" id="L360">                        start--;</span>
+                    }
+<span class="fc" id="L362">                    start++;</span>
+
+<span class="fc" id="L364">                    int end = start+5;</span>
+<span class="pc bpc" id="L365" title="4 of 10 branches missed.">                    while(replacedText.length()&gt;end &amp;&amp; replacedText.charAt(end) != '&quot;' &amp;&amp; replacedText.charAt(end) != '\'' &amp;&amp; replacedText.charAt(end) != ' ' &amp;&amp; replacedText.charAt(end) != '\t'){</span>
+<span class="fc" id="L366">                        end++;</span>
+                    }
+<span class="fc" id="L368">                    end++; //replacedText bereme vratane koncovej uvodzovky</span>
+
+<span class="fc" id="L370">                    String oldFormTag = replacedText.substring(start, end);</span>
+<span class="fc" id="L371">                    String newOldFormTag = oldFormTag;</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">                    if(oldFormTag.indexOf('&quot;') != -1)</span>
+<span class="fc" id="L373">                        newOldFormTag = oldFormTag.replace(&quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">                    else if(oldFormTag.indexOf('\'') != -1)</span>
+<span class="nc" id="L375">                        newOldFormTag = oldFormTag.replace(&quot;\'&quot;, &quot;&quot;);</span>
+<span class="fc" id="L376">                    int formTagInd = newOldFormTag.indexOf(':');</span>
+<span class="pc bpc" id="L377" title="2 of 4 branches missed.">                    if(formTagInd != -1 &amp;&amp; formTagInd &lt; newOldFormTag.length()-1)</span>
+                    {
+<span class="fc" id="L379">                        String emailAddress = newOldFormTag.substring(formTagInd+1);</span>
+<span class="fc" id="L380">                        String formTag1 = &quot;\&quot;javascript:decodeEmail('&quot;;</span>
+<span class="fc" id="L381">                        String formTag2 = encodeEmailAddress(emailAddress)+&quot;')\&quot; &quot;;</span>
+<span class="fc" id="L382">                        String newFormTag = formTag1+formTag2;</span>
+
+<span class="fc" id="L384">                        replacedText = Tools.replace(replacedText, oldFormTag, newFormTag);</span>
+                    }
+<span class="fc" id="L386">                    start = replacedText.indexOf(&quot;mailto:&quot;, end+1);</span>
+<span class="fc" id="L387">                }</span>
+
+                //nahrad aj email v samotnom texte, email musi byt obaleny v A elemente (odkaze)
+<span class="pc bpc" id="L390" title="3 of 4 branches missed.">                if (spamProtectionJavascript.contains(&quot;emailAuto&quot;) &amp;&amp; replacedText.indexOf(&quot;@&quot;)!=-1)</span>
+                {
+<span class="nc" id="L392">                    String regex = &quot;&gt;(\\s*[a-z0-9]+[a-z0-9\\._+=#$%&amp;-]*[a-z0-9]+@[a-z0-9]+[a-z0-9\\._-]*[a-z0-9]+\\.[a-z]{2,4}\\s*)&lt;/a&gt;&quot;;</span>
+<span class="nc" id="L393">                    Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L394">                    Matcher matcher = pattern.matcher(replacedText);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">                    while (matcher.find())</span>
+                    {
+                        try
+                        {
+<span class="nc bnc" id="L399" title="All 2 branches missed.">                            if (matcher.groupCount()&gt;=1)</span>
+                            {
+<span class="nc bnc" id="L401" title="All 2 branches missed.">                                if (request.getAttribute(&quot;mailProtection&quot;) == null)</span>
+                                {
+<span class="nc" id="L403">                                    replacedText = new StringBuilder().append(inlineJs).append(replacedText);</span>
+<span class="nc" id="L404">                                    request.setAttribute(&quot;mailProtection&quot;, true);</span>
+                                }
+
+<span class="nc" id="L407">                                String emailAddress = matcher.group(1);</span>
+<span class="nc" id="L408">                                Logger.debug(WriteTagToolsForCore.class, &quot;replacing email:&quot;+emailAddress);</span>
+<span class="nc" id="L409">                                String oldHTML = &quot;&gt;&quot;+emailAddress+&quot;&lt;/a&gt;&quot;;</span>
+<span class="nc" id="L410">                                String newHTML = &quot;&gt;&lt;script type='text/javascript'&gt;writeEmailToPage(\&quot;&quot;+encodeEmailAddress(emailAddress.trim())+&quot;\&quot;);&lt;/script&gt;&lt;/a&gt;&quot;;</span>
+<span class="nc" id="L411">                                replacedText = Tools.replace(replacedText, oldHTML, newHTML);</span>
+                            }
+                        }
+<span class="nc" id="L414">                        catch (Exception ex)</span>
+                        {
+<span class="nc" id="L416">                            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L417">                        }</span>
+                    }
+                }
+
+            }
+<span class="nc" id="L422">            catch (RuntimeException e)</span>
+            {
+<span class="nc" id="L424">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L425">            }</span>
+        }
+
+<span class="fc" id="L428">        return (replacedText);</span>
+    }
+
+    /**
+     * V HTML kode nastavi elementu LABEL s danym for=id CSS triedu invalidLabel
+     * @param html
+     * @param id
+     * @param labelText - pole pre nastavenie navratovej hodnoty textu labelu (jeho obsahu)
+     * @return
+     */
+    private static StringBuilder updateLabelClassInvalid(StringBuilder html, String id, StringBuffer labelText)
+    {
+        try
+        {
+<span class="nc" id="L442">            int start = html.indexOf(&quot;for=\&quot;&quot;+id+&quot;\&quot;&quot;);</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">            if (start == -1) return html;</span>
+
+<span class="nc" id="L445">            int end = html.indexOf(&quot;&gt;&quot;, start);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">            if (end == -1) return html;</span>
+
+<span class="nc" id="L448">            start = html.lastIndexOf(&quot;&lt;&quot;, end);</span>
+
+<span class="nc" id="L450">            String labelTag = html.substring(start, end);</span>
+
+<span class="nc" id="L452">            String newLabel = null;</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">            if (labelTag.indexOf(&quot;class&quot;)==-1) newLabel = labelTag + &quot; class=\&quot;invalidLabel\&quot;&quot;;</span>
+            else
+            {
+<span class="nc" id="L456">                newLabel = Tools.replace(labelTag, &quot;class=\&quot;&quot;, &quot;class=\&quot;invalidLabel &quot;);</span>
+<span class="nc" id="L457">                newLabel = Tools.replace(newLabel, &quot;class='&quot;, &quot;class='invalidLabel &quot;);</span>
+            }
+
+            //ziskaj text labelu
+<span class="nc" id="L461">            int labelEnd = html.indexOf(&quot;&lt;/label&gt;&quot;, end);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">            if (labelEnd &gt; end)</span>
+            {
+<span class="nc" id="L464">                String labelContentHTML = html.substring(end+1, labelEnd);</span>
+<span class="nc" id="L465">                labelText.append(SearchTools.htmlToPlain(labelContentHTML));</span>
+            }
+
+<span class="nc" id="L468">            StringBuilder newHtml = new StringBuilder(html.length());</span>
+<span class="nc" id="L469">            newHtml.append(html.substring(0, start));</span>
+<span class="nc" id="L470">            newHtml.append(newLabel);</span>
+<span class="nc" id="L471">            newHtml.append(html.substring(end));</span>
+
+<span class="nc" id="L473">            return newHtml;</span>
+        }
+<span class="nc" id="L475">        catch (Exception e)</span>
+        {
+<span class="nc" id="L477">            sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L480">        return html;</span>
+    }
+
+    public static String encodeEmailAddress(String email)
+    {
+        //adresa uz bola raz zakodovana
+<span class="pc bpc" id="L486" title="3 of 4 branches missed.">        if (email.indexOf('~')!=-1 &amp;&amp; email.indexOf('!')!=-1) return email;</span>
+
+<span class="fc" id="L488">        String returnEmail = email;</span>
+        //prekoduj znaky
+<span class="fc" id="L490">        returnEmail = returnEmail.replace('@', '~');</span>
+<span class="fc" id="L491">        returnEmail = returnEmail.replace('.', '!');</span>
+
+        //cele to pre istotu otoc
+<span class="fc" id="L494">        char[] newEmail = new char[returnEmail.length()];</span>
+<span class="fc bfc" id="L495" title="All 2 branches covered.">        for (int i=0; i&lt;returnEmail.length(); i++)</span>
+        {
+<span class="fc" id="L497">            newEmail[i] = returnEmail.charAt(returnEmail.length()-i-1);</span>
+        }
+<span class="fc" id="L499">        returnEmail = new String(newEmail);</span>
+
+<span class="fc" id="L501">        return(returnEmail);</span>
+    }
+
+    /**
+     * Vykona nahradenie znaciek !WRITE a !CALL v texte ktory sa vypisuje (napr. az po vykonani nejakeho include)
+     * @param text
+     * @param request
+     * @return
+     */
+    public static StringBuilder replaceWriteText(StringBuilder text, HttpServletRequest request)
+    {
+        //	poreplacuj texty s !WRITE(
+<span class="fc" id="L513">        StringBuilder replacedText = text;</span>
+        try
+        {
+<span class="fc" id="L516">            int counter = 0;</span>
+<span class="fc" id="L517">            String REPLACE_START = &quot;!WRITE(&quot;;</span>
+<span class="fc" id="L518">            String REPLACE_END = &quot;)!&quot;;</span>
+<span class="fc" id="L519">            int start = replacedText.indexOf(REPLACE_START);</span>
+            int end;
+            String name;
+<span class="pc bpc" id="L522" title="1 of 2 branches missed.">            while (start != -1)</span>
+            {
+<span class="nc" id="L524">                end = replacedText.indexOf(REPLACE_END, start);</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">                if (end &gt; start)</span>
+                {
+                    try
+                    {
+<span class="nc" id="L529">                        name = replacedText.substring(start + REPLACE_START.length(), end);</span>
+                        //Logger.println(this,&quot;name=&quot;+name);
+<span class="nc" id="L531">                        replacedText = Tools.replace(replacedText, REPLACE_START + name + REPLACE_END, getRequestString(request, name));</span>
+                    }
+<span class="nc" id="L533">                    catch (Exception ex)</span>
+                    {
+<span class="nc" id="L535">                        sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L536">                    }</span>
+                }
+
+                //failsafe
+<span class="nc" id="L540">                counter++;</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">                if (counter &gt; 30)</span>
+                {
+<span class="nc" id="L543">                    break;</span>
+                }
+<span class="nc" id="L545">                start = replacedText.indexOf(REPLACE_START, start + 1);</span>
+            }
+        }
+<span class="nc" id="L548">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L550">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L551">        }</span>
+
+        try
+        {
+<span class="fc" id="L555">            int counter = 0;</span>
+<span class="fc" id="L556">            String REPLACE_START = &quot;!CALL(&quot;;</span>
+<span class="fc" id="L557">            String REPLACE_END = &quot;)!&quot;;</span>
+<span class="fc" id="L558">            int start = replacedText.indexOf(REPLACE_START);</span>
+            int end;
+<span class="pc bpc" id="L560" title="1 of 2 branches missed.">            while (start != -1)</span>
+            {
+<span class="nc" id="L562">                end = replacedText.indexOf(REPLACE_END, start);</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">                if (end &gt; start)</span>
+                {
+                    try
+                    {
+<span class="nc" id="L567">                        String name = replacedText.substring(start + REPLACE_START.length(), end);</span>
+<span class="nc" id="L568">                        String callMethod = name;</span>
+                        //Logger.println(this,&quot;name=&quot;+name);
+
+                        //zavolaj cez reflection pozadovanu metodu
+<span class="nc" id="L572">                        int i = callMethod.lastIndexOf('.');</span>
+<span class="nc" id="L573">                        String callClass = callMethod.substring(0, i);</span>
+<span class="nc" id="L574">                        callMethod = callMethod.substring(i+1);</span>
+<span class="nc" id="L575">                        i = callMethod.indexOf('(');</span>
+<span class="nc" id="L576">                        String callParameters = null;</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">                        if (i &gt; 0)</span>
+                        {
+<span class="nc" id="L579">                            callParameters = callMethod.substring(i+1, callMethod.lastIndexOf(')'));</span>
+<span class="nc" id="L580">                            callMethod = callMethod.substring(0, i).trim();</span>
+                        }
+<span class="nc" id="L582">                        String returnText = null;</span>
+                        try
+                        {
+<span class="nc" id="L585">                            Class&lt;?&gt; c = Class.forName(callClass);</span>
+<span class="nc" id="L586">                            Object o = c.getDeclaredConstructor().newInstance();</span>
+                            Method m;
+<span class="nc" id="L588">                            Class&lt;?&gt;[] parameterTypes = new Class[0]; // {String.class, String.class, HttpServletRequest.class};</span>
+<span class="nc" id="L589">                            Object[] arguments = new Object[0]; // {username, password, request};</span>
+
+<span class="nc bnc" id="L591" title="All 2 branches missed.">                            if (Tools.isNotEmpty(callParameters))</span>
+                            {
+<span class="nc" id="L593">                                StringTokenizer st = new StringTokenizer(callParameters, &quot;,&quot;);</span>
+<span class="nc" id="L594">                                int pocet = st.countTokens();</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">                                if (pocet &gt; 0)</span>
+                                {
+<span class="nc" id="L597">                                    parameterTypes = new Class[pocet];</span>
+<span class="nc" id="L598">                                    arguments = new Object[pocet];</span>
+                                    String param;
+<span class="nc" id="L600">                                    i = 0;</span>
+<span class="nc bnc" id="L601" title="All 2 branches missed.">                                    while (st.hasMoreTokens())</span>
+                                    {
+<span class="nc" id="L603">                                        param = st.nextToken().trim();</span>
+<span class="nc" id="L604">                                        Logger.debug(WriteTagToolsForCore.class, &quot;CALL param: &quot; + param);</span>
+
+<span class="nc bnc" id="L606" title="All 2 branches missed.">                                        if (&quot;request&quot;.equals(param))</span>
+                                        {
+<span class="nc" id="L608">                                            parameterTypes[i] = HttpServletRequest.class;</span>
+<span class="nc" id="L609">                                            arguments[i] = request;</span>
+                                        }
+<span class="nc bnc" id="L611" title="All 2 branches missed.">                                        if (&quot;session&quot;.equals(param))</span>
+                                        {
+<span class="nc" id="L613">                                            parameterTypes[i] = HttpSession.class;</span>
+<span class="nc" id="L614">                                            arguments[i] = request.getSession();</span>
+                                        }
+<span class="nc bnc" id="L616" title="All 4 branches missed.">                                        else if (param.startsWith(&quot;\&quot;&quot;) || param.startsWith(&quot;'&quot;))</span>
+                                        {
+<span class="nc" id="L618">                                            parameterTypes[i] = String.class;</span>
+<span class="nc" id="L619">                                            arguments[i] = param.substring(1, param.length()-1);</span>
+                                        }
+<span class="nc bnc" id="L621" title="All 2 branches missed.">                                        else if (param.indexOf('.')!=-1)</span>
+                                        {
+<span class="nc" id="L623">                                            parameterTypes[i] = Double.class;</span>
+<span class="nc" id="L624">                                            arguments[i] = Double.valueOf(Tools.getDoubleValue(param, 0));</span>
+                                        }
+                                        else
+                                        {
+<span class="nc" id="L628">                                            parameterTypes[i] = Integer.class;</span>
+<span class="nc" id="L629">                                            arguments[i] = Integer.valueOf(Tools.getIntValue(param, 0));</span>
+                                        }
+
+<span class="nc" id="L632">                                        i++;</span>
+                                    }
+                                }
+                            }
+
+<span class="nc" id="L637">                            m = c.getMethod(callMethod, parameterTypes);</span>
+<span class="nc" id="L638">                            Object result = m.invoke(o, arguments);</span>
+<span class="nc bnc" id="L639" title="All 2 branches missed.">                            returnText = result != null ? result.toString() : &quot;&quot;;</span>
+                        }
+<span class="nc" id="L641">                        catch (Exception ex)</span>
+                        {
+<span class="nc" id="L643">                            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L644">                        }</span>
+
+<span class="nc" id="L646">                        replacedText = Tools.replace(replacedText, REPLACE_START + name + REPLACE_END, returnText);</span>
+                    }
+<span class="nc" id="L648">                    catch (Exception ex)</span>
+                    {
+<span class="nc" id="L650">                        sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L651">                    }</span>
+                }
+
+                //failsafe
+<span class="nc" id="L655">                counter++;</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">                if (counter &gt; 30)</span>
+                {
+<span class="nc" id="L658">                    break;</span>
+                }
+<span class="nc" id="L660">                start = replacedText.indexOf(REPLACE_START, start + 1);</span>
+            }
+        }
+<span class="nc" id="L663">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L665">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L666">        }</span>
+
+        //fixni XHTML zalezitosti
+
+
+<span class="fc" id="L671">        return(replacedText);</span>
+    }
+
+    private static String getRequestString(HttpServletRequest request, String name)
+    {
+<span class="nc" id="L676">        String ret = (String) request.getAttribute(name);</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">        if (ret == null)</span>
+        {
+<span class="nc" id="L679">            ret = &quot;&quot;;</span>
+        }
+<span class="nc" id="L681">        return (ret);</span>
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static boolean isFileExists(String fileUrl)
+    {
+        //cache pre zvysenie vykonu v pluska GlusterFS
+        Boolean fileExists;
+<span class="fc" id="L689">        Map&lt;String, Boolean&gt; fileExistsTable = null;</span>
+<span class="fc" id="L690">        int writeTagFileExistsCacheMinutes = Constants.getInt(&quot;writeTagFileExistsCacheMinutes&quot;);</span>
+<span class="pc bpc" id="L691" title="1 of 2 branches missed.">        if (writeTagFileExistsCacheMinutes &gt; 0)</span>
+        {
+<span class="nc" id="L693">            Cache c = Cache.getInstance();</span>
+<span class="nc" id="L694">            fileExistsTable = (Map&lt;String, Boolean&gt;)c.getObject(CACHE_KEY_FILE_EXISTS);</span>
+<span class="nc bnc" id="L695" title="All 2 branches missed.">            if (fileExistsTable == null)</span>
+            {
+<span class="nc" id="L697">                fileExistsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L698">                c.setObjectSeconds(CACHE_KEY_FILE_EXISTS, fileExistsTable, writeTagFileExistsCacheMinutes*60, true);</span>
+            }
+<span class="nc" id="L700">            fileExists = fileExistsTable.get(fileUrl);</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">            if (fileExists != null) return fileExists.booleanValue();</span>
+        }
+
+        //Logger.println(this,&quot;Testing IFN: &quot; + fileUrl);
+<span class="fc bfc" id="L705" title="All 2 branches covered.">        if (FileTools.exists(fileUrl)) fileExists = Boolean.TRUE;</span>
+<span class="fc" id="L706">        else fileExists = Boolean.FALSE;</span>
+
+<span class="pc bpc" id="L708" title="1 of 2 branches missed.">        if (fileExistsTable!=null) fileExistsTable.put(fileUrl, fileExists);</span>
+
+<span class="fc" id="L710">        return fileExists.booleanValue();</span>
+    }
+
+    private static String checkSetFile(String includeFileName, String newName)
+    {
+<span class="fc bfc" id="L715" title="All 2 branches covered.">        if (isFileExists(newName))</span>
+        {
+<span class="fc" id="L717">            return newName;</span>
+        }
+<span class="fc" id="L719">        return(includeFileName);</span>
+    }
+
+    /**
+     * Vrati custom cestu ku komponente, alebo null, ak nie je custom cesta
+     * @param includeFileName
+     * @param request
+     * @return
+     */
+    public static String getCustomPageNull(String includeFileName, HttpServletRequest request)
+    {
+<span class="fc" id="L730">        String newIncludeFileName = getCustomPage(includeFileName, request);</span>
+<span class="pc bpc" id="L731" title="1 of 2 branches missed.">        if (includeFileName.equals(newIncludeFileName))</span>
+        {
+<span class="fc" id="L733">            return null;</span>
+        }
+<span class="nc" id="L735">        return newIncludeFileName;</span>
+    }
+
+
+    /**
+     * Pre zadane URL JSP suboru najde jeho custom alternativu
+     * @param includeFileName
+     * @param request
+     * @return
+     */
+    public static String getCustomPage(String includeFileName, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L747" title="1 of 2 branches missed.">        if (includeFileName.lastIndexOf('.')==-1) return includeFileName;</span>
+<span class="fc" id="L748">        return getCustomPath(includeFileName, request);</span>
+    }
+
+    /**
+     * Pre zadanu URL najde jeho custom cestu v installName alebo logInstallName adresari
+     */
+    @SuppressWarnings(&quot;java:S1075&quot;)
+    public static String getCustomPath(String url, HttpServletRequest request)
+    {
+        //riesime len /components/ alebo /templates/ adresare
+<span class="fc bfc" id="L758" title="All 4 branches covered.">        if (url.startsWith(&quot;/components/&quot;)==false &amp;&amp; url.startsWith(&quot;/templates/&quot;)==false) return url;</span>
+
+<span class="fc bfc" id="L760" title="All 2 branches covered.">        if (&quot;/components/form/check_form_impl.jsp&quot;.equals(url))</span>
+        {
+            try
+            {
+<span class="fc" id="L764">                String referer = request.getHeader(&quot;Referer&quot;);</span>
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(referer))</span>
+                {
+<span class="fc" id="L767">                    referer = referer.toLowerCase();</span>
+                    //odstran domenu
+<span class="pc bpc" id="L769" title="1 of 2 branches missed.">                    if (referer.startsWith(&quot;http&quot;)) referer = referer.substring(referer.indexOf(&quot;/&quot;, 10));</span>
+
+<span class="fc" id="L771">                    Logger.debug(WriteTagToolsForCore.class, &quot;url=&quot; + url + &quot; referer=&quot; + referer);</span>
+                    //pre admin cast chcem davat standardny checkform, nie custom verziu
+<span class="fc bfc" id="L773" title="All 4 branches covered.">                    if (referer.startsWith(&quot;/admin&quot;) || referer.startsWith(&quot;/components/&quot;)) return url;</span>
+                }
+            }
+<span class="nc" id="L776">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L778">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L779">            }</span>
+        }
+
+<span class="fc" id="L782">        String lng = PageLng.getUserLng(request);</span>
+<span class="fc" id="L783">        String origUrl = url;</span>
+
+<span class="fc" id="L785">        String ext = &quot;&quot;;</span>
+<span class="fc bfc" id="L786" title="All 2 branches covered.">        if (url.contains(&quot;.&quot;)) ext = url.substring(url.lastIndexOf('.'));</span>
+<span class="fc" id="L787">        String newUrl = url;</span>
+
+        //prefix bude /components/ alebo /templates/
+<span class="fc" id="L790">        String prefix = url.substring(0, url.indexOf(&quot;/&quot;, 3)+1);</span>
+
+        //ak nezacina na istall name skus najst v installName adresari, pre /templates/ prehladaj vzdy, kedze mame /templates/intranet/intranet/ (meno installName sa zhoduje s menom sablony)
+<span class="fc bfc" id="L793" title="All 4 branches covered.">        if (&quot;/templates/&quot;.equals(prefix) || origUrl.startsWith(prefix+Constants.getInstallName()+&quot;/&quot;)==false)</span>
+        {
+            //skus prehladavat /components/INSTALL-NAME/news/news.jsp
+<span class="fc" id="L796">            String fileName = Tools.replace(origUrl, prefix, prefix+Constants.getInstallName()+&quot;/&quot;);</span>
+
+<span class="fc" id="L798">            newUrl = checkSetFile(newUrl, fileName);</span>
+<span class="fc" id="L799">            newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, &quot;-&quot;+lng+ext));</span>
+        }
+
+<span class="fc" id="L802">        String logInstallName = Constants.getString(&quot;logInstallName&quot;);</span>
+        //ak nezacina na logInstallName skus najst v logInstallName
+<span class="pc bpc" id="L804" title="5 of 6 branches missed.">        if (Tools.isNotEmpty(logInstallName) &amp;&amp; (&quot;/templates/&quot;.equals(prefix) || origUrl.startsWith(prefix + logInstallName+&quot;/&quot;)==false))</span>
+        {
+            //toto sa pouziva a intranetoch, kde mame installName intranet ale je customizovany pre nejakeho klienta, takto vieme dohladat specialnu stranku
+<span class="nc" id="L807">            String fileName = Tools.replace(origUrl, prefix, prefix+logInstallName+&quot;/&quot;);</span>
+<span class="nc" id="L808">            newUrl = checkSetFile(newUrl, fileName);</span>
+
+<span class="nc bnc" id="L810" title="All 4 branches missed.">            if (&quot;/templates/&quot;.equals(prefix) &amp;&amp; fileName.equals(newUrl)==false)</span>
+            {
+                //nenasla sa zhoda, skusme este zo zaciatku odstranit installName, ked napr. mame /templates/intranet/intranet -&gt; /templates/siov/intranet
+<span class="nc" id="L813">                fileName = Tools.replace(origUrl, prefix+Constants.getInstallName()+&quot;/&quot;, prefix+logInstallName+&quot;/&quot;);</span>
+<span class="nc" id="L814">                newUrl = checkSetFile(newUrl, fileName);</span>
+            }
+        }
+
+<span class="fc bfc" id="L818" title="All 2 branches covered.">        if (request != null)</span>
+        {
+<span class="fc" id="L820">            TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
+<span class="fc bfc" id="L821" title="All 2 branches covered.">            if (temp != null)</span>
+            {
+<span class="fc" id="L823">                String templateInstallName = temp.getTemplateInstallName();</span>
+<span class="pc bpc" id="L824" title="5 of 6 branches missed.">                if (Tools.isNotEmpty(templateInstallName) &amp;&amp; (&quot;/templates/&quot;.equals(prefix) || origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false))</span>
+                {
+                    //skus prehladavat /components/ing/news/news.jsp (orig. /components/ing/menu/news.jsp)
+                    String fileName;
+<span class="nc bnc" id="L828" title="All 2 branches missed.">                    if (origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false) fileName = Tools.replace(origUrl, prefix, prefix+templateInstallName+&quot;/&quot;);</span>
+<span class="nc" id="L829">                    else fileName = origUrl;</span>
+
+<span class="nc" id="L831">                    newUrl = checkSetFile(newUrl, fileName);</span>
+<span class="nc" id="L832">                    newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, &quot;-&quot;+lng+ext));</span>
+                }
+            }
+        }
+
+        //Logger.println(this,&quot;IFN RESULT: &quot; + newIncludeFileName);
+<span class="fc" id="L838">        return(newUrl);</span>
+    }
+
+    /**
+     * Vrati cestu k custom page pre Admin cast, alebo null, ak neexistuje ziadna
+     * @param pageURL
+     * @param request
+     * @return
+     */
+    public static String getCustomPageAdmin(String pageURL, HttpServletRequest request)
+    {
+        //custom page
+<span class="fc" id="L850">        String forward = Tools.replace(pageURL, &quot;/admin/&quot;, &quot;/admin/spec/&quot;+Constants.getInstallName()+&quot;/&quot;);</span>
+<span class="pc bpc" id="L851" title="1 of 2 branches missed.">        if (FileTools.exists(forward))</span>
+        {
+<span class="nc" id="L853">            return forward;</span>
+        }
+<span class="fc" id="L855">        forward = Tools.replace(pageURL, &quot;/admin/&quot;, &quot;/components/&quot;+Constants.getInstallName()+&quot;/admin/&quot;);</span>
+<span class="pc bpc" id="L856" title="1 of 2 branches missed.">        if (FileTools.exists(forward))</span>
+        {
+<span class="nc" id="L858">            return forward;</span>
+        }
+
+<span class="fc" id="L861">        String defaultSkin = Constants.getString(&quot;defaultSkin&quot;);</span>
+
+        //WebJET 9 skin page
+<span class="pc bpc" id="L864" title="1 of 2 branches missed.">        if (&quot;webjet9&quot;.equals(defaultSkin))</span>
+        {
+<span class="fc" id="L866">            forward = Tools.replace(pageURL, &quot;/admin/&quot;, &quot;/admin/skins/&quot;+defaultSkin+&quot;/&quot;);</span>
+<span class="fc bfc" id="L867" title="All 2 branches covered.">            if (FileTools.exists(forward))</span>
+            {
+<span class="fc" id="L869">                return forward;</span>
+            }
+            //ak neexistuje wj9, sprav fallback na wj8
+<span class="fc" id="L872">            defaultSkin = &quot;webjet8&quot;;</span>
+        }
+
+        //WebJET 8 skin page
+<span class="fc" id="L876">        forward = Tools.replace(pageURL, &quot;/admin/&quot;, &quot;/admin/skins/&quot;+defaultSkin+&quot;/&quot;);</span>
+<span class="fc bfc" id="L877" title="All 2 branches covered.">        if (FileTools.exists(forward))</span>
+        {
+<span class="fc" id="L879">            return forward;</span>
+        }
+
+        //WebJET 6 skin page fallback
+<span class="pc bpc" id="L883" title="1 of 2 branches missed.">        if (&quot;webjet6&quot;.equals(defaultSkin)==false)</span>
+        {
+<span class="fc" id="L885">            forward = Tools.replace(pageURL, &quot;/admin/&quot;, &quot;/admin/skins/webjet6/&quot;);</span>
+<span class="pc bpc" id="L886" title="1 of 2 branches missed.">            if (FileTools.exists(forward))</span>
+            {
+<span class="nc" id="L888">                return forward;</span>
+            }
+        }
+
+<span class="fc" id="L892">        return null;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

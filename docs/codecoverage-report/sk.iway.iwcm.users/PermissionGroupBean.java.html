@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PermissionGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">PermissionGroupBean.java</span></div><h1>PermissionGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+/**
+ * Zastupuje SKUPINU prav, to znamena kolekciu prav zoskupenych pod nejakym nazvom. NEMAZAT - pri pouziti verzie z WJ8 nastane zacyklenie springfox (aj ked su triedy naoko rovnake)
+ */
+@Entity
+@Table(name=&quot;user_perm_groups&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_PERM_GROUP_UPDATE)
+public class PermissionGroupBean extends ActiveRecordRepository implements Serializable
+{
+	private static final long serialVersionUID = -1L;
+
+<span class="fc" id="L51">	public PermissionGroupBean(){</span>
+		//constructor
+<span class="fc" id="L53">	}</span>
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_user_perm_groups&quot;)
+	@TableGenerator(name=&quot;WJGen_user_perm_groups&quot;,pkColumnValue=&quot;user_perm_groups&quot;)
+	@Column(name=&quot;group_id&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.ID,
+		title = &quot;[[#{components.users.id}]]&quot;,
+		renderFormat = &quot;dt-format-selector&quot;
+	)
+	private Long id;
+
+	@Column(name=&quot;group_title&quot;)
+	@NotBlank
+	@DataTableColumn(
+		inputType = DataTableColumnType.OPEN_EDITOR,
+		title = &quot;[[#{users.permission_group.name}]]&quot;,
+		tab = &quot;basicInfo&quot;
+	)
+	String title;
+
+	//***This columns are redirect through editorFields***
+	@Column(name=&quot;writable_folders&quot;)
+	String writableFolders;
+
+	@Column(name=&quot;editable_groups&quot;)
+	String editableGroups;
+
+	@Column(name=&quot;editable_pages&quot;)
+	String editablePages;
+
+	//***
+
+<span class="fc" id="L87">	@JsonManagedReference(value=&quot;group&quot;)</span>
+	@OneToMany(fetch = FetchType.LAZY, cascade=CascadeType.ALL, targetEntity=PermissionInPermissionGroupBean.class, mappedBy=&quot;group&quot;)
+	private Set&lt;PermissionInPermissionGroupBean&gt; permissions = null;
+
+<span class="fc" id="L91">    @DataTableColumnNested</span>
+	@Transient
+	private PermissionGroupEditorFields editorFields = null; //NOSONAR
+
+	public String getTitle()
+	{
+<span class="fc" id="L97">		return title;</span>
+	}
+
+	public void setTitle(String title)
+	{
+<span class="fc" id="L102">		this.title = title;</span>
+<span class="fc" id="L103">	}</span>
+
+	public Long getId() {
+<span class="fc" id="L106">		return id;</span>
+	}
+
+	public void setId(Long id) {
+<span class="fc" id="L110">		this. id = id;</span>
+<span class="fc" id="L111">	}</span>
+
+	@JsonIgnore
+	public int getUserPermGroupId() {
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if (id == null) return 0;</span>
+<span class="fc" id="L116">		return id.intValue();</span>
+	}
+
+	@JsonIgnore
+	public void setUserPermGroupId(int id) {
+<span class="fc" id="L121">		this.id = Long.valueOf(id);</span>
+<span class="fc" id="L122">	}</span>
+
+	public void deletePermission(String permission)
+	{
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">		if (permissions == null) return;</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">		for (Iterator&lt;PermissionInPermissionGroupBean&gt; iterator = permissions.iterator(); iterator.hasNext();)</span>
+		{
+<span class="fc" id="L129">			PermissionInPermissionGroupBean pg = iterator.next();</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">			if (permission.equalsIgnoreCase(pg.getPermission()))</span>
+			{
+<span class="fc" id="L132">				pg.delete();</span>
+<span class="fc" id="L133">				JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L134">				em.remove(pg);</span>
+
+<span class="fc" id="L136">				iterator.remove();</span>
+			}
+<span class="fc" id="L138">		}</span>
+<span class="fc" id="L139">	}</span>
+
+	public void addPermission(String permission)
+	{
+<span class="fc bfc" id="L143" title="All 2 branches covered.">		if (permissions == null) permissions = new HashSet&lt;&gt;();</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">		for (PermissionInPermissionGroupBean perm : permissions)</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (permission.equalsIgnoreCase(perm.getPermission()))</span>
+<span class="nc" id="L146">				return;</span>
+
+<span class="fc" id="L148">		PermissionInPermissionGroupBean newPerm = new PermissionInPermissionGroupBean();</span>
+<span class="fc" id="L149">		newPerm.setPermission(permission);</span>
+<span class="fc" id="L150">		permissions.add(newPerm);</span>
+<span class="fc" id="L151">		newPerm.group = this;</span>
+<span class="fc" id="L152">	}</span>
+
+	public List&lt;String&gt; getPermissionNames()
+	{
+<span class="fc" id="L156">		List&lt;String&gt; perms = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">		if (permissions == null) return perms;</span>
+
+<span class="fc bfc" id="L159" title="All 2 branches covered.">		for (PermissionInPermissionGroupBean perm : permissions)</span>
+<span class="fc" id="L160">			perms.add(perm.permission);</span>
+<span class="fc" id="L161">		return perms;</span>
+	}
+
+	public Set&lt;String&gt; getPermissionSet()
+	{
+<span class="fc" id="L166">		Set&lt;String&gt; perms = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">		if (permissions == null) return perms;</span>
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">		for (PermissionInPermissionGroupBean perm : permissions)</span>
+<span class="fc" id="L170">			perms.add(perm.permission);</span>
+<span class="fc" id="L171">		return perms;</span>
+	}
+
+	public String getWritableFolders() {
+<span class="fc" id="L175">		return writableFolders;</span>
+	}
+
+	public void setWritableFolders(String writableFolders) {
+<span class="fc" id="L179">		this.writableFolders = writableFolders;</span>
+<span class="fc" id="L180">	}</span>
+
+	public String getEditableGroups() {
+<span class="fc" id="L183">		return editableGroups;</span>
+	}
+
+	public void setEditableGroups(String editableGroups) {
+<span class="fc" id="L187">		this.editableGroups = editableGroups;</span>
+<span class="fc" id="L188">	}</span>
+
+	public String getEditablePages() {
+<span class="fc" id="L191">		return editablePages;</span>
+	}
+
+	public void setEditablePages(String editablePages) {
+<span class="fc" id="L195">		this.editablePages = editablePages;</span>
+<span class="fc" id="L196">	}</span>
+
+	@Override
+	public boolean equals(Object o)
+	{
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (this == o) return true;</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">		if (o == null || getClass() != o.getClass()) return false;</span>
+
+<span class="nc" id="L204">		PermissionGroupBean that = (PermissionGroupBean) o;</span>
+
+<span class="nc bnc" id="L206" title="All 4 branches missed.">		if (!Objects.equals(id, that.id) || !Objects.equals(title, that.title)) return false;</span>
+
+<span class="nc" id="L208">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

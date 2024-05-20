@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AplicationSearch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.search</a> &gt; <span class="el_source">AplicationSearch.java</span></div><h1>AplicationSearch.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.search;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * vyhladavanie vo WJ moduloch modla ich nazvu
+ */
+<span class="fc" id="L20">public class AplicationSearch implements Searchable</span>
+{
+	public List&lt;SearchResult&gt; search(String text, HttpServletRequest request)
+	{
+<span class="fc" id="L24">		List&lt;SearchResult&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L26">		String lng = PageLng.getUserLng(request);</span>
+<span class="fc" id="L27">		Prop prop = Prop.getInstance(lng);</span>
+<span class="fc" id="L28">		Identity user = UsersDB.getCurrentUser(request);</span>
+
+<span class="fc" id="L30">		List&lt;ModuleInfo&gt; modules = Modules.getInstance().getUserMenuItems(user);</span>
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">		for(ModuleInfo module:modules)</span>
+		{
+<span class="fc" id="L34">			String propText = prop.getText(module.getNameKey());</span>
+
+<span class="fc" id="L36">			String cmpModuleName = DB.internationalToEnglish(propText.toLowerCase());</span>
+<span class="fc" id="L37">			String cmpText = DB.internationalToEnglish(text.toLowerCase());</span>
+
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">			if(Tools.isNotEmpty(propText) &amp;&amp; cmpModuleName.contains(cmpText))</span>
+			{
+<span class="nc" id="L41">				SearchResult sr = new SearchResult();</span>
+<span class="nc" id="L42">				sr.setLabel(propText);</span>
+<span class="nc" id="L43">				sr.setText(&quot;&quot;);</span>
+<span class="nc" id="L44">				sr.setLink(module.getLeftMenuLink());</span>
+<span class="nc" id="L45">				sr.setType(this.getClass().getCanonicalName());</span>
+<span class="nc" id="L46">				result.add(sr);</span>
+			}
+<span class="fc" id="L48">		}</span>
+
+<span class="fc" id="L50">		return result;</span>
+	}
+	@Override
+	public boolean canUse(HttpServletRequest request)
+	{
+		// TODO: Doriesit prava ci sa to ma userovi vobec zobrazovat
+<span class="fc" id="L56">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

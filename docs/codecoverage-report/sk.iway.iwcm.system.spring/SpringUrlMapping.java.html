@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringUrlMapping.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">SpringUrlMapping.java</span></div><h1>SpringUrlMapping.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
+
+/*
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.system.WJResponseWrapper;
+import sk.iway.iwcm.tags.WriteTag;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+*/
+
+/**
+ * Drzi info o URL mapovanych na Spring.
+ *  SpringUrlMapping.java
+ *
+ *
+ *@Title        webjet8
+ *@Company      Interway a.s. (www.interway.sk)
+ *@Copyright    Interway a.s (c) 2001-2016
+ *@author       Author: mbocko
+ *@created      Date: 19.9.2016
+ *@modified     Date: 19.9.2016
+ */
+//@Component
+<span class="nc" id="L47">public class SpringUrlMapping// implements ApplicationListener&lt;ContextRefreshedEvent&gt;</span>
+{
+	private static final String LOGON_URL = &quot;/admin/logon/&quot;;
+
+	public static String redirect(String url) {
+<span class="fc" id="L52">		return &quot;redirect:&quot; + url;</span>
+	}
+
+	public static String redirectToLogon() {
+<span class="fc" id="L56">		return redirect(LOGON_URL);</span>
+	}
+
+	public static String redirectTo403() {
+<span class="nc" id="L60">		return redirect(&quot;/403&quot;);</span>
+	}
+
+	public static void redirectTo403(HttpServletResponse response) throws IOException {
+<span class="nc" id="L64">		response.sendRedirect(&quot;/403&quot;);</span>
+<span class="nc" id="L65">	}</span>
+
+	public static String redirectTo404() {
+<span class="nc" id="L68">		return redirect(&quot;/404&quot;);</span>
+	}
+
+	public static void redirectTo404(HttpServletResponse response) throws IOException {
+<span class="nc" id="L72">		response.sendRedirect(&quot;/404&quot;);</span>
+<span class="nc" id="L73">	}</span>
+
+	public static void redirectToLogon(HttpServletResponse response) throws IOException {
+<span class="nc" id="L76">		response.sendRedirect(LOGON_URL);</span>
+<span class="nc" id="L77">	}</span>
+
+	/**
+	 * Return path to custom component, eg.
+	 * /components/user/logon -&gt; /components/INSTALL_NAME/user/logon
+	 * @param path
+	 * @param request
+	 * @return
+	 */
+	public static String getCustomPath(String path, HttpServletRequest request) {
+<span class="fc" id="L87">		String ext = &quot;.jsp&quot;;</span>
+		String customPath;
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if (path.startsWith(&quot;/admin/&quot;)) {</span>
+<span class="nc" id="L90">			customPath = WriteTagToolsForCore.getCustomPageAdmin(path+ext, request);</span>
+		} else {
+<span class="fc" id="L92">			customPath = WriteTagToolsForCore.getCustomPath(path+ext, request);</span>
+		}
+<span class="pc bpc" id="L94" title="2 of 4 branches missed.">		if (Tools.isNotEmpty(customPath) &amp;&amp; customPath.length()&gt;5) {</span>
+<span class="fc" id="L95">			return customPath.substring(0, customPath.length()-ext.length());</span>
+		}
+
+
+<span class="nc" id="L99">		return path;</span>
+	}
+
+	//jeeff: tuto haluzu s mapovanim springu na /spring nepotrebujeme, kedze uz mame Spring komponenty cez INCLUDE
+	//****** kedze je to ale @Component, tak triedu nemozeme len tak lahko zmazat kvoli update procesu ******
+
+
+/*
+	private static Set&lt;String&gt; springUrls;
+
+	@Autowired
+	private RequestMappingHandlerMapping requestMappingHandlerMapping;
+
+	//@Override
+	@EventListener
+	public void onApplicationEvent(final ContextRefreshedEvent event)
+	{
+		springUrls = Collections.synchronizedSet(new HashSet&lt;String&gt;());
+		for (RequestMappingInfo reqMapInfo : requestMappingHandlerMapping.getHandlerMethods().keySet())
+		{
+			for (String url : reqMapInfo.getPatternsCondition().getPatterns())
+			{
+				if (url.contains(&quot;{&quot;))
+				{
+					url = url.substring(0, url.indexOf(&quot;{&quot;));
+				}
+
+				if (url.contains(&quot;*&quot;)) {
+					url = Tools.replace(url, &quot;*&quot;, &quot;&quot;);
+				}
+
+				springUrls.add(url);
+			}
+		}
+		PathFilter.registerDynamicForward(&quot;SpringForwarder&quot;, new DynamicForward() {
+
+			@Override
+			public boolean isValid(String path)
+			{
+				if (!path.startsWith(&quot;/spring&quot;) &amp;&amp; springUrls!=null)
+				{
+
+					for (String sUrl : springUrls)
+					{
+						if (path.startsWith(sUrl))
+						{
+							return true;
+						}
+
+					}
+
+				}
+				return false;
+			}
+
+			@Override
+			public boolean forward(String path, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+			{
+
+				String pathForPage = &quot;&quot;;
+				for (String sUrl : springUrls)
+				{
+					if (path.startsWith(sUrl))
+					{
+						pathForPage = sUrl;
+					}
+				}
+				if (Constants.getBoolean(&quot;SpringRequiresSecure&quot;) &amp;&amp; !Tools.isSecure(request))
+				{
+					Logger.error(this, &quot;ERROR: SPRING vyzaduje httpS pripojenie!!&quot;);
+					response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					request.getRequestDispatcher(&quot;/403.jsp&quot;).forward(request, response);
+					//System.out.println(&quot;SPRING forward 403&quot;);
+					return true;
+				}
+
+				if (DocTools.testXssStrictGet(path) || DocTools.testXss(path) || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 || request.getRequestURI().indexOf(&quot;//&quot;)!=-1 || path.indexOf('\\')!=-1 || path.indexOf(&quot;/../&quot;)!=-1)
+				{
+					if (!DocTools.isXssStrictUrlException(path, &quot;xssProtectionStrictGetUrlException&quot;))
+					{
+						//je to pokus o XSS: /404.html/'onmouseover=prompt(915761)
+						Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS path=&quot;+path, -1, -1);
+						Logger.error(this, &quot;ERROR: SPRING XSS utok, path=&quot;+path);
+						response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+						request.getRequestDispatcher(&quot;/403.jsp&quot;).forward(request, response);
+						return true;
+					}
+				}
+
+				//STRICT XSS FILTER (aplikuje sa na vsetky HTTP poziadavky)
+				String strictXssRedirect = DocTools.getXssStrictUrlRedirect(request, path, request.getQueryString());
+				if (strictXssRedirect != null)
+				{
+					Logger.error(this, &quot;ERROR: SPRING XSS utok, path=&quot;);
+					response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					request.getRequestDispatcher(&quot;/403.jsp&quot;).forward(request, response);
+					return true;
+				}
+
+				int docId = DocDB.getInstance().getVirtualPathDocId(pathForPage, DocDB.getDomain(request));
+				if (docId&gt;0)
+				{
+					WJResponseWrapper respWrapper = null;
+					respWrapper = new WJResponseWrapper(response, request);
+					request.getRequestDispatcher(&quot;/spring&quot;+path).include(request, respWrapper);
+//					if (respWrapper.redirectURL!=null)
+//					{
+//						response.sendRedirect(respWrapper.redirectURL);
+//						return true;
+//					}
+
+					StringBuilder htmlCode = new StringBuilder(Tools.getStringValue(respWrapper.getOutputOfStreamAsString(), &quot;&quot;));
+					htmlCode = WriteTag.fixFlash(htmlCode, request);
+					htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode,request);
+					//htmlCode = WriteTag.preventSpam(htmlCode, request);
+					//htmlCode = WriteTag.secureFormmail(htmlCode, request);
+					htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);
+					request.setAttribute(&quot;proxyOutputData&quot;, htmlCode.toString());
+					//System.out.println(&quot;SPRING forward DOCID was found&quot;);
+					return false;
+				}
+				else
+				{
+					path = &quot;/spring&quot; + path;
+					request.getRequestDispatcher(path).forward(request, response);
+					//System.out.println(&quot;SPRING forward 200 OK&quot;);
+					return true;
+				}
+
+			}
+		});
+	}
+
+	*/
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

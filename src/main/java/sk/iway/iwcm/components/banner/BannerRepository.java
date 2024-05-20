@@ -9,8 +9,5 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 @Repository
 public interface BannerRepository extends DomainIdRepository<BannerBean, Long> {
-
     List<BannerBean> findDistinctAllByBannerGroupLikeAndDomainId(String bannerGroup, int domainId);
-
-    BannerBean findByIdAndDomainId(Long id, int domanId);
 }

@@ -1,0 +1,2138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner</a> &gt; <span class="el_source">BannerDB.java</span></div><h1>BannerDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner;
+
+import static sk.iway.iwcm.components.banner.model.BannerStatViews.FIELD_INSERT_DATE;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+
+import javax.persistence.Query;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.components.banner.model.BannerGroupBean;
+import sk.iway.iwcm.components.banner.model.BannerWebDocBean;
+import sk.iway.iwcm.components.banner.model.BannerWebGroupBean;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.StatGraphNewDB;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.StatWriteBuffer;
+import sk.iway.iwcm.system.jpa.JpaComparator;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.users.SettingsAdminDB;
+
+
+/**
+ *  BannerDB.java - zobrazovanie bannerov, praca s tabulkou banner_banners
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.49 $
+ *@created      $Date: 2010/01/20 10:12:27 $
+ *@modified     $Date: 2010/01/20 10:12:27 $
+ */
+public class BannerDB
+{
+<span class="fc" id="L76">	private static Random random = new Random();</span>
+
+	private BannerDB() {
+		//
+	}
+
+	/**
+	 * Ziskanie zoznamu vsetky banerov (aj neaktivnych) z databazy
+	 * @return
+	 */
+	public static List&lt;BannerBean&gt; getAllBanners()
+	{
+<span class="nc" id="L88">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L89">		ReadAllQuery dbQuery = new ReadAllQuery(BannerBean.class);</span>
+
+<span class="nc" id="L91">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L92">		Expression expr = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L93">		dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="nc" id="L95">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L96">		return JpaDB.getResultList(query);</span>
+	}
+
+	/**
+	 * Ziskanie banerov podla podmienok
+	 * @param groups - zoznam skupin oddelenych ciarkou, alebo null
+	 * @param orderBy - nazov JAVA PROPERTY (nie stlpca v DB), podla ktoreho sa robi order
+	 * @return
+	 */
+	public static List&lt;BannerBean&gt; getBanners(String groups, String orderBy)
+	{
+		//ak mozeme, pouzi cache
+<span class="fc" id="L108">		String cacheKey = &quot;BannerDB.ban.&quot;+groups;</span>
+<span class="fc" id="L109">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L110">		int cacheTime = Constants.getInt(&quot;bannerCacheTime&quot;);</span>
+<span class="pc bpc" id="L111" title="3 of 4 branches missed.">		if (cacheTime&gt;0 &amp;&amp; Tools.isNotEmpty(groups))</span>
+		{
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L114">			List&lt;BannerBean&gt; banners = (List&lt;BannerBean&gt;)c.getObject(cacheKey);</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (banners != null)</span>
+			{
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (orderBy != null)</span>
+				{
+<span class="nc" id="L120">					JpaComparator&lt;BannerBean&gt; comparator = new JpaComparator&lt;&gt;(BannerBean.class, orderBy, true);</span>
+<span class="nc" id="L121">					comparator.orderList(banners);</span>
+				}
+				//Filter banners
+<span class="nc" id="L124">				return BannerDB.filterByDocAndGroupId(banners);</span>
+			}
+		}
+
+<span class="fc" id="L128">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L129">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L130">		ReadAllQuery dbQuery = new ReadAllQuery(BannerBean.class, builder);</span>
+
+<span class="fc" id="L132">		Expression expr = null;</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(groups))</span>
+		{
+<span class="fc" id="L135">			groups = DB.removeSlashes(groups);</span>
+<span class="fc" id="L136">			StringTokenizer st = new StringTokenizer(groups, &quot;,+&quot;);</span>
+<span class="fc" id="L137">			List&lt;String&gt; groupList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L140">				groupList.add(st.nextToken());</span>
+			}
+<span class="fc" id="L142">			expr = builder.get(&quot;bannerGroup&quot;).in(groups.split(&quot;,&quot;));</span>
+
+		}
+
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">		if(expr == null)</span>
+<span class="nc" id="L147">			expr = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+		else
+<span class="fc" id="L149">			expr = expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+
+<span class="fc" id="L151">		dbQuery.setSelectionCriteria(expr);</span>
+
+
+<span class="fc" id="L154">		Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L155">		List&lt;BannerBean&gt; banners = JpaDB.getResultList(query);</span>
+
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">		if (cacheTime&gt;0)</span>
+		{
+<span class="nc" id="L159">			c.setObject(cacheKey, banners, cacheTime);</span>
+		}
+
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		if (orderBy != null)</span>
+		{
+<span class="nc" id="L164">			JpaComparator&lt;BannerBean&gt; comparator = new JpaComparator&lt;&gt;(BannerBean.class, orderBy, true);</span>
+<span class="nc" id="L165">			comparator.orderList(banners);</span>
+		}
+
+		//Filter banners by docId/groupId
+<span class="fc" id="L169">		return BannerDB.filterByDocAndGroupId(banners);</span>
+	}
+
+	/**
+	 * vyfiltrujem vsetky bannery na zaklade campaignBanner. Ak nenajde, tak vratim vsetky
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 */
+	public static List&lt;BannerBean&gt; getBanners(String groups, String orderBy, String campaignBanner)
+	{
+<span class="fc" id="L178">		List&lt;BannerBean&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L179">		List&lt;BannerBean&gt; allBanners = getBanners(groups, orderBy);</span>
+<span class="pc bpc" id="L180" title="2 of 4 branches missed.">		if(allBanners != null &amp;&amp; allBanners.isEmpty()==false)</span>
+		{
+<span class="fc bfc" id="L182" title="All 2 branches covered.">			for(BannerBean banner : allBanners)</span>
+			{
+<span class="fc bfc" id="L184" title="All 2 branches covered.">				if (Tools.isNotEmpty(campaignBanner)) {</span>
+					//adding only matching campaign banners
+<span class="fc bfc" id="L186" title="All 2 branches covered.">					if (campaignBanner.equals(banner.getCampaignTitle())) result.add(banner);</span>
+				} else {
+<span class="fc" id="L188">					result.add(banner);</span>
+				}
+<span class="fc" id="L190">			}</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">			if (result.size()==0) {</span>
+				//didn't find any matching campaign banner, add at least non campaign ones (maybe there are more banners on page and we need to show other banners)
+<span class="fc bfc" id="L194" title="All 2 branches covered.">				for(BannerBean banner : allBanners)</span>
+				{
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">					if (Tools.isEmpty(banner.getCampaignTitle())) {</span>
+<span class="fc" id="L197">						result.add(banner);</span>
+					}
+<span class="fc" id="L199">				}</span>
+			}
+		}
+
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">		return (result.size() &gt; 0 ? result : allBanners);</span>
+	}
+
+	/**
+	 * Ziskanie skupin bannerov
+	 * @return
+	 */
+	public static List&lt;BannerGroupBean&gt; getBannerGroups()
+	{
+<span class="fc" id="L212">		List&lt;BannerGroupBean&gt; banners =new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L213">		Connection db_conn = null;</span>
+<span class="fc" id="L214">		PreparedStatement ps = null;</span>
+<span class="fc" id="L215">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L218">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L219">			ps = db_conn.prepareStatement(&quot;SELECT distinct banner_group FROM banner_banners ORDER BY banner_group&quot;);</span>
+<span class="fc" id="L220">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L223">				BannerGroupBean bean=new BannerGroupBean();</span>
+<span class="fc" id="L224">				bean.setBannerGroup(rs.getString(&quot;banner_group&quot;));</span>
+<span class="fc" id="L225">				banners.add(bean);</span>
+<span class="fc" id="L226">			}</span>
+<span class="fc" id="L227">			rs.close();</span>
+<span class="fc" id="L228">			ps.close();</span>
+<span class="fc" id="L229">			db_conn.close();</span>
+<span class="fc" id="L230">			rs = null;</span>
+<span class="fc" id="L231">			ps = null;</span>
+<span class="fc" id="L232">			db_conn = null;</span>
+		}
+<span class="nc" id="L234">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L236">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L243">					rs.close();</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L245">					ps.close();</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L247">					db_conn.close();</span>
+			}
+<span class="nc" id="L249">			catch (Exception ex2)</span>
+			{
+				//
+<span class="fc" id="L252">			}</span>
+		}
+
+<span class="fc" id="L255">		return(banners);</span>
+	}
+
+	/**
+	 * Ziska skupiny bannerov povolenych pre usera
+	 * @param userid id usera
+	 * @return
+	 */
+	public static List&lt;BannerGroupBean&gt; getBannerGroupsByUserAllowedCategories(int userid){
+<span class="fc" id="L264">		List&lt;BannerGroupBean&gt; bannerGroupNames = BannerDB.getBannerGroups();</span>
+<span class="fc" id="L265">		List&lt;String&gt; allowedCategories = SettingsAdminDB.getAllowedCategories(SettingsAdminDB.getSettings(userid),&quot;menuBanner&quot;);</span>
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">		if(allowedCategories != null){</span>
+<span class="nc" id="L267">			List&lt;BannerGroupBean&gt; bannerGroupsFiltered = new ArrayList&lt;&gt;(bannerGroupNames.size());</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			for(BannerGroupBean bgb : bannerGroupNames){</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">				if(allowedCategories.contains(bgb.getBannerGroup().trim()))</span>
+<span class="nc" id="L270">					bannerGroupsFiltered.add(bgb);</span>
+<span class="nc" id="L271">			}</span>
+
+<span class="nc" id="L273">			bannerGroupNames = bannerGroupsFiltered;</span>
+		}
+<span class="fc" id="L275">		return bannerGroupNames;</span>
+	}
+
+
+	/**
+	 * Ziskanie banera
+	 * @param bannerId - id bannera
+	 * @return
+	 */
+	public static BannerBean getBanner(int bannerId)
+	{
+<span class="fc" id="L286">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L287">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L288">		ReadAllQuery dbQuery = new ReadAllQuery(BannerBean.class, builder);</span>
+<span class="fc" id="L289">		Expression expr = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L290">		expr = expr.and(builder.get(&quot;id&quot;).equal(bannerId));</span>
+<span class="fc" id="L291">		dbQuery.setSelectionCriteria(expr);</span>
+
+
+<span class="fc" id="L294">		Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L295">		List&lt;BannerBean&gt; banners = JpaDB.getResultList(query);</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">		if(!Tools.isEmpty(banners))</span>
+<span class="fc" id="L297">			return banners.get(0);</span>
+<span class="nc" id="L298">		return new BannerBean();</span>
+	}
+
+	/**
+	 * Ulozenie banera do DB
+	 * @param banBean
+	 * @param banId
+	 * @return
+	 */
+	public static boolean saveBanner(BannerBean banBean, int banId)
+	{
+<span class="nc" id="L309">		boolean saveOK = false;</span>
+		try
+		{
+<span class="nc" id="L312">			banBean.setDomainId(CloudToolsForCore.getDomainId());</span>
+			//		uloz banner do DB
+<span class="nc" id="L314">			JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L315">			em.getTransaction().begin();</span>
+
+<span class="nc bnc" id="L317" title="All 2 branches missed.">			if (banId&lt;1)</span>
+			{
+<span class="nc" id="L319">				em.persist(banBean);</span>
+<span class="nc" id="L320">				Adminlog.add(Adminlog.TYPE_BANNER_CREATE, &quot;Vytvoreny banner: &quot;+banBean.getName(), -1, -1);</span>
+			}
+			else
+			{
+				//BannerBean original = em.find(BannerBean.class, banId);
+//				SQLTemplate template = new SQLTemplate(BannerBean.class, &quot;SELECT * FROM banner&quot;, true);
+<span class="nc" id="L326">				BeanDiff diff = new BeanDiff().setNewLoadJpaOriginal(banBean, banBean.getBannerId());</span>
+<span class="nc" id="L327">				Adminlog.add(Adminlog.TYPE_BANNER_UPDATE, &quot;Upraveny banner: &quot;+banBean.getName()+new BeanDiffPrinter(diff), banId, -1);</span>
+<span class="nc" id="L328">				banBean = em.merge(banBean);</span>
+			}
+			//banBean.setObjectId(new ObjectId(BannerBean.class, &quot;bannerId&quot;, 222));
+
+<span class="nc bnc" id="L332" title="All 2 branches missed.">			if (banBean.getStatClicks() == null)</span>
+			{
+<span class="nc" id="L334">				banBean.setStatClicks(Integer.valueOf(0));</span>
+			}
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			if (banBean.getStatViews() == null)</span>
+			{
+<span class="nc" id="L338">				banBean.setStatViews(Integer.valueOf(0));</span>
+			}
+
+<span class="nc" id="L341">			em.getTransaction().commit();</span>
+
+<span class="nc" id="L343">			saveOK = true;</span>
+		}
+<span class="nc" id="L345">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L347">			Logger.error(ex);</span>
+<span class="nc" id="L348">		}</span>
+
+<span class="nc" id="L350">		return saveOK;</span>
+	}
+
+	/**
+	 * Vymaze banner z DB
+	 * @param bannerId - ID bannera v DB
+	 * @return
+	 */
+	public static boolean deleteBanner(int bannerId)
+	{
+<span class="nc" id="L360">		Connection db_conn = null;</span>
+<span class="nc" id="L361">		PreparedStatement ps = null;</span>
+<span class="nc" id="L362">		ResultSet rs = null;</span>
+<span class="nc" id="L363">		boolean ret = false;</span>
+		try
+		{
+<span class="nc" id="L366">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L367">			ps = db_conn.prepareStatement(&quot;SELECT name FROM banner_banners WHERE banner_id = ?&quot;);</span>
+<span class="nc" id="L368">			ps.setInt(1, bannerId);</span>
+<span class="nc" id="L369">			String name = null;</span>
+<span class="nc" id="L370">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L373">				name = rs.getString(1);</span>
+
+<span class="nc" id="L375">			rs.close();</span>
+<span class="nc" id="L376">			rs = null;</span>
+<span class="nc" id="L377">			ps.close();</span>
+
+<span class="nc" id="L379">			ps = db_conn.prepareStatement(&quot;DELETE FROM banner_banners WHERE banner_id=? AND domain_id=? &quot;);</span>
+<span class="nc" id="L380">			Adminlog.add(Adminlog.TYPE_BANNER_DELETE, &quot;Zmazany banner: &quot;+name, bannerId, -1);</span>
+<span class="nc" id="L381">			ps.setInt(1, bannerId);</span>
+<span class="nc" id="L382">			ps.setInt(2, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L384">			int updateBanner = ps.executeUpdate();</span>
+
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if(updateBanner != 0) ret = true;</span>
+<span class="nc" id="L387">			ps.close();</span>
+<span class="nc" id="L388">			ps = null;</span>
+		}
+<span class="nc" id="L390">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L392">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L398" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L399">					db_conn.close();</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L401">					ps.close();</span>
+			}
+<span class="nc" id="L403">			catch (Exception ex2)</span>
+			{
+				//
+<span class="nc" id="L406">			}</span>
+		}
+<span class="nc" id="L408">		return (ret);</span>
+	}
+
+	public static BannerBean getRandomBanner(String groups)
+	{
+<span class="nc" id="L413">		return getRandomBanner(groups, &quot;&quot;);</span>
+	}
+
+	/**
+	 * Vrati nahodny banner
+	 * @param groups - zoznam skupin oddelenych ciarkou
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 * @return
+	 */
+	public static BannerBean getRandomBanner(String groups, String campaignBanner)
+	{
+<span class="fc" id="L424">		List&lt;BannerBean&gt; bannersOK = getOnlyAvailable(getBanners(groups, null, campaignBanner), campaignBanner);</span>
+
+<span class="pc bpc" id="L426" title="2 of 4 branches missed.">		if (bannersOK != null &amp;&amp; bannersOK.size() &gt; 0)</span>
+		{
+			//vygeneruj nahodne cislo od 0 do size
+<span class="fc" id="L429">			int index = random.nextInt(bannersOK.size());</span>
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">			if (index &gt;= bannersOK.size())</span>
+<span class="nc" id="L431">				index = bannersOK.size() - 1;</span>
+<span class="fc" id="L432">			BannerBean banner = bannersOK.get(index);</span>
+<span class="fc" id="L433">			return(banner);</span>
+		}
+<span class="nc" id="L435">		return(null);</span>
+	}
+
+	/**
+	 * Vrati nahodny banner - doplnene o cookie filtrovanie na zaklade cookieGroup
+	 * @param groups - zoznam skupin oddelenych ciarkou
+	 * @return
+	 */
+	public static BannerBean getRandomBanner(String groups, Cookie[] cookie)
+	{
+<span class="nc" id="L445">		List&lt;BannerBean&gt; banners = getBanners(groups, null);</span>
+<span class="nc" id="L446">		List&lt;BannerBean&gt; bannersOK = new ArrayList&lt;&gt;();</span>
+		BannerBean banBean;
+<span class="nc" id="L448">		long dateFrom = 0;</span>
+<span class="nc" id="L449">		long dateTo = 0;</span>
+<span class="nc" id="L450">		long now = Tools.getNow();</span>
+		int statClicks;
+		int statViews;
+
+<span class="nc bnc" id="L454" title="All 2 branches missed.">		for (int i=0; i&lt;banners.size(); i++)</span>
+		{
+<span class="nc" id="L456">			banBean = banners.get(i);</span>
+
+<span class="nc" id="L458">			dateFrom = 0;</span>
+<span class="nc" id="L459">			dateTo = now + 1;</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">			if (banBean.getDateFrom()!=null)	dateFrom = banBean.getDateFrom().getTime();</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">			if (banBean.getDateTo()!=null) dateTo = banBean.getDateTo().getTime();</span>
+
+			//ak je nastavene 0, ignoruj statistiku
+<span class="nc" id="L464">			statClicks = Tools.getIntValue(banBean.getStatClicks());</span>
+<span class="nc" id="L465">			statViews = Tools.getIntValue(banBean.getStatViews());</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxClicks())==0) statClicks = 0;</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxViews())==0) statViews = 0;</span>
+
+			//testujem, ci este nebolo dosiahnute obmedzenie zobrazovania banneru, ak nie, pridam banner do zoznamu bannersOK
+<span class="nc bnc" id="L470" title="All 2 branches missed.">			if (  Tools.getIntValue(banBean.getMaxClicks()) &gt;= statClicks &amp;&amp;		//MAX CLICKS &gt;= AKTUALNY POCET KLIKNUTI</span>
+<span class="nc bnc" id="L471" title="All 6 branches missed.">					Tools.getIntValue(banBean.getMaxViews()) &gt;= statViews &amp;&amp;		//MAX VIEWS &gt;= AKTUALNY POCET VIDENI</span>
+					dateFrom &lt;= now &amp;&amp;								//CAS OD &lt;= AKTUALNY CAS
+					dateTo &gt;= now 	&amp;&amp;								//CAS DO &gt;= AKTUALNY CAS
+<span class="nc bnc" id="L474" title="All 2 branches missed.">					banBean.getActive().booleanValue()==true)</span>
+			{
+<span class="nc" id="L476">				bannersOK.add(banBean);</span>
+			}
+		}
+
+		//custom pre Ing kontrola podla cookie usera, vyhodi tie ktore nevyhovuju fitru
+<span class="nc bnc" id="L481" title="All 2 branches missed.">		if(cookie != null)</span>
+<span class="nc" id="L482">			bannersOK = getVisitorCookieGroup(bannersOK, cookie);</span>
+
+<span class="nc bnc" id="L484" title="All 2 branches missed.">		if (bannersOK.size() &gt; 0)</span>
+		{
+			//vygeneruj nahodne cislo od 0 do size
+<span class="nc" id="L487">			int index = random.nextInt(bannersOK.size());</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (index &gt;= bannersOK.size())</span>
+			{
+<span class="nc" id="L490">				index = bannersOK.size() - 1;</span>
+			}
+<span class="nc" id="L492">			BannerBean banner = bannersOK.get(index);</span>
+<span class="nc" id="L493">			return(banner);</span>
+		}
+<span class="nc" id="L495">		return(null);</span>
+	}
+
+    /**
+     * Vrati nasledujuci banner v zozname
+     * @param groups - zoznam skupin oddelenych ciarkou
+     * @param session - session
+     * @param bannerList - zoznam bannerov, ktore som uz zobrazil
+     * @param bannerIndex - index bannera v session
+     * @return
+     */
+	public static BannerBean getNextBanner(String groups, HttpSession session, List&lt;String&gt; bannerList, String bannerIndex)
+	{
+<span class="nc" id="L508">		return getNextBanner( groups,  session,  bannerList, bannerIndex, null );</span>
+	}
+
+    /**
+     * @deprecated pouzite verziu so stringom*
+     */
+	@Deprecated
+    public static BannerBean getNextBanner(String groups, HttpSession session, List&lt;String&gt; bannerList, int bannerIndex)
+    {
+<span class="nc" id="L517">        return getNextBanner( groups,  session,  bannerList, String.valueOf(bannerIndex), null );</span>
+    }
+
+    /**
+     * @deprecated pozuite verziu so Stringom
+     * @return
+     */
+	@Deprecated
+    public static BannerBean getNextBanner(String groups, HttpSession session, List&lt;String&gt; bannerList, int bannerIndex, Cookie[] cookie)
+    {
+<span class="nc" id="L527">        return getNextBanner( groups,  session,  bannerList, String.valueOf(bannerIndex), cookie );</span>
+    }
+
+	 public static BannerBean getNextBanner(String groups, HttpSession session, List&lt;String&gt; bannerList, String bannerIndex, Cookie[] cookie)
+	 {
+<span class="nc" id="L532">	 	  return getNextBanner(groups, session, bannerList, String.valueOf(bannerIndex), cookie, null);</span>
+	 }
+
+    /**
+     * Doplnenie o fitrovanie cez cookie custom pre Ing
+     * @param groups
+     * @param session
+     * @param bannerList
+     * @param bannerIndex
+	  * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+     * @return
+     *@author		$Author: prau $(prau)
+     */
+	public static BannerBean getNextBanner(String groups, HttpSession session, List&lt;String&gt; bannerList, String bannerIndex, Cookie[] cookie, String campaignBanner)
+	{
+		//ziskam si zoznam bannerov z DB
+<span class="fc" id="L548">		List&lt;BannerBean&gt; banners = getOnlyAvailable(getBanners(groups, null, campaignBanner), campaignBanner);</span>
+<span class="fc" id="L549">		List&lt;BannerBean&gt; bannersOK = new ArrayList&lt;&gt;();</span>
+		BannerBean banBean;
+		BannerBean banner;
+		String bannerId;
+<span class="fc" id="L553">		boolean found = false;</span>
+		//int index = -1;
+<span class="fc" id="L555">		long dateFrom = 0;</span>
+<span class="fc" id="L556">		long dateTo = 0;</span>
+<span class="fc" id="L557">		long now = Tools.getNow();</span>
+		int statClicks;
+		int statViews;
+
+<span class="fc bfc" id="L561" title="All 2 branches covered.">		for (int i=0; i&lt;banners.size(); i++)</span>
+		{
+<span class="fc" id="L563">			banBean = banners.get(i);</span>
+
+<span class="fc" id="L565">			dateFrom = 0;</span>
+<span class="fc" id="L566">			dateTo = now + 1;</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">			if (banBean.getDateFrom()!=null)	dateFrom = banBean.getDateFrom().getTime();</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">			if (banBean.getDateTo()!=null) dateTo = banBean.getDateTo().getTime();</span>
+
+			//ak je nastavene 0, ignoruj statistiku
+<span class="fc" id="L571">			statClicks = Tools.getIntValue(banBean.getStatClicks());</span>
+<span class="fc" id="L572">			statViews = Tools.getIntValue(banBean.getStatViews());</span>
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxClicks())==0) statClicks = 0;</span>
+<span class="pc bpc" id="L574" title="1 of 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxViews())==0) statViews = 0;</span>
+
+			//testujem, ci este nebolo dosiahnute obmedzenie zobrazovania banneru, ak nie, pridam banner do zoznamu bannersOK
+<span class="pc bpc" id="L577" title="1 of 2 branches missed.">			if ( Tools.getIntValue(banBean.getMaxClicks()) &gt;= statClicks &amp;&amp;		//MAX CLICKS &gt;= AKTUALNY POCET KLIKNUTI</span>
+<span class="pc bpc" id="L578" title="3 of 6 branches missed.">					Tools.getIntValue(banBean.getMaxViews()) &gt;= statViews &amp;&amp;		//MAX VIEWS &gt;= AKTUALNY POCET VIDENI</span>
+					dateFrom &lt;= now &amp;&amp;								//CAS OD &lt;= AKTUALNY CAS
+					dateTo &gt;= now 	&amp;&amp;								//CAS DO &gt;= AKTUALNY CAS
+<span class="pc bpc" id="L581" title="1 of 2 branches missed.">					banBean.getActive().booleanValue()==true)</span>
+			{
+<span class="fc" id="L583">				bannersOK.add(banBean);</span>
+			}
+		}
+
+		//custom pre Ing kontrola podla cookie usera, vyhodi tie ktore nevyhovuju fitru
+<span class="pc bpc" id="L588" title="1 of 2 branches missed.">		if(cookie != null)</span>
+<span class="nc" id="L589">			bannersOK = getVisitorCookieGroup(bannersOK, cookie);</span>
+
+		//System.out.println(&quot;bannersOK.size() : &quot;+bannersOK.size());
+
+		//ak v session nie je bannerIndex, t.j. prvy krat volam fukciu a zoznam bannerList je prazdny
+<span class="fc bfc" id="L594" title="All 2 branches covered.">		if (session.getAttribute(&quot;bannerIndex&quot;+bannerIndex) == null)</span>
+		{
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">			if (bannersOK.size() &gt; 0)</span>
+			{
+<span class="fc" id="L598">				banner = bannersOK.get(0);</span>
+<span class="fc" id="L599">				bannerList.add(String.valueOf(banner.getBannerId()));</span>
+<span class="fc" id="L600">				session.setAttribute(&quot;bannerList&quot;+bannerIndex, bannerList);</span>
+
+<span class="fc" id="L602">				return(banner);</span>
+			}
+		}
+		else
+		{
+<span class="pc bpc" id="L607" title="1 of 2 branches missed.">			if (bannersOK.size() &gt; 0)</span>
+			{
+				//prelezem zoznam bannersOK a zoznam bannerList, ak su ID rovnake =&gt; banner uz bol zobrazeny a preskocim ho
+				//V pripade, ze v skupine je iba jeden baner, nekontrolujem ID ci uz bol baner zobrazeny
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">				for (int i=0; i&lt;bannersOK.size(); i++)</span>
+				{
+<span class="fc" id="L613">					banner = bannersOK.get(i);</span>
+<span class="fc bfc" id="L614" title="All 2 branches covered.">					for (int j=0; j&lt;bannerList.size(); j++)</span>
+					{
+<span class="fc" id="L616">						bannerId = bannerList.get(j);</span>
+<span class="fc bfc" id="L617" title="All 4 branches covered.">						if ( bannerId.equals( String.valueOf(banner.getBannerId()) ) &amp;&amp; bannersOK.size() &gt; 1)</span>
+						{
+<span class="fc" id="L619">							found = true;</span>
+							//index = banner.getBannerId();
+						}
+					}
+<span class="fc bfc" id="L623" title="All 2 branches covered.">					if ( !found )</span>
+					{
+<span class="fc" id="L625">						bannerList.add(String.valueOf(banner.getBannerId()));</span>
+<span class="fc" id="L626">						session.setAttribute(&quot;bannerList&quot;+bannerIndex, bannerList);</span>
+
+					/*	Logger.println(BannerDB.class,&quot;-----------------\nBannerList: &quot;);
+						for (int j=0; j&lt;bannerList.size(); j++)
+						{
+							Logger.println(BannerDB.class,&quot;   &quot;+ bannerList.get(j));
+						}
+						Logger.println(BannerDB.class,&quot;-----------------&quot;);
+					*/
+
+<span class="fc bfc" id="L636" title="All 2 branches covered.">						if (bannerList.size() &gt;= bannersOK.size())</span>
+						{
+<span class="fc" id="L638">							session.removeAttribute(&quot;bannerIndex&quot;+bannerIndex);</span>
+							//Logger.println(BannerDB.class,&quot;----- session.removeAttribute&quot;);
+						}
+<span class="fc" id="L641">						return(banner);</span>
+					}
+					//index = -1;
+<span class="fc" id="L644">					found = false;</span>
+				}
+			}
+
+		}
+
+<span class="nc" id="L650">		return(null);</span>
+	}
+
+	public static BannerBean getPriorityBanner(String groups)
+	{
+<span class="nc" id="L655">		return getPriorityBanner(groups, &quot;&quot;);</span>
+	}
+
+
+	/**
+	 * Vrati banner s najvyssou prioritou
+	 * @param groups - zoznam skupin oddelenych ciarkou
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 * @return
+	 */
+	public static BannerBean getPriorityBanner(String groups, String campaignBanner)
+	{
+<span class="nc" id="L667">		List&lt;BannerBean&gt; bannersOK = getOnlyAvailable(getBanners(groups, &quot;id&quot;, campaignBanner), campaignBanner);</span>
+		BannerBean banBean;
+<span class="nc" id="L669">		int index = 0;</span>
+<span class="nc" id="L670">		int prioritySum = 0;</span>
+<span class="nc" id="L671">		int prioritySumTemp = 0;</span>
+
+		//Logger.println(BannerDB.class,&quot;banners: &quot;+banners.size());
+
+<span class="nc bnc" id="L675" title="All 4 branches missed.">		if (bannersOK != null &amp;&amp; bannersOK.size() &gt; 0)</span>
+		{
+			//urobim sumu vah vsetkych bannerov
+<span class="nc bnc" id="L678" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+			{
+<span class="nc" id="L680">				banBean = bannersOK.get(i);</span>
+<span class="nc" id="L681">				prioritySum += Tools.getIntValue(banBean.getPriority());</span>
+			}
+
+			//vygeneruj nahodne cislo od 0 do prioritySum
+<span class="nc" id="L685">			index = random.nextInt(prioritySum);	//((int) (Math.random() * (prioritySum)));</span>
+
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (index &gt; prioritySum)</span>
+			{
+<span class="nc" id="L689">				index = prioritySum;</span>
+			}
+
+			//vyberam podla nahodneho indexu banner zo zoznamu bannersOK
+<span class="nc bnc" id="L693" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+			{
+<span class="nc" id="L695">				banBean = bannersOK.get(i);</span>
+<span class="nc" id="L696">				prioritySumTemp += Tools.getIntValue(banBean.getPriority());</span>
+
+<span class="nc bnc" id="L698" title="All 2 branches missed.">				if (prioritySumTemp &gt;= index)</span>
+				{
+<span class="nc" id="L700">					return(banBean);</span>
+				}
+			}
+		}
+<span class="nc" id="L704">		return(null);</span>
+	}
+
+	public static BannerBean getPriorityBanner(String groups, Cookie[] cookie)
+	{
+<span class="nc" id="L709">		List&lt;BannerBean&gt; banners = getBanners(groups, &quot;id&quot;);</span>
+<span class="nc" id="L710">		List&lt;BannerBean&gt; bannersOK = new ArrayList&lt;&gt;();</span>
+		BannerBean banBean;
+<span class="nc" id="L712">		int index = 0;</span>
+<span class="nc" id="L713">		int prioritySum = 0;</span>
+<span class="nc" id="L714">		int prioritySumTemp = 0;</span>
+<span class="nc" id="L715">		long dateFrom = 0;</span>
+<span class="nc" id="L716">		long dateTo = 0;</span>
+<span class="nc" id="L717">		long now = Tools.getNow();</span>
+		int statClicks;
+		int statViews;
+
+		//Logger.println(BannerDB.class,&quot;banners: &quot;+banners.size());
+
+<span class="nc bnc" id="L723" title="All 2 branches missed.">		for (int i=0; i&lt;banners.size(); i++)</span>
+		{
+<span class="nc" id="L725">			banBean = banners.get(i);</span>
+			//Logger.println(BannerDB.class,banBean.getBannerId()+&quot;  &quot;+banBean.getPriority());
+
+<span class="nc" id="L728">			dateFrom = 0;</span>
+<span class="nc" id="L729">			dateTo = now + 1;</span>
+<span class="nc bnc" id="L730" title="All 2 branches missed.">			if (banBean.getDateFrom()!=null)	dateFrom = banBean.getDateFrom().getTime();</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			if (banBean.getDateTo()!=null) dateTo = banBean.getDateTo().getTime();</span>
+
+			//ak je nastavene 0, ignoruj statistiku
+<span class="nc" id="L734">			statClicks = Tools.getIntValue(banBean.getStatClicks());</span>
+<span class="nc" id="L735">			statViews = Tools.getIntValue(banBean.getStatViews());</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxClicks())==0) statClicks = 0;</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">			if (Tools.getIntValue(banBean.getMaxViews())==0) statViews = 0;</span>
+
+			//Logger.println(BannerDB.class,banBean.getBannerId() +  &quot; dateFrom: &quot; + banBean.getDateFrom() + &quot; &quot; + banBean.getDateFromTime() + &quot; = &quot; + dateFrom + &quot; now=&quot;+Tools.getNow());
+			//Logger.println(BannerDB.class,banBean.getBannerId() +  &quot;   dateTo: &quot; + banBean.getDateTo() + &quot; &quot; + banBean.getDateToTime() + &quot; = &quot; + dateTo + &quot; now=&quot;+Tools.getNow());
+
+			//testujem, ci este nebolo dosiahnute obmedzenie zobrazovania banneru, ak nie, pridam banner do zoznamu bannersOK
+<span class="nc bnc" id="L743" title="All 2 branches missed.">			if ( Tools.getIntValue(banBean.getMaxClicks()) &gt;= statClicks &amp;&amp;		//MAX CLICKS &gt;= AKTUALNY POCET KLIKNUTI</span>
+<span class="nc bnc" id="L744" title="All 6 branches missed.">					Tools.getIntValue(banBean.getMaxViews()) &gt;= statViews &amp;&amp;		//MAX VIEWS &gt;= AKTUALNY POCET VIDENI</span>
+					dateFrom &lt;= now &amp;&amp;								//CAS OD &lt;= AKTUALNY CAS
+					dateTo &gt;= now 	&amp;&amp;								//CAS DO &gt;= AKTUALNY CAS
+<span class="nc bnc" id="L747" title="All 2 branches missed.">					banBean.getActive().booleanValue()==true)</span>
+			{
+<span class="nc" id="L749">				bannersOK.add(banBean);</span>
+			}
+		}
+
+<span class="nc" id="L753">		bannersOK = filterByDocAndGroupId(bannersOK);</span>
+
+		//custom pre Ing kontrola podla cookie usera, vyhodi tie ktore nevyhovuju fitru
+<span class="nc bnc" id="L756" title="All 2 branches missed.">		if(cookie != null)</span>
+<span class="nc" id="L757">			bannersOK = getVisitorCookieGroup(bannersOK, cookie);</span>
+
+<span class="nc bnc" id="L759" title="All 2 branches missed.">		if (bannersOK.size() &gt; 0)</span>
+		{
+			//urobim sumu vah vsetkych bannerov
+<span class="nc bnc" id="L762" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+			{
+<span class="nc" id="L764">				banBean = bannersOK.get(i);</span>
+<span class="nc" id="L765">				prioritySum += Tools.getIntValue(banBean.getPriority());</span>
+			}
+
+			//vygeneruj nahodne cislo od 0 do prioritySum
+<span class="nc" id="L769">			index = random.nextInt(prioritySum);</span>
+
+<span class="nc bnc" id="L771" title="All 2 branches missed.">			if (index &gt; prioritySum)</span>
+			{
+<span class="nc" id="L773">				index = prioritySum;</span>
+			}
+
+			//vyberam podla nahodneho indexu banner zo zoznamu bannersOK
+<span class="nc bnc" id="L777" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+			{
+<span class="nc" id="L779">				banBean = bannersOK.get(i);</span>
+<span class="nc" id="L780">				prioritySumTemp += Tools.getIntValue(banBean.getPriority());</span>
+
+<span class="nc bnc" id="L782" title="All 2 branches missed.">				if (prioritySumTemp &gt;= index)</span>
+				{
+<span class="nc" id="L784">					return(banBean);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L789">		return(null);</span>
+	}
+
+	/**
+	 * vrati vsetky bannery pre stranku s danou url
+	 * @param url - url stranky, pre ktoru chceme vratit zoznam bannerov
+	 *	@param groups - nazov skup
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 */
+	private static List&lt;BannerBean&gt; getBannersForUrl(String url, String groups, String campaignBanner)
+	{
+<span class="nc" id="L800">		List&lt;BannerBean&gt; bannerList = getOnlyAvailable(getBanners(groups, null, campaignBanner), campaignBanner)</span>
+<span class="nc" id="L801">												.stream()</span>
+<span class="nc bnc" id="L802" title="All 4 branches missed.">												.filter(b -&gt; isBannerForUrl(b,url) &amp;&amp; BannerDB.isBannerActive(b))</span>
+<span class="nc" id="L803">												.collect(Collectors.toList());</span>
+
+<span class="nc" id="L805">		return bannerList;</span>
+	}
+
+	/**
+	 * Banner pre url - nahodny
+	 * @param url - url stranky, pre ktoru chceme vratit zoznam bannerov
+	 *	@param groups - nazov skup
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 */
+	public static BannerBean getFirstBannerForUrlByPriority(String url, String groups, String campaignBanner)
+	{
+<span class="nc" id="L816">		List&lt;BannerBean&gt; bannersForUrl = getBannersForUrl(url,groups,campaignBanner);</span>
+<span class="nc bnc" id="L817" title="All 4 branches missed.">		if(bannersForUrl != null &amp;&amp; bannersForUrl.size()  &gt; 0)</span>
+		{
+<span class="nc" id="L819">			bannersForUrl = bannersForUrl.stream().sorted((b1,b2)-&gt;Integer.compare(b2.getPriority(),b1.getPriority())).collect(Collectors.toList());</span>
+<span class="nc" id="L820">			return bannersForUrl.get(0);</span>
+		}
+
+<span class="nc" id="L823">		return null;</span>
+	}
+
+	/**
+	 * Banner pre url - prvy podla najvyssej priority
+	 * @param url - url stranky, pre ktoru chceme vratit zoznam bannerov
+	 *	@param groups - nazov skup
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 */
+	public static BannerBean getBannerForUrlRandom(String url, String groups, String campaignBanner)
+	{
+<span class="nc" id="L834">		List&lt;BannerBean&gt; bannersForUrl = getBannersForUrl(url,groups,campaignBanner);</span>
+<span class="nc bnc" id="L835" title="All 4 branches missed.">		if(bannersForUrl != null &amp;&amp; bannersForUrl.size()  &gt; 0)</span>
+		{
+<span class="nc" id="L837">			return bannersForUrl.get(random.nextInt(bannersForUrl.size()));</span>
+		}
+
+<span class="nc" id="L840">		return null;</span>
+	}
+
+	/**
+	 * vrati priznak, ci dany banner je pre danu url
+	 * @param banner
+	 * @param url
+	 */
+	public static boolean isBannerForUrl(BannerBean banner, String url)
+	{
+<span class="pc bpc" id="L850" title="2 of 4 branches missed.">		if(Tools.isEmpty(url) || banner == null)</span>
+<span class="nc" id="L851">			return false;</span>
+
+<span class="fc" id="L853">		String bannerLocation = banner.getBannerLocation();</span>
+<span class="pc bpc" id="L854" title="1 of 2 branches missed.">		if(Tools.isEmpty(bannerLocation))</span>
+<span class="nc" id="L855">			return false;</span>
+
+<span class="fc" id="L857">		String[] bannerUrls = Tools.getTokens(bannerLocation, &quot;,&quot;);</span>
+<span class="fc" id="L858">		boolean isBannerForUrl = false;</span>
+<span class="pc bpc" id="L859" title="1 of 2 branches missed.">		for (String bannerUrl : bannerUrls)</span>
+		{
+			//moznost zadat znak * alebo /zaciatok/url-adresy/* do pola Adresa umiestnenia bannera. Pri zadani znaku * sa banner bude zobrazovat na lubovolnej stranke, pri zadani /zaciatok/url-adresy/* na strankach s URL adresou zacinajucou na zadany vyraz.
+<span class="pc bpc" id="L862" title="7 of 8 branches missed.">			if (url.equals(bannerUrl) || &quot;*&quot;.equals(bannerUrl) || (bannerUrl.endsWith(&quot;/*&quot;) &amp;&amp; url.startsWith(bannerUrl.substring(0, bannerUrl.length()-1))))</span>
+<span class="fc" id="L863">				isBannerForUrl = true;</span>
+
+<span class="pc bpc" id="L865" title="1 of 2 branches missed.">			if(isBannerForUrl) break;</span>
+		}
+<span class="fc" id="L867">		return isBannerForUrl;</span>
+	}
+
+	/**
+	 * Update statistiky kliknuti na banner v DB
+	 * @param bannerId - ID bannera v DB
+	 * @return
+	 */
+	public static boolean statAddClick(int bannerId, HttpServletRequest request)
+	{
+<span class="fc" id="L877">		StatWriteBuffer.add(</span>
+			&quot;UPDATE banner_banners SET stat_clicks = stat_clicks + 1, stat_date = ? WHERE banner_id=?&quot;,
+			&quot;banner_banners&quot;,
+<span class="fc" id="L880">			new Timestamp(Tools.getNow()),</span>
+<span class="fc" id="L881">			bannerId</span>
+		);
+
+<span class="fc" id="L884">		StatWriteBuffer.add(</span>
+			&quot;INSERT INTO banner_stat_clicks (banner_id, insert_date, ip, host, domain_id) VALUES (?, ?, ?, ?, ?)&quot;,
+			&quot;banner_stat_clicks&quot;,
+<span class="fc" id="L887">			bannerId,</span>
+<span class="fc" id="L888">			new Timestamp(Tools.getNow()),</span>
+<span class="fc" id="L889">			DB.prepareString(Tools.getRemoteIP(request), 16),</span>
+<span class="fc" id="L890">			DB.prepareString(Tools.getRemoteHost(request), 128),</span>
+<span class="fc" id="L891">			CloudToolsForCore.getDomainId()</span>
+		);
+
+<span class="fc" id="L894">		return true;</span>
+	}
+
+	/**
+	 * Update statistiky videni bannera v DB
+	 * @param bannerId - ID bannera v DB
+	 * @return
+	 */
+	public static boolean statAddView(int bannerId)
+	{
+<span class="fc" id="L904">		StatWriteBuffer.add(</span>
+			&quot;UPDATE banner_banners SET stat_views = stat_views + 1, stat_date = ? WHERE banner_id=?&quot;,
+			&quot;banner_banners&quot;,
+<span class="fc" id="L907">			new Timestamp(Tools.getNow()),</span>
+<span class="fc" id="L908">			bannerId</span>
+		);
+
+<span class="fc" id="L911">		StatWriteBuffer.addUpdateInsertPair(</span>
+		&quot;UPDATE banner_stat_views_day SET views=views+1 WHERE banner_id = ? AND insert_date = ? AND domain_id=?&quot;,
+		&quot;INSERT INTO banner_stat_views_day (banner_id, insert_date, views, domain_id) VALUES (?, ?, 1, ?)&quot;,
+		&quot;banner_stat_views_day&quot;,
+<span class="fc" id="L915">			bannerId,</span>
+<span class="fc" id="L916">			new java.sql.Date(Tools.getNow()),</span>
+<span class="fc" id="L917">			CloudToolsForCore.getDomainId()</span>
+		);
+
+<span class="fc" id="L920">		return true;</span>
+	}
+
+
+	/**
+	 *  vrati time serie VIDENI bannera pre graf
+	 *
+	 *@param  from      Description of the Parameter
+	 *@param  to        Description of the Parameter
+	 *@return           The topPagesTimeData value
+	 */
+	public static Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; getBannerStatViewsTimeData(java.util.Date from, java.util.Date to, int bannerId)
+	{
+<span class="fc" id="L933">		Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L934">		Connection db_conn = null;</span>
+<span class="fc" id="L935">		PreparedStatement ps = null;</span>
+<span class="fc" id="L936">		ResultSet rs = null;</span>
+		try
+		{
+
+			Map&lt;java.util.Date, Number&gt; bts;
+<span class="fc" id="L941">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L942">			StringBuilder sql = new StringBuilder(&quot;SELECT &quot;).append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(&quot;, SUM(views) AS views FROM banner_stat_views_day WHERE banner_id=? &quot;);</span>
+<span class="pc bpc" id="L943" title="1 of 2 branches missed.">			if (from != null)</span>
+			{
+				//Logger.println(BannerDB.class,&quot;++++++++++from: &quot;+Tools.formatDate(from.getTime()));
+<span class="fc" id="L946">				sql.append(&quot; AND insert_date&gt;=? &quot;);</span>
+			}
+<span class="pc bpc" id="L948" title="1 of 2 branches missed.">			if (to != null)</span>
+			{
+				//Logger.println(BannerDB.class,&quot;++++++++++from: &quot;+Tools.formatDate(to.getTime()));
+<span class="fc" id="L951">				sql.append(&quot; AND insert_date&lt;=? &quot;);</span>
+			}
+<span class="fc" id="L953">			sql.append(&quot; GROUP BY &quot;+StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE));</span>
+			//sql += &quot; ORDER BY insert_date ASC&quot;;
+<span class="fc" id="L955">			Logger.debug(BannerDB.class,sql.toString());</span>
+
+<span class="fc" id="L957">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L958">			int index = 1;</span>
+<span class="fc" id="L959">			ps.setInt(index++, bannerId);</span>
+
+<span class="pc bpc" id="L961" title="1 of 2 branches missed.">			if (from != null)</span>
+			{
+<span class="fc" id="L963">				ps.setDate(index++, new Date(from.getTime()));</span>
+			}
+<span class="pc bpc" id="L965" title="1 of 2 branches missed.">			if (to != null)</span>
+			{
+<span class="fc" id="L967">				ps.setDate(index++, new Date(to.getTime()));</span>
+			}
+
+<span class="fc" id="L970">			DebugTimer timer = new DebugTimer(&quot;getBannerStatViewsTimeData&quot;);</span>
+<span class="fc" id="L971">			rs = ps.executeQuery();</span>
+<span class="fc" id="L972">			timer.diff(&quot;mam RS&quot;);</span>
+
+<span class="fc" id="L974">			Calendar cal = Calendar.getInstance();</span>
+			//Logger.println(BannerDB.class,&quot;---------- Views&quot;);
+
+			//bts = new TimeSeries(&quot;banner views&quot;);
+<span class="fc" id="L978">			bts = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L979" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+				try
+				{
+<span class="fc" id="L983">					cal.clear();</span>
+<span class="fc" id="L984">					cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L985">					cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L986">					cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L987">					cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+
+<span class="fc" id="L989">					Logger.debug(BannerDB.class, &quot;views: &quot;+Tools.formatDate(cal.getTimeInMillis())+&quot; views=&quot;+rs.getInt(&quot;views&quot;));</span>
+
+					try
+					{
+<span class="fc" id="L993">						Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L994">						calendar.setTime(cal.getTime());</span>
+<span class="fc" id="L995">						calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L996">						calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="fc" id="L997">						calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="fc" id="L998">						calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="fc" id="L999">						java.util.Date day = calendar.getTime();</span>
+
+<span class="fc" id="L1001">						bts.put(day, Integer.valueOf(rs.getInt(&quot;views&quot;)));</span>
+					}
+<span class="nc" id="L1003">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L1005">						Logger.error(StatGraphNewDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L1006">						Logger.error(ex);</span>
+<span class="fc" id="L1007">					}</span>
+				}
+<span class="nc" id="L1009">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L1011">					Logger.error(ex);</span>
+<span class="pc" id="L1012">				}</span>
+			}
+<span class="fc" id="L1014">			rs.close();</span>
+<span class="fc" id="L1015">			ps.close();</span>
+<span class="fc" id="L1016">			db_conn.close();</span>
+<span class="fc" id="L1017">			rs = null;</span>
+<span class="fc" id="L1018">			ps = null;</span>
+<span class="fc" id="L1019">			db_conn = null;</span>
+
+<span class="fc" id="L1021">			timer.diff(&quot;mam data&quot;);</span>
+<span class="fc" id="L1022">			collection.put(&quot;banner views&quot; ,bts);</span>
+		}
+<span class="nc" id="L1024">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1026">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1032" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1033">					rs.close();</span>
+<span class="pc bpc" id="L1034" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1035">					ps.close();</span>
+<span class="pc bpc" id="L1036" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1037">					db_conn.close();</span>
+			}
+<span class="nc" id="L1039">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1041">				Logger.error(ex2);</span>
+<span class="fc" id="L1042">			}</span>
+		}
+
+<span class="fc" id="L1045">		return (collection);</span>
+	}
+
+
+	/**
+	 *  vrati time serie KLIKNUTI bannera pre graf
+	 *
+	 *@param  from      Description of the Parameter
+	 *@param  to        Description of the Parameter
+	 *@param  bannerId  ID bannera
+	 *@return           The topPagesTimeData value
+	 */
+	public static Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; getBannerStatClicksTimeData(java.util.Date from, java.util.Date to, int bannerId)
+	{
+
+<span class="fc" id="L1060">		Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L1061">		Connection db_conn = null;</span>
+<span class="fc" id="L1062">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1063">		ResultSet rs = null;</span>
+		try
+		{
+
+<span class="fc" id="L1067">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1068">			StringBuilder sql = new StringBuilder(&quot;SELECT &quot;).append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(&quot;, COUNT(id) AS clicks FROM banner_stat_clicks WHERE banner_id=? &quot;);</span>
+<span class="pc bpc" id="L1069" title="1 of 2 branches missed.">			if (from != null)</span>
+			{
+				//Logger.println(BannerDB.class,&quot;++++++++++from: &quot;+Tools.formatDate(from.getTime()));
+<span class="fc" id="L1072">				sql.append(&quot; AND insert_date&gt;=? &quot;);</span>
+			}
+<span class="pc bpc" id="L1074" title="1 of 2 branches missed.">			if (to != null)</span>
+			{
+				//Logger.println(BannerDB.class,&quot;++++++++++from: &quot;+Tools.formatDate(to.getTime()));
+<span class="fc" id="L1077">				sql.append(&quot; AND insert_date&lt;=? &quot;);</span>
+			}
+<span class="fc" id="L1079">			sql.append(&quot; GROUP BY &quot;+StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE));</span>
+			//sql += &quot; ORDER BY insert_date&quot;;
+			//Logger.println(BannerDB.class,sql);
+<span class="fc" id="L1082">			Logger.debug(BannerDB.class, &quot;getBannerStatClicksTimeData sql: &quot;+sql);</span>
+
+<span class="fc" id="L1084">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1085">			int index = 1;</span>
+<span class="fc" id="L1086">			ps.setInt(index++, bannerId);</span>
+<span class="pc bpc" id="L1087" title="1 of 2 branches missed.">			if (from != null)</span>
+			{
+<span class="fc" id="L1089">				ps.setTimestamp(index++, new Timestamp(from.getTime()));</span>
+			}
+<span class="pc bpc" id="L1091" title="1 of 2 branches missed.">			if (to != null)</span>
+			{
+<span class="fc" id="L1093">				ps.setTimestamp(index++, new Timestamp(to.getTime()));</span>
+			}
+
+<span class="fc" id="L1096">			rs = ps.executeQuery();</span>
+
+<span class="fc" id="L1098">			Calendar cal = Calendar.getInstance();</span>
+			//Logger.println(BannerDB.class,&quot;---------- Clicks&quot;);
+
+			//TimeSeries bts = new TimeSeries(&quot;banner clicks&quot;);
+<span class="fc" id="L1102">			Map&lt;java.util.Date, Number&gt; bts = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L1103" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+				try
+				{
+<span class="nc" id="L1107">					cal.clear();</span>
+<span class="nc" id="L1108">					cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="nc" id="L1109">					cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="nc" id="L1110">					cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="nc" id="L1111">					cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+					try
+					{
+<span class="nc" id="L1114">						Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L1115">						calendar.setTime(cal.getTime());</span>
+<span class="nc" id="L1116">						calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="nc" id="L1117">						calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L1118">						calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L1119">						calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="nc" id="L1120">						java.util.Date day = calendar.getTime();</span>
+
+<span class="nc" id="L1122">						bts.put(day, Integer.valueOf(rs.getInt(&quot;clicks&quot;)));</span>
+					}
+<span class="nc" id="L1124">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L1126">						Logger.error(StatGraphNewDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L1127">						Logger.error(ex);</span>
+<span class="nc" id="L1128">					}</span>
+				}
+<span class="nc" id="L1130">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L1132">					Logger.error(ex);</span>
+<span class="nc" id="L1133">				}</span>
+			}
+
+<span class="fc" id="L1136">			rs.close();</span>
+<span class="fc" id="L1137">			ps.close();</span>
+<span class="fc" id="L1138">			db_conn.close();</span>
+<span class="fc" id="L1139">			rs = null;</span>
+<span class="fc" id="L1140">			ps = null;</span>
+<span class="fc" id="L1141">			db_conn = null;</span>
+
+<span class="fc" id="L1143">			collection.put(&quot;banner clicks&quot; ,bts);</span>
+
+		}
+<span class="nc" id="L1146">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1148">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1154" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1155">					rs.close();</span>
+<span class="pc bpc" id="L1156" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1157">					ps.close();</span>
+<span class="pc bpc" id="L1158" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1159">					db_conn.close();</span>
+			}
+<span class="nc" id="L1161">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1163">				Logger.error(ex2);</span>
+<span class="fc" id="L1164">			}</span>
+		}
+<span class="fc" id="L1166">		return (collection);</span>
+	}
+
+
+	/**
+	 *
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+	public static List&lt;Column&gt; getTop10Banners(java.util.Date from, java.util.Date to, List&lt;BannerGroupBean&gt; bannerGroups)
+	{
+<span class="fc" id="L1179">		int max_size = 10;</span>
+<span class="fc" id="L1180">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1181">		Connection db_conn = null;</span>
+<span class="fc" id="L1182">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1183">		ResultSet rs = null;</span>
+		try
+		{
+			StringBuilder sql;
+<span class="fc" id="L1187">			db_conn = DBPool.getConnection();</span>
+
+			//fix na zle nastavene hodnoty
+<span class="fc" id="L1190">			ps = db_conn.prepareStatement(&quot;UPDATE banner_stat_clicks SET clicks=1 WHERE clicks IS NULL&quot;);</span>
+<span class="fc" id="L1191">			ps.execute();</span>
+<span class="fc" id="L1192">			ps.close();</span>
+<span class="fc" id="L1193">			ps = null;</span>
+
+<span class="fc" id="L1195">			sql = new StringBuilder(&quot;SELECT banner_id, name, banner_location, stat_views, stat_clicks, width, height, active, client_id, banner_group, banner_type&quot;)</span>
+<span class="fc" id="L1196">			.append(&quot; FROM banner_banners&quot;)</span>
+<span class="fc" id="L1197">			.append(&quot; WHERE stat_date &gt;= ? AND stat_date &lt;= ? AND domain_id = ? &quot;);</span>
+			//filter by banner groups
+<span class="pc bpc" id="L1199" title="1 of 2 branches missed.">			if(bannerGroups != null)</span>
+			{
+<span class="nc bnc" id="L1201" title="All 2 branches missed.">				if(bannerGroups.size() &gt; 0)</span>
+				{
+<span class="nc" id="L1203">					boolean first = true;</span>
+<span class="nc" id="L1204">					sql.append(&quot; AND banner_group IN (&quot;);</span>
+<span class="nc bnc" id="L1205" title="All 2 branches missed.">					for(BannerGroupBean bgb : bannerGroups)</span>
+					{
+<span class="nc bnc" id="L1207" title="All 2 branches missed.">						if(first)</span>
+						{
+<span class="nc" id="L1209">							sql.append(&quot; ? &quot;);</span>
+<span class="nc" id="L1210">							first = false;</span>
+						}
+						else
+<span class="nc" id="L1213">							sql.append(&quot;, ? &quot;);</span>
+<span class="nc" id="L1214">					}</span>
+<span class="nc" id="L1215">					sql.append(&quot; ) &quot;);</span>
+				}
+			}
+<span class="fc" id="L1218">			sql.append(&quot; ORDER BY stat_views DESC, stat_clicks DESC&quot;);</span>
+
+			//Logger.println(BannerDB.class,&quot;GetTopPages: &quot;+sql);
+
+<span class="fc" id="L1222">			int counter = 1;</span>
+<span class="fc" id="L1223">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1224">			ps.setTimestamp(counter++, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1225">			ps.setTimestamp(counter++, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L1226">			ps.setInt(counter++, CloudToolsForCore.getDomainId());</span>
+
+<span class="pc bpc" id="L1228" title="1 of 2 branches missed.">			if(bannerGroups != null)</span>
+			{
+<span class="nc bnc" id="L1230" title="All 2 branches missed.">				if(bannerGroups.size() &gt; 0)</span>
+				{
+<span class="nc bnc" id="L1232" title="All 2 branches missed.">					for(BannerGroupBean bgb : bannerGroups)</span>
+					{
+<span class="nc" id="L1234">						ps.setString(counter++, bgb.getBannerGroup());</span>
+<span class="nc" id="L1235">					}</span>
+				}
+			}
+
+<span class="fc" id="L1239">			rs = ps.executeQuery();</span>
+			//iteruj cez riadky
+			Column col;
+<span class="fc" id="L1242">			int count = 0;</span>
+<span class="pc bpc" id="L1243" title="1 of 4 branches missed.">			while (rs.next() &amp;&amp; count &lt; max_size)</span>
+			{
+<span class="fc" id="L1245">				col = new Column();</span>
+<span class="fc" id="L1246">				col.setIntColumn1(rs.getInt(&quot;banner_id&quot;));</span>
+<span class="fc" id="L1247">				col.setColumn2(DB.getDbString(rs, &quot;banner_location&quot;));</span>
+<span class="fc" id="L1248">				col.setIntColumn3(rs.getInt(&quot;stat_views&quot;));</span>
+<span class="fc" id="L1249">				col.setIntColumn4(rs.getInt(&quot;stat_clicks&quot;));</span>
+<span class="fc" id="L1250">				col.setIntColumn5(rs.getInt(&quot;width&quot;));</span>
+<span class="fc" id="L1251">				col.setIntColumn6(rs.getInt(&quot;height&quot;));</span>
+<span class="fc" id="L1252">				col.setIntColumn7(rs.getInt(&quot;client_id&quot;));</span>
+<span class="fc" id="L1253">				col.setColumn8(rs.getString(&quot;banner_group&quot;));</span>
+<span class="fc" id="L1254">				col.setColumn9(rs.getString(&quot;banner_type&quot;));</span>
+<span class="fc" id="L1255">				col.setBooleanColumn1(rs.getBoolean(&quot;active&quot;));</span>
+<span class="fc" id="L1256">				col.setColumn3(BannerDB.getBannerNameFromLocation(DB.getDbString(rs, &quot;name&quot;), col.getColumn2()));</span>
+<span class="fc" id="L1257">				ret.add(col);</span>
+<span class="fc" id="L1258">				count++;</span>
+			}
+<span class="fc" id="L1260">			rs.close();</span>
+<span class="fc" id="L1261">			ps.close();</span>
+<span class="fc" id="L1262">			db_conn.close();</span>
+<span class="fc" id="L1263">			rs = null;</span>
+<span class="fc" id="L1264">			ps = null;</span>
+<span class="fc" id="L1265">			db_conn = null;</span>
+		}
+<span class="nc" id="L1267">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1269">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1275" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1276">					rs.close();</span>
+<span class="pc bpc" id="L1277" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1278">					ps.close();</span>
+<span class="pc bpc" id="L1279" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1280">					db_conn.close();</span>
+			}
+<span class="nc" id="L1282">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1284">				Logger.error(ex2);</span>
+<span class="fc" id="L1285">			}</span>
+		}
+<span class="fc" id="L1287">		return (ret);</span>
+	}
+
+	private static Map&lt;Integer, String&gt; getBannerNamesTable()
+	{
+<span class="fc" id="L1292">		Map&lt;Integer, String&gt; bannerNames = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L1294">		Connection db_conn = null;</span>
+<span class="fc" id="L1295">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1296">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L1299">			db_conn = DBPool.getConnection();</span>
+
+			//ziskaj si zoznam bannerov
+<span class="fc" id="L1302">			String sql = &quot;SELECT banner_id, name, banner_location FROM banner_banners WHERE domain_id = ? &quot;;</span>
+
+<span class="fc" id="L1304">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1305">			ps.setInt(1, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L1306">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L1307" title="All 2 branches covered.">			while(rs.next())</span>
+			{
+<span class="fc" id="L1309">				bannerNames.put(Integer.valueOf(rs.getInt(&quot;banner_id&quot;)), BannerDB.getBannerNameFromLocation(DB.getDbString(rs, &quot;name&quot;), DB.getDbString(rs, &quot;banner_location&quot;)));</span>
+			}
+<span class="fc" id="L1311">			rs.close();</span>
+<span class="fc" id="L1312">			ps.close();</span>
+<span class="fc" id="L1313">			db_conn.close();</span>
+<span class="fc" id="L1314">			rs = null;</span>
+<span class="fc" id="L1315">			ps = null;</span>
+<span class="fc" id="L1316">			db_conn = null;</span>
+		}
+<span class="nc" id="L1318">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1320">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1326" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1327">					rs.close();</span>
+<span class="pc bpc" id="L1328" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1329">					ps.close();</span>
+<span class="pc bpc" id="L1330" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1331">					db_conn.close();</span>
+			}
+<span class="nc" id="L1333">			catch (Exception ex2)</span>
+			{
+				//
+<span class="fc" id="L1336">			}</span>
+		}
+<span class="fc" id="L1338">		return bannerNames;</span>
+	}
+
+	/**
+	 *
+	 * @param from
+	 * @param to
+	 * @param bannerGroups
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+	public static Map&lt;String, Map&lt;java.util.Date, Number&gt;&gt; getTop10BannersViewsTimeData(java.util.Date from, java.util.Date to, List&lt;BannerGroupBean&gt; bannerGroups)
+	{
+<span class="fc" id="L1351">		int max_size = 10;</span>
+<span class="fc" id="L1352">		int count = 0;</span>
+<span class="fc" id="L1353">		Map&lt;String, List&lt;Integer[]&gt;&gt; dates = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L1354">		int[] topBanners = new int[max_size];</span>
+<span class="fc" id="L1355">		Map&lt;Integer, String&gt; bannerNames = BannerDB.getBannerNamesTable();</span>
+
+<span class="fc" id="L1357">		Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+		Map&lt;java.util.Date, Number&gt; bts;
+<span class="fc" id="L1359">		StringBuilder sql = new StringBuilder();</span>
+
+<span class="fc" id="L1361">		Connection db_conn = null;</span>
+<span class="fc" id="L1362">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1363">		ResultSet rs = null;</span>
+		try
+		{
+<span class="pc bpc" id="L1366" title="2 of 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
+			{
+<span class="fc" id="L1368">				db_conn = DBPool.getConnection();</span>
+				//ziskam si top10 - robime to z clicks tabulky (je to rychlejsie) a vieme porovnat videnia VS kliknutia
+<span class="fc" id="L1370">				sql.append(&quot;SELECT c.banner_id, COUNT(c.banner_id) AS clicks &quot;).append(&quot;FROM banner_stat_clicks c JOIN banner_banners b ON (b.banner_id = c.banner_id) &quot;).append(&quot;WHERE insert_date &gt;= ? AND insert_date &lt;= ? AND b.domain_id = ? &quot;);</span>
+
+<span class="pc bpc" id="L1372" title="1 of 2 branches missed.">				if (bannerGroups != null)</span>
+				{
+<span class="nc bnc" id="L1374" title="All 2 branches missed.">					if (bannerGroups.size() &gt; 0)</span>
+					{
+<span class="nc" id="L1376">						boolean first = true;</span>
+<span class="nc" id="L1377">						sql.append(&quot; AND b.banner_group IN (&quot;);</span>
+<span class="nc bnc" id="L1378" title="All 2 branches missed.">						for (BannerGroupBean bgb : bannerGroups)</span>
+						{
+<span class="nc bnc" id="L1380" title="All 2 branches missed.">							if (first)</span>
+							{
+<span class="nc" id="L1382">								sql.append(&quot; ? &quot;);</span>
+<span class="nc" id="L1383">								first = false;</span>
+							}
+							else
+<span class="nc" id="L1386">								sql.append(&quot;, ? &quot;);</span>
+<span class="nc" id="L1387">						}</span>
+<span class="nc" id="L1388">						sql.append(&quot; ) &quot;);</span>
+					}
+				}
+
+
+<span class="fc" id="L1393">				sql.append(&quot;GROUP BY c.banner_id &quot;).append(&quot;ORDER BY clicks DESC&quot;);</span>
+
+<span class="fc" id="L1395">				int counter = 1;</span>
+
+<span class="fc" id="L1397">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1398">				ps.setTimestamp(counter++, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1399">				ps.setTimestamp(counter++, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L1400">				ps.setInt(counter++, CloudToolsForCore.getDomainId());</span>
+
+<span class="pc bpc" id="L1402" title="1 of 2 branches missed.">				if(bannerGroups != null)</span>
+				{
+<span class="nc bnc" id="L1404" title="All 2 branches missed.">					if(bannerGroups.size() &gt; 0)</span>
+					{
+<span class="nc bnc" id="L1406" title="All 2 branches missed.">						for(BannerGroupBean bgb : bannerGroups)</span>
+						{
+<span class="nc" id="L1408">							ps.setString(counter++, bgb.getBannerGroup());</span>
+<span class="nc" id="L1409">						}</span>
+					}
+				}
+
+<span class="fc" id="L1413">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1414" title="1 of 4 branches missed.">				while(rs.next() &amp;&amp; count &lt; max_size)</span>
+				{
+<span class="fc" id="L1416">					topBanners[count] = rs.getInt(&quot;banner_id&quot;);</span>
+<span class="fc" id="L1417">					count++;</span>
+				}
+<span class="fc" id="L1419">				rs.close();</span>
+<span class="fc" id="L1420">				ps.close();</span>
+<span class="fc" id="L1421">				rs = null;</span>
+<span class="fc" id="L1422">				ps = null;</span>
+
+				//podla top10 zistim pocet videni na den
+<span class="fc" id="L1425">				sql.delete(0, sql.length());</span>
+<span class="fc" id="L1426">				sql.append(&quot;SELECT banner_id, &quot;).append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(&quot;, SUM(views) AS views &quot;)</span>
+<span class="fc" id="L1427">				.append(&quot;FROM banner_stat_views_day &quot;).append(&quot;WHERE insert_date &gt;= ? AND insert_date &lt;= ? AND banner_id IN ( &quot;);</span>
+
+<span class="fc bfc" id="L1429" title="All 2 branches covered.">				for(int i=0; i&lt;topBanners.length; i++)</span>
+				{
+<span class="fc bfc" id="L1431" title="All 2 branches covered.">					if (i &gt; 0)</span>
+					{
+<span class="fc" id="L1433">						sql.append(&quot;, '&quot;).append(topBanners[i]).append('\'');</span>
+					}
+					else
+					{
+<span class="fc" id="L1437">						sql.append('\'').append(topBanners[i]).append('\'');</span>
+					}
+				}
+<span class="fc" id="L1440">				sql.append(&quot;) AND domain_id = ? &quot;);</span>
+
+<span class="fc" id="L1442">				sql.append(&quot;GROUP BY banner_id, &quot;).append(StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE));</span>
+
+				//-netreba sql += &quot;ORDER BY vt_year, vt_month, vt_day&quot;;
+
+<span class="fc" id="L1446">				Logger.debug(BannerDB.class, &quot;sql:&quot;+sql);</span>
+<span class="fc" id="L1447">				DebugTimer timer = new DebugTimer(&quot;getTop10BannersViewsTimeData&quot;);</span>
+<span class="fc" id="L1448">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1449">				ps.setDate(1, new Date(from.getTime()));</span>
+<span class="fc" id="L1450">				ps.setDate(2, new Date(to.getTime()));</span>
+<span class="fc" id="L1451">				ps.setInt(3, CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L1453">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+<span class="fc" id="L1455">				Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L1456">				timer.diff(&quot;mam RS&quot;);</span>
+<span class="fc bfc" id="L1457" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+					try {
+<span class="fc" id="L1460">						cal.clear();</span>
+<span class="fc" id="L1461">						cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1462">						cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L1463">						cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L1464">						cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+
+<span class="fc" id="L1466">						Integer[] data = new Integer[2];</span>
+<span class="fc" id="L1467">						data[0] = Integer.valueOf(rs.getInt(&quot;banner_id&quot;));</span>
+<span class="fc" id="L1468">						data[1] = Integer.valueOf(rs.getInt(&quot;views&quot;));</span>
+
+<span class="fc bfc" id="L1470" title="All 2 branches covered.">						if (dates.get(Tools.formatDate(cal.getTime()))!=null)</span>
+						{
+<span class="fc" id="L1472">							List&lt;Integer[]&gt; dayBanners = dates.get(Tools.formatDate(cal.getTime()));</span>
+<span class="pc bpc" id="L1473" title="1 of 2 branches missed.">							if (dayBanners != null)</span>
+<span class="fc" id="L1474">								dayBanners.add(data);</span>
+<span class="fc" id="L1475">						}</span>
+						else
+						{
+<span class="fc" id="L1478">							List&lt;Integer[]&gt; dayBanners = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1479">							dayBanners.add(data);</span>
+<span class="fc" id="L1480">							dates.put(Tools.formatDate(cal.getTime()), dayBanners);</span>
+						}
+<span class="pc" id="L1482">					} catch (Exception ex) {}</span>
+				}
+<span class="fc" id="L1484">				rs.close();</span>
+<span class="fc" id="L1485">				ps.close();</span>
+<span class="fc" id="L1486">				db_conn.close();</span>
+<span class="fc" id="L1487">				rs = null;</span>
+<span class="fc" id="L1488">				ps = null;</span>
+<span class="fc" id="L1489">				db_conn = null;</span>
+<span class="fc" id="L1490">				timer.diff(&quot;RS spracovane&quot;);</span>
+
+<span class="fc" id="L1492">				Calendar calTo = Calendar.getInstance();</span>
+<span class="fc" id="L1493">				calTo.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1494">				calTo.setTime(to);</span>
+
+<span class="fc" id="L1496">				cal.clear();</span>
+<span class="fc" id="L1497">				cal.setTimeInMillis(from.getTime());</span>
+<span class="fc" id="L1498">				cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+				//cal.set(from.getYear()+1900, from.getMonth(), from.getDate(), 0, 0);
+
+				//Logger.println(BannerDB.class,&quot;Date: &quot;+cal.getTime());
+
+<span class="fc bfc" id="L1503" title="All 2 branches covered.">				for(int i=0; i&lt;topBanners.length; i++)</span>
+				{
+<span class="fc bfc" id="L1505" title="All 2 branches covered.">					if(topBanners[i] &gt; 0)</span>
+					{
+<span class="fc" id="L1507">						String name = bannerNames.get(Integer.valueOf(topBanners[i]));</span>
+						//bts = new TimeSeries(name != null ? name:&quot;&quot;);
+<span class="fc" id="L1509">						bts = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L1511">						cal.clear();</span>
+<span class="fc" id="L1512">						cal.setTimeInMillis(from.getTime());</span>
+<span class="fc" id="L1513">						cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+						//cal.set(from.getYear()+1900, from.getMonth(), from.getDate(), 0, 0);
+<span class="fc bfc" id="L1515" title="All 2 branches covered.">						while (cal.getTimeInMillis() &lt;= calTo.getTimeInMillis())</span>
+						{
+<span class="fc bfc" id="L1517" title="All 2 branches covered.">							if (dates.get(Tools.formatDate(cal.getTime()))!=null)</span>
+							{
+<span class="fc" id="L1519">								List&lt;Integer[]&gt; dayBanners = dates.get(Tools.formatDate(cal.getTime()));</span>
+<span class="pc bpc" id="L1520" title="1 of 2 branches missed.">								if (dayBanners != null)</span>
+								{
+<span class="fc bfc" id="L1522" title="All 2 branches covered.">									for (Integer[] data : dayBanners)</span>
+									{
+
+<span class="fc bfc" id="L1525" title="All 2 branches covered.">										if (topBanners[i] == data[0].intValue())</span>
+										{
+											try
+											{
+<span class="fc" id="L1529">												Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L1530">												calendar.setTime(cal.getTime());</span>
+<span class="fc" id="L1531">												calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L1532">												calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="fc" id="L1533">												calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="fc" id="L1534">												calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="fc" id="L1535">												java.util.Date day = calendar.getTime();</span>
+
+<span class="pc bpc" id="L1537" title="1 of 2 branches missed.">												if(bts.get(day)==null)</span>
+<span class="fc" id="L1538">													bts.put(day, data[1]);</span>
+												else
+<span class="nc" id="L1540">													bts.put(day, bts.get(day).intValue() + data[1].intValue());</span>
+											}
+<span class="nc" id="L1542">											catch (Exception ex)</span>
+											{
+<span class="nc" id="L1544">												Logger.error(BannerDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+												//Logger.error(ex);
+<span class="fc" id="L1546">											}</span>
+										}
+<span class="fc" id="L1548">									}</span>
+								}
+							}
+<span class="fc" id="L1551">							cal.add(Calendar.DAY_OF_YEAR, 1);</span>
+						}
+<span class="pc bpc" id="L1553" title="1 of 2 branches missed.">						collection.put(name != null ? name:&quot;&quot; ,bts);</span>
+					}
+				}
+			}
+
+		}
+<span class="nc" id="L1559">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1561">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1567" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1568">					rs.close();</span>
+<span class="pc bpc" id="L1569" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1570">					ps.close();</span>
+<span class="pc bpc" id="L1571" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1572">					db_conn.close();</span>
+			}
+<span class="nc" id="L1574">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1576">				Logger.error(ex2);</span>
+<span class="fc" id="L1577">			}</span>
+		}
+
+<span class="fc" id="L1580">		return (collection);</span>
+	}
+
+
+	/**
+	 *
+	 * @param from
+	 * @param to
+	 * @param bannerGroups
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+	public static Map&lt;String, Map&lt;java.util.Date, Number&gt;&gt; getTop10BannersClicksTimeData(java.util.Date from, java.util.Date to, List&lt;BannerGroupBean&gt; bannerGroups)
+	{
+<span class="fc" id="L1594">		int max_size = 10;</span>
+<span class="fc" id="L1595">		int count = 0;</span>
+<span class="fc" id="L1596">		Map&lt;String, List&lt;Integer[]&gt;&gt; dates = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L1597">		int[] topBanners = new int[max_size];</span>
+<span class="fc" id="L1598">		Map&lt;Integer, String&gt; bannerNames = BannerDB.getBannerNamesTable();</span>
+
+<span class="fc" id="L1600">		Map&lt;String,  Map&lt;java.util.Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+		Map&lt;java.util.Date, Number&gt; bts;
+<span class="fc" id="L1602">		StringBuilder sql = new StringBuilder();</span>
+
+<span class="fc" id="L1604">		Connection db_conn = null;</span>
+<span class="fc" id="L1605">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1606">		ResultSet rs = null;</span>
+		try
+		{
+<span class="pc bpc" id="L1609" title="2 of 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
+			{
+<span class="fc" id="L1611">				db_conn = DBPool.getConnection();</span>
+				//ziskam si top10
+<span class="fc" id="L1613">				sql.append(&quot;SELECT c.banner_id, COUNT(c.banner_id) AS clicks &quot;)</span>
+<span class="fc" id="L1614">				.append(&quot;FROM banner_stat_clicks c JOIN banner_banners b ON (b.banner_id = c.banner_id)&quot;).append(&quot;WHERE c.insert_date &gt;= ? AND c.insert_date &lt;= ? AND b.domain_id = ? &quot;);</span>
+
+<span class="pc bpc" id="L1616" title="1 of 2 branches missed.">				if (bannerGroups != null)</span>
+				{
+<span class="nc bnc" id="L1618" title="All 2 branches missed.">					if (bannerGroups.size() &gt; 0)</span>
+					{
+<span class="nc" id="L1620">						boolean first = true;</span>
+<span class="nc" id="L1621">						sql.append(&quot; AND b.banner_group IN (&quot;);</span>
+<span class="nc bnc" id="L1622" title="All 2 branches missed.">						for (BannerGroupBean bgb : bannerGroups)</span>
+						{
+<span class="nc bnc" id="L1624" title="All 2 branches missed.">							if (first)</span>
+							{
+<span class="nc" id="L1626">								sql.append(&quot; ? &quot;);</span>
+<span class="nc" id="L1627">								first = false;</span>
+							}
+							else
+<span class="nc" id="L1630">								sql.append(&quot;, ? &quot;);</span>
+<span class="nc" id="L1631">						}</span>
+<span class="nc" id="L1632">						sql.append(&quot; ) &quot;);</span>
+					}
+				}
+
+
+<span class="fc" id="L1637">				sql.append(&quot;GROUP BY c.banner_id &quot;).append(&quot;ORDER BY clicks DESC&quot;);</span>
+
+<span class="fc" id="L1639">				int counter = 1;</span>
+<span class="fc" id="L1640">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1641">				ps.setTimestamp(counter++, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1642">				ps.setTimestamp(counter++, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L1643">				ps.setInt(counter++, CloudToolsForCore.getDomainId());</span>
+
+<span class="pc bpc" id="L1645" title="1 of 2 branches missed.">				if(bannerGroups != null)</span>
+				{
+<span class="nc bnc" id="L1647" title="All 2 branches missed.">					if(bannerGroups.size() &gt; 0)</span>
+					{
+<span class="nc bnc" id="L1649" title="All 2 branches missed.">						for(BannerGroupBean bgb : bannerGroups)</span>
+						{
+<span class="nc" id="L1651">							ps.setString(counter++, bgb.getBannerGroup());</span>
+<span class="nc" id="L1652">						}</span>
+					}
+				}
+
+<span class="fc" id="L1656">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1657" title="1 of 4 branches missed.">				while(rs.next() &amp;&amp; count &lt; max_size)</span>
+				{
+<span class="fc" id="L1659">					topBanners[count] = rs.getInt(&quot;banner_id&quot;);</span>
+<span class="fc" id="L1660">					count++;</span>
+				}
+<span class="fc" id="L1662">				rs.close();</span>
+<span class="fc" id="L1663">				ps.close();</span>
+<span class="fc" id="L1664">				rs = null;</span>
+<span class="fc" id="L1665">				ps = null;</span>
+
+				//podla top10 zistim pocet videni na den
+<span class="fc" id="L1668">				sql.delete(0, sql.length());</span>
+<span class="fc" id="L1669">				sql.append(&quot;SELECT banner_id, COUNT(banner_id) AS clicks, &quot;).append(StatNewDB.getDMYSelect(FIELD_INSERT_DATE)).append(' ')</span>
+<span class="fc" id="L1670">				.append(&quot;FROM banner_stat_clicks &quot;).append(&quot;WHERE banner_id IN ( &quot;);</span>
+
+<span class="fc bfc" id="L1672" title="All 2 branches covered.">				for(int i=0; i&lt;topBanners.length; i++)</span>
+				{
+<span class="fc bfc" id="L1674" title="All 2 branches covered.">					if (i &gt; 0)</span>
+					{
+<span class="fc" id="L1676">						sql.append(&quot;, '&quot;).append(topBanners[i]).append('\'');</span>
+					}
+					else
+					{
+<span class="fc" id="L1680">						sql.append('\'').append(topBanners[i]).append('\'');</span>
+					}
+				}
+<span class="fc" id="L1683">				sql.append(&quot;) AND domain_id = ? &quot;);</span>
+<span class="fc" id="L1684">				sql.append(&quot;GROUP BY banner_id, &quot;).append(StatNewDB.getDMYGroupBy(FIELD_INSERT_DATE)).append(' ')</span>
+<span class="fc" id="L1685">				.append(&quot;ORDER BY vt_year, vt_month, vt_day&quot;);</span>
+
+<span class="fc" id="L1687">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L1688">				ps.setInt(1, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L1689">				rs = ps.executeQuery();</span>
+				//iteruj cez riadky
+<span class="fc" id="L1691">				Calendar cal = Calendar.getInstance();</span>
+
+<span class="fc bfc" id="L1693" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L1695">					cal.clear();</span>
+<span class="fc" id="L1696">					cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1697">					cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L1698">					cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L1699">					cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+
+<span class="fc" id="L1701">					Integer[] data = new Integer[2];</span>
+<span class="fc" id="L1702">					data[0] = Integer.valueOf(rs.getInt(&quot;banner_id&quot;));</span>
+<span class="fc" id="L1703">					data[1] = Integer.valueOf(rs.getInt(&quot;clicks&quot;));</span>
+
+<span class="fc bfc" id="L1705" title="All 2 branches covered.">					if (dates.containsKey(Tools.formatDate(cal.getTime())))</span>
+					{
+<span class="fc" id="L1707">						List&lt;Integer[]&gt; dayBanners = dates.get(Tools.formatDate(cal.getTime()));</span>
+<span class="pc bpc" id="L1708" title="1 of 2 branches missed.">						if (dayBanners != null)</span>
+<span class="fc" id="L1709">							dayBanners.add(data);</span>
+<span class="fc" id="L1710">					}</span>
+					else
+					{
+<span class="fc" id="L1713">						List&lt;Integer[]&gt; dayBanners = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1714">						dayBanners.add(data);</span>
+<span class="fc" id="L1715">						dates.put(Tools.formatDate(cal.getTime()), dayBanners);</span>
+					}
+<span class="fc" id="L1717">				}</span>
+<span class="fc" id="L1718">				rs.close();</span>
+<span class="fc" id="L1719">				ps.close();</span>
+<span class="fc" id="L1720">				db_conn.close();</span>
+<span class="fc" id="L1721">				rs = null;</span>
+<span class="fc" id="L1722">				ps = null;</span>
+<span class="fc" id="L1723">				db_conn = null;</span>
+
+<span class="fc" id="L1725">				Calendar calTo = Calendar.getInstance();</span>
+<span class="fc" id="L1726">				calTo.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L1727">				calTo.setTime(to);</span>
+
+<span class="fc" id="L1729">				cal.clear();</span>
+<span class="fc" id="L1730">				cal.setTimeInMillis(from.getTime());</span>
+<span class="fc" id="L1731">				cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+				//cal.set(from.getYear()+1900, from.getMonth(), from.getDate(), 0, 0);
+
+				//Logger.println(BannerDB.class,&quot;Date: &quot;+cal.getTime());
+
+<span class="fc bfc" id="L1736" title="All 2 branches covered.">				for(int i=0; i&lt;topBanners.length; i++)</span>
+				{
+<span class="fc bfc" id="L1738" title="All 2 branches covered.">					if(topBanners[i] &gt; 0)</span>
+					{
+<span class="fc" id="L1740">						String value = bannerNames.get(Integer.valueOf(topBanners[i]));</span>
+						//bts = new TimeSeries(value != null ? value : &quot;&quot;);
+<span class="fc" id="L1742">						bts = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L1744">						cal.clear();</span>
+<span class="fc" id="L1745">						cal.setTimeInMillis(from.getTime());</span>
+<span class="fc" id="L1746">						cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+						//cal.set(from.getYear()+1900, from.getMonth(), from.getDate(), 0, 0);
+<span class="fc bfc" id="L1748" title="All 2 branches covered.">						while (cal.getTimeInMillis() &lt;= calTo.getTimeInMillis())</span>
+						{
+<span class="fc bfc" id="L1750" title="All 2 branches covered.">							if (dates.containsKey(Tools.formatDate(cal.getTime())))</span>
+							{
+<span class="fc" id="L1752">								List&lt;Integer[]&gt; dayBanners = dates.get(Tools.formatDate(cal.getTime()));</span>
+<span class="pc bpc" id="L1753" title="1 of 2 branches missed.">								if (dayBanners != null)</span>
+								{
+<span class="fc bfc" id="L1755" title="All 2 branches covered.">									for (Integer[] data : dayBanners)</span>
+									{
+
+<span class="fc bfc" id="L1758" title="All 2 branches covered.">										if (topBanners[i] == data[0].intValue())</span>
+										{
+											try
+											{
+<span class="fc" id="L1762">												Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L1763">												calendar.setTime(cal.getTime());</span>
+<span class="fc" id="L1764">												calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L1765">												calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="fc" id="L1766">												calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="fc" id="L1767">												calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="fc" id="L1768">												java.util.Date day = calendar.getTime();</span>
+
+<span class="fc" id="L1770">												bts.put(day, data[1]);</span>
+											}
+<span class="nc" id="L1772">											catch (Exception ex)</span>
+											{
+<span class="nc" id="L1774">												Logger.error(BannerDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L1775">												Logger.error(ex);</span>
+<span class="fc" id="L1776">											}</span>
+										}
+<span class="fc" id="L1778">									}</span>
+								}
+							}
+<span class="fc" id="L1781">							cal.add(Calendar.DAY_OF_YEAR, 1);</span>
+						}
+<span class="pc bpc" id="L1783" title="1 of 2 branches missed.">						collection.put(value != null ? value : &quot;&quot; ,bts);</span>
+					}
+				}
+			}
+
+		}
+<span class="nc" id="L1789">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1791">			Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L1797" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1798">					rs.close();</span>
+<span class="pc bpc" id="L1799" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1800">					ps.close();</span>
+<span class="pc bpc" id="L1801" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1802">					db_conn.close();</span>
+			}
+<span class="nc" id="L1804">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1806">				Logger.error(ex2);</span>
+<span class="fc" id="L1807">			}</span>
+		}
+<span class="fc" id="L1809">		return (collection);</span>
+	}
+
+	/**
+	 * Update statistiky videni bannera v DB
+	 * @param bannerId - ID bannera v DB
+	 * @return
+	 */
+	public static boolean statAddViewExt(int bannerId,int inc,java.util.Date insertDate)
+	{
+<span class="nc" id="L1819">		StatWriteBuffer.addUpdateInsertPair(</span>
+			&quot;UPDATE banner_stat_views_day SET views=views+? WHERE banner_id = ? AND insert_date = ?&quot;,
+			&quot;INSERT INTO banner_stat_views_day (views, banner_id, insert_date) VALUES (?, ?, ?)&quot;,
+			&quot;banner_stat_views_day&quot;,
+<span class="nc" id="L1823">			inc,</span>
+<span class="nc" id="L1824">			bannerId,</span>
+<span class="nc" id="L1825">			new java.sql.Date(insertDate.getTime())</span>
+		);
+<span class="nc" id="L1827">		return true;</span>
+	}
+
+	public static String getBannerNameFromLocation(String name, String location)
+	{
+		try
+		{
+<span class="pc bpc" id="L1834" title="1 of 2 branches missed.">			if (Tools.isEmpty(name))</span>
+			{
+<span class="nc" id="L1836">				name = location;</span>
+<span class="nc bnc" id="L1837" title="All 2 branches missed.">				if (name != null)</span>
+				{
+<span class="nc" id="L1839">					int i = name.lastIndexOf('/');</span>
+<span class="nc bnc" id="L1840" title="All 2 branches missed.">					if (i &gt; 0)</span>
+					{
+<span class="nc" id="L1842">						name = name.substring(i+1);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L1847">		catch (RuntimeException ex)</span>
+		{
+<span class="nc" id="L1849">			Logger.error(ex);</span>
+<span class="fc" id="L1850">		}</span>
+
+<span class="fc" id="L1852">		return(name);</span>
+	}
+
+	/**
+	 * Ziskanie uzivatelskych bannerov
+	 * @param userId
+	 * @return
+	 */
+	public static List&lt;BannerBean&gt; getBannersByUserId(String groups, String orderBy, int userId)
+	{
+<span class="nc" id="L1862">		List&lt;BannerBean&gt; bannerList = getBanners(groups, orderBy);</span>
+<span class="nc" id="L1863">		List&lt;BannerBean&gt; userBannerList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1864" title="All 2 branches missed.">		for (BannerBean bannerBean : bannerList)</span>
+		{
+<span class="nc bnc" id="L1866" title="All 2 branches missed.">			if(bannerBean.getClientId() == userId)</span>
+			{
+<span class="nc" id="L1868">				userBannerList.add(bannerBean);</span>
+			}
+<span class="nc" id="L1870">		}</span>
+<span class="nc" id="L1871">		return userBannerList;</span>
+	}
+
+	/**
+	 * Ziskanie uzivatelskych bannerov pre statistiku
+	 * @param from
+	 * @param to
+	 * @param userId
+	 * @return
+	 */
+	public static List&lt;Column&gt; getTop10BannersByUserId(java.util.Date from, java.util.Date to, int userId,List&lt;BannerGroupBean&gt; bannerGroups)
+	{
+<span class="nc" id="L1883">		List&lt;Column&gt; topBanners = BannerDB.getTop10Banners(from, to,bannerGroups);</span>
+<span class="nc" id="L1884">		List&lt;Column&gt; userTopBanners = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1885" title="All 2 branches missed.">		for (Column col : topBanners)</span>
+		{
+<span class="nc bnc" id="L1887" title="All 2 branches missed.">			if(col.getIntColumn7() == userId)</span>
+			{
+<span class="nc" id="L1889">				userTopBanners.add(col);</span>
+			}
+<span class="nc" id="L1891">		}</span>
+<span class="nc" id="L1892">		return userTopBanners;</span>
+	}
+
+	/**
+	 * Metoda vrati true ak uzivatel ma pravo vidiet banner so zadanym bannerId, v opacnom pripade vrati false
+	 * @param bannerId
+	 * @param userId
+	 * @return
+	 */
+	public static boolean getBannerAccess(int bannerId, int userId)
+	{
+<span class="nc" id="L1903">		BannerBean bb = getBanner(bannerId);</span>
+<span class="nc bnc" id="L1904" title="All 2 branches missed.">		if(bb != null)</span>
+		{
+<span class="nc" id="L1906">			List&lt;BannerBean&gt; userBannerList = getBannersByUserId(null, &quot;id&quot;, userId);</span>
+<span class="nc bnc" id="L1907" title="All 2 branches missed.">			if(userBannerList.size() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L1909" title="All 2 branches missed.">				if(bb.getClientId() == userId)</span>
+<span class="nc" id="L1910">					return true;</span>
+			}
+		}
+
+<span class="nc" id="L1914">		return false;</span>
+	}
+
+	/**
+	 * Zistuje platnost baneru, ci je aktivny, banerovu expiraciu, ci nieje prekoreceny pocet zobrazeni
+	 * @param banner
+	 * @return
+	 */
+	public static boolean isBannerActive(BannerBean banner)
+	{
+<span class="pc bpc" id="L1924" title="1 of 2 branches missed.">		if(banner != null)</span>
+		{
+<span class="fc" id="L1926">			long dateFrom = 0;</span>
+<span class="fc" id="L1927">			long dateTo = 0;</span>
+<span class="fc" id="L1928">			long now = Tools.getNow();</span>
+			int statClicks;
+			int statViews;
+
+<span class="fc" id="L1932">			dateFrom = 0;</span>
+<span class="fc" id="L1933">			dateTo = now + 1;</span>
+<span class="fc bfc" id="L1934" title="All 2 branches covered.">			if (banner.getDateFrom()!=null)	dateFrom = banner.getDateFrom().getTime();</span>
+<span class="fc bfc" id="L1935" title="All 2 branches covered.">			if (banner.getDateTo()!=null) dateTo = banner.getDateTo().getTime();</span>
+
+			//ak je nastavene 0, ignoruj statistiku
+<span class="fc" id="L1938">			statClicks = Tools.getIntValue(banner.getStatClicks());</span>
+<span class="fc" id="L1939">			statViews = Tools.getIntValue(banner.getStatViews());</span>
+<span class="pc bpc" id="L1940" title="1 of 2 branches missed.">			if (Tools.getIntValue(banner.getMaxClicks())==0) statClicks = 0;</span>
+<span class="pc bpc" id="L1941" title="1 of 2 branches missed.">			if (Tools.getIntValue(banner.getMaxViews())==0) statViews = 0;</span>
+
+			//testujem, ci este nebolo dosiahnute obmedzenie zobrazovania banneru, ak nie, pridam banner do zoznamu bannersOK
+<span class="pc bpc" id="L1944" title="1 of 2 branches missed.">			if (  Tools.getIntValue(banner.getMaxClicks()) &gt;= statClicks &amp;&amp;		//MAX CLICKS &gt;= AKTUALNY POCET KLIKNUTI</span>
+<span class="pc bpc" id="L1945" title="2 of 6 branches missed.">					Tools.getIntValue(banner.getMaxViews()) &gt;= statViews &amp;&amp;		//MAX VIEWS &gt;= AKTUALNY POCET VIDENI</span>
+				  dateFrom &lt;= now &amp;&amp;								//CAS OD &lt;= AKTUALNY CAS
+				  dateTo &gt;= now 	&amp;&amp;								//CAS DO &gt;= AKTUALNY CAS
+<span class="fc bfc" id="L1948" title="All 2 branches covered.">				  banner.getActive().booleanValue()==true)</span>
+			{
+<span class="fc" id="L1950">				return true;</span>
+			}
+		}
+
+<span class="fc" id="L1954">		return false;</span>
+	}
+
+	public static List&lt;BannerBean&gt; getOnlyAvailable(List&lt;BannerBean&gt; banners)
+	{
+<span class="nc" id="L1959">		return getOnlyAvailable(banners, null);</span>
+	}
+
+	/**
+	 * prefiltruje zoznam banerov a vrati dostupne banery a v pripade obsahovych len take, ktore sa nezobrazuju len pri kampani
+	 * @param banners
+	 * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
+	 */
+	public static List&lt;BannerBean&gt; getOnlyAvailable(List&lt;BannerBean&gt; banners, String campaignBanner)
+	{
+<span class="fc" id="L1969">		List&lt;BannerBean&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1970">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L1971">		String url = &quot;/&quot;;</span>
+<span class="pc bpc" id="L1972" title="1 of 2 branches missed.">		if (rb != null) url = rb.getUrl();</span>
+
+<span class="pc bpc" id="L1974" title="2 of 4 branches missed.">		if(banners != null &amp;&amp; banners.isEmpty()==false)</span>
+		{
+<span class="fc bfc" id="L1976" title="All 2 branches covered.">			for(BannerBean banner : banners)</span>
+			{
+<span class="fc bfc" id="L1978" title="All 2 branches covered.">				if(banner.isAvailable())</span>
+				{
+					//obsahovy banner sa zobrazuje len na nasich URL adresach
+<span class="fc bfc" id="L1981" title="All 2 branches covered.">					if (banner.getBannerType().intValue() == 4)</span>
+					{
+						//ak mam priznak zobrazovania len pri kampani
+<span class="fc bfc" id="L1984" title="All 2 branches covered.">						if(isBannerCampaignOnly(banner) &amp;&amp;</span>
+							(
+<span class="fc bfc" id="L1986" title="All 2 branches covered.">								Tools.isEmpty(campaignBanner) || //hodnota v kampanovom parametri nesmie byt prazdna</span>
+<span class="pc bpc" id="L1987" title="1 of 2 branches missed.">								Tools.isEmpty(banner.getCampaignTitle()) || //hodnota campaignTitle (Kampanovy banner) nesmie byt prazdna</span>
+<span class="pc bpc" id="L1988" title="1 of 2 branches missed.">								campaignBanner.equals(banner.getCampaignTitle()) == false //hodnoty parametra a campaignTitle musi byt zhodna</span>
+							)
+						) {
+<span class="nc" id="L1991">							continue;</span>
+						}
+
+<span class="pc bpc" id="L1994" title="1 of 2 branches missed.">						if(isBannerForUrl(banner, url))</span>
+<span class="fc" id="L1995">							result.add(banner);</span>
+					}
+					else
+					{
+<span class="fc" id="L1999">						result.add(banner);</span>
+					}
+				}
+<span class="fc" id="L2002">			}</span>
+		}
+
+		//Filte banners
+<span class="fc" id="L2006">		return BannerDB.filterByDocAndGroupId(result);</span>
+	}
+
+	/**
+	 * Vrati iba tie banery, ktore vyhovuju skupine v cookies. Ak je cookie prazdna vrati null alebo jeden banner.
+	 * @param banners
+	 * @param cookie
+	 * @return
+	 *@author		$Author: prau $(prau)
+	 */
+	public static List&lt;BannerBean&gt; getVisitorCookieGroup(List&lt;BannerBean&gt; banners, Cookie[] cookie)
+	{
+<span class="nc" id="L2018">		List&lt;BannerBean&gt; returnBanners = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2019">		List&lt;BannerBean&gt; returnDefaultBanner = new ArrayList&lt;&gt;();</span>
+		String[] tokens;
+<span class="nc" id="L2021">		String cookieValue = null;</span>
+<span class="nc" id="L2022">		String defaultGroupValue = null;</span>
+
+<span class="nc" id="L2024">		Logger.debug(BannerDB.class,&quot;banners size() : &quot;+banners.size());</span>
+<span class="nc bnc" id="L2025" title="All 6 branches missed.">		if(cookie != null &amp;&amp; banners != null &amp;&amp; banners.size() &gt; 0)</span>
+		{
+<span class="nc" id="L2027">			defaultGroupValue = Constants.getString(&quot;ingBankVisitorCookieGroupDefaultValue&quot;);</span>
+			//System.out.println(&quot;Cookies: &quot;);
+<span class="nc bnc" id="L2029" title="All 2 branches missed.">			for(Cookie c: cookie)</span>
+			{
+				//&quot;meno cookie premennej ktoru ziskam&quot;
+<span class="nc bnc" id="L2032" title="All 2 branches missed.">				if(c.getName().equals(Constants.getString(&quot;ingBankVisitorCookieGroupName&quot;)))</span>
+				{
+<span class="nc" id="L2034">					cookieValue = c.getValue();</span>
+<span class="nc" id="L2035">					Logger.debug(BannerDB.class,&quot;Ziskal som cookie hodnotu: &quot;+cookieValue);</span>
+				}
+			}
+
+<span class="nc" id="L2039">			boolean banneradded = false;</span>
+<span class="nc bnc" id="L2040" title="All 2 branches missed.">			for(BannerBean banner : banners)</span>
+			{
+<span class="nc" id="L2042">				tokens = Tools.getTokens(banner.getVisitorCookieGroup(),&quot;,&quot;);</span>
+<span class="nc bnc" id="L2043" title="All 2 branches missed.">				for(String bGrop:tokens)</span>
+				{
+<span class="nc bnc" id="L2045" title="All 8 branches missed.">					if(!banneradded &amp;&amp; cookieValue != null &amp;&amp; cookieValue.length() &gt; 0 &amp;&amp; bGrop.indexOf(cookieValue) != -1 )</span>
+					{
+<span class="nc" id="L2047">						returnBanners.add(banner);</span>
+<span class="nc" id="L2048">						banneradded = true;</span>
+					}
+
+<span class="nc bnc" id="L2051" title="All 2 branches missed.">					if(bGrop.indexOf(defaultGroupValue) != -1 )</span>
+					{
+<span class="nc" id="L2053">						returnDefaultBanner.add(banner);</span>
+					}
+				}
+<span class="nc" id="L2056">				banneradded = false;</span>
+<span class="nc" id="L2057">			}</span>
+<span class="nc" id="L2058">		}</span>
+		else
+<span class="nc" id="L2060">			Logger.debug(BannerDB.class,&quot;cookie je null alebo banners je null alebo prazdny&quot;+&quot; cookie: &quot;+cookie+&quot; banners: &quot;+banners);</span>
+
+<span class="nc bnc" id="L2062" title="All 4 branches missed.">		return  (returnBanners != null &amp;&amp; returnBanners.size() &gt; 0) ? returnBanners : returnDefaultBanner;</span>
+	}
+
+	/**
+	 * Metoda zisti ci je banner kampanovy, tzn. zobrazuje sa iba pri kampani
+	 * @param banner
+	 * @return true alebo false podla toho ci je banner kampanovy
+	 */
+	public static boolean isBannerCampaignOnly(BannerBean banner)
+	{
+<span class="pc bpc" id="L2072" title="1 of 2 branches missed.">		if (banner == null)</span>
+<span class="nc" id="L2073">			return false;</span>
+
+		// Kampanovy banner moze byt iba banner typu 4 = Obsahovy banner
+<span class="pc bpc" id="L2076" title="2 of 6 branches missed.">		if (banner.getBannerType().intValue() == 4 &amp;&amp; (banner.getOnlyWithCampaign() == null || !banner.getOnlyWithCampaign()))</span>
+<span class="fc" id="L2077">			return false;</span>
+
+<span class="fc" id="L2079">		return true;</span>
+	}
+
+	private static List&lt;BannerBean&gt; filterByDocAndGroupId(List&lt;BannerBean&gt; bannerList)
+	{
+<span class="fc" id="L2084">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L2085" title="1 of 2 branches missed.">		if (rb == null) return bannerList;</span>
+
+<span class="fc" id="L2087">		int docId = rb.getDocId();</span>
+<span class="fc" id="L2088">		int groupId = rb.getGroupId();</span>
+
+<span class="pc bpc" id="L2090" title="1 of 2 branches missed.">		if(docId == -1) return bannerList;</span>
+
+<span class="pc bpc" id="L2092" title="1 of 2 branches missed.">		if(groupId == -1)</span>
+		{
+<span class="nc" id="L2094">			DocDetails dd = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L2095" title="All 2 branches missed.">			if(dd != null) groupId = dd.getGroupId();</span>
+		}
+
+<span class="fc" id="L2098">		Set&lt;BannerBean&gt; hs = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L2099">		List&lt;GroupDetails&gt; parentGroups = null;</span>
+<span class="pc bpc" id="L2100" title="1 of 2 branches missed.">		if (groupId &gt; 0) parentGroups = GroupsDB.getParentGroupsCached(groupId);</span>
+
+<span class="fc bfc" id="L2102" title="All 2 branches covered.">		for(BannerBean bb : bannerList)</span>
+		{
+			//ak je prazdne groups aj docs pridaj (zobrazuje sa vsade)
+<span class="pc bpc" id="L2105" title="2 of 8 branches missed.">			if ((bb.getDocIds()==null || bb.getDocIds().isEmpty()) &amp;&amp; (bb.getGroupIds()==null || bb.getGroupIds().isEmpty()))</span>
+			{
+<span class="fc" id="L2107">				hs.add(bb);</span>
+			}
+			else
+			{
+<span class="pc bpc" id="L2111" title="2 of 6 branches missed.">				if (bb.getGroupIds()!=null &amp;&amp; bb.getGroupIds().isEmpty()==false &amp;&amp; parentGroups!=null)</span>
+				{
+					// pre adresare
+<span class="fc bfc" id="L2114" title="All 2 branches covered.">					for(GroupDetails gd:parentGroups)</span>
+					{
+<span class="fc bfc" id="L2116" title="All 2 branches covered.">						for(BannerWebGroupBean isgb:bb.getGroupIds())</span>
+						{
+<span class="fc bfc" id="L2118" title="All 2 branches covered.">							if(isgb.getGroupId() == gd.getGroupId()) hs.add(bb);</span>
+<span class="fc" id="L2119">						}</span>
+<span class="fc" id="L2120">					}</span>
+				}
+<span class="pc bpc" id="L2122" title="1 of 4 branches missed.">				if (bb.getDocIds()!=null &amp;&amp; bb.getDocIds().isEmpty()==false)</span>
+				{
+<span class="fc bfc" id="L2124" title="All 2 branches covered.">					for(BannerWebDocBean bwdb:bb.getDocIds())</span>
+					{
+<span class="pc bpc" id="L2126" title="1 of 4 branches missed.">						if(bwdb.getDocId() == docId || docId == -1) hs.add(bb);</span>
+<span class="fc" id="L2127">					}</span>
+				}
+			}
+<span class="fc" id="L2130">		}</span>
+
+<span class="fc" id="L2132">		bannerList.clear();</span>
+<span class="fc" id="L2133">		bannerList.addAll(hs);</span>
+<span class="fc" id="L2134">		return bannerList;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExcelImport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">ExcelImport.java</span></div><h1>ExcelImport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  Superclass pre import udajov z excelu do databazy, prvy riadok obsahuje nazvy stlpcov
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.8 $
+ *@created      Štvrtok, 2003, august 21
+ *@modified     $Date: 2004/03/23 19:23:05 $
+ */
+public abstract class ExcelImport
+{
+	protected Map&lt;String, Integer&gt; header;
+	protected InputStream in;
+	protected HttpServletRequest request;
+	protected PrintWriter out;
+	protected int rowCounter;
+
+	public ExcelImport(InputStream in, HttpServletRequest request, PrintWriter out) //NOSONAR
+<span class="nc" id="L48">	{</span>
+<span class="nc" id="L49">		this.in = in;</span>
+<span class="nc" id="L50">		this.request = request;</span>
+<span class="nc" id="L51">		this.out = out;</span>
+<span class="nc" id="L52">		rowCounter = 0;</span>
+<span class="nc" id="L53">		header = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L54">	}</span>
+
+	/**
+	 * Nastavi stlpec updated v databaze v tabulke tableName na false
+	 * @param tableName
+	 * @return
+	 */
+	public boolean setUpdateField(String tableName)
+	{
+<span class="nc" id="L63">		boolean ret = false;</span>
+<span class="nc" id="L64">		java.sql.Connection db_conn = null;</span>
+<span class="nc" id="L65">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L68">			db_conn = sk.iway.iwcm.DBPool.getConnection(request);</span>
+
+
+			//nastav updated na 0, aby sme vedeli co sa v exceli nenachadza...
+<span class="nc" id="L72">			ps = db_conn.prepareStatement(&quot;UPDATE &quot;+tableName+&quot; SET updated=?&quot;);</span>
+<span class="nc" id="L73">			ps.setBoolean(1, false);</span>
+<span class="nc" id="L74">			ps.execute();</span>
+<span class="nc" id="L75">			ps.close();</span>
+
+<span class="nc" id="L77">			db_conn.close();</span>
+<span class="nc" id="L78">			ret = true;</span>
+<span class="nc" id="L79">			db_conn = null;</span>
+<span class="nc" id="L80">			ps = null;</span>
+		}
+<span class="nc" id="L82">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+		finally{
+			try{
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L87">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+<span class="nc" id="L89">		return(ret);</span>
+	}
+
+	/**
+	 * vymaze z databazy zaznamy, ktore nie su updatnute
+	 * @param tableName
+	 * @return
+	 */
+	public boolean deleteNotUpdated(String tableName)
+	{
+<span class="nc" id="L99">		boolean ret = false;</span>
+		try
+		{
+<span class="nc" id="L102">			java.sql.Connection db_conn = sk.iway.iwcm.DBPool.getConnection(request);</span>
+			try
+			{
+				String sql;
+
+<span class="nc" id="L107">				println(out, &quot;&quot;, -1);</span>
+				//vymaz polozky
+<span class="nc" id="L109">				sql = &quot;SELECT * FROM &quot;+tableName+&quot; WHERE updated=?&quot;;</span>
+<span class="nc" id="L110">				PreparedStatement ps = db_conn.prepareStatement(sql);</span>
+				try
+				{
+<span class="nc" id="L113">					ps.setBoolean(1, false);</span>
+<span class="nc" id="L114">					ResultSet rs = ps.executeQuery();</span>
+					try
+					{
+<span class="nc bnc" id="L117" title="All 2 branches missed.">						while (rs.next())</span>
+						{
+<span class="nc" id="L119">							printlnError(out, &quot;Vymazávam: &quot;+rs.getString(1)+&quot;, &quot;+rs.getString(2)+&quot;, &quot;+rs.getString(3)+&quot;, &quot;+rs.getString(4), -1);</span>
+						}
+					}
+<span class="nc" id="L122">					finally { rs.close(); }</span>
+				}
+<span class="nc" id="L124">				finally { ps.close(); }</span>
+<span class="nc" id="L125">				sql = &quot;DELETE FROM &quot;+tableName+&quot; WHERE updated=?&quot;;</span>
+<span class="nc" id="L126">				ps = db_conn.prepareStatement(sql);</span>
+				try
+				{
+<span class="nc" id="L129">					ps.setBoolean(1, false);</span>
+<span class="nc" id="L130">					ps.execute();</span>
+				}
+<span class="nc" id="L132">				finally { ps.close(); }</span>
+			}
+<span class="nc" id="L134">			finally { db_conn.close(); }</span>
+<span class="nc" id="L135">			ret = true;</span>
+		}
+<span class="nc" id="L137">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L138">		return(ret);</span>
+	}
+
+	/**
+	 * Nastavi hashtable, ktora prevadza meno na cislo stlpca. Meno je vzdy lowercase
+	 * @param row
+	 */
+	protected void setHeader(Row row)
+	{
+<span class="nc" id="L147">		Iterator&lt;Cell&gt; cels = row.cellIterator();</span>
+		Cell cell;
+		String str;
+		int pos;
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		while (cels.hasNext())</span>
+		{
+<span class="nc" id="L153">			cell = cels.next();</span>
+
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (cell == null)</span>
+			{
+<span class="nc" id="L157">				continue;</span>
+			}
+
+<span class="nc" id="L160">			str = getValue(cell);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (str != null) str = str.toLowerCase();</span>
+<span class="nc" id="L162">			pos = cell.getColumnIndex();</span>
+
+<span class="nc" id="L164">			header.put(str, Integer.valueOf(pos));</span>
+		}
+<span class="nc" id="L166">	}</span>
+
+	/**
+	 * pridanie riadku do zoznamu riadkov
+	 * @param row
+	 */
+	protected abstract void saveRow(Connection db_conn, Row row) throws Exception;
+
+	public void doImport(Prop prop)
+	{
+<span class="nc" id="L176">		doImport(null, prop);</span>
+<span class="nc" id="L177">	}</span>
+
+	public void doImport(String sheetName, Prop prop)
+	{
+		try
+		{
+<span class="nc" id="L183">			Logger.println(this,&quot;doImport sheet=&quot;+sheetName);</span>
+
+<span class="nc" id="L185">			POIFSFileSystem fs = new POIFSFileSystem(in);</span>
+<span class="nc" id="L186">			HSSFWorkbook wb = new HSSFWorkbook(fs);</span>
+
+<span class="nc" id="L188">			Logger.println(this,&quot;doImport mam wb&quot;);</span>
+
+<span class="nc bnc" id="L190" title="All 4 branches missed.">			if (sheetName==null || sheetName.trim().length()&lt;1)</span>
+			{
+				//iteruj po sheetoch a importuj ich
+<span class="nc" id="L193">				int counter = 0;</span>
+<span class="nc" id="L194">				HSSFSheet sheet = wb.getSheetAt(counter);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">				while (sheet!=null)</span>
+				{
+<span class="nc" id="L197">					Logger.println(this,&quot;doImport: sheet=&quot;+wb.getSheetName(counter));</span>
+
+<span class="nc" id="L199">					println(out, &quot;&lt;big&gt;&lt;b&gt;&quot;+prop.getText(&quot;file.importing_sheet&quot;)+&quot; &quot;+(counter+1)+&quot;: &quot;+wb.getSheetName(counter)+&quot;&lt;/b&gt;&lt;/big&gt;&lt;br&gt;&lt;br&gt;&quot;, -1);</span>
+<span class="nc" id="L200">					importSheet(sheet);</span>
+<span class="nc" id="L201">					counter++;</span>
+					try
+					{
+<span class="nc" id="L204">						sheet = wb.getSheetAt(counter);</span>
+					}
+<span class="nc" id="L206">					catch (IndexOutOfBoundsException iobex)</span>
+					{
+<span class="nc" id="L208">						sheet = null;</span>
+<span class="nc" id="L209">					}</span>
+				}
+<span class="nc" id="L211">			}</span>
+			else
+			{
+<span class="nc" id="L214">				Logger.println(this,&quot;doImport sheet=&quot;+sheetName);</span>
+
+<span class="nc" id="L216">				HSSFSheet sheet = wb.getSheet(sheetName);</span>
+<span class="nc" id="L217">				importSheet(sheet);</span>
+			}
+
+<span class="nc" id="L220">			wb.close();</span>
+		}
+<span class="nc" id="L222">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L224">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L225">		}</span>
+
+<span class="nc" id="L227">		println(out, &quot;&quot;, -1);</span>
+<span class="nc" id="L228">	}</span>
+
+	/**
+	 * vykonanie importu
+	 */
+	public void importSheet(HSSFSheet sheet)
+	{
+		try
+		{
+			Row row;
+
+<span class="nc" id="L239">			Iterator&lt;Row&gt; rows = sheet.rowIterator();</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (rows.hasNext()==false) return;</span>
+
+<span class="nc" id="L243">			rowCounter = 0;</span>
+
+<span class="nc" id="L245">			row = rows.next();</span>
+
+<span class="nc" id="L247">			setHeader(row);</span>
+
+<span class="nc" id="L249">			java.sql.Connection db_conn = sk.iway.iwcm.DBPool.getConnection(request);</span>
+			try
+			{
+<span class="nc bnc" id="L252" title="All 2 branches missed.">				while (rows.hasNext())</span>
+				{
+<span class="nc" id="L254">					rowCounter++;</span>
+					try
+					{
+<span class="nc" id="L257">						row = rows.next();</span>
+<span class="nc" id="L258">						Logger.println(this,&quot;save row&quot;);</span>
+<span class="nc" id="L259">						saveRow(db_conn, row);</span>
+					}
+<span class="nc" id="L261">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L263">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L264">						printlnError(out, &quot;Chyba importu: &quot;+ex.getMessage(), rowCounter);</span>
+<span class="nc" id="L265">					}</span>
+				}
+			}
+<span class="nc" id="L268">			finally { db_conn.close(); }</span>
+		}
+<span class="nc" id="L270">		catch (Exception ex){</span>
+<span class="nc" id="L271">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L272">			printlnError(out, &quot;Vyskytla sa chyba - &quot; + ex.getMessage(), rowCounter);</span>
+<span class="nc" id="L273">		}</span>
+<span class="nc" id="L274">	}</span>
+
+
+
+	public static void println(PrintWriter out, String message, int row)
+	{
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (row&gt;=0) out.print(row+&quot;: &quot;);</span>
+<span class="nc" id="L281">		out.println(message+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L282">		out.flush();</span>
+<span class="nc" id="L283">	}</span>
+
+	public static void printlnError(PrintWriter out, String message, int row)
+	{
+<span class="nc bnc" id="L287" title="All 2 branches missed.">		if (row&gt;=0) out.print(row+&quot;: &quot;);</span>
+<span class="nc" id="L288">		out.println(&quot;&lt;font color='red'&gt;&quot;+message+&quot;&lt;/font&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L289">		out.flush();</span>
+<span class="nc" id="L290">	}</span>
+
+	/**
+	 * zmaze uvodzovky a apostrofy z textu
+	 * @param textPar
+	 * @return
+	 */
+	public String dropQuote(String textPar)
+	{
+<span class="nc" id="L299">		String text = textPar;</span>
+<span class="nc bnc" id="L300" title="All 4 branches missed.">		if (text==null || text.trim().length()&lt;1) return(text);</span>
+
+		try
+		{
+<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (text.charAt(0)==('\&quot;')) text = text.substring(1);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (text.charAt(0)=='\'') text = text.substring(1);</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">			if (text.endsWith(&quot;\&quot;&quot;)) text = text.substring(0, text.length()-1);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			if (text.endsWith(&quot;'&quot;)) text = text.substring(0, text.length()-1);</span>
+		}
+<span class="nc" id="L309">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L311">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L312">		}</span>
+
+<span class="nc" id="L314">		return(text);</span>
+	}
+
+	public HSSFCell getCell(HSSFRow row, String name)
+	{
+<span class="nc" id="L319">		Integer index = header.get(name.toLowerCase());</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		if (index==null) return(null);</span>
+
+		//Logger.println(this,&quot;get cell name=&quot;+name+&quot; index=&quot;+index.intValue());
+<span class="nc" id="L324">		return(row.getCell(index.intValue()));</span>
+	}
+
+	public String getValue(HSSFRow row, String name)
+	{
+<span class="nc" id="L329">		return(getValue(getCell(row, name)));</span>
+	}
+
+	/**
+	 *  Ziska hodnotu bunky ako String
+	 *
+	 *@param  cell  Description of the Parameter
+	 *@return       The value value
+	 */
+	public static String getValue(Cell cell)
+	{
+<span class="nc" id="L340">		String value = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		if (cell != null)</span>
+		{
+<span class="nc" id="L344">			CellType cellType = cell.getCellType();</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			if (cellType.equals(CellType.STRING))</span>
+<span class="nc" id="L346">				value = cell.getStringCellValue();</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			else if (cellType.equals(CellType.NUMERIC))</span>
+<span class="nc" id="L348">				value = Integer.toString(((int)cell.getNumericCellValue()));</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			else if (cellType.equals(CellType.BLANK))</span>
+<span class="nc" id="L350">				value = &quot;&quot;;</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			else if (cellType.equals(CellType.BOOLEAN))</span>
+<span class="nc" id="L352">				value = Boolean.toString(cell.getBooleanCellValue());</span>
+			else
+<span class="nc" id="L354">				Logger.error(ExcelImport.class,&quot;nejaky cudny celltype: &quot; + cell.getCellType());</span>
+		}
+
+		try
+		{
+			//osetri numeric field z 200.0 na 200
+<span class="nc bnc" id="L360" title="All 4 branches missed.">			if (value!=null &amp;&amp; value.endsWith(&quot;.0&quot;))</span>
+			{
+<span class="nc" id="L362">				value = value.substring(0, value.length()-2);</span>
+			}
+		}
+<span class="nc" id="L365">		catch (Exception ex)</span>
+		{
+
+<span class="nc" id="L368">		}</span>
+
+
+<span class="nc" id="L371">		return value;</span>
+	}
+
+	public int getIntValue(HSSFRow row, String name)
+	{
+<span class="nc" id="L376">		return(getIntValue(getCell(row, name)));</span>
+	}
+
+	/**
+	 * vrati celociselnu hodnotu bunky
+	 * @param cell
+	 * @return
+	 */
+	public static int getIntValue(HSSFCell cell)
+	{
+<span class="nc" id="L386">		int value = 0;</span>
+		try
+		{
+<span class="nc" id="L389">			value = Integer.parseInt(getValue(cell));</span>
+		}
+<span class="nc" id="L391">		catch (Exception ex)</span>
+		{
+
+<span class="nc" id="L394">		}</span>
+<span class="nc" id="L395">		return(value);</span>
+	}
+
+	public boolean getBooleanValue(HSSFRow row, String name)
+	{
+<span class="nc" id="L400">		return(getBooleanValue(getCell(row, name)));</span>
+	}
+
+	/**
+	 * vrati true ak je v bunke napisane ano, pravda, alebo nieco podobne
+	 * @param cell
+	 * @return
+	 */
+	public static boolean getBooleanValue(HSSFCell cell)
+	{
+<span class="nc" id="L410">		boolean value = false;</span>
+<span class="nc" id="L411">		String sValue = getValue(cell);</span>
+<span class="nc bnc" id="L412" title="All 10 branches missed.">		if (&quot;ano&quot;.equalsIgnoreCase(sValue) || &quot;áno&quot;.equalsIgnoreCase(sValue) || &quot;pravda&quot;.equalsIgnoreCase(sValue)  || &quot;x&quot;.equalsIgnoreCase(sValue) || &quot;a&quot;.equalsIgnoreCase(sValue))</span>
+		{
+<span class="nc" id="L414">			value = true;</span>
+		}
+<span class="nc" id="L416">		return(value);</span>
+	}
+
+	/**
+	 * @return
+	 */
+	public Date getDateValue(HSSFRow row, String name)
+	{
+<span class="nc" id="L424">		Date ret = null;</span>
+		try {
+<span class="nc" id="L426">			 GregorianCalendar gc = new GregorianCalendar(1900, Calendar.JANUARY, 1);</span>
+<span class="nc" id="L427">		    gc.add(Calendar.DATE, Integer.parseInt(getValue(row,name))-1);</span>
+<span class="nc" id="L428">		    gc.add(Calendar.DAY_OF_MONTH, -1);</span>
+<span class="nc" id="L429">		    ret = new Date(gc.getTimeInMillis());</span>
+<span class="nc" id="L430">		} catch(Exception e) {</span>
+
+<span class="nc" id="L432">		}</span>
+<span class="nc" id="L433">		return ret;</span>
+	}
+
+	/**
+	 * trimne aj tvrde medzery
+	 * @param sPar
+	 * @return
+	 */
+	public String trim(String sPar)
+	{
+<span class="nc" id="L443">		String s = sPar;</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">		if(s == null) return null;</span>
+<span class="nc" id="L445">		s = s.trim();</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">		if (s.length() == 0 ) return s;</span>
+<span class="nc" id="L447">		char[] space={160};</span>
+<span class="nc bnc" id="L448" title="All 4 branches missed.">		while(s.endsWith(new String(space)) || s.endsWith(&quot; &quot;))</span>
+<span class="nc" id="L449">			s = s.substring(0,s.length()-1);</span>
+<span class="nc bnc" id="L450" title="All 4 branches missed.">		while(s.startsWith(new String(space)) || s.charAt(0) == (' '))</span>
+<span class="nc" id="L451">			s = s.substring(0,s.length()-1);</span>
+<span class="nc" id="L452">		s = s.trim();</span>
+<span class="nc" id="L453">		return s;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

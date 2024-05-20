@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETProxySelector.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.proxy</a> &gt; <span class="el_source">WebJETProxySelector.java</span></div><h1>WebJETProxySelector.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.proxy;
+
+import java.io.IOException;
+import java.net.Authenticator;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+//import org.apache.commons.httpclient.HttpClient;
+//import org.apache.commons.httpclient.UsernamePasswordCredentials;
+//import org.apache.commons.httpclient.auth.AuthScope;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  ProxySelector.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 10.9.2012 14:54:56
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class WebJETProxySelector extends ProxySelector
+{
+<span class="nc" id="L36">	private ProxySelector defsel = null;</span>
+<span class="nc" id="L37">	private String proxyHost = null;</span>
+<span class="nc" id="L38">	private int proxyPort = 0;</span>
+<span class="nc" id="L39">	private String proxyHostsException = null;</span>
+
+<span class="nc" id="L41">	private String proxyHostHttps = null;</span>
+<span class="nc" id="L42">	private int proxyPortHttps = 0;</span>
+
+	//private String proxyUsername = null;
+	//private String proxyPassword = null;
+
+	private WebJETProxySelector(ProxySelector def, String proxyHost, int proxyPort, String proxyUsername, String proxyPassword, String proxyHostsException, String proxyHostHttps, int proxyPortHttps)
+<span class="nc" id="L48">	{</span>
+<span class="nc" id="L49">		defsel = def;</span>
+<span class="nc" id="L50">		this.proxyHost = proxyHost;</span>
+<span class="nc" id="L51">		this.proxyPort = proxyPort;</span>
+<span class="nc" id="L52">		this.proxyHostsException = proxyHostsException;</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">		if (Tools.isNotEmpty(proxyHostHttps) &amp;&amp; proxyHostHttps.length()&gt;3) this.proxyHostHttps = proxyHostHttps;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (proxyPortHttps&gt;1) this.proxyPortHttps = proxyPortHttps;</span>
+<span class="nc" id="L55">	}</span>
+
+	/**
+	 * Inicializacia spojenia cez proxy
+	 * @param host
+	 * @param port
+	 * @param username
+	 * @param password
+	 */
+	public static void initProxy(String host, int port, final String username, final String password, final String hostsException, final String httpsHost, final int httpsPort)
+	{
+<span class="nc" id="L66">		Logger.println(InitServlet.class,&quot;Setting http proxy: &quot; + host+&quot;:&quot;+port+&quot;, https proxy: &quot; + httpsHost + &quot;:&quot; + httpsPort + &quot; user=&quot;+username+&quot; exceptions=&quot;+hostsException);</span>
+
+		//System.setProperty(&quot;http.proxyType&quot;, &quot;4&quot;);
+<span class="nc" id="L69">      System.setProperty(&quot;http.proxyHost&quot;, host);</span>
+<span class="nc" id="L70">		System.setProperty(&quot;http.proxyPort&quot;, Integer.toString(port));</span>
+<span class="nc" id="L71">		Logger.debug(WebJETProxySelector.class, &quot;Setting proxy: http.proxyHost=&quot;+host+&quot; proxyPort=&quot;+port);</span>
+
+		/* uz netrena, pridavame to v InitServlete podla http nastaveni
+      System.setProperty(&quot;https.proxyHost&quot;, host);
+      System.setProperty(&quot;https.proxyPort&quot;, Integer.toString(port));
+      */
+
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if (Tools.isNotEmpty(httpsHost) &amp;&amp; httpsHost.length()&gt;3)</span>
+		{
+<span class="nc" id="L80">			System.setProperty(&quot;https.proxyHost&quot;, httpsHost);</span>
+<span class="nc" id="L81">			Logger.debug(WebJETProxySelector.class, &quot;Setting httpS proxy, host=&quot;+httpsHost);</span>
+		}
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (httpsPort&gt;1)</span>
+		{
+<span class="nc" id="L85">			System.setProperty(&quot;https.proxyPort&quot;, Integer.toString(httpsPort));</span>
+<span class="nc" id="L86">			Logger.debug(WebJETProxySelector.class, &quot;Setting httpS proxy, port=&quot;+httpsPort);</span>
+		}
+
+		//System.setProperty(&quot;jdk.http.auth.tunneling.disabledSchemes&quot;, &quot;&quot;);
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (Tools.isNotEmpty(hostsException)) System.setProperty(&quot;http.nonProxyHosts&quot;, Tools.replace(hostsException, &quot;,&quot;, &quot;|&quot;));</span>
+
+<span class="nc" id="L93">		String usernameNoDomain = username;</span>
+		/* zda sa, ze toto fakt netreba, ani vo VUB nebolo potrebne takto delit, takze zatial zakomentovane
+		if (username.contains(&quot;\\&quot;))
+		{
+			int i = username.indexOf(&quot;\\&quot;);
+			String domain = username.substring(0, i);
+			usernameNoDomain = username.substring(i+1);
+
+			System.setProperty(&quot;http.auth.ntlm.domain&quot;, domain);
+		}
+		*/
+
+<span class="nc" id="L105">		WebJETProxySelector selector = new WebJETProxySelector(ProxySelector.getDefault(), host, port, usernameNoDomain, password, hostsException, httpsHost, httpsPort);</span>
+<span class="nc" id="L106">		ProxySelector.setDefault(selector);</span>
+
+<span class="nc" id="L108">		System.setProperty(&quot;http.proxySet&quot;, &quot;true&quot;);</span>
+
+		/*
+			TODO: set authenticator
+		*/
+<span class="nc" id="L113">	}</span>
+
+	/**
+	 * Toto je zvlastne, kvoli TB sme to museli presunut do samostatnej metody a inicializovat az na konci InitServletu, pretoze inak sa httpS proxy neautentifikovala
+	 */
+	public static void setAuthenticator()
+	{
+<span class="fc" id="L120">		final String username = &quot;&quot;+Constants.getString(&quot;proxyUser&quot;);</span>
+<span class="fc" id="L121">		final String password = &quot;&quot;+Constants.getString(&quot;proxyPassword&quot;);</span>
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">		if (username.length()&gt;1)</span>
+		{
+<span class="nc" id="L125">			Authenticator.setDefault(new Authenticator()</span>
+<span class="nc" id="L126">			{</span>
+				@Override
+				protected PasswordAuthentication getPasswordAuthentication()
+				{
+<span class="nc" id="L130">					Logger.debug(WebJETProxySelector.class, &quot;getPasswordAuthentication, requestorType:&quot;+getRequestorType());</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (getRequestorType() == RequestorType.PROXY)</span>
+					{
+<span class="nc" id="L133">						String prot = getRequestingProtocol().toLowerCase();</span>
+<span class="nc" id="L134">						String host = System.getProperty(prot + &quot;.proxyHost&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">						if (Tools.isEmpty(host)) host = Constants.getString(&quot;proxyHost&quot;);</span>
+<span class="nc" id="L136">						Logger.debug(WebJETProxySelector.class, &quot;Testing auth for prot:&quot;+prot+&quot; host:&quot;+host+&quot; requestingHost=&quot;+getRequestingHost());</span>
+						//zakomentovane, pretoze nam to vracalo IP adresu if (getRequestingHost().equalsIgnoreCase(host))
+<span class="nc" id="L138">						Logger.debug(WebJETProxySelector.class, &quot;Returning authentication, u=&quot; + username);</span>
+<span class="nc" id="L139">						return new PasswordAuthentication(username, password.toCharArray());</span>
+					}
+<span class="nc" id="L141">					return null;</span>
+				}
+			});
+		}
+<span class="fc" id="L145">	}</span>
+
+	/**
+	 * Nastavi proxy pre Apache Commons HttpClient v3
+	 * @param client
+	 */
+	/*public static void setProxyForHttpClient(HttpClient client, String url)
+	{
+		try
+		{
+			String proxyHost = Constants.getString(&quot;proxyHost&quot;);
+			if (Tools.isEmpty(proxyHost)) return;
+
+			int proxyPort = Constants.getInt(&quot;proxyPort&quot;);
+			String proxyHostsException = Constants.getString(&quot;proxyHostsException&quot;);
+			String proxyUser = Constants.getString(&quot;proxyUser&quot;);
+			String proxyPassword = Constants.getString(&quot;proxyPassword&quot;);
+
+			Logger.debug(WebJETProxySelector.class, &quot;Setting proxy for http client, url=&quot;+url);
+			if (Tools.isNotEmpty(proxyHostsException))
+			{
+				//ziskanie samotnej domeny z http://server.domena/nieco
+				if (url.indexOf(&quot;://&quot;)!=-1) url = url.substring(url.indexOf(&quot;://&quot;)+3);
+				if (url.indexOf(&quot;/&quot;)!=-1) url = url.substring(0, url.indexOf(&quot;/&quot;));
+				//odstranenie portu
+				if (url.indexOf(&quot;:&quot;)!=-1) url = url.substring(0, url.indexOf(&quot;:&quot;));
+
+				Logger.debug(WebJETProxySelector.class, &quot;Testing &quot;+(&quot;,&quot;+proxyHostsException+&quot;,&quot;)+&quot; vs &quot;+(&quot;,&quot;+url+&quot;,&quot;));
+
+				if ( (&quot;,&quot;+proxyHostsException+&quot;,&quot;).indexOf(&quot;,&quot;+url+&quot;,&quot;)!=-1 )
+				{
+					Logger.debug(WebJETProxySelector.class, &quot;Returning noproxy&quot;);
+					return;
+				}
+			}
+
+			Logger.debug(WebJETProxySelector.class, &quot;Returning proxy=&quot;+proxyHost+&quot;:&quot;+proxyPort+&quot; user=&quot;+proxyUser+&quot; pass=&quot;+proxyPassword);
+			if (Tools.isNotEmpty(proxyUser))
+			{
+				client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
+			}
+			else
+			{
+				client.getHostConfiguration().setProxy(proxyHost, proxyPort);
+			}
+		}
+		catch (Exception ex)
+		{
+			sk.iway.iwcm.Logger.error(ex);
+		}
+	}*/
+
+	@Override
+	public java.util.List&lt;Proxy&gt; select(URI uri)
+	{
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (uri == null)</span>
+		{
+<span class="nc" id="L202">			throw new IllegalArgumentException(&quot;URI can't be null.&quot;);</span>
+		}
+<span class="nc" id="L204">		Logger.debug(WebJETProxySelector.class, &quot;select: uri=&quot;+uri);</span>
+<span class="nc" id="L205">		String protocol = uri.getScheme();</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">		if (&quot;http&quot;.equalsIgnoreCase(protocol) || &quot;https&quot;.equalsIgnoreCase(protocol))</span>
+		{
+<span class="nc" id="L208">			List&lt;Proxy&gt; list = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (Tools.isNotEmpty(proxyHostsException))</span>
+			{
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if ( (&quot;,&quot;+proxyHostsException+&quot;,&quot;).indexOf(&quot;,&quot;+uri.getHost()+&quot;,&quot;)!=-1 )</span>
+				{
+<span class="nc" id="L214">					Logger.debug(WebJETProxySelector.class, &quot;Returning noproxy&quot;);</span>
+<span class="nc" id="L215">					list.add(Proxy.NO_PROXY);</span>
+<span class="nc" id="L216">					return list;</span>
+				}
+			}
+
+			Proxy p;
+<span class="nc bnc" id="L221" title="All 6 branches missed.">			if (&quot;https&quot;.equalsIgnoreCase(protocol) &amp;&amp; Tools.isNotEmpty(proxyHostHttps) &amp;&amp; proxyPortHttps&gt;1)</span>
+			{
+<span class="nc" id="L223">				p = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHostHttps, proxyPortHttps));</span>
+<span class="nc" id="L224">				Logger.debug(WebJETProxySelector.class, &quot;Returning proxy https=&quot;+proxyHostHttps+&quot;:&quot;+proxyPortHttps);</span>
+			}
+			else
+			{
+<span class="nc" id="L228">				p = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));</span>
+<span class="nc" id="L229">				Logger.debug(WebJETProxySelector.class, &quot;Returning proxy=&quot;+proxyHost+&quot;:&quot;+proxyPort);</span>
+			}
+<span class="nc" id="L231">			list.add(p);</span>
+
+<span class="nc" id="L233">			return list;</span>
+		}
+<span class="nc bnc" id="L235" title="All 6 branches missed.">		if (defsel != null &amp;&amp; uri.getPort()!=443 &amp;&amp; uri.getPort()!=80)</span>
+		{
+<span class="nc" id="L237">			Logger.debug(WebJETProxySelector.class, &quot;Returning default proxy&quot;);</span>
+<span class="nc" id="L238">			return defsel.select(uri);</span>
+		}
+		else
+		{
+<span class="nc" id="L242">			Logger.debug(WebJETProxySelector.class, &quot;Returning NO proxy&quot;);</span>
+<span class="nc" id="L243">			List&lt;Proxy&gt; l = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L244">			l.add(Proxy.NO_PROXY);</span>
+<span class="nc" id="L245">			return l;</span>
+		}
+	}
+
+	@Override
+	public void connectFailed(URI uri, SocketAddress sa, IOException ioe)
+	{
+<span class="nc" id="L252">		Logger.debug(WebJETProxySelector.class, &quot;Proxy connection fail:&quot;+ioe);</span>
+<span class="nc bnc" id="L253" title="All 6 branches missed.">		if (uri == null || sa == null || ioe == null)</span>
+		{
+<span class="nc" id="L255">			throw new IllegalArgumentException(&quot;Arguments can't be null.&quot;);</span>
+		}
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (defsel != null)</span>
+<span class="nc" id="L258">				defsel.connectFailed(uri, sa, ioe);</span>
+<span class="nc" id="L259">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

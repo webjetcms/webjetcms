@@ -1,0 +1,1187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">ImageInfo.java</span></div><h1>ImageInfo.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+
+/*
+ * ImageInfo.java
+ *
+ * Version 1.3
+ *
+ * A Java class to determine image width, height and color depth for
+ * a number of image file formats.
+ *
+ * Written by Marco Schmidt &lt;marcoschmidt@users.sourceforge.net&gt;
+ *
+ * Contributed to the Public Domain.
+ *
+ * Last modification 2002-06-17
+ */
+
+import java.io.DataInput;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Vector;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.upload.UploadedFile;
+
+/**
+ * Get file format, image resolution, number of bits per pixel and optionally
+ * number of images, comments and physical resolution from
+ * JPEG, GIF, BMP, PCX, PNG, IFF, RAS, PBM, PGM, PPM, PSD and SWF files
+ * (or input streams).
+ * &lt;p&gt;
+ * Use the class like this:
+ * &lt;pre&gt;
+ * ImageInfo ii = new ImageInfo();
+ * ii.setInput(in); // in can be InputStream or RandomAccessFile
+ * ii.setDetermineImageNumber(true); // default is false
+ * ii.setCollectComments(true); // default is false
+ * if (!ii.check()) {
+ *   Logger.error(this,&quot;Not a supported image file format.&quot;);
+ *   return;
+ * }
+ * Logger.println(ImageInfo.class,ii.getFormatName() + &quot;, &quot; + ii.getMimeType() +
+ *   &quot;, &quot; + ii.getWidth() + &quot; x &quot; + ii.getHeight() + &quot; pixels, &quot; +
+ *   ii.getBitsPerPixel() + &quot; bits per pixel, &quot; + ii.getNumberOfImages() +
+ *   &quot; image(s), &quot; + ii.getNumberOfComments() + &quot; comment(s).&quot;);
+ * &lt;/pre&gt;
+ * You can also use this class as a command line program.
+ * Call it with a number of image file names as parameters:
+ * &lt;pre&gt;
+ *   java ImageInfo *.jpg *.png *.gif
+ * &lt;/pre&gt;
+ * or call it without parameters and pipe data to it:
+ * &lt;pre&gt;
+ *   cat image.jpg | java ImageInfo
+ * &lt;/pre&gt;
+ * &lt;p&gt;
+ * Known limitations:
+ * &lt;ul&gt;
+ * &lt;li&gt;When the determination of the number of images is turned off, GIF bits
+ *  per pixel are only read from the global header.
+ *  For some GIFs, local palettes change this to a typically larger
+ *  value. To be certain to get the correct color depth, call
+ *  setDetermineImageNumber(true) before calling check().
+ *  The complete scan over the GIF file will take additional time.&lt;/li&gt;
+ * &lt;li&gt;Transparency information is not included in the bits per pixel count.
+ *  Actually, it was my decision not to include those bits, so it's a feature! ;-)&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * Requirements:
+ * &lt;ul&gt;
+ * &lt;li&gt;Java 1.1 or higher&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * The latest version can be found at &lt;a href=&quot;http://www.geocities.com/marcoschmidt.geo/image-info.html&quot;&gt;http://www.geocities.com/marcoschmidt.geo/image-info.html&lt;/a&gt;.
+ * &lt;p&gt;
+ * Written by &lt;a href=&quot;mailto:marcoschmidt@users.sourceforge.net&quot;&gt;Marco Schmidt&lt;/a&gt;.
+ * &lt;p&gt;
+ * This class is contributed to the Public Domain.
+ * Use it at your own risk.
+ * &lt;p&gt;
+ * Last modification 2002-06-17.
+ * &lt;p&gt;
+ * History:
+ * &lt;ul&gt;
+ * &lt;li&gt;&lt;strong&gt;2001-08-24&lt;/strong&gt; Initial version.&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2001-10-13&lt;/strong&gt; Added support for the file formats BMP and PCX.&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2001-10-16&lt;/strong&gt; Fixed bug in read(int[], int, int) that returned
+ * &lt;li&gt;&lt;strong&gt;2002-01-22&lt;/strong&gt; Added support for file formats Amiga IFF and Sun Raster (RAS).&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-01-24&lt;/strong&gt; Added support for file formats Portable Bitmap / Graymap / Pixmap (PBM, PGM, PPM) and Adobe Photoshop (PSD).
+ *   Added new method getMimeType() to return the MIME type associated with a particular file format.&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-03-15&lt;/strong&gt; Added support to recognize number of images in file. Only works with GIF.
+ *   Use {@link #setDetermineImageNumber} with &lt;code&gt;true&lt;/code&gt; as argument to identify animated GIFs
+ *   ({@link #getNumberOfImages()} will return a value larger than &lt;code&gt;1&lt;/code&gt;).&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-04-10&lt;/strong&gt; Fixed a bug in the feature 'determine number of images in animated GIF' introduced with version 1.1.
+ *   Thanks to Marcelo P. Lima for sending in the bug report.
+ *   Released as 1.1.1.&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-04-18&lt;/strong&gt; Added {@link #setCollectComments(boolean)}.
+ *  That new method lets the user specify whether textual comments are to be
+ *  stored in an internal list when encountered in an input image file / stream.
+ *  Added two methods to return the physical width and height of the image in dpi:
+ *   {@link #getPhysicalWidthDpi()} and {@link #getPhysicalHeightDpi()}.
+ *  If the physical resolution could not be retrieved, these methods return &lt;code&gt;-1&lt;/code&gt;.
+ *  &lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-04-23&lt;/strong&gt; Added support for the new properties physical resolution and
+ *   comments for some formats. Released as 1.2.&lt;/li&gt;
+ * &lt;li&gt;&lt;strong&gt;2002-06-17&lt;/strong&gt; Added support for SWF, sent in by Michael Aird.
+ *  Changed checkJpeg() so that other APP markers than APP0 will not lead to a failure anymore.
+ *  Released as 1.3.&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+public class ImageInfo {
+   /**
+    * Return value of {@link #getFormat()} for JPEG streams.
+    * ImageInfo can extract physical resolution and comments
+    * from JPEGs (only from APP0 headers).
+    * Only one image can be stored in a file.
+    */
+   public static final int FORMAT_JPEG = 0;
+
+   /**
+    * Return value of {@link #getFormat()} for GIF streams.
+    * ImageInfo can extract comments from GIFs and count the number
+    * of images (GIFs with more than one image are animations).
+    * If you know of a place where GIFs store the physical resolution
+    * of an image, please
+    * &lt;a href=&quot;http://www.geocities.com/marcoschmidt.geo/contact.html&quot;&gt;send me a mail&lt;/a&gt;!
+    */
+   public static final int FORMAT_GIF = 1;
+
+   /**
+    * Return value of {@link #getFormat()} for PNG streams.
+    * PNG only supports one image per file.
+    * Both physical resolution and comments can be stored with PNG,
+    * but ImageInfo is currently not able to extract those.
+    */
+   public static final int FORMAT_PNG = 2;
+
+   /**
+    * Return value of {@link #getFormat()} for BMP streams.
+    * BMP only supports one image per file.
+    * BMP does not allow for comments.
+    * The physical resolution can be stored.
+    * &lt;em&gt;The specification that I have says that the values must be
+    *  interpreted as dots per meter. However, given that I only
+    *  encounter typical dpi values like 72 or 300, I currently
+    *  consider those values dpi. Maybe someone can shed some light
+    *  on this, please send me a mail in that case.&lt;/em&gt;
+    */
+   public static final int FORMAT_BMP = 3;
+
+   /**
+    * Return value of {@link #getFormat()} for PCX streams.
+    * PCX does not allow for comments or more than one image per file.
+    * However, the physical resolution can be stored.
+    */
+   public static final int FORMAT_PCX = 4;
+
+   /**
+    * Return value of {@link #getFormat()} for IFF streams.
+    */
+   public static final int FORMAT_IFF = 5;
+
+   /**
+    * Return value of {@link #getFormat()} for RAS streams.
+    * Sun Raster allows for one image per file only and is not able to
+    * store physical resolution or comments.
+    */
+   public static final int FORMAT_RAS = 6;
+
+   /** Return value of {@link #getFormat()} for PBM streams. */
+   public static final int FORMAT_PBM = 7;
+
+   /** Return value of {@link #getFormat()} for PGM streams. */
+   public static final int FORMAT_PGM = 8;
+
+   /** Return value of {@link #getFormat()} for PPM streams. */
+   public static final int FORMAT_PPM = 9;
+
+   /** Return value of {@link #getFormat()} for PSD streams. */
+   public static final int FORMAT_PSD = 10;
+
+   /** Return value of {@link #getFormat()} for SWF (Shockwave) streams. */
+   public static final int FORMAT_SWF = 11;
+
+   /**
+    * The names of all supported file formats.
+    * The FORMAT_xyz int constants can be used as index values for
+    * this array.
+    */
+<span class="fc" id="L194">   private static final String[] FORMAT_NAMES =</span>
+      {&quot;JPEG&quot;, &quot;GIF&quot;, &quot;PNG&quot;, &quot;BMP&quot;, &quot;PCX&quot;,
+       &quot;IFF&quot;, &quot;RAS&quot;, &quot;PBM&quot;, &quot;PGM&quot;, &quot;PPM&quot;,
+       &quot;PSD&quot;, &quot;SWF&quot;};
+
+   /**
+    * The names of the MIME types for all supported file formats.
+    * The FORMAT_xyz int constants can be used as index values for
+    * this array.
+    */
+<span class="fc" id="L204">   private static final String[] MIME_TYPE_STRINGS =</span>
+      {&quot;image/jpeg&quot;, &quot;image/gif&quot;, &quot;image/png&quot;, &quot;image/bmp&quot;, &quot;image/pcx&quot;,
+       &quot;image/iff&quot;, &quot;image/ras&quot;, &quot;image/x-portable-bitmap&quot;, &quot;image/x-portable-graymap&quot;, &quot;image/x-portable-pixmap&quot;,
+       &quot;image/psd&quot;, &quot;application/x-shockwave-flash&quot;};
+
+   private int width;
+   private int height;
+   private int bitsPerPixel;
+   private int format;
+   private InputStream in;
+   private DataInput din;
+<span class="pc" id="L215">   private boolean collectComments = true;</span>
+   private Vector&lt;String&gt; comments;
+   private boolean determineNumberOfImages;
+   private int numberOfImages;
+   private int physicalHeightDpi;
+   private int physicalWidthDpi;
+   private int bitBuf;
+   private int bitPos;
+
+   public ImageInfo()
+<span class="fc" id="L225">   {</span>
+
+<span class="fc" id="L227">   }</span>
+
+   public ImageInfo(String url)
+<span class="nc" id="L230">   {</span>
+   	try
+		{
+<span class="nc" id="L233">   		InputStream is = new IwcmInputStream(Tools.getRealPath(url));</span>
+<span class="nc" id="L234">   		setInput(is);</span>
+<span class="nc" id="L235">   		check();</span>
+<span class="nc" id="L236">   		is.close();</span>
+		}
+<span class="nc" id="L238">   	catch (FileNotFoundException e)</span>
+   	{
+<span class="nc" id="L240">   		Logger.debug(ImageInfo.class, &quot;File &quot;+url+&quot; doesn't exists&quot;);</span>
+   	}
+<span class="nc" id="L242">		catch (Exception e)</span>
+		{
+<span class="nc" id="L244">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L245">		}</span>
+<span class="nc" id="L246">   }</span>
+
+   public ImageInfo(IwcmFile file)
+<span class="nc" id="L249">   {</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">      if (file == null) return;</span>
+      try
+      {
+<span class="nc" id="L253">         InputStream is = new IwcmInputStream(file.getAbsolutePath());</span>
+<span class="nc" id="L254">         setInput(is);</span>
+<span class="nc" id="L255">         check();</span>
+<span class="nc" id="L256">         is.close();</span>
+      }
+<span class="nc" id="L258">      catch (FileNotFoundException e)</span>
+      {
+<span class="nc" id="L260">         Logger.debug(ImageInfo.class, &quot;File &quot;+file.getAbsolutePath()+&quot; doesn't exists&quot;);</span>
+      }
+<span class="nc" id="L262">      catch (Exception e)</span>
+      {
+<span class="nc" id="L264">         sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L265">      }</span>
+<span class="nc" id="L266">   }</span>
+
+   public ImageInfo(UploadedFile file)
+<span class="nc" id="L269">   {</span>
+      try
+      {
+<span class="nc" id="L272">         setInput(file.getInputStream());</span>
+<span class="nc" id="L273">         check();</span>
+      }
+<span class="nc" id="L275">      catch (Exception e)</span>
+      {
+<span class="nc" id="L277">         sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L278">      }</span>
+<span class="nc" id="L279">   }</span>
+
+   public ImageInfo(InputStream inputStream)
+<span class="nc" id="L282">   {</span>
+   	try
+		{
+<span class="nc" id="L285">   		setInput(inputStream);</span>
+<span class="nc" id="L286">   		check();</span>
+		}
+<span class="nc" id="L288">		catch (Exception e)</span>
+		{
+<span class="nc" id="L290">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L291">		}</span>
+<span class="nc" id="L292">   }</span>
+
+   private void addComment(String s) {
+<span class="nc bnc" id="L295" title="All 2 branches missed.">      if (comments == null) {</span>
+<span class="nc" id="L296">         comments = new Vector&lt;&gt;();</span>
+      }
+<span class="nc" id="L298">      comments.addElement(s);</span>
+<span class="nc" id="L299">   }</span>
+
+   /**
+    * Call this method after you have provided an input stream or file
+    * using {@link #setInput(InputStream)} or {@link #setInput(DataInput)}.
+    * If true is returned, the file format was known and you information
+    * about its content can be retrieved using the various getXyz methods.
+    * @return if information could be retrieved from input
+    */
+   public boolean check() {
+<span class="fc" id="L309">      format = -1;</span>
+<span class="fc" id="L310">      width = -1;</span>
+<span class="fc" id="L311">      height = -1;</span>
+<span class="fc" id="L312">      bitsPerPixel = -1;</span>
+<span class="fc" id="L313">      numberOfImages = 1;</span>
+<span class="fc" id="L314">      physicalHeightDpi = -1;</span>
+<span class="fc" id="L315">      physicalWidthDpi = -1;</span>
+<span class="fc" id="L316">      comments = null;</span>
+      try {
+<span class="fc" id="L318">         int b1 = read() &amp; 0xff;</span>
+<span class="fc" id="L319">         int b2 = read() &amp; 0xff;</span>
+<span class="pc bpc" id="L320" title="3 of 4 branches missed.">         if (b1 == 0x47 &amp;&amp; b2 == 0x49) {</span>
+<span class="nc" id="L321">            return checkGif();</span>
+         }
+         else
+<span class="pc bpc" id="L324" title="3 of 4 branches missed.">         if (b1 == 0x89 &amp;&amp; b2 == 0x50) {</span>
+<span class="nc" id="L325">            return checkPng();</span>
+         }
+         else
+<span class="pc bpc" id="L328" title="2 of 4 branches missed.">         if (b1 == 0xff &amp;&amp; b2 == 0xd8) {</span>
+<span class="fc" id="L329">            return checkJpeg();</span>
+         }
+         else
+<span class="nc bnc" id="L332" title="All 4 branches missed.">         if (b1 == 0x42 &amp;&amp; b2 == 0x4d) {</span>
+<span class="nc" id="L333">            return checkBmp();</span>
+         }
+         else
+<span class="nc bnc" id="L336" title="All 4 branches missed.">         if (b1 == 0x0a &amp;&amp; b2 &lt; 0x06) {</span>
+<span class="nc" id="L337">            return checkPcx();</span>
+         }
+         else
+<span class="nc bnc" id="L340" title="All 4 branches missed.">         if (b1 == 0x46 &amp;&amp; b2 == 0x4f) {</span>
+<span class="nc" id="L341">            return checkIff();</span>
+         }
+         else
+<span class="nc bnc" id="L344" title="All 4 branches missed.">         if (b1 == 0x59 &amp;&amp; b2 == 0xa6) {</span>
+<span class="nc" id="L345">            return checkRas();</span>
+         }
+         else
+<span class="nc bnc" id="L348" title="All 6 branches missed.">         if (b1 == 0x50 &amp;&amp; b2 &gt;= 0x31 &amp;&amp; b2 &lt;= 0x36) {</span>
+<span class="nc" id="L349">            return checkPnm(b2 - '0');</span>
+         }
+         else
+<span class="nc bnc" id="L352" title="All 4 branches missed.">         if (b1 == 0x38 &amp;&amp; b2 == 0x42) {</span>
+<span class="nc" id="L353">            return checkPsd();</span>
+         }
+         else
+<span class="nc bnc" id="L356" title="All 4 branches missed.">         if (b1 == 0x46 &amp;&amp; b2 == 0x57) {</span>
+<span class="nc" id="L357">            return checkSwf();</span>
+         }
+         else {
+<span class="nc" id="L360">            return false;</span>
+         }
+<span class="nc" id="L362">      } catch (IOException ioe) {</span>
+<span class="nc" id="L363">         return false;</span>
+      }
+   }
+
+   private boolean checkBmp() throws IOException {
+<span class="nc" id="L368">      byte[] a = new byte[44];</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">      if (read(a) != a.length) {</span>
+<span class="nc" id="L370">         return false;</span>
+      }
+<span class="nc" id="L372">      width = getIntLittleEndian(a, 16);</span>
+<span class="nc" id="L373">      height = getIntLittleEndian(a, 20);</span>
+<span class="nc bnc" id="L374" title="All 4 branches missed.">      if (width &lt; 1 || height &lt; 1) {</span>
+<span class="nc" id="L375">         return false;</span>
+      }
+<span class="nc" id="L377">      bitsPerPixel = getShortLittleEndian(a, 26);</span>
+<span class="nc bnc" id="L378" title="All 12 branches missed.">      if (bitsPerPixel != 1 &amp;&amp; bitsPerPixel != 4 &amp;&amp;</span>
+          bitsPerPixel != 8 &amp;&amp; bitsPerPixel != 16 &amp;&amp;
+          bitsPerPixel != 24 &amp;&amp; bitsPerPixel != 32) {
+<span class="nc" id="L381">          return false;</span>
+      }
+<span class="nc" id="L383">      int x = getIntLittleEndian(a, 36);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">      if (x &gt; 0) {</span>
+<span class="nc" id="L385">         setPhysicalWidthDpi(x);</span>
+      }
+<span class="nc" id="L387">      int y = getIntLittleEndian(a, 40);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">      if (y &gt; 0) {</span>
+<span class="nc" id="L389">         setPhysicalHeightDpi(y);</span>
+      }
+<span class="nc" id="L391">      format = FORMAT_BMP;</span>
+<span class="nc" id="L392">      return true;</span>
+   }
+
+   private boolean checkGif() throws IOException {
+<span class="nc" id="L396">      final byte[] GIF_MAGIC_87A = {0x46, 0x38, 0x37, 0x61};</span>
+<span class="nc" id="L397">      final byte[] GIF_MAGIC_89A = {0x46, 0x38, 0x39, 0x61};</span>
+<span class="nc" id="L398">      byte[] a = new byte[11]; // 4 from the GIF signature + 7 from the global header</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">      if (read(a) != 11) {</span>
+<span class="nc" id="L400">         return false;</span>
+      }
+<span class="nc bnc" id="L402" title="All 2 branches missed.">      if ((!equals(a, 0, GIF_MAGIC_89A, 0, 4)) &amp;&amp;</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">         (!equals(a, 0, GIF_MAGIC_87A, 0, 4))) {</span>
+<span class="nc" id="L404">         return false;</span>
+      }
+<span class="nc" id="L406">      format = FORMAT_GIF;</span>
+<span class="nc" id="L407">      width = getShortLittleEndian(a, 4);</span>
+<span class="nc" id="L408">      height = getShortLittleEndian(a, 6);</span>
+<span class="nc" id="L409">      int flags = a[8] &amp; 0xff;</span>
+<span class="nc" id="L410">      bitsPerPixel = ((flags &gt;&gt; 4) &amp; 0x07) + 1;</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">      if (!determineNumberOfImages) {</span>
+<span class="nc" id="L412">         return true;</span>
+      }
+      // skip global color palette
+<span class="nc bnc" id="L415" title="All 2 branches missed.">      if ((flags &amp; 0x80) != 0) {</span>
+<span class="nc" id="L416">         int tableSize = (1 &lt;&lt; ((flags &amp; 7) + 1)) * 3;</span>
+<span class="nc" id="L417">         skip(tableSize);</span>
+      }
+<span class="nc" id="L419">      numberOfImages = 0;</span>
+      int blockType;
+      do
+      {
+<span class="nc" id="L423">         blockType = read();</span>
+<span class="nc bnc" id="L424" title="All 4 branches missed.">         switch(blockType)</span>
+         {
+            case(0x2c): // image separator
+            {
+<span class="nc bnc" id="L428" title="All 2 branches missed.">               if (read(a, 0, 9) != 9) {</span>
+<span class="nc" id="L429">                  return false;</span>
+               }
+<span class="nc" id="L431">               flags = a[8] &amp; 0xff;</span>
+<span class="nc" id="L432">               int localBitsPerPixel = (flags &amp; 0x07) + 1;</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">               if (localBitsPerPixel &gt; bitsPerPixel) {</span>
+<span class="nc" id="L434">                  bitsPerPixel = localBitsPerPixel;</span>
+               }
+<span class="nc bnc" id="L436" title="All 2 branches missed.">               if ((flags &amp; 0x80) != 0) {</span>
+<span class="nc" id="L437">                  skip((1 &lt;&lt; localBitsPerPixel) * 3);</span>
+               }
+<span class="nc" id="L439">               skip(1); // initial code length</span>
+               int n;
+               do
+               {
+<span class="nc" id="L443">                  n = read();</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">                  if (n &gt; 0) {</span>
+<span class="nc" id="L445">                     skip(n);</span>
+                  }
+                  else
+<span class="nc bnc" id="L448" title="All 2 branches missed.">                  if (n == -1) {</span>
+<span class="nc" id="L449">                     return false;</span>
+                  }
+               }
+<span class="nc bnc" id="L452" title="All 2 branches missed.">               while (n &gt; 0);</span>
+<span class="nc" id="L453">               numberOfImages++;</span>
+<span class="nc" id="L454">               break;</span>
+            }
+            case(0x21): // extension
+            {
+<span class="nc" id="L458">               int extensionType = read();</span>
+<span class="nc bnc" id="L459" title="All 4 branches missed.">               if (collectComments &amp;&amp; extensionType == 0xfe) {</span>
+<span class="nc" id="L460">                  StringBuilder sb = new StringBuilder();</span>
+                  int n;
+                  do
+                  {
+<span class="nc" id="L464">                     n = read();</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">                     if (n == -1) {</span>
+<span class="nc" id="L466">                        return false;</span>
+                     }
+<span class="nc bnc" id="L468" title="All 2 branches missed.">                     if (n &gt; 0) {</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">                        for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L470">                           int ch = read();</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">                           if (ch == -1) {</span>
+<span class="nc" id="L472">                              return false;</span>
+                           }
+<span class="nc" id="L474">                           sb.append((char)ch);</span>
+                        }
+                     }
+                  }
+<span class="nc bnc" id="L478" title="All 2 branches missed.">                  while (n &gt; 0);</span>
+<span class="nc" id="L479">               } else {</span>
+                  int n;
+                  do
+                  {
+<span class="nc" id="L483">                     n = read();</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">                     if (n &gt; 0) {</span>
+<span class="nc" id="L485">                        skip(n);</span>
+                     }
+                     else
+<span class="nc bnc" id="L488" title="All 2 branches missed.">                     if (n == -1) {</span>
+<span class="nc" id="L489">                        return false;</span>
+                     }
+                  }
+<span class="nc bnc" id="L492" title="All 2 branches missed.">                  while (n &gt; 0);</span>
+               }
+<span class="nc" id="L494">               break;</span>
+            }
+            case(0x3b): // end of file
+            {
+<span class="nc" id="L498">               break;</span>
+            }
+            default:
+            {
+<span class="nc" id="L502">               return false;</span>
+            }
+         }
+      }
+<span class="nc bnc" id="L506" title="All 2 branches missed.">      while (blockType != 0x3b);</span>
+<span class="nc" id="L507">      return true;</span>
+   }
+
+   private boolean checkIff() throws IOException {
+<span class="nc" id="L511">      byte[] a = new byte[10];</span>
+      // read remaining 2 bytes of file id, 4 bytes file size
+      // and 4 bytes IFF subformat
+<span class="nc bnc" id="L514" title="All 2 branches missed.">      if (read(a, 0, 10) != 10) {</span>
+<span class="nc" id="L515">         return false;</span>
+      }
+<span class="nc" id="L517">      final byte[] IFF_RM = {0x52, 0x4d};</span>
+<span class="nc bnc" id="L518" title="All 2 branches missed.">      if (!equals(a, 0, IFF_RM, 0, 2)) {</span>
+<span class="nc" id="L519">         return false;</span>
+      }
+<span class="nc" id="L521">      int type = getIntBigEndian(a, 6);</span>
+<span class="nc bnc" id="L522" title="All 4 branches missed.">      if (type != 0x494c424d &amp;&amp; // type must be ILBM...</span>
+          type != 0x50424d20) { // ...or PBM
+<span class="nc" id="L524">          return false;</span>
+      }
+      // loop chunks to find BMHD chunk
+      do {
+<span class="nc bnc" id="L528" title="All 2 branches missed.">         if (read(a, 0, 8) != 8) {</span>
+<span class="nc" id="L529">            return false;</span>
+         }
+<span class="nc" id="L531">         int chunkId = getIntBigEndian(a, 0);</span>
+<span class="nc" id="L532">         int size = getIntBigEndian(a, 4);</span>
+<span class="nc bnc" id="L533" title="All 2 branches missed.">         if ((size &amp; 1) == 1) {</span>
+<span class="nc" id="L534">            size++;</span>
+         }
+<span class="nc bnc" id="L536" title="All 2 branches missed.">         if (chunkId == 0x424d4844) { // BMHD chunk</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">            if (read(a, 0, 9) != 9) {</span>
+<span class="nc" id="L538">               return false;</span>
+            }
+<span class="nc" id="L540">            format = FORMAT_IFF;</span>
+<span class="nc" id="L541">            width = getShortBigEndian(a, 0);</span>
+<span class="nc" id="L542">            height = getShortBigEndian(a, 2);</span>
+<span class="nc" id="L543">            bitsPerPixel = a[8] &amp; 0xff;</span>
+<span class="nc bnc" id="L544" title="All 8 branches missed.">            return (width &gt; 0 &amp;&amp; height &gt; 0 &amp;&amp; bitsPerPixel &gt; 0 &amp;&amp; bitsPerPixel &lt; 33);</span>
+         } else {
+<span class="nc" id="L546">            skip(size);</span>
+         }
+<span class="nc" id="L548">      } while (true);</span>
+   }
+
+   private boolean checkJpeg() throws IOException {
+<span class="fc" id="L552">      byte[] data = new byte[12];</span>
+      while (true) {
+<span class="pc bpc" id="L554" title="1 of 2 branches missed.">         if (read(data, 0, 4) != 4) {</span>
+<span class="nc" id="L555">            return false;</span>
+         }
+<span class="fc" id="L557">         int marker = getShortBigEndian(data, 0);</span>
+<span class="fc" id="L558">         int size = getShortBigEndian(data, 2);</span>
+<span class="pc bpc" id="L559" title="1 of 2 branches missed.">         if ((marker &amp; 0xff00) != 0xff00) {</span>
+<span class="nc" id="L560">            return false; // not a valid marker</span>
+         }
+<span class="fc bfc" id="L562" title="All 2 branches covered.">         if (marker == 0xffe0) { // APPx</span>
+<span class="pc bpc" id="L563" title="1 of 2 branches missed.">            if (size &lt; 14) {</span>
+<span class="nc" id="L564">               return false; // APPx header must be larger than 14 bytes</span>
+            }
+<span class="pc bpc" id="L566" title="1 of 2 branches missed.">            if (read(data, 0, 12) != 12) {</span>
+<span class="nc" id="L567">               return false;</span>
+            }
+<span class="fc" id="L569">            final byte[] APP0_ID = {0x4a, 0x46, 0x49, 0x46, 0x00};</span>
+<span class="pc bpc" id="L570" title="1 of 2 branches missed.">            if (equals(APP0_ID, 0, data, 0, 5)) {</span>
+<span class="fc bfc" id="L571" title="All 2 branches covered.">               if (data[7] == 1) {</span>
+<span class="fc" id="L572">                  setPhysicalWidthDpi(getShortBigEndian(data, 8));</span>
+<span class="fc" id="L573">                  setPhysicalHeightDpi(getShortBigEndian(data, 10));</span>
+               }
+               else
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">               if (data[7] == 2) {</span>
+<span class="nc" id="L577">                  int x = getShortBigEndian(data, 8);</span>
+<span class="nc" id="L578">                  int y = getShortBigEndian(data, 10);</span>
+<span class="nc" id="L579">                  setPhysicalWidthDpi((int)(x * 2.54f));</span>
+<span class="nc" id="L580">                  setPhysicalHeightDpi((int)(y * 2.54f));</span>
+               }
+            }
+<span class="fc" id="L583">            skip(size - 14);</span>
+<span class="fc" id="L584">         }</span>
+         else
+<span class="pc bpc" id="L586" title="3 of 6 branches missed.">         if (collectComments &amp;&amp; size &gt; 2 &amp;&amp; marker == 0xfffe) { // comment</span>
+<span class="nc" id="L587">            size -= 2;</span>
+<span class="nc" id="L588">            byte[] chars = new byte[size];</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">            if (read(chars, 0, size) != size) {</span>
+<span class="nc" id="L590">               return false;</span>
+            }
+<span class="nc" id="L592">            String comment = new String(chars, &quot;iso-8859-1&quot;);</span>
+<span class="nc" id="L593">            comment = comment.trim();</span>
+<span class="nc" id="L594">            Logger.println(ImageInfo.class,comment);</span>
+<span class="nc" id="L595">            addComment(comment);</span>
+<span class="nc" id="L596">         }</span>
+         else
+<span class="pc bpc" id="L598" title="3 of 8 branches missed.">         if (marker &gt;= 0xffc0 &amp;&amp; marker &lt;= 0xffcf &amp;&amp; marker != 0xffc4 &amp;&amp; marker != 0xffc8) {</span>
+<span class="pc bpc" id="L599" title="1 of 2 branches missed.">            if (read(data, 0, 6) != 6) {</span>
+<span class="nc" id="L600">               return false;</span>
+            }
+<span class="fc" id="L602">            format = FORMAT_JPEG;</span>
+<span class="fc" id="L603">            bitsPerPixel = (data[0] &amp; 0xff) * (data[5] &amp; 0xff);</span>
+<span class="fc" id="L604">            width = getShortBigEndian(data, 3);</span>
+<span class="fc" id="L605">            height = getShortBigEndian(data, 1);</span>
+<span class="fc" id="L606">            return true;</span>
+         } else {
+<span class="fc" id="L608">            skip(size - 2);</span>
+         }
+<span class="fc" id="L610">      }</span>
+   }
+
+   private boolean checkPcx() throws IOException {
+<span class="nc" id="L614">      byte[] a = new byte[64];</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">      if (read(a) != a.length) {</span>
+<span class="nc" id="L616">         return false;</span>
+      }
+<span class="nc bnc" id="L618" title="All 2 branches missed.">      if (a[0] != 1) { // encoding, 1=RLE is only valid value</span>
+<span class="nc" id="L619">         return false;</span>
+      }
+      // width / height
+<span class="nc" id="L622">      int x1 = getShortLittleEndian(a, 2);</span>
+<span class="nc" id="L623">      int y1 = getShortLittleEndian(a, 4);</span>
+<span class="nc" id="L624">      int x2 = getShortLittleEndian(a, 6);</span>
+<span class="nc" id="L625">      int y2 = getShortLittleEndian(a, 8);</span>
+<span class="nc bnc" id="L626" title="All 8 branches missed.">      if (x1 &lt; 0 || x2 &lt; x1 || y1 &lt; 0 || y2 &lt; y1) {</span>
+<span class="nc" id="L627">         return false;</span>
+      }
+<span class="nc" id="L629">      width = x2 - x1 + 1;</span>
+<span class="nc" id="L630">      height = y2 - y1 + 1;</span>
+      // color depth
+<span class="nc" id="L632">      int bits = a[1];</span>
+<span class="nc" id="L633">      int planes = a[63];</span>
+<span class="nc bnc" id="L634" title="All 10 branches missed.">      if (planes == 1 &amp;&amp;</span>
+          (bits == 1 || bits == 2 || bits == 4 || bits == 8)) {
+         // paletted
+<span class="nc" id="L637">         bitsPerPixel = bits;</span>
+      } else
+<span class="nc bnc" id="L639" title="All 4 branches missed.">      if (planes == 3 &amp;&amp; bits == 8) {</span>
+         // RGB truecolor
+<span class="nc" id="L641">         bitsPerPixel = 24;</span>
+      } else {
+<span class="nc" id="L643">         return false;</span>
+      }
+<span class="nc" id="L645">      setPhysicalWidthDpi(getShortLittleEndian(a, 10));</span>
+<span class="nc" id="L646">      setPhysicalHeightDpi(getShortLittleEndian(a, 10));</span>
+<span class="nc" id="L647">      format = FORMAT_PCX;</span>
+<span class="nc" id="L648">      return true;</span>
+   }
+
+   private boolean checkPng() throws IOException {
+<span class="nc" id="L652">      final byte[] PNG_MAGIC = {0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};</span>
+<span class="nc" id="L653">      byte[] a = new byte[24];</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">      if (read(a) != 24) {</span>
+<span class="nc" id="L655">         return false;</span>
+      }
+<span class="nc bnc" id="L657" title="All 2 branches missed.">      if (!equals(a, 0, PNG_MAGIC, 0, 6)) {</span>
+<span class="nc" id="L658">         return false;</span>
+      }
+<span class="nc" id="L660">      format = FORMAT_PNG;</span>
+<span class="nc" id="L661">      width = getIntBigEndian(a, 14);</span>
+<span class="nc" id="L662">      height = getIntBigEndian(a, 18);</span>
+<span class="nc" id="L663">      bitsPerPixel = a[22] &amp; 0xff;</span>
+<span class="nc" id="L664">      int colorType = a[23] &amp; 0xff;</span>
+<span class="nc bnc" id="L665" title="All 4 branches missed.">      if (colorType == 2 || colorType == 6) {</span>
+<span class="nc" id="L666">         bitsPerPixel *= 3;</span>
+      }
+<span class="nc" id="L668">      return true;</span>
+   }
+
+   private boolean checkPnm(int id) throws IOException {
+<span class="nc bnc" id="L672" title="All 4 branches missed.">      if (id &lt; 1 || id &gt; 6) {</span>
+<span class="nc" id="L673">         return false;</span>
+      }
+<span class="nc" id="L675">      final int[] PNM_FORMATS = {FORMAT_PBM, FORMAT_PGM, FORMAT_PPM};</span>
+<span class="nc" id="L676">      format = PNM_FORMATS[(id - 1) % 3];</span>
+<span class="nc" id="L677">      boolean hasPixelResolution = false;</span>
+      String s;
+      while (true)
+      {
+<span class="nc" id="L681">         s = readLine();</span>
+<span class="nc bnc" id="L682" title="All 2 branches missed.">         if (s != null) {</span>
+<span class="nc" id="L683">            s = s.trim();</span>
+         }
+<span class="nc bnc" id="L685" title="All 4 branches missed.">         if (s == null || s.length() &lt; 1) {</span>
+<span class="nc" id="L686">            continue;</span>
+         }
+<span class="nc bnc" id="L688" title="All 2 branches missed.">         if (s.charAt(0) == '#') { // comment</span>
+<span class="nc bnc" id="L689" title="All 4 branches missed.">            if (collectComments &amp;&amp; s.length() &gt; 1) {</span>
+<span class="nc" id="L690">               addComment(s.substring(1));</span>
+            }
+            continue;
+         }
+<span class="nc bnc" id="L694" title="All 2 branches missed.">         if (!hasPixelResolution) { // split &quot;343 966&quot; into width=343, height=966</span>
+<span class="nc" id="L695">            int spaceIndex = s.indexOf(' ');</span>
+<span class="nc bnc" id="L696" title="All 2 branches missed.">            if (spaceIndex == -1) {</span>
+<span class="nc" id="L697">               return false;</span>
+            }
+<span class="nc" id="L699">            String widthString = s.substring(0, spaceIndex);</span>
+<span class="nc" id="L700">            spaceIndex = s.lastIndexOf(' ');</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">            if (spaceIndex == -1) {</span>
+<span class="nc" id="L702">               return false;</span>
+            }
+<span class="nc" id="L704">            String heightString = s.substring(spaceIndex + 1);</span>
+            try {
+<span class="nc" id="L706">               width = Integer.parseInt(widthString);</span>
+<span class="nc" id="L707">               height = Integer.parseInt(heightString);</span>
+<span class="nc" id="L708">            } catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L709">               return false;</span>
+<span class="nc" id="L710">            }</span>
+<span class="nc bnc" id="L711" title="All 4 branches missed.">            if (width &lt; 1 || height &lt; 1) {</span>
+<span class="nc" id="L712">               return false;</span>
+            }
+<span class="nc bnc" id="L714" title="All 2 branches missed.">            if (format == FORMAT_PBM) {</span>
+<span class="nc" id="L715">               bitsPerPixel = 1;</span>
+<span class="nc" id="L716">               return true;</span>
+            }
+<span class="nc" id="L718">            hasPixelResolution = true;</span>
+<span class="nc" id="L719">         }</span>
+         else
+         {
+            int maxSample;
+            try {
+<span class="nc" id="L724">               maxSample = Integer.parseInt(s);</span>
+<span class="nc" id="L725">            } catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L726">               return false;</span>
+<span class="nc" id="L727">            }</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">            if (maxSample &lt; 0) {</span>
+<span class="nc" id="L729">               return false;</span>
+            }
+<span class="nc bnc" id="L731" title="All 2 branches missed.">            for (int i = 0; i &lt; 25; i++) {</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">               if (maxSample &lt; (1 &lt;&lt; (i + 1))) {</span>
+<span class="nc" id="L733">                  bitsPerPixel = i + 1;</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">                  if (format == FORMAT_PPM) {</span>
+<span class="nc" id="L735">                     bitsPerPixel *= 3;</span>
+                  }
+<span class="nc" id="L737">                  return true;</span>
+               }
+            }
+<span class="nc" id="L740">            return false;</span>
+         }
+      }
+   }
+
+   private boolean checkPsd() throws IOException {
+<span class="nc" id="L746">      byte[] a = new byte[24];</span>
+<span class="nc bnc" id="L747" title="All 2 branches missed.">      if (read(a) != a.length) {</span>
+<span class="nc" id="L748">         return false;</span>
+      }
+<span class="nc" id="L750">      final byte[] PSD_MAGIC = {0x50, 0x53};</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">      if (!equals(a, 0, PSD_MAGIC, 0, 2)) {</span>
+<span class="nc" id="L752">         return false;</span>
+      }
+<span class="nc" id="L754">      format = FORMAT_PSD;</span>
+<span class="nc" id="L755">      width = getIntBigEndian(a, 16);</span>
+<span class="nc" id="L756">      height = getIntBigEndian(a, 12);</span>
+<span class="nc" id="L757">      int channels = getShortBigEndian(a, 10);</span>
+<span class="nc" id="L758">      int depth = getShortBigEndian(a, 20);</span>
+<span class="nc" id="L759">      bitsPerPixel = channels * depth;</span>
+<span class="nc bnc" id="L760" title="All 8 branches missed.">      return (width &gt; 0 &amp;&amp; height &gt; 0 &amp;&amp; bitsPerPixel &gt; 0 &amp;&amp; bitsPerPixel &lt;= 64);</span>
+   }
+
+   private boolean checkRas() throws IOException {
+<span class="nc" id="L764">      byte[] a = new byte[14];</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">      if (read(a) != a.length) {</span>
+<span class="nc" id="L766">         return false;</span>
+      }
+<span class="nc" id="L768">      final byte[] RAS_MAGIC = {0x6a, (byte)0x95};</span>
+<span class="nc bnc" id="L769" title="All 2 branches missed.">      if (!equals(a, 0, RAS_MAGIC, 0, 2)) {</span>
+<span class="nc" id="L770">         return false;</span>
+      }
+<span class="nc" id="L772">      format = FORMAT_RAS;</span>
+<span class="nc" id="L773">      width = getIntBigEndian(a, 2);</span>
+<span class="nc" id="L774">      height = getIntBigEndian(a, 6);</span>
+<span class="nc" id="L775">      bitsPerPixel = getIntBigEndian(a, 10);</span>
+<span class="nc bnc" id="L776" title="All 8 branches missed.">      return (width &gt; 0 &amp;&amp; height &gt; 0 &amp;&amp; bitsPerPixel &gt; 0 &amp;&amp; bitsPerPixel &lt;= 24);</span>
+   }
+
+   // Written by Michael Aird.
+   private boolean checkSwf() throws IOException {
+      //get rid of the last byte of the signature, the byte of the version and 4 bytes of the size
+<span class="nc" id="L782">      byte[] a = new byte[6];</span>
+<span class="nc bnc" id="L783" title="All 2 branches missed.">      if (read(a) != a.length) {</span>
+<span class="nc" id="L784">         return false;</span>
+      }
+<span class="nc" id="L786">      format = FORMAT_SWF;</span>
+<span class="nc" id="L787">      int bitSize = (int)readUBits( 5 );</span>
+      //int minX = (int)readSBits( bitSize );
+<span class="nc" id="L789">      int maxX = readSBits( bitSize );</span>
+      //int minY = (int)readSBits( bitSize );
+<span class="nc" id="L791">      int maxY = readSBits( bitSize );</span>
+<span class="nc" id="L792">      width = maxX/20; //cause we're in twips</span>
+<span class="nc" id="L793">      height = maxY/20;  //cause we're in twips</span>
+<span class="nc" id="L794">      setPhysicalWidthDpi(72);</span>
+<span class="nc" id="L795">      setPhysicalHeightDpi(72);</span>
+<span class="nc bnc" id="L796" title="All 4 branches missed.">      return (width &gt; 0 &amp;&amp; height &gt; 0);</span>
+   }
+
+   private boolean equals(byte[] a1, int offs1, byte[] a2, int offs2, int num) {
+<span class="fc bfc" id="L800" title="All 2 branches covered.">      while (num-- &gt; 0) {</span>
+<span class="pc bpc" id="L801" title="1 of 2 branches missed.">         if (a1[offs1++] != a2[offs2++]) {</span>
+<span class="nc" id="L802">            return false;</span>
+         }
+      }
+<span class="fc" id="L805">      return true;</span>
+   }
+
+   /**
+    * If {@link #check()} was successful, returns the image's number of bits per pixel.
+    * Does not include transparency information like the alpha channel.
+    * @return number of bits per image pixel
+    */
+   public int getBitsPerPixel() {
+<span class="nc" id="L814">      return bitsPerPixel;</span>
+   }
+
+   /**
+    * Returns the index'th comment retrieved from the image.
+    * @throws IllegalArgumentException if index is smaller than 0 or larger than or equal
+    * to the number of comments retrieved
+    * @see #getNumberOfComments
+    */
+   public String getComment(int index) {
+<span class="nc bnc" id="L824" title="All 6 branches missed.">      if (comments == null || index &lt; 0 || index &gt;= comments.size()) {</span>
+<span class="nc" id="L825">         throw new IllegalArgumentException(&quot;Not a valid comment index: &quot; + index);</span>
+      }
+<span class="nc" id="L827">      return (String)comments.elementAt(index);</span>
+   }
+
+   /**
+    * If {@link #check()} was successful, returns the image format as one
+    * of the FORMAT_xyz constants from this class.
+    * Use {@link #getFormatName()} to get a textual description of the file format.
+    * @return file format as a FORMAT_xyz constant
+    */
+   public int getFormat() {
+<span class="nc" id="L837">      return format;</span>
+   }
+
+   /**
+    * If {@link #check()} was successful, returns the image format's name.
+    * Use {@link #getFormat()} to get a unique number.
+    * @return file format name
+    */
+   public String getFormatName() {
+<span class="nc bnc" id="L846" title="All 4 branches missed.">      if (format &gt;= 0 &amp;&amp; format &lt; FORMAT_NAMES.length) {</span>
+<span class="nc" id="L847">         return FORMAT_NAMES[format];</span>
+      } else {
+<span class="nc" id="L849">         return &quot;?&quot;;</span>
+      }
+   }
+
+   /**
+    * If {@link #check()} was successful, returns one the image's vertical
+    * resolution in pixels.
+    * @return image height in pixels
+    */
+   public int getHeight() {
+<span class="fc" id="L859">      return height;</span>
+   }
+
+   private int getIntBigEndian(byte[] a, int offs) {
+<span class="nc" id="L863">      return</span>
+         (a[offs] &amp; 0xff) &lt;&lt; 24 |
+         (a[offs + 1] &amp; 0xff) &lt;&lt; 16 |
+         (a[offs + 2] &amp; 0xff) &lt;&lt; 8 |
+         a[offs + 3] &amp; 0xff;
+   }
+
+   private int getIntLittleEndian(byte[] a, int offs) {
+<span class="nc" id="L871">      return</span>
+         (a[offs + 3] &amp; 0xff) &lt;&lt; 24 |
+         (a[offs + 2] &amp; 0xff) &lt;&lt; 16 |
+         (a[offs + 1] &amp; 0xff) &lt;&lt; 8 |
+         a[offs] &amp; 0xff;
+   }
+
+   /**
+    * If {@link #check()} was successful, returns a String with the
+    * MIME type of the format.
+    * @return MIME type, e.g. &lt;code&gt;image/jpeg&lt;/code&gt;
+    */
+   public String getMimeType() {
+<span class="nc bnc" id="L884" title="All 4 branches missed.">      if (format &gt;= 0 &amp;&amp; format &lt; MIME_TYPE_STRINGS.length) {</span>
+<span class="nc" id="L885">         return MIME_TYPE_STRINGS[format];</span>
+      } else {
+<span class="nc" id="L887">         return null;</span>
+      }
+   }
+
+   /**
+    * If {@link #check()} was successful and {@link #setCollectComments(boolean)} was called with
+    * &lt;code&gt;true&lt;/code&gt; as argument, returns the number of comments retrieved
+    * from the input image stream / file.
+    * Any number &amp;gt;= 0 and smaller than this number of comments is then a
+    * valid argument for the {@link #getComment(int)} method.
+    * @return number of comments retrieved from input image
+    */
+   public int getNumberOfComments()
+   {
+<span class="nc bnc" id="L901" title="All 2 branches missed.">      if (comments == null) {</span>
+<span class="nc" id="L902">         return 0;</span>
+      } else {
+<span class="nc" id="L904">         return comments.size();</span>
+      }
+   }
+
+   /**
+    * Returns the number of images in the examined file.
+    * Assumes that &lt;code&gt;setDetermineImageNumber(true);&lt;/code&gt; was called before
+    * a successful call to {@link #check()}.
+    * This value can currently be only different from &lt;code&gt;1&lt;/code&gt; for GIF images.
+    * @return number of images in file
+    */
+   public int getNumberOfImages()
+   {
+<span class="nc" id="L917">      return numberOfImages;</span>
+   }
+
+   /**
+    * Returns the physical height of this image in dots per inch (dpi).
+    * Assumes that {@link #check()} was successful.
+    * Returns &lt;code&gt;-1&lt;/code&gt; on failure.
+    * @return physical height (in dpi)
+    * @see #getPhysicalWidthDpi()
+    * @see #getPhysicalHeightInch()
+    */
+   public int getPhysicalHeightDpi() {
+<span class="nc" id="L929">      return physicalHeightDpi;</span>
+   }
+
+   /**
+    * If {@link #check()} was successful, returns the physical width of this image in dpi (dots per inch)
+    * or -1 if no value could be found.
+    * @return physical height (in dpi)
+    * @see #getPhysicalHeightDpi()
+    * @see #getPhysicalWidthDpi()
+    * @see #getPhysicalWidthInch()
+    */
+   public float getPhysicalHeightInch() {
+<span class="nc" id="L941">      int h = getHeight();</span>
+<span class="nc" id="L942">      int ph = getPhysicalHeightDpi();</span>
+<span class="nc bnc" id="L943" title="All 4 branches missed.">      if (h &gt; 0 &amp;&amp; ph &gt; 0) {</span>
+<span class="nc" id="L944">         return ((float)h) / ((float)ph);</span>
+      } else {
+<span class="nc" id="L946">         return -1.0f;</span>
+      }
+   }
+
+   /**
+    * If {@link #check()} was successful, returns the physical width of this image in dpi (dots per inch)
+    * or -1 if no value could be found.
+    * @return physical width (in dpi)
+    * @see #getPhysicalHeightDpi()
+    * @see #getPhysicalWidthInch()
+    * @see #getPhysicalHeightInch()
+    */
+   public int getPhysicalWidthDpi() {
+<span class="nc" id="L959">      return physicalWidthDpi;</span>
+   }
+
+   /**
+    * Returns the physical width of an image in inches, or
+    * &lt;code&gt;-1.0f&lt;/code&gt; if width information is not available.
+    * Assumes that {@link #check} has been called successfully.
+    * @return physical width in inches or &lt;code&gt;-1.0f&lt;/code&gt; on failure
+    * @see #getPhysicalWidthDpi
+    * @see #getPhysicalHeightInch
+    */
+   public float getPhysicalWidthInch() {
+<span class="nc" id="L971">      int w = getWidth();</span>
+<span class="nc" id="L972">      int pw = getPhysicalWidthDpi();</span>
+<span class="nc bnc" id="L973" title="All 4 branches missed.">      if (w &gt; 0 &amp;&amp; pw &gt; 0) {</span>
+<span class="nc" id="L974">         return ((float)w) / ((float)pw);</span>
+      } else {
+<span class="nc" id="L976">         return -1.0f;</span>
+      }
+   }
+
+   private int getShortBigEndian(byte[] a, int offs) {
+<span class="fc" id="L981">      return</span>
+         (a[offs] &amp; 0xff) &lt;&lt; 8 |
+         (a[offs + 1] &amp; 0xff);
+   }
+
+   private int getShortLittleEndian(byte[] a, int offs) {
+<span class="nc" id="L987">      return (a[offs] &amp; 0xff) | (a[offs + 1] &amp; 0xff) &lt;&lt; 8;</span>
+   }
+
+   /**
+    * If {@link #check()} was successful, returns one the image's horizontal
+    * resolution in pixels.
+    * @return image width in pixels
+    */
+   public int getWidth() {
+<span class="fc" id="L996">      return width;</span>
+   }
+
+   private int read() throws IOException {
+<span class="pc bpc" id="L1000" title="1 of 2 branches missed.">      if (in != null) {</span>
+<span class="fc" id="L1001">         return in.read();</span>
+      } else {
+<span class="nc" id="L1003">         return din.readByte();</span>
+      }
+   }
+
+   private int read(byte[] a) throws IOException {
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">      if (in != null) {</span>
+<span class="nc" id="L1009">         return in.read(a);</span>
+      } else {
+<span class="nc" id="L1011">         din.readFully(a);</span>
+<span class="nc" id="L1012">         return a.length;</span>
+      }
+   }
+
+   private int read(byte[] a, int offset, int num) throws IOException {
+<span class="pc bpc" id="L1017" title="1 of 2 branches missed.">      if (in != null) {</span>
+<span class="fc" id="L1018">         return in.read(a, offset, num);</span>
+      } else {
+<span class="nc" id="L1020">         din.readFully(a, offset, num);</span>
+<span class="nc" id="L1021">         return num;</span>
+      }
+   }
+
+   private String readLine() throws IOException {
+<span class="nc" id="L1026">      return readLine(new StringBuffer());</span>
+   }
+
+   private String readLine(StringBuffer sb) throws IOException {
+      boolean finished;
+      do {
+<span class="nc" id="L1032">         int value = read();</span>
+<span class="nc bnc" id="L1033" title="All 4 branches missed.">         finished = (value == -1 || value == 10);</span>
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">         if (!finished) {</span>
+<span class="nc" id="L1035">            sb.append((char)value);</span>
+         }
+<span class="nc bnc" id="L1037" title="All 2 branches missed.">      } while (!finished);</span>
+<span class="nc" id="L1038">      return sb.toString();</span>
+   }
+
+    /**
+     * Read an unsigned value from the given number of bits
+     */
+   public long readUBits( int numBits ) throws IOException
+   {
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">      if (numBits == 0) {</span>
+<span class="nc" id="L1047">         return 0;</span>
+      }
+<span class="nc" id="L1049">      int bitsLeft = numBits;</span>
+<span class="nc" id="L1050">      long result = 0;</span>
+<span class="nc bnc" id="L1051" title="All 2 branches missed.">      if (bitPos == 0) { //no value in the buffer - read a byte</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">         if (in != null) {</span>
+<span class="nc" id="L1053">            bitBuf = in.read();</span>
+         } else {
+<span class="nc" id="L1055">            bitBuf = din.readByte();</span>
+         }
+<span class="nc" id="L1057">         bitPos = 8;</span>
+      }
+
+       while( true )
+        {
+<span class="nc" id="L1062">            int shift = bitsLeft - bitPos;</span>
+<span class="nc bnc" id="L1063" title="All 2 branches missed.">            if( shift &gt; 0 )</span>
+            {
+                // Consume the entire buffer
+<span class="nc" id="L1066">                result |= bitBuf &lt;&lt; shift;</span>
+<span class="nc" id="L1067">                bitsLeft -= bitPos;</span>
+
+                // Get the next byte from the input stream
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">                if (in != null) {</span>
+<span class="nc" id="L1071">                  bitBuf = in.read();</span>
+                } else {
+<span class="nc" id="L1073">                  bitBuf = din.readByte();</span>
+                }
+<span class="nc" id="L1075">                bitPos = 8;</span>
+            }
+            else
+            {
+                // Consume a portion of the buffer
+<span class="nc" id="L1080">                result |= bitBuf &gt;&gt; -shift;</span>
+<span class="nc" id="L1081">                bitPos -= bitsLeft;</span>
+<span class="nc" id="L1082">                bitBuf &amp;= 0xff &gt;&gt; (8 - bitPos);	// mask off the consumed bits</span>
+
+<span class="nc" id="L1084">                return result;</span>
+            }
+<span class="nc" id="L1086">        }</span>
+    }
+
+        /**
+     * Read a signed value from the given number of bits
+     */
+    private int readSBits( int numBits ) throws IOException
+    {
+        // Get the number as an unsigned value.
+<span class="nc" id="L1095">        long uBits = readUBits( numBits );</span>
+
+        // Is the number negative?
+<span class="nc bnc" id="L1098" title="All 2 branches missed.">        if( ( uBits &amp; (1L &lt;&lt; (numBits - 1))) != 0 )</span>
+        {
+            // Yes. Extend the sign.
+<span class="nc" id="L1101">            uBits |= -1L &lt;&lt; numBits;</span>
+        }
+
+<span class="nc" id="L1104">        return (int)uBits;</span>
+    }
+
+   /**
+    * Reset the bit buffer
+    */
+   public void synchBits()
+   {
+<span class="nc" id="L1112">      bitBuf = 0;</span>
+<span class="nc" id="L1113">      bitPos = 0;</span>
+<span class="nc" id="L1114">   }</span>
+
+   /**
+    * Specify whether textual comments are supposed to be extracted from input.
+    * Default is &lt;code&gt;false&lt;/code&gt;.
+    * If enabled, comments will be added to an internal list.
+    * @param newValue if &lt;code&gt;true&lt;/code&gt;, this class will read comments
+    * @see #getNumberOfComments
+    * @see #getComment
+    */
+   public void setCollectComments(boolean newValue)
+   {
+<span class="nc" id="L1126">      collectComments = newValue;</span>
+<span class="nc" id="L1127">   }</span>
+
+   /**
+    * Specify whether the number of images in a file is to be
+    * determined - default is &lt;code&gt;false&lt;/code&gt;.
+    * This is a special option because some file formats require running over
+    * the entire file to find out the number of images, a rather time-consuming
+    * task.
+    * Not all file formats support more than one image.
+    * If this method is called with &lt;code&gt;true&lt;/code&gt; as argument,
+    * the actual number of images can be queried via
+    * {@link #getNumberOfImages()} after a successful call to
+    * {@link #check()}.
+    * @param newValue will the number of images be determined?
+    * @see #getNumberOfImages
+    */
+   public void setDetermineImageNumber(boolean newValue)
+   {
+<span class="nc" id="L1145">      determineNumberOfImages = newValue;</span>
+<span class="nc" id="L1146">   }</span>
+
+   /**
+    * Set the input stream to the argument stream (or file).
+    * Note that {@link java.io.RandomAccessFile} implements
+    * {@link java.io.DataInput}.
+    * @param dataInput the input stream to read from
+    */
+   public void setInput(DataInput dataInput) {
+<span class="nc" id="L1155">      din = dataInput;</span>
+<span class="nc" id="L1156">      in = null;</span>
+<span class="nc" id="L1157">   }</span>
+
+   /**
+    * Set the input stream to the argument stream (or file).
+    * @param inputStream the input stream to read from
+    */
+   public void setInput(InputStream inputStream) {
+<span class="fc" id="L1164">      in = inputStream;</span>
+<span class="fc" id="L1165">      din = null;</span>
+<span class="fc" id="L1166">   }</span>
+
+   private void setPhysicalHeightDpi(int newValue) {
+<span class="fc" id="L1169">      physicalWidthDpi = newValue;</span>
+<span class="fc" id="L1170">   }</span>
+
+   private void setPhysicalWidthDpi(int newValue) {
+<span class="fc" id="L1173">      physicalHeightDpi = newValue;</span>
+<span class="fc" id="L1174">   }</span>
+
+   private void skip(int num) throws IOException {
+<span class="fc" id="L1177">   	long count=0;</span>
+<span class="pc bpc" id="L1178" title="1 of 2 branches missed.">   	if (in != null) {</span>
+<span class="fc" id="L1179">   		count = in.skip(num);	//kvoli FindBugs - warning SR_NOT_CHECKED</span>
+<span class="fc" id="L1180">      	Logger.debug(this, &quot;Skiped IN: &quot;+count);</span>
+      } else {
+<span class="nc" id="L1182">      	count = din.skipBytes(num);</span>
+<span class="nc" id="L1183">      	Logger.debug(this, &quot;Skiped DIN: &quot;+count);</span>
+      }
+<span class="fc" id="L1185">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

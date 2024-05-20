@@ -174,6 +174,8 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-notifications")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/insert-script")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/default")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-changed-webpages")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-awaiting-publish-webpages")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-list")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-groups-list")),

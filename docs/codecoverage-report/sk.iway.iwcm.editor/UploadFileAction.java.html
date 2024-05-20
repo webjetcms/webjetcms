@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadFileAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">UploadFileAction.java</span></div><h1>UploadFileAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.struts.util.ResponseUtils;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.gallery.ImageInfo;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.upload.UploadedFile;
+
+/**
+ *  Description of the Class
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.12 $
+ *@created      Piatok, 2002, mďż˝j 17
+ *@modified     $Date: 2004/03/12 10:16:36 $
+ */
+public class UploadFileAction {
+
+	private static final String FILE_NOT_ALLOWED = &quot;/admin/FCKeditor/editor/dialog/editor_upload_iframe.jsp&quot;;
+
+	private UploadFileAction() {
+		//utility class
+	}
+
+	/**
+	 * Save image that was drag&amp;drop inside opened web page editor (uploadType=ckeditor).
+	 * @param request
+	 * @param response
+	 * @param multipartFile
+	 * @return
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+	public static String execute(HttpServletRequest request, HttpServletResponse response, CommonsMultipartFile multipartFile) throws IOException {
+
+<span class="nc" id="L64">		HttpSession session = request.getSession();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (session == null) return &quot;logon_admin&quot;;</span>
+
+<span class="nc" id="L67">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+		//povolenie pre blog alebo wiki
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (UsersDB.checkUserPerms(user, Constants.getString(&quot;webpagesFunctionsPerms&quot;)) == false) return &quot;logon_admin&quot;;</span>
+
+<span class="nc" id="L71">		int groupId = Tools.getIntValue(request.getParameter(&quot;groupId&quot;), -1);</span>
+<span class="nc" id="L72">		int docId = Tools.getIntValue(request.getParameter(&quot;docId&quot;), -1);</span>
+<span class="nc" id="L73">		String title = request.getParameter(&quot;title&quot;);</span>
+<span class="nc" id="L74">		FileItem file = multipartFile.getFileItem();</span>
+<span class="nc" id="L75">		String fileURL = &quot;&quot;;</span>
+<span class="nc" id="L76">		String realPath = null;</span>
+<span class="nc" id="L77">		String fileName = null;</span>
+		//Size must be taken from CommonsMultipartFile !! - CommonsMultipartFile.getFileItem().getSize() isn't firht value
+<span class="nc" id="L79">		long fileSize = multipartFile.getSize();</span>
+
+		//Check file size for upload, upload type id fix ckeditor, we dont use this method for other upload type's
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (!isFileAllowed(&quot;ckeditor&quot;, file, user, request, fileSize)) return FILE_NOT_ALLOWED;</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (file != null) {</span>
+			//Retrieve the file name
+<span class="nc" id="L86">			fileName = file.getName().trim();</span>
+
+			//Check file name
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (!Tools.isEmpty(fileName)) {</span>
+
+<span class="nc" id="L91">				String extension = FileTools.getFileExtension(fileName);</span>
+<span class="nc" id="L92">				ImageInfo ii = new ImageInfo(file.getInputStream());</span>
+<span class="nc" id="L93">				Logger.debug(UploadFileAction.class, &quot;ckeditor upload, extension=&quot; + extension + &quot; ii=&quot; + ii.getFormatName());</span>
+
+<span class="nc" id="L95">				String extensionII = ii.getFormatName();</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">				if (extensionII != null &amp;&amp; extensionII.length() &gt; 2) {</span>
+					//musime spravit podla ImageInfo lebo Word klame ze posiela png ale realne je obrazok jpg
+<span class="nc" id="L98">					extensionII = extensionII.toLowerCase();</span>
+<span class="nc" id="L99">					extensionII = Tools.replace(extensionII, &quot;jpeg&quot;, &quot;jpg&quot;);</span>
+<span class="nc" id="L100">					extension = extensionII;</span>
+				}
+
+<span class="nc bnc" id="L103" title="All 4 branches missed.">				if (fileName.equals(&quot;image.png&quot;) || fileName.equals(&quot;image.jpg&quot;)) {</span>
+					//jedna sa o pasted grafiku z nejakeho programu
+<span class="nc" id="L105">					fileName = &quot;image-&quot; + PkeyGenerator.getNextValue(&quot;ckeditor_upload_counter&quot;) + &quot;.&quot; + extension;</span>
+				}
+
+				//adresar odvodime podla posledne editovanej stranky
+<span class="nc" id="L109">				Logger.debug(UploadFileAction.class, &quot;UPLOAD docId=&quot;+docId+&quot; groupId=&quot;+groupId);</span>
+
+<span class="nc" id="L111">				String subDir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, null);</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">				if (ContextFilter.isRunning(request) &amp;&amp; subDir.startsWith(request.getContextPath()))</span>
+<span class="nc" id="L113">					subDir = ContextFilter.removeContextPath(request.getContextPath(), subDir);</span>
+
+<span class="nc" id="L115">				IwcmFile f = IwcmFile.fromVirtualPath(Constants.getString(&quot;imagesRootDir&quot;) + subDir, fileName);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if(f.exists())</span>
+<span class="nc" id="L117">					fileName = PkeyGenerator.getNextValue(&quot;ckeditor_upload_counter&quot;)+&quot;_&quot;+fileName;</span>
+
+<span class="nc" id="L119">				realPath = Tools.getRealPath(Constants.getString(&quot;imagesRootDir&quot;) + subDir) + File.separatorChar + fileName;</span>
+<span class="nc" id="L120">				fileURL = Constants.getString(&quot;imagesRootDir&quot;) + subDir + &quot;/&quot; + fileName;</span>
+
+<span class="nc bnc" id="L122" title="All 4 branches missed.">				if (realPath != null &amp;&amp; fileSize &gt; 0) {</span>
+<span class="nc" id="L123">					IwcmFile f2 = new IwcmFile(realPath);</span>
+
+					//Save main file
+<span class="nc" id="L126">					IwcmFsDB.writeFiletoDest(file.getInputStream(), new File(f2.getPath()), (int)fileSize);</span>
+
+<span class="nc" id="L128">					Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;file upload: &quot; + realPath, -1, -1);</span>
+				}
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">				if (GalleryDB.isGalleryFolder(Constants.getString(&quot;imagesRootDir&quot;) + subDir)) {</span>
+					//v realpath mas cestu k obrazku kde jeOriginal
+					//ten nechas ako je
+					//ale vytvoris jeho novu kopiu
+<span class="nc" id="L135">					GalleryDB.resizePicture(realPath, Constants.getString(&quot;imagesRootDir&quot;) + subDir);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">				} else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;)) {</span>
+<span class="nc" id="L137">					GalleryDB.setImage(Constants.getString(&quot;imagesRootDir&quot;) + subDir, fileName);</span>
+				}
+
+<span class="nc" id="L140">				UploadFileAction.reflectionLoader(request, user, fileURL);</span>
+			}
+
+<span class="nc bnc" id="L143" title="All 4 branches missed.">			if (fileURL != null &amp;&amp; fileName != null) {</span>
+<span class="nc" id="L144">				response.setStatus(HttpServletResponse.SC_OK);</span>
+<span class="nc" id="L145">				PrintWriter out = response.getWriter();</span>
+
+<span class="nc" id="L147">				fileURL = request.getContextPath() + fileURL;</span>
+<span class="nc" id="L148">				fileURL = Tools.replace(fileURL, &quot;//&quot;, &quot;/&quot;);</span>
+
+<span class="nc" id="L150">				out.print(&quot;{\&quot;fileName\&quot;:\&quot;&quot;+ResponseUtils.filter(fileName)+&quot;\&quot;,\&quot;uploaded\&quot;:1,\&quot;url\&quot;:\&quot;&quot;+ Tools.replace(fileURL, &quot;/&quot;, &quot;\\/&quot;) +&quot;\&quot;,\&quot;error\&quot;:{\&quot;number\&quot;&quot; +</span>
+						&quot;:201,\&quot;message\&quot;:\&quot;A file with the same name is already available. The uploaded file was renamed to \\\&quot;847&quot; +
+						&quot;(2).jpg\\\&quot;.\&quot;}}&quot;);
+			}
+		}
+
+<span class="nc" id="L156">		return null;</span>
+	}
+
+	/**
+	 * Check is the file is allowed
+	 * @param uploadType
+	 * @param file
+	 * @param user
+	 * @param request
+	 * @param fileSize
+	 * @return
+	 */
+	public static boolean isFileAllowed(String uploadType, FileItem file, Identity user, HttpServletRequest request, Long fileSize) {
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (file == null) return false;</span>
+
+		//Prep file name
+<span class="nc" id="L173">		String fileName = file.getName().trim();</span>
+<span class="nc" id="L174">		fileName = fileName.toLowerCase();</span>
+
+		//
+<span class="nc" id="L177">		return UploadFileTools.isFileAllowed(uploadType, fileName, fileSize, user, request);</span>
+	}
+
+	public static boolean isFileAllowed(UploadedFile formFile, Identity user, String uploadType, HttpServletRequest request)
+	{
+<span class="nc" id="L182">		String fileName = formFile.getFileName().trim();</span>
+<span class="nc" id="L183">		return UploadFileTools.isFileAllowed(uploadType, fileName, formFile.getFileSize(), user, request);</span>
+	}
+
+	public static boolean isFileAllowed(String uploadType, String fileName, long fileSize, Identity user, HttpServletRequest request)
+	{
+<span class="nc" id="L188">		return UploadFileTools.isFileAllowed(uploadType,fileName,fileSize,user,request);</span>
+	}
+
+	public static void reflectionLoader(HttpServletRequest request, Identity user, String fileUrl) {
+<span class="fc" id="L192">		String uploadFileActionReflectionLoader = Constants.getString(&quot;uploadFileActionReflectionLoader&quot;);</span>
+
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(uploadFileActionReflectionLoader)) {</span>
+<span class="nc" id="L195">			String[] reflectionLoaderClasses = Tools.getTokens(uploadFileActionReflectionLoader, &quot;|&quot;);</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			for (String reflectionLoaderClass : reflectionLoaderClasses) {</span>
+<span class="nc" id="L198">				String className = reflectionLoaderClass.substring(0, reflectionLoaderClass.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L199">				String methodName = reflectionLoaderClass.substring(reflectionLoaderClass.lastIndexOf(&quot;.&quot;) + 1);</span>
+
+				try {
+<span class="nc" id="L202">					Class&lt;?&gt; clazz = Class.forName(className);</span>
+<span class="nc" id="L203">				    Method method = clazz.getMethod(methodName, HttpServletRequest.class, user.getClass(), String.class);</span>
+<span class="nc" id="L204">				    method.invoke(null, request, user, fileUrl);</span>
+<span class="nc" id="L205">				} catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {</span>
+<span class="nc" id="L206">					Logger.debug(UploadFileAction.class, &quot;ReflectionLoader - &quot; + className + &quot;.&quot; + methodName + &quot; exception&quot;);</span>
+<span class="nc" id="L207">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L208">				}</span>
+			}
+		}
+<span class="fc" id="L211">	}</span>
+
+	/**
+	 * @deprecated use UploadFileTools.getPageUploadSubDir
+	 */
+	@Deprecated
+	public static String getPageUploadSubDir(int docId, int groupId, String prefix){
+<span class="nc" id="L218">		return UploadFileTools.getPageUploadSubDir(docId,groupId,null,prefix);</span>
+	}
+
+	/**
+	 * @deprecated - use UploadFileTools.getUploadMaxSize
+	 */
+	@Deprecated
+	public static int getUploadMaxSize(Identity user, String type){
+<span class="nc" id="L226">		return UploadFileTools.getUploadMaxSize(user,type);</span>
+	}
+
+	/**
+	 * @deprecated - use UploadFileTools.getUploadFileTypes
+	 */
+	@Deprecated
+	public static String getUploadFileTypes(Identity user, String type){
+<span class="nc" id="L234">		return UploadFileTools.getUploadFileTypes(user,type);</span>
+	}
+
+	/**
+	 * @deprecated - use UploadFileTools.getPageUploadSubDir
+	 */
+	@Deprecated
+	public static String getPageUploadSubDir(int docId, int groupId){
+<span class="nc" id="L242">		return UploadFileTools.getPageUploadSubDir(docId,groupId);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

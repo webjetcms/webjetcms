@@ -70,7 +70,7 @@ public class JsTreeItem {
     }
     /**
      * Prida novu ikonu k textu (vytvorenu ako span element)
-     * @param className - fas fa-eye-slash -> <span class="fas fa-eye-slash"></span>
+     * @param className - ti ti-eye-off -> <span class="ti ti-eye-off"></span>
      */
     public void addTextIcon(String className) {
         if (textIcons == null) textIcons = new ArrayList<>();

@@ -142,9 +142,13 @@ public class Identity extends UserDetails
 	 */
 	public boolean isDisabledItem(String name)
 	{
+		//allow welcome for all
+		if ("welcome".equals(name)) return false;
+
 		String fixedName = name;
 		//fix starych nazvov
 		if ("menuForms".equals(fixedName)) fixedName = "cmp_form";
+
 
 		//Logger.println(this,"isDisabledItem("+name+")");
 		if (disabledItemsTable == null)

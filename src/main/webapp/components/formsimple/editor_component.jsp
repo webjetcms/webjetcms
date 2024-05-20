@@ -77,6 +77,10 @@ taglib prefix="iway"
 	.editorWrapper .item.collapsed .removeItem { display: none; }
 	.editorWrapper .item.collapsed .moveItem { bottom: -10px;right: 2px; }
 	.jsonEditorHidden { display: none; }
+    .requiredField {
+        position: absolute;
+        top: 55px;
+    }
     #tabMenu1 .form-group label { margin-top: 10px; }
 
 	#editorWrapper form.collapsed .cleditorToolbar {
@@ -85,6 +89,31 @@ taglib prefix="iway"
 </style>
 
 <script type="text/javascript" src="/admin/scripts/common.jsp"></script>
+
+<script type='text/javascript'>
+var lastPressed = null;
+
+//called from user_addoc.jsp
+function setPage(document)
+{
+	var virtualPath = ""
+	$.ajax({
+		type: "GET",
+		dataType: "json",
+		url: "/admin/_docid_to_virtual_path.jsp?docid="+document[0],
+		async: false,
+		success: function(text){virtualPath = eval(text).virtualPath}
+	})
+	if (lastPressed == $('#forward_button').get(0))
+		$("input[name='attribute_forward']").val(virtualPath)
+	else if (lastPressed == $('#forward_fail_button').get(0))
+		$("input[name='attribute_forwardFail']").val(virtualPath)
+	else if (lastPressed == $('#use_form_mail_doc_id_button').get(0))
+		$("input[name='attribute_useFormMailDocId']").val(document[0])
+	else
+		$("input[name='attribute_formmail_sendUserInfoDocId']").val(document[0])
+}
+</script>
 
 <script type='text/javascript'>
 //<![CDATA[
@@ -151,6 +180,11 @@ var editorItemFields = {
 		options: <%= list.toString(4) %>,
         onchange: "fieldTypeOnChange"
 	},
+    required: {
+        title: "<iwcm:text key="components.formsimple.required" />",
+        type: "checkboxRight",
+        classes: "editorLeft requiredField"
+    },
     label: {
         title: "<iwcm:text key="components.formsimple.label" />",
         comment: "<iwcm:text key="components.formsimple.labelComment" />",
@@ -163,11 +197,6 @@ var editorItemFields = {
         comment: "<iwcm:text key="components.formsimple.valueComment" />",
         type: "text",
         dataType: "string",
-        classes: "editorRight"
-    },
-	required: {
-        title: "<iwcm:text key="components.formsimple.required" />",
-        type: "checkbox",
         classes: "editorRight"
     },
     placeholder: {
@@ -189,10 +218,10 @@ var editorItemFields = {
 // Form fields to edit
 var editorItemsToUse = [
     "fieldType",
+    "required",
     "label",
     "value",
     "placeholder",
-	"required",
     "tooltip"
 ];
 
@@ -467,8 +496,9 @@ function updateTextareas() {
 
 <div class="box_tab box_tab_thin left">
 	<ul class="tab_menu" id="Tabs">
-		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.news.styleAndSettings" /></a></li>
-		<li class="last"><a href="#" onclick="showHideTab('2'); loadWysiwygs()" id="tabLink2"><iwcm:text key="components.news.items" /></a></li>
+		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="datatable.tab.basic" /></a></li>
+		<li class="last"><a href="#" onclick="showHideTab('2'); loadWysiwygs()" id="tabLink2"><iwcm:text key="datatable.tab.advanced" /></a></li>
+		<li class="last"><a href="#" onclick="showHideTab('3'); loadWysiwygs()" id="tabLink3"><iwcm:text key="components.news.items" /></a></li>
 	</ul>
 </div>
 
@@ -535,18 +565,6 @@ function updateTextareas() {
             </div>
 		</div>
 
-		<iwcm:menu name="cmp_crypto">
-		<div class="form-group clearfix">
-			<div class="col-xs-4"><label for="attribute_encryptKey"><iwcm:text key="Šifrovací kľúč" /></label></div>
-			<div class="col-xs-8">
-				<textarea name="attribute_encryptKey" class="form-control" id="attribute_encryptKey" style="height: 190px; font-size: 10px !important;" placeholder="encrypt_key-..."><%=attributes.get("encryptKey") != null ? ResponseUtils.filter(attributes.get("encryptKey")) : ""%></textarea>
-				<div class="comment">
-					Zadajte šifrovací kľuč, vygenerovať si ho môžete v <a href="javascript:openPopupDialogFromLeftMenu('/components/crypto/admin/keymanagement');">Správe šifrovacích kľúčov</a>
-				</div>
-			</div>
-		</div>
-		</iwcm:menu>
-
 		<div class="form-group clearfix">
 			<div class="col-xs-4"></div>
 			<div class="col-xs-8">
@@ -558,9 +576,90 @@ function updateTextareas() {
 		</div>
 
 	</div>
-	<div class="tab-page" id="tabMenu2">
+    <div class="tab-page" id="tabMenu2">
 
+        <div class="form-group clearfix">
+			<div class="col-xs-4"> <iwcm:text key="editor.form.cc_emails" /> </div>
+			<div class="col-xs-8"> <input type="text" name="attribute_ccEmails" class="email" size="40" value="<%=attributes.get("ccEmails") != null ? ResponseUtils.filter(attributes.get("ccEmails")) : ""%>" title="<iwcm:text key="editor.form.help.cc_emails"/>" /></div>
+		</div>
 
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.bcc_emails" /> </div>
+            <div class="col-xs-8"> <input type="text" name="attribute_bccEmails" class="email" size="40" value="<%=attributes.get("bccEmails") != null ? ResponseUtils.filter(attributes.get("bccEmails")) : ""%>" title="<iwcm:text key="editor.form.help.bcc_emails"/>" /> </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.reply_to_emails" /> </div>
+            <div class="col-xs-8"> <input type="text" name="attribute_replyTo" class="email" size="40" value="<%=attributes.get("replyTo") != null ? ResponseUtils.filter(attributes.get("replyTo")) : ""%>" title="<iwcm:text key="editor.form.reply_to_emails"/>" /> </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.subject" /> </div>
+            <div class="col-xs-8"> <input type="text" name="attribute_subject" class="" value="<%=attributes.get("subject") != null ? ResponseUtils.filter(attributes.get("subject")) : ""%>" title="<iwcm:text key="editor.form.help.subject"/>" /> </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.forward" /> </div>
+            <div class="col-xs-8">
+                <input type="text" size="40" name="attribute_forward" class="" value="<%=attributes.get("forward") != null ? ResponseUtils.filter(attributes.get("forward")) : ""%>" title="<iwcm:text key="editor.form.help.forward"/>" />
+                <input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="forward_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.forward_fail" /> </div>
+            <div class="col-xs-8">
+                <input type="text" size="40" name="attribute_forwardFail" class="" value="<%=attributes.get("forwardFail") != null ? ResponseUtils.filter(attributes.get("forwardFail")) : ""%>" title="<iwcm:text key="editor.form.help.forward_fail"/>" />
+                <input type="button" class="button70" value='<iwcm:text key="editor.form.choose" />'  id="forward_fail_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.forward_type" /> </div>
+            <div class="col-xs-8">
+                <select name="attribute_forwardType" title="<iwcm:text key="editor.form.help.forward_type"/>">
+                    <option value=""></option>
+                    <option value="forward" <%="forward".equals(attributes.get("forwardType")) ? "selected" : "" %>>forward</option>
+                    <option value="addParams" <%="addParams".equals(attributes.get("forwardType")) ? "selected" : "" %> >addParams</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.use_form_mail_doc_id" /> </div>
+            <div class="col-xs-8">
+                <input type="text" size="5" name="attribute_useFormMailDocId" class="" value="<%=attributes.get("useFormMailDocId") != null ? ResponseUtils.filter(attributes.get("useFormMailDocId")) : ""%>" title="<iwcm:text key="editor.form.help.use_form_mail_doc_id"/>" />
+                <input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_mail_doc_id_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.send_user_info_doc_id" /> </div>
+            <div class="col-xs-8">
+                <input type="text" size="5"  name="attribute_formmail_sendUserInfoDocId" class="inputtext" value="<%=attributes.get("formmail_sendUserInfoDocId") != null ? ResponseUtils.filter(attributes.get("formmail_sendUserInfoDocId")) : ""%>" title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>" />
+                <input type="button" class="button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <div class="col-xs-4"> <iwcm:text key="editor.form.afterSendInterceptor" /> </div>
+            <div class="col-xs-8"> <input type="text" name="attribute_afterSendInterceptor" class="" size="40" id="attribute-afterSendInterceptor" value="<%=attributes.get("afterSendInterceptor") != null ? ResponseUtils.filter(attributes.get("afterSendInterceptor")) : ""%>" title="<iwcm:text key="editor.form.help.afterSendInterceptor"/>" /> </div>
+        </div>
+
+        <iwcm:menu name="cmp_crypto">
+            <div class="form-group clearfix">
+                <div class="col-xs-4"><label for="attribute_encryptKey"><iwcm:text key="components.form.encryptionKey" /></label></div>
+                <div class="col-xs-8">
+                    <textarea name="attribute_encryptKey" class="form-control" id="attribute_encryptKey" style="height: 190px; font-size: 10px !important;" placeholder="encrypt_key-..."><%=attributes.get("encryptKey") != null ? ResponseUtils.filter(attributes.get("encryptKey")) : ""%></textarea>
+                    <div class="comment">
+                        <iwcm:text key="formsimple.encryptionKey.text_a" /> <a href="javascript:openPopupDialogFromLeftMenu('/components/crypto/admin/keymanagement');"><iwcm:text key="formsimple.encryptionKey.text_b" /></a>
+                    </div>
+                </div>
+            </div>
+		</iwcm:menu>
+    </div>
+
+	<div class="tab-page" id="tabMenu3">
 		<div id="editorWrapper" class="editorWrapper collapsable"
 				data-collapse="<iwcm:text key="components.json_editor.collapse" />"
 				data-expand="<iwcm:text key="components.json_editor.expand" />">

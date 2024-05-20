@@ -151,7 +151,7 @@ label { display:block; padding:2px 0; }
 								<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 									<input class="input_fromDate form-control datepicker" type="text" name="fromDate">
 									<span class="input-group-btn">
-										<button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+										<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
 									</span>
 								</div>
 							</div>

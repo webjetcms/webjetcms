@@ -1,0 +1,13 @@
+{
+    "output": "html",
+    "fields": [
+      "name",
+      "licensePeriod",
+      "licenseType",
+      "link",
+      "remoteVersion",
+      "installedVersion",
+      "definedVersion",
+      "author"
+    ]
+  }

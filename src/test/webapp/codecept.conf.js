@@ -5,18 +5,32 @@ const { devices } = require('playwright');
 // HEADLESS=true npx codecept run
 setHeadlessWhen(process.env.HEADLESS);
 
-var url = process.env.CODECEPT_URL || 'http://iwcm.interway.sk';
-var codeceptShow = process.env.CODECEPT_SHOW;
-var browser = process.env.CODECEPT_BROWSER || "chromium";
-var restart = process.env.CODECEPT_RESTART || "context";
-var autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
-var pressKeyDelay = 13;
+let url = process.env.CODECEPT_URL || 'http://iwcm.interway.sk';
+let codeceptShow = process.env.CODECEPT_SHOW;
+let browser = process.env.CODECEPT_BROWSER || "chromium";
+let restart = process.env.CODECEPT_RESTART || "context";
+let autoDelayEnabled = "true" == process.env.CODECEPT_AUTODELAY;
+
+let language = process.env.CODECEPT_LNG || "sk"; //default sk
+
+let loginButtonText = "Prihlásiť sa";
+//Select language if not default
+if ("sk" != language) {
+  //Different language detected, selecting language
+  if("en" == language) {
+    loginButtonText = "Login";
+  } else if("cz" == language) {
+    loginButtonText = "Přihlásit se";
+  }
+}
+
+let pressKeyDelay = 13;
 if ("firefox"===browser) {
   autoDelayEnabled = true;
   pressKeyDelay = 30;
 }
 
-var showBrowser = true;
+let showBrowser = true;
 if (typeof codeceptShow != "undefined" && "false" == codeceptShow) {
   showBrowser = false;
 }
@@ -118,10 +132,21 @@ exports.config = {
             I.amOnPage('/logoff.do?forward=/admin/logon/');
             //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
             I.wjSetDefaultWindowSize();
+
+            //Select language if not default
+            if ("sk" != language) {
+              //Different language detected, selecting language
+              if("en" == language) {
+                I.selectOption("language", "English");
+              } else if("cz" == language) {
+                I.selectOption("language", "Česky");
+              }
+            }
+
             //odosli prihlasenie
             I.fillField("username", "tester");
             I.fillField("password", secret("*********"));
-            I.forceClick("Prihlásiť sa");
+            I.forceClick(loginButtonText);
             I.waitForText("Tester Playwright", 30);
           },
           check: (I) => {

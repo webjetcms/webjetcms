@@ -27,9 +27,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.ConfigurableDataSource;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
-import sk.iway.Password;
+import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -70,7 +68,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2024.0.21.{minor.number} {build.date}";
+	private static String actualVersion = "2024.18.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 
@@ -182,24 +180,10 @@ public class InitServlet extends HttpServlet
 			{
 				if (databaseValues.size() < 1) {
 					Logger.println(this,"ERROR: not configured");
-					webjetConfigured = false;
+					webjetConfigured = false; //NOSONAR
 					throw new Exception("Not configured");
 				}
-				webjetConfigured = true;
-
-				xjava.security.Cipher alg = null;
-				try
-				{
-					java.security.Security.addProvider(new cryptix.provider.Cryptix());
-					//alg = xjava.security.Cipher.getInstance("Rijndael", "Cryptix");
-					alg = xjava.security.Cipher.getInstance(new cryptix.provider.cipher.Rijndael(), null, null);
-				}
-				catch (Exception e)
-				{
-					System.out.println("Error instancing Cryptix " + e.getMessage()); //NOSONAR
-					sk.iway.iwcm.Logger.error(e);
-				}
-
+				webjetConfigured = true; //NOSONAR
 
 				String license = getInitParameter("license", databaseValues);
 
@@ -260,7 +244,7 @@ public class InitServlet extends HttpServlet
 
 				//dekoduj licenciu
 				//Logger.println(this,"---->"+license);
-				String decoded = decrypt(license, alg);
+				String decoded = decrypt(license);
 				//Logger.println(this,"====>"+decoded);
 				String[] domainDecoded = new String[1];
 				domainDecoded[0] = decoded.substring(0, DOMAIN_LEN);
@@ -452,7 +436,7 @@ public class InitServlet extends HttpServlet
 					{
 						if (domainKey.indexOf(":")>0) domainKey = domainKey.substring(domainKey.indexOf(":")+1); //NOSONAR
 						//System.out.println("domainKey="+domainKey);
-						decoded = decrypt(domainKey, alg);
+						decoded = decrypt(domainKey);
 						domainList.add(decoded);
 					}
 					domainDecoded = domainList.toArray(new String[0]);
@@ -1365,6 +1349,9 @@ public class InitServlet extends HttpServlet
 			Logger.println(this,"INIT"+source+": " + name + "=" + value);
 		}
 
+		//value - is considered as empty
+		if ("db".equals(source)==false && "-".equals(value)) value = "";
+
 		value = ConfDB.tryDecrypt(value);
 
 		return(value);
@@ -1413,35 +1400,15 @@ public class InitServlet extends HttpServlet
 	 *@return                heslo
 	 *@exception  Exception  Description of the Exception
 	 */
-	private String decrypt(String password, xjava.security.Cipher alg) throws Exception
+	private String decrypt(String password) throws Exception
 	{
-		if (password == null)
-		{
-			return ("");
-		}
-		if (password.length() < 10)
-		{
-			return (password);
-		}
-		if (alg == null) return "";
-
-		byte[] pass = Password.toByteArray(password);
-		byte[] dct;
-		String b;
-
 		StringBuilder sb = new StringBuilder();
 		sb.append("5f456cad56789c6d51b8987b");
 		sb.insert(0, "ab256c5a325d6c6a");
 		sb.append("654d654c89a987b951cbacdb");
 
-		RawSecretKey key = new RawSecretKey("Rijndael", Hex.fromString(sb.toString()));
 
-		alg.initDecrypt(key);
-		dct = alg.crypt(pass);
-		b = Hex.toString(dct);
-
-		String decoded = new String(Password.toByteArray(b)).trim();
-		return (decoded);
+		return Rijndael.decrypt(password, sb.toString());
 	}
 
 	public static boolean restart()
@@ -1533,7 +1500,7 @@ public class InitServlet extends HttpServlet
 		else if ("I".equals(wjVersion)) ver.append(" NET");
 		else if ("C".equals(wjVersion)) ver.append(" Cestovka");
 		else if ("M".equals(wjVersion) && "cloud".equals(Constants.getInstallName())) ver.append(" Cloud");
-		else if ("M".equals(wjVersion)) ver.append(" Multiweb");
+		else if ("M".equals(wjVersion)) ver.append(" MultiWeb");
 		else if ("O".equals(wjVersion)) ver.append(" Community (Open Source)");
 		else ver.append(" Basic");
 
@@ -1619,11 +1586,11 @@ public class InitServlet extends HttpServlet
 
 	private void deleteOldStrutsConfig() {
 		try {
-			String virtualPath = "/WEB-INF/struts-config.xml";
+			String virtualPath = "/WEB-INF/struts-config.xml"; //NOSONAR
 			if (Constants.getBoolean("enableJspJarPackaging") && JarPackaging.isJarPackaging(virtualPath)==false) {
 				//struts-config.xml is on file system, delete it and use one from jar file
 				File f = new File(Tools.getRealPath(virtualPath));
-				if (f.exists()) f.delete();
+				if (f.exists()) f.delete(); //NOSONAR
 			}
 		} catch (Exception ex) {
 			Logger.error(InitServlet.class, ex);

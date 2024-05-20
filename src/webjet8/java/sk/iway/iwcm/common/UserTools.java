@@ -113,7 +113,7 @@ public class UserTools {
         if (department == null)
             return null;
         //todo dorobit checkovanie datumu do UsersDB
-        List<UserDetails> userDetails = UsersDB.getUsersByWhereSql(" AND fax = " + department.getId() + " AND authorized = 1");
+        List<UserDetails> userDetails = UsersDB.getUsersByWhereSql(" AND fax = " + department.getId() + " AND authorized = "+DB.getBooleanSql(true));
         for (UserDetails userDetail : userDetails) {
             if (userDetail.isInUserGroup(Constants.getInt("organisation_structure.holiday_approver",-1))) {
                 return userDetail.getUserId();

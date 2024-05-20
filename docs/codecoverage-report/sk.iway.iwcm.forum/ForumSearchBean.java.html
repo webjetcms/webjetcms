@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ForumSearchBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.forum</a> &gt; <span class="el_source">ForumSearchBean.java</span></div><h1>ForumSearchBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.forum;
+
+
+/**
+ *  Bean pre forum vyhladavanie
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: joruz $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 07.04.2005 15:47:50
+ *@modified     $$
+ */
+<span class="nc" id="L15">public class ForumSearchBean</span>
+{
+   private int forumId;
+   private String forumName;
+   private int docId;
+   private int parentId;
+   private String subject;
+   private String question;
+   private String autorFullName;
+   private String autorEmail;
+   private int userId;
+	private String flag;
+	private String questionDate;
+	
+  
+
+	/**
+	 * @return Returns the questionDate.
+	 */
+	public String getQuestionDate()
+	{
+<span class="nc" id="L36">		return questionDate;</span>
+	}
+	/**
+	 * @param questionDate The questionDate to set.
+	 */
+	public void setQuestionDate(String questionDate)
+	{
+<span class="nc" id="L43">		this.questionDate = questionDate;</span>
+<span class="nc" id="L44">	}</span>
+	/**
+	 * @return Returns the autorEmail.
+	 */
+	public String getAutorEmail()
+	{
+<span class="nc" id="L50">		return autorEmail;</span>
+	}
+	/**
+	 * @param autorEmail The autorEmail to set.
+	 */
+	public void setAutorEmail(String autorEmail)
+	{
+<span class="nc" id="L57">		this.autorEmail = autorEmail;</span>
+<span class="nc" id="L58">	}</span>
+	/**
+	 * @return Returns the autorFullName.
+	 */
+	public String getAutorFullName()
+	{
+<span class="nc" id="L64">		return autorFullName;</span>
+	}
+	/**
+	 * @param autorFullName The autorFullName to set.
+	 */
+	public void setAutorFullName(String autorFullName)
+	{
+<span class="nc" id="L71">		this.autorFullName = autorFullName;</span>
+<span class="nc" id="L72">	}</span>
+	/**
+	 * @return Returns the docId.
+	 */
+	public int getDocId()
+	{
+<span class="nc" id="L78">		return docId;</span>
+	}
+	/**
+	 * @param docId The docId to set.
+	 */
+	public void setDocId(int docId)
+	{
+<span class="nc" id="L85">		this.docId = docId;</span>
+<span class="nc" id="L86">	}</span>
+	/**
+	 * @return Returns the flag.
+	 */
+	public String getFlag()
+	{
+<span class="nc" id="L92">		return flag;</span>
+	}
+	/**
+	 * @param flag The flag to set.
+	 */
+	public void setFlag(String flag)
+	{
+<span class="nc" id="L99">		this.flag = flag;</span>
+<span class="nc" id="L100">	}</span>
+	/**
+	 * @return Returns the forumId.
+	 */
+	public int getForumId()
+	{
+<span class="nc" id="L106">		return forumId;</span>
+	}
+	/**
+	 * @param forumId The forumId to set.
+	 */
+	public void setForumId(int forumId)
+	{
+<span class="nc" id="L113">		this.forumId = forumId;</span>
+<span class="nc" id="L114">	}</span>
+	/**
+	 * @return Returns the forumName.
+	 */
+	public String getForumName()
+	{
+<span class="nc" id="L120">		return forumName;</span>
+	}
+	/**
+	 * @param forumName The forumName to set.
+	 */
+	public void setForumName(String forumName)
+	{
+<span class="nc" id="L127">		this.forumName = forumName;</span>
+<span class="nc" id="L128">	}</span>
+	/**
+	 * @return Returns the parentId.
+	 */
+	public int getParentId()
+	{
+<span class="nc" id="L134">		return parentId;</span>
+	}
+	/**
+	 * @param parentId The parentId to set.
+	 */
+	public void setParentId(int parentId)
+	{
+<span class="nc" id="L141">		this.parentId = parentId;</span>
+<span class="nc" id="L142">	}</span>
+	
+	/**
+	 * @return Returns the question.
+	 */
+	public String getQuestion()
+	{
+<span class="nc" id="L149">		return question;</span>
+	}
+	/**
+	 * @param question The question to set.
+	 */
+	public void setQuestion(String question)
+	{
+<span class="nc" id="L156">		this.question = question;</span>
+<span class="nc" id="L157">	}</span>
+	/**
+	 * @return Returns the subject.
+	 */
+	public String getSubject()
+	{
+<span class="nc" id="L163">		return subject;</span>
+	}
+	/**
+	 * @param subject The subject to set.
+	 */
+	public void setSubject(String subject)
+	{
+<span class="nc" id="L170">		this.subject = subject;</span>
+<span class="nc" id="L171">	}</span>
+	/**
+	 * @return Returns the userId.
+	 */
+	public int getUserId()
+	{
+<span class="nc" id="L177">		return userId;</span>
+	}
+	/**
+	 * @param userId The userId to set.
+	 */
+	public void setUserId(int userId)
+	{
+<span class="nc" id="L184">		this.userId = userId;</span>
+<span class="nc" id="L185">	}</span>
+	@Override
+	public int hashCode()
+	{
+<span class="nc" id="L189">		final int prime = 31;</span>
+<span class="nc" id="L190">		int result = 1;</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		result = prime * result + ((autorEmail == null) ? 0 : autorEmail.hashCode());</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		result = prime * result + ((autorFullName == null) ? 0 : autorFullName.hashCode());</span>
+<span class="nc" id="L193">		result = prime * result + docId;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		result = prime * result + ((flag == null) ? 0 : flag.hashCode());</span>
+<span class="nc" id="L195">		result = prime * result + forumId;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		result = prime * result + ((forumName == null) ? 0 : forumName.hashCode());</span>
+<span class="nc" id="L197">		result = prime * result + parentId;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		result = prime * result + ((question == null) ? 0 : question.hashCode());</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		result = prime * result + ((questionDate == null) ? 0 : questionDate.hashCode());</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		result = prime * result + ((subject == null) ? 0 : subject.hashCode());</span>
+<span class="nc" id="L201">		result = prime * result + userId;</span>
+<span class="nc" id="L202">		return result;</span>
+	}
+	@Override
+	public boolean equals(Object obj)
+	{
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (this == obj)</span>
+<span class="nc" id="L208">			return true;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		if (obj == null)</span>
+<span class="nc" id="L210">			return false;</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (getClass() != obj.getClass())</span>
+<span class="nc" id="L212">			return false;</span>
+<span class="nc" id="L213">		ForumSearchBean other = (ForumSearchBean) obj;</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (autorEmail == null)</span>
+		{
+<span class="nc bnc" id="L216" title="All 2 branches missed.">			if (other.autorEmail != null)</span>
+<span class="nc" id="L217">				return false;</span>
+		}
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		else if (!autorEmail.equals(other.autorEmail))</span>
+<span class="nc" id="L220">			return false;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (autorFullName == null)</span>
+		{
+<span class="nc bnc" id="L223" title="All 2 branches missed.">			if (other.autorFullName != null)</span>
+<span class="nc" id="L224">				return false;</span>
+		}
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		else if (!autorFullName.equals(other.autorFullName))</span>
+<span class="nc" id="L227">			return false;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (docId != other.docId)</span>
+<span class="nc" id="L229">			return false;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (flag == null)</span>
+		{
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (other.flag != null)</span>
+<span class="nc" id="L233">				return false;</span>
+		}
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		else if (!flag.equals(other.flag))</span>
+<span class="nc" id="L236">			return false;</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (forumId != other.forumId)</span>
+<span class="nc" id="L238">			return false;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if (forumName == null)</span>
+		{
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (other.forumName != null)</span>
+<span class="nc" id="L242">				return false;</span>
+		}
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		else if (!forumName.equals(other.forumName))</span>
+<span class="nc" id="L245">			return false;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (parentId != other.parentId)</span>
+<span class="nc" id="L247">			return false;</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (question == null)</span>
+		{
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			if (other.question != null)</span>
+<span class="nc" id="L251">				return false;</span>
+		}
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		else if (!question.equals(other.question))</span>
+<span class="nc" id="L254">			return false;</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">		if (questionDate == null)</span>
+		{
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			if (other.questionDate != null)</span>
+<span class="nc" id="L258">				return false;</span>
+		}
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		else if (!questionDate.equals(other.questionDate))</span>
+<span class="nc" id="L261">			return false;</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (subject == null)</span>
+		{
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (other.subject != null)</span>
+<span class="nc" id="L265">				return false;</span>
+		}
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		else if (!subject.equals(other.subject))</span>
+<span class="nc" id="L268">			return false;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (userId != other.userId)</span>
+<span class="nc" id="L270">			return false;</span>
+<span class="nc" id="L271">		return true;</span>
+	}	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -6,7 +6,12 @@ Before(({ I, login }) => {
 
 Scenario('approving', ({I, DT, Document}) => {
 
-    I.amOnPage("/admin/approve.jsp?historyid=6951&docid=6031");
+    if("sk" === I.getConfLng()) {
+        I.amOnPage("/admin/approve.jsp?historyid=6951&docid=6031");
+    } else if("en" === I.getConfLng()) {
+        I.amOnPage("/admin/approve.jsp?docid=81853&historyid=129353");
+    }
+    
     Document.screenshot("/redactor/webpages/approve/approve-form.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");

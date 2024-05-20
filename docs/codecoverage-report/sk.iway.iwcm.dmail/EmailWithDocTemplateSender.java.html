@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailWithDocTemplateSender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailWithDocTemplateSender.java</span></div><h1>EmailWithDocTemplateSender.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.runtime.RuntimeServices;
+import org.apache.velocity.runtime.RuntimeSingleton;
+import org.apache.velocity.runtime.parser.ParseException;
+import org.apache.velocity.tools.generic.DateTool;
+import org.jsoup.parser.Parser;
+
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+
+/**
+ * Date: 21.02.2018
+ * Time: 11:01
+ * Project: webjet8
+ * Company: InterWay a. s. (www.interway.sk)
+ * Copyright: InterWay a. s. (c) 2001-2018
+ *
+ * @author mpijak
+ */
+public class EmailWithDocTemplateSender {
+    private String templateProcessor ;
+
+<span class="nc" id="L46">    public EmailWithDocTemplateSender() {</span>
+<span class="nc" id="L47">        this.templateProcessor = &quot;freemarker&quot;;</span>
+<span class="nc" id="L48">    }</span>
+
+<span class="nc" id="L50">    public EmailWithDocTemplateSender(String templateProcessor) {</span>
+<span class="nc" id="L51">        this.templateProcessor = templateProcessor;</span>
+<span class="nc" id="L52">    }</span>
+
+    public boolean send(String toEmail, String docUrl, String jsonData) throws IOException {
+<span class="nc" id="L55">        Map&lt;String, Object&gt; dataMap = this.converJsonStringToDataMap(jsonData);</span>
+<span class="nc" id="L56">        return this.send(toEmail, docUrl, dataMap, null);</span>
+    }
+
+    public boolean send(String toEmail, String docUrl, Map&lt;String, Object&gt; params) {
+<span class="nc" id="L60">        return (send(toEmail, docUrl, params, null));</span>
+    }
+
+    public boolean send(String toEmail, String docUrl, Map&lt;String, Object&gt; params, String attachmentsList) {
+<span class="nc" id="L64">        DocDetails docDetails = this.getDocDetails(docUrl);</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (docDetails == null) {</span>
+<span class="nc" id="L67">            Logger.debug(getClass(), &quot;Document with docurl &quot; + docUrl + &quot;not found !!!&quot;);</span>
+<span class="nc" id="L68">            return false;</span>
+        }
+
+<span class="nc" id="L71">        String mailBody = &quot;&quot;;</span>
+<span class="nc" id="L72">        String fromEmail = &quot;&quot;;</span>
+<span class="nc" id="L73">        String title = &quot;&quot;;</span>
+<span class="nc" id="L74">        String fromName = &quot;&quot;;</span>
+
+<span class="nc" id="L76">        mailBody = this.getParsedTemplate(docDetails.getData(), params, docUrl);</span>
+<span class="nc" id="L77">        title = this.getParsedTemplate(docDetails.getFieldA(), params, docUrl+&quot;fieldA&quot;);</span>
+<span class="nc" id="L78">        fromEmail = this.getParsedTemplate(docDetails.getFieldB(), params, docUrl+&quot;fieldB&quot;);</span>
+<span class="nc" id="L79">        fromName = this.getParsedTemplate(docDetails.getFieldC(), params, docUrl+&quot;fieldC&quot;);</span>
+
+<span class="nc" id="L81">        return SendMail.send(fromName, fromEmail, toEmail, title, mailBody, attachmentsList);</span>
+    }
+
+    public boolean sendLater(String toEmail, String docUrl, String jsonData, HttpServletRequest request) throws IOException {
+<span class="nc" id="L85">        Map&lt;String, Object&gt; dataMap = this.converJsonStringToDataMap(jsonData);</span>
+<span class="nc" id="L86">        return this.sendLater(toEmail, docUrl, dataMap, request);</span>
+    }
+
+    public boolean sendLater(String toEmail, String docUrl, Map&lt;String, Object&gt; params, HttpServletRequest request) {
+<span class="nc" id="L90">        DocDetails docDetails = this.getDocDetails(docUrl);</span>
+
+<span class="nc" id="L92">        String mailBody = &quot;&quot;;</span>
+<span class="nc" id="L93">        String fromEmail = &quot;&quot;;</span>
+<span class="nc" id="L94">        String title = &quot;&quot;;</span>
+<span class="nc" id="L95">        String fromName = &quot;&quot;;</span>
+
+<span class="nc" id="L97">        mailBody = this.getParsedTemplate(docDetails.getData(), params, docUrl);</span>
+<span class="nc" id="L98">        title = this.getParsedTemplate(docDetails.getFieldA(), params, docUrl+&quot;fieldA&quot;);</span>
+<span class="nc" id="L99">        fromEmail = this.getParsedTemplate(docDetails.getFieldB(), params, docUrl+&quot;fieldB&quot;);</span>
+<span class="nc" id="L100">        fromName = this.getParsedTemplate(docDetails.getFieldC(), params, docUrl+&quot;fieldC&quot;);</span>
+
+<span class="nc" id="L102">        String baseHref = Tools.getBaseHref(request)+&quot;/&quot;;</span>
+<span class="nc" id="L103">        return SendMail.sendLater(fromName, fromEmail, toEmail, null, null, null, title, mailBody, baseHref, null, null);</span>
+    }
+
+    public DocDetails getDocDetails(String url) {
+<span class="nc" id="L107">        String domainName = null;</span>
+<span class="nc" id="L108">        RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (currentRequestBean != null) {</span>
+<span class="nc" id="L110">            domainName = currentRequestBean.getDomain();</span>
+        }
+<span class="nc" id="L112">        int docId = DocDB.getDocIdFromURL(url, domainName);</span>
+<span class="nc" id="L113">        return DocDB.getInstance().getDoc(docId);</span>
+    }
+
+    private Map&lt;String, Object&gt; converJsonStringToDataMap(String jsonData) throws IOException {
+<span class="nc" id="L117">        ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="nc" id="L118">        Map&lt;String, Object&gt; map = objectMapper.readValue(jsonData, new TypeReference&lt;Map&lt;String, Object&gt;&gt;(){});</span>
+<span class="nc" id="L119">        return map;</span>
+    }
+
+    private VelocityContext convertDataMapToVelocityContext(Map&lt;String, Object&gt; data) {
+<span class="nc" id="L123">        VelocityContext context = new VelocityContext();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (Map.Entry&lt;String, Object&gt; entry : data.entrySet()) {</span>
+<span class="nc" id="L125">            context.put(entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L126">        }</span>
+<span class="nc" id="L127">        return context;</span>
+    }
+
+    private String getParsedVelocityTemplate(String html, Map&lt;String, Object&gt; params, String templateName) throws ParseException {
+<span class="nc" id="L131">        VelocityContext context = convertDataMapToVelocityContext(params);</span>
+<span class="nc" id="L132">        context.put(&quot;date&quot;, new DateTool());</span>
+<span class="nc" id="L133">        String htmlClean = this.getCleanHtml(html);</span>
+<span class="nc" id="L134">        Reader reader = new StringReader(htmlClean);</span>
+
+<span class="nc" id="L136">        Template templateByName = new Template();</span>
+<span class="nc" id="L137">        templateByName.setName(templateName);</span>
+
+<span class="nc" id="L139">        Template template = new Template();</span>
+<span class="nc" id="L140">        RuntimeServices runtimeServices = RuntimeSingleton.getRuntimeServices();</span>
+<span class="nc" id="L141">        template.setRuntimeServices(runtimeServices);</span>
+<span class="nc" id="L142">        template.setData(runtimeServices.parse(reader, templateByName));</span>
+<span class="nc" id="L143">        template.initDocument();</span>
+
+<span class="nc" id="L145">        StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L146">        template.merge(context, writer);</span>
+
+<span class="nc" id="L148">        return writer.toString();</span>
+    }
+
+    private String getParsedFreemarkerTemplate(String freemarkerTemplateHtml, Map&lt;String, Object&gt; params, String templateName) throws IOException, TemplateException {
+<span class="nc" id="L152">        Configuration configuration = createFreemarkerConfiguration();</span>
+<span class="nc" id="L153">        String htmlClean = this.getCleanHtml(freemarkerTemplateHtml);</span>
+<span class="nc" id="L154">        freemarker.template.Template template = new freemarker.template.Template(templateName, htmlClean, configuration);</span>
+
+<span class="nc" id="L156">        Writer out = new StringWriter();</span>
+<span class="nc" id="L157">        template.process(params, out);</span>
+
+<span class="nc" id="L159">        out.close();</span>
+
+<span class="nc" id="L161">        return out.toString();</span>
+    }
+
+    private Configuration createFreemarkerConfiguration() {
+<span class="nc" id="L165">        Configuration config = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);</span>
+<span class="nc" id="L166">        config.setDefaultEncoding(&quot;windows-1250&quot;);</span>
+<span class="nc" id="L167">        config.setEncoding(Locale.getDefault(), &quot;windows-1250&quot;);</span>
+<span class="nc" id="L168">        return config;</span>
+    }
+
+    private String getCleanHtml(String html) {
+<span class="nc" id="L172">        String htmlClean = html;</span>
+<span class="nc" id="L173">        htmlClean = Tools.replace(htmlClean, &quot;&lt;pre&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L174">        htmlClean = Tools.replace(htmlClean, &quot;&lt;/pre&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L175">        htmlClean = Tools.replace(htmlClean, &quot;&lt;code&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L176">        htmlClean = Tools.replace(htmlClean, &quot;&lt;/code&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L177">        htmlClean = Parser.unescapeEntities(htmlClean, true);</span>
+<span class="nc" id="L178">        return htmlClean;</span>
+    }
+
+    public String getParsedTemplate(String templateName, Map&lt;String, Object&gt; params, String templateHtml) {
+<span class="nc" id="L182">        String res = &quot;&quot;;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (this.templateProcessor.equals(&quot;freemarker&quot;)) {</span>
+            try {
+<span class="nc" id="L185">                res = this.getParsedFreemarkerTemplate(templateName, params, templateHtml);</span>
+<span class="nc" id="L186">            } catch (IOException e) {</span>
+<span class="nc" id="L187">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L188">            } catch (TemplateException e) {</span>
+<span class="nc" id="L189">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L190">            }</span>
+        } else {
+            try {
+<span class="nc" id="L193">                res = this.getParsedVelocityTemplate(templateName, params, templateHtml);</span>
+<span class="nc" id="L194">            } catch (ParseException e) {</span>
+<span class="nc" id="L195">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L196">            }</span>
+        }
+<span class="nc" id="L198">        return res;</span>
+    }
+
+    public String getTemplateProcessor() {
+<span class="nc" id="L202">        return templateProcessor;</span>
+    }
+
+    public void setTemplateProcessor(String templateProcessor) {
+<span class="nc" id="L206">        this.templateProcessor = templateProcessor;</span>
+<span class="nc" id="L207">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

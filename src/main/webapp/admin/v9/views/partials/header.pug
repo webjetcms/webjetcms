@@ -5,10 +5,10 @@ div.ly-container.container
     div.header-link-group
 
         .btn.btn-sm.btn-outline-secondary.js-sidebar-toggler
-            i.far.fa-bars
+            i.ti.ti-menu-2
 
         .js-domain-toggler
-            i.far.fa-browser
+            i.ti.ti-browser
             select(data-th-field="${layout.header.currentDomain}" onchange="WJ.changeDomain(this);" data-th-data-previous="${layout.header.currentDomain}")
                 option(data-th-each="domain : ${layout.header.domains}" data-th-text="${domain}" data-th-value="${domain}")
 
@@ -17,50 +17,50 @@ div.ly-container.container
         div.header-link-group
 
             a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();")
-                i.far.fa-question-circle
+                i.ti.ti-help
                 |   <span data-th-text="\#{menu.top.help}">Pomocnik</span>
 
         div.header-link-group
 
             a.btn.btn-sm.btn-outline-secondary.js-search-toggler(href="/admin/searchall.jsp")
-                i.far.fa-search
+                i.ti.ti-search
 
             .btn.btn-sm.btn-outline-secondary.js-tasks-toggler(style="display:none")
-                i.far.fa-tasks.todo
+                i.ti.ti-list-check.todo
 
             .btn.btn-sm.btn-outline-secondary.js-message-toggler(style="display:none")
-                i.far.fa-comment-alt.todo
+                i.ti.ti-message.todo
 
             .btn.btn-sm.btn-outline-secondary.js-notifications-toggler(style="display:none")
-                i.far.fa-bell.todo
+                i.ti.ti-bell.todo
 
         div.header-link-group
 
             div.dropdown
                 button.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(id="dropdownMenuUser" data-bs-toggle="dropdown" aria-expanded="false")
-                    i.far.fa-address-card
+                    i.ti.ti-id
                     <span data-th-text="${layout.user.fullName}" style="padding-left: 3px;">WebJET User</span>
 
                 ul.dropdown-menu(aria-labelledby="dropdownMenuUser")
                     li
                         a.dropdown-item(data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
-                            i.far.fa-user
+                            i.ti.ti-user
                             <span data-th-text="\#{components.forum.bb.profile}" data-th-remove="tag">Profil</span>
                     li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
                         a.dropdown-item(data-th-data-userid="${layout.user.userId}" onclick="WJ.openPopupDialog('/admin/2factorauth.jsp?userid='+$(this).data('userid'))")
-                            i.far.fa-phone
+                            i.ti.ti-device-mobile-message
                             <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
                     li(data-th-if="${layout.hasPermission('cmp_form')}")
                         a.dropdown-item(onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-                            i.far.fa-key
+                            i.ti.ti-key
                             <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
                     li
                         a.dropdown-item(data-th-href="${layout.getConstant('adminLogoffLink')}")
-                            i.far.fa-sign-out
+                            i.ti.ti-logout
                             <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
                 |
 
         div.header-link-group
 
             a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(data-th-href="${layout.getConstant('adminLogoffLink')}" data-th-title="\#{menu.logout}" data-toggle="tooltip")
-                i.far.fa-sign-out
+                i.ti.ti-logout.fs-5

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExcelUploadExampleListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.basecms.contact.excelimport</a> &gt; <span class="el_source">ExcelUploadExampleListener.java</span></div><h1>ExcelUploadExampleListener.java</h1><pre class="source lang-java linenums">package sk.iway.basecms.contact.excelimport;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import sk.iway.basecms.contact.upload.Form;
+import sk.iway.iwcm.admin.AbstractUploadListener;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.admin.xls.ExcelImportServiceInterface;
+import sk.iway.iwcm.admin.xls.exception.ExcelImportServiceException;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+import javax.validation.Validator;
+import java.util.List;
+
+/**
+ * Ukazkovy Thymeleaf listener pre spracovanie uploadu suboru
+ * a nasledny import z Excel formatu
+ */
+@Component
+public class ExcelUploadExampleListener extends AbstractUploadListener&lt;Form&gt; {
+
+<span class="fc" id="L29">    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelUploadExampleListener.class);</span>
+    private final ExcelImportServiceInterface springImportService;
+
+    protected ExcelUploadExampleListener(ExcelImportServiceInterface springImportService, Validator validator) {
+<span class="fc" id="L33">        super(validator);</span>
+<span class="fc" id="L34">        this.springImportService = springImportService;</span>
+<span class="fc" id="L35">    }</span>
+
+    @Override
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='contact' &amp;&amp; event.source.subpage=='excelimport'&quot;)
+    public void processForm(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+        // sprocesovanie dat formularu do objektu a validacia tohto objektu
+<span class="fc" id="L41">        super.processForm(event);</span>
+<span class="fc" id="L42">        ModelMap model = event.getSource().getModel();</span>
+        // ziskanie objektu a vlozenie do modelu
+<span class="fc" id="L44">        Form form = getForm();</span>
+<span class="fc" id="L45">        model.addAttribute(&quot;form&quot;, form);</span>
+
+<span class="fc" id="L47">        LOGGER.debug(&quot;Is post: {}&quot;, isPost());</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (!isPost()) {</span>
+            // ak nie je request typu post, tak dalej nic nerobime
+<span class="fc" id="L50">            return;</span>
+        }
+
+        // ziskanie validacnych errorov
+<span class="fc" id="L54">        BindingResult errors = getBindingResult();</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (errors.hasErrors()) {</span>
+<span class="nc" id="L56">            LOGGER.debug(&quot;We have errors: {}&quot;, errors.getErrorCount());</span>
+<span class="nc" id="L57">            return;</span>
+        }
+
+        try {
+            // importovanie dat zo suboru do DB tabulky
+<span class="fc" id="L62">            springImportService.importFile(form.getDocument());</span>
+
+            // presmerovanie po uspesnom importe
+<span class="fc" id="L65">            String redirect = &quot;/apps/contact/admin/excelimport/&quot;;</span>
+<span class="fc" id="L66">            model.addAttribute(&quot;redirect&quot;, redirect);</span>
+<span class="fc" id="L67">            LOGGER.debug(&quot;Redirecting to: {}&quot;, redirect);</span>
+
+<span class="fc" id="L69">            RedirectAttributes redirectAttributes = event.getSource().getRedirectAttributes();</span>
+<span class="fc" id="L70">            redirectAttributes.addFlashAttribute(&quot;success&quot;, Prop.getInstance().getText(&quot;form.flash.success&quot;));</span>
+<span class="nc" id="L71">        } catch (ExcelImportServiceException e) {</span>
+            // zobrazenie chybovych hlaskok v pripade problemu s importom
+<span class="nc" id="L73">            List&lt;String&gt; errs = e.getErrors();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            for (String err : errs) {</span>
+<span class="nc" id="L75">                errors.rejectValue(&quot;&quot;, &quot;&quot;, err);</span>
+<span class="nc" id="L76">            }</span>
+<span class="fc" id="L77">        }</span>
+<span class="fc" id="L78">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

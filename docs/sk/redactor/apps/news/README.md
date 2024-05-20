@@ -53,6 +53,7 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 - Nemusí byť vyplnený perex (anotácia) - štandardne sa zobrazia len novinky, ktoré majú vyplnenú anotáciu (perex), ak zaškrtnete toto pole, načítajú sa aj tie, ktoré anotáciu (perex) vyplnenú nemajú
 - Načítanie s textom stránky (menej optimálne) - štandardne sa z databázy nenačítava text stránky, ak ho pre zobrazenie potrebujete, zaškrtnite toto pole. Načítanie ale bude pomalšie a náročnejšie na výkon databázy a servera.
 - Kontrolovať duplicitu - ak stránka obsahuje viacero aplikácii novinky v jednej stránke, eviduje sa zoznam už zobrazených noviniek. Už existujúce sa vyradia so zoznamu. Nemusí ale následne sedieť počet zobrazených záznamov, zároveň sa ale nestane, že bude na jednej stránke zobrazená rovnaká novinka viac krát.
+- Vylúčiť hlavné stránky priečinkov - ak je zvolené vylúčia sa hlavné stránky priečinkov (pri možnosti Zahrnúť podadresáre). Predpokladá sa, že podadresáre obsahujú hlavnú stránku so zoznamom noviniek v tomto priečinku. Takéto stránky sa vylúčia a nepoužijú sa v zozname noviniek.
 - Vložiť triedy do `Velocity` šablóny - špeciálne pole pre programátora, ktorým je možné zadefinovať Java triedu (program), ktorú je možné následne použiť v šablóne. Ak nemáte presné inštrukcie čo do tohto poľa vložiť ponechajte ho prázdne.
 - Čas vyrovnávacej pamäte (minúty) - počet minút pamätania zoznamu noviniek. Načítanie zoznamu noviniek môže byť náročné na výkon databázy, odporúčame nastaviť vyrovnávaciu pamäť na minimálne 10 minút. Urýchli to zobrazenie stránky (hlavne ak je zoznam noviniek napr. na úvodnej stránke).
 
@@ -126,6 +127,19 @@ Niekoľko ukážok práce s pokročilými objektami:
 $pagesAll
 //celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
 $totalPages
+
+//podmienene zobrazenie ak je zadany perex obrazok
+#if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
+```
+
+Ak potrebujete zobrazovať dátum prvého uloženia web stránky nastavte konf. premennú `editorAutoFillPublishStart` na hodnotu `true`. Po nastavení bude editor automaticky vypĺňať pole Dátum začiatku v karte Perex v editore aktuálnym dátumom. Tento dátum je možné v prípade potreby aj manuálne zmeniť. Následne v šablóne môžete použiť nasledovné objekty:
+
+```velocity
+//datum a cas posledneho ulozenia
+$doc.lastUpdateDate $doc.lastUpdateTime
+
+//datum a cas vytvorenia
+$doc.publishStartString
 ```
 
 ## Perex skupiny
@@ -149,6 +163,37 @@ V karte filter môžete definovať pokročilé možnosti zobrazenia noviniek pod
 V karte novinky sa zobrazí zoznam noviniek, ktoré sa načítajú podľa zvolených adresárov z karty Parametre aplikácie. Vidíte tak zoznam noviniek a môžete jednoducho existujúce novinky upravovať (upraviť nadpis, fotografiu, prípadne text novinky). Rovnako môžete vytvoriť novú novinku.
 
 ![](editor-dialog-newslist.png)
+
+# Vyhľadávanie
+
+Aplikácia podporuje aj dynamické vyhľadávanie/filtrovanie noviniek priamo na web stránke pomocou URL parametrov. Viete tak vo web stránke pridať filtrovanie zobrazených noviniek podľa želania návštevníka (napr. podľa kategórie, dátumov atď). Vyhľadávanie/filtrovanie sa zadáva do URL parametrov vo formáte:
+
+```
+search[fieldName_searchType]=value
+search[title_co]=test
+```
+
+pričom hodnota searchType môže má nasledovné možnosti:
+
+- `eq` - presná zhoda
+- `gt` - viac ako
+- `ge` - viac ako vrátane
+- `le` - menej ako vrátane
+- `lt` - menej ako
+- `sw` - začína na
+- `ew` - končí na
+- `co` - obsahuje
+- `swciai` - začína na bez ohľadu na veľkosť písmen a diakritiku
+- `ewciai` - končí na bez ohľadu na veľkosť písmen a diakritiku
+- `cociai` - obsahuje bez ohľadu na veľkosť písmen a diakritiku
+
+Pri zadávaní URL parametrov môže nastať problém z odmietnutím hodnoty `[]` a zobrazením chyby `400 - Bad Request`, v takom prípade použite náhradu `[=%5B, ]=%5D`, príklad volania:
+
+```
+/zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
+```
+
+URL parameter search sa môže vyskytovať viac krát, pre viaceré parametre sa použije spojenie `AND`.
 
 # Možné konfiguračné premenné
 

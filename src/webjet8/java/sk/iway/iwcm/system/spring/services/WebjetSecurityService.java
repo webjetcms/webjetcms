@@ -5,6 +5,8 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -26,10 +28,11 @@ import java.util.StringTokenizer;
  *  @PreAuthorize("@WebjetSecurityService.isAdmin()") - admin
  *  @PreAuthorize("@WebjetSecurityService.isInUserGroup('nazov-skupiny')") - patri do skupiny
  *  @PreAuthorize("@WebjetSecurityService.hasPermission('editDir|addSubdir')") - ma pravo na modul editDir ALEBO addSubdir
+ *  @PreAuthorize("@WebjetSecurityService.hasPermission('editDir&addSubdir')") - musi mat pravo na modul editDir SUCASNE na addSubdir
  *
  * @author mpijak
  */
-@Service("WebjetSecurityService")
+@Service("WebjetSecurityService") //NOSONAR
 public class WebjetSecurityService {
     private final HttpSession session;
     private final HttpServletRequest request;
@@ -71,7 +74,7 @@ public class WebjetSecurityService {
     }
 
     /**
-     * Check user permissions. Perms can be separated by '|' or '&'. 
+     * Check user permissions. Perms can be separated by '|' or '&'.
      * If separated by '|' user must have at least one of this permissions.
      * If separated by '&' user must have all of this permissions.
      * @param permission
@@ -82,12 +85,17 @@ public class WebjetSecurityService {
             return false;
         }
 
-        //Cant contain both separators at sme time
+        if (permission.startsWith("Constants:")) {
+            //get permission from constants
+            permission = Constants.getString(permission.substring(10));
+        }
+
+        //Cant contain both separators at same time
         if(permission.contains("|") && permission.contains("&")) {
             return false;
         }
 
-        //OR user must have at leats one of this permissions
+        //OR user must have at least one of this permissions
         if(permission.contains("|")) {
             StringTokenizer st = new StringTokenizer(permission, "|");
             while (st.hasMoreTokens()) {

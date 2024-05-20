@@ -16,7 +16,7 @@ Formulár na hodnotenie stránky môžete pridať ako aplikáciu alebo priamo po
 Formulár obsahuje parametre:
 
 - `checkLogon` - Zapnúť kontrolu prihláseného používateľa, ak je možnosť zvolená, hodnotiť stránku môžu iba prihlásený používatelia.
-- `ratingDocId` - Doc ID stránky, ktorá sa bude hodnotiť, ak je zadaná hodnota <1 použije sa automaticky ID aktuálne zobrazenej web stránky.
+- `ratingDocId` - Doc ID stránky, ktorá sa bude hodnotiť, ak je zadaná hodnota menšia ako 1, použije sa automaticky ID aktuálne zobrazenej web stránky.
 - `range` - Rozsah stupnice hodnotenia.
 
 ![](rating-form_app.png)

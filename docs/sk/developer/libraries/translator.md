@@ -4,7 +4,7 @@
 **Dependencies (závislosti)**
 - [StorageHandler](storage-handler.md)
 - [Tools](tools.md)
-- [jQuery Ajax](https://api.jquery.com/jquery.ajax/) _[Presmeruje na oficiálnu dokumentáciu]_
+- [jQuery Ajax](https://api.jquery.com/jquery.ajax/), _[Presmeruje na oficiálnu dokumentáciu]_
 ---
 Knižnica slúži na implementáciu jazykových prekladov v systéme **WebJET**.
 Použiť ju je možné v Javascript súboroch, tak aj priamo vo vyrenderovanom HTML dokumente, kde sú texty vkladané serverovo.
@@ -18,23 +18,22 @@ ktorý je nastavený priamo v konštruktore triedy `Translator`.
 Následne inštancia čaká na zavolanie metód [load()](#load), alebo [onBeforeLoad()](#onbeforeload), [onAfterLoad()](#onafterload)
 
 Metóda [load()](#load) skontroluje existenciu lokálnych (už existujúcich) prekladov:
-1. Ak **neexistujú**, tak vykoná API request a získané preklady uloží do úložiska a inštancia je v stave `DONE & READY`.
-2. Ak **existujú**, tak skontroluje, či sú uložené preklady aktuálne na základe porovnania dátumu poslednej aktualizácie uloženom v úložisku a dátumu,
+- Ak **neexistujú**, tak vykoná API request a získané preklady uloží do úložiska a inštancia je v stave `DONE & READY`.
+- Ak **existujú**, tak skontroluje, či sú uložené preklady aktuálne na základe porovnania dátumu poslednej aktualizácie uloženom v úložisku a dátumu,
 ktorý máme prístupný vo `window` v premennej `window.propertiesLastModified`
-    - Ak sú dátumy **rozdielne**, tak sa vykoná API request a získané preklady uloží do úložiska a inštancia je v stave `DONE & READY`.
-    - Ak sú dátumy **rovnaké**, tak sa nevykoná žiadna ďalšia akcia a inštancia je v stave `DONE & READY`.
-
+  - Ak sú dátumy **rozdielne**, tak sa vykoná API request a získané preklady uloží do úložiska a inštancia je v stave `DONE & READY`.
+  - Ak sú dátumy **rovnaké**, tak sa nevykoná žiadna ďalšia akcia a inštancia je v stave `DONE & READY`.
 
 Metódy [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#onafterload) pridajú nami zadefinovanú funkciu do callback stacku,
 ktorý sa vykoná tak, ako je popísané v detaile metód [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#onafterload).
 
 Metóda [translate()](#translate) prevezme vstupný argument (prekladový kľúč) a na základe neho sa pokúsi vyhľadať v úložisku prekladov konkrétny preklad.
-1. Ak preklad **existuje**, tak ho metóda vráti, ako svoj result.
-2. Ak preklad **neexistuje**, alebo bol vložený nevalidný prekladový kľúč, tak metóda vráti ten vstupný kľúč, ako svoj result.
+- Ak preklad **existuje**, tak ho metóda vráti, ako svoj result.
+- Ak preklad **neexistuje**, alebo bol vložený nevalidný prekladový kľúč, tak metóda vráti ten vstupný kľúč, ako svoj result.
 
 ## Vytvorenie inštancie:
 
-**WebJET** inicializuje knižnicu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** inicializuje knižnicu v súbore [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js).
 
 ```javascript
 /* webjetTranslationService */
@@ -43,10 +42,11 @@ import {Translator} from "./libs/translator/translator";
 window.webjetTranslationService = new Translator();
 ```
 
-následne ju implementuje v súbore [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js),
+Následne ju implementuje v súbore [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js),
 kde pomocou funkcie [load()](#load) načítame preklady zo servera ak ešte neexistujú lokálne alebo ak existuje update.
 
 Funkcia [load()](#load) si sama skontroluje aktuálnosť existujúcich prekladov a rozhodne sa, či má vykonať request na API.
+
 ```javascript
 // Spustenie načítania prekladov
 window.webjetTranslationService.onAfterLoad(() => {
@@ -66,19 +66,23 @@ const preklad = WJ.translate('translation.key'); // V premennej preklad máme pr
 ```
 
 ### Pre celú HTML stránku
+
 **Implementácia vo WebJET CMS nevyžaduje túto funkcionalitu, pretože sa všetky preklady riešia už pri rendere stránky.**
 
-Pre preklady priamo vo vyrenderovanej stránke sa používajú html data atribúty **data-translator**
-`data-translator="prekladový.kľúč"`
+Pre preklady priamo vo vyrenderovanej stránke sa používajú html data atribúty **data-translator**,
+`data-translator="prekladový.kľúč"`.
 
-data atribút môže byť umiestnený na akúkoľvek HTML značku ale musí byť bezprostredne na značne, ktorá obsahuje prekladaný text.
+Data atribút môže byť umiestnený na akúkoľvek HTML značku ale musí byť bezprostredne na značne, ktorá obsahuje prekladaný text.
 Ak je umiestnený na HTML značke, ktorá obsahuje ďalší HTML kód, musí byť tento HTML kód obsiahnutý aj v samotnom preklade, inak bude stávajúci HTML nahradený hodnotou z prekladu.
 
-**Upozornenie:** _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
+**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
+
 ```html
 <span data-translator="components.datatables.data.insertDate">Dátum vloženia</span>
 ```
+
 Následne je potrebné pridať do HTML stránky volanie prekladovej funkcie.
+
 ```javascript
 $(document).ready(() => {
     window.webjetTranslationService.onBeforeLoad(instance => {
@@ -86,7 +90,9 @@ $(document).ready(() => {
     }).load();
 });
 ```
+
 alebo umiestniť na koniec stránky
+
 ```html
 <body>
 .
@@ -100,17 +106,25 @@ alebo umiestniť na koniec stránky
     </script>
 </body>
 ```
+
 ---
 ## Zoznam API
 **(Kliknutím zobrazíš detail pre funkciu)**
 
-| Metódy                            | Gettery               | Settery                   |
-| -----------                       | -----------           | -----------               |
-| [load()](#load)                   | [language](#language) | [urlLoad](#urlload)       |
-| [onBeforeLoad()](#onbeforeload)   | [date](#date)         | [urlUpdate](#urlupdate)   |
-| [onAfterLoad()](#onafterload)     |
-| [translate()](#translate)         |
-| [htmlTranslate()](#htmltranslate) |
+Metódy:
+- [load()](#load)
+- [onBeforeLoad()](#onbeforeload)
+- [onAfterLoad()](#onafterload)
+- [translate()](#translate)
+- [htmlTranslate()](#htmltranslate)
+
+Gettery:
+- [language](#language)
+- [date](#date)
+
+Settery:
+- [urlLoad](#urlload)
+- [urlUpdate](#urlupdate)
 
 Podrobnejšie API sa nachádza v [GIT repozitári](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/translator#kni%C5%BEnica-translator)
 
@@ -130,16 +144,16 @@ _URL adresy je možné meniť pomocou [urlLoad](#urlload) a [urlUpdate](#urlupda
  */
 window.webjetTranslationService.load();
 ```
----
+
 #### onBeforeLoad()
-Metóda zabezpečuje pridávanie callbakov,
-ktoré sa vykonajú bezprostredne po zavolaní metódy [load()](#load)
+Metóda zabezpečuje pridávanie callbakov, ktoré sa vykonajú bezprostredne po zavolaní metódy [load()](#load).
 
 Callbacky môžeme pridávať ľubovoľne, ale vždy iba pred volaním vyššie spomenutej metódy.
 
 Voliteľný druhý atribút ``rewrite`` zabezpečí v prípade, ak je nastavený na ``TRUE``, že sa vykoná iba naposledy pridaný callback.
 
 Metóda vracia inštanciu triedy ``Translator`` a tak je možné za ňou pomocou ``DOT operátora`` volať ďalšie metódy.
+
 ```javascript
 /**
  * @description Pridanie akcie, ktorá sa vykoná pred načítaním dát zo servera.
@@ -150,16 +164,17 @@ Metóda vracia inštanciu triedy ``Translator`` a tak je možné za ňou pomocou
  */
 window.webjetTranslationService.onBeforeLoad(callback, rewrite = false);
 ```
+
 ---
 #### onAfterLoad()
-Metóda zabezpečuje pridávanie callbakov,
-ktoré sa vykonajú po úspešnom prijatí dát zo server API po zavolaní metódy [load()](#load)
+Metóda zabezpečuje pridávanie callbakov, ktoré sa vykonajú po úspešnom prijatí dát zo server API po zavolaní metódy [load()](#load).
 
 Callbacky môžeme pridávať ľubovolne, ale vždy iba pred volaním vyššie spomenutej metódy.
 
 Voliteľný druhý atribút ``rewrite`` zabezpečí v prípade, ak je nastavený na ``TRUE``, že sa vykoná iba naposledy pridaný callback.
 
 Metóda vracia inštanciu triedy ``Translator`` a tak je možné za ňou pomocou ``DOT operátora`` volať ďalšie metódy.
+
 ```javascript
 /**
  * @description Pridanie akcie, ktorá sa vykoná po úspešnom načítaní dát zo servera.
@@ -170,11 +185,13 @@ Metóda vracia inštanciu triedy ``Translator`` a tak je možné za ňou pomocou
  */
 window.webjetTranslationService.onAfterLoad(callback, rewrite = false);
 ```
+
 ---
 #### translate()
 Zavolaním tejto metódy získame preklad v aktuálne používanom jazyku na základe kľúča.
 
 Ak preklad neexistuje alebo bol vložený neplatný kľúč, metóda vráti hodnotu tohto kľúča.
+
 ```javascript
 /**
  * @description Vyhľadá a vráti text v aktuálne používanom jazyku na základe translate kľúča.
@@ -184,14 +201,15 @@ Ak preklad neexistuje alebo bol vložený neplatný kľúč, metóda vráti hodn
  */
 window.webjetTranslationService.translate(translationFieldName);
 ```
+
 ---
 #### htmlTranslate()
 Zavolaním tejto metódy na konci stránky
 alebo pomocou ``document.ready`` čiže po dokončení renderu webu zabezpečíme,
 že všetkým elementom na stránke, ktoré majú zadefinovaný data atribút ``data-translator`` budú zmenené
-textové hodnoty ``innerHTML`` na základe kľúča uvedeného v data atribúte ``data-translator``
+textové hodnoty ``innerHTML`` na základe kľúča uvedeného v data atribúte ``data-translator``.
 
-**Upozornenie:** _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
+**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
 
 [Klikni pre viac info o použití](#pre-celú-html-stránku)
 
@@ -213,11 +231,13 @@ textové hodnoty ``innerHTML`` na základe kľúča uvedeného v data atribúte 
  */
 window.webjetTranslationService.htmlTranslate(scope = document);
 ```
+
 ---
 **getters**
 
 #### language
 Vracia používaný jazyk aplikácie priamo zo Store.
+
 ```javascript
 /**
  * @description Vráti aktuálne používaný jazyk.
@@ -227,9 +247,11 @@ Vracia používaný jazyk aplikácie priamo zo Store.
  */
 const lang = window.webjetTranslationService.language;
 ```
+
 ---
 #### date
 Vráti dátum poslednej aktualizácie vo formáte timestamp (milisekundy).
+
 ```javascript
 /**
  * @description Vráti uložený timestamp poslednej aktualizácie. Ak neexistuje, tak vráti aktuálny.
@@ -239,6 +261,7 @@ Vráti dátum poslednej aktualizácie vo formáte timestamp (milisekundy).
  */
 const date = window.webjetTranslationService.date;
 ```
+
 ---
 **setters**
 
@@ -253,17 +276,4 @@ Adresu je potrebné meniť ešte pred zavolaním metódy [load()](#load)
  * @setter
  */
 window.webjetTranslationService.urlLoad = 'Nová/url/adresa/pre/ziskanie/prekladov';
-```
----
-#### urlUpdate
-Zadanie novej API adresy pre načítanie dostupných prekladov.
-Adresu je potrebné meniť ešte pred zavolaním metódy [load()](#load)
-```javascript
-/**
- * @description Zadanie novej API adresy pre aktualizáciu dostupných prekladov.
- * @param {string} value
- * @public
- * @setter
- */
-window.webjetTranslationService.urlUpdate = 'Nová/url/adresa/pre/ziskanie/aktualizácií';
 ```

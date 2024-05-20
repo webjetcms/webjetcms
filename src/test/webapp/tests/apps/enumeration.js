@@ -31,6 +31,7 @@ Scenario('Enum type zakladne testy', async ({I, DataTables}) => {
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
+        skipSwitchDomain: true
     });
 });
 
@@ -62,7 +63,12 @@ Scenario('Okresne mesta zakladne testy', async ({I, DT, DataTables}) => {
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
+        skipSwitchDomain: true
     });
+});
+
+Scenario('logout', ({I}) => {
+    I.logout();
 });
 
 Scenario('test datatables paging', async ({I, DT}) => {
@@ -108,7 +114,7 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/");
     filterEnumDataByType(I, DTE, enumTypeNameA);
 
-    I.click("button.buttons-create");
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
     I.dontSee("Prepojenie na číselník");
     I.dontSee("Rodič");
@@ -125,7 +131,7 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
         //Check loop child select error
         selectChildEnumType(I, enumTypeNameB);
             //Toggle child enum for enumData
-            I.click("#DTE_Field_allowChildEnumerationType_0");
+            I.clickCss("#DTE_Field_allowChildEnumerationType_0");
         DTE.save();
 
         openEnumType(I, DTE, enumTypeNameB);
@@ -137,7 +143,7 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
             //Toggle parent option for enumData
             I.click(enumTypeNameB);
             DTE.waitForEditor('enumerationTypeDataTable');
-            I.click("#DTE_Field_allowParentEnumerationData_0");
+            I.clickCss("#DTE_Field_allowParentEnumerationData_0");
             DTE.save();
 
     I.say("Phase 3");
@@ -159,8 +165,8 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
         //Checkbox does not working for now
 
         //Check child enum type was saved
-        I.click("td.dt-select-td.sorting_1");
-        I.click("button.buttons-edit");
+        I.clickCss("td.dt-select-td.sorting_1");
+        I.clickCss("button.buttons-edit");
         DTE.waitForEditor('enumerationDataDataTable');
         I.see(enumTypeNameB);
         DTE.cancel();
@@ -183,15 +189,15 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
         //Checkbox does not working for now
 
         //Delete parent enumeration data
-        I.click("td.dt-select-td.sorting_1");
-        I.click("button.buttons-remove");
+        I.clickCss("td.dt-select-td.sorting_1");
+        I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
         DT.waitForLoader('enumerationDataDataTable');
         I.see(stringTestValue+"2");
 
         //Check deleted parent
-        I.click("td.dt-select-td.sorting_1");
-        I.click("button.buttons-edit");
+        I.clickCss("td.dt-select-td.sorting_1");
+        I.clickCss("button.buttons-edit");
         DTE.waitForEditor('enumerationDataDataTable');
         I.see("(!deleted)_" + stringTestValue + "1");
         DTE.cancel();
@@ -205,8 +211,8 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
     I.pressKey('Enter', "input.dt-filter-typeName");
     DTE.waitForLoader();
 
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -216,14 +222,14 @@ Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
     DTE.waitForLoader();
 
     //Delete enumTypeNameA
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
 function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStrChar) {
-    I.click("button.buttons-create");
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
 
     //Must see fields
@@ -232,10 +238,10 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
     I.see(booleanName + variant.toUpperCase());
 
     //Set enum data value
-    I.click("#DTE_Field_string1");
+    I.clickCss("#DTE_Field_string1");
     I.fillField("#DTE_Field_string1", stringTestValue + bonusStrChar);
 
-    I.click("#DTE_Field_decimal1");
+    I.clickCss("#DTE_Field_decimal1");
     I.fillField("#DTE_Field_decimal1", numberTestValue);
 
     I.checkOption("#DTE_Field_boolean1");
@@ -243,13 +249,15 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
     if(childEnumType !== null && childEnumType !== "") {
         //Select enum type child
         I.see("Prepojenie na číselník");
-        I.click('//*[@id="enumerationDataDataTable_modal"]/div/div/div[3]/div/form/div/div[27]/div[1]/div[1]/div/button');
+        //I.click('//*[@id="enumerationDataDataTable_modal"]/div/div/div[3]/div/form/div/div[27]/div[1]/div[1]/div/button');
+        I.clickCss("div.DTE_Field_Name_editorFields\\.childEnumTypeId div.dropdown button");
         I.fillField('body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input', childEnumType);
         I.click(childEnumType);
     } else if(parentEnumData !== null && parentEnumData !== "") {
         //Select enum data parent
         I.see("Rodič");
-        I.click('//*[@id="enumerationDataDataTable_modal"]/div/div/div[3]/div/form/div/div[28]/div[1]/div[1]/div/button');
+        //I.click('//*[@id="enumerationDataDataTable_modal"]/div/div/div[3]/div/form/div/div[28]/div[1]/div[1]/div/button');
+        I.clickCss("div.DTE_Field_Name_editorFields\\.parentEnumDataId div.dropdown button");
         I.fillField('body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input', parentEnumData);
         I.click(parentEnumData);
     }
@@ -260,13 +268,13 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
 
 function selectChildEnumType(I, childName) {
     I.click('//*[@id="panel-body-dt-enumerationTypeDataTable-basic"]/div[3]/div[1]/div[1]/div/button');
-    I.click('body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input');
+    I.clickCss('body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input');
     I.fillField('body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input', childName);
     I.click(childName);
 }
 
 function createEnumType(I, DTE, typeName, stringName, numberName, booleanName) {
-    I.click("button.buttons-create");
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor('enumerationTypeDataTable');
     DTE.save();
 
@@ -275,13 +283,13 @@ function createEnumType(I, DTE, typeName, stringName, numberName, booleanName) {
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
 
     I.fillField('#DTE_Field_typeName', typeName);
-    I.click("#pills-dt-enumerationTypeDataTable-strings-tab");
+    I.clickCss("#pills-dt-enumerationTypeDataTable-strings-tab");
 
     I.fillField('#DTE_Field_string1Name', stringName);
-    I.click("#pills-dt-enumerationTypeDataTable-numbers-tab");
+    I.clickCss("#pills-dt-enumerationTypeDataTable-numbers-tab");
 
     I.fillField("#DTE_Field_decimal1Name", numberName);
-    I.click("#pills-dt-enumerationTypeDataTable-booleans-tab");
+    I.clickCss("#pills-dt-enumerationTypeDataTable-booleans-tab");
 
     I.fillField('#DTE_Field_boolean1Name', booleanName);
     DTE.save();
@@ -326,7 +334,7 @@ function checkToggleLogic(I) {
 }
 
 function filterEnumDataByType(I, DTE, typeName) {
-    I.click("#pills-enumerationType-tab");
+    I.clickCss("#pills-enumerationType-tab");
     I.fillField('body > div.bs-container.dropdown.bootstrap-select > div > div.bs-searchbox > input', typeName);
     I.see(typeName);
     I.click(typeName);

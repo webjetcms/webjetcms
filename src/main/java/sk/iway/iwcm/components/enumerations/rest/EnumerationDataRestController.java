@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
@@ -51,9 +50,9 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         EnumerationTypeBean actualSelectedType;
         Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter("enumerationTypeId"), -1);
         if(enumerationTypeId == -1) {
-            actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(0);
+            actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(false);
         } else {
-            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId);
+            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);
         }
         return actualSelectedType;
     }
@@ -71,7 +70,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
             else page = new DatatablePageImpl<>(new ArrayList<>());
         } else {
             page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));
-            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId);
+            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);
         }
 
         processFromEntity(page, ProcessItemAction.GETALL);
@@ -112,7 +111,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         EnumerationDataBean entity;
 
         if(id == -1) entity = new EnumerationDataBean();
-        else entity = enumerationDataRepository.getNonHiddenByEnumId(Integer.valueOf(id+""));
+        else entity = enumerationDataRepository.getNonHiddenByEnumId(Integer.valueOf(id+""), false);
 
         processFromEntity(entity, ProcessItemAction.GETONE);
 
@@ -185,10 +184,9 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @RequestMapping(value="/enum-types")
-    @ResponseBody
     public Map<Integer, String> getEnumerationTypes() {
         HashMap<Integer, String> enumTypesMap = new HashMap<>();
-        List<EnumerationTypeBean> enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById();
+        List<EnumerationTypeBean> enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById(false);
 
         for(EnumerationTypeBean enumType : enumTypeList)
             enumTypesMap.put(enumType.getEnumerationTypeId(), enumType.getTypeName());
@@ -197,14 +195,13 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @RequestMapping( value="/enum-type", params={"enumerationTypeId"})
-    @ResponseBody
     public EnumerationTypeBean getEnumerationType(@RequestParam("enumerationTypeId") Integer enumTypeId) {
-        return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId);
+        return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId, false);
     }
 
     @Override
     public boolean deleteItem(EnumerationDataBean entity, long id) {
-        enumerationDataRepository.deleteEnumDataById(entity.getEnumerationDataId());
+        enumerationDataRepository.deleteEnumDataById(entity.getEnumerationDataId(), true);
         Adminlog.add(Adminlog.TYPE_UPDATEDB, "DELETE/HIDE:\nid: "+id+"\nstring1: "+entity.getString1(), (int)id, -1);
         Cache.getInstance().removeObjectStartsWithName("enumeration.");
         return true;

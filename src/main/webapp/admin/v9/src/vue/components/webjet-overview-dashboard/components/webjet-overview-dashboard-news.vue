@@ -2,7 +2,7 @@
     <div class="overview__news">
         <div class="overview__news__head">
             <div class="overview__news__head__icon">
-                <i class="fas fa-rss"></i>
+                <i class="ti ti-rss"></i>
             </div>
             <span>
                 {{$newsInWebJET}}
@@ -48,7 +48,16 @@
                 url: url,
                 success: function(data) {
                     //console.log("data=", data);
-                    self.news = data.news;
+                    self.news = [];
+                    try {
+                        if (data.news.length>3) {
+                            self.news.push(data.news.shift());
+                            self.news.push(data.news.shift());
+                            self.news.push(data.news.shift());
+                        }
+                    } catch (e) {
+                        console.error("Error parsing news data", e);
+                    }
                 }
             });
         },

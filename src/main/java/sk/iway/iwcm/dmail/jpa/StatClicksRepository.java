@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,9 @@ public interface StatClicksRepository extends JpaRepository<StatClicksEntity, Lo
     @Modifying
     public void deleteByCampainId(Long campainId);
 
+    //email_id is ambigious in entity, we must use nativequery
     @Transactional
     @Modifying
-    public void deleteByEmailId(Long emailId);
+    @Query(value = "DELETE FROM emails_stat_click WHERE email_id = ?1", nativeQuery=true)
+    void deleteByEmailId(Long emailId);
 }

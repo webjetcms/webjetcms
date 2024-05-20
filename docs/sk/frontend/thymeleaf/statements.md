@@ -96,3 +96,11 @@ Je možné použiť nasledovné atribúty:
 - ```data-th-insert``` - do tela tag-u vloží zadaný súbor
 - ```data-th-replace``` - celý tag nahradí zadaným súborom
 
+## Volanie statickej metódy
+
+Ak potrebujete volať statickú metódu môžete použiť `T()` funkciu:
+
+```html
+<p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
+<p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+```

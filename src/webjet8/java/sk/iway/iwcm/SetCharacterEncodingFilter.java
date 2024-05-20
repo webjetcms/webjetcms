@@ -325,6 +325,17 @@ public class SetCharacterEncodingFilter implements Filter
 			pathNoContext = "/";
 		}
 
+		//POZOR PRED TYMTO MIESTOM NESMIE BYT ZIADNE CITANIE PARAMETROV!!!!!!!
+	    // Select and set (if needed) the character encoding to be used
+	    String currentEncoding = selectEncoding(servletRequest);
+	    if (currentEncoding != null)
+	    {
+	    	servletRequest.setCharacterEncoding(currentEncoding);
+	    }
+
+	    registerDataContext(req);
+	   	//System.out.println("SetCharacterEncodingFilter.doFilter");
+
 		if (pathNoContext.startsWith("/wjerrorpages/")
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/templates/")) )
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/components/_common/combine.jsp")) )
@@ -342,17 +353,6 @@ public class SetCharacterEncodingFilter implements Filter
 
    			return;
    		}
-
-   		//POZOR PRED TYMTO MIESTOM NESMIE BYT ZIADNE CITANIE PARAMETROV!!!!!!!
-	      // Select and set (if needed) the character encoding to be used
-	      String currentEncoding = selectEncoding(servletRequest);
-	      if (currentEncoding != null)
-	      {
-	      	servletRequest.setCharacterEncoding(currentEncoding);
-	      }
-
-	      registerDataContext(req);
-	   	//System.out.println("SetCharacterEncodingFilter.doFilter");
 
 	      //aby mem.jsp bolo dostupne v kazdej situacii bez ohladu na DB spojenia
 	      if (pathNoContext.startsWith("/admin/mem2.jsp"))

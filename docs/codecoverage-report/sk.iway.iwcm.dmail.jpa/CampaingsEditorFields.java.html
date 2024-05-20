@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CampaingsEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.jpa</a> &gt; <span class="el_source">CampaingsEditorFields.java</span></div><h1>CampaingsEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.jpa;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotEmpty;
+
+import org.springframework.beans.BeanWrapperImpl;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.dmail.EmailDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserGroupsDB;
+
+@Getter
+@Setter
+<span class="fc" id="L29">public class CampaingsEditorFields implements Serializable {</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;user.permissions.label&quot;, tab = &quot;groupsTab&quot;, hidden = true, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.admin.editUserGroups&quot;),
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] permisions;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;groupedit.type_email&quot;, tab = &quot;groupsTab&quot;, hidden = true, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;menu.email&quot;),
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] emails;
+
+    //Replacement for CampaingsEntity.userGroupsIds, showen in table as text but hidden in editor
+<span class="fc" id="L44">    @DataTableColumn(inputType = DataTableColumnType.TEXT,</span>
+        title = &quot;components.email.regenerate.all.groups.title&quot;,
+        hiddenEditor = true,
+        filter = false,
+        sortAfter = &quot;senderEmail&quot;
+    )
+    private String userGroupsNames = &quot;&quot;;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.dmail.camp.send_emails&quot;,
+        hiddenEditor = true,
+        filter = false,
+        sortAfter = &quot;lastSentDate&quot;)
+    private String sentMails;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.dmail.campaings.status&quot;,
+        hiddenEditor = true,
+        filter = false,
+        sortAfter = &quot;sentMails&quot;)
+    private String status;
+
+    //Get DocDetails then convert to emailsEntity.url (String)
+<span class="fc" id="L69">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.JSON,
+        title=&quot;components.dmail.admin_email.emailUrl&quot;,
+        className = &quot;dt-tree-page&quot;,
+        tab = &quot;main&quot;,
+        sortAfter = &quot;subject&quot;,
+        filter = false
+    )
+    @NotEmpty
+    private DocDetails pageToSend = null;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title=&quot;email.attachment&quot;,
+        tab = &quot;advanced&quot;,
+        hidden = true,
+        sortAfter = &quot;sendAt&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                }
+            )
+        }
+    )
+    private String file1;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title=&quot;&amp;nbsp;&quot;,
+        tab = &quot;advanced&quot;,
+        sortAfter = &quot;editorFields.file1&quot;,
+        hidden = true
+    )
+    private String file2;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title=&quot;&amp;nbsp;&quot;,
+        tab = &quot;advanced&quot;,
+        sortAfter = &quot;editorFields.file2&quot;,
+        hidden = true
+    )
+    private String file3;
+
+
+    public void fromCampaingEntity(CampaingsEntity campOriginal, Prop prop, HttpServletRequest request) {
+
+        //Set this Editor fields
+<span class="fc" id="L118">        campOriginal.setEditorFields(this);</span>
+
+        //Concate text for sentMails column (just info column)
+<span class="fc" id="L121">        sentMails = campOriginal.getCountOfSentMails() + &quot; / &quot; + campOriginal.getCountOfRecipients();</span>
+
+        //nastav pageToSend
+<span class="fc" id="L124">        pageToSend = WebpagesService.getBasicDocFromUrl(campOriginal.getUrl());</span>
+
+        //zoznam nazvov skupin pouzivatelov
+<span class="fc" id="L127">        userGroupsNames = UserGroupsDB.getInstance().convertIdsToNames(campOriginal.getUserGroupsIds());</span>
+
+        //Take userGroupIds string, split on Individual ids, convert to Integer, push inside recieversGroupsArray
+<span class="fc" id="L130">        int[] userGroupsIds =  Tools.getTokensInt(campOriginal.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="fc" id="L131">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(userGroupsIds);</span>
+<span class="fc" id="L132">        permisions = splitPermsEmails.get(0);</span>
+<span class="fc" id="L133">        emails = splitPermsEmails.get(1);</span>
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if(campOriginal.getId() != -1) {</span>
+            //Set email status
+<span class="fc" id="L137">            String currentStatus = EmailDB.getStaus(campOriginal.getId().intValue());</span>
+
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if(&quot;disabled&quot;.equals(currentStatus)) {</span>
+<span class="fc" id="L140">                status = prop.getText(&quot;components.dmail.campaings.status.disabled&quot;);</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            } else if (&quot;enabled&quot;.equals(currentStatus)) {</span>
+<span class="nc" id="L142">                status = prop.getText(&quot;components.dmail.campaings.status.enabled&quot;);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            } else if (&quot;all_sent&quot;.equals(currentStatus)) {</span>
+<span class="fc" id="L144">                status = prop.getText(&quot;components.dmail.campaings.status.all_sent&quot;);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            } else if (&quot;unknown&quot;.equals(currentStatus)) {</span>
+<span class="fc" id="L146">                status = prop.getText(&quot;components.dmail.campaings.status.unknown&quot;);</span>
+            }
+        }
+
+        //process attachments, format is /files/path/filename.pdf;filename.pdf;/files/path/file2.pdf;file2.pdf;
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(campOriginal.getAttachments())) {</span>
+<span class="nc" id="L152">            String[] tokens = Tools.getTokens(campOriginal.getAttachments(), &quot;;&quot;);</span>
+<span class="nc" id="L153">            int fileCounter = 1;</span>
+<span class="nc" id="L154">            BeanWrapperImpl bw = new BeanWrapperImpl(this);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            for (String token : tokens) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                if (token.startsWith(&quot;/&quot;)==false) continue;</span>
+
+                try {
+<span class="nc" id="L159">                    bw.setPropertyValue(&quot;file&quot;+fileCounter, token);</span>
+<span class="nc" id="L160">                } catch (Exception ex) {</span>
+<span class="nc" id="L161">                    Logger.error(CampaingsEditorFields.class, ex);</span>
+<span class="nc" id="L162">                }</span>
+
+
+<span class="nc" id="L165">                fileCounter++;</span>
+            }
+        }
+<span class="fc" id="L168">    }</span>
+
+    public void toCampaingEntity(CampaingsEntity campOriginal, HttpServletRequest request) {
+
+        //Check if url was changed
+<span class="fc" id="L173">        DocDB  docDB = DocDB.getInstance();</span>
+<span class="fc" id="L174">        int docId = campOriginal.getEditorFields().getPageToSend().getDocId();</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if(docId != -1) {</span>
+<span class="fc" id="L176">            String docLink = docDB.getDocLink(docId, null, true, request);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if(!docLink.equals(campOriginal.getUrl())) campOriginal.setUrl(docLink);</span>
+<span class="fc" id="L178">        } else campOriginal.setUrl(&quot;&quot;);</span>
+
+        //Check if user groups was changed
+<span class="fc" id="L181">        campOriginal.setUserGroupsIds(UserDetailsService.getUserGroupIds(campOriginal.getEditorFields().getPermisions(), campOriginal.getEditorFields().getEmails()));</span>
+
+        //Cannot be null
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        if(campOriginal.getCountOfSentMails() == null) campOriginal.setCountOfSentMails(0);</span>
+
+        //process attachments, format is /files/path/filename.pdf;filename.pdf;/files/path/file2.pdf;file2.pdf;
+<span class="fc" id="L187">        StringBuilder attachments = new StringBuilder();</span>
+<span class="fc" id="L188">        BeanWrapperImpl bw = new BeanWrapperImpl(campOriginal.getEditorFields());</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (int fileCounter=1; fileCounter&lt;=3; fileCounter++) {</span>
+            try {
+<span class="fc" id="L191">                String path = (String)bw.getPropertyValue(&quot;file&quot;+fileCounter);</span>
+<span class="pc bpc" id="L192" title="2 of 4 branches missed.">                if (path==null || Tools.isEmpty(path)) continue;</span>
+
+<span class="nc" id="L194">                int separator = path.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                if (separator&gt;1) {</span>
+<span class="nc" id="L196">                    String name = path.substring(separator+1);</span>
+<span class="nc" id="L197">                    attachments.append(path).append(&quot;;&quot;).append(name).append(&quot;;&quot;);</span>
+                }
+
+<span class="nc" id="L200">            } catch (Exception ex) {</span>
+<span class="nc" id="L201">                Logger.error(CampaingsEditorFields.class, ex);</span>
+<span class="nc" id="L202">            }</span>
+        }
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (attachments.length()&lt;1) campOriginal.setAttachments(null);</span>
+<span class="nc" id="L205">        else campOriginal.setAttachments(attachments.toString());</span>
+<span class="fc" id="L206">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

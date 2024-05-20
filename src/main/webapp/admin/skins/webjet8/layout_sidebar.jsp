@@ -321,7 +321,7 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 									<a class="md-main-menu__item__link" href="${subMenuItem.href}">
 										<i class="${subMenuItem.icon}"></i>
 										${subMenuItem.text}
-										<% if (!subMenuItem.getChildrens().isEmpty()) out.print("<i class='fas fa-chevron-down'></i>"); %>
+										<% if (!subMenuItem.getChildrens().isEmpty()) out.print("<i class='ti ti-chevron-down'></i>"); %>
 									</a>
 									<% if (!subMenuItem.getChildrens().isEmpty()) { %>
 										<div class="md-main-menu__item__sub-menu">

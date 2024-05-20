@@ -51,12 +51,7 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
 
         if(id != -1) {
             //ziskaj udaje volanim super.getOneItem aby sa korektne vykonalo porovnanie domain_id stlpca
-            QuestionsAnswersEntity entity = super.getOneItem(id);
-
-            //Column answerToEmail is Transient, so we fill column with answer value in editor
-            entity.setAnswerToEmail(entity.getAnswer());
-
-            return entity;
+            return super.getOneItem(id);
         }
 
         //novy zaznam, nastav hodnoty aktualne prihlaseneho usera
@@ -84,11 +79,6 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
 
         //ak sa vytvara otazka v admine nema toto nastavene, takze nastavime na true
         if (entity.getAllowPublishOnWeb()==null) entity.setAllowPublishOnWeb(Boolean.TRUE);
-
-        //set email answer to database
-        if(Tools.isNotEmpty(entity.getAnswerToEmail()) && Tools.isEmpty(entity.getAnswer())) {
-            entity.setAnswer(entity.getAnswerToEmail());
-        }
 
         if(Tools.isNotEmpty(entity.getAnswerToEmail()) || Tools.isNotEmpty(entity.getAnswer())) {
             entity.setAnswerDate(new Date());

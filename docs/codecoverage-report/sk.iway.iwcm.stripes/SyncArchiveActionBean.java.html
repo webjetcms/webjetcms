@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncArchiveActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">SyncArchiveActionBean.java</span></div><h1>SyncArchiveActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.FileBean;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.zip.ZipEntry;
+import sk.iway.iwcm.system.zip.ZipInputStream;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  SyncArchiveActionBean.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 20.1.2009 11:50:27
+ *@modified     $Date: 2009/05/04 09:26:01 $
+ */
+<span class="fc" id="L31">public class SyncArchiveActionBean implements ActionBean</span>
+{
+	private ActionBeanContext context;
+	private FileBean archive;
+
+	public FileBean getArchive()
+	{
+<span class="nc" id="L38">		return archive;</span>
+	}
+
+	public void setArchive(FileBean archive)
+	{
+<span class="fc" id="L43">		this.archive = archive;</span>
+<span class="fc" id="L44">	}</span>
+	@Override
+	public ActionBeanContext getContext()
+	{
+<span class="fc" id="L48">		return context;</span>
+	}
+	@Override
+	public void setContext(ActionBeanContext cntxt)
+	{
+<span class="fc" id="L53">		context=cntxt;</span>
+
+<span class="fc" id="L55">	}</span>
+	@DefaultHandler
+	public Resolution sync()
+	{
+<span class="fc" id="L59">		Identity user = UsersDB.getCurrentUser(getContext().getRequest());</span>
+<span class="pc bpc" id="L60" title="2 of 4 branches missed.">		if (user == null || user.isAdmin()==false) return(new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+		try
+		{
+<span class="fc" id="L64">			String virtualDir=&quot;/WEB-INF/tmp/&quot; + new SimpleDateFormat(&quot;dd.MM.yyyy-HHmm&quot;).format(new Date());</span>
+			/*if (Constants.getBoolean(&quot;multiDomainEnabled&quot;))
+			{
+				virtualDir=&quot;/files/&quot;+MultiDomainFilter.getDomainAlias(DocDB.getDomain(context.getRequest()))+&quot;/protected/backup/&quot;+ new SimpleDateFormat(&quot;dd.MM.yyyy-hhmm&quot;).format(new Date());
+			}*/
+<span class="fc" id="L69">			String backupDir = Tools.getRealPath(virtualDir);</span>
+<span class="fc" id="L70">			IwcmFile backupDirFile = new IwcmFile(backupDir);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">			if (backupDirFile.exists()==false)</span>
+			{
+<span class="fc" id="L73">				backupDirFile.mkdirs();</span>
+			}
+
+<span class="fc" id="L76">			ZipInputStream zis = new ZipInputStream(archive.getInputStream());</span>
+			ZipEntry entry;
+			IwcmFile outFile;
+
+<span class="fc bfc" id="L80" title="All 2 branches covered.">			while ((entry = zis.getNextEntry()) != null)</span>
+			{
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">				if (entry.getName().endsWith(&quot;/&quot;)) //je to adresar</span>
+				{
+<span class="nc" id="L84">					outFile = new IwcmFile(backupDir + java.io.File.separatorChar + entry.getName());</span>
+<span class="nc" id="L85">					outFile.mkdirs();</span>
+				}
+				else
+				{
+<span class="fc bfc" id="L89" title="All 2 branches covered.">					if (entry.getName().contains(&quot;/&quot;))</span>
+					{
+<span class="fc" id="L91">						int index = entry.getName().lastIndexOf('/') + 1;</span>
+<span class="fc" id="L92">						String realDir = backupDir + java.io.File.separatorChar + entry.getName().substring(0, index).replace('/', java.io.File.separatorChar);</span>
+<span class="fc" id="L93">						String realPath = realDir + entry.getName().substring(index);</span>
+<span class="fc" id="L94">						IwcmFile outDir = new IwcmFile(realDir);</span>
+<span class="fc" id="L95">						outDir.mkdirs();</span>
+<span class="fc" id="L96">						outFile = new IwcmFile(realPath);</span>
+<span class="fc" id="L97">					}</span>
+					else
+					{
+<span class="fc" id="L100">						outFile = new IwcmFile(backupDir + java.io.File.separatorChar + entry.getName());</span>
+					}
+<span class="fc" id="L102">					IwcmFsDB.writeFileToDisk(zis, new java.io.File(outFile.getPath()), false);</span>
+				}
+				//new IwcmFile(outFile.getPath()).setLastModified(entry.getTime());//nastavime lastModified podla suboru zo zip archivu
+			}
+<span class="fc" id="L106">			zis.close();</span>
+<span class="fc" id="L107">			context.getRequest().setAttribute(&quot;syncDir&quot;,virtualDir);</span>
+		}
+<span class="nc" id="L109">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L111">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L112">		}</span>
+<span class="fc" id="L113">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

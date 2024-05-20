@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.media</a> &gt; <span class="el_source">MediaRestController.java</span></div><h1>MediaRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.media;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.SpecSearch;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.spirit.MediaDB;
+import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaEditorFields;
+import sk.iway.spirit.model.MediaGroupBean;
+
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/media&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('editor_edit_media_all|menuWebpages')&quot;)
+public class MediaRestController extends DatatableRestControllerV2&lt;Media, Long&gt; {
+
+    private final MediaRepository mediaRepository;
+    private final MediaGroupRepository mediaGroupRepository;
+<span class="fc" id="L50">    private final String DOCUMENTS_TABLE_NAME = &quot;documents&quot;;</span>
+
+    @Autowired
+    public MediaRestController(MediaRepository mediaRepository, MediaGroupRepository mediaGroupRepository) {
+<span class="fc" id="L54">        super(mediaRepository);</span>
+<span class="fc" id="L55">        this.mediaRepository = mediaRepository;</span>
+<span class="fc" id="L56">        this.mediaGroupRepository = mediaGroupRepository;</span>
+<span class="fc" id="L57">    }</span>
+
+    /**
+     * Ziska vsetky media
+     * POZOR: ma 3 rezimy:
+     * - ak ide zo samostatnej media stranky /admin/v9/webpages/media/ zobrazuje vsetky media bez ohladu na web stranku
+     * - ak ide zo zalozky Media vo web strankach dostava ako URL parameter docId a groupId, podla toho vrati len media pre danu stranku
+     * - ak ide zo zalozky Media a je to NOVA web stranka pouzije ziskanie podla ID prihlaseneho pouzivatela a fk_table_name documents_temp
+     */
+    @Override
+    public Page&lt;Media&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L69">        int domainId = CloudToolsForCore.getDomainId();</span>
+
+        //get docId
+<span class="fc" id="L72">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+
+        //get groupId
+<span class="fc" id="L75">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), -1);</span>
+
+        //get user identity
+<span class="fc" id="L78">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
+
+        //checking permisions
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if(docId &lt; 1) {</span>
+
+            //if user don't have permisions, throw error message for user
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">            if(!GroupsDB.isGroupEditable(user, groupId)) {</span>
+<span class="nc" id="L85">                throw new IllegalArgumentException(getProp().getText(&quot;editor.permsDenied&quot;));</span>
+            }
+        } else {
+            //if user don't have permisions, throw error message for user
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">            if(!EditorDB.isPageEditable(user, docId)) {</span>
+<span class="nc" id="L90">                throw new IllegalArgumentException(getProp().getText(&quot;editor.permsDenied&quot;));</span>
+            }
+        }
+
+        DatatablePageImpl&lt;Media&gt; page;
+
+        //get Media by docId (if docId is &lt; 1 use user.userId)
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">        if (getRequest().getParameter(&quot;docId&quot;)==null &amp;&amp; getRequest().getParameter(&quot;groupId&quot;)==null) {</span>
+
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (getUser().isDisabledItem(&quot;editor_edit_media_all&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
+
+            //docId ani groupId ako parameter neboli poslane = sme v zozname vsetkych medii
+<span class="fc" id="L102">            page = new DatatablePageImpl&lt;&gt;(mediaRepository.findAllByDomainId(domainId, pageable));</span>
+        } else {
+            //dostali sme docId parameter, sme vnorena datatabulka vo web stranke
+<span class="fc" id="L105">            page = new DatatablePageImpl&lt;&gt;(mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(getMediaFkId(), getTableName(), domainId, pageable));</span>
+        }
+
+        //create list of MediaGroupBeans, used as value in multiselect when create/edit Media
+        List&lt;MediaGroupBean&gt; groups;
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (groupId &lt; 1) groups = MediaDB.getGroups();</span>
+<span class="fc" id="L111">        else groups = MediaDB.getGroups(groupId);</span>
+
+        //add, getted Media groups as option for &quot;Integer[] groups&quot; located in MediaEditorFields
+<span class="fc" id="L114">        page.addOptions(&quot;editorFields.groups&quot;, groups, &quot;mediaGroupName&quot;, &quot;mediaGroupId&quot;, false);</span>
+
+<span class="fc" id="L116">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+
+<span class="fc" id="L118">        return page;</span>
+    }
+
+    //when create/edit Media, call method toMedia from MediaEditorFiled
+    @Override
+    public void beforeSave(Media entity) {
+
+        int docId;
+        String tableName;
+
+        //First check if call is from EditorDataTable
+        //If yes set table fix like &quot;documets&quot; and docId get from doc tree selector (is required)
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if(isCallerFromAllMedia()) {</span>
+<span class="fc" id="L131">            tableName = DOCUMENTS_TABLE_NAME;</span>
+<span class="fc" id="L132">            docId = entity.getEditorFields().getDocDetails().getDocId();</span>
+        } else {
+            //docid zober z request.getDocId(pripad editacie vo web stranke) alebo z entity (ak je zadane v editacii) alebo ako -1 ked nie je nic
+<span class="fc" id="L135">            docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), Tools.getIntValue(entity.getMediaFkId(), -1));</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (docId &gt; 0) {</span>
+<span class="fc" id="L137">                int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                if (mutigroupDocId &gt; 0) docId = mutigroupDocId;</span>
+            }
+<span class="fc" id="L140">            tableName = entity.getMediaFkTableName();</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (Tools.isEmpty(tableName)) tableName = getTableName();</span>
+
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if(docId &lt; 1) {</span>
+<span class="fc" id="L144">                Identity user = getUser();</span>
+<span class="fc" id="L145">                docId = user.getUserId();</span>
+            }
+        }
+
+<span class="fc" id="L149">        checkPerms(docId);</span>
+
+        //IMPORTANT - dont use method getMediaFkId here because we need know if it's docId or userId
+        //this difference we need to know to call getLastOrder with right param
+<span class="fc" id="L153">        Integer mediaSortOrder = entity.getMediaSortOrder();</span>
+        //if mediaSortOrder is empty set using docId (aka userId)
+<span class="pc bpc" id="L155" title="2 of 4 branches missed.">        if(mediaSortOrder == null || mediaSortOrder == 0) {</span>
+<span class="nc" id="L156">            mediaSortOrder = MediaDB.getLastOrder(docId, tableName) + 10;</span>
+        }
+
+        //set docId(document creating/editing media) and table name as &quot;documents&quot;
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (entity.getMediaFkId()==null) entity.setMediaFkId(docId);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (Tools.isEmpty(entity.getMediaFkTableName())) entity.setMediaFkTableName(tableName);</span>
+
+        //set new mediaSortOrder
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (entity.getMediaSortOrder()==null) entity.setMediaSortOrder(mediaSortOrder);</span>
+
+        //set last update (current date and time)
+<span class="fc" id="L167">        Date date = new Date();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (getRequest().getParameter(&quot;docId&quot;)==null) {</span>
+            try {
+                //sme vo vsetkych mediach, ak medium existuje, zachovajme datum
+<span class="pc bpc" id="L171" title="1 of 4 branches missed.">                if (entity.getId()!=null &amp;&amp; entity.getId()&gt;0) {</span>
+<span class="fc" id="L172">                    Media current = mediaRepository.getById(entity.getId());</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                    if (current != null) date = current.getLastUpdate();</span>
+<span class="pc bpc" id="L174" title="2 of 4 branches missed.">                } else if (entity.getMediaFkId()!=null &amp;&amp; DOCUMENTS_TABLE_NAME.equals(entity.getMediaFkTableName())) {</span>
+                    //skus podla poslednej zmeny web stranky
+<span class="fc" id="L176">                    DocDetails doc = DocDB.getInstance().getDoc(entity.getMediaFkId().intValue());</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">                    if (doc != null) {</span>
+                        //nastav sekundu pred publikovanim stranky
+<span class="fc" id="L179">                        date = new Date(doc.getDateCreated()-1000);</span>
+                    }
+                }
+<span class="nc" id="L182">            } catch (Exception ex) {</span>
+<span class="nc" id="L183">                Logger.error(MediaRestController.class, ex);</span>
+<span class="fc" id="L184">            }</span>
+        }
+<span class="fc" id="L186">        entity.setLastUpdate(date);</span>
+
+        //call toMedia method to handle groups convert
+<span class="fc" id="L189">        entity.getEditorFields().toMedia(entity, mediaGroupRepository);</span>
+<span class="fc" id="L190">    }</span>
+
+    @Override
+    public Media getOneItem(long id) {
+
+<span class="fc" id="L195">        Media entity = super.getOneItem(id);</span>
+
+        //set empty Media entity (without setting, creating dialog will not show but don't throw any error)
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if(entity == null) {</span>
+<span class="fc" id="L199">            entity = new Media();</span>
+<span class="fc" id="L200">            entity.setGroups(new ArrayList&lt;MediaGroupBean&gt;());</span>
+<span class="fc" id="L201">            entity.setMediaFkTableName(&quot;&quot;);</span>
+<span class="fc" id="L202">            entity.setMediaFkId(-1);</span>
+<span class="fc" id="L203">            entity.setMediaLink(&quot;&quot;);</span>
+<span class="fc" id="L204">            entity.setMediaThumbLink(&quot;&quot;);</span>
+<span class="fc" id="L205">            entity.setMediaTitleSk(&quot;&quot;);</span>
+        }
+
+        //Creating new Media from webPage
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if(id &lt; 1) {</span>
+<span class="fc" id="L210">            int docId = getMediaFkId();</span>
+<span class="fc" id="L211">            String tableName = getTableName();</span>
+
+<span class="fc" id="L213">            Integer mediaSortOrder = Integer.valueOf(MediaDB.getLastOrder(docId, tableName) + 10);</span>
+<span class="fc" id="L214">            entity.setMediaFkTableName(tableName);</span>
+<span class="fc" id="L215">            entity.setMediaFkId(docId);</span>
+<span class="fc" id="L216">            entity.setMediaSortOrder(mediaSortOrder);</span>
+
+            //Call is from MediaDataTable
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if(isCallerFromAllMedia()) {</span>
+                //Fix set table
+<span class="fc" id="L221">                entity.setMediaFkTableName(DOCUMENTS_TABLE_NAME);</span>
+
+                //DocId set as null, because we use doc tree select
+<span class="fc" id="L224">                entity.setMediaFkId(null);</span>
+            }
+        }
+
+<span class="pc bpc" id="L228" title="1 of 4 branches missed.">        if (entity.getMediaFkId()!=null &amp;&amp; entity.getMediaFkId() &gt; 0) checkPerms(entity.getMediaFkId());</span>
+
+<span class="fc" id="L230">        return processFromEntity(entity, ProcessItemAction.GETONE);</span>
+    }
+
+    /**
+     * Vrati docId z request parametra, ak je -1 (nova web stranka) vrati ID prihlaseneho pouzivatela
+     * @return
+     */
+    public int getMediaFkId() {
+        //get docId
+<span class="fc" id="L239">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (docId &gt; 0) {</span>
+<span class="fc" id="L241">            int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">            if (mutigroupDocId &gt; 0) docId = mutigroupDocId;</span>
+        }
+
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if(docId &lt; 1) {</span>
+            //get user identity
+<span class="fc" id="L247">            final Identity user = getUser();</span>
+<span class="fc" id="L248">            return user.getUserId();</span>
+<span class="fc" id="L249">        } else return docId;</span>
+    }
+
+    /**
+     * Vrati meno tabulky (fk_table_name), kde pre kladne docId z requestu
+     * je to documents a pre novu web stranku (docId&lt;1) vrati documents_temp
+     * @return
+     */
+    public String getTableName() {
+<span class="fc" id="L258">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if(docId  &lt; 1) {</span>
+<span class="fc" id="L261">            return &quot;documents_temp&quot;;</span>
+<span class="fc" id="L262">        } else return DOCUMENTS_TABLE_NAME;</span>
+    }
+
+    private void checkPerms(int docId) {
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">        if (docId &gt; 0) {</span>
+<span class="fc" id="L267">            Identity user = getUser();</span>
+<span class="pc bpc" id="L268" title="1 of 4 branches missed.">            if(user.isEnabledItem(&quot;editor_edit_media_all&quot;)==false &amp;&amp; EditorDB.isPageEditable(user, docId)==false) {</span>
+<span class="nc" id="L269">                throw new IllegalArgumentException(getProp().getText(&quot;datatables.accessDenied.title.js&quot;));</span>
+            }
+        }
+<span class="fc" id="L272">    }</span>
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, Media&gt; target, Identity user, Errors errors, Long id, Media entity) {
+<span class="fc" id="L276">        boolean valid = true;</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">        if (isCallerFromAllMedia()) {</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            if(entity.getEditorFields() == null) valid = false;</span>
+
+<span class="fc" id="L280">            DocDetails doc = entity.getEditorFields().getDocDetails();</span>
+
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">            if(doc == null) valid = false;</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">            else if(doc.getDocId() &lt; 0) valid = false;</span>
+
+<span class="fc bfc" id="L285" title="All 2 branches covered.">            if(!valid) errors.rejectValue(&quot;errorField.editorFields.docDetails&quot;, null, getProp().getText(&quot;media.doc_tree_select.required&quot;));</span>
+
+            //also show validate error for title
+<span class="fc bfc" id="L288" title="All 2 branches covered.">            if (Tools.isEmpty(entity.getMediaTitleSk())) errors.rejectValue(&quot;errorField.mediaTitleSk&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+        }
+<span class="fc" id="L290">    }</span>
+
+    /**
+     * Returns true if call is from all media page
+     * @return
+     */
+    private boolean isCallerFromAllMedia() {
+<span class="fc" id="L297">        return &quot;true&quot;.equals(getRequest().getParameter(&quot;isCalledFromTable&quot;));</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;Media&gt; root, CriteriaBuilder builder) {
+<span class="fc" id="L302">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L303">        int groupId = Tools.getIntValue(params.get(&quot;searchEditorFields.groups&quot;), -1);</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">        if (groupId &gt; 0) {</span>
+<span class="fc" id="L305">            predicates.add(builder.equal(root.join(&quot;groups&quot;).get(&quot;id&quot;), groupId));</span>
+        }
+<span class="fc" id="L307">        String docTitle = params.get(&quot;searchEditorFields.docDetails&quot;);</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (Tools.isNotEmpty(docTitle)) {</span>
+<span class="fc" id="L309">            SpecSearch&lt;Media&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+<span class="fc" id="L310">            specSearch.addSpecSearchDocFullPath(docTitle, &quot;mediaFkId&quot;, predicates, root, builder);</span>
+        }
+<span class="fc" id="L312">    }</span>
+
+    @Override
+    public Media processFromEntity(Media entity, ProcessItemAction action) {
+        //GetOneItem call super, and super call this with null entity !
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        if(entity == null) return entity;</span>
+
+        //Prepare instance of editor fields
+<span class="fc" id="L320">        MediaEditorFields mef = new MediaEditorFields();</span>
+
+        //Set &quot;volitelne polia&quot;
+<span class="fc" id="L323">        mef.setFieldsDefinition( mef.getFields(entity, &quot;components.media&quot;, 'F') );</span>
+
+        //Perform from action
+<span class="fc" id="L326">        mef.fromMedia(entity);</span>
+
+        //Set prepared editor fields
+<span class="fc" id="L329">        entity.setEditorFields(mef);</span>
+<span class="fc" id="L330">        return entity;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

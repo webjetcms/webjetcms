@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetViewResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component</a> &gt; <span class="el_source">WebjetViewResolver.java</span></div><h1>WebjetViewResolver.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component;
+
+import org.springframework.core.Ordered;
+import org.springframework.lang.NonNull;
+import org.springframework.web.context.support.WebApplicationObjectSupport;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.view.RedirectView;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+import java.util.*;
+
+// vracia vhodny view z viewResolverov na zaklade cesty
+<span class="fc" id="L17">public class WebjetViewResolver extends WebApplicationObjectSupport implements ViewResolver {</span>
+
+    private String viewFolder;
+    private List&lt;ViewResolver&gt; viewResolvers;
+
+    public View resolveViewName(@NonNull String viewName, @NonNull Locale locale) throws Exception {
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">        if (viewResolvers == null) {</span>
+<span class="nc" id="L24">            return null;</span>
+        }
+
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (viewName.startsWith(&quot;redirect:&quot;)) {</span>
+<span class="fc" id="L28">            return new RedirectView(Tools.replace(viewName, &quot;redirect:&quot;, &quot;&quot;));</span>
+        }
+
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">        for (ViewResolver viewResolver : viewResolvers) {</span>
+
+<span class="fc" id="L33">            String viewNameLocal = viewName;</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (!WebjetInternalResourceViewResolver.class.isAssignableFrom(viewResolver.getClass())</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                    &amp;&amp; !WebjetFreeMarkerViewResolver.class.isAssignableFrom(viewResolver.getClass())) {</span>
+<span class="fc" id="L37">                View view = viewResolver.resolveViewName(viewNameLocal, locale);</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">                if (view != null) {</span>
+<span class="fc" id="L39">                    return view;</span>
+                }
+
+                continue;
+            }
+
+            String prefix;
+            String suffix;
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (viewResolver instanceof WebjetInternalResourceViewResolver) {</span>
+<span class="fc" id="L49">                WebjetInternalResourceViewResolver wjViewResolver = (WebjetInternalResourceViewResolver) viewResolver;</span>
+<span class="fc" id="L50">                prefix = wjViewResolver.getPrefix();</span>
+<span class="fc" id="L51">                suffix = wjViewResolver.getSuffix();</span>
+<span class="fc" id="L52">            }</span>
+            else {
+<span class="fc" id="L54">                WebjetFreeMarkerViewResolver wjViewResolver = (WebjetFreeMarkerViewResolver) viewResolver;</span>
+<span class="fc" id="L55">                prefix = wjViewResolver.getPrefix();</span>
+<span class="fc" id="L56">                suffix = wjViewResolver.getSuffix();</span>
+            }
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(prefix)) {</span>
+<span class="nc" id="L60">                viewNameLocal = prefix + viewNameLocal;</span>
+            }
+
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(suffix) &amp;&amp; !viewNameLocal.contains(suffix)) {</span>
+<span class="fc" id="L64">                viewNameLocal = viewNameLocal + suffix;</span>
+                // kedze pridavam suffix do viewName, tak uz nie je potrebny vo viewResolveri, kedze ten je sprosty a vlozi suffix do viewName znova
+                //wjViewResolver.setSuffix(&quot;&quot;);
+            }
+
+            // cesta s installName
+<span class="fc" id="L70">            List&lt;String&gt; paths = getPaths(viewNameLocal);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            for (String path : paths) {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                if (FileTools.isFile(path)) {</span>
+<span class="fc" id="L73">                    return viewResolver.resolveViewName(Tools.replace(path, suffix, &quot;&quot;), locale);</span>
+                }
+<span class="fc" id="L75">            }</span>
+<span class="fc" id="L76">        }</span>
+
+<span class="nc" id="L78">        Logger.debug(WebjetViewResolver.class, String.format(&quot;JSP not found: %s&quot;, viewName));</span>
+        //throw new Exception(String.format(&quot;JSP not found: %s&quot;, viewName));
+
+<span class="nc" id="L81">        return null;</span>
+    }
+
+    public void setViewResolvers(List&lt;ViewResolver&gt; viewResolvers)
+    {
+<span class="fc" id="L86">        this.viewResolvers = viewResolvers;</span>
+<span class="fc" id="L87">        this.viewResolvers.sort(Comparator.comparing(o -&gt; ((Ordered) o).getOrder()));</span>
+<span class="fc" id="L88">    }</span>
+
+    private List&lt;String&gt; getPaths(String viewName) {
+<span class="fc" id="L91">        String installName = Constants.getInstallName();</span>
+<span class="fc" id="L92">        List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L94">        List&lt;String&gt; tokens1 = new ArrayList&lt;&gt;(Arrays.asList(Tools.getTokens(viewName, &quot;/&quot;)));</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(viewFolder)) {</span>
+<span class="nc" id="L96">            tokens1.add(tokens1.size() - 1, viewFolder);</span>
+        }
+
+<span class="fc" id="L99">        List&lt;String&gt; tokens2 = new ArrayList&lt;&gt;(Arrays.asList(Tools.getTokens(viewName, &quot;/&quot;)));</span>
+<span class="fc" id="L100">        tokens2.add(1, installName);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(viewFolder)) {</span>
+<span class="nc" id="L102">            tokens2.add(tokens2.size() - 1, viewFolder);</span>
+        }
+
+<span class="fc" id="L105">        result.add(&quot;/&quot; + Tools.join(tokens2, &quot;/&quot;));</span>
+<span class="fc" id="L106">        result.add(&quot;/&quot; + Tools.join(tokens1, &quot;/&quot;));</span>
+
+<span class="fc" id="L108">        return result;</span>
+    }
+
+    public String getViewFolder() {
+<span class="nc" id="L112">        return viewFolder;</span>
+    }
+
+    public void setViewFolder(String viewFolder) {
+<span class="nc" id="L116">        this.viewFolder = viewFolder;</span>
+<span class="nc" id="L117">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

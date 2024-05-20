@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LayoutBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">LayoutBean.java</span></div><h1>LayoutBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
+
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+
+/**
+ * LayoutBean - drzi atributy pre model
+ */
+@Getter
+@Setter
+<span class="fc" id="L19">public class LayoutBean {</span>
+
+    private Identity user;
+    private HeaderBean header;
+    //brand: cms, net, lms
+    private String brand;
+    //plna verzia WebJETu: Web JET admin verzia 8.7.979 18.03.2020 13:06:59 Enterprise
+    private String version;
+    private List&lt;MenuBean&gt; menu;
+    private String lng;
+    private String lngWebjet;
+    private String csrfToken;
+    private String nopermsCss;
+    private String nopermsJavascript;
+    //datum poslednej zmeny properties suborov pre efektivnejsie (ne)volanie REST sluzby pre ich aktualizaciu na FE
+    private long propertiesLastModified;
+
+    public String getConstant(String name)
+    {
+<span class="fc" id="L38">        return Constants.getString(name);</span>
+    }
+
+    public String getConstant(String name, String defaultValue)
+    {
+<span class="nc" id="L43">        return Constants.getString(name, defaultValue);</span>
+    }
+
+    public int getConstantInt(String name)
+    {
+<span class="fc" id="L48">        return Constants.getInt(name);</span>
+    }
+
+    public int getConstantInt(String name, int defaultValue)
+    {
+<span class="fc" id="L53">        return Constants.getInt(name, defaultValue);</span>
+    }
+
+    public boolean getConstantBoolean(String name)
+    {
+<span class="fc" id="L58">        return Constants.getBoolean(name);</span>
+    }
+
+    public String getDataTableColumns(String className) throws JsonProcessingException {
+<span class="fc" id="L62">        String json = new DataTableColumnsFactory(className).getColumnsJson();</span>
+<span class="fc" id="L63">        return json;</span>
+    }
+
+    public String getUserDto() throws JsonProcessingException {
+<span class="fc" id="L67">        return JsonTools.objectToJSON(new UserDto(getUser()));</span>
+    }
+
+    /**
+     * Overi prava pouzivatela na zadanu polozku
+     * @param permission - kod prava (napr. cmp_crypto)
+     * @return
+     */
+    public boolean hasPermission(String permission) {
+<span class="fc" id="L76">        return user.isEnabledItem(permission);</span>
+    }
+
+    /**
+     * Vrati true, ak existuje viac ako 30 perex skupin pre ich zobrazenie ako multiselect
+     * @return
+     */
+    public static boolean isPerexGroupsRenderAsSelect() {
+        //ak existuje viac ako 30 perex skupin renderuj to ako multiselect
+<span class="fc" id="L85">        int count = DocDB.getInstance().getPerexGroups().size();</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (count &gt; 30) return true;</span>
+<span class="fc" id="L87">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

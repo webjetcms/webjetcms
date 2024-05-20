@@ -1,0 +1,84 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/calendar-suggest-events";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.calendar.jpa.SuggestEventEntity")})]*/ [];
+</script>
+
+<script type="text/javascript" data-th-inline="javascript">
+    var suggestEventsDatatTable;
+
+    window.redirect = function (id) {
+        window.location.href = "/apps/calendar/admin/?id=" + id;
+    }
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "suggestEvents",
+            tabs: [
+                {
+                    url: '/apps/calendar/admin/',
+                    title: /*[[#{menu.calendar}]]*/ 'title',
+                    active: false
+                },
+                {
+                    url: '/apps/calendar/admin/suggest-events/',
+                    title: /*[[#{calendar.suggest_evens}]]*/ 'title',
+                    active: true
+                }
+            ]
+        });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "suggest", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatLinkTemplate: "javascript:redirect({{id}});" });
+        window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatPrefix: "" });
+
+        suggestEventsDatatTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: ChartTools.filterColumns(["id", "title", "dateFrom", "dateTo", "typeId", "suggest"], columns),
+            id: "suggestEventsDatatTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        suggestEventsDatatTable.hideButton("create");
+        suggestEventsDatatTable.hideButton("edit");
+        suggestEventsDatatTable.hideButton("remove");
+        suggestEventsDatatTable.hideButton("celledit");
+        suggestEventsDatatTable.hideButton("import");
+        suggestEventsDatatTable.hideButton("duplicate");
+
+        var buttonCounter = 1;
+        suggestEventsDatatTable.button().add(buttonCounter++, {
+            text: '<i class="ti ti-thumb-up"></i>',
+            action: function (e, dt, node) {
+                suggestEventsDatatTable.executeAction("suggestEvent");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-success buttons-suggest',
+            attr: {
+                'title': '[[#{calendar.suggest_event}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        suggestEventsDatatTable.button().add(buttonCounter++, {
+            text: '<i class="ti ti-thumb-down"></i>',
+            action: function (e, dt, node) {
+                suggestEventsDatatTable.executeAction("notSuggestEvent");
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-danger buttons-not-suggest buttons-divider',
+            attr: {
+                'title': '[[#{calendar.not_suggest_event}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+    });
+</script>
+
+<table id="suggestEventsDatatTable" class="datatableInit table"></table>

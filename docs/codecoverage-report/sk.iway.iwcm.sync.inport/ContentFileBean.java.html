@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContentFileBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">ContentFileBean.java</span></div><h1>ContentFileBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+
+/**
+ *  ContentFileBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 12.6.2012 16:43:38
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class ContentFileBean
+{
+
+	public final static int STATUS_MISSING = 0;
+	public final static int STATUS_NEWER = 1;
+	public final static int STATUS_OLDER = 2;
+	public final static int STATUS_CURRENT_DIFFERENT = 3;
+	public final static int STATUS_CURRENT_SAME = 4;
+
+	private int number;
+	private String path;
+	private int status;
+	private boolean selected;
+
+	public ContentFileBean(int number, String path, int status)
+<span class="fc" id="L29">	{</span>
+<span class="fc" id="L30">		this.number = number;</span>
+<span class="fc" id="L31">		this.path = path;</span>
+<span class="fc" id="L32">		this.status = status;</span>
+<span class="pc bpc" id="L33" title="2 of 4 branches missed.">		this.selected = !((STATUS_OLDER == status) || (STATUS_CURRENT_SAME == status));</span>
+<span class="fc" id="L34">	}</span>
+
+<span class="fc" id="L36">	public int     getNumber () { return number  ; }</span>
+<span class="fc" id="L37">	public String  getPath   () { return path    ; }</span>
+<span class="fc" id="L38">	public boolean isSelected() { return selected; }</span>
+
+	public String getLocalPath()
+	{
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		return (STATUS_MISSING == status) ? &quot;&quot; : path;</span>
+	}
+
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">	public boolean isMissing         () { return STATUS_MISSING           == status; }</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">	public boolean isNewer           () { return STATUS_NEWER             == status; }</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">	public boolean isOlder           () { return STATUS_OLDER             == status; }</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">	public boolean isCurrentDifferent() { return STATUS_CURRENT_DIFFERENT == status; }</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">	public boolean isCurrentSame     () { return STATUS_CURRENT_SAME      == status; }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

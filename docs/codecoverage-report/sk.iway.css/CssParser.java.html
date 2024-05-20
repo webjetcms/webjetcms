@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CssParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.css</a> &gt; <span class="el_source">CssParser.java</span></div><h1>CssParser.java</h1><pre class="source lang-java linenums">package sk.iway.css;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.utils.Pair;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+
+public class CssParser {
+
+<span class="fc" id="L22">	List&lt;Pair&lt;String, String&gt;&gt; elements = new LinkedList&lt;Pair&lt;String, String&gt;&gt;();</span>
+
+	public CssParser(IwcmFile css)
+<span class="fc" id="L25">	{</span>
+<span class="fc" id="L26">		parseCssFile(css);</span>
+<span class="fc" id="L27">	}</span>
+
+	private void parseCssFile(IwcmFile css)
+	{
+<span class="fc" id="L31">		Reader in = null;</span>
+<span class="fc" id="L32">		Scanner scanner = null;</span>
+<span class="fc" id="L33">		boolean success = false;</span>
+		try
+		{
+<span class="fc" id="L36">			in = new InputStreamReader(new IwcmInputStream(css));</span>
+<span class="fc" id="L37">			scanner = new Scanner(in);</span>
+<span class="fc" id="L38">			scanner.useDelimiter(&quot;}&quot;);</span>
+
+<span class="fc" id="L40">			success = parse(scanner);</span>
+		}
+<span class="nc" id="L42">		catch (FileNotFoundException e)</span>
+		{
+<span class="nc" id="L44">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally {
+			try
+			{
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">				if (scanner!=null) scanner.close();</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">				if (in!=null) in.close();</span>
+			}
+<span class="nc" id="L52">			catch (Exception e)</span>
+			{
+<span class="nc" id="L54">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L55">			}</span>
+		}
+
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		if (success==false) {</span>
+<span class="fc" id="L59">			parseEditorComments(css);</span>
+		}
+<span class="fc" id="L61">	}</span>
+
+	private boolean parse(Scanner scanner)
+	{
+<span class="fc bfc" id="L65" title="All 2 branches covered.">		while (scanner.hasNext()) {</span>
+<span class="fc" id="L66">			String text = cleanText(scanner.next());</span>
+
+<span class="pc bpc" id="L68" title="2 of 6 branches missed.">			if (text.contains(&quot;@media&quot;) || text.contains(&quot;/** Editor end **/&quot;) || text.contains(&quot;.cssParserEnd&quot;)) {</span>
+<span class="fc" id="L69">				Logger.debug(CssParser.class, &quot;break&quot;);</span>
+<span class="fc" id="L70">				return false;</span>
+			}
+
+<span class="pc bpc" id="L73" title="3 of 6 branches missed.">			if (text.contains(&quot; &quot;) || text.contains(&quot;#&quot;) || !text.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L74">				continue;</span>
+			}
+
+<span class="fc" id="L77">			Pair&lt;String, String&gt; result = new Pair&lt;String, String&gt;(parseTag(text), parseClass(text));</span>
+<span class="fc" id="L78">			elements.add(result);</span>
+<span class="fc" id="L79">        }</span>
+
+<span class="fc" id="L81">		return true;</span>
+	}
+
+	private void parseEditorComments(IwcmFile css) {
+
+<span class="fc" id="L86">		File file = new File(css.getAbsolutePath());</span>
+
+<span class="fc" id="L88">		try (FileReader fr = new FileReader(file); BufferedReader br = new BufferedReader(fr);) {</span>
+			String line;
+<span class="fc" id="L90">			String lastLine = null;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">			while ((line = br.readLine()) != null) {</span>
+
+<span class="pc bpc" id="L93" title="1 of 4 branches missed.">				if (line.contains(&quot;/* editor */&quot;) &amp;&amp; lastLine != null) {</span>
+<span class="fc" id="L94">					String text = cleanText(lastLine);</span>
+<span class="pc bpc" id="L95" title="3 of 6 branches missed.">					if (text.contains(&quot; &quot;) || text.contains(&quot;#&quot;) || !text.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L96">						continue;</span>
+					}
+<span class="fc" id="L98">					Pair&lt;String, String&gt; result = new Pair&lt;String, String&gt;(parseTag(text), parseClass(text));</span>
+<span class="fc" id="L99">					elements.add(result);</span>
+				}
+
+<span class="fc" id="L102">				lastLine = line;</span>
+			}
+<span class="nc" id="L104">		} catch (IOException e) {</span>
+<span class="nc" id="L105">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L106">		}</span>
+
+<span class="fc" id="L108">	}</span>
+
+	private String parseTag(String element)
+	{
+<span class="fc" id="L112">		int dotIndex = element.indexOf(&quot;.&quot;);</span>
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if (dotIndex == 0) {</span>
+<span class="fc" id="L115">			return &quot;*&quot;;</span>
+		}
+
+<span class="fc" id="L118">		return element.substring(0, dotIndex).trim();</span>
+	}
+
+	private String parseClass(String element)
+	{
+<span class="fc" id="L123">		int dotIndex = element.indexOf(&quot;.&quot;);</span>
+
+		//replace btn.btn-primary na btn btn-primary
+<span class="fc" id="L126">		return Tools.replace(element.substring(dotIndex + 1).trim(), &quot;.&quot;, &quot; &quot;);</span>
+	}
+
+	private String cleanText(String text)
+	{
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">		if (text.contains(&quot;{&quot;)) {</span>
+<span class="fc" id="L132">			text = text.substring(0, text.indexOf(&quot;{&quot;)).trim();</span>
+		}
+<span class="fc" id="L134">		text = text.trim().replaceAll(&quot;\\r\\n|\\r|\\n|\\t&quot;, &quot;&quot;);</span>
+
+<span class="fc" id="L136">		return text;</span>
+	}
+
+	public List&lt;Pair&lt;String, String&gt;&gt; getElements()
+	{
+<span class="fc" id="L141">		return elements;</span>
+	}
+
+	public void setElements(List&lt;Pair&lt;String, String&gt;&gt; elements)
+	{
+<span class="nc" id="L146">		this.elements = elements;</span>
+<span class="nc" id="L147">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

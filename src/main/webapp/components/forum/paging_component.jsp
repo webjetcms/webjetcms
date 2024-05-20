@@ -1,9 +1,14 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="org.apache.struts.util.ResponseUtils"%>
+%>
+<%@ page pageEncoding="utf-8" import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
+
+Prop prop = Prop.getInstance( request.getParameter("language") );
+
 int pageSize = 10;
 if(request.getAttribute("pageSize") != null)
 	pageSize = sk.iway.iwcm.Tools.getIntValue((String)request.getAttribute("pageSize"), 10);
@@ -142,10 +147,10 @@ if (pageLink.startsWith("/components")) pageLink = ""; //kvoli AJAX nacitaniu, a
 				String key = "components.forum.number_of_results";
 				if (request.getAttribute("pagingListKey")!=null) key = (String)request.getAttribute("pagingListKey");
 			%>
-			<iwcm:text key="<%=key%>"/>:&nbsp;<%=totalResults%>,&nbsp;
+			<%=prop.getText(key) %> :&nbsp;<%=totalResults%>,&nbsp;
 		</span>
 		<span class="paging-info">
-			<span><iwcm:text key="components.forum.displaying"/>: <strong><%=(bazarOffset+1)%></strong> - <strong><%=pageTo%></strong></span>
+			<span> <%=prop.getText("components.forum.displaying") %> : <strong><%=(bazarOffset+1)%></strong> - <strong><%=pageTo%></strong></span>
 		</span>
 	</div>
 	<div class="btn-group forum-pagination float-right pull-right">

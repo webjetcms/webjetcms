@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">GalleryBean.java</span></div><h1>GalleryBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+
+import java.util.Arrays;
+import java.util.Date;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ * GalleryBean.java - informacie o obrazku z DB
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 16.9.2004 23:19:42
+ *@modified     $Date: 2004/08/09 08:42:03 $
+ */
+public class GalleryBean
+{
+   public GalleryBean()
+<span class="fc" id="L24">   {</span>
+      //prazdny konstruktor
+<span class="fc" id="L26">   }</span>
+
+<span class="fc" id="L28">   private String imagePath=&quot;&quot;;</span>
+<span class="fc" id="L29">   private String imageName=&quot;&quot;;</span>
+<span class="fc" id="L30">   private String shortDescription=&quot;&quot;;</span>
+<span class="fc" id="L31">   private String longDescription=&quot;&quot;;</span>
+<span class="fc" id="L32">   private int imageId=-1;</span>
+<span class="fc" id="L33">   private String bigDimension=&quot;&quot;;</span>
+<span class="fc" id="L34">   private String bigLength=&quot;&quot;;</span>
+<span class="fc" id="L35">   private String nextImage=&quot;&quot;;</span>
+<span class="fc" id="L36">   private String prevImage=&quot;&quot;;</span>
+<span class="fc" id="L37">   private String originalImage=&quot;&quot;;</span>
+<span class="fc" id="L38">   private String author=&quot;&quot;;</span>
+<span class="fc" id="L39">   private int sendCount=0;</span>
+<span class="fc" id="L40">   private String allowedDomains = &quot;&quot;;</span>
+	private String[] perexGroup;
+<span class="fc" id="L42">	private int selectedX =-1;</span>
+<span class="fc" id="L43">	private int selectedY = -1;</span>
+<span class="fc" id="L44">	private int selectedWidth =-1;</span>
+<span class="fc" id="L45">	private int selectedHeight =-1;</span>
+	private Date uploadDate;
+	private int sortPriority;
+<span class="fc" id="L48">	private boolean cyclicViewing = false;</span>
+
+<span class="fc" id="L50">	private boolean prevNextLinksInitalized = false;</span>
+	private void initPrevNextLinks()
+	{
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (prevNextLinksInitalized) return;</span>
+<span class="nc" id="L54">		GalleryDB.fillPrevNextLink(this, cyclicViewing);</span>
+<span class="nc" id="L55">		prevNextLinksInitalized = true;</span>
+<span class="nc" id="L56">	}</span>
+
+
+	/**
+	 * Vrati URL k obrazku ako imagePath+/+imageName
+	 * @return
+	 */
+	public String getImageUrl()
+	{
+<span class="fc" id="L65">		return getImagePath()+&quot;/&quot;+getImageName();</span>
+	}
+
+   public String getImagePath()
+   {
+<span class="fc" id="L70">      return imagePath;</span>
+   }
+   public void setImagePath(String imagePath)
+   {
+<span class="fc" id="L74">      this.imagePath = imagePath;</span>
+<span class="fc" id="L75">   }</span>
+   public void setImageName(String imageName)
+   {
+<span class="fc" id="L78">      this.imageName = imageName;</span>
+<span class="fc" id="L79">   }</span>
+   public String getImageName()
+   {
+<span class="fc" id="L82">      return imageName;</span>
+   }
+   public void setShortDescription(String shortDescription)
+   {
+<span class="fc" id="L86">      this.shortDescription = shortDescription;</span>
+<span class="fc" id="L87">   }</span>
+   public String getShortDescription()
+   {
+<span class="fc" id="L90">      return shortDescription;</span>
+   }
+
+   public String getDescriptionByLng(String lng, String item)
+   {
+<span class="nc" id="L95">      return GalleryDB.getDescriptionLng(this.imageId, item, lng);</span>
+   }
+
+   public String getAuthor()
+	{
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">		return (this.author == null ? &quot;&quot; : this.author);</span>
+	}
+	public void setAuthor(String author)
+	{
+<span class="fc" id="L104">		this.author = author;</span>
+<span class="fc" id="L105">	}</span>
+	/**
+    * vrati short description, tak aby neobsahoval \n
+    * @return
+    */
+   public String getShortDescriptionJS()
+   {
+<span class="nc" id="L112">      String ret = getShortDescription();</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">      if (ret==null) return(&quot;&quot;);</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">      if (ret.indexOf('\n')&gt;0)</span>
+      {
+<span class="nc bnc" id="L118" title="All 6 branches missed.">         if (ret.indexOf(&quot;&lt;br&quot;)!=-1 || ret.indexOf(&quot;&lt;p&quot;)!=-1 || ret.indexOf(&quot;&lt;td&quot;)!=-1)</span>
+         {
+            //je to HTML, \n mozeme nahradit medzerou
+<span class="nc" id="L121">            ret = Tools.replace(ret, &quot;\n&quot;, &quot; &quot;);</span>
+         }
+         else
+         {
+            //nie je to HTML, \n nahradime za &lt;br&gt;
+<span class="nc" id="L126">            ret = Tools.replace(ret, &quot;\n&quot;, &quot;&lt;br /&gt;&quot;);</span>
+         }
+      }
+
+<span class="nc" id="L130">      ret = Tools.replace(ret, &quot;\r&quot;, &quot;&quot;);</span>
+      //sepal z toho uvodzovky
+<span class="nc" id="L132">      ret = Tools.replace(ret, &quot;\&quot;&quot;, &quot;&amp;quot;&quot;);</span>
+
+<span class="nc" id="L134">      return(ret);</span>
+   }
+
+
+   public void setLongDescription(String longDescription)
+   {
+<span class="fc" id="L140">      this.longDescription = longDescription;</span>
+<span class="fc" id="L141">   }</span>
+   public String getLongDescription()
+   {
+<span class="fc" id="L144">      return longDescription;</span>
+   }
+
+   public String getLongDescriptionJS()
+   {
+<span class="nc" id="L149">      String ret = getLongDescription();</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">      if (ret==null) return(&quot;&quot;);</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">      if (ret.indexOf('\n')&gt;0)</span>
+      {
+<span class="nc bnc" id="L155" title="All 6 branches missed.">         if (ret.indexOf(&quot;&lt;br&quot;)!=-1 || ret.indexOf(&quot;&lt;p&quot;)!=-1 || ret.indexOf(&quot;&lt;td&quot;)!=-1)</span>
+         {
+            //je to HTML, \n mozeme nahradit medzerou
+<span class="nc" id="L158">            ret = Tools.replace(ret, &quot;\n&quot;, &quot; &quot;);</span>
+         }
+         else
+         {
+            //nie je to HTML, \n nahradime za &lt;br&gt;
+<span class="nc" id="L163">            ret = Tools.replace(ret, &quot;\n&quot;, &quot;&lt;br /&gt;&quot;);</span>
+         }
+      }
+
+<span class="nc" id="L167">      ret = Tools.replace(ret, &quot;\r&quot;, &quot;&quot;);</span>
+      //sepal z toho uvodzovky
+<span class="nc" id="L169">      ret = Tools.replace(ret, &quot;\&quot;&quot;, &quot;&amp;quot;&quot;);</span>
+
+<span class="nc" id="L171">      return(ret);</span>
+   }
+
+
+   public void setImageId(int imageId)
+   {
+<span class="fc" id="L177">      this.imageId = imageId;</span>
+<span class="fc" id="L178">   }</span>
+   public int getImageId()
+   {
+<span class="nc" id="L181">      return imageId;</span>
+   }
+   public String getBigDimension()
+   {
+<span class="fc" id="L185">      return bigDimension;</span>
+   }
+   public void setBigDimension(String bigDimension)
+   {
+<span class="fc" id="L189">      this.bigDimension = bigDimension;</span>
+<span class="fc" id="L190">   }</span>
+   public String getBigLength()
+   {
+<span class="nc" id="L193">      return bigLength;</span>
+   }
+   public void setBigLength(String bigLength)
+   {
+<span class="fc" id="L197">      this.bigLength = bigLength;</span>
+<span class="fc" id="L198">   }</span>
+   public String getNextImage()
+   {
+<span class="nc" id="L201">   	initPrevNextLinks();</span>
+<span class="nc" id="L202">      return nextImage;</span>
+   }
+   public void setNextImage(String nextImage)
+   {
+<span class="fc" id="L206">      this.nextImage = nextImage;</span>
+<span class="fc" id="L207">   }</span>
+   public String getPrevImage()
+   {
+<span class="nc" id="L210">   	initPrevNextLinks();</span>
+<span class="nc" id="L211">      return prevImage;</span>
+   }
+   public void setPrevImage(String prevImage)
+   {
+<span class="fc" id="L215">      this.prevImage = prevImage;</span>
+<span class="fc" id="L216">   }</span>
+   public void setOriginalImage(String originalImage)
+   {
+<span class="fc" id="L219">      this.originalImage = originalImage;</span>
+<span class="fc" id="L220">   }</span>
+   public String getOriginalImage()
+   {
+<span class="nc bnc" id="L223" title="All 4 branches missed.">   	if (originalImage==null &amp;&amp; Constants.getBoolean(&quot;galleryUseFastLoading&quot;))</span>
+   	{
+<span class="nc" id="L225">   		originalImage = GalleryDB.getImagePathOriginal(imagePath + &quot;/&quot; + imageName);</span>
+   	}
+
+<span class="nc" id="L228">      return originalImage;</span>
+   }
+	public int getSendCount()
+	{
+<span class="nc" id="L232">		return sendCount;</span>
+	}
+	public void setSendCount(int sendCount)
+	{
+<span class="fc" id="L236">		this.sendCount = sendCount;</span>
+<span class="fc" id="L237">	}</span>
+	public String getAllowedDomains()
+	{
+<span class="nc" id="L240">		return allowedDomains;</span>
+	}
+	public void setAllowedDomains(String allowedDomains)
+	{
+<span class="fc" id="L244">		this.allowedDomains = allowedDomains;</span>
+<span class="fc" id="L245">	}</span>
+	public String[] getPerexGroup()
+	{
+<span class="nc" id="L248">		return perexGroup;</span>
+	}
+	public void setPerexGroup(String[] perexGroup)
+	{
+<span class="fc" id="L252">		this.perexGroup = perexGroup;</span>
+<span class="fc" id="L253">	}</span>
+	public int getSelectedX()
+	{
+<span class="fc" id="L256">		return selectedX;</span>
+	}
+	public void setSelectedX(int selectedX)
+	{
+<span class="fc" id="L260">		this.selectedX = selectedX;</span>
+<span class="fc" id="L261">	}</span>
+	public int getSelectedY()
+	{
+<span class="fc" id="L264">		return selectedY;</span>
+	}
+	public void setSelectedY(int selectedY)
+	{
+<span class="fc" id="L268">		this.selectedY = selectedY;</span>
+<span class="fc" id="L269">	}</span>
+	public int getSelectedWidth()
+	{
+<span class="fc" id="L272">		return selectedWidth;</span>
+	}
+	public void setSelectedWidth(int selectedWidth)
+	{
+<span class="fc" id="L276">		this.selectedWidth = selectedWidth;</span>
+<span class="fc" id="L277">	}</span>
+	public int getSelectedHeight()
+	{
+<span class="fc" id="L280">		return selectedHeight;</span>
+	}
+	public void setSelectedHeight(int selectedHeight)
+	{
+<span class="fc" id="L284">		this.selectedHeight = selectedHeight;</span>
+<span class="fc" id="L285">	}</span>
+
+	/**
+	 * Returns bean property uploadDate, if it ist null, tries to find file corresponding
+	 * to this bean, if found, returns date of last modification of this file, if not found
+	 * returns null
+	 * @return
+	 */
+	public Date getUploadDate()
+	{
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (uploadDate == null)</span>
+		{
+<span class="nc" id="L297">			IwcmFile f = new IwcmFile(Tools.getRealPath(getOriginalImage()));</span>
+<span class="nc bnc" id="L298" title="All 4 branches missed.">			if (f != null &amp;&amp; f.isFile()) uploadDate = new Date(f.lastModified());</span>
+<span class="nc" id="L299">			else uploadDate = new Date();</span>
+		}
+<span class="nc bnc" id="L301" title="All 2 branches missed.">		return uploadDate == null ? null : (Date) uploadDate.clone();</span>
+	}
+
+	public Date getUploadDateNull()
+	{
+<span class="nc" id="L306">		return this.uploadDate;</span>
+	}
+
+	public void setUploadDate(Date uploadDate)
+	{
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">		this.uploadDate = uploadDate == null ? null : (Date) uploadDate.clone();</span>
+<span class="fc" id="L312">	}</span>
+
+	public void setSortPriority(int sortPriority)
+	{
+<span class="fc" id="L316">		this.sortPriority = sortPriority;</span>
+<span class="fc" id="L317">	}</span>
+
+	public int getSortPriority()
+	{
+<span class="nc" id="L321">		return sortPriority;</span>
+	}
+
+	public boolean isCyclicViewing()
+	{
+<span class="nc" id="L326">		return cyclicViewing;</span>
+	}
+
+	public void setCyclicViewing(boolean cyclicViewing)
+	{
+<span class="fc" id="L331">		this.cyclicViewing = cyclicViewing;</span>
+<span class="fc" id="L332">	}</span>
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L337">		return &quot;GalleryBean [imagePath=&quot; + imagePath + &quot;, imageName=&quot; + imageName + &quot;, shortDescription=&quot; + shortDescription</span>
+					+ &quot;, longDescription=&quot; + longDescription + &quot;, imageId=&quot; + imageId + &quot;, bigDimension=&quot; + bigDimension
+					+ &quot;, bigLength=&quot; + bigLength + &quot;, nextImage=&quot; + nextImage + &quot;, prevImage=&quot; + prevImage + &quot;, originalImage=&quot;
+					+ originalImage + &quot;, author=&quot; + author + &quot;, sendCount=&quot; + sendCount + &quot;, allowedDomains=&quot; + allowedDomains
+<span class="nc" id="L341">					+ &quot;, perexGroup=&quot; + Arrays.toString(perexGroup) + &quot;, selectedX=&quot; + selectedX + &quot;, selectedY=&quot; + selectedY</span>
+					+ &quot;, selectedWidth=&quot; + selectedWidth + &quot;, selectedHeight=&quot; + selectedHeight + &quot;, uploadDate=&quot; + uploadDate
+					+ &quot;, sortPriority=&quot; + sortPriority + &quot;, cyclicViewing=&quot; + cyclicViewing
+					+ &quot;, prevNextLinksInitalized=&quot; + prevNextLinksInitalized + &quot;]&quot;;
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

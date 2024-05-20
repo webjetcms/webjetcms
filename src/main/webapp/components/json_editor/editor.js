@@ -70,6 +70,8 @@ var EditorItemFieldRenderer = (function () {
 
                 case 'checkbox'         : return '<input class="editorItemValue checkbox" id="'+this.name+this.id+'" type="checkbox" name="' + this.name + '" '+this.value+'>';
 
+                case 'checkboxRight'    : return '<input class="editorItemValue checkbox" id="'+this.name+this.id+'" type="checkbox" name="' + this.name + '" '+this.value+'>';
+
                 default                 : return '<input class="editorItemValue" id="'+this.name+this.id+'" type="text" name="' + this.name + '" value="' + this.escapeHtml(this.value) + '">' ;
             }
         }
@@ -87,7 +89,7 @@ var EditorItemFieldRenderer = (function () {
                 cleaner = '<div class="cleaner"></div>';
             }
             if (this.editorItemFields[this.name].comment) {
-                comment = '<div class="comment col-sm-12">' + this.editorItemFields[this.name].comment + '</div>';
+                comment = '<div class="comment col-sm-8 offset-sm-4">' + this.editorItemFields[this.name].comment + '</div>';
             }
             if ("checkbox" == this.editorItemFields[this.name].type) {
                 if ("true" == this.value || true == this.value) this.value = "checked";
@@ -105,10 +107,18 @@ var EditorItemFieldRenderer = (function () {
 
             //console.log("rendering EditorItemFieldRenderer");
 
+            var label = this.renderLabel();
+            var input = this.renderInput();
+
+            if ("checkboxRight" == this.editorItemFields[this.name].type) {
+                input = '<label>' + input + " " + this.editorItemFields[this.name].title + '</label>';
+                label = "";
+            }
+
             return '<div class="' + this.getClasses() + ' clearfix" id="' + this.getWrapperId() + '">' +
-                (this.editorItemFields[this.name].type != 'hidden' ? '<div class="col-sm-4">' + this.renderLabel() + '</div>' : '') +
+                (this.editorItemFields[this.name].type != 'hidden' ? '<div class="col-sm-4">' + label + '</div>' : '') +
                 '<div class="col-sm-8">' +
-                this.renderInput() +
+                input +
                 '</div>' +
                 comment +
                 '</div>' +

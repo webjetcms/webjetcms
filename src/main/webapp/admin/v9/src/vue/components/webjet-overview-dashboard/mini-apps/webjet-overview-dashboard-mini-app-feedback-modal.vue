@@ -39,7 +39,7 @@
                                                 <div class="toast-container-progress">
                                                     <span>{{ this.$WJ.translate('admin.welcome.feedback.dialog.uploaded_files.js') }}</span>
                                                     <svg
-                                                        class="fa-progress-bar fa-pull-right"
+                                                        class="fa-progress-bar float-end"
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         viewBox="-1 -1 34 34"
                                                     >
@@ -61,14 +61,14 @@
                                                 <div id="toast-container-upload"></div>
                                             </div>
                                             <div id="upload-toastr-template" style="display: none">
-                                                <i class="far fa-image-polaroid"></i>
+                                                <i class="ti ti-polaroid"></i>
                                                 <span>{FILE_NAME}</span>
-                                                <i class="far fa-check-circle fa-pull-right"></i>
-                                                <i class="fas fa-exclamation-triangle fa-pull-right"></i>
-                                                <i class="fas fa-circle-notch fa-spin fa-pull-right"></i>
-                                                <i class="far fa-exclamation-circle fa-pull-right"></i>
+                                                <i class="ti ti-circle-check float-end"></i>
+                                                <i class="ti ti-alert-triangle float-end"></i>
+                                                <i class="ti ti-dots-vertical ti-spin float-end"></i>
+                                                <i class="ti ti-exclamation-circle float-end"></i>
                                                 <svg
-                                                    class="fa-progress-bar fa-pull-right"
+                                                    class="fa-progress-bar float-end"
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="-1 -1 34 34"
                                                 >
@@ -112,7 +112,7 @@
                             <div class="DTE_Form_Buttons">
                                 <span class="buttons-footer-left">
                                     <button type="button" class="btn btn-link" @click="$WJ.showHelpWindow()">
-                                        <i class="far fa-question-circle"></i>{{ this.$WJ.translate('button.help') }}
+                                        <i class="ti ti-help me-1"></i>{{ this.$WJ.translate('button.help') }}
                                     </button>
                                 </span>
                                 <button
@@ -120,7 +120,7 @@
                                     type="button"
                                     class="btn btn-outline-secondary btn-close-editor"
                                 >
-                                    <i class="fal fa-times"></i> {{ this.$WJ.translate('button.cancel') }}
+                                    <i class="ti ti-x"></i> {{ this.$WJ.translate('button.cancel') }}
                                 </button>
                                 <button
                                     :class="{ disabled: feedbackSubmitDisabled }"
@@ -128,7 +128,7 @@
                                     class="btn btn-primary"
                                     tabindex="0"
                                 >
-                                    <i class="fal fa-check"></i> {{ this.$WJ.translate('button.send') }}
+                                    <i class="ti ti-check"></i> {{ this.$WJ.translate('button.send') }}
                                 </button>
                             </div>
                         </div>

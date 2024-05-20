@@ -14,7 +14,7 @@ if ((request.getParameter("id")==null || request.getParameter("userlngr")==null)
 	String path = sk.iway.iwcm.PathFilter.getOrigPath(request);
 	String v9link = sk.iway.iwcm.admin.layout.MenuService.replaceV9MenuLink(path);
 	//System.out.println("path="+path+" v9link="+v9link);
-	if (path.equals(v9link)==false) {
+	if (path.equals(v9link)==false && sk.iway.iwcm.Tools.isNotEmpty(v9link)) {
 		//System.out.println("v9link="+v9link);
 
 		//response.sendRedirect(v9link);

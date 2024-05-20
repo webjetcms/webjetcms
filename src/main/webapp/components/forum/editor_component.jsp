@@ -236,7 +236,7 @@ function loadListIframe()
 							</div>
 						</div>
 					</div>
-					<div id="mbTopics" style="display: block;">
+					<div id="mbTopics" style="display: inline-block;">
 						<div class="row">
 							<div class="col-sm-6 leftCol">
 								<label for="useDelTimeLimit"><iwcm:text key="components.forum.use_del_time_limit"/>:&nbsp;</label>

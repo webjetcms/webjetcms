@@ -4,11 +4,11 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('screenshot live chart from server monitoring', async ({I, DTE, Document}) => { 
-    I.amOnPage("/admin/v9/settings/server-monitoring-records/");
+Scenario('screenshot live chart from server monitoring', async ({I, Document}) => { 
+    I.amOnPage("/apps/server_monitoring/admin/records/");
 
     await I.executeScript(function(){
-        window.location.href="/admin/v9/settings/server-monitoring/";
+        window.location.href="/apps/server_monitoring/admin/";
     });
 
     //Let the data load

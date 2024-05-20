@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplateDetailEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">TemplateDetailEditorFields.java</span></div><h1>TemplateDetailEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+<span class="fc" id="L12">public class TemplateDetailEditorFields {</span>
+
+<span class="fc" id="L14">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;templates.temps-list.replace_template&quot;,
+        tab = &quot;templatesTab&quot;,
+        className = &quot;hide-on-create&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+                },
+                message = &quot;templates.temps-list.replace_template.tooltip&quot;
+            )
+        },
+        hidden = true
+    )
+<span class="fc" id="L29">    private Integer mergeToTempId = -1;</span>
+
+<span class="fc" id="L31">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;templatesTab&quot;,
+        className = &quot;hide-on-create&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;templates.temps-list.replace_template_checkbox&quot;, value = &quot;true&quot;)
+                }
+            )
+        },
+        hidden = true
+    )
+    private boolean mergeTemplates = false;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

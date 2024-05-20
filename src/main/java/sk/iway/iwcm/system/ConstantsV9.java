@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-				"button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*");
+				"button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -52,9 +52,9 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd,login,auth");
 
-		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
+		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
 		Constants.setInt("datatablesExportMaxRows", 50000, Constants.MOD_PERFORMANCE, "Datatables - maximalny pocet riadkov, ktore je mozne naraz exportovat.");
 		Constants.setInt("javaMinimalVersion", 17, Constants.MOD_CONFIG, "Minimalna podporovana verzia jazyka Java");
@@ -81,6 +81,14 @@ public class ConstantsV9 {
 		Constants.setInt("restaurantMenu.alergensCount", 14, "restaurant_menu", "Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen");
 
 		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
+
+		Constants.setString("webpagesFunctionsPerms", "menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting", Constants.MOD_SECURITY, "Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.");
+		Constants.setString("bloggerAppPermissions", "menuGallery,menuInquiry,cmp_quiz,cmp_form", "blog", "Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER");
+
+		Constants.setString("dmailListUnsubscribeBaseHref", "", "dmail", "Zakladna URL adresa pre odhlasovanie sa z mailing listu. Ak je prazdna, tak sa pouzije URL adresa podla domeny odosielaneho emailu.");
+
+		Constants.setString("uaParserYamlPath", "", "stat", "Cesta k YAML suboru s konfiguraciou pre UA parser. Ak je prazdna, tak sa pouzije defaultna konfiguracia.");
+		Constants.setBoolean("usersSplitByDomain", false, Constants.MOD_USER, "Pri nastaveni na true su oddeleny pouzivatelia podla domen podobne ako v MultiWeb instalacii");
 	}
 
 	/**

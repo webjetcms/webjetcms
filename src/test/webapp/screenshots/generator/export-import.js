@@ -14,7 +14,7 @@ Scenario('export-users', ({ I, Document }) => {
     Document.screenshot("/redactor/datatables/export-dialog.png", 1280, 430);
 
     I.click("#pills-export-advanced-tab");
-    Document.screenshotElement("div.modal.show div.modal-dialog", "/redactor/datatables/export-dialog-advanced.png");
+    Document.screenshotElement("#datatableExportModal > div > div.DTE_Action_Edit", "/redactor/datatables/export-dialog-advanced.png");
 });
 
 Scenario('import-users', ({ I, Document }) => {
@@ -25,7 +25,13 @@ Scenario('import-users', ({ I, Document }) => {
     //import
     I.click("button[data-dtbtn=import]");
     I.wait(1);
-    I.click("Aktualizovať existujúce záznamy");
+
+    if("sk" === I.getConfLng()) {
+        I.click("Aktualizovať existujúce záznamy");
+    } else if("en" === I.getConfLng()) {
+        I.click("Update existing records");
+    }
+
     Document.screenshot("/redactor/datatables/import-dialog.png", 1280, 500);
 });
 
@@ -53,7 +59,7 @@ Scenario('Import skip wrong data', ({ I, Document }) => {
     I.waitForElement("#toast-container-webjet");
     I.moveCursorTo('#toast-container-webjet');
     Document.screenshotElement("#toast-container-webjet", "/redactor/datatables/import_err_notification.png");
-}); 
+});
 
 function insertFile(I, fileName, skipWrong) {
     I.clickCss("button.btn-import-dialog");

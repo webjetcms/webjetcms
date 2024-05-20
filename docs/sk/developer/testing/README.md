@@ -330,6 +330,7 @@ Funkcie implementované v ```Document``` objekte:
 - `notifyCheckAndClose(text)` - overí text v `toastr` notifikácii a zatvorí ju.
 - `editorComponentOpen()` - otvorí nastavenie aplikácie v editore stránok (okno `editor_component.jsp`).
 - `editorComponentOk()` - klikne na tlačidlo OK pre uloženie nastavenia aplikácie.
+- `scrollTo(selector)` - posunie obsah okna na zadaný element.
 
 V ```Document``` objekte sú aj funkcie pre vytváranie [fotiek obrazovky](screenshots.md).
 
@@ -699,7 +700,7 @@ DTE.waitForEditor
 DTE.waitForLoader
 ```
 
-**Každé volanie** ```I.click('Uložiť');``` musí čakať na uloženie cez ```DTE.waitForLoader```.
+**Každé volanie**, ```I.click('Uložiť');``` musí čakať na uloženie cez ```DTE.waitForLoader```.
 
 ### Dĺžka scenára
 

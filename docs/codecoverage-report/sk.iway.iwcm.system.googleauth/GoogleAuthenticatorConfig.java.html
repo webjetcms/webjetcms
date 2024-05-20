@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleAuthenticatorConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.googleauth</a> &gt; <span class="el_source">GoogleAuthenticatorConfig.java</span></div><h1>GoogleAuthenticatorConfig.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.googleauth;
+
+/**
+ *  GoogleAuthenticatorConfig.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2017
+ *@author       $Author: jeeff mminda $
+ *@version      $Revision: 1.3 $
+ *@created      Date: Jun 5, 2017 9:49:56 AM
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+import java.util.concurrent.TimeUnit;
+
+<span class="nc" id="L16">public class GoogleAuthenticatorConfig {</span>
+<span class="nc" id="L17">    private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);</span>
+<span class="nc" id="L18">    private int windowSize = 3;</span>
+<span class="nc" id="L19">    private int codeDigits = 6;</span>
+<span class="nc" id="L20">    private int keyModulus = (int) Math.pow(10, codeDigits);</span>
+<span class="nc" id="L21">    private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;</span>
+
+    /**
+     * Returns the key module.
+     *
+     * @return the key module.
+     */
+    public int getKeyModulus() {
+<span class="nc" id="L29">        return keyModulus;</span>
+    }
+
+    /**
+     * Returns the key representation.
+     *
+     * @return the key representation.
+     */
+    public KeyRepresentation getKeyRepresentation() {
+<span class="nc" id="L38">        return keyRepresentation;</span>
+    }
+
+    /**
+     * Returns the number of digits in the generated code.
+     *
+     * @return the number of digits in the generated code.
+     */
+    @SuppressWarnings(&quot;UnusedDeclaration&quot;)
+    public int getCodeDigits() {
+<span class="nc" id="L48">        return codeDigits;</span>
+    }
+
+    /**
+     * Returns the time step size, in milliseconds, as specified by RFC 6238.
+     * The default value is 30.000.
+     *
+     * @return the time step size in milliseconds.
+     */
+    public long getTimeStepSizeInMillis() {
+<span class="nc" id="L58">        return timeStepSizeInMillis;</span>
+    }
+
+    /**
+     * Returns an integer value representing the number of windows of size
+     * timeStepSizeInMillis that are checked during the validation process,
+     * to account for differences between the server and the client clocks.
+     * The bigger the window, the more tolerant the library code is about
+     * clock skews.
+     * &lt;p/&gt;
+     * We are using Google's default behaviour of using a window size equal
+     * to 3.  The limit on the maximum window size, present in older
+     * versions of this library, has been removed.
+     *
+     * @return the window size.
+     * @see #timeStepSizeInMillis
+     */
+    public int getWindowSize() {
+<span class="nc" id="L76">        return windowSize;</span>
+    }
+
+<span class="nc" id="L79">    public static class GoogleAuthenticatorConfigBuilder {</span>
+<span class="nc" id="L80">        private GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig();</span>
+
+        public GoogleAuthenticatorConfig build() {
+<span class="nc" id="L83">            return config;</span>
+        }
+
+        public GoogleAuthenticatorConfigBuilder setCodeDigits(int codeDigits) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            if (codeDigits &lt;= 0) {</span>
+<span class="nc" id="L88">                throw new IllegalArgumentException(&quot;Code digits must be positive.&quot;);</span>
+            }
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (codeDigits &lt; 6) {</span>
+<span class="nc" id="L92">                throw new IllegalArgumentException(&quot;The minimum number of digits is 6.&quot;);</span>
+            }
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (codeDigits &gt; 8) {</span>
+<span class="nc" id="L96">                throw new IllegalArgumentException(&quot;The maximum number of digits is 8.&quot;);</span>
+            }
+
+<span class="nc" id="L99">            config.codeDigits = codeDigits;</span>
+<span class="nc" id="L100">            config.keyModulus = (int) Math.pow(10, codeDigits);</span>
+<span class="nc" id="L101">            return this;</span>
+        }
+
+        public GoogleAuthenticatorConfigBuilder setTimeStepSizeInMillis(long timeStepSizeInMillis) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (timeStepSizeInMillis &lt;= 0) {</span>
+<span class="nc" id="L106">                throw new IllegalArgumentException(&quot;Time step size must be positive.&quot;);</span>
+            }
+
+<span class="nc" id="L109">            config.timeStepSizeInMillis = timeStepSizeInMillis;</span>
+<span class="nc" id="L110">            return this;</span>
+        }
+
+        public GoogleAuthenticatorConfigBuilder setWindowSize(int windowSize) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (windowSize &lt;= 0) {</span>
+<span class="nc" id="L115">                throw new IllegalArgumentException(&quot;Window number must be positive.&quot;);</span>
+            }
+
+<span class="nc" id="L118">            config.windowSize = windowSize;</span>
+<span class="nc" id="L119">            return this;</span>
+        }
+
+        public GoogleAuthenticatorConfigBuilder setKeyRepresentation(KeyRepresentation keyRepresentation) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (keyRepresentation == null) {</span>
+<span class="nc" id="L124">                throw new IllegalArgumentException(&quot;Key representation cannot be null.&quot;);</span>
+            }
+
+<span class="nc" id="L127">            config.keyRepresentation = keyRepresentation;</span>
+<span class="nc" id="L128">            return this;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

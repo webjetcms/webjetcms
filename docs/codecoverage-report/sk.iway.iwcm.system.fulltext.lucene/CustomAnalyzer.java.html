@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomAnalyzer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">CustomAnalyzer.java</span></div><h1>CustomAnalyzer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Set;
+
+import org.apache.lucene.analysis.ASCIIFoldingFilter;
+import org.apache.lucene.analysis.LowerCaseFilter;
+import org.apache.lucene.analysis.PorterStemFilter;
+import org.apache.lucene.analysis.StopFilter;
+import org.apache.lucene.analysis.StopwordAnalyzerBase;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.cz.CzechStemFilter;
+import org.apache.lucene.analysis.standard.StandardFilter;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.util.Version;
+
+import sk.iway.iwcm.system.fulltext.FulltextSearch;
+
+/**
+ *  CustomAnalyzer
+ *  Applies Lemmatising ONLY on fields DATA and TITLE
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: jeeff thaber $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.4.2011 11:27:45
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class CustomAnalyzer extends StopwordAnalyzerBase
+{
+	/** Default maximum allowed token length */
+	  public static final int DEFAULT_MAX_TOKEN_LENGTH = 255;
+
+<span class="fc" id="L37">	  private int maxTokenLength = DEFAULT_MAX_TOKEN_LENGTH;</span>
+
+	  /**
+	   * Specifies whether deprecated acronyms should be replaced with HOST type.
+	   * See {@linkplain &quot;https://issues.apache.org/jira/browse/LUCENE-1068&quot;}
+	   */
+	  //private final boolean replaceInvalidAcronym;
+
+	private String language;
+
+	  /** An unmodifiable set containing some common English words that are usually not
+	  useful for searching. */
+
+	  /** Builds an analyzer with the given stop words.
+	   * @param matchVersion Lucene version to match See {@link
+	   * &lt;a href=&quot;#version&quot;&gt;above&lt;/a&gt;}
+	   * @param stopWords stop words */
+	  private  CustomAnalyzer(Version matchVersion, Set&lt;?&gt; stopWords) {
+<span class="fc" id="L55">	    super(matchVersion, stopWords);</span>
+	    //replaceInvalidAcronym = matchVersion.onOrAfter(Version.LUCENE_31);
+<span class="fc" id="L57">	  }</span>
+
+	  /** Builds an analyzer with the default stop words ({@link
+	   * #STOP_WORDS_SET}).
+	   * @param matchVersion Lucene version to match See {@link
+	   * &lt;a href=&quot;#version&quot;&gt;above&lt;/a&gt;}
+	   */
+	  public CustomAnalyzer(Version matchVersion,String language) {
+<span class="fc" id="L65">	    this(matchVersion, FulltextSearch.stopwords(language));</span>
+<span class="fc" id="L66">	    this.language = language;</span>
+<span class="fc" id="L67">	  }</span>
+
+	  /**
+	   * Set maximum allowed token length.  If a token is seen
+	   * that exceeds this length then it is discarded.  This
+	   * setting only takes effect the next time tokenStream or
+	   * reusableTokenStream is called.
+	   */
+	  public void setMaxTokenLength(int length) {
+<span class="nc" id="L76">	    maxTokenLength = length;</span>
+<span class="nc" id="L77">	  }</span>
+
+	  /**
+	   * @see #setMaxTokenLength
+	   */
+	  public int getMaxTokenLength() {
+<span class="nc" id="L83">	    return maxTokenLength;</span>
+	  }
+
+
+	  @Override
+	  protected TokenStreamComponents createComponents(final String fieldName, final Reader reader)
+	  {
+<span class="nc" id="L90">		  final StandardTokenizer src = new StandardTokenizer(matchVersion, reader);</span>
+<span class="nc" id="L91">		  src.setMaxTokenLength(maxTokenLength);</span>
+	    //src.setReplaceInvalidAcronym(replaceInvalidAcronym);
+<span class="nc" id="L93">	    TokenStream tok = new StandardFilter(matchVersion, src);</span>
+<span class="nc" id="L94">	    tok = new LowerCaseFilter(matchVersion, tok);</span>
+	    /* use algorithmic stemmers for Enlish and Czech language */
+<span class="nc bnc" id="L96" title="All 2 branches missed.">	    if (language.equals(&quot;en&quot;))</span>
+	    {
+<span class="nc" id="L98">	   	 tok = new PorterStemFilter(tok);</span>
+<span class="nc" id="L99">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">	    }else if (language.equals(&quot;cz&quot;))</span>
+	    {
+<span class="nc" id="L102">	   	 tok = new CzechStemFilter(tok);</span>
+<span class="nc" id="L103">	   	 tok = new ASCIIFoldingFilter(tok);</span>
+<span class="nc" id="L104">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
+	    }
+	    else{
+<span class="nc" id="L107">	   	 tok = new ASCIIFoldingFilter(tok);</span>
+<span class="nc" id="L108">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
+<span class="nc" id="L109">	   	 tok = new LemmatisatingFilter(Version.LUCENE_31, tok, language);</span>
+	    }
+
+
+<span class="nc" id="L113">	    return new TokenStreamComponents(src, tok)</span>
+<span class="nc" id="L114">	    {</span>
+	      @Override
+	      protected boolean reset(final Reader reader) throws IOException
+	      {
+<span class="nc" id="L118">	        src.setMaxTokenLength(maxTokenLength);</span>
+<span class="nc" id="L119">	        return super.reset(reader);</span>
+	      }
+	    };
+	  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

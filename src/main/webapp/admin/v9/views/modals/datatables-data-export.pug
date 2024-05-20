@@ -62,7 +62,7 @@ include ../pug/mixins
                                     <input type="text" class="form-control dt-settings-filename" value="export">
                                 </div>
                                 <div class="col-sm-1 form-group-tooltip">
-                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.Nazov_suboru.title}"><i class="far fa-info-circle"></i></button>
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.Nazov_suboru.title}"><i class="ti ti-info-circle"></i></button>
                                 </div>
                             </div>
 
@@ -119,7 +119,7 @@ include ../pug/mixins
                                     </div>
                                 </div>
                                 <div class="col-sm-1 form-group-tooltip">
-                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.filter.tooltip}"><i class="far fa-info-circle"></i></button>
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{components.datatables-data-export.filter.tooltip}"><i class="ti ti-info-circle"></i></button>
                                 </div>
                             </div>
 
@@ -172,9 +172,10 @@ include ../pug/mixins
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="far fa-question-circle"></i> [[\#{button.help}]]</button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
-                <button type="button" class="btn btn-primary" id="submit-export"><i class="fal fa-check"></i> [[\#{components.datatables-data-export.Exportovat}]]</button>
+                span.buttons-footer-left
+                    <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="ti ti-help"></i> [[\#{button.help}]]</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="ti ti-x"></i> [[\#{button.cancel}]]</button>
+                <button type="button" class="btn btn-primary" id="submit-export"><i class="ti ti-check"></i> [[\#{components.datatables-data-export.Exportovat}]]</button>
             </div>
         </div>
     </div>

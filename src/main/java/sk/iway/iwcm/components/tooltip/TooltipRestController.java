@@ -59,7 +59,14 @@ public class TooltipRestController extends DatatableRestControllerV2<DictionaryB
 
         //If id isnt -1 return exist entity
         if(id != -1) {
-            return DictionaryDB.getDictionary((int)id);
+            DictionaryBean bean = DictionaryDB.getDictionary((int)id);
+            if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+                String domain = CloudToolsForCore.getDomainName();
+                if (bean != null && domain.equals(bean.getDomain())==false) {
+                    return null;
+                }
+            }
+            return bean;
         }
 
         //Create new empty entity DictionaryBean

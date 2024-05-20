@@ -125,9 +125,6 @@ public class Constants {
 	public static void clearValues() {
 		Logger.info(Constants.class, "Constants - clearValues");
 
-		// nastavenie logovania pre Html2Text triedu natvrdo na sl4j
-		net.htmlparser.jericho.Config.LoggerProvider = net.htmlparser.jericho.LoggerProvider.SLF4J;
-
 		allValues = new ArrayList<>();
 
 		// deprecated hodnota
@@ -399,7 +396,7 @@ public class Constants {
 		// default skin pre WebJET
 		setString("defaultSkin", "webjet8");
 
-		setString("spamProtectionJavascript", "all formtagCsrf formmailCsrf", "form;security",
+		setString("spamProtectionJavascript", "all formtagCsrf formmailCsrf formmail mailto", "form;security",
 				"ak je nastavené na all (budú chránené všetky formuláre) alebo formmail (chránené budú len formuláre odosielané na email), budú formuláre chránené javascriptom, pre deaktivovanie funkcie je potrebné zadať none. Štandardne nastavené na all.");
 		setInt("spamProtectionSendInterval", 30, "form;security",
 				"čas v sekundách počas ktorého nie je možné znova odoslať formulár na email. Štandardne nastavené na 30.");
@@ -439,7 +436,7 @@ public class Constants {
 
 		setInt("cacheStaticContentSeconds", 300, MOD_PERFORMANCE,
 				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi expiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
-		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg", MOD_PERFORMANCE,
+		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2", MOD_PERFORMANCE,
 				"pripony suborov, na ktore bude aplikovana cache hlavicka");
 
 		setString("basketCurrencyField", "fieldJ", MOD_BASKET,
@@ -1854,7 +1851,7 @@ public class Constants {
 				"Ak je nastavena na true tak bude komponenta /components/server_monitoring/monitor.jsp vracat chybu 'UNAVAILABLE' ");
 
 		setString("xsrfUrlExceptionSystem",
-				"%.gif!,%.jpg!,%.png!,%.css!,%.woff2!,%.js!,%.map!,/admin/mem.jsp!,/admin/!,/admin/index.jsp!,/admin/logon.jsp!,/admin/logon.do!,/sync/getobject,%approve,%Approve,/localconf.jsp,/admin/elFinder/elfinder-dialog.jsp!,/admin/tail.jsp,/admin/skins/webjet8/ckeditor/plugins/webjetcomponents/component_preview.jsp,/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp,/components/qa/admin_answer.jsp",
+				"%.gif!,%.jpg!,%.png!,%.css!,%.woff2!,%.js!,%.map!,/admin/mem.jsp!,/admin/!,/admin/index.jsp!,/admin/logon.jsp!,/admin/logon.do!,/sync/getobject,%approve,%Approve,/localconf.jsp,/admin/elFinder/elfinder-dialog.jsp!,/admin/tail.jsp,/admin/skins/webjet8/ckeditor/plugins/webjetcomponents/component_preview.jsp,/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp,/components/qa/admin_answer.jsp,/components/user/change_password.jsp",
 				MOD_SECURITY,
 				"Zoznam systemovych povolenych URL pre ktore sa nekontroluje referer (ODPORUCAME NEMENIT, pre nastavenie klientskej hodnoty pre danu instalaciu pouzite xsrfUrlException)");
 
@@ -1889,8 +1886,6 @@ public class Constants {
 
 		setBoolean("isGoogleAuthRequiredForAdmin", false, MOD_CONFIG,
 				"Ak je nastavene na true tak je pri prihlaseni uzivatel nuteny vytvorit si google auth. token a prihlasovat sa vzdy aj s kodom ");
-		setBoolean("quizAdminShowImageUrl", false, MOD_CONFIG,
-				"Ak je nastavene na true tak pri editacii dotaznikov vieme ku kazdej otazke uploadnut obrazok ");
 
 		setInt("regUserDefaultUserId", -1, MOD_USER,
 				"Pri registrovani noveho pouzivatela pomocou RegUserAction, pridana moznost nastavit prava na admin moduly podla pouzivatela (user_id) zadaneho v tejto konfiguracnej premennej");
@@ -1957,7 +1952,7 @@ public class Constants {
 				"java.beans.XMLDecoder, sk.iway.iwcm.sync.export.Content, java.util.ArrayList, java.util.List, java.lang.String, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.doc.GroupDetails, sk.iway.spirit.model.Media, java.util.Vector, java.util.Date, org.eclipse.persistence.indirection.IndirectList, sk.iway.spirit.model.MediaGroupBean, sk.iway.iwcm.editor.DocNoteBean, sk.iway.iwcm.doc.TemplateDetails, sk.iway.iwcm.users.UserGroupDetails, sk.iway.iwcm.system.UpdateDBBean, sk.iway.iwcm.system.ConfDetails, sk.iway.iwcm.update.VersionBean, java.util.Hashtable, java.util.Map, sk.iway.iwcm.doc.PerexGroupBean, sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry, sk.iway.iwcm.components.banner.model.BannerBean, java.lang.Integer, sk.iway.iwcm.gallery.GalleryBean, java.sql.Timestamp, java.util.HashMap, sk.iway.iwcm.inquiry.InquiryBean, sk.iway.iwcm.gallery.GalleryDimension, java.awt.Dimension, sk.iway.iwcm.inquiry.AnswerForm, sk.iway.iwcm.doc.TemplateDetailEditorFields, sk.iway.iwcm.doc.DocEditorFields, sk.iway.iwcm.doc.GroupEditorField, sk.iway.iwcm.doc.TemplateDetailEditorFields",
 				MOD_CONFIG, "Povolene triedy pre XMLDecoder");
 
-		setBoolean("swaggerEnabled", false, MOD_SECURITY, "Povolenie zobrazovania swagger API dokumentacie");
+		setBoolean("swaggerEnabled", false, MOD_SECURITY, "Povolenie zobrazovania swagger API dokumentacie na URL adrese /admin/swagger-ui/index.html");
 		setBoolean("swaggerRequireAdmin", true, MOD_SECURITY,
 				"Ak je nastavene na true je vyzadovane admin konto pre zobrazenie swagger dokumentacie");
 
@@ -2107,6 +2102,11 @@ public class Constants {
 	 * System bezi na ORACLE databaze
 	 */
 	public static final int DB_ORACLE = 4;
+
+	/**
+	 * PostgreSQL DB engine
+	 */
+	public static final int DB_PGSQL = 5;
 
 	/**
 	 * default hodnota

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">MenuTag.java</span></div><h1>MenuTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.TagSupport;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UsersDB;
+
+
+/**
+ *  Kontrola ci dany user ma pravo na dane menu
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      $Date: 2007/04/11 09:26:38 $
+ */
+
+<span class="fc" id="L27">public final class MenuTag extends TagSupport</span>
+{
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 *  The page to which we should forward for the user to log on.
+	 */
+<span class="fc" id="L34">	private String name = null;</span>
+<span class="fc" id="L35">	private String notName = null;</span>
+
+	/**
+	 *  Return the bean name.
+	 *
+	 *@return    The name value
+	 */
+	public String getName()
+	{
+<span class="nc" id="L44">		return (this.name);</span>
+	}
+
+
+	/**
+	 *  Set the bean name.
+	 *
+	 *@param  name  The new bean name
+	 */
+	public void setName(String name)
+	{
+<span class="fc" id="L55">		this.name = name;</span>
+<span class="fc" id="L56">	}</span>
+
+
+	// ------------------------------------------------------- Public Methods
+
+	/**
+	 *  Defer our checking until the end of this tag is encountered.
+	 *
+	 *@return                   Description of the Return Value
+	 *@exception  JspException  if a JSP exception has occurred
+	 */
+	@Override
+	public int doStartTag() throws JspException
+	{
+		// Is there a valid user logged on?
+<span class="fc" id="L71">		HttpSession session = pageContext.getSession();</span>
+<span class="fc" id="L72">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+
+		//Logger.error(this,&quot;valid=&quot;+valid+&quot; name=&quot;+name);
+
+		// Forward control based on the results
+		//Logger.println(this,&quot;name=&quot;+name+&quot; notName=&quot;+notName);
+<span class="pc bpc" id="L78" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; user.isValid())</span>
+		{
+<span class="fc bfc" id="L80" title="All 2 branches covered.">			if (name != null)</span>
+			{
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">				if (isEnabledPerms(name, user))</span>
+				{
+<span class="fc" id="L84">					return(EVAL_BODY_INCLUDE);</span>
+				}
+			}
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">			if (notName != null)</span>
+			{
+				//v not name robime AND
+<span class="fc" id="L90">				StringTokenizer st = new StringTokenizer(notName, &quot;|&quot;);</span>
+<span class="fc" id="L91">				boolean maNejakePovolene = false;</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">				while (st.hasMoreTokens())</span>
+				{
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">					if (user.isEnabledItem(st.nextToken().trim()))</span>
+					{
+<span class="fc" id="L96">						maNejakePovolene = true;</span>
+<span class="fc" id="L97">						break;</span>
+					}
+				}
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">				if (maNejakePovolene==false)</span>
+				{
+					//robime redirect na welcome
+<span class="nc" id="L104">					return(EVAL_BODY_INCLUDE);</span>
+				}
+<span class="fc" id="L106">			}</span>
+		}
+		else
+		{
+			try
+			{
+<span class="nc" id="L112">				pageContext.forward(&quot;/admin/logon.jsp&quot;);</span>
+			}
+<span class="nc" id="L114">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L116">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L117">			}</span>
+<span class="nc" id="L118">			Logger.debug(this,&quot;MENU: user je null&quot;);</span>
+		}
+<span class="fc" id="L120">		return(SKIP_BODY);</span>
+	}
+
+	/**
+	 * Overi, ci ma user aspon jedno zo zadanych prav (oddelenych znakom |), ak ano, vrati true
+	 * @param perms
+	 * @param user
+	 * @return
+	 */
+	public static boolean isEnabledPerms(String perms, Identity user)
+	{
+		//v name robime OR
+<span class="fc" id="L132">		StringTokenizer st = new StringTokenizer(perms, &quot;|&quot;);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="fc" id="L135">			String perm = st.nextToken();</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">			if (Tools.isEmpty(perm)) continue;</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">			if (perm.startsWith(&quot;gid:&quot;)) {</span>
+				//specialna moznost pouzitia &lt;iwcm:menu pre kontrolu user skupin &lt;iwcm:menu name=&quot;gid:34-Editacia profilu klienta v systeme|gid:33-Vytvorenie profilu klienta v systeme&quot;&gt;
+				try
+				{
+					//skus ziskat id
+<span class="nc" id="L142">					int gid = Tools.getIntValue(perm.substring(4, perm.indexOf(&quot;-&quot;)).trim(), -1);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">					if (gid &gt; 0) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">						if (user.isInUserGroup(gid)) return true;</span>
+					};
+				}
+<span class="nc" id="L147">				catch (Exception e)</span>
+				{
+<span class="nc" id="L149">				}</span>
+			}
+<span class="pc bpc" id="L151" title="4 of 6 branches missed.">			else if ((user.isAdmin() || UsersDB.checkUserPerms(user, &quot;admin|editableGroupsNotEmpty&quot;)) &amp;&amp; user.isEnabledItem(perm.trim()))</span>
+			{
+<span class="fc" id="L153">				return true;</span>
+			}
+<span class="nc" id="L155">		}</span>
+
+<span class="nc" id="L157">		return false;</span>
+	}
+
+
+	/**
+	 *  Perform our logged-in user check by looking for the existence of a
+	 *  session scope bean under the specified name. If this bean is not present,
+	 *  control is forwarded to the specified logon page.
+	 *
+	 *@return                   Description of the Return Value
+	 *@exception  JspException  if a JSP exception has occurred
+	 */
+	@Override
+	public int doEndTag() throws JspException
+	{
+<span class="fc" id="L172">		return(EVAL_PAGE);</span>
+	}
+
+
+	/**
+	 *  Release any acquired resources.
+	 */
+	@Override
+	public void release()
+	{
+		//Logger.println(this,&quot;RELEASE: &quot; + name + &quot;;&quot;+notName);
+<span class="fc" id="L183">		super.release();</span>
+<span class="fc" id="L184">		this.name = null;</span>
+<span class="fc" id="L185">		this.notName = null;</span>
+
+<span class="fc" id="L187">	}</span>
+
+	public String getNotName()
+	{
+<span class="nc" id="L191">		return notName;</span>
+	}
+	public void setNotName(String notName)
+	{
+<span class="fc" id="L195">		this.notName = notName;</span>
+<span class="fc" id="L196">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

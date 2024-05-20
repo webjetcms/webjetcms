@@ -78,9 +78,9 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
 		}
 		else
 		{
-			user.setPassword(newPassword);
-			UsersDB.saveUser(user);
-			request.setAttribute("success", true);
+			boolean passwordSaved = sk.iway.iwcm.components.users.userdetail.UserDetailsService.savePassword(newPassword, user.getUserId());
+
+			request.setAttribute("success", passwordSaved);
 		}
 	}
 %>

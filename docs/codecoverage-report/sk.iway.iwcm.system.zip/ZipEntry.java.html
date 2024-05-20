@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ZipEntry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.zip</a> &gt; <span class="el_source">ZipEntry.java</span></div><h1>ZipEntry.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.zip;
+
+/**
+ *  ZipEntry.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.3.2005 13:31:29
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+/*
+ * @(#)ZipEntry.java	1.35 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+import java.util.Date;
+
+/**
+ * This class is used to represent a ZIP file entry.
+ *
+ * @version 1.35, 01/23/03
+ * @author David Connelly
+ */
+@SuppressWarnings(&quot;deprecation&quot;)
+public class ZipEntry implements ZipConstants, Cloneable
+{
+	String name; // entry name
+<span class="pc" id="L32">	long time = -1; // modification time (in DOS time)</span>
+<span class="pc" id="L33">	long crc = -1; // crc-32 of entry data</span>
+<span class="pc" id="L34">	long size = -1; // uncompressed size of entry data</span>
+<span class="pc" id="L35">	long csize = -1; // compressed size of entry data</span>
+<span class="pc" id="L36">	int method = -1; // compression method</span>
+	byte[] extra; // optional extra field data for entry
+	String comment; // optional comment string for entry
+	// The following flags are used only by Zip{Input,Output}Stream
+	int flag; // bit flags
+	int version; // version needed to extract
+	long offset; // offset of loc header
+	/**
+	 * Compression method for uncompressed entries.
+	 */
+	public static final int STORED = 0;
+	/**
+	 * Compression method for compressed (deflated) entries.
+	 */
+	public static final int DEFLATED = 8;
+
+	/**
+	 * Creates a new zip entry with the specified name.
+	 *
+	 * @param name
+	 *           the entry name
+	 * @exception NullPointerException
+	 *               if the entry name is null
+	 * @exception IllegalArgumentException
+	 *               if the entry name is longer than 0xFFFF bytes
+	 */
+	public ZipEntry(String name)
+<span class="fc" id="L63">	{</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (name == null)</span>
+		{
+<span class="nc" id="L66">			throw new NullPointerException();</span>
+		}
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">		if (name.length() &gt; 0xFFFF)</span>
+		{
+<span class="nc" id="L70">			throw new IllegalArgumentException(&quot;entry name too long&quot;);</span>
+		}
+		//WebJET
+<span class="fc" id="L73">		this.name = name.trim();</span>
+<span class="fc" id="L74">	}</span>
+
+	/**
+	 * Creates a new zip entry with fields taken from the specified zip entry.
+	 *
+	 * @param e
+	 *           a zip Entry object
+	 */
+	public ZipEntry(ZipEntry e)
+<span class="nc" id="L83">	{</span>
+<span class="nc" id="L84">		name = e.name;</span>
+<span class="nc" id="L85">		time = e.time;</span>
+<span class="nc" id="L86">		crc = e.crc;</span>
+<span class="nc" id="L87">		size = e.size;</span>
+<span class="nc" id="L88">		csize = e.csize;</span>
+<span class="nc" id="L89">		method = e.method;</span>
+<span class="nc" id="L90">		extra = e.extra;</span>
+<span class="nc" id="L91">		comment = e.comment;</span>
+<span class="nc" id="L92">	}</span>
+
+	/*
+	 * Creates a new zip entry for the given name with fields initialized from
+	 * the specified jzentry data.
+	 */
+	ZipEntry(String name, long jzentry)
+<span class="nc" id="L99">	{</span>
+<span class="nc" id="L100">		this.name = name;</span>
+<span class="nc" id="L101">		initFields(jzentry);</span>
+<span class="nc" id="L102">	}</span>
+
+	private native void initFields(long jzentry);
+
+	/*
+	 * Creates a new zip entry with fields initialized from the specified jzentry
+	 * data.
+	 */
+	ZipEntry(long jzentry)
+<span class="nc" id="L111">	{</span>
+<span class="nc" id="L112">		initFields(jzentry);</span>
+<span class="nc" id="L113">	}</span>
+
+	/**
+	 * Returns the name of the entry.
+	 *
+	 * @return the name of the entry
+	 */
+	public String getName()
+	{
+		//WebJET - [#37426]VYSLEDKY Z PENTRACNYCH TESTOV - ochrana pred zip evil
+<span class="fc" id="L123">		String nameFixed = name;</span>
+<span class="pc bpc" id="L124" title="2 of 4 branches missed.">		if (nameFixed != null &amp;&amp; nameFixed.contains(&quot;..&quot;))</span>
+		{
+			//cesta je vo formate ../../../test.jsp
+<span class="nc" id="L127">			int i = nameFixed.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (i == -1) i = nameFixed.lastIndexOf(&quot;\\&quot;);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L131">				nameFixed = nameFixed.substring(i+1);</span>
+			}
+		}
+
+<span class="fc" id="L135">		return nameFixed;</span>
+	}
+
+	/**
+	 * Sets the modification time of the entry.
+	 *
+	 * @param time
+	 *           the entry modification time in number of milliseconds since the
+	 *           epoch
+	 * @see #getTime()
+	 */
+	public void setTime(long time)
+	{
+<span class="nc" id="L148">		this.time = javaToDosTime(time);</span>
+<span class="nc" id="L149">	}</span>
+
+	/**
+	 * Returns the modification time of the entry, or -1 if not specified.
+	 *
+	 * @return the modification time of the entry, or -1 if not specified
+	 * @see #setTime(long)
+	 */
+	public long getTime()
+	{
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		return time != -1 ? dosToJavaTime(time) : -1;</span>
+	}
+
+	/**
+	 * Sets the uncompressed size of the entry data.
+	 *
+	 * @param size
+	 *           the uncompressed size in bytes
+	 * @exception IllegalArgumentException
+	 *               if the specified size is less than 0 or greater than
+	 *               0xFFFFFFFF bytes
+	 * @see #getSize()
+	 */
+	public void setSize(long size)
+	{
+<span class="nc bnc" id="L174" title="All 4 branches missed.">		if (size &lt; 0 || size &gt; 0xFFFFFFFFL)</span>
+		{
+<span class="nc" id="L176">			throw new IllegalArgumentException(&quot;invalid entry size&quot;);</span>
+		}
+<span class="nc" id="L178">		this.size = size;</span>
+<span class="nc" id="L179">	}</span>
+
+	/**
+	 * Returns the uncompressed size of the entry data, or -1 if not known.
+	 *
+	 * @return the uncompressed size of the entry data, or -1 if not known
+	 * @see #setSize(long)
+	 */
+	public long getSize()
+	{
+<span class="nc" id="L189">		return size;</span>
+	}
+
+	/**
+	 * Returns the size of the compressed entry data, or -1 if not known. In the
+	 * case of a stored entry, the compressed size will be the same as the
+	 * uncompressed size of the entry.
+	 *
+	 * @return the size of the compressed entry data, or -1 if not known
+	 * @see #setCompressedSize(long)
+	 */
+	public long getCompressedSize()
+	{
+<span class="nc" id="L202">		return csize;</span>
+	}
+
+	/**
+	 * Sets the size of the compressed entry data.
+	 *
+	 * @param csize
+	 *           the compressed size to set to
+	 * @see #getCompressedSize()
+	 */
+	public void setCompressedSize(long csize)
+	{
+<span class="nc" id="L214">		this.csize = csize;</span>
+<span class="nc" id="L215">	}</span>
+
+	/**
+	 * Sets the CRC-32 checksum of the uncompressed entry data.
+	 *
+	 * @param crc
+	 *           the CRC-32 value
+	 * @exception IllegalArgumentException
+	 *               if the specified CRC-32 value is less than 0 or greater than
+	 *               0xFFFFFFFF
+	 * @see #setCrc(long)
+	 */
+	public void setCrc(long crc)
+	{
+<span class="nc bnc" id="L229" title="All 4 branches missed.">		if (crc &lt; 0 || crc &gt; 0xFFFFFFFFL)</span>
+		{
+<span class="nc" id="L231">			throw new IllegalArgumentException(&quot;invalid entry crc-32&quot;);</span>
+		}
+<span class="nc" id="L233">		this.crc = crc;</span>
+<span class="nc" id="L234">	}</span>
+
+	/**
+	 * Returns the CRC-32 checksum of the uncompressed entry data, or -1 if not
+	 * known.
+	 *
+	 * @return the CRC-32 checksum of the uncompressed entry data, or -1 if not
+	 *         known
+	 * @see #getCrc()
+	 */
+	public long getCrc()
+	{
+<span class="nc" id="L246">		return crc;</span>
+	}
+
+	/**
+	 * Sets the compression method for the entry.
+	 *
+	 * @param method
+	 *           the compression method, either STORED or DEFLATED
+	 * @exception IllegalArgumentException
+	 *               if the specified compression method is invalid
+	 * @see #getMethod()
+	 */
+	public void setMethod(int method)
+	{
+<span class="nc bnc" id="L260" title="All 4 branches missed.">		if (method != STORED &amp;&amp; method != DEFLATED)</span>
+		{
+<span class="nc" id="L262">			throw new IllegalArgumentException(&quot;invalid compression method&quot;);</span>
+		}
+<span class="nc" id="L264">		this.method = method;</span>
+<span class="nc" id="L265">	}</span>
+
+	/**
+	 * Returns the compression method of the entry, or -1 if not specified.
+	 *
+	 * @return the compression method of the entry, or -1 if not specified
+	 * @see #setMethod(int)
+	 */
+	public int getMethod()
+	{
+<span class="fc" id="L275">		return method;</span>
+	}
+
+	/**
+	 * Sets the optional extra field data for the entry.
+	 *
+	 * @param extra
+	 *           the extra field data bytes
+	 * @exception IllegalArgumentException
+	 *               if the length of the specified extra field data is greater
+	 *               than 0xFFFF bytes
+	 * @see #getExtra()
+	 */
+	public void setExtra(byte[] extra)
+	{
+<span class="nc bnc" id="L290" title="All 4 branches missed.">		if (extra != null &amp;&amp; extra.length &gt; 0xFFFF)</span>
+		{
+<span class="nc" id="L292">			throw new IllegalArgumentException(&quot;invalid extra field length&quot;);</span>
+		}
+<span class="nc" id="L294">		this.extra = extra; </span>
+<span class="nc" id="L295">	}</span>
+
+	/**
+	 * Returns the extra field data for the entry, or null if none.
+	 *
+	 * @return the extra field data for the entry, or null if none
+	 * @see #setExtra(byte[])
+	 */
+	public byte[] getExtra()
+	{
+<span class="nc" id="L305">		return extra;</span>
+	}
+
+	/**
+	 * Sets the optional comment string for the entry.
+	 *
+	 * @param comment
+	 *           the comment string
+	 * @exception IllegalArgumentException
+	 *               if the length of the specified comment string is greater
+	 *               than 0xFFFF bytes
+	 * @see #getComment()
+	 */
+	public void setComment(String comment)
+	{
+<span class="nc bnc" id="L320" title="All 6 branches missed.">		if (comment != null &amp;&amp; comment.length() &gt; 0xffff / 3 &amp;&amp; getUTF8Length(comment) &gt; 0xffff)</span>
+		{
+<span class="nc" id="L322">			throw new IllegalArgumentException(&quot;invalid entry comment length&quot;);</span>
+		}
+<span class="nc" id="L324">		this.comment = comment;</span>
+<span class="nc" id="L325">	}</span>
+
+	static int getUTF8Length(String s)
+	{
+<span class="nc" id="L329">		int count = 0;</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		for (int i = 0; i &lt; s.length(); i++)</span>
+		{
+<span class="nc" id="L332">			char ch = s.charAt(i);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (ch &lt;= 0x7f)</span>
+			{
+<span class="nc" id="L335">				count++;</span>
+			}
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			else if (ch &lt;= 0x7ff)</span>
+			{
+<span class="nc" id="L339">				count += 2;</span>
+			}
+			else
+			{
+<span class="nc" id="L343">				count += 3;</span>
+			}
+		}
+<span class="nc" id="L346">		return count;</span>
+	}
+
+	/**
+	 * Returns the comment string for the entry, or null if none.
+	 *
+	 * @return the comment string for the entry, or null if none
+	 * @see #setComment(String)
+	 */
+	public String getComment()
+	{
+<span class="nc" id="L357">		return comment;</span>
+	}
+
+	/**
+	 * Returns true if this is a directory entry. A directory entry is defined to
+	 * be one whose name ends with a '/'.
+	 *
+	 * @return true if this is a directory entry
+	 */
+	public boolean isDirectory()
+	{
+<span class="nc" id="L368">		return name.endsWith(&quot;/&quot;);</span>
+	}
+
+	/**
+	 * Returns a string representation of the ZIP entry.
+	 */
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L377">		return getName();</span>
+	}
+
+	/*
+	 * Converts DOS time to Java time (number of milliseconds since epoch).
+	 */	
+	private static long dosToJavaTime(long dtime)
+	{
+<span class="nc" id="L385">		Date d = new Date((int) (((dtime &gt;&gt; 25) &amp; 0x7f) + 80), (int) (((dtime &gt;&gt; 21) &amp; 0x0f) - 1), (int) ((dtime &gt;&gt; 16) &amp; 0x1f),</span>
+					(int) ((dtime &gt;&gt; 11) &amp; 0x1f), (int) ((dtime &gt;&gt; 5) &amp; 0x3f), (int) ((dtime &lt;&lt; 1) &amp; 0x3e));
+<span class="nc" id="L387">		return d.getTime();</span>
+	}
+
+	/*
+	 * Converts Java time to DOS time.
+	 */
+	private static long javaToDosTime(long time)
+	{
+<span class="nc" id="L395">		Date d = new Date(time);</span>
+<span class="nc" id="L396">		int year = d.getYear() + 1900;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (year &lt; 1980)</span>
+		{
+<span class="nc" id="L399">			return (1 &lt;&lt; 21) | (1 &lt;&lt; 16);</span>
+		}
+<span class="nc" id="L401">		return (year - 1980) &lt;&lt; 25 | (d.getMonth() + 1) &lt;&lt; 21 | d.getDate() &lt;&lt; 16 | d.getHours() &lt;&lt; 11 | d.getMinutes() &lt;&lt; 5</span>
+<span class="nc" id="L402">					| d.getSeconds() &gt;&gt; 1;</span>
+	}
+
+	/**
+	 * Returns the hash code value for this entry.
+	 */
+	@Override
+	public int hashCode()
+	{
+<span class="nc" id="L411">		return name.hashCode();</span>
+	}
+
+	/**
+	 * Returns a copy of this entry.
+	 */
+	@Override
+	public Object clone()
+	{
+		try
+		{
+<span class="nc" id="L422">			ZipEntry e = (ZipEntry) super.clone();</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			e.extra = (extra == null ? null : (byte[]) extra.clone());</span>
+<span class="nc" id="L424">			return e;</span>
+		}
+<span class="nc" id="L426">		catch (CloneNotSupportedException e)</span>
+		{
+			// This should never happen, since we are Cloneable
+<span class="nc" id="L429">			throw new InternalError();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

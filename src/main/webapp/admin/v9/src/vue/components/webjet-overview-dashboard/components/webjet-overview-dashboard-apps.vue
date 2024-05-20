@@ -2,7 +2,7 @@
     <div class="overview__apps">
         <div class="overview__apps__head">
             <div class="overview__apps__head__icon">
-                <i class="fas fa-rocket"></i>
+                <i class="ti ti-rocket fs-4"></i>
             </div>
             <span>
                 {{$appsForNewWebJET}}
@@ -156,7 +156,7 @@
             left: 20px;
             padding-top: 10px;
             i {
-                font-size: 28px;
+                font-size: 32px;
                 color: #C2C6D2;
             }
         }

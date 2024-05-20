@@ -1,0 +1,1537 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatableRestControllerV2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatableRestControllerV2.java</span></div><h1>DatatableRestControllerV2.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.ActiveRecordBase;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.system.stripes.MultipartWrapper;
+import sk.iway.iwcm.users.UsersDB;
+
+//import javax.persistence.EntityManagerFactory;
+import javax.persistence.Id;
+//import javax.persistence.PersistenceUnit;
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.*;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
+/**
+ * Title        webjet8
+ * Company      Interway a. s. (www.interway.sk)
+ * Copyright    Interway a. s. (c) 2001-2019
+ * @author       tmarcinkova $
+ * @created      2019/05/10 12:50
+ *
+ *  Abstraktny univerzalny RestController na pracu s DataTables Editor-om
+ *
+ */
+public abstract class DatatableRestControllerV2&lt;T, ID extends Serializable&gt;
+{
+	private final JpaRepository&lt;T, Long&gt; repo;
+
+	//pozor: po zmene je potrebne opravit aj prefix v src/main/webapp/admin/v9/src/js/app.js
+	private static final String REGEX_PREFIX = &quot;regex:&quot;;
+
+	@Autowired
+	private HttpServletRequest request;
+
+	@Autowired
+	private Validator validator;
+
+<span class="fc" id="L82">	private static final ThreadLocal&lt;ThreadBean&gt; threadData = new ThreadLocal&lt;&gt;(); //NOSONAR</span>
+
+<span class="fc" id="L84">	boolean checkDomainId = false;</span>
+
+<span class="fc" id="L86">	protected DatatableRestControllerV2() {</span>
+<span class="fc" id="L87">		this.repo = null;</span>
+<span class="fc" id="L88">	}</span>
+
+<span class="fc" id="L90">	protected DatatableRestControllerV2(JpaRepository&lt;T, Long&gt; repo) {</span>
+<span class="fc" id="L91">		this.repo = repo;</span>
+
+		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
+<span class="pc bpc" id="L94" title="2 of 4 branches missed.">		if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">			if (repo instanceof DomainIdRepository) checkDomainId = true;</span>
+		}
+<span class="fc" id="L97">	}</span>
+
+	/***************************** CITANIE / ZAPIS DAT *****************************/
+
+	/**
+	 * Vlozi NOVU entitu do databazy
+	 * @param entity
+	 * @return
+	 */
+	public T insertItem(T entity) {
+		//musime z editoFields najskor prepisat hodnoty do entity
+<span class="fc" id="L108">		T processed = processToEntity(entity, ProcessItemAction.CREATE);</span>
+		//ulozime
+<span class="fc" id="L110">		T saved = repo.save(processed);</span>
+		//nastavime editorFields atributy
+<span class="fc" id="L112">		return processFromEntity(saved, ProcessItemAction.CREATE);</span>
+	}
+
+	/**
+	 * Ulozi existujucu entitu do databazy
+	 * @param entity
+	 * @param id
+	 * @return
+	 */
+	public T editItem(T entity, long id) {
+
+		//zachovaj thread bean, lebo volanie getOne ho zmaze a moze to byt nastavene z beforeSave metody
+<span class="fc" id="L124">		boolean forceReload = isForceReload();</span>
+<span class="fc" id="L125">		List&lt;NotifyBean&gt; notify = getThreadData().getNotify();</span>
+
+		//toto nam zabezpeci aby sa nam nestratili udaje, ktore nemame v editore
+<span class="fc" id="L128">		T one = getOne(id);</span>
+
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (isForceReload()) setForceReload(forceReload);</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">		if (notify!=null) addNotify(notify);</span>
+
+<span class="fc" id="L133">		List&lt;String&gt; alwaysCopyProperties = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L135">		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">		for (Field field : declaredFields) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {</span>
+<span class="fc" id="L138">				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);</span>
+<span class="fc" id="L139">				boolean[] hiddenEditor = annotation.hiddenEditor();</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">				if (hiddenEditor.length &gt; 0) {</span>
+					//ak je hiddenEditor preskoc
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">					if (hiddenEditor[0]==true) continue;</span>
+				}
+<span class="fc" id="L144">				boolean alwaysCopy = false;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">				if (annotation.alwaysCopyProperties().length&gt;0) {</span>
+<span class="nc" id="L146">					alwaysCopy = annotation.alwaysCopyProperties()[0];</span>
+					//implicit false value
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (alwaysCopy==false) continue;</span>
+				}
+<span class="pc bpc" id="L150" title="4 of 10 branches missed.">				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {</span>
+					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
+<span class="fc" id="L152">					alwaysCopyProperties.add(field.getName());</span>
+				}
+			}
+		}
+
+<span class="fc" id="L157">		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, (String[]) null);</span>
+
+		//musime z editoFields najskor prepisat hodnoty do entity
+<span class="fc" id="L160">		T processed = processToEntity(one, ProcessItemAction.CREATE);</span>
+		//ulozime
+<span class="fc" id="L162">		T saved = repo.save(processed);</span>
+		//nastavime editorFields atributy
+<span class="fc" id="L164">		return processFromEntity(saved, ProcessItemAction.EDIT);</span>
+	}
+
+	/**
+	 * metoda pre ziskanie entity s rovnakou hodnotou v stlci propertyName ako hodnota v obj
+	 * @param propertyName
+	 * @param obj
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public List&lt;T&gt; findItemBy(String propertyName, T original) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+
+		//musime spravit najskor kopiu obj, aby sme na nej mohli zavolat processToEntity bez posahania povodnej entity
+<span class="fc" id="L180">		T obj = (T)original.getClass().getDeclaredConstructor().newInstance();</span>
+<span class="fc" id="L181">		NullAwareBeanUtils.copyProperties(original, obj);</span>
+<span class="fc" id="L182">		processToEntity(obj, ProcessItemAction.EDIT);</span>
+
+<span class="fc" id="L184">		JpaEntityManager entityManager = JpaTools.getEclipseLinkEntityManager(original.getClass());</span>
+<span class="fc" id="L185">		ReadAllQuery raq = new ReadAllQuery(original.getClass());</span>
+<span class="fc" id="L186">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="fc" id="L188">		BeanWrapperImpl bw = new BeanWrapperImpl(obj);</span>
+<span class="fc" id="L189">		Object value = bw.getPropertyValue(propertyName);</span>
+<span class="fc" id="L190">		Expression exp = builder.get(propertyName).equal(value);</span>
+
+		//pridaj domainId podmienku ak entita obsahuje domainId stlpec (aby sa neaktualizovali entity v inej domene)
+<span class="pc bpc" id="L193" title="2 of 4 branches missed.">		if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true) {</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">			if (bw.getPropertyType(&quot;domainId&quot;)!=null) {</span>
+<span class="fc" id="L195">				exp = exp.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+			}
+		}
+
+<span class="fc" id="L199">		raq.setSelectionCriteria(exp);</span>
+
+<span class="fc" id="L201">		Query query = entityManager.createQuery(raq);</span>
+<span class="fc" id="L202">		List&lt;T&gt; list = query.getResultList();</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">		for (T entity : list) {</span>
+<span class="fc" id="L204">			processFromEntity(entity, ProcessItemAction.FIND);</span>
+<span class="fc" id="L205">		}</span>
+<span class="fc" id="L206">		return list;</span>
+	}
+
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	private String getIdColumnName(T entity) {
+<span class="fc" id="L211">		Class c = entity.getClass();</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">		for (Field field : c.getDeclaredFields()) {</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">			if (field.isAnnotationPresent(Id.class)) {</span>
+<span class="fc" id="L214">				return field.getName();</span>
+			}
+		}
+
+<span class="fc" id="L218">		return null;</span>
+	}
+
+	/**
+	 * metoda na upravu beanu v DB na zaklade nazvu stlpca v DB @updateByColumn.
+	 * @param entity
+	 * @param updateByColumn
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 */
+	private List&lt;T&gt; editItemByColumn(T entity, String updateByColumn) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+		// ziskame list entit, ktore obsahuju v stlpci updateByColumn rovnaku hodnotu ako entita
+<span class="fc" id="L232">		String idColumnName = getIdColumnName(entity);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">		if (&quot;id&quot;.equalsIgnoreCase(updateByColumn)) updateByColumn = idColumnName;</span>
+
+<span class="fc" id="L235">		List&lt;T&gt; itemsBy = findItemBy(updateByColumn, entity);</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">		if (itemsBy.isEmpty()) {</span>
+			//zmaz ID column
+			try {
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (idColumnName == null) idColumnName = &quot;id&quot;;</span>
+<span class="nc" id="L240">				BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="nc" id="L241">				Long id = null;</span>
+<span class="nc" id="L242">				try { bw.setPropertyValue(idColumnName, id); }</span>
+<span class="nc" id="L243">				catch (Exception ex) { bw.setPropertyValue(idColumnName, 0); }</span>
+<span class="nc" id="L244">			} catch (Exception ex) {</span>
+				//failsafe
+<span class="nc" id="L246">			}</span>
+<span class="nc" id="L247">			T processed = insertItem(entity);</span>
+<span class="nc" id="L248">			return Arrays.asList(processed);</span>
+		}
+
+<span class="fc" id="L251">		List&lt;T&gt; savedList = new ArrayList&lt;&gt;();</span>
+		// nastavenie dat a ulozenie
+<span class="fc bfc" id="L253" title="All 2 branches covered.">		for (T itemBy : itemsBy) {</span>
+<span class="fc" id="L254">			long id = 0;</span>
+			try {
+<span class="fc" id="L256">				BeanWrapperImpl bw = new BeanWrapperImpl(itemBy);</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">				Object value = bw.getPropertyValue(idColumnName != null ? idColumnName : &quot;id&quot;);</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">				if (value instanceof Number) {</span>
+<span class="fc" id="L259">					id = ((Number)value).longValue();</span>
+				}
+<span class="nc" id="L261">			} catch (Exception ex) {</span>
+				//failsafe
+<span class="fc" id="L263">			}</span>
+
+<span class="fc" id="L265">			BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+			//setni ID hodnotu na povodnej entite, aby sa nasledne korektne vykonala processToEntity so spravnym ID
+			try {
+<span class="fc" id="L268">				bw.setPropertyValue(&quot;id&quot;, Long.valueOf(id));</span>
+<span class="nc" id="L269">			} catch (Exception e) {</span>
+				//failsafe
+<span class="fc" id="L271">			}</span>
+<span class="pc bpc" id="L272" title="1 of 4 branches missed.">			if (idColumnName!=null &amp;&amp; &quot;id&quot;.equals(idColumnName)==false) {</span>
+				try {
+<span class="nc" id="L274">					bw.setPropertyValue(idColumnName, Long.valueOf(id));</span>
+<span class="nc" id="L275">				} catch (Exception e) {</span>
+					//failsafe
+<span class="nc" id="L277">				}</span>
+			}
+
+<span class="fc" id="L280">			T saved = editItem(entity, id);</span>
+<span class="fc" id="L281">			afterSave(entity, saved);</span>
+
+<span class="fc" id="L283">			savedList.add(saved);</span>
+<span class="fc" id="L284">		}</span>
+
+<span class="fc" id="L286">		return savedList;</span>
+	}
+
+	/**
+	 * Zmaze danu entitu z databazy
+	 * @param entity
+	 * @param id
+	 * @return
+	 */
+	public boolean deleteItem(T entity, long id) {
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">		if (beforeDelete(repo.getById(id))) {</span>
+			try {
+<span class="fc bfc" id="L298" title="All 2 branches covered.">				if (checkDomainId) {</span>
+					//zmazanie pri pouziti domain_id riesime ziskanim zaznamu cez getOneItem ktore overi aj domain_id stlpec a naslednym zmazanim entity
+<span class="fc" id="L300">					T fromRepo = getOneItem(id);</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">					if (fromRepo != null) {</span>
+<span class="fc" id="L302">						DomainIdRepository&lt;T, ID&gt; domainRepo = getDomainRepo();</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">						if (domainRepo!=null) domainRepo.delete(fromRepo);</span>
+					}
+<span class="fc" id="L305">				} else {</span>
+<span class="fc" id="L306">					T fromRepo = getOneItem(id);</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">					if (fromRepo != null) {</span>
+<span class="fc" id="L308">						repo.delete(fromRepo);</span>
+					}
+				}
+<span class="fc" id="L311">				afterDelete(entity, id);</span>
+<span class="fc" id="L312">				return true;</span>
+<span class="nc" id="L313">			} catch (Exception e) {</span>
+<span class="nc" id="L314">				Logger.error(DatatableRestControllerV2.class, e);</span>
+			}
+		}
+
+<span class="nc" id="L318">		return false;</span>
+	}
+
+	/**
+	 * Ziska z databazy entitu so zadanym id
+	 * @param id
+	 * @return
+	 */
+	public T getOneItem(long id) {
+<span class="fc" id="L327">		T result = null;</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">		if (repo.existsById(id)) {</span>
+<span class="fc" id="L329">			Optional&lt;T&gt; byId = Optional.empty();</span>
+
+<span class="fc bfc" id="L331" title="All 2 branches covered.">			if (checkDomainId) {</span>
+<span class="fc" id="L332">				DomainIdRepository&lt;T, ID&gt; domainRepo = getDomainRepo();</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">				if (domainRepo!=null) byId = domainRepo.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L334">			} else {</span>
+<span class="fc" id="L335">				byId = repo.findById(id);</span>
+			}
+
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">			if (byId.isPresent()) {</span>
+<span class="fc" id="L339">				result = byId.get();</span>
+			}
+		}
+<span class="fc" id="L342">		return processFromEntity(result, ProcessItemAction.GETONE);</span>
+	}
+
+	/**
+	 * Ziska z databazy vsetky zaznamy
+	 * @param pageable
+	 * @return
+	 */
+	public Page&lt;T&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L351">		Page&lt;T&gt; page = null;</span>
+
+<span class="fc bfc" id="L353" title="All 2 branches covered.">		if (checkDomainId) {</span>
+			//volame aj s podmienkami domain_id
+<span class="fc" id="L355">			DomainIdRepository&lt;T, ID&gt; domainRepo = getDomainRepo();</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">			if (domainRepo!=null) {</span>
+				//ak nemame size parameter tak sa jedna o serverSide: false, takze pageable nemame pouzit
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">				if (getRequest().getParameter(&quot;size&quot;)==null) page = new DatatablePageImpl&lt;&gt;(domainRepo.findAllByDomainId(CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L359">				else page = domainRepo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable);</span>
+			}
+<span class="fc" id="L361">		} else {</span>
+			//ak nemame size parameter tak sa jedna o serverSide: false, takze pageable nemame pouzit
+<span class="fc bfc" id="L363" title="All 2 branches covered.">			if (getRequest().getParameter(&quot;size&quot;)==null) page = new DatatablePageImpl&lt;&gt;(repo.findAll());</span>
+<span class="fc" id="L364">			else page = repo.findAll(pageable);</span>
+		}
+
+<span class="fc" id="L367">		processFromEntity(page, ProcessItemAction.GETALL);</span>
+
+<span class="fc" id="L369">		return page;</span>
+	}
+
+	/**
+	 * Vrati vsetky zaznamy, pricom vykona volanie metody addSpecSearch,
+	 * cize je mozne pouzit URL parametre na filtrovanie vsetkych zaznamov.
+	 * @param empty - prazdny objekt (je potrebny kvoli vytvoreniu instance)
+	 * @param pageable
+	 * @return
+	 */
+	public Page&lt;T&gt; getAllItemsIncludeSpecSearch(T empty, Pageable pageable) {
+
+<span class="fc" id="L381">		Map&lt;String, String&gt; params = getParamsMap(getRequest());</span>
+
+<span class="fc" id="L383">		return searchItem(params, pageable, empty);</span>
+	}
+
+	/**
+	 * Convert URL/request parameters to Map&lt;String paramName, String paramValue&gt;
+	 * @param request
+	 * @return
+	 */
+	public static Map&lt;String, String&gt; getParamsMap(HttpServletRequest request) {
+<span class="fc" id="L392">		Map&lt;String, String[]&gt; paramsMulti = request.getParameterMap();</span>
+<span class="fc" id="L393">		Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">		for (Map.Entry&lt;String, String[]&gt; entry : paramsMulti.entrySet()) {</span>
+<span class="fc" id="L395">			String[] value = entry.getValue();</span>
+<span class="pc bpc" id="L396" title="2 of 4 branches missed.">			if (value != null &amp;&amp; value.length&gt;0) {</span>
+<span class="fc" id="L397"> 				params.put(entry.getKey(), value[0]);</span>
+			}
+<span class="fc" id="L399">		}</span>
+<span class="fc" id="L400">		return params;</span>
+	}
+
+	/**
+	 * Vykona zadanu akciu (napr. rotacia obrazku v galerii)
+	 *
+	 * @param entity
+	 * @param action
+	 * @return false ak nastane chyba
+	 */
+	public boolean processAction(T entity, String action) {
+<span class="nc" id="L411">		return true;</span>
+	}
+
+	/**
+	 * Vykona upravy vo vsetkych entitach v page objekte pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param page
+	 * @param action - typ zmeny - create,edit,getall...
+	 */
+	public void processFromEntity(Page&lt;T&gt; page, ProcessItemAction action) {
+<span class="pc bpc" id="L421" title="1 of 4 branches missed.">		if (page == null || page.getContent()==null) { //NOSONAR</span>
+<span class="fc" id="L422">			return;</span>
+		}
+
+		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">		if (isExporting()) action = ProcessItemAction.GETONE;</span>
+
+<span class="fc bfc" id="L428" title="All 2 branches covered.">		for (T entity : page.getContent()) {</span>
+<span class="fc" id="L429">			processFromEntity(entity, action);</span>
+<span class="fc" id="L430">		}</span>
+<span class="fc" id="L431">	}</span>
+
+	/**
+	 * Vykona upravy vo vsetkych entitach v page objekte pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param entities - list entit
+	 * @param action - typ zmeny - create,edit,getall...
+	 */
+	public void processFromEntity(List&lt;T&gt; entities, ProcessItemAction action) {
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">		if(entities == null) return;</span>
+
+		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
+<span class="pc bpc" id="L443" title="1 of 2 branches missed.">		if (isExporting()) action = ProcessItemAction.GETONE;</span>
+
+<span class="pc bpc" id="L445" title="1 of 2 branches missed.">		for (T entity : entities) {</span>
+<span class="nc" id="L446">			processFromEntity(entity, action);</span>
+<span class="nc" id="L447">		}</span>
+<span class="fc" id="L448">	}</span>
+
+	/**
+	 * Vykona upravy v entite pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param entity
+	 * @param action - typ zmeny - create,edit,getall...
+	 */
+	public T processFromEntity(T entity, ProcessItemAction action) {
+<span class="fc" id="L457">		return entity;</span>
+	}
+
+	/**
+	 * Vykona upravy v entite pri odpovedi (ulozeni) z REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from editorFields to entity)
+	 * @param entity
+	 * @param action - typ zmeny - create,edit,getall,
+	 */
+	public T processToEntity(T entity, ProcessItemAction action) {
+<span class="fc" id="L467">		return entity;</span>
+	}
+
+
+	/**
+	 * Do objektu searchProperties naplni hladane vyrazy, vrati pripadne upraveny ExampleMatcher
+	 * @param params
+	 * @param searchProperties - vratena mapa request parametrov pre vyhladavanie
+	 * @param searchWrapped
+	 * @param matcher - ak sa jedna o exampleMatcher, moze byt null
+	 * @param isExampleSearch
+	 * @return
+	 */
+	public ExampleMatcher getSearchProperties(Map&lt;String, String&gt; params, Map&lt;String, String&gt; searchProperties, BeanWrapperImpl searchWrapped, ExampleMatcher matcher, boolean isExampleSearch) {
+
+		//final Map&lt;String, String&gt; searchProperties = new HashMap&lt;&gt;();
+
+<span class="fc bfc" id="L484" title="All 2 branches covered.">		for (Map.Entry&lt;String, String&gt; paramsEntry : params.entrySet()) {</span>
+<span class="fc" id="L485">			String key = getCleanKey(paramsEntry.getKey());</span>
+
+<span class="fc bfc" id="L487" title="All 2 branches covered.">			if (!searchWrapped.isReadableProperty(key)) {</span>
+<span class="fc" id="L488">				Logger.debug(DatatableRestControllerV2.class, &quot;Property is not readable, key; &quot;+key);</span>
+<span class="fc" id="L489">				continue;</span>
+			}
+
+<span class="fc" id="L492">			String value = paramsEntry.getValue();</span>
+<span class="pc bpc" id="L493" title="1 of 2 branches missed.">			if (Tools.isEmpty(value)) continue;</span>
+
+<span class="fc bfc" id="L495" title="All 4 branches covered.">			if (value.startsWith(&quot;range:&quot;) || value.startsWith(&quot;daterange:&quot;)) {</span>
+<span class="fc" id="L496">				searchProperties.put(key, value);</span>
+			}
+			else {
+<span class="fc" id="L499">				String cleanValue = getCleanValue(value);</span>
+
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">				if (Tools.isEmpty(cleanValue)) {</span>
+<span class="nc" id="L502">					Logger.debug(DatatableRestControllerV2.class, &quot;Value empty, key: &quot;+key+&quot;, value: &quot;+value);</span>
+<span class="nc" id="L503">					continue;</span>
+				}
+
+<span class="fc bfc" id="L506" title="All 2 branches covered.">				if (isExampleSearch) {</span>
+<span class="fc" id="L507">					ExampleMatcher.GenericPropertyMatcher genericPropertyMatcherFromValue = getGenericPropertyMatcherFromValue(value);</span>
+<span class="fc" id="L508">					matcher = matcher.withMatcher(key, genericPropertyMatcherFromValue);</span>
+
+<span class="fc" id="L510">					searchWrapped.setPropertyValue(key, getCleanValue(value));</span>
+<span class="fc" id="L511">				} else {</span>
+<span class="fc" id="L512">					searchProperties.put(key, value);</span>
+				}
+			}
+<span class="fc" id="L515">		}</span>
+
+<span class="fc" id="L517">		return matcher;</span>
+	}
+
+	/**
+	 * Vyhlada objekty podla zadaneho search objektu a pripadnych parametrov z requestu
+	 * @param params
+	 * @param pageable
+	 * @param search
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public Page&lt;T&gt; searchItem(@RequestParam Map&lt;String, String&gt; params, Pageable pageable, T search) {
+
+		//urcenie sposobu hladania - by example alebo pomocou presnych parametrov
+<span class="fc" id="L531">		boolean isExampleSearch = true;</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">		if (repo instanceof JpaSpecificationExecutor) {</span>
+<span class="fc" id="L533">			isExampleSearch = false;</span>
+		}
+
+<span class="fc" id="L536">		ExampleMatcher matcher = ExampleMatcher.matchingAll();</span>
+
+<span class="fc" id="L538">		BeanWrapperImpl searchWrapped = new BeanWrapperImpl(search);</span>
+
+<span class="fc" id="L540">		final Map&lt;String, String&gt; searchProperties = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L541">		matcher = getSearchProperties(params, searchProperties, searchWrapped, matcher, isExampleSearch);</span>
+
+		Page&lt;T&gt; page;
+<span class="fc bfc" id="L544" title="All 2 branches covered.">		if (isExampleSearch) {</span>
+<span class="fc" id="L545">			matcher = matcher.withIgnoreCase().withIgnoreNullValues();</span>
+<span class="fc" id="L546">			Example&lt;T&gt; exampleQuery = Example.of(search, matcher);</span>
+
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">			if (pageable != null) page = repo.findAll(exampleQuery, pageable);</span>
+<span class="nc" id="L549">			else page = new DatatablePageImpl&lt;&gt;(repo.findAll(exampleQuery));</span>
+<span class="fc" id="L550">		} else {</span>
+<span class="fc" id="L551">			Specification&lt;T&gt; spec  = getSearchConditions(searchProperties, params, search);</span>
+<span class="fc bfc" id="L552" title="All 2 branches covered.">			if (pageable != null) page = ((JpaSpecificationExecutor&lt;T&gt;)repo).findAll(spec, pageable);</span>
+<span class="fc" id="L553">			else page = new DatatablePageImpl&lt;&gt;(((JpaSpecificationExecutor&lt;T&gt;)repo).findAll(spec));</span>
+		}
+
+<span class="fc" id="L556">		ProcessItemAction action = ProcessItemAction.FIND;</span>
+		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
+<span class="fc bfc" id="L558" title="All 2 branches covered.">		if (isExporting()) action = ProcessItemAction.GETONE;</span>
+
+<span class="fc bfc" id="L560" title="All 2 branches covered.">		for (T entity : page.getContent()) {</span>
+<span class="fc" id="L561">			processFromEntity(entity, action);</span>
+<span class="fc" id="L562">		}</span>
+
+<span class="fc" id="L564">		return page;</span>
+	}
+
+	/**
+	 * Doplni pri volani getAllItems options polozky pre vyberove polia
+	 * @param page
+	 */
+	public void getOptions(DatatablePageImpl&lt;T&gt; page) {
+		//page.addOptions(field, options, labelProperty, valueProperty, includeOriginalObject);
+<span class="fc" id="L573">	}</span>
+
+	/*************************** BEZPECNOST A VALIDACIA ****************************/
+
+	public boolean checkAccessAllowed(HttpServletRequest request) {
+<span class="fc" id="L578">		return true;</span>
+	}
+
+	/**
+	 * Pripravena metoda, odporucame implementovat v child triede.
+	 * Metoda je volana pre kazdy odoslaby objekt.
+	 * Chyby pridava do error objeku pomocou {@link Errors}.rejectValue
+	 *
+	 * @param request
+	 * @param user
+	 * @param errors
+	 * @param id
+	 * @param entity
+	 */
+<span class="fc" id="L592">	public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, T&gt; target, Identity user, Errors errors, Long id, T entity) {}</span>
+
+	/**
+	 * Metoda volana pred zmazanim enity z DB, moze vykonat dodatocne akcie
+	 * napr. zmazanie suborov z disku, ulozenie do archivu,
+	 * alebo specialne kontroly prav
+	 * @param entity
+	 * @return
+	 */
+	public boolean beforeDelete(T entity) {
+<span class="fc" id="L602">		return true;</span>
+	}
+
+	/**
+	 * Metoda volana pred insert/save danej entity,
+	 * da sa pouzit na nastavenie udajov, napr. datum ulozenia, domainId a podobne
+	 * @param entity
+	 */
+	public void beforeSave(T entity) {
+
+<span class="fc" id="L612">	}</span>
+
+	/**
+	 * Metoda volana pred duplikovanim danej entity,
+	 * da sa pouzit na resetovanie udajov, napr. priradena default stranka adresara a podobne
+	 * @param entity
+	 */
+	public void beforeDuplicate(T entity) {
+
+<span class="fc" id="L621">	}</span>
+
+	/**
+	 * Metoda volana po duplikovanim danej entity,
+	 * da sa pouzit na dokopirovanie udajov, napr. media web stranky
+	 * @param entity - novo ulozena (zduplikovana) entita
+	 * @param originalId - ID povodneho zaznamu ktory sa duplikoval
+	 */
+	public void afterDuplicate(T entity, Long originalId) {
+
+<span class="fc" id="L631">	}</span>
+
+	/**
+	 * Metoda volana po ulozeni entity.
+	 * POZOR: pre novo vytvaranu entitu bude jej ID ulozene len v saved entite, povodna entity bude mat ID=0
+	 * @param entity - povodna odoslana entita
+	 * @param saved - uz ulozena verzia entity
+	 */
+	public void afterSave(T entity, T saved) {
+
+<span class="fc" id="L641">	}</span>
+
+	/**
+	 * Metoda volana po zmazanim enity z DB, moze vykonat dodatocne akcie
+	 * napr. zmazanie suborov z disku, ulozenie do archivu,
+	 * alebo obnovu cache objektov
+	 * @param entity
+	 * @return
+	 */
+	public void afterDelete(T entity, long id) {
+
+<span class="fc" id="L652">	}</span>
+
+	/**
+	 * Metoda sa vola pri importe po kazdom chunku
+	 * @param chunk - aktualny chunk
+	 * @param totalChunks - celkovy pocet chunkov
+	 */
+	public void afterImportChunk(int chunk, int totalChunks) {
+
+<span class="fc" id="L661">	}</span>
+
+
+	/************************** PRIVATNE / SUPPORT metody***************************/
+
+	private ExampleMatcher.GenericPropertyMatcher getGenericPropertyMatcherFromValue(String value) {
+<span class="pc bpc" id="L667" title="1 of 4 branches missed.">		if (value.startsWith(&quot;^&quot;) &amp;&amp; value.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L668">			return ExampleMatcher.GenericPropertyMatchers.exact();</span>
+<span class="fc bfc" id="L669" title="All 2 branches covered.">		} else if (value.startsWith(&quot;^&quot;)) {</span>
+<span class="fc" id="L670">			return ExampleMatcher.GenericPropertyMatchers.startsWith();</span>
+<span class="pc bpc" id="L671" title="1 of 2 branches missed.">		} else if (value.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L672">			return ExampleMatcher.GenericPropertyMatchers.endsWith();</span>
+<span class="pc bpc" id="L673" title="1 of 2 branches missed.">		} else if (value.startsWith(REGEX_PREFIX)) {</span>
+<span class="nc" id="L674">			return ExampleMatcher.GenericPropertyMatchers.regex();</span>
+		}
+<span class="fc" id="L676">		return ExampleMatcher.GenericPropertyMatchers.contains();</span>
+	}
+
+	public static String getCleanKey(String key) {
+<span class="fc" id="L680">		return firstToLower(Tools.replace(key, &quot;search&quot;, &quot;&quot;));</span>
+	}
+
+	public static String getCleanValue(String value) {
+<span class="fc" id="L684">		String result = value;</span>
+<span class="fc bfc" id="L685" title="All 2 branches covered.">		if (result.length() &gt;= 2) {</span>
+<span class="fc bfc" id="L686" title="All 2 branches covered.">			if (result.startsWith(&quot;^&quot;))</span>
+<span class="fc" id="L687">				result = result.substring(1);</span>
+<span class="fc bfc" id="L688" title="All 2 branches covered.">			if (result.endsWith(&quot;$&quot;))</span>
+<span class="fc" id="L689">				result = result.substring(0, result.length() - 1);</span>
+		}
+<span class="pc bpc" id="L691" title="3 of 4 branches missed.">		if (result.startsWith(REGEX_PREFIX) &amp;&amp; result.length() &gt; REGEX_PREFIX.length())</span>
+<span class="nc" id="L692">			result = result.substring(REGEX_PREFIX.length());</span>
+
+<span class="fc" id="L694">		return result;</span>
+	}
+
+	private static String firstToLower(String value) {
+<span class="pc bpc" id="L698" title="2 of 4 branches missed.">		if (value == null || value.length() == 0) {</span>
+<span class="nc" id="L699">			return &quot;&quot;;</span>
+		}
+
+<span class="fc" id="L702">		char[] chArr = value.toCharArray();</span>
+<span class="fc" id="L703">		chArr[0] = Character.toLowerCase(chArr[0]);</span>
+
+<span class="fc" id="L705">		return new String(chArr);</span>
+	}
+
+	/**
+	 * metoda na validovanie dat z editora, vola metodu validateEditor nejprv ak existuje tak z child objektu, ak nie tak z tohto
+	 * validateEditor sa vola pre kazdy objekt v requeste.
+	 * @param request
+	 * @param binder
+	 * @throws IllegalAccessException
+	 */
+	@InitBinder
+	protected void initBinder(HttpServletRequest request, WebDataBinder binder)
+	{
+<span class="fc" id="L718">		String requestURI = request.getRequestURI();</span>
+<span class="fc bfc" id="L719" title="All 2 branches covered.">		if (requestURI.endsWith(&quot;/editor&quot;)) {</span>
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L721">			DatatableRequest&lt;Long, T&gt; target = (DatatableRequest&lt;Long, T&gt;) binder.getTarget();</span>
+<span class="fc bfc" id="L722" title="All 2 branches covered.">			if (target != null) {</span>
+<span class="fc" id="L723">				Map&lt;Long, T&gt; data = target.getData();</span>
+<span class="fc" id="L724">				BindingResult bindingResult = binder.getBindingResult();</span>
+<span class="fc" id="L725">				Identity currentUser = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L726" title="1 of 2 branches missed.">				if (data != null) {</span>
+<span class="fc bfc" id="L727" title="All 2 branches covered.">					for (Map.Entry&lt;Long, T&gt; galleryEntityEntry : data.entrySet()) {</span>
+<span class="fc" id="L728">						Long key = galleryEntityEntry.getKey();</span>
+<span class="fc" id="L729">						T value = galleryEntityEntry.getValue();</span>
+
+						//zial, nefunguje inak nastavovanie errorov ako na konkretny field, takze to fejkujeme takymto objektom
+						//moze to robit haluze pri editacii viacerych objektov naraz, u nas ale pouzivame len spolocne atributy, takze by to mohlo fungovat aj tam
+<span class="fc" id="L733">						target.setErrorField(value);</span>
+
+<span class="fc bfc" id="L735" title="All 2 branches covered.">						if (target.getDztotalchunkcount()&gt;0) {</span>
+<span class="fc" id="L736">							setImporting(true);</span>
+<span class="pc bpc" id="L737" title="1 of 2 branches missed.">							if (target.getDzchunkindex()&gt;0) setLastImportedRow(target.getDzchunkindex()*Constants.getInt(&quot;chunksQuantity&quot;));</span>
+<span class="fc" id="L738">							else setLastImportedRow(null);</span>
+						} else {
+<span class="fc" id="L740">							setImporting(false);</span>
+						}
+
+<span class="fc" id="L743">						setImportedColumns(target.getImportedColumns());</span>
+
+<span class="fc" id="L745">						validateEditor(request, target, currentUser, bindingResult, key, value);</span>
+<span class="fc" id="L746">					}</span>
+				}
+
+<span class="fc bfc" id="L749" title="All 2 branches covered.">				if (bindingResult.hasFieldErrors()) {</span>
+					//vyhod este globalnu error hlasku, aby sa zobrazila aj pri tlacitkach a user si preklikal taby na konkretne chyby
+<span class="fc" id="L751">					bindingResult.addError(new ObjectError(&quot;global&quot;, Prop.getInstance(request).getText(&quot;datatable.error.fieldErrorMessage&quot;)));</span>
+				}
+			}
+		}
+<span class="fc" id="L755">	}</span>
+
+
+    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class&lt;?&gt; initialClass, String fieldName) throws NoSuchFieldException {
+<span class="fc" id="L759">        java.lang.reflect.Field field = null;</span>
+<span class="fc" id="L760">        int failsafe=0;</span>
+<span class="fc" id="L761">        Class&lt;?&gt; targetClass = initialClass;</span>
+<span class="pc bpc" id="L762" title="2 of 4 branches missed.">        while (targetClass != null &amp;&amp; failsafe++&lt;15) {</span>
+            try {
+<span class="fc" id="L764">                field = targetClass.getDeclaredField(fieldName);</span>
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">                if(field != null) return field;</span>
+<span class="pc" id="L766">            } catch (NoSuchFieldException e) {}</span>
+            // Field not found in current class, continue to superclass
+<span class="fc" id="L768">            targetClass = targetClass.getSuperclass();</span>
+        }
+
+<span class="nc" id="L771">       throw new NoSuchFieldException(&quot;Field &quot; + fieldName + &quot; not found in class &quot; + initialClass + &quot; or in super classes&quot;);</span>
+    }
+
+	private static boolean isFieldType(Class&lt;?&gt; initialClass, String fieldNam, DataTableColumnType type) {
+<span class="fc" id="L775">		boolean isProvidedType = false;</span>
+		try {
+<span class="fc" id="L777">			java.lang.reflect.Field field = getDeclaredFiledRecursive(initialClass, fieldNam);</span>
+<span class="pc bpc" id="L778" title="1 of 2 branches missed.">			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {</span>
+<span class="fc" id="L779">				DataTableColumnType[] inputType = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).inputType();</span>
+
+				//Check if field inputType is equal with provided inputType
+<span class="pc bpc" id="L782" title="2 of 4 branches missed.">				if(inputType != null &amp;&amp; inputType.length &gt; 0)</span>
+<span class="fc" id="L783">					isProvidedType = inputType[0].equals(type);</span>
+			}
+<span class="nc" id="L785">		} catch(Exception e) {</span>
+			//Do nothing
+<span class="fc" id="L787">		}</span>
+
+<span class="fc" id="L789">		return isProvidedType;</span>
+	}
+
+	/**
+	 * Vytvori zoznam predikatov pre vyhladavanie
+	 * @param properties - ocisteny zoznam params o atributy, ktore sa nechachadzaju v T
+	 * @param example - kompletny zoznam request parametrov, vratane pagingu
+	 * @return
+	 */
+	protected Specification&lt;T&gt; getSearchConditions(Map&lt;String, String&gt; properties, Map&lt;String, String&gt; params, T entity) {
+<span class="fc" id="L799">		return (Specification&lt;T&gt;) (root, query, builder) -&gt; {</span>
+<span class="fc" id="L800">			final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L802" title="All 2 branches covered.">			for (Map.Entry&lt;String, String&gt; paramsEntry : properties.entrySet()) {</span>
+<span class="fc" id="L803">				String field = paramsEntry.getKey();</span>
+<span class="fc" id="L804">				String value = paramsEntry.getValue();</span>
+
+				//toto sa hlada v addSpecSearch
+<span class="fc bfc" id="L807" title="All 2 branches covered.">				if (&quot;perexGroups&quot;.equals(field)) continue;</span>
+
+<span class="fc bfc" id="L809" title="All 2 branches covered.">				if (value.startsWith(&quot;daterange:&quot;)) {</span>
+<span class="fc" id="L810">					Timestamp from = null;</span>
+<span class="fc" id="L811">					Timestamp to = null;</span>
+<span class="fc" id="L812">					String[] values = Tools.getTokens(value.substring(value.indexOf(&quot;:&quot;)+1), &quot;-&quot;);</span>
+<span class="fc bfc" id="L813" title="All 2 branches covered.">					if (values.length==2) {</span>
+<span class="fc" id="L814">						from = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+<span class="fc" id="L815">						to = new Timestamp(Tools.getLongValue(values[1], 0));</span>
+<span class="pc bpc" id="L816" title="1 of 2 branches missed.">					} else if (values.length==1) {</span>
+						//ked nemame from pride to ako: daterange:-1589666400000
+<span class="pc bpc" id="L818" title="1 of 2 branches missed.">						if (value.contains(&quot;range:-&quot;)) to = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+<span class="fc" id="L819">						else from = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+					}
+
+					//Ak sa jedna o DATETIME, ta žiadnu úpravu nespravíme (používateľ nech si časovú zložku nastaví sám)
+					//Ak sa jedná o DATE, tak nastavíme časovú zložku FROM na 00:00:00 a TO na 23:59:59
+<span class="fc" id="L824">					boolean isDate = isFieldType(entity.getClass(), field, DataTableColumnType.DATE);</span>
+
+<span class="pc bpc" id="L826" title="1 of 4 branches missed.">					if(isDate &amp;&amp; from != null) {</span>
+<span class="fc" id="L827">						Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L828">						cal.setTime(from);</span>
+<span class="fc" id="L829">						cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L830">						cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L831">						cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L832">						from = new Timestamp( cal.getTimeInMillis() );</span>
+					}
+
+<span class="pc bpc" id="L835" title="1 of 4 branches missed.">					if(isDate &amp;&amp; to != null) {</span>
+<span class="fc" id="L836">						Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L837">						cal.setTime(to);</span>
+						//set to begining of next day because we will use lessThan
+<span class="fc" id="L839">						cal.add(Calendar.DATE, 1);</span>
+<span class="fc" id="L840">						cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L841">						cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L842">						cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L843">						to = new Timestamp( cal.getTimeInMillis() );</span>
+					}
+
+<span class="fc" id="L846">					sk.iway.iwcm.Logger.debug(DatatableRestControllerV2.class, &quot;Daterange from=&quot;+Tools.formatDateTimeSeconds(from)+&quot; to=&quot;+Tools.formatDateTimeSeconds(to)+&quot; original=&quot;+value);</span>
+
+<span class="pc bpc" id="L848" title="1 of 2 branches missed.">					if (from != null) predicates.add(builder.greaterThanOrEqualTo(root.get(field), from));</span>
+<span class="fc bfc" id="L849" title="All 2 branches covered.">					if (to != null) predicates.add(builder.lessThan(root.get(field), to));</span>
+<span class="fc bfc" id="L850" title="All 2 branches covered.">				} else if (value.startsWith(&quot;range:&quot;)) {</span>
+<span class="fc" id="L851">					BigDecimal from = null;</span>
+<span class="fc" id="L852">					BigDecimal to = null;</span>
+<span class="fc" id="L853">					String[] values = Tools.getTokens(value.substring(value.indexOf(&quot;:&quot;)+1), &quot;-&quot;);</span>
+<span class="pc bpc" id="L854" title="1 of 2 branches missed.">					if (values.length==2) {</span>
+<span class="nc" id="L855">						from = Tools.getBigDecimalValue(values[0], &quot;0&quot;);</span>
+<span class="nc" id="L856">						to = Tools.getBigDecimalValue(values[1], &quot;0&quot;);</span>
+<span class="pc bpc" id="L857" title="1 of 2 branches missed.">					} else if (values.length==1) {</span>
+						//ked nemame from pride to ako: daterange:-1589666400000
+<span class="pc bpc" id="L859" title="1 of 2 branches missed.">						if (value.contains(&quot;range:-&quot;)) to = Tools.getBigDecimalValue(values[0], &quot;0&quot;);</span>
+<span class="fc" id="L860">						else from = Tools.getBigDecimalValue(values[0], &quot;0&quot;);</span>
+					}
+
+<span class="fc" id="L863">					sk.iway.iwcm.Logger.debug(DatatableRestControllerV2.class, &quot;Range from=&quot;+from+&quot; to=&quot;+to+&quot; original=&quot;+value);</span>
+
+<span class="pc bpc" id="L865" title="1 of 2 branches missed.">					if (from != null) predicates.add(builder.greaterThanOrEqualTo(root.get(field), from));</span>
+<span class="pc bpc" id="L866" title="1 of 2 branches missed.">					if (to != null) predicates.add(builder.lessThanOrEqualTo(root.get(field), to));</span>
+<span class="fc" id="L867">				} else {</span>
+					try {
+						//skus ziskat field, ak to padne na IllegalArgumentException tak neexistuje, nevadi, ignorujeme
+						@SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L871">						Path path = root.get(field);</span>
+
+						//toto nefunguje dobre
+						//path.getJavaType().isInstance(Boolean.class) - aj ked je Boolean vrati false
+						//toto funguje
+						//path.getJavaType().isAssignableFrom(Boolean.class)
+
+<span class="fc" id="L878">						String simpleName = path.getJavaType().getSimpleName();</span>
+
+<span class="pc bpc" id="L880" title="1 of 2 branches missed.">						if (&quot;null&quot;.equals(value)) {</span>
+<span class="nc" id="L881">							predicates.add(builder.isNull(root.get(field)));</span>
+<span class="fc bfc" id="L882" title="All 2 branches covered.">						} else if (simpleName.equalsIgnoreCase(&quot;Boolean&quot;)) {</span>
+<span class="fc" id="L883">							predicates.add(builder.equal(root.get(field), Boolean.valueOf(value)));</span>
+<span class="fc bfc" id="L884" title="All 4 branches covered.">						} else if (simpleName.equalsIgnoreCase(&quot;Integer&quot;) || simpleName.equalsIgnoreCase(&quot;int&quot;)) {</span>
+<span class="fc" id="L885">							predicates.add(builder.equal(root.get(field), Integer.valueOf(value)));</span>
+<span class="fc bfc" id="L886" title="All 2 branches covered.">						} else if (simpleName.equalsIgnoreCase(&quot;Long&quot;)) {</span>
+<span class="fc" id="L887">							predicates.add(builder.equal(root.get(field), Long.valueOf(value)));</span>
+<span class="pc bpc" id="L888" title="1 of 2 branches missed.">						} else if (simpleName.equalsIgnoreCase(&quot;Double&quot;)) {</span>
+<span class="nc" id="L889">							predicates.add(builder.equal(root.get(field), Double.valueOf(value)));</span>
+						} else {
+
+<span class="fc bfc" id="L892" title="All 4 branches covered.">							if (value.startsWith(&quot;^&quot;) &amp;&amp; value.endsWith(&quot;$&quot;)) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));</span>
+							else {
+<span class="fc bfc" id="L894" title="All 2 branches covered.">								if (value.startsWith(&quot;^&quot;)) value = value.substring(1)+&quot;%&quot;;</span>
+<span class="fc bfc" id="L895" title="All 2 branches covered.">								else if (value.endsWith(&quot;$&quot;)) value = &quot;%&quot;+value.substring(0, value.length()-1);</span>
+<span class="fc" id="L896">								else value = &quot;%&quot;+value+&quot;%&quot;;</span>
+
+<span class="pc bpc" id="L898" title="3 of 4 branches missed.">								if (Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; isJpaLowerField(field)) {</span>
+<span class="nc" id="L899">									predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));</span>
+<span class="pc bpc" id="L900" title="1 of 2 branches missed.">								} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {</span>
+<span class="nc" id="L901">									predicates.add(builder.like(builder.lower(builder.function(&quot;unaccent&quot;, String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));</span>
+								} else {
+<span class="fc" id="L903">									predicates.add(builder.like(root.get(field), value));</span>
+								}
+							}
+						}
+<span class="fc" id="L907">					} catch (IllegalArgumentException e) {</span>
+						//failsafe
+<span class="fc" id="L909">					}</span>
+				}
+<span class="fc" id="L911">			}</span>
+
+			//pridaj do vyhladavania automaticky podmienku podla domain_id ak je potrebna
+<span class="fc bfc" id="L914" title="All 2 branches covered.">			if (checkDomainId) predicates.add(builder.equal(root.get(&quot;domainId&quot;), CloudToolsForCore.getDomainId()));</span>
+
+<span class="fc" id="L916">			addSpecSearch(params, predicates, root, builder);</span>
+
+<span class="fc" id="L918">			return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
+		};
+	}
+
+	/**
+	 * Doplnenie pecialneho vyhladavanie, interne vola:
+	 * - addSpecSearchUserFullName(searchUserFullName, &quot;userId&quot;, predicates, root, builder);
+	 * @param params
+	 * @param predicates
+	 */
+	public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
+
+		//v DB entite mame bezne len userId a pridavame tam entitu userFullName, defaultne ked existuje parameter searchUserFullName tak hladaj podla userId
+<span class="fc" id="L931">		String searchUserFullName = params.get(&quot;searchUserFullName&quot;);</span>
+<span class="fc bfc" id="L932" title="All 2 branches covered.">		if (Tools.isNotEmpty(searchUserFullName)) {</span>
+<span class="fc" id="L933">			SpecSearch&lt;T&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+			//ziskaj zoznam IDecok userov, ktory maju dane meno
+<span class="fc" id="L935">			specSearch.addSpecSearchUserFullName(searchUserFullName, &quot;userId&quot;, predicates, root, builder);</span>
+
+		}
+
+		//vyhladavanie na zaklade stavu
+<span class="fc" id="L940">		String statusSearch = params.get(&quot;searchEditorFields.statusIcons&quot;);</span>
+<span class="fc bfc" id="L941" title="All 2 branches covered.">		if (Tools.isNotEmpty(statusSearch)) {</span>
+<span class="fc" id="L942">			SpecSearch&lt;T&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+<span class="fc" id="L943">			specSearch.addSpecSearchStatusIcons(statusSearch, predicates, root, builder);</span>
+		}
+
+		//vyhladavanie podla perexSkupiny
+<span class="fc" id="L947">		String searchPerexGroups = params.get(&quot;searchPerexGroups&quot;);</span>
+<span class="fc bfc" id="L948" title="All 2 branches covered.">		if (Tools.isNotEmpty(searchPerexGroups)) {</span>
+<span class="fc" id="L949">			SpecSearch&lt;T&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+			//ziskaj zoznam IDecok userov, ktory maju dane meno
+<span class="fc" id="L951">			specSearch.addSpecSearchPerexGroup(searchPerexGroups, &quot;perexGroups&quot;, predicates, root, builder);</span>
+
+		}
+<span class="fc" id="L954">	}</span>
+
+	/********************************* REST METODY *********************************/
+
+	/**
+	 * Vrati vsetky zaznamy v datatabaze (serverovo strankovane a sortovane)
+	 */
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@GetMapping(&quot;/all&quot;)
+	public Page&lt;T&gt; getAll(Pageable pageable) {
+<span class="fc" id="L964">		clearThreadData();</span>
+<span class="fc bfc" id="L965" title="All 2 branches covered.">		if (&quot;true&quot;.equals(request.getParameter(&quot;export&quot;))) {</span>
+<span class="fc" id="L966">			setExporting(true);</span>
+<span class="fc" id="L967">			Adminlog.add(Adminlog.TYPE_FORM_EXPORT, request.getRequestURI(),-1, -1);</span>
+		}
+		else {
+<span class="fc" id="L970">			setExporting(false);</span>
+		}
+
+<span class="fc" id="L973">		Page&lt;T&gt; page = this.getAllItems(pageable);</span>
+
+		//napln options
+		DatatablePageImpl&lt;T&gt; pageImpl;
+<span class="fc bfc" id="L977" title="All 2 branches covered.">		if (page instanceof DatatablePageImpl) {</span>
+			//uz je to impl, moze mat nejake options uz setnute
+<span class="fc" id="L979">			pageImpl = (DatatablePageImpl&lt;T&gt;)page;</span>
+		} else {
+<span class="fc" id="L981">			pageImpl = new DatatablePageImpl&lt;&gt;(page);</span>
+		}
+<span class="fc" id="L983">		this.getOptions(pageImpl);</span>
+
+<span class="fc" id="L985">		pageImpl.setNotify(getThreadData().getNotify());</span>
+
+<span class="fc" id="L987">		return pageImpl;</span>
+	}
+
+	/**
+	 * Vyhlada zaznamy v databaze podla zadanych kriterii (serverovo strankovane a sortovane).
+	 * Pouziva EampleMatcher, v Beane NESMU BYT pouzite primitivne typy (vsetko musia byt Objekty)
+	 */
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@GetMapping(&quot;/search/findByColumns&quot;)
+	public Page&lt;T&gt; findByColumns(@RequestParam Map&lt;String, String&gt; params, Pageable pageable, T search) {
+<span class="fc" id="L997">		clearThreadData();</span>
+<span class="pc bpc" id="L998" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;export&quot;))) {</span>
+<span class="nc" id="L999">			setExporting(true);</span>
+<span class="nc" id="L1000">			Adminlog.add(Adminlog.TYPE_FORM_EXPORT, request.getRequestURI(),-1, -1);</span>
+		}
+		else {
+<span class="fc" id="L1003">			setExporting(false);</span>
+		}
+<span class="fc" id="L1005">		return searchItem(params, pageable, search);</span>
+	}
+
+	/**
+	 * Ulozenie zaznamu do DB vo formate posielanom Datatables Editor, moze naraz zapisat viac zaznamov
+	 */
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@PostMapping(value = &quot;/editor&quot;, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity&lt;DatatableResponse&lt;T&gt;&gt; handleEditor(HttpServletRequest request, @RequestBody DatatableRequest&lt;Long, T&gt; datatableRequest) {
+<span class="fc" id="L1014">		boolean isImporting = isImporting();</span>
+<span class="fc" id="L1015">		Integer lastImportedRow = getLastImportedRow();</span>
+<span class="fc" id="L1016">		List&lt;NotifyBean&gt; notifyListBeforeClear = getThreadData().getNotify();</span>
+<span class="fc" id="L1017">		clearThreadData();</span>
+<span class="fc bfc" id="L1018" title="All 2 branches covered.">		if (isImporting) {</span>
+<span class="fc" id="L1019">			setImporting(true);</span>
+			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
+<span class="pc bpc" id="L1021" title="3 of 4 branches missed.">			if (notifyListBeforeClear!=null &amp;&amp; notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);</span>
+		}
+
+<span class="fc" id="L1024">		DatatableResponse&lt;T&gt; response = new DatatableResponse&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1026" title="1 of 2 branches missed.">		if (datatableRequest.isDeleteOldData()) {</span>
+			//je potrebne sa zamysliet nad bezpecnostou, zatial schovane aj v UI
+			//repo.deleteAll();
+		}
+
+<span class="fc" id="L1031">		setForceReload(false);</span>
+<span class="fc" id="L1032">		setImportedColumns(datatableRequest.getImportedColumns());</span>
+
+<span class="fc" id="L1034">		String updateByColumn = datatableRequest.getUpdateByColumn();</span>
+<span class="fc" id="L1035">		getThreadData().setUpdateByColumn(updateByColumn);</span>
+
+<span class="fc" id="L1037">		String importMode = datatableRequest.getImportMode();</span>
+<span class="fc" id="L1038">		getThreadData().setImportMode(importMode);</span>
+
+<span class="fc" id="L1040">		int rowCounter = 0;</span>
+<span class="pc bpc" id="L1041" title="1 of 4 branches missed.">		if (isImporting &amp;&amp; lastImportedRow!=null) rowCounter = lastImportedRow.intValue();</span>
+<span class="fc bfc" id="L1042" title="All 2 branches covered.">		for (Long id : datatableRequest.getData().keySet()) {</span>
+<span class="fc" id="L1043">			rowCounter++;</span>
+
+<span class="fc" id="L1045">			T entity = datatableRequest.getData().get(id);</span>
+
+<span class="fc bfc" id="L1047" title="All 2 branches covered.">			if (entity instanceof ActiveRecordBase) {</span>
+<span class="fc" id="L1048">				Integer rowNum = ((ActiveRecordBase)entity).get__rowNum__();</span>
+<span class="fc" id="L1049">				setLastImportedRow(rowNum);</span>
+<span class="fc" id="L1050">			} else {</span>
+<span class="fc bfc" id="L1051" title="All 2 branches covered.">				if (isImporting()) setLastImportedRow(rowCounter);</span>
+<span class="fc" id="L1052">				else setLastImportedRow(null);</span>
+			}
+
+			//tu nepouzijeme podmienku checkDomainId, aby sa domainId nastavilo vzdy a nezostalo NULL/0 aj ked je aktualne enableStaticFilesExternalDir vypnute (napr. na produkcii)
+<span class="fc bfc" id="L1056" title="All 2 branches covered.">			if (repo instanceof DomainIdRepository) {</span>
+				//over, ci entita ma property domainId a ci sedi voci aktualnemu CloudToolsForCore.getDomainId()
+<span class="fc" id="L1058">				BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L1059">				Integer domainId = (Integer)bw.getPropertyValue(&quot;domainId&quot;);</span>
+<span class="fc bfc" id="L1060" title="All 6 branches covered.">				if (domainId == null || domainId.intValue()&lt;1 || datatableRequest.isInsert()) {</span>
+					//domainId nie je nastavene, setni na aktualnu hodnotu
+<span class="fc" id="L1062">					domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L1063">					bw.setPropertyValue(&quot;domainId&quot;, domainId);</span>
+				} else {
+<span class="pc bpc" id="L1065" title="1 of 2 branches missed.">					if (CloudToolsForCore.getDomainId() != domainId.intValue()) {</span>
+						//domainId nesedi, je to nejaka manipulacia s datami, vyhod chybu
+<span class="nc" id="L1067">						throwError(&quot;datatables.error.domainId&quot;);</span>
+					}
+				}
+			}
+
+<span class="fc" id="L1072">			boolean isDuplicate = false;</span>
+<span class="fc bfc" id="L1073" title="All 2 branches covered.">			if (datatableRequest.isInsert()) {</span>
+				try {
+<span class="fc bfc" id="L1075" title="All 2 branches covered.">					if (id&gt;0) {</span>
+						//jedna sa o duplikovanie, musime zrusit hodnotu ID property
+<span class="fc" id="L1077">						String propertyName = &quot;id&quot;;</span>
+<span class="pc bpc" id="L1078" title="1 of 2 branches missed.">						for (Field field : entity.getClass().getDeclaredFields()) {</span>
+<span class="pc bpc" id="L1079" title="1 of 2 branches missed.">							if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {</span>
+<span class="fc" id="L1080">								DataTableColumnType[] inputType = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).inputType();</span>
+<span class="pc bpc" id="L1081" title="2 of 4 branches missed.">								if (inputType.length&gt;0 &amp;&amp; inputType[0]==DataTableColumnType.ID) {</span>
+<span class="fc" id="L1082">									propertyName = field.getName();</span>
+<span class="fc" id="L1083">									break;</span>
+								}
+							}
+						}
+
+<span class="fc" id="L1088">						Long lnull = null;</span>
+<span class="fc" id="L1089">						Long inull = null;</span>
+						try {
+							//musime ist takto, pretoze na lombok triedach BeanUtils nic nespravi
+<span class="fc" id="L1092">							String methodName = &quot;set&quot;+propertyName.substring(0,1).toUpperCase()+propertyName.substring(1);</span>
+<span class="fc" id="L1093">							Method setId = entity.getClass().getMethod(methodName, Long.class);</span>
+<span class="fc" id="L1094">							setId.invoke(entity, lnull);</span>
+<span class="nc" id="L1095">						} catch (Exception e) {</span>
+							try {
+								//na starych WJ triedach je potrebne nastavit integer hodnotu, napr. setTempId(0)
+<span class="nc" id="L1098">								String methodName = &quot;set&quot;+propertyName.substring(0,1).toUpperCase()+propertyName.substring(1);</span>
+<span class="nc" id="L1099">								Method setId = entity.getClass().getMethod(methodName, Integer.class);</span>
+<span class="nc" id="L1100">								setId.invoke(entity, 0);</span>
+<span class="nc" id="L1101">							} catch (Exception e2) {</span>
+								try {
+									//na starych WJ triedach je potrebne nastavit int hodnotu, napr. setTempId(0)
+<span class="nc" id="L1104">									String methodName = &quot;set&quot;+propertyName.substring(0,1).toUpperCase()+propertyName.substring(1);</span>
+<span class="nc" id="L1105">									Method setId = entity.getClass().getMethod(methodName, int.class);</span>
+<span class="nc" id="L1106">									setId.invoke(entity, 0);</span>
+<span class="nc" id="L1107">								} catch (Exception e21) {</span>
+<span class="nc" id="L1108">									BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+									//setni ID hodnotu na povodnej entite, aby sa nasledne korektne vykonala processToEntity so spravnym ID
+									try {
+<span class="nc" id="L1111">										bw.setPropertyValue(propertyName, lnull);</span>
+<span class="nc" id="L1112">									} catch (Exception e3) {</span>
+										try {
+<span class="nc" id="L1114">											bw.setPropertyValue(propertyName, inull);</span>
+<span class="nc" id="L1115">										} catch (Exception e4) {</span>
+											try {
+<span class="nc" id="L1117">												bw.setPropertyValue(propertyName, 0);</span>
+<span class="nc" id="L1118">											} catch (Exception e5) {</span>
+
+<span class="nc" id="L1120">											}</span>
+<span class="nc" id="L1121">										}</span>
+<span class="nc" id="L1122">									}</span>
+<span class="nc" id="L1123">								}</span>
+<span class="nc" id="L1124">							}</span>
+<span class="fc" id="L1125">						}</span>
+
+<span class="fc" id="L1127">						isDuplicate = true;</span>
+<span class="fc" id="L1128">						beforeDuplicate(entity);</span>
+					}
+
+<span class="nc" id="L1131">				} catch (Exception ex) {</span>
+<span class="nc" id="L1132">					Logger.error(DatatableRestControllerV2.class, ex);</span>
+<span class="nc" id="L1133">					throwError(&quot;datatables.error.system.js&quot;);</span>
+<span class="fc" id="L1134">				}</span>
+
+<span class="pc bpc" id="L1136" title="1 of 6 branches missed.">				if (isImporting &amp;&amp; &quot;onlyNew&quot;.equals(importMode) &amp;&amp; Tools.isNotEmpty(updateByColumn)) {</span>
+					try {
+<span class="fc" id="L1138">						List&lt;T&gt; itemsBy = findItemBy(updateByColumn, entity);</span>
+<span class="pc bpc" id="L1139" title="1 of 2 branches missed.">						if (itemsBy.isEmpty()==false) {</span>
+							//SKIP import, entity allready exists
+<span class="fc" id="L1141">							Logger.debug(DatatableRestControllerV2.class, &quot;import SKIP entity - allready exists, entity=&quot;+entity+&quot;, &quot;+updateByColumn+&quot;=&quot;+updateByColumn);</span>
+<span class="fc" id="L1142">							response.setForceReload(Boolean.TRUE);</span>
+<span class="fc" id="L1143">							return ResponseEntity.ok(response);</span>
+						}
+<span class="nc" id="L1145">					} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {</span>
+<span class="nc" id="L1146">						response.setError(String.format(&quot;Field: %s not found&quot;, updateByColumn));</span>
+<span class="nc" id="L1147">						Logger.error(DatatableRestControllerV2.class, e);</span>
+<span class="nc" id="L1148">						return ResponseEntity.ok(response);</span>
+<span class="nc" id="L1149">					}</span>
+				}
+
+<span class="fc" id="L1152">				beforeSave(entity);</span>
+
+<span class="fc" id="L1154">				ResponseEntity&lt;T&gt; re = add(entity);</span>
+<span class="fc" id="L1155">				response.add(re.getBody());</span>
+
+<span class="fc" id="L1157">				afterSave(entity, re.getBody());</span>
+
+<span class="fc bfc" id="L1159" title="All 2 branches covered.">				if (isDuplicate) afterDuplicate(entity, id);</span>
+
+<span class="fc bfc" id="L1161" title="All 2 branches covered.">			} else if (datatableRequest.isUpdate()) {</span>
+<span class="fc" id="L1162">				beforeSave(entity);</span>
+
+<span class="fc" id="L1164">				ResponseEntity&lt;T&gt; re=null;</span>
+				// Ak updatujeme na zaklade stlpca v DB
+<span class="fc bfc" id="L1166" title="All 2 branches covered.">				if (Tools.isNotEmpty(updateByColumn)) {</span>
+					try {
+<span class="fc" id="L1168">						response.setData(editItemByColumn(entity, updateByColumn));</span>
+<span class="nc" id="L1169">					} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {</span>
+<span class="nc" id="L1170">						response.setError(String.format(&quot;Field: %s not found&quot;, updateByColumn));</span>
+<span class="nc" id="L1171">						Logger.error(DatatableRestControllerV2.class, e);</span>
+<span class="nc" id="L1172">						return ResponseEntity.ok(response);</span>
+<span class="fc" id="L1173">					}</span>
+				}
+				else {
+<span class="fc" id="L1176">					re = edit(id, entity);</span>
+<span class="fc" id="L1177">					response.add(re.getBody());</span>
+				}
+
+<span class="fc bfc" id="L1180" title="All 2 branches covered.">				if (re != null) afterSave(entity, re.getBody());</span>
+
+<span class="pc bpc" id="L1182" title="1 of 2 branches missed.">			} else if (datatableRequest.isDelete()) {</span>
+				//delete(id, datatableRequest.getData().get(id));
+<span class="fc" id="L1184">				boolean deleted = deleteItem(datatableRequest.getData().get(id), id);</span>
+<span class="pc bpc" id="L1185" title="1 of 2 branches missed.">				if (deleted == false) {</span>
+<span class="nc" id="L1186">					throwError(&quot;editor.delete_error&quot;);</span>
+				}
+			}
+<span class="fc" id="L1189">		}</span>
+
+<span class="fc bfc" id="L1191" title="All 2 branches covered.">		if (isForceReload()) {</span>
+<span class="fc" id="L1192">			response.setForceReload(Boolean.TRUE);</span>
+		}
+
+<span class="fc bfc" id="L1195" title="All 2 branches covered.">		if (isImporting) {</span>
+<span class="fc" id="L1196">			afterImportChunk(datatableRequest.getDzchunkindex(), datatableRequest.getDztotalchunkcount());</span>
+		}
+
+		//If thread notify list != null, set list into response
+<span class="fc bfc" id="L1200" title="All 2 branches covered.">		if(hasNotify()) response.setNotify(getThreadData().getNotify());</span>
+
+<span class="pc bpc" id="L1202" title="1 of 2 branches missed.">		if (datatableRequest.getData().size()&gt;5) {</span>
+			//aby nenastala chyba 429 pri importe musime spomalit download
+<span class="nc" id="L1204">			MultipartWrapper.slowdownUpload();</span>
+		}
+
+<span class="fc" id="L1207">		return ResponseEntity.ok(response);</span>
+	}
+
+	/**
+	 * Volanie specialnej akcie (napr. otocenie obrazku v galerii).
+	 * V pug subore sa vola ako galleryTable.executeAction(&quot;rotate&quot;);
+	 * @param action
+	 * @param ids
+	 * @return
+	 */
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@PostMapping(value = &quot;/action/{action}&quot;)
+	public ResponseEntity&lt;DatatableResponse&lt;T&gt;&gt; action(@PathVariable String action, @RequestParam(value = &quot;ids[]&quot;) Long[] ids) {
+<span class="fc" id="L1220">		clearThreadData();</span>
+<span class="fc" id="L1221">		DatatableResponse&lt;T&gt; response = new DatatableResponse&lt;&gt;();</span>
+
+<span class="fc bfc" id="L1223" title="All 2 branches covered.">		for (Long id : ids) {</span>
+<span class="fc" id="L1224">			Logger.debug(DatatableRestControllerV2.class, &quot;action=&quot; + action + &quot;, id=&quot; + id);</span>
+
+<span class="fc" id="L1226">			T entity = null;</span>
+			//id==-1 je v situacii ked sa nic neselectne, napr. pre refresh akciu
+<span class="fc bfc" id="L1228" title="All 2 branches covered.">			if (id != -1) entity = getOneItem(id);</span>
+<span class="pc bpc" id="L1229" title="1 of 4 branches missed.">			if (entity != null || id==-1) {</span>
+<span class="fc" id="L1230">				boolean success = processAction(entity, action);</span>
+<span class="pc bpc" id="L1231" title="1 of 2 branches missed.">				if (success == false) {</span>
+<span class="nc" id="L1232">					response.setError(getProp().getText(&quot;datatable.error.unknown&quot;) + &quot;: id=&quot; + id);</span>
+				}
+			}
+		}
+
+		//If thread notify list != null, set list into response
+<span class="fc bfc" id="L1238" title="All 2 branches covered.">		if(hasNotify()) response.setNotify(getThreadData().getNotify());</span>
+<span class="fc" id="L1239">		response.setForceReload(isForceReload());</span>
+
+<span class="fc" id="L1241">		return ResponseEntity.ok(response);</span>
+	}
+
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@GetMapping(&quot;/{id}&quot;)
+	public T getOne(@PathVariable(&quot;id&quot;) long id) {
+<span class="fc" id="L1247">		clearThreadData();</span>
+<span class="fc" id="L1248">		T result = getOneItem(id);</span>
+<span class="fc" id="L1249">		addNotifyToEditorFields(result);</span>
+<span class="fc" id="L1250">		return result;</span>
+	}
+
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@PostMapping(&quot;/add&quot;)
+	public ResponseEntity&lt;T&gt; add(@Valid @RequestBody T entity) {
+		// validacia
+<span class="fc" id="L1257">		Set&lt;ConstraintViolation&lt;T&gt;&gt; violations = validator.validate(entity);</span>
+<span class="fc bfc" id="L1258" title="All 2 branches covered.">		if (!violations.isEmpty()) {</span>
+<span class="fc" id="L1259">			throw new ConstraintViolationException(&quot;Invalid data&quot;, violations);</span>
+		} else {
+<span class="fc" id="L1261">			T newT = this.insertItem(entity);</span>
+<span class="fc" id="L1262">			return new ResponseEntity&lt;&gt;(newT, null, HttpStatus.CREATED);</span>
+		}
+	}
+
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@PostMapping(&quot;/edit/{id}&quot;)
+	public ResponseEntity&lt;T&gt; edit(@PathVariable(&quot;id&quot;) long id, @Valid @RequestBody T entity) {
+		// validacia
+<span class="fc" id="L1270">		Set&lt;ConstraintViolation&lt;T&gt;&gt; violations = validator.validate(entity);</span>
+<span class="fc bfc" id="L1271" title="All 2 branches covered.">		if (!violations.isEmpty()) {</span>
+<span class="fc" id="L1272">			throw new ConstraintViolationException(&quot;Invalid data&quot;, violations);</span>
+		} else {
+<span class="fc" id="L1274">			T one = this.editItem(entity, id);</span>
+<span class="fc" id="L1275">			return ResponseEntity.ok(one);</span>
+		}
+	}
+
+	@PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@DeleteMapping(&quot;/{id}&quot;)
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	public ResponseEntity delete(@PathVariable(&quot;id&quot;) long id, @RequestBody T entity) {
+<span class="nc" id="L1283">		clearThreadData();</span>
+<span class="nc" id="L1284">		Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L1286">		boolean deleted = this.deleteItem(entity, id);</span>
+<span class="nc" id="L1287">		result.put(&quot;result&quot;, deleted);</span>
+
+<span class="nc" id="L1289">		return new ResponseEntity&lt;&gt;(result, HttpStatus.OK);</span>
+	}
+
+	public JpaRepository&lt;T, Long&gt; getRepo() {
+<span class="fc" id="L1293">		return repo;</span>
+	}
+
+	public HttpServletRequest getRequest(){
+<span class="fc" id="L1297">		return this.request;</span>
+	}
+
+	public Identity getUser(){
+<span class="fc" id="L1301">		return UsersDB.getCurrentUser(getRequest());</span>
+	}
+
+	public Prop getProp() {
+		//kedze nie sme thread safe vraciame takto, request je autowired, cize ten je OK
+<span class="fc" id="L1306">		return Prop.getInstance(getRequest());</span>
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errors
+	 */
+	@SuppressWarnings(&quot;all&quot;)
+	public void throwError(String errorKey) {
+<span class="fc" id="L1316">		String message = getProp().getText(errorKey);</span>
+<span class="fc" id="L1317">		throw new RuntimeException(message);</span>
+	}
+
+	/**
+	 * Vyvola vynimku platnosti typu pola (napr. kontrola email adresy)
+	 * @param errorKey - prekladovy kluc chybovej spravy
+	 */
+	@SuppressWarnings(&quot;all&quot;)
+	public void throwConstraintViolation(String errorKey) {
+<span class="nc" id="L1326">		String message = getProp().getText(errorKey);</span>
+<span class="nc" id="L1327">		throw new ConstraintViolationException(message, null);</span>
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKeys
+	 */
+	@SuppressWarnings(&quot;all&quot;)
+	public void throwError(List&lt;String&gt; errorKeys) {
+		//preved z klucov na texy
+<span class="fc" id="L1338">		Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L1339">		StringBuilder message = new StringBuilder();</span>
+<span class="fc bfc" id="L1340" title="All 2 branches covered.">		for (String key : errorKeys) {</span>
+<span class="pc bpc" id="L1341" title="1 of 2 branches missed.">			if (message.length()&gt;0) message.append(&quot;;\n&quot;);</span>
+<span class="fc" id="L1342">			message.append(prop.getText(key));</span>
+<span class="fc" id="L1343">		}</span>
+
+<span class="fc" id="L1345">		throw new RuntimeException(message.toString());</span>
+	}
+
+	private static ThreadBean getThreadData() {
+<span class="fc" id="L1349">		ThreadBean data = threadData.get();</span>
+<span class="fc bfc" id="L1350" title="All 2 branches covered.">		if (data == null) {</span>
+<span class="fc" id="L1351">			Logger.debug(DatatableRestControllerV2.class, &quot;ThreadData.creating, id=&quot;+Thread.currentThread().getId());</span>
+<span class="fc" id="L1352">			data = new ThreadBean();</span>
+<span class="fc" id="L1353">			threadData.set(data);</span>
+		}
+		//Logger.debug(DatatableRestControllerV2.class, &quot;ThreadData.get, id=&quot;+Thread.currentThread().getId()+&quot; data=&quot;+data.toString());
+<span class="fc" id="L1356">		return data;</span>
+	}
+
+	private void clearThreadData() {
+<span class="fc" id="L1360">		getThreadData().clear();</span>
+<span class="fc" id="L1361">	}</span>
+
+	/**
+	 * Indikuje, ze dane volanie je pre export dat
+	 * @return
+	 */
+	public boolean isExporting() {
+<span class="fc" id="L1368">		boolean exporting = getThreadData().isExporting();</span>
+		//Logger.debug(DatatableRestControllerV2.class, &quot;isExporting, thread=&quot;+Thread.currentThread().getId()+&quot; exporting=&quot;+exporting);
+<span class="fc" id="L1370">		return exporting;</span>
+	}
+
+	private void setExporting(boolean exporting) {
+<span class="fc" id="L1374">		getThreadData().setExporting(exporting);</span>
+<span class="fc" id="L1375">	}</span>
+
+	/**
+	 * Indikuje, ze dane volanie je pre import dat
+	 * @return
+	 */
+	public boolean isImporting() {
+<span class="fc" id="L1382">		return getThreadData().isImporting();</span>
+	}
+
+	private void setImporting(boolean importing) {
+<span class="fc" id="L1386">		getThreadData().setImporting(importing);</span>
+<span class="fc" id="L1387">	}</span>
+
+	/**
+	 * Indikuje, ze sa ma vykonat reload tabulky
+	 * @return
+	 */
+	public boolean isForceReload() {
+<span class="fc" id="L1394">		return getThreadData().isForceReload();</span>
+	}
+
+	public void setForceReload(boolean forceReload) {
+<span class="fc" id="L1398">		getThreadData().setForceReload(forceReload);</span>
+<span class="fc" id="L1399">	}</span>
+
+	public boolean hasNotify() {
+<span class="fc bfc" id="L1402" title="All 2 branches covered.">		return getThreadData().getNotify() != null ? true : false;</span>
+	}
+
+	/**
+	 * Prida notifikaciu pre zobrazenie po odoslani dat
+	 * @param notify
+	 */
+	public static void addNotify(NotifyBean notify) {
+<span class="fc" id="L1410">		getThreadData().addNotify(notify);</span>
+<span class="fc" id="L1411">	}</span>
+
+	/**
+	 * Prida zoznam notifikacii pre zobrazenie po odoslani dat
+	 * @param notifyList
+	 */
+	public static void addNotify(List&lt;NotifyBean&gt; notifyList) {
+<span class="pc bpc" id="L1418" title="1 of 4 branches missed.">		if (notifyList != null &amp;&amp; notifyList.isEmpty()==false) {</span>
+<span class="fc bfc" id="L1419" title="All 2 branches covered.">			for (NotifyBean notify : notifyList) {</span>
+<span class="fc" id="L1420">				getThreadData().addNotify(notify);</span>
+<span class="fc" id="L1421">			}</span>
+		}
+<span class="fc" id="L1423">	}</span>
+
+	/**
+	 * Nastavi cislo importovaneho riadku (ak sa nachadza v datach)
+	 * @param lastImportedRow
+	 * @return
+	 */
+	private void setLastImportedRow(Integer lastImportedRow) {
+<span class="fc" id="L1431">		getThreadData().setLastImportedRow(lastImportedRow);</span>
+<span class="fc" id="L1432">	}</span>
+
+	/**
+	 * Vrati cislo posledne importovaneho riadku
+	 * @return
+	 */
+	public static Integer getLastImportedRow() {
+<span class="fc" id="L1439">		return getThreadData().getLastImportedRow();</span>
+	}
+
+	private void setImportedColumns(Set&lt;String&gt; importedColumns) {
+<span class="fc" id="L1443">		getThreadData().setImportedColumns(importedColumns);</span>
+<span class="fc" id="L1444">	}</span>
+
+	/**
+	 * Returns Set&lt;String&gt; of imported columns from xlsx file.
+	 * You can check which columns were in Excel file during import process.
+	 * @return
+	 */
+	public static Set&lt;String&gt; getImportedColumns() {
+<span class="fc" id="L1452">		return getThreadData().getImportedColumns();</span>
+	}
+
+	/**
+	 * Vrati repo pretypovane na DomainIdRepository pre jednoduchsie pouzitie
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private DomainIdRepository&lt;T, ID&gt; getDomainRepo() {
+<span class="pc bpc" id="L1461" title="1 of 2 branches missed.">		if (repo instanceof DomainIdRepository) {</span>
+<span class="fc" id="L1462">			return (DomainIdRepository&lt;T, ID&gt;)repo;</span>
+		}
+<span class="nc" id="L1464">		return null;</span>
+	}
+
+	/**
+	 * Prida notify list do BaseEditorFields objektu (ak existuje)
+	 * Toto je potrebne pri REST volaniach, kedy sa posiela nazad len zakladna entita
+	 * @param entity
+	 */
+	private void addNotifyToEditorFields(T entity) {
+		try {
+<span class="fc" id="L1474">			List&lt;NotifyBean&gt; notifyList = getThreadData().getNotify();</span>
+<span class="pc bpc" id="L1475" title="1 of 4 branches missed.">			if (notifyList!=null &amp;&amp; notifyList.isEmpty()==false) {</span>
+<span class="fc" id="L1476">				BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="pc bpc" id="L1477" title="1 of 2 branches missed.">				if (bw.getPropertyType(&quot;editorFields.notify&quot;)!=null) {</span>
+<span class="fc" id="L1478">					bw.setPropertyValue(&quot;editorFields.notify&quot;, getThreadData().getNotify());</span>
+				}
+			}
+<span class="nc" id="L1481">		} catch (Exception e) {</span>
+<span class="nc" id="L1482">			Logger.error(DatatableRestControllerV2.class, e);</span>
+<span class="fc" id="L1483">		}</span>
+<span class="fc" id="L1484">	}</span>
+
+	/**
+	 * There is problem to return single Boolean from JPA query,
+	 * it's returned as Boolean in MariaDB/MSSQL and Number (0 or 1) on Oracle
+	 * there we cast it correctly to boolean
+	 * @param value
+	 * @return
+	 */
+	public static boolean jpaToBoolean(Object value) {
+<span class="pc bpc" id="L1494" title="1 of 2 branches missed.">		if (value == null) return false;</span>
+<span class="pc bpc" id="L1495" title="1 of 2 branches missed.">		if (value instanceof Boolean) return (Boolean)value;</span>
+<span class="nc bnc" id="L1496" title="All 2 branches missed.">		if (value instanceof Number) {</span>
+<span class="nc bnc" id="L1497" title="All 2 branches missed.">			return ((Number)value).intValue() == 1 ? true : false;</span>
+		}
+<span class="nc" id="L1499">		return false;</span>
+	}
+
+	/**
+	 * Test if field value should be lower cased
+	 * @param field
+	 * @return
+	 */
+	private boolean isJpaLowerField(String field)
+    {
+<span class="nc" id="L1509">		String[] jpaToLowerFields = ConstantsV9.getArrayCached(&quot;jpaToLowerFields&quot;, 120);</span>
+<span class="nc bnc" id="L1510" title="All 6 branches missed.">        if (jpaToLowerFields==null || jpaToLowerFields.length==0 || field==null) return false;</span>
+
+<span class="nc bnc" id="L1512" title="All 2 branches missed.">        for (String one : jpaToLowerFields)</span>
+        {
+<span class="nc bnc" id="L1514" title="All 2 branches missed.">           if (one.equals(field)) return true;</span>
+		   //support for descriptionLong* so we don't need to write all language codes
+<span class="nc bnc" id="L1516" title="All 4 branches missed.">		   if (one.endsWith(&quot;*&quot;) &amp;&amp; one.substring(0, one.length()-1) .equals(field)) return true;</span>
+        }
+<span class="nc" id="L1518">        return false;</span>
+    }
+
+	/**
+	 * column name which is used to update the row with import
+	 * @return
+	 */
+	public String getUpdateByColumn() {
+<span class="nc" id="L1526">		return getThreadData().getUpdateByColumn();</span>
+	}
+
+	/**
+	 * mode of import (append, update, onlyNew)
+	 * @return
+	 */
+	public String getImportMode() {
+<span class="fc" id="L1534">		return getThreadData().getImportMode();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

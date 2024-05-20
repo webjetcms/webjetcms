@@ -15,6 +15,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.ResultBean;
@@ -315,7 +316,7 @@ public class GalleryActionBean extends WebJETActionBean
 			if (FileIndexer.isFileIndexerConfigured())
 			{
 				List<ResultBean> indexedFiles = new ArrayList<>();
-				FileIndexer.indexFile(smallFileUrl, indexedFiles, getRequest());
+				FileIndexerTools.indexFile(smallFileUrl, indexedFiles, getRequest());
 			}
 
 			result.put("result", true);

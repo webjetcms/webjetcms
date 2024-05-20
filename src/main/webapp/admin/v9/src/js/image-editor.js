@@ -43,6 +43,7 @@ export class ImageEditor extends Editor {
         // zistim ci boli robene zmeny v editore na obrazku
         if (this.#editorState === 0) {
             //alert('nespravili ste žiadne zmeny v editore obrázkov');
+            WJ.dispatchEvent("WJ.imageEditor.upload.success", {});
             return;
         }
 

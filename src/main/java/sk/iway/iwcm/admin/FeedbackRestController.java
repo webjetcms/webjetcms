@@ -35,11 +35,9 @@ public class FeedbackRestController {
         String recipient = Constants.getString("problemReportEmail");
 
         //Create mail helper
-        MailHelper mailHelper = new MailHelper();
-
-        //Set default params
-        mailHelper.setSubject("Spätná väzba k WebJET CMS - " + Tools.getServerName(request));
-        mailHelper.setRecipients(recipient);
+        MailHelper mailHelper = new MailHelper()
+            .setSubject("Spätná väzba k WebJET CMS - " + Tools.getServerName(request))
+            .setToEmail(recipient);
 
         //Get params from request
         Map<String, String[]> params =  request.getParameterMap();
@@ -118,7 +116,7 @@ public class FeedbackRestController {
 	{
 		if (Tools.isEmpty(emails)) return "";
 
-		String emailsArr[] = Tools.getTokens(emails, ",", true);
+		String[] emailsArr = Tools.getTokens(emails, ",", true);
 		if (emailsArr.length>0) return emailsArr[0];
 
 		return "";

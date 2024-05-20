@@ -117,7 +117,7 @@ block content
 
             let buttonCounter = 4;
             usersDatatable.button().add(buttonCounter++, {
-                text: '<i class="fa-regular fa-person-circle-check"></i>',
+                text: '<i class="ti ti-user-check"></i>',
                 action: function (e, dt, node) {
                     usersDatatable.executeAction("authUserNoGen");
                 },
@@ -132,7 +132,7 @@ block content
             });
 
             usersDatatable.button().add(buttonCounter++, {
-                text: '<i class="fa-regular fa-person-circle-check"></i>',
+                text: '<i class="ti ti-user-check"></i>',
                 action: function (e, dt, node) {
                     usersDatatable.executeAction("authUserWithGen");
                 },
@@ -203,13 +203,15 @@ block content
 
                     $(styleDef).appendTo("head");
 
-                    addPermGroupsIcons();
-
                     //aktivuj eventy pre znova vykreslenie
                     $("#DTE_Field_editorFields-enabledItems").on('redraw.jstree select_all.jstree deselect_all.jstree', function (e, data) {
                         //console.log("redraw");
                         addPermGroupsIcons();
                     });
+
+                    setTimeout(function() {
+                        addPermGroupsIcons();
+                    }, 300);
 
                     //bindni click event
                     $(".DTE_Field_Name_editorFields\\.permGroups").on("click", "input", function() {

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportExport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components</a> &gt; <span class="el_source">ImportExport.java</span></div><h1>ImportExport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.jsp.JspWriter;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.fileupload.FileItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+
+/**
+ *  Export.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2015
+ *@author       $Author: jeeff rzapach $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 21.12.2015 11:50:22
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class ImportExport
+{
+<span class="nc" id="L45">	static int bufferSize = 4 * 1024;</span>
+
+<span class="nc" id="L47">	protected ImportExport() {</span>
+		//utility class
+<span class="nc" id="L49">	}</span>
+
+	public static void createJson(String archivePath, String archiveName, List&lt;IwcmFile&gt; files)
+	{
+<span class="nc" id="L53">		BufferedOutputStream output = null;</span>
+		try
+		{
+<span class="nc" id="L56">			JSONArray result = new JSONArray();</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			for(IwcmFile f : files)</span>
+			{
+<span class="nc" id="L60">				JSONObject item = new JSONObject();</span>
+<span class="nc" id="L61">				item.put(&quot;path&quot;,  f.getVirtualPath());</span>
+<span class="nc" id="L62">				item.put(&quot;modified&quot;,  f.lastModified());</span>
+<span class="nc" id="L63">			   item.put(&quot;size&quot;,   f.length());</span>
+<span class="nc" id="L64">			   result.put(item);</span>
+<span class="nc" id="L65">			}</span>
+
+<span class="nc" id="L67">			makeDirs(archivePath);</span>
+
+<span class="nc" id="L69">			output = new BufferedOutputStream(new IwcmOutputStream(new IwcmFile(PathFilter.getRealPath(archivePath), archiveName)));</span>
+<span class="nc" id="L70">			output.write(result.toString(3).getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L71">			output.close();</span>
+<span class="nc" id="L72">			output = null;</span>
+		}
+<span class="nc" id="L74">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L75">		finally					{closeOutputStream(output);}</span>
+<span class="nc" id="L76">	}</span>
+
+	public static void createZip(String archivePath, String archiveName, List&lt;IwcmFile&gt; files, JspWriter printWriter)
+	{
+<span class="nc" id="L80">		ZipArchiveOutputStream zipOut = null;</span>
+<span class="nc" id="L81">		int scrollIndex = 0;</span>
+		try
+		{
+<span class="nc bnc" id="L84" title="All 4 branches missed.">			if(files!=null &amp;&amp; files.size()&gt;0)</span>
+			{
+<span class="nc" id="L86">				makeDirs(archivePath);</span>
+
+<span class="nc" id="L88">				IwcmOutputStream output = new IwcmOutputStream(new IwcmFile(PathFilter.getRealPath(archivePath), archiveName));</span>
+<span class="nc" id="L89">				zipOut = new ZipArchiveOutputStream(output);</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				for(IwcmFile file : files)</span>
+				{
+<span class="nc" id="L93">					addToZipArchive(zipOut, file);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					if (printWriter != null)</span>
+					{
+<span class="nc" id="L96">						printWriter.println(&quot;Adding file: &quot; + file.getVirtualPath() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">						if (scrollIndex &gt;= 15)</span>
+						{
+<span class="nc" id="L99">							printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L100">							scrollIndex = 0;</span>
+						}
+<span class="nc" id="L102">						printWriter.flush();</span>
+<span class="nc" id="L103">						scrollIndex++;</span>
+					}
+<span class="nc" id="L105">				}</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (printWriter != null) {</span>
+<span class="nc" id="L107">					printWriter.println(&quot;&lt;br&gt;Počet súborov: &quot;+files.size()+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L108">					printWriter.flush();</span>
+				}
+
+<span class="nc" id="L111">				zipOut.close();</span>
+<span class="nc" id="L112">				zipOut = null;</span>
+			}
+		}
+<span class="nc" id="L115">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L116">		finally					{closeOutputStream(zipOut);}</span>
+<span class="nc" id="L117">	}</span>
+
+	public static void createTarGz(String archivePath, String archiveName, List&lt;IwcmFile&gt; files, JspWriter printWriter)
+	{
+<span class="nc" id="L121">		TarArchiveOutputStream tOut = null;</span>
+<span class="nc" id="L122">		int scrollIndex = 0;</span>
+		try
+		{
+<span class="nc bnc" id="L125" title="All 4 branches missed.">			if(files!=null &amp;&amp; files.size()&gt;0)</span>
+			{
+<span class="nc" id="L127">				makeDirs(archivePath);</span>
+
+<span class="nc" id="L129">				IwcmOutputStream output = new IwcmOutputStream(new IwcmFile(PathFilter.getRealPath(archivePath), archiveName));</span>
+<span class="nc" id="L130">				GzipCompressorOutputStream gzOut = new GzipCompressorOutputStream(output);</span>
+<span class="nc" id="L131">				tOut = new TarArchiveOutputStream(gzOut);</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				for(IwcmFile file : files)</span>
+				{
+<span class="nc" id="L135">					addToTarGzArchive(tOut, file);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">					if (printWriter != null)</span>
+					{
+<span class="nc" id="L138">						printWriter.println(&quot;Adding file: &quot; + file.getVirtualPath() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">						if (scrollIndex &gt;= 15)</span>
+						{
+<span class="nc" id="L141">							printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L142">							scrollIndex = 0;</span>
+						}
+<span class="nc" id="L144">						printWriter.flush();</span>
+<span class="nc" id="L145">						scrollIndex++;</span>
+					}
+<span class="nc" id="L147">				}</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if (printWriter != null) {</span>
+<span class="nc" id="L149">					printWriter.println(&quot;&lt;br&gt;Počet súborov: &quot;+files.size()+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L150">					printWriter.flush();</span>
+				}
+
+<span class="nc" id="L153">				tOut.close();</span>
+<span class="nc" id="L154">				tOut = null;</span>
+			}
+		}
+<span class="nc" id="L157">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L158">		finally 					{closeOutputStream(tOut);}</span>
+<span class="nc" id="L159">	}</span>
+
+	private static void addToZipArchive(ZipArchiveOutputStream zipOut, IwcmFile inFile)
+	{
+<span class="nc" id="L163">		IwcmInputStream in = null;</span>
+		try
+		{
+<span class="nc" id="L166">			ZipArchiveEntry entry = new ZipArchiveEntry(removeSlash(inFile.getVirtualPath()));</span>
+<span class="nc" id="L167">			entry.setSize(inFile.length());</span>
+<span class="nc" id="L168">			entry.setTime(inFile.lastModified());</span>
+
+<span class="nc" id="L170">			zipOut.putArchiveEntry(entry);</span>
+<span class="nc" id="L171">			in = new IwcmInputStream(inFile);</span>
+<span class="nc" id="L172">			int bytesRead = -1;</span>
+<span class="nc" id="L173">			byte[] buffer = new byte[bufferSize];</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			while ((bytesRead = in.read(buffer)) != -1)</span>
+			{
+<span class="nc" id="L176">				zipOut.write(buffer, 0, bytesRead);</span>
+			}
+<span class="nc" id="L178">			in.close();</span>
+<span class="nc" id="L179">			in = null;</span>
+
+<span class="nc" id="L181">			zipOut.closeArchiveEntry();</span>
+		}
+<span class="nc" id="L183">		catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L184">		finally					{closeInputStream(in);}</span>
+<span class="nc" id="L185">	}</span>
+
+	private static void addToTarGzArchive(TarArchiveOutputStream tOut, IwcmFile inFile)
+	{
+<span class="nc" id="L189">		IwcmInputStream in = null;</span>
+		try
+		{
+<span class="nc" id="L192">			TarArchiveEntry tarEntry = new TarArchiveEntry(removeSlash(inFile.getVirtualPath()));</span>
+<span class="nc" id="L193">			tarEntry.setSize(inFile.length());</span>
+<span class="nc" id="L194">			tarEntry.setModTime(inFile.lastModified());</span>
+
+<span class="nc" id="L196">		   tOut.putArchiveEntry(tarEntry);</span>
+<span class="nc" id="L197">			in = new IwcmInputStream(inFile);</span>
+<span class="nc" id="L198">			int bytesRead = -1;</span>
+<span class="nc" id="L199">			byte[] buffer = new byte[bufferSize];</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			while ((bytesRead = in.read(buffer)) != -1)</span>
+			{
+<span class="nc" id="L202">				tOut.write(buffer, 0, bytesRead);</span>
+			}
+<span class="nc" id="L204">			in.close();</span>
+
+<span class="nc" id="L206">			tOut.closeArchiveEntry();</span>
+		}
+<span class="nc" id="L208">		catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L209">		finally					{closeInputStream(in);}</span>
+<span class="nc" id="L210">	}</span>
+
+	//s lomitkom sa vytvoril adresar bez nazvu
+	private static String removeSlash(String s)
+	{
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if(s.startsWith(&quot;/&quot;))</span>
+<span class="nc" id="L216">			s = s.substring(1);</span>
+
+<span class="nc" id="L218">		return s;</span>
+	}
+
+	public static List&lt;IwcmFile&gt; getFiles(IwcmFile directory, Date fromDate, Map&lt;String, JSONObject&gt; snapshot, List&lt;String&gt; doNotExport)
+	{
+<span class="nc" id="L223">		List&lt;IwcmFile&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		if (directory.exists())</span>
+		{
+<span class="nc" id="L227">			IwcmFile[] fileList = directory.listFiles();</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			for (IwcmFile file : fileList)</span>
+			{
+<span class="nc" id="L230">				boolean add = true;</span>
+
+<span class="nc bnc" id="L232" title="All 2 branches missed.">				if(doNotExport!=null)</span>
+				{
+<span class="nc bnc" id="L234" title="All 2 branches missed.">					for(String s : doNotExport)</span>
+					{
+<span class="nc bnc" id="L236" title="All 2 branches missed.">						if(file.getVirtualPath().startsWith(s))</span>
+						{
+<span class="nc" id="L238">							add = false;</span>
+<span class="nc" id="L239">							break;</span>
+						}
+<span class="nc" id="L241">					}</span>
+				}
+
+<span class="nc bnc" id="L244" title="All 4 branches missed.">				if(fromDate!=null &amp;&amp; file.lastModified()&lt;fromDate.getTime())</span>
+<span class="nc" id="L245">					add = false;</span>
+
+<span class="nc bnc" id="L247" title="All 4 branches missed.">				if(snapshot!=null &amp;&amp; snapshot.get(file.getVirtualPath())!=null)</span>
+				{
+					try
+					{
+<span class="nc" id="L251">						long modified = Long.parseLong(snapshot.get(file.getVirtualPath()).get(&quot;modified&quot;).toString());</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">						if(file.lastModified()&lt;=modified)</span>
+<span class="nc" id="L253">							add = false;</span>
+					}
+<span class="nc" id="L255">					catch(Exception e)</span>
+					{
+<span class="nc" id="L257">						sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L258">					}</span>
+				}
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if(add == false)</span>
+<span class="nc" id="L262">					continue;</span>
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				if(file.isDirectory())</span>
+<span class="nc" id="L265">					result.addAll(getFiles(file, fromDate, snapshot, doNotExport));</span>
+				else
+<span class="nc" id="L267">					result.add(file);</span>
+			}
+		}
+
+<span class="nc" id="L271">		return result;</span>
+	}
+
+	public static List&lt;IwcmFile&gt; importFromZip(FileItem archive, String tmpDir, JspWriter printWriter)
+	{
+<span class="nc" id="L276">		List&lt;IwcmFile&gt; importedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L277">		ZipArchiveInputStream zipIn = null;</span>
+		try
+		{
+<span class="nc" id="L280">			BufferedInputStream in = new BufferedInputStream(archive.getInputStream());</span>
+<span class="nc" id="L281">			zipIn = new ZipArchiveInputStream(in);</span>
+
+<span class="nc" id="L283">			ZipArchiveEntry entry = null;</span>
+<span class="nc" id="L284">			int scrollIndex = 0;</span>
+<span class="nc" id="L285">			int fileCount = 0;</span>
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			while ((entry = (ZipArchiveEntry) zipIn.getNextEntry()) != null)</span>
+			{
+<span class="nc" id="L289">				BufferedOutputStream dest = null;</span>
+				try
+				{
+<span class="nc" id="L292">					String entryPath = tmpDir + &quot;/&quot; + entry.getName(); //NOSONAR</span>
+<span class="nc" id="L293">					makeDirs(entryPath.substring(0, entryPath.lastIndexOf('/')));</span>
+
+<span class="nc" id="L295">					IwcmOutputStream fos = new IwcmOutputStream(entryPath, true);</span>
+<span class="nc" id="L296">					dest = new BufferedOutputStream(fos);</span>
+
+<span class="nc" id="L298">					int bytesRead = -1;</span>
+<span class="nc" id="L299">					byte[] buffer = new byte[bufferSize];</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">					while ((bytesRead = zipIn.read(buffer)) != -1)</span>
+					{
+<span class="nc" id="L302">						dest.write(buffer, 0, bytesRead);</span>
+					}
+<span class="nc" id="L304">					dest.close();</span>
+<span class="nc" id="L305">					dest = null;</span>
+
+<span class="nc bnc" id="L307" title="All 2 branches missed.">					if (printWriter != null)</span>
+					{
+<span class="nc" id="L309">						printWriter.println(&quot;Extracting file: &quot; + entry.getName() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">						if (scrollIndex &gt;= 15)</span>
+						{
+<span class="nc" id="L312">							printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L313">							scrollIndex = 0;</span>
+						}
+<span class="nc" id="L315">						printWriter.flush();</span>
+<span class="nc" id="L316">						scrollIndex++;</span>
+					}
+<span class="nc" id="L318">					fileCount++;</span>
+
+<span class="nc" id="L320">					IwcmFile importedFile = IwcmFile.fromVirtualPath(entryPath);</span>
+<span class="nc" id="L321">					importedFile.setLastModified(entry.getLastModifiedDate().getTime());</span>
+<span class="nc" id="L322">					importedFiles.add(importedFile);</span>
+				}
+<span class="nc" id="L324">				catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L325">				finally					{closeOutputStream(dest);}</span>
+<span class="nc" id="L326">			}</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			if (printWriter != null) {</span>
+<span class="nc" id="L328">				printWriter.println(&quot;&lt;br&gt;Počet súborov: &quot;+fileCount+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L329">				printWriter.flush();</span>
+			}
+
+<span class="nc" id="L332">			zipIn.close();</span>
+<span class="nc" id="L333">			zipIn = null;</span>
+		}
+<span class="nc" id="L335">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L336">		finally					{closeInputStream(zipIn);}</span>
+<span class="nc" id="L337">		return importedFiles;</span>
+	}
+
+	public static List&lt;IwcmFile&gt; importFromTgz(FileItem archive, String tmpDir, JspWriter printWriter)
+	{
+<span class="nc" id="L342">		List&lt;IwcmFile&gt; importedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L343">		TarArchiveInputStream tarIn = null;</span>
+		try
+		{
+<span class="nc" id="L346">			BufferedInputStream in = new BufferedInputStream(archive.getInputStream());</span>
+<span class="nc" id="L347">			GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);</span>
+<span class="nc" id="L348">			tarIn = new TarArchiveInputStream(gzIn);</span>
+
+<span class="nc" id="L350">			TarArchiveEntry entry = null;</span>
+<span class="nc" id="L351">			int scrollIndex = 0;</span>
+<span class="nc" id="L352">			int fileCount = 0;</span>
+
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null)</span>
+			{
+<span class="nc" id="L356">				BufferedOutputStream dest = null;</span>
+				try
+				{
+<span class="nc" id="L359">					String entryPath = tmpDir + &quot;/&quot; + entry.getName(); //NOSONAR</span>
+<span class="nc" id="L360">					makeDirs(entryPath.substring(0, entryPath.lastIndexOf('/')));</span>
+
+<span class="nc" id="L362">					IwcmOutputStream fos = new IwcmOutputStream(entryPath, true);</span>
+<span class="nc" id="L363">					dest = new BufferedOutputStream(fos);</span>
+
+<span class="nc" id="L365">					int bytesRead = -1;</span>
+<span class="nc" id="L366">					byte[] buffer = new byte[bufferSize];</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">					while ((bytesRead = tarIn.read(buffer)) != -1)</span>
+					{
+<span class="nc" id="L369">						dest.write(buffer, 0, bytesRead);</span>
+					}
+<span class="nc" id="L371">					dest.close();</span>
+<span class="nc" id="L372">					dest = null;</span>
+
+<span class="nc bnc" id="L374" title="All 2 branches missed.">					if (printWriter != null)</span>
+					{
+<span class="nc" id="L376">						printWriter.println(&quot;Extracting file: &quot; + entry.getName() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">						if (scrollIndex &gt;= 15)</span>
+						{
+<span class="nc" id="L379">							printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L380">							scrollIndex = 0;</span>
+						}
+<span class="nc" id="L382">						printWriter.flush();</span>
+<span class="nc" id="L383">						scrollIndex++;</span>
+					}
+<span class="nc" id="L385">					fileCount++;</span>
+
+<span class="nc" id="L387">					IwcmFile importedFile = IwcmFile.fromVirtualPath(entryPath);</span>
+<span class="nc" id="L388">					importedFile.setLastModified(entry.getLastModifiedDate().getTime());</span>
+<span class="nc" id="L389">					importedFiles.add(importedFile);</span>
+				}
+<span class="nc" id="L391">				catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L392">				finally					{closeOutputStream(dest);}</span>
+<span class="nc" id="L393">			}</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			if (printWriter != null) {</span>
+<span class="nc" id="L395">				printWriter.println(&quot;&lt;br&gt;Počet súborov: &quot;+fileCount+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L396">				printWriter.flush();</span>
+			}
+
+<span class="nc" id="L399">			tarIn.close();</span>
+<span class="nc" id="L400">			tarIn = null;</span>
+		}
+<span class="nc" id="L402">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L403">		finally					{closeInputStream(tarIn);}</span>
+<span class="nc" id="L404">		return importedFiles;</span>
+	}
+
+	private static void makeDirs(String path)
+	{
+<span class="nc" id="L409">		IwcmFile dir = IwcmFile.fromVirtualPath(path);</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">		if(!dir.exists())</span>
+<span class="nc" id="L411">			dir.mkdirs();</span>
+<span class="nc" id="L412">	}</span>
+
+	private static void closeInputStream(InputStream s)
+	{
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		if(s!=null)</span>
+		{
+<span class="nc" id="L418">			try						{s.close();}</span>
+<span class="nc" id="L419">			catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
+		}
+<span class="nc" id="L421">	}</span>
+
+	private static void closeOutputStream(OutputStream s)
+	{
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		if(s!=null)</span>
+		{
+<span class="nc" id="L427">			try						{s.close();}</span>
+<span class="nc" id="L428">			catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
+		}
+<span class="nc" id="L430">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

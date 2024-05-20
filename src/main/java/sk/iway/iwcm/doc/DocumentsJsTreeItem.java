@@ -15,7 +15,7 @@ public class DocumentsJsTreeItem extends JsTreeItem {
         this.docDetails = docDetails;
 
         setId("docId-" + docDetails.getDocId());
-        setText(docDetails.getTitle());
+        setText(Tools.replace(docDetails.getTitle(), "&#47;", "/"));
         setVirtualPath(docDetails.getVirtualPath());
 
         setIcon(getIconPrivate(groupDefaultDocId));
@@ -31,22 +31,26 @@ public class DocumentsJsTreeItem extends JsTreeItem {
         }
 
         if (Tools.isNotEmpty(docDetails.getExternalLink())) {
-            addTextIcon("fas fa-external-link-alt");
+            addTextIcon("ti ti-external-link");
         }
 
         if (!docDetails.isSearchable()) {
-            addTextIcon("fas fa-eye-slash");
+            addTextIcon("ti ti-eye-off");
         }
 
         if (Tools.isNotEmpty(docDetails.getPasswordProtected())) {
-            addTextIcon("fas fa-lock");
+            addTextIcon("ti ti-lock");
         }
 
-        String faPrefix = "fas";
-        if (docDetails.isShowInMenu()==false) faPrefix = "fal";
-        if (docDetails.getDocId()==groupDefaultDocId) addLiClass("is-default-page");
+        String icon = "article";
+        String suffix = "-filled";
+        if (docDetails.isShowInMenu()==false) suffix = "";
+        if (docDetails.getDocId()==groupDefaultDocId) {
+            addLiClass("is-default-page");
+            icon = "star";
+        }
 
-        return faPrefix+" fa-globe";
+        return "ti ti-"+icon+suffix;
     }
 
     private JsTreeItemState getStatePrivate() {

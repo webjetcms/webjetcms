@@ -28,6 +28,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -101,7 +102,8 @@ public class AdminLogonController {
             return CHANGE_PASSWORD_FORM;
         } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, null)){
             user.setPassword(userForm.getNewPassword());
-            UsersDB.saveUser(user);
+            UserDetailsService.savePassword(userForm.getNewPassword(), user.getUserId());
+
             Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "UsrLogonAction - user ("+user.getLogin()+") successfully changed password", -1, -1);
             session.removeAttribute(Constants.USER_KEY+"_changepassword");
             LogonTools.setUserToSession(session, user);

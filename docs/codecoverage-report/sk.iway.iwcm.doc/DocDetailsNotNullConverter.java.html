@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocDetailsNotNullConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocDetailsNotNullConverter.java</span></div><h1>DocDetailsNotNullConverter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+
+import sk.iway.iwcm.admin.layout.DocDetailsDto;
+
+/**
+ * Konvertuje databazovy typ int docId na DocDetailsDto objekt a naopak.
+ * Ak je DocDetailsDto NULL vrati hodnotu -1
+ *
+ * Priklad pouzitia:
+ * @Column(name = &quot;email_doc_id&quot;)
+ * @Convert(converter = DocDetailsConverter.class)
+ * private DocDetailsDto emailDoc;
+ *
+ * v databaze sa ulozi hodnota docId ale na FE bude dostupny DocDetailsDto objekt
+ *
+ */
+@Converter
+<span class="fc" id="L21">public class DocDetailsNotNullConverter implements AttributeConverter&lt;DocDetailsDto, Integer&gt; {</span>
+
+    @Override
+    public Integer convertToDatabaseColumn(DocDetailsDto doc) {
+        //podmienka &gt;0 je aby fungovala anotacia @NotNull na entite
+<span class="fc bfc" id="L26" title="All 4 branches covered.">        if (doc != null &amp;&amp; doc.getDocId()&gt;0) return Integer.valueOf(doc.getDocId());</span>
+<span class="fc" id="L27">        return -1;</span>
+    }
+
+    @Override
+    public DocDetailsDto convertToEntityAttribute(Integer docId) {
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (docId != null) {</span>
+<span class="fc" id="L33">            DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L34">            DocDetails doc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (doc != null) return new DocDetailsDto(doc);</span>
+        }
+<span class="fc" id="L37">        return null;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

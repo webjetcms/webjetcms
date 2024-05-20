@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TextTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">TextTag.java</span></div><h1>TextTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.TagSupport;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.IwayProperties;
+import sk.iway.iwcm.i18n.Prop;
+
+
+/**
+ *  Tag pre vypis stringu z requestu v JSP stranke
+ *
+ *@Title        WebJET
+ *@Company      Interway
+ *@Copyright    Ľuboš Balát, Copyright (c) 2002
+ *@author       jeeff
+ *@version      1.0
+ *@created      Piatok, 2002, február 22
+ *@modified     $Date: 2010/01/20 11:15:08 $
+ */
+<span class="fc" id="L26">public class TextTag extends TagSupport</span>
+{
+	private static final long serialVersionUID = 1955748610554165388L;
+
+	public static final String PREFIX_KEY = &quot;webjet.textTag.prefix&quot;;
+
+	// Name of request attribute - required
+<span class="fc" id="L33">	private String key = null;</span>
+<span class="fc" id="L34">	private String param1 = null;</span>
+<span class="fc" id="L35">	private String param2 = null;</span>
+<span class="fc" id="L36">	private String param3 = null;</span>
+<span class="fc" id="L37">	private String defaultText = null;</span>
+<span class="fc" id="L38">	private String lng = null;</span>
+<span class="fc" id="L39">	private boolean pluralize = false;</span>
+<span class="fc" id="L40">    private boolean jsEscape = false;</span>
+
+	@Override
+	public void release()
+	{
+<span class="fc" id="L45">		super.release();</span>
+<span class="fc" id="L46">		key = null;</span>
+<span class="fc" id="L47">		param1 = null;</span>
+<span class="fc" id="L48">		param2 = null;</span>
+<span class="fc" id="L49">		param3 = null;</span>
+<span class="fc" id="L50">		defaultText = null;</span>
+<span class="fc" id="L51">		lng = null;</span>
+<span class="fc" id="L52">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@return                   Description of the Return Value
+	 *@exception  JspException  Description of the Exception
+	 */
+	@Override
+	public final int doEndTag() throws JspException
+	{
+		try
+		{
+<span class="fc" id="L65">			String text = key;</span>
+<span class="fc" id="L66">			HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+<span class="fc" id="L67">			String lng = &quot;&quot;;</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">			if (this.lng!=null)</span>
+			{
+<span class="nc" id="L70">				lng = this.lng;</span>
+			}
+<span class="fc bfc" id="L72" title="All 2 branches covered.">			else if (pageContext.getAttribute(&quot;lng&quot;)!=null)</span>
+			{
+<span class="fc" id="L74">				lng = (String)pageContext.getAttribute(&quot;lng&quot;);</span>
+			}
+<span class="fc bfc" id="L76" title="All 2 branches covered.">			else if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
+			{
+<span class="fc" id="L78">				lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+			}
+			else
+			{
+<span class="fc" id="L82">				lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">				if (lng!=null &amp;&amp; lng.length()&gt;3) lng = null;</span>
+<span class="pc bpc" id="L84" title="1 of 4 branches missed.">				if (lng != null &amp;&amp; request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG)==null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">				if (lng==null)</span>
+				{
+<span class="fc" id="L87">					lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+				}
+<span class="fc bfc" id="L89" title="All 2 branches covered.">				if (lng == null)</span>
+				{
+<span class="fc" id="L91">					lng = PageLng.getUserLng(request); // sk.iway.iwcm.Constants.getString(&quot;defaultLanguage&quot;);</span>
+				}
+			}
+
+<span class="fc" id="L95">			boolean needRefresh = false;</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">			if (request.getSession().getAttribute(&quot;userlngr&quot;)!=null)</span>
+			{
+				//ak to mame v session, tak chceme pri kazdom zobrazeni stranky spravit refresh
+<span class="nc" id="L99">				needRefresh = true;</span>
+			}
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">			if (request.getParameter(&quot;userlngr&quot;)!=null)</span>
+			{
+<span class="nc" id="L103">				needRefresh = true;</span>
+			}
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">			if (pageContext.getAttribute(&quot;userlngr&quot;)!=null)</span>
+			{
+				//pri zobrazeni tejto stranky sme uz jazyk refreshli, nema zmysel to robit znova
+<span class="nc" id="L108">				needRefresh = false;</span>
+			}
+
+			//Logger.println(this,&quot;userlngr=&quot;+request.getParameter(&quot;userlngr&quot;));
+
+<span class="fc" id="L113">			Prop prop = null;</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">			if (needRefresh)</span>
+			{
+<span class="nc" id="L116">				pageContext.setAttribute(&quot;userlngr&quot;, &quot;refreshed&quot;);</span>
+<span class="nc" id="L117">				prop = Prop.getInstance(pageContext.getServletContext(), lng, true);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (&quot;session&quot;.equals(request.getParameter(&quot;userlngr&quot;)))</span>
+				{
+					//uloz si to do session, teraz sa bude refreshovat pri kazdom zobrazeni stranky
+<span class="nc" id="L121">					request.getSession().setAttribute(&quot;userlngr&quot;, &quot;session&quot;);</span>
+				}
+			}
+			else
+			{
+<span class="fc" id="L126">				prop = Prop.getInstance(pageContext.getServletContext(), lng, false);</span>
+			}
+
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">			if (pluralize)</span>
+			{
+<span class="nc" id="L131">				IwayProperties iwayProperties = prop.getRes(lng);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (iwayProperties.containsKey(key+&quot;.&quot;+param1))</span>
+				{
+<span class="nc" id="L134">					key = key+&quot;.&quot;+param1;</span>
+				} 
+				else 
+				{
+<span class="nc" id="L138">					boolean keyFound = false;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">					for (String lKey : iwayProperties.keySet())</span>
+					{
+<span class="nc bnc" id="L141" title="All 6 branches missed.">						if (lKey.startsWith(key) &amp;&amp; (lKey.contains(&quot;.&quot;+param1+&quot;.&quot;) || lKey.endsWith(&quot;.&quot;+param1)))</span>
+						{
+<span class="nc" id="L143">							key = lKey;</span>
+<span class="nc" id="L144">							keyFound = true;</span>
+<span class="nc" id="L145">							break;</span>
+						}
+<span class="nc" id="L147">					}</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (!keyFound)</span>
+					{
+<span class="nc" id="L150">						key = key+&quot;.X&quot;;</span>
+					}
+				}
+<span class="nc" id="L153">				iwayProperties = null;</span>
+			}
+
+<span class="fc" id="L156">			text = prop.getText(key, param1, param2, param3);</span>
+
+<span class="fc" id="L158">			String textTagPrefix = (String)pageContext.getRequest().getAttribute(PREFIX_KEY);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(textTagPrefix))</span>
+			{
+<span class="nc" id="L161">				String prefixKey = textTagPrefix+&quot;.&quot;+key;</span>
+<span class="nc" id="L162">				String textWithPrefix = prop.getText(prefixKey, param1, param2, param3);</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">				if (Tools.isNotEmpty(textWithPrefix) &amp;&amp; prefixKey.equals(textWithPrefix)==false) text = textWithPrefix;</span>
+			}
+
+<span class="pc bpc" id="L166" title="3 of 6 branches missed.">			if (text.equals(key) &amp;&amp; Tools.isNotEmpty(defaultText) &amp;&amp; lng.equals(&quot;sk&quot;))</span>
+			{
+<span class="nc" id="L168">				text = defaultText;</span>
+			}
+
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">			if (jsEscape) text = JSEscapeTag.jsEscape(text);</span>
+
+			//text = prop.getText(key);
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">			if (text != null)</span>
+			{
+<span class="fc" id="L176">				pageContext.getOut().write(text);</span>
+			}
+
+		}
+<span class="nc" id="L180">		catch (Exception e)</span>
+		{
+
+<span class="fc" id="L183">		}</span>
+<span class="fc" id="L184">		return EVAL_PAGE;</span>
+	}
+
+	public final void setKey(String key)
+	{
+<span class="fc" id="L189">		this.key = key;</span>
+<span class="fc" id="L190">	}</span>
+
+	public String getParam1()
+	{
+<span class="nc" id="L194">		return param1;</span>
+	}
+	public void setParam1(String param1)
+	{
+<span class="fc" id="L198">		this.param1 = param1;</span>
+<span class="fc" id="L199">	}</span>
+	public String getParam2()
+	{
+<span class="nc" id="L202">		return param2;</span>
+	}
+	public void setParam2(String param2)
+	{
+<span class="fc" id="L206">		this.param2 = param2;</span>
+<span class="fc" id="L207">	}</span>
+	public String getParam3()
+	{
+<span class="nc" id="L210">		return param3;</span>
+	}
+	public void setParam3(String param3)
+	{
+<span class="nc" id="L214">		this.param3 = param3;</span>
+<span class="nc" id="L215">	}</span>
+
+	public String getDefaultText()
+	{
+<span class="nc" id="L219">		return defaultText;</span>
+	}
+
+	public void setDefaultText(String defaultText)
+	{
+<span class="nc" id="L224">		this.defaultText = defaultText;</span>
+<span class="nc" id="L225">	}</span>
+
+	public String getLng() {
+<span class="nc" id="L228">		return lng;</span>
+	}
+
+	public void setLng(String lng) {
+<span class="nc" id="L232">		this.lng = lng;</span>
+<span class="nc" id="L233">	}</span>
+
+	public void setPluralize(boolean pluralize) {
+<span class="nc" id="L236">		this.pluralize = pluralize;</span>
+<span class="nc" id="L237">	}</span>
+
+    public boolean isJsEscape()
+    {
+<span class="nc" id="L241">        return jsEscape;</span>
+    }
+
+    public void setJsEscape(boolean jsEscape)
+    {
+<span class="nc" id="L246">        this.jsEscape = jsEscape;</span>
+<span class="nc" id="L247">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

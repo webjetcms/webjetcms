@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmFsFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">IwcmFsFilter.java</span></div><h1>IwcmFsFilter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.util.List;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.filebrowser.EditForm;
+import sk.iway.iwcm.sync.FileBean;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.users.UsersDB;
+
+;
+/**
+ * IwcmFsFilter.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.11 $
+ * @created Date: 25.6.2008 16:13:33
+ * @modified $Date: 2010/02/17 11:35:15 $
+ */
+<span class="nc" id="L41">public class IwcmFsFilter implements Filter</span>
+{
+	 @Override
+	public void destroy()
+	{
+		//
+<span class="nc" id="L47">	}</span>
+	 @Override
+	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
+	{
+<span class="nc" id="L51">		HttpServletRequest request = (HttpServletRequest) req;</span>
+<span class="nc" id="L52">		HttpServletResponse response = (HttpServletResponse) res;</span>
+<span class="nc" id="L53">		String path = request.getRequestURI();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (ContextFilter.isRunning(request)) path = ContextFilter.removeContextPath(request.getContextPath(), path);</span>
+
+		//Logger.debug(IwcmFsFilter.class, &quot;path=&quot;+path);
+
+		//fix pre VUB - zobrazoval sa im zdrojovy kod pre volania index.JSP
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (Tools.isNotEmpty(path))</span>
+		{
+<span class="nc bnc" id="L61" title="All 4 branches missed.">			if (path.toLowerCase().endsWith(&quot;.jsp&quot;) &amp;&amp; path.endsWith(&quot;.jsp&quot;)==false)</span>
+			{
+<span class="nc" id="L63">				response.setHeader(&quot;Location&quot;, path.toLowerCase());</span>
+<span class="nc" id="L64">				response.setStatus(301);</span>
+<span class="nc" id="L65">				return;</span>
+			}
+		}
+
+
+<span class="nc" id="L70">		boolean useDbStorage = IwcmFsDB.useDBStorage(path);</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (!useDbStorage)</span>
+		{
+<span class="nc" id="L73">			chain.doFilter(req, res);</span>
+<span class="nc" id="L74">			return;</span>
+		}
+
+		//kvoli vykonu volame len pre /files/
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (path.startsWith(&quot;/files/&quot;))</span>
+		{
+<span class="nc" id="L80">			path = Tools.URLDecode(path);</span>
+
+			//mame nan prava?
+<span class="nc" id="L83">			EditForm ef = PathFilter.isPasswordProtected(path, request);</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">			if (ef != null &amp;&amp; !ef.isAccessibleFor(UsersDB.getCurrentUser(request)) &amp;&amp;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">						PathFilter.doFileForbiddenRedirect(ef, UsersDB.getCurrentUser(request), path, request, response)</span>
+			)
+			{
+<span class="nc" id="L88">				return;</span>
+			}
+		}
+
+<span class="nc" id="L92">		Integer fatId = IwcmFsDB.getFatIdTable().get(path);</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">		if (useDbStorage &amp;&amp; fatId != null)// ak existuje v storage</span>
+		{
+			//ziskanie suboru z historie
+<span class="nc" id="L96">			long fid = Tools.getLongValue(request.getParameter(&quot;fid&quot;), -1);</span>
+<span class="nc" id="L97">			int fatIdHistory = -1;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			if (fid &gt; 0)</span>
+			{
+<span class="nc" id="L100">				Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if (user != null &amp;&amp; user.isAdmin())</span>
+				{
+<span class="nc" id="L103">					List&lt;FileBean&gt; versionList = AdminTools.getVersionList(path);</span>
+					//over ci taka verzia existuje
+<span class="nc bnc" id="L105" title="All 2 branches missed.">					for (FileBean version : versionList)</span>
+					{
+<span class="nc bnc" id="L107" title="All 2 branches missed.">						if (version.getLocalLastModified() == fid)</span>
+						{
+							//nasli sme, mozeme poslat na vystup
+<span class="nc" id="L110">							fatIdHistory = (int)fid;</span>
+<span class="nc" id="L111">							break;</span>
+						}
+<span class="nc" id="L113">					}</span>
+				}
+			}
+
+
+<span class="nc" id="L118">			File file = new File(Tools.getRealPath(path));</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (fatIdHistory &lt; 1)</span>
+			{
+				// ak mozeme zapisovat na disk
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;iwfs_writeToDisk&quot;))</span>
+				{
+<span class="nc" id="L124">					long lastModffied = 0;</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">					if (IwcmFsDB.getModifiedTable().get(path) != null)</span>
+					{
+<span class="nc" id="L127">						lastModffied = IwcmFsDB.getModifiedTable().get(path);</span>
+					}
+
+<span class="nc bnc" id="L130" title="All 4 branches missed.">					if (file.exists() &amp;&amp; round(file.lastModified()) == round(lastModffied))</span>
+					{
+						// na disku je ten isty subor ako v DB
+<span class="nc" id="L133">						chain.doFilter(req, res);</span>
+<span class="nc" id="L134">						return;</span>
+					}
+					else
+					{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">						if (file.exists())</span>
+						{
+<span class="nc bnc" id="L140" title="All 2 branches missed.">							if (round(file.lastModified()) &lt; round(lastModffied))</span>
+							{
+								// v storage je novsi
+<span class="nc" id="L143">								IwcmFsDB.writeFileToDisk(file, file, true);</span>
+
+								//nastav rovnaky lastModified
+<span class="nc" id="L146">								file.setLastModified(lastModffied);</span>
+
+<span class="nc" id="L148">								chain.doFilter(req, res);</span>
+<span class="nc" id="L149">								return;</span>
+							}
+<span class="nc bnc" id="L151" title="All 4 branches missed.">							if (Constants.getBoolean(&quot;iwfs_writeToDB&quot;) &amp;&amp; round(file.lastModified()) &gt; round(lastModffied))</span>
+							{
+								// na disku je novsi
+<span class="nc" id="L154">								IwcmFsDB.writeFileToDB(file);</span>
+<span class="nc" id="L155">								chain.doFilter(req, res);</span>
+<span class="nc" id="L156">								return;</span>
+							}
+						}
+						else
+						{
+<span class="nc" id="L161">							IwcmFsDB.writeFileToDisk(file);</span>
+						}
+					}
+<span class="nc" id="L164">				}</span>
+				else
+				{
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					if (file.exists())</span>
+					{
+<span class="nc" id="L169">						long lastModffied = 0;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">						if (IwcmFsDB.getModifiedTable().get(path) != null)</span>
+						{
+<span class="nc" id="L172">							lastModffied = IwcmFsDB.getModifiedTable().get(path);</span>
+						}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">						if (round(file.lastModified()) == round(lastModffied))</span>
+						{
+<span class="nc" id="L176">							chain.doFilter(req, res);</span>
+<span class="nc" id="L177">							return;</span>
+						}
+					}
+				}
+			}
+
+<span class="nc" id="L183">			String mimeType = Constants.getServletContext().getMimeType(path.toLowerCase());</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="nc" id="L185">			response.setContentType(mimeType);</span>
+
+<span class="nc" id="L187">         PathFilter.setDownloadHeaders(path, request, response);</span>
+
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (fatIdHistory &lt; 1) PathFilter.setStaticContentHeaders(path, UsersDB.getCurrentUser(request), request, response);</span>
+
+<span class="nc" id="L191">			byte data[] = null;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			if (fatIdHistory &lt; 1) data = FileCache.getObject(path);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (data != null)</span>
+			{
+<span class="nc" id="L195">				response.setContentLength(data.length);</span>
+
+<span class="nc" id="L197">				 OutputStream out=response.getOutputStream();</span>
+<span class="nc" id="L198">				 out.write(data);</span>
+<span class="nc" id="L199">				 out.close();</span>
+<span class="nc" id="L200">			}</span>
+			else
+			{
+<span class="nc" id="L203">				IwcmFile iwcmFile = new IwcmFile(file);</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">				if (fatIdHistory &gt; 0)</span>
+				{
+<span class="nc" id="L207">					data = IwcmFsDB.writeFileToOutputStreamFromHistory(file, response.getOutputStream(), fatIdHistory);</span>
+				}
+				else
+				{
+					//RequestDump dump = new RequestDump(request);
+					//Logger.debug(IwcmFsFilter.class, &quot;Serving file &quot;+path+&quot; request:\n&quot;+dump.completeRequestReport());
+<span class="nc bnc" id="L213" title="All 6 branches missed.">					if (path.startsWith(&quot;/files/&quot;) || path.endsWith(&quot;mp3&quot;) || path.endsWith(&quot;.mp4&quot;))</span>
+					{
+						//toto ani nejde do cache, mp3/4 kvoli range requestom na mp3/mp4 subory
+<span class="nc" id="L216">						FilePathTools.writeFileOut(path, request, response);</span>
+					}
+					else
+					{
+<span class="nc" id="L220">						response.setContentLength((int) iwcmFile.length());</span>
+<span class="nc" id="L221">						data = IwcmFsDB.writeFileToOutputStream(file, response.getOutputStream());</span>
+					}
+				}
+
+<span class="nc bnc" id="L225" title="All 6 branches missed.">				if (data!=null &amp;&amp; fatIdHistory &lt; 1 &amp;&amp; data.length &gt; 0)</span>
+				{
+<span class="nc" id="L227">					FileCache.setObject(path, data);</span>
+				}
+			}
+
+<span class="nc" id="L231">			return;</span>
+		}
+
+		//ak je zapnute storage s disk cache a subor nie je vo FAT tabulke tak vrat 404
+<span class="nc bnc" id="L235" title="All 6 branches missed.">		if (useDbStorage &amp;&amp; fatId == null &amp;&amp; Constants.getBoolean(&quot;iwfs_writeToDisk&quot;)) {</span>
+<span class="nc" id="L236">			String qs = request.getQueryString();</span>
+<span class="nc" id="L237">			req.setAttribute(&quot;path_filter_query_string&quot;, qs);</span>
+<span class="nc" id="L238">			req.setAttribute(&quot;path_filter_orig_path&quot;, path);</span>
+
+<span class="nc" id="L240">			response.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="nc" id="L241">			request.getRequestDispatcher(&quot;/404.jsp&quot;).forward(req, res);</span>
+<span class="nc" id="L242">			return;</span>
+		}
+
+<span class="nc" id="L245">		chain.doFilter(req, res);</span>
+<span class="nc" id="L246">	}</span>
+	 @Override
+	public void init(FilterConfig filterConfig) throws ServletException
+	{
+		//
+<span class="nc" id="L251">	}</span>
+
+	private long round(long i)
+	{
+<span class="nc" id="L255">		return new BigDecimal(Math.round(new BigDecimal(i).divide(new BigDecimal(100)).doubleValue()))</span>
+<span class="nc" id="L256">					.multiply(new BigDecimal(100)).longValue();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

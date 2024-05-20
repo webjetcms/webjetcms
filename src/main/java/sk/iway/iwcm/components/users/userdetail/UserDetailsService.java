@@ -158,7 +158,15 @@ public class UserDetailsService {
             fixEditorMiniEdit(userId);
         }
 
-        boolean saveok = savePassword(entity, userId);
+        //entity.getId is null for new users, saved ID is in userId parameter
+        if (entity.getId()==null || entity.getId()<1) {
+            if (Tools.isEmpty(entity.getPassword()) || UserTools.PASS_UNCHANGED.equals(entity.getPassword())) {
+                //set random password for new users
+                entity.setPassword(Password.generatePassword(10));
+            }
+        }
+
+        boolean saveok = savePassword(entity.getPassword(), userId);
         if (saveok==false) return false;
 
         if (Tools.isNotEmpty(entity.getApiKey()) && entity.getApiKey().equals(UserTools.PASS_UNCHANGED)==false) {
@@ -188,7 +196,7 @@ public class UserDetailsService {
                 entity.setPassword(Password.generatePassword(10));
             }
         }
-        return savePassword(userId, entity.getPassword());
+        return savePassword(entity.getPassword(), userId);
     }
 
     /**
@@ -198,9 +206,9 @@ public class UserDetailsService {
      * @return
      */
     @SuppressWarnings("java:S1871")
-    public static boolean savePassword(int userId, String password) {
+    public static boolean savePassword(String password, int userId) {
 
-        if (Tools.isNotEmpty(password) && password.equals(UserTools.PASS_UNCHANGED)==false) {
+        if (Tools.isNotEmpty(password) && password.equals(UserTools.PASS_UNCHANGED)==false && userId>0) {
 
             String currentHash = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id=?", userId);
             if (password.startsWith("bcrypt:$2a$12") && password.length()>64) {
@@ -217,7 +225,9 @@ public class UserDetailsService {
             //ulozit heslo
             Logger.debug(UserDetailsService.class, "Heslo je zmenene, ukladam");
 
-            try {
+            UserDetails user = UsersDB.getUser(userId);
+            if (user != null) {
+                try {
 
                 String salt = "";
                 String hash = "";
@@ -244,9 +254,10 @@ public class UserDetailsService {
                 //invalidate other user sessions
                 SessionHolder.getInstance().invalidateOtherUserSessions(userId);
 
-            } catch (Exception ex) {
-                Logger.error(UserDetailsService.class, ex);
-                return false;
+                } catch (Exception ex) {
+                    Logger.error(UserDetailsService.class, ex);
+                    return false;
+                }
             }
         }
         return true;
@@ -533,5 +544,14 @@ public class UserDetailsService {
         } else if (Tools.isEmpty(entity.getPassword())) {
             errors.rejectValue("errorField.password", "403", prop.getText("javax.validation.constraints.NotBlank.message"));
         }
+    }
+
+    /**
+     * Normally users are global for all domains.
+     * - they are split in MultiWeb installation
+     * - or when conf usersSplitByDomain is set to true (mainly for autotest purposes)
+     */
+    public static boolean isUsersSplitByDomain() {
+        return Constants.getBoolean("usersSplitByDomain") || InitServlet.isTypeCloud();
     }
 }

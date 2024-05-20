@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WriteAttributeTagProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component.dialect</a> &gt; <span class="el_source">WriteAttributeTagProcessor.java</span></div><h1>WriteAttributeTagProcessor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component.dialect;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.model.IAttribute;
+import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.processor.element.IElementTagStructureHandler;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.ninja.Ninja;
+
+/**
+ * Trieda WriteAttributeTagProcessor pre iwcm tag s nazvom write
+ * Tag &lt;div data-iwcm-write=&quot;&quot;/&gt; sluzi na vykonanie !INCLUDE v zadanom mene atributu (napr. doc_data)
+ */
+public class WriteAttributeTagProcessor extends AbstractIwcmAttributeTagProcessor {
+
+    private static final String ATTR_NAME = &quot;write&quot;;
+    private static final int PRECEDENCE = 10003;
+
+    public WriteAttributeTagProcessor(final String dialectPrefix) {
+<span class="fc" id="L23">        super(dialectPrefix, ATTR_NAME, PRECEDENCE);</span>
+<span class="fc" id="L24">    }</span>
+
+    /**
+     * Metoda pre nahradenie tagu obsahom
+     */
+    @Override
+    protected void processTag(ITemplateContext context, IProcessableElementTag tag, String attributeValue, IElementTagStructureHandler structureHandler, HttpServletRequest request) {
+<span class="fc" id="L31">        Ninja ninja = new Ninja(request);</span>
+<span class="fc" id="L32">        String htmlCode = ninja.write(attributeValue);</span>
+
+        //ak ma tag atribut data-iwcm-remove=&quot;tag&quot; tak robime replace celeho tagu, inak robime len setBody
+<span class="fc" id="L35">        IAttribute removeAttr = tag.getAttribute(&quot;data-iwcm-remove&quot;);</span>
+<span class="fc" id="L36">        boolean replace = true;</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (removeAttr != null) {</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">            if (&quot;false&quot;.equals(removeAttr.getValue())) replace=false;</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">            else if (&quot;true&quot;.equals(removeAttr.getValue())) {</span>
+                //uz je defaultne nastavene
+                //replace=true;
+            }
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            else if (&quot;tag&quot;.equals(removeAttr.getValue())==false) replace=false;</span>
+        } else {
+            //pre doc_ atributy remove defaultne nerobime
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (attributeValue.startsWith(&quot;doc_&quot;)) replace = false;</span>
+        }
+
+<span class="fc" id="L49">        IAttribute jqueryAttr = tag.getAttribute(&quot;data-iwcm-jquery&quot;);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (jqueryAttr != null) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (&quot;false&quot;.equals(jqueryAttr.getValue())) {</span>
+                //nechceme vkladat jquery automaticky, poznacme ze uz bolo vlozene
+<span class="nc" id="L53">                Tools.insertJQuery(request);</span>
+            }
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            if (&quot;true&quot;.equals(jqueryAttr.getValue())) {</span>
+<span class="nc" id="L56">                htmlCode = Tools.insertJQuery(request) + &quot;\n&quot; + htmlCode;</span>
+            }
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (&quot;force&quot;.equals(jqueryAttr.getValue())) {</span>
+<span class="nc" id="L59">                request.removeAttribute(&quot;jQueryInserted&quot;);</span>
+<span class="nc" id="L60">                request.removeAttribute(&quot;commonPageFunctionsInserted&quot;);</span>
+<span class="nc" id="L61">                htmlCode = Tools.insertJQuery(request) + &quot;\n&quot; + htmlCode;</span>
+            }
+        }
+
+<span class="fc" id="L65">        structureHandler.removeAttribute(&quot;data-iwcm-write&quot;);</span>
+<span class="fc" id="L66">        structureHandler.removeAttribute(&quot;data-iwcm-remove&quot;);</span>
+<span class="fc" id="L67">        structureHandler.removeAttribute(&quot;data-iwcm-jquery&quot;);</span>
+
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (replace) {</span>
+<span class="fc" id="L70">            structureHandler.replaceWith(htmlCode, false);</span>
+        } else {
+<span class="fc" id="L72">            structureHandler.setBody(htmlCode, false);</span>
+        }
+<span class="fc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

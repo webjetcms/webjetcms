@@ -33,11 +33,11 @@ public class UserAgent {
     }
 
     /**
-     * Funkcia na vr?tenie verzie prehliada?a. Verzia sa zis?uje na z?klade UserAdent
-     * @return String - verzia prehliada?a
+     * Funkcia na vratenie verzie prehliadaca. Verzia sa zistuje na zaklade UserAdent
+     * @return String - verzia prehliadaca
      */
     public String getBrowserVersion(){
-        String browserVersion = String.valueOf(Math.round(getBrowserDetector().getBrowserVersion()));
+        String browserVersion = getBrowserDetector().getBrowserVersionShort();
         return browserVersion;
     }
 
@@ -83,7 +83,8 @@ public class UserAgent {
     }
 
     public String getDeviceOS(){
-        String deviceOs = getBrowserDetector().getBrowserPlatform()+" "+getBrowserDetector().getBrowserSubplatform();
+        String deviceOs = getBrowserDetector().getBrowserPlatform();
+        if (Tools.isNotEmpty(getBrowserDetector().getBrowserSubplatform())) deviceOs += " "+getBrowserDetector().getBrowserSubplatform();
         return deviceOs.toLowerCase();
     }
 

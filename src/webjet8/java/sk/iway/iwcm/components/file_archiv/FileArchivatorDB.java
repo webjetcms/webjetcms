@@ -356,11 +356,17 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
             conditions.add(filterNotIn("category", fabSearch.getExcludeCategory()));
 
 
-		if(fabSearch.getShowFile() != null && fabSearch.getShowFile().booleanValue())
-			conditions.add(filterEquals("show_file", 1));
-		else if(fabSearch.getShowFile() != null && fabSearch.getShowFile().booleanValue() == false)
-			conditions.add(filterEquals("show_file", 0));
-
+		if(fabSearch.getShowFile()!=null)
+		{
+			if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+				conditions.add(filterEquals("show_file", fabSearch.getShowFile().booleanValue()));
+			} else {
+				if(fabSearch.getShowFile().booleanValue())
+					conditions.add(filterEquals("show_file", 1));
+				else
+					conditions.add(filterEquals("show_file", 0));
+			}
+		}
 
 		if(Tools.isNotEmpty(fabSearch.getVirtualFileName()))
 			conditions.add(filterSubstring("virtual_file_name", fabSearch.getVirtualFileName()));
@@ -672,7 +678,8 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 
             if(fabSearch.getShowFile() != null)
             {
-                expr = expr.and(builder.get("showFile").equal(fabSearch.getShowFile().booleanValue() ? 1 : 0));
+				if (Constants.DB_TYPE==Constants.DB_PGSQL) expr = expr.and(builder.get("showFile").equal(fabSearch.getShowFile().booleanValue()));
+                else expr = expr.and(builder.get("showFile").equal(fabSearch.getShowFile().booleanValue() ? 1 : 0));
             }
 
             dbQuery.setSelectionCriteria(expr);

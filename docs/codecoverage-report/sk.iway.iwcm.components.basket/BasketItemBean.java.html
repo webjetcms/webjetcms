@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketItemBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketItemBean.java</span></div><h1>BasketItemBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+
+/**
+ *  BasketItemBean.java - Polozka nakupneho kosika
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.5 $
+ *@created      Date: 9.11.2005 15:06:05
+ *@modified     $Date: 2009/11/25 16:34:07 $
+ */
+
+@Entity
+@Table(name=&quot;basket_item&quot;)
+<span class="fc" id="L37">public class BasketItemBean implements Serializable</span>
+{
+	private static final long serialVersionUID = 1281182025300889704L;
+
+	private transient DocDetails doc;
+
+	@Id
+	@Column(name=&quot;basket_item_id&quot;)
+	@GeneratedValue(generator=&quot;WJGen_basket_item&quot;)
+   @TableGenerator(name=&quot;WJGen_basket_item&quot;, pkColumnValue=&quot;basket_item&quot;)
+	private int basketItemId;
+
+	@Column(name=&quot;browser_id&quot;)
+	private Long browserId;
+
+	@Column(name=&quot;logged_user_id&quot;)
+	private int loggedUserId;
+
+	@Column(name=&quot;item_id&quot;)
+	private int itemId;
+
+	@Column(name=&quot;item_title&quot;)
+	private String itemTitle;
+
+	@Column(name=&quot;item_part_no&quot;)
+	private String itemPartNo;
+
+	@Column(name=&quot;item_price&quot;)
+	private Double itemPrice;
+
+	@Column(name=&quot;item_vat&quot;)
+	private Double itemVat;
+
+	@Column(name=&quot;item_qty&quot;)
+	private Integer itemQty;
+
+	@Column(name=&quot;item_note&quot;)
+	private String itemNote;
+
+	@Column(name=&quot;date_insert&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date dateInsert;
+
+	@ManyToOne(cascade=CascadeType.ALL)
+	@JoinColumn(name=&quot;basket_invoice_id&quot;)
+	BasketInvoiceBean basketInvoice;
+
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+
+	public double getItemPriceQty()
+	{
+<span class="nc" id="L89">		return(getItemQty().intValue() * getItemPrice().doubleValue());</span>
+	}
+
+	/**
+	 * Vrati cenu jednej polozky vratane DPH
+	 * @return
+	 */
+	public double getItemPriceVat()
+	{
+		//TODO: vypocet DPH
+<span class="nc" id="L99">		double vat = getItemVat().doubleValue();</span>
+<span class="nc" id="L100">		vat = (vat / 100) + 1;</span>
+
+<span class="nc" id="L102">		return(getItemPrice().doubleValue() * vat);</span>
+	}
+
+	public boolean itemAlreadyPurchased()
+	{
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		return getBasketItemId() &gt; 0;</span>
+	}
+
+	/**
+	 * Vrati cenu vratane DPH * pocet poloziek
+	 * @return
+	 */
+	public double getItemPriceVatQty()
+	{
+<span class="nc" id="L116">		return(getItemQty().intValue() * getItemPriceVat());</span>
+	}
+
+	public String getTitle()
+	{
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="nc" id="L122">			return getItemTitle();</span>
+<span class="nc" id="L123">		return(getDoc().getTitle());</span>
+	}
+
+	public synchronized DocDetails getDoc()
+	{
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (doc == null)</span>
+		{
+<span class="nc" id="L130">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L131">			doc = docDB.getDoc(getItemId());</span>
+		}
+<span class="nc" id="L133">		return(doc);</span>
+	}
+
+	//------------------------PREPOCITAVANIE NA LOKALNE CENY POUZIVATELA-----------------------
+	/**
+	 * Metody na prepocitavanie cien do inych mien. Metody sa vyskytuju v roznych obmenach:
+	 * getLocalPrice - vypocita cenu bez DPH
+	 * getItemLocalPriceQty - vypocita cenu bez DPH krat pocet poloziek v kosiku
+	 * getLocalPriceVat - vypocita cenu aj s DPH
+	 * getItemLocalPriceVatQty - vypocita cenu s DPH krat pocet poloziek v kosiku
+	 *
+	 * Tieto metody sa vyskytuju v dvoch obmenach - s a bez zadanej meny. Ak sa mena nezada,
+	 * vezme sa vychodzia mena pouzivatela.
+	 */
+
+	public double getLocalPrice(HttpServletRequest request, String currency)
+	{
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="nc" id="L151">			return getItemPrice();</span>
+<span class="nc" id="L152">		return getDoc().getLocalPrice(request,currency);</span>
+	}
+
+	public double getLocalPrice(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="nc" id="L158">			return getItemPrice();</span>
+<span class="nc" id="L159">		return getDoc().getLocalPrice(request);</span>
+	}
+
+	public double getItemLocalPriceQty(HttpServletRequest request, String currency)
+	{
+<span class="nc" id="L164">		return getItemQty()*getLocalPrice(request, currency);</span>
+	}
+
+	public double getItemLocalPriceQty(HttpServletRequest request)
+	{
+<span class="nc" id="L169">		return getItemQty()*getLocalPrice(request);</span>
+	}
+
+	public double getItemLocalPriceVatQty(HttpServletRequest request, String currency)
+	{
+<span class="nc" id="L174">		double vat = getItemVat().doubleValue();</span>
+<span class="nc" id="L175">		vat = (vat / 100) + 1;</span>
+<span class="nc" id="L176">		return vat*getItemQty()*getLocalPrice(request, currency);</span>
+	}
+
+	public double getLocalPriceVat(HttpServletRequest request, String currency)
+	{
+<span class="nc" id="L181">		double vat = getItemVat().doubleValue();</span>
+<span class="nc" id="L182">		vat = (vat / 100.0) + 1.0;</span>
+<span class="nc" id="L183">		return vat*getLocalPrice(request, currency);</span>
+	}
+
+	public double getLocalPriceVat(HttpServletRequest request)
+	{
+<span class="nc" id="L188">		double vat = getItemVat().doubleValue();</span>
+<span class="nc" id="L189">		vat = (vat / 100.0) + 1.0;</span>
+<span class="nc" id="L190">		return vat*getLocalPrice(request);</span>
+	}
+
+	public double getItemLocalPriceVatQty(HttpServletRequest request)
+	{
+<span class="nc" id="L195">		return getItemLocalPriceVatQty(request, BasketDB.getDisplayCurrency(request));</span>
+	}
+
+
+
+	/**
+	 * ------- getters &amp; setters
+	 *
+	 *
+	 */
+
+	/**
+	 *	Vrati identifikator faktury, ku ktorej patri nakupna polozka
+	 */
+	public int getBasketInvoiceId()
+	{
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (basketInvoice == null)</span>
+<span class="nc" id="L212">			return 0;</span>
+<span class="nc" id="L213">		return basketInvoice.getBasketInvoiceId();</span>
+	}
+
+	public int getBasketItemId()
+	{
+<span class="nc" id="L218">		return basketItemId;</span>
+	}
+
+	public void setBasketItemId(int basketItemId)
+	{
+<span class="nc" id="L223">		this.basketItemId = basketItemId;</span>
+<span class="nc" id="L224">	}</span>
+
+	public Long getBrowserId()
+	{
+<span class="nc" id="L228">		return browserId;</span>
+	}
+
+	public void setBrowserId(Long browserId)
+	{
+<span class="nc" id="L233">		this.browserId = browserId;</span>
+<span class="nc" id="L234">	}</span>
+
+	public int getLoggedUserId()
+	{
+<span class="nc" id="L238">		return loggedUserId;</span>
+	}
+
+	public void setLoggedUserId(int loggedUserId)
+	{
+<span class="nc" id="L243">		this.loggedUserId = loggedUserId;</span>
+<span class="nc" id="L244">	}</span>
+
+	public int getItemId()
+	{
+<span class="nc" id="L248">		return itemId;</span>
+	}
+
+	public void setItemId(int itemId)
+	{
+<span class="nc" id="L253">		this.itemId = itemId;</span>
+<span class="nc" id="L254">	}</span>
+
+	public String getItemTitle()
+	{
+<span class="nc" id="L258">		return itemTitle;</span>
+	}
+
+	public void setItemTitle(String itemTitle)
+	{
+<span class="nc" id="L263">		this.itemTitle = itemTitle;</span>
+<span class="nc" id="L264">	}</span>
+
+	public String getItemPartNo()
+	{
+<span class="nc" id="L268">		return itemPartNo;</span>
+	}
+
+	public void setItemPartNo(String itemPartNo)
+	{
+<span class="nc" id="L273">		this.itemPartNo = itemPartNo;</span>
+<span class="nc" id="L274">	}</span>
+
+	public Double getItemPrice()
+	{
+<span class="nc" id="L278">		return itemPrice;</span>
+	}
+
+	public void setItemPrice(Double itemPrice)
+	{
+<span class="nc" id="L283">		this.itemPrice = itemPrice;</span>
+<span class="nc" id="L284">	}</span>
+
+	public Double getItemVat()
+	{
+<span class="nc" id="L288">		return itemVat;</span>
+	}
+
+	public void setItemVat(Double itemVat)
+	{
+<span class="nc" id="L293">		this.itemVat = itemVat;</span>
+<span class="nc" id="L294">	}</span>
+
+	public Integer getItemQty()
+	{
+<span class="nc" id="L298">		return itemQty;</span>
+	}
+
+	public void setItemQty(Integer itemQty)
+	{
+<span class="nc" id="L303">		this.itemQty = itemQty;</span>
+<span class="nc" id="L304">	}</span>
+
+	public String getItemNote()
+	{
+<span class="nc" id="L308">		return itemNote;</span>
+	}
+
+	public void setItemNote(String itemNote)
+	{
+<span class="nc" id="L313">		this.itemNote = itemNote;</span>
+<span class="nc" id="L314">	}</span>
+
+	public Date getDateInsert()
+	{
+<span class="nc bnc" id="L318" title="All 2 branches missed.">		return dateInsert == null ? null : (Date) dateInsert.clone();</span>
+	}
+
+	public void setDateInsert(Date dateInsert)
+	{
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		this.dateInsert = dateInsert == null ? null : (Date) dateInsert.clone();</span>
+<span class="nc" id="L324">	}</span>
+
+	public BasketInvoiceBean getBasketInvoice()
+	{
+<span class="nc" id="L328">		return basketInvoice;</span>
+	}
+
+	public void setBasketInvoice(BasketInvoiceBean basketInvoice)
+	{
+<span class="nc" id="L333">		this.basketInvoice = basketInvoice;</span>
+<span class="nc" id="L334">	}</span>
+
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L340">		return String.format(&quot;%dx%s&quot;, getItemQty(), getItemTitle());</span>
+	}
+
+	//public int getDomainId() {
+	//	return domainId;
+	//}
+
+	//public void setDomainId(int domainId) {
+	//	this.domainId = domainId;
+	//}
+
+	/**
+	 * Vrati aktualnu domainId
+	 * @return
+	 */
+	public int getDomainId() {
+<span class="nc" id="L356">		return domainId;</span>
+		//return CloudToolsForCore.getDomainId();
+	}
+
+	/**
+	 * Force nastavi objektu domainId aktualnej domeny
+	 *
+	 */
+	public void setDomainId(int domainId) {
+		//this.domainId = domainId;
+<span class="nc" id="L366">		this.domainId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L367">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

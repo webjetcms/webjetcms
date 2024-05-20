@@ -724,7 +724,7 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
             var headline = DATA.columns[inputIndex].title;
 
             if ($('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-column-index="' + inputIndex + '"]').length < 1) {
-                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[inputIndex].data + '" data-column-index="' + inputIndex + '"><span  class="dt-filter-labels__link__headline">' + headline + '</span><i class="far fa-times"></i></a>');
+                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[inputIndex].data + '" data-column-index="' + inputIndex + '"><span  class="dt-filter-labels__link__headline">' + headline + '</span><i class="ti ti-x" style="font-size: 0.9rem"></i></a>');
             }
 
             $('#' + DATA.id + '_wrapper th[data-column-index="' + inputIndex + '"]').addClass("has-filter-active");

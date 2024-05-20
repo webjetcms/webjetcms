@@ -1,0 +1,2676 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">CalendarDB.java</span></div><h1>CalendarDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.SettingsBean;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  CalendarDB - kalendar podujati, meniny
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       not attributable
+ *@version      1.0
+ *@created      Štvrtok, 2004, február 12
+ *@modified     $Date: 2004/03/18 15:45:04 $
+ */
+<span class="nc" id="L52">public class CalendarDB</span>
+{
+	public static final int FORUM_OFFSET = 1000000;
+
+	/**
+	 *  vrati hodnotu parametra, alebo attributu (ak nie je parameter)
+	 *
+	 *@param  name
+	 *@param  request
+	 *@return
+	 */
+	private static String getParamAttribute(String name, HttpServletRequest request)
+	{
+<span class="nc" id="L65">		String ret = request.getParameter(name);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (ret == null)</span>
+		{
+<span class="nc" id="L68">			ret = (String) request.getAttribute(name);</span>
+		}
+<span class="nc" id="L70">		return (ret);</span>
+	}
+
+	/**
+	 *  vrati hodnotu parametra, alebo attributu (ak nie je parameter) ako cislo, alebo -1 ak sa o cislo nejedna
+	 *
+	 *@param  name
+	 *@param  request
+	 *@return
+	 */
+	private static int getParamAttributeInt(String name, HttpServletRequest request)
+	{
+<span class="nc" id="L82">		String tmp = getParamAttribute(name, request);</span>
+<span class="nc" id="L83">		int i = -1;</span>
+
+		try
+		{
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			if (tmp != null)</span>
+			{
+<span class="nc" id="L89">				i = Integer.parseInt(tmp);</span>
+			}
+		}
+<span class="nc" id="L92">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L94">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L95">		}</span>
+<span class="nc" id="L96">		return (i);</span>
+	}
+
+	/**
+	 *  vrati zoznam udalosti kalendara v zavislosti na parametroch v requeste
+	 *
+	 *@param  request
+	 *@return
+	 */
+	public static List&lt;CalendarDetails&gt; getEvents(HttpServletRequest request)
+	{
+<span class="nc" id="L107">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L108">		Connection db_conn = null;</span>
+<span class="nc" id="L109">		PreparedStatement ps = null;</span>
+<span class="nc" id="L110">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L114">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L115">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND date_to &gt;= ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+
+<span class="nc" id="L117">			long now = (new java.util.Date()).getTime();</span>
+<span class="nc" id="L118">			now = now - 86400000;</span>
+<span class="nc" id="L119">			long end = 0;</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (getParamAttribute(&quot;calAllEvents&quot;, request) != null)</span>
+			{
+				//chce vsetky zaznamy uplne od zaciatku
+<span class="nc" id="L124">				now = 1000;</span>
+			}
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (getParamAttribute(&quot;calStart&quot;, request) != null)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L129">				now = DB.getTimestamp(getParamAttribute(&quot;calStart&quot;, request), &quot;0:00&quot;, DBPool.getDBName(request));</span>
+			}
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (getParamAttribute(&quot;calEnd&quot;, request) != null)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L134">				end = DB.getTimestamp(getParamAttribute(&quot;calEnd&quot;, request), &quot;23:59&quot;, DBPool.getDBName(request));</span>
+<span class="nc" id="L135">				sql.append(&quot; AND date_from &lt;= ? &quot;);</span>
+			}
+
+			int i;
+<span class="nc" id="L139">			i = getParamAttributeInt(&quot;calTypeId&quot;, request);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L142">				sql.append(&quot; AND c.type_id = ?&quot;);</span>
+			}
+<span class="nc" id="L144">			String typNazvy = getParamAttribute(&quot;typyNazvy&quot;, request);</span>
+<span class="nc" id="L145">			StringBuilder typyInSQL = new StringBuilder(&quot; AND ct.name IN (&quot;);</span>
+<span class="nc" id="L146">			List&lt;String&gt; typyIn = null;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (Tools.isNotEmpty(typNazvy))</span>
+			{
+<span class="nc" id="L149">				StringTokenizer st = new StringTokenizer(typNazvy, &quot;,+&quot;);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+				{
+<span class="nc" id="L152">					String nazov = DB.removeSlashes(st.nextToken());</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">					if (Tools.isNotEmpty(nazov))</span>
+					{
+<span class="nc bnc" id="L155" title="All 2 branches missed.">						if (typyIn == null)</span>
+						{
+<span class="nc" id="L157">							typyIn = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L158">							typyIn.add(nazov);</span>
+<span class="nc" id="L159">							typyInSQL.append(&quot;?&quot;);</span>
+						}
+						else
+						{
+<span class="nc" id="L163">							typyIn.add(nazov);	//pripravim si hodnoty do IN</span>
+<span class="nc" id="L164">							typyInSQL.append(&quot;,?&quot;);</span>
+						}
+					}
+<span class="nc" id="L167">				}</span>
+<span class="nc" id="L168">				typyInSQL.append(&quot;)&quot;);</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">				if (typyIn!=null &amp;&amp; typyIn.size() &gt; 0)</span>
+				{
+<span class="nc" id="L171">					sql.append(typyInSQL);	//pridam IN SQL</span>
+				}
+			}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+			{
+<span class="nc" id="L176">				sql.append(&quot; AND approve = ?&quot;);</span>
+			}
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+			{
+<span class="nc" id="L181">				sql.append(&quot; AND suggest = ?&quot;);</span>
+			}
+<span class="nc" id="L183">			sql.append(&quot; ORDER BY date_from&quot;);</span>
+<span class="nc" id="L184">			Logger.debug(CalendarDB.class, &quot;sql=&quot;+sql.toString());</span>
+<span class="nc" id="L185">			int psIndex = 1;</span>
+<span class="nc" id="L186">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L187">			ps.setTimestamp(psIndex++, new Timestamp(now));</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (end &gt; 0) ps.setTimestamp(psIndex++, new Timestamp(end));</span>
+<span class="nc" id="L189">			Logger.debug(CalendarDB.class, &quot;date_to: &quot; + new Timestamp(end));</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if(i &gt; 0)</span>
+			{
+<span class="nc" id="L192">				ps.setInt(psIndex++, i);</span>
+			}
+<span class="nc bnc" id="L194" title="All 4 branches missed.">			if (typyIn != null &amp;&amp; typyIn.size() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				for(String s: typyIn)</span>
+				{
+<span class="nc" id="L198">					ps.setString(psIndex++, s);	//postupne nastavim hodnoty do IN</span>
+<span class="nc" id="L199">				}</span>
+			}
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+			{
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				int showApprove = &quot;1&quot;.equals(getParamAttribute(&quot;showApprove&quot;, request)) ? 1 : 0;</span>
+<span class="nc" id="L204">				ps.setInt(psIndex++, showApprove);</span>
+			}
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+<span class="nc" id="L207">				ps.setBoolean(psIndex++, (Boolean)request.getAttribute(&quot;suggest&quot;));</span>
+			//if (Tools.isNotEmpty(typyIn)) ps.setString(psIndex++, typyIn);
+<span class="nc" id="L209">			rs = ps.executeQuery();</span>
+			CalendarDetails cal;
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L213">				cal = new CalendarDetails();</span>
+<span class="nc" id="L214">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L215">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L216">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+				try
+				{
+					//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L221" title="All 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+					{
+<span class="nc" id="L223">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">						if (docId &gt; 0)</span>
+						{
+<span class="nc" id="L226">							DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L227">							DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">							if (doc != null)</span>
+							{
+<span class="nc" id="L230">								cal.setDescription(doc.getData());</span>
+							}
+						}
+					}
+				}
+<span class="nc" id="L235">				catch (Exception ex)</span>
+				{
+					//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L238">				}</span>
+
+<span class="nc" id="L240">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L241">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L242">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L243">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L244">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L245">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L246">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L247">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L248">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L249">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L250">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L251">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L252">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L253">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L254">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L255">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L256">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L257">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L258">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L259">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L260">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L261">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+<span class="nc" id="L262">				events.add(cal);</span>
+			}
+
+<span class="nc" id="L265">			rs.close();</span>
+<span class="nc" id="L266">			ps.close();</span>
+<span class="nc" id="L267">			db_conn.close();</span>
+<span class="nc" id="L268">			rs = null;</span>
+<span class="nc" id="L269">			ps = null;</span>
+<span class="nc" id="L270">			db_conn = null;</span>
+		}
+<span class="nc" id="L272">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L274">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L281">					rs.close();</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L283">					ps.close();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L285">					db_conn.close();</span>
+			}
+<span class="nc" id="L287">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L289">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L290">			}</span>
+		}
+
+<span class="nc" id="L293">		return (events);</span>
+	}
+
+	public static CalendarDetails getEvent(int calendarId, HttpServletRequest request)
+	{
+<span class="nc" id="L298">		return getEvent(calendarId);</span>
+	}
+
+	/**
+	 *  Ziska zaznam v kalendari
+	 *
+	 *@param  calendarId
+	 *@param  request
+	 *@return
+	 */
+	public static CalendarDetails getEvent(int calendarId)
+	{
+<span class="nc" id="L310">		CalendarDetails cal = null;</span>
+
+<span class="nc" id="L312">		Connection db_conn = null;</span>
+<span class="nc" id="L313">		PreparedStatement ps = null;</span>
+<span class="nc" id="L314">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L318">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L319">			String sql = &quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND c.calendar_id=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;);</span>
+
+<span class="nc" id="L321">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L322">			ps.setInt(1, calendarId);</span>
+
+<span class="nc" id="L324">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L327">				cal = new CalendarDetails();</span>
+<span class="nc" id="L328">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L329">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L330">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+				try
+				{
+					//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L335" title="All 2 branches missed.">					if (cal.getDescription().length() &lt; 6)</span>
+					{
+<span class="nc" id="L337">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">						if (docId &gt; 0)</span>
+						{
+<span class="nc" id="L340">							DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L341">							DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">							if (doc != null)</span>
+							{
+<span class="nc" id="L344">								cal.setDescription(doc.getData());</span>
+							}
+						}
+					}
+				}
+<span class="nc" id="L349">				catch (Exception ex)</span>
+				{
+					//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L352">				}</span>
+
+<span class="nc" id="L354">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L355">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L356">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L357">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L358">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L359">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L360">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L361">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L362">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L363">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L364">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L365">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L366">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L367">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L368">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L369">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L370">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L371">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L372">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L373">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L374">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L375">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+<span class="nc" id="L376">				cal.setHashString(DB.getDbString(rs, &quot;hash_string&quot;));</span>
+			}
+
+<span class="nc" id="L379">			rs.close();</span>
+<span class="nc" id="L380">			ps.close();</span>
+<span class="nc" id="L381">			db_conn.close();</span>
+<span class="nc" id="L382">			rs = null;</span>
+<span class="nc" id="L383">			ps = null;</span>
+<span class="nc" id="L384">			db_conn = null;</span>
+		}
+<span class="nc" id="L386">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L388">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L394" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L395">					rs.close();</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L397">					ps.close();</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L399">					db_conn.close();</span>
+			}
+<span class="nc" id="L401">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L403">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L404">			}</span>
+		}
+
+<span class="nc" id="L407">		return (cal);</span>
+	}
+
+	/**
+	 * Toto sa vola z crontabu kazdych 10 minut
+	 * @param args
+	 */
+	public static void main(String[] args)
+	{
+		//Logger.println(CalendarDB.class,&quot;CalendarDB.sendNotify()&quot;);
+<span class="pc bpc" id="L417" title="4 of 6 branches missed.">		if(args != null &amp;&amp; args.length &gt; 0 &amp;&amp; Tools.getIntValue(args[0], 3) == 2)</span>
+		{
+<span class="nc" id="L419">			String serverName = &quot;&quot;;</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">			if(args.length &gt; 1)</span>
+<span class="nc" id="L421">				serverName = args[1];</span>
+<span class="nc" id="L422">			sendListEventsNotify(serverName);</span>
+<span class="nc" id="L423">		}else</span>
+<span class="fc" id="L424">			CalendarDB.sendNotify();</span>
+<span class="fc" id="L425">	}</span>
+
+	/**
+	 *  Posle notifikaciu emailom
+	 */
+	public static void sendNotify()
+	{
+<span class="fc" id="L432">		Connection db_conn = null;</span>
+<span class="fc" id="L433">		PreparedStatement ps = null;</span>
+<span class="fc" id="L434">		ResultSet rs = null;</span>
+
+<span class="fc" id="L436">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L437">		Calendar calendar = Calendar.getInstance();</span>
+
+		try
+		{
+<span class="fc" id="L441">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L442">			ps = db_conn.prepareStatement(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.notify_hours_before&lt;&gt;0 AND c.type_id=ct.type_id AND notify_sent=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+<span class="fc" id="L443">			ps.setBoolean(1, false);</span>
+<span class="fc" id="L444">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L445" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L447">				CalendarDetails cal = new CalendarDetails();</span>
+<span class="nc" id="L448">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L449">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L450">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+				try
+				{
+					//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L455" title="All 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+					{
+<span class="nc" id="L457">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">						if (docId &gt; 0)</span>
+						{
+<span class="nc" id="L460">							DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L461">							DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">							if (doc != null)</span>
+							{
+<span class="nc" id="L464">								cal.setDescription(doc.getData());</span>
+							}
+						}
+					}
+				}
+<span class="nc" id="L469">				catch (Exception ex)</span>
+				{
+					//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L472">				}</span>
+
+<span class="nc" id="L474">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L475">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L476">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L477">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L478">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L479">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L480">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L481">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L482">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L483">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L484">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L485">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L486">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L487">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L488">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L489">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L490">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L491">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L492">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L493">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L494">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L495">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+
+<span class="nc" id="L497">				Logger.debug(CalendarDB.class, &quot;sendNotify: testing id=&quot;+cal.getCalendarId());</span>
+
+<span class="nc bnc" id="L499" title="All 6 branches missed.">				if (cal.getNotifyHoursBefore() != 0 &amp;&amp; cal.getNotifyEmails().length() &gt; 1 &amp;&amp; cal.getNotifySender().length() &gt; 1)</span>
+				{
+<span class="nc" id="L501">					calendar.setTime(new java.util.Date(cal.getFrom().getTime()));</span>
+<span class="nc" id="L502">					calendar.add(Calendar.HOUR_OF_DAY, -cal.getNotifyHoursBefore());</span>
+					//?? je to v minulosti?
+
+<span class="nc" id="L505">					Logger.debug(CalendarDB.class, &quot;sendNotify: time=&quot;+Tools.formatDateTime(calendar.getTime().getTime()));</span>
+
+<span class="nc bnc" id="L507" title="All 2 branches missed.">					if (calendar.getTime().getTime() &lt; Tools.getNow())</span>
+					{
+<span class="nc" id="L509">						Logger.debug(CalendarDB.class, &quot;adding: &quot; + cal.getTitle());</span>
+<span class="nc" id="L510">						events.add(cal);</span>
+					}
+				}
+<span class="nc" id="L513">			}</span>
+
+<span class="fc" id="L515">			rs.close();</span>
+<span class="fc" id="L516">			ps.close();</span>
+<span class="fc" id="L517">			db_conn.close();</span>
+<span class="fc" id="L518">			rs = null;</span>
+<span class="fc" id="L519">			ps = null;</span>
+<span class="fc" id="L520">			db_conn = null;</span>
+		}
+<span class="nc" id="L522">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L524">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L530" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L531">					rs.close();</span>
+<span class="pc bpc" id="L532" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L533">					ps.close();</span>
+<span class="pc bpc" id="L534" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L535">					db_conn.close();</span>
+			}
+<span class="nc" id="L537">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L539">			}</span>
+		}
+
+		//preiteruj zaznamy a pre kazdy posli notify
+<span class="pc bpc" id="L543" title="1 of 2 branches missed.">		for (CalendarDetails cal : events)</span>
+		{
+<span class="nc" id="L545">			sendNotifyMail(cal);</span>
+<span class="nc" id="L546">		}</span>
+<span class="fc" id="L547">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  cal  Description of the Parameter
+	 *@return      Description of the Return Value
+	 */
+	private static boolean sendNotifyMail(CalendarDetails cal)
+	{
+<span class="nc" id="L557">		Logger.debug(CalendarDB.class, &quot;sendNotifyEmail: hb=&quot;+cal.getNotifyHoursBefore()+&quot; ne=&quot;+cal.getNotifyEmails()+&quot; se=&quot;+cal.getNotifySender());</span>
+
+<span class="nc bnc" id="L559" title="All 6 branches missed.">		if (cal.getNotifyHoursBefore() != 0 &amp;&amp; cal.getNotifyEmails().length() &gt; 1 &amp;&amp; cal.getNotifySender().length() &gt; 1)</span>
+		{
+<span class="nc" id="L561">			Prop prop = Prop.getInstance(Constants.getServletContext(), cal.getLng(), false);</span>
+<span class="nc" id="L562">			String subject = cal.getTitle();</span>
+
+<span class="nc" id="L564">			StringBuilder body= new StringBuilder(&quot;&lt;html&gt;&lt;head&gt;&lt;style&gt;&quot;);</span>
+
+			try
+			{
+				//nacitaj css styl
+<span class="nc" id="L569">				InputStream is = Constants.getServletContext().getResourceAsStream(&quot;/css/email.css&quot;);</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">				if (is==null)</span>
+				{
+<span class="nc" id="L572">					is = Constants.getServletContext().getResourceAsStream(Constants.getString(&quot;editorPageCss&quot;));</span>
+				}
+<span class="nc bnc" id="L574" title="All 2 branches missed.">				if (is!=null)</span>
+				{
+<span class="nc" id="L576">					BufferedReader br = new BufferedReader(new InputStreamReader(is, Constants.FILE_ENCODING));</span>
+					String line;
+<span class="nc bnc" id="L578" title="All 2 branches missed.">					while ((line=br.readLine())!=null)</span>
+					{
+<span class="nc" id="L580">						body.append(line).append('\n');</span>
+					}
+<span class="nc" id="L582">					br.close();</span>
+				}
+			}
+<span class="nc" id="L585">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L587">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L588">			}</span>
+
+<span class="nc" id="L590">			body.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+
+<span class="nc" id="L592">			body.append(cal.getNotifyIntrotext());</span>
+
+<span class="nc" id="L594">			body.append(&quot;&lt;table&gt;\n&quot;);</span>
+
+<span class="nc" id="L596">			body.append( &quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L597">			body.append( &quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.title&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L598">			body.append( &quot;   &lt;td&gt;&quot;).append(cal.getTitle()).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L599">			body.append( &quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L601">			body.append( &quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L602">			body.append( &quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.begin&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L603">			body.append( &quot;   &lt;td&gt;&quot;).append(cal.getFromString()).append(' ').append(cal.getTimeRange()).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L604">			body.append( &quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L606">			body.append( &quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L607">			body.append( &quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.description&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L608">			body.append( &quot;&lt;td&gt;&quot;).append(cal.getDescription()).append( &quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L609">			body.append( &quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L611">			body.append( &quot;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+
+<span class="nc" id="L613">			StringBuilder smsBody = new StringBuilder(cal.getNotifyIntrotext()).append(' ');</span>
+<span class="nc" id="L614">			smsBody.append(prop.getText(&quot;calendar_edit.begin&quot;)).append(&quot;: &quot;).append(cal.getFromString());</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">			if (Tools.isEmpty(cal.getTimeRange())==false)</span>
+			{
+<span class="nc" id="L617">				smsBody.append(&quot; &quot;).append(cal.getTimeRange());</span>
+			}
+<span class="nc" id="L619">			smsBody.append(prop.getText(&quot;calendar_edit.title&quot;)).append(&quot;: &quot;).append(cal.getTitle());</span>
+
+<span class="nc" id="L621">			StringTokenizer st = new StringTokenizer(cal.getNotifyEmails(), &quot;,&quot;);</span>
+			String toEmail;
+<span class="nc" id="L623">			String fromName = getName(cal.getNotifySender());</span>
+<span class="nc" id="L624">			String fromEmail = getEmail(cal.getNotifySender());</span>
+<span class="nc" id="L625">			UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+			UserGroupDetails userGroupDetails;
+<span class="nc" id="L627">			Map&lt;String, String&gt; allreadySent = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L628" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L630">				toEmail = st.nextToken().trim();</span>
+
+<span class="nc" id="L632">				Logger.debug(CalendarDB.class, &quot;sendNotifyEmail: sending to: &quot;+toEmail);</span>
+
+<span class="nc" id="L634">				userGroupDetails = userGroupsDB.getUserGroup(toEmail);</span>
+<span class="nc bnc" id="L635" title="All 4 branches missed.">				if (toEmail.indexOf('@') != -1 &amp;&amp; userGroupDetails==null)</span>
+				{
+<span class="nc bnc" id="L637" title="All 2 branches missed.">					if (allreadySent.get(toEmail)==null)</span>
+					{
+<span class="nc" id="L639">						SendMail.send(fromName, fromEmail, toEmail, subject, body.toString());</span>
+
+<span class="nc" id="L641">						allreadySent.put(toEmail, toEmail);</span>
+					}
+				}
+				else
+				{
+					//je to asi meno skupiny, ktorym to ma ist
+<span class="nc bnc" id="L647" title="All 2 branches missed.">					if (userGroupDetails != null)</span>
+					{
+						//nacitaj zoznam ludi z danej skupiny
+<span class="nc bnc" id="L650" title="All 2 branches missed.">						for (UserDetails usr : UsersDB.getUsersByGroup(userGroupDetails.getUserGroupId()))</span>
+						{
+<span class="nc" id="L652">							toEmail = usr.getEmail();</span>
+<span class="nc bnc" id="L653" title="All 4 branches missed.">							if (toEmail.indexOf('@') != -1 &amp;&amp; allreadySent.get(toEmail)==null)</span>
+							{
+<span class="nc" id="L655">									Logger.println(CalendarDB.class,&quot;SENDING TO BY GROUP: &quot; + toEmail + &quot; &quot; + usr.getFullName());</span>
+<span class="nc" id="L656">									SendMail.send(fromName, fromEmail, toEmail, subject, body.toString());</span>
+<span class="nc" id="L657">									allreadySent.put(toEmail, toEmail);</span>
+							}
+<span class="nc" id="L659">						}</span>
+					}
+				}
+			}
+
+			//oznac zaznam za odoslany
+<span class="nc" id="L665">			Connection db_conn = null;</span>
+<span class="nc" id="L666">			PreparedStatement ps = null;</span>
+			try
+			{
+<span class="nc" id="L669">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L670">				ps = db_conn.prepareStatement(&quot;UPDATE calendar SET notify_sent=? WHERE calendar_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L671">				ps.setBoolean(1, true);</span>
+<span class="nc" id="L672">				ps.setInt(2, cal.getCalendarId());</span>
+<span class="nc" id="L673">				ps.execute();</span>
+
+<span class="nc" id="L675">				ps.close();</span>
+<span class="nc" id="L676">				db_conn.close();</span>
+<span class="nc" id="L677">				ps = null;</span>
+<span class="nc" id="L678">				db_conn = null;</span>
+			}
+<span class="nc" id="L680">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L682">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L688" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L689">						ps.close();</span>
+<span class="nc bnc" id="L690" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L691">						db_conn.close();</span>
+				}
+<span class="nc" id="L693">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L695">				}</span>
+			}
+
+		}
+<span class="nc" id="L699">		return (false);</span>
+	}
+
+	/**
+	 *  Vrati meno zo stringu typu Peter Weber &lt;peter@weber.sk&gt;
+	 *
+	 *@param  from  Description of the Parameter
+	 *@return       The email value
+	 */
+	public static String getEmail(String from)
+	{
+		//OK todo: checek ci from neobsahuje nieco ako: &quot;aaa&lt;b&gt;4444&lt;/b&gt;bbb&quot; &lt;miba@interway.sk&gt;
+
+		try
+		{
+<span class="nc bnc" id="L714" title="All 2 branches missed.">			if (from == null)</span>
+			{
+<span class="nc" id="L716">				return (&quot;&quot;);</span>
+			}
+<span class="nc" id="L718">			int begin = from.lastIndexOf('&lt;');</span>
+<span class="nc" id="L719">			int end = from.lastIndexOf('&gt;');</span>
+
+<span class="nc bnc" id="L721" title="All 2 branches missed.">			if (begin &lt; 0)</span>
+			{
+<span class="nc" id="L723">				return (from);</span>
+			}
+<span class="nc bnc" id="L725" title="All 2 branches missed.">			if (end &lt; begin)</span>
+			{
+<span class="nc" id="L727">				return (from);</span>
+			}
+
+<span class="nc" id="L730">			return (from.substring(begin + 1, end).trim());</span>
+		}
+<span class="nc" id="L732">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L734">			return from;</span>
+		}
+	}
+
+	/**
+	 *  Vrati email zo stringu typu Peter Weber &lt;peter@weber.sk&gt;
+	 *
+	 *@param  from  Description of the Parameter
+	 *@return       The name value
+	 */
+	public static String getName(String from)
+	{
+		try
+		{
+<span class="nc bnc" id="L748" title="All 2 branches missed.">			if (from == null)</span>
+			{
+<span class="nc" id="L750">				return (&quot;&quot;);</span>
+			}
+<span class="nc" id="L752">			int begin = from.indexOf('&lt;');</span>
+<span class="nc bnc" id="L753" title="All 2 branches missed.">			if (begin &lt; 0)</span>
+			{
+<span class="nc" id="L755">				return (from);</span>
+			}
+
+<span class="nc" id="L758">			return (from.substring(0, begin).trim());</span>
+		}
+<span class="nc" id="L760">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L762">			return from;</span>
+		}
+	}
+
+	/**
+	 * Vrati meniny pre dany jazyk a dnovy posun
+	 * @param lng - jazyk
+	 * @param offset - pocet dni posunu
+	 * @return
+	 */
+	public static String getMeniny(String lng, int offset)
+	{
+<span class="nc" id="L774">		String name = &quot;&quot;;</span>
+
+<span class="nc" id="L776">		Connection db_conn = null;</span>
+<span class="nc" id="L777">		PreparedStatement ps = null;</span>
+<span class="nc" id="L778">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L781">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc bnc" id="L782" title="All 2 branches missed.">			if (offset != 0)</span>
+			{
+<span class="nc" id="L784">				cal.add(Calendar.DAY_OF_YEAR, offset);</span>
+			}
+
+			//Logger.println(this,&quot;meniny: &quot; + cal.get(Calendar.DAY_OF_MONTH) + &quot;.&quot;+(cal.get(Calendar.MONTH) + 1)+&quot; [&quot;+lng);
+
+<span class="nc" id="L789">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L790">			ps = db_conn.prepareStatement(&quot;SELECT * FROM calendar_name_in_year WHERE lng=? AND day=? AND month=?&quot;);</span>
+<span class="nc" id="L791">			ps.setString(1, lng);</span>
+<span class="nc" id="L792">			ps.setInt(2, cal.get(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L793">			ps.setInt(3, cal.get(Calendar.MONTH) + 1);</span>
+<span class="nc" id="L794">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L795" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L797">				name = DB.getDbString(rs, &quot;name&quot;);</span>
+			}
+
+<span class="nc" id="L800">			rs.close();</span>
+<span class="nc" id="L801">			ps.close();</span>
+<span class="nc" id="L802">			db_conn.close();</span>
+<span class="nc" id="L803">			rs = null;</span>
+<span class="nc" id="L804">			ps = null;</span>
+<span class="nc" id="L805">			db_conn = null;</span>
+		}
+<span class="nc" id="L807">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L809">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L815" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L816">					db_conn.close();</span>
+<span class="nc bnc" id="L817" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L818">					rs.close();</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L820">					ps.close();</span>
+			}
+<span class="nc" id="L822">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L824">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L825">			}</span>
+		}
+
+<span class="nc" id="L828">		return(name);</span>
+	}
+
+	/**
+	 * Vrati zoznam pozvanok so stavmi pre zadany zaznam kalendara
+	 * @param calendarId
+	 * @return
+	 */
+	public static List&lt;CalendarInvitationDetails&gt; getInvitations(int calendarId)
+	{
+<span class="nc" id="L838">		List&lt;CalendarInvitationDetails&gt; invitations = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L840">		Connection db_conn = null;</span>
+<span class="nc" id="L841">		PreparedStatement ps = null;</span>
+<span class="nc" id="L842">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L845">			String sql = &quot;SELECT u.*, i.calendar_invitation_id, i.calendar_id, i.sent_date, i.status_date, i.status FROM users u, calendar_invitation i WHERE u.user_id=i.user_id AND i.calendar_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true)+&quot; ORDER BY last_name&quot;;</span>
+
+<span class="nc" id="L847">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L848">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L849">			ps.setInt(1, calendarId);</span>
+<span class="nc" id="L850">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L853">				CalendarInvitationDetails inv = new CalendarInvitationDetails();</span>
+<span class="nc" id="L854">				fillCalendarInvitation(rs, inv);</span>
+<span class="nc" id="L855">				invitations.add(inv);</span>
+<span class="nc" id="L856">			}</span>
+<span class="nc" id="L857">			rs.close();</span>
+<span class="nc" id="L858">			ps.close();</span>
+<span class="nc" id="L859">			db_conn.close();</span>
+<span class="nc" id="L860">			rs = null;</span>
+<span class="nc" id="L861">			ps = null;</span>
+<span class="nc" id="L862">			db_conn = null;</span>
+		}
+<span class="nc" id="L864">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L866">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L872" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L873">					rs.close();</span>
+<span class="nc bnc" id="L874" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L875">					ps.close();</span>
+<span class="nc bnc" id="L876" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L877">					db_conn.close();</span>
+			}
+<span class="nc" id="L879">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L881">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L882">			}</span>
+		}
+
+<span class="nc" id="L885">		return(invitations);</span>
+	}
+
+	/**
+	 * Vrati pozvanku so zadanym ID
+	 * @param calendarInvitationId
+	 * @return
+	 */
+	public static CalendarInvitationDetails getInvitation(int calendarInvitationId)
+	{
+<span class="nc" id="L895">		CalendarInvitationDetails inv = null;</span>
+<span class="nc" id="L896">		Connection db_conn = null;</span>
+<span class="nc" id="L897">		PreparedStatement ps = null;</span>
+<span class="nc" id="L898">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L901">			String sql = &quot;SELECT u.*, i.calendar_invitation_id, i.calendar_id, i.sent_date, i.status_date, i.status FROM users u, calendar_invitation i WHERE u.user_id=i.user_id AND i.calendar_invitation_id=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+
+<span class="nc" id="L903">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L904">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L905">			ps.setInt(1, calendarInvitationId);</span>
+<span class="nc" id="L906">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L907" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L909">				inv = new CalendarInvitationDetails();</span>
+<span class="nc" id="L910">				fillCalendarInvitation(rs, inv);</span>
+			}
+<span class="nc" id="L912">			rs.close();</span>
+<span class="nc" id="L913">			ps.close();</span>
+<span class="nc" id="L914">			db_conn.close();</span>
+<span class="nc" id="L915">			rs = null;</span>
+<span class="nc" id="L916">			ps = null;</span>
+<span class="nc" id="L917">			db_conn = null;</span>
+		}
+<span class="nc" id="L919">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L921">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L927" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L928">					rs.close();</span>
+<span class="nc bnc" id="L929" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L930">					ps.close();</span>
+<span class="nc bnc" id="L931" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L932">					db_conn.close();</span>
+			}
+<span class="nc" id="L934">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L936">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L937">			}</span>
+		}
+
+<span class="nc" id="L940">		return(inv);</span>
+	}
+
+	/**
+	 * Naplni CalendarInvitationDetails z resultsetu
+	 * @param rs
+	 * @param inv
+	 */
+	private static void fillCalendarInvitation(ResultSet rs, CalendarInvitationDetails inv) throws SQLException
+	{
+<span class="nc" id="L950">		inv.setCalendarInvitationId(rs.getInt(&quot;calendar_invitation_id&quot;));</span>
+<span class="nc" id="L951">		inv.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L952">		inv.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L953">		Timestamp t = rs.getTimestamp(&quot;sent_date&quot;);</span>
+<span class="nc bnc" id="L954" title="All 2 branches missed.">		if (t!=null) inv.setSentDate(new java.util.Date(t.getTime()));</span>
+<span class="nc" id="L955">		t = rs.getTimestamp(&quot;status_date&quot;);</span>
+<span class="nc bnc" id="L956" title="All 2 branches missed.">		if (t!=null) inv.setStatusDate(new java.util.Date(t.getTime()));</span>
+<span class="nc" id="L957">		inv.setStatus(DB.getDbString(rs, &quot;status&quot;));</span>
+
+		//napln user details
+		try
+		{
+<span class="nc" id="L962">			inv.setUser(new UserDetails(rs));</span>
+		}
+<span class="nc" id="L964">		catch (Exception e)</span>
+		{
+<span class="nc" id="L966">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L967">		}</span>
+<span class="nc" id="L968">	}</span>
+
+	/**
+	 * Aktualizuje stav pozvanky, status je char(1) a mal by mat hodnoty:
+	 * -=nenastavene
+	 * A=accepted
+	 * D=declined
+	 * T=tentative
+	 * @param calendarInvitationId
+	 * @param status
+	 */
+	public static boolean setCalendarInvitationStatus(int calendarInvitationId, String status)
+	{
+<span class="nc" id="L981">		boolean saveOK = false;</span>
+<span class="nc" id="L982">		Connection db_conn = null;</span>
+<span class="nc" id="L983">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L986">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L987">			ps = db_conn.prepareStatement(&quot;UPDATE calendar_invitation SET status_date=?, status=? WHERE calendar_invitation_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L988">			ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L989">			ps.setString(2, status);</span>
+<span class="nc" id="L990">			ps.setInt(3, calendarInvitationId);</span>
+<span class="nc" id="L991">			ps.execute();</span>
+<span class="nc" id="L992">			ps.close();</span>
+
+<span class="nc" id="L994">			saveOK = true;</span>
+
+<span class="nc" id="L996">			db_conn.close();</span>
+<span class="nc" id="L997">			ps = null;</span>
+<span class="nc" id="L998">			db_conn = null;</span>
+		}
+<span class="nc" id="L1000">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1002">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1009">					ps.close();</span>
+<span class="nc bnc" id="L1010" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1011">					db_conn.close();</span>
+			}
+<span class="nc" id="L1013">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1015">			}</span>
+		}
+<span class="nc" id="L1017">		return(saveOK);</span>
+	}
+
+	/**
+	 * vrati pozvanku podla uzivatela
+	 * @param calendarId
+	 * @param userId
+	 * @return
+	 */
+	public static CalendarInvitationDetails getInvitationByUser(int calendarId, int userId)
+	{
+<span class="nc" id="L1028">		Connection db_conn = null;</span>
+<span class="nc" id="L1029">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1030">		ResultSet rs = null;</span>
+<span class="nc" id="L1031">		CalendarInvitationDetails inv = null;</span>
+		try
+		{
+<span class="nc" id="L1034">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1035">			ps = db_conn.prepareStatement(&quot;SELECT * FROM calendar_invitation WHERE calendar_id = ? AND user_id=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1036">			ps.setInt(1, calendarId);</span>
+<span class="nc" id="L1037">			ps.setInt(2, userId);</span>
+<span class="nc" id="L1038">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1039" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L1041">				inv = new CalendarInvitationDetails();</span>
+<span class="nc" id="L1042">				inv.setCalendarInvitationId(rs.getInt(&quot;calendar_invitation_id&quot;));</span>
+<span class="nc" id="L1043">				inv.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L1044">				inv.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L1045">				Timestamp t = rs.getTimestamp(&quot;sent_date&quot;);</span>
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">				if (t!=null) inv.setSentDate(new java.util.Date(t.getTime()));</span>
+<span class="nc" id="L1047">				t = rs.getTimestamp(&quot;status_date&quot;);</span>
+<span class="nc bnc" id="L1048" title="All 2 branches missed.">				if (t!=null) inv.setStatusDate(new java.util.Date(t.getTime()));</span>
+<span class="nc" id="L1049">				inv.setStatus(DB.getDbString(rs, &quot;status&quot;));</span>
+<span class="nc" id="L1050">				inv.setUser(UsersDB.getUser(userId));</span>
+			}
+<span class="nc" id="L1052">			rs.close();</span>
+<span class="nc" id="L1053">			ps.close();</span>
+<span class="nc" id="L1054">			db_conn.close();</span>
+<span class="nc" id="L1055">			rs = null;</span>
+<span class="nc" id="L1056">			ps = null;</span>
+<span class="nc" id="L1057">			db_conn = null;</span>
+		}
+<span class="nc" id="L1059">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1061">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1068">					rs.close();</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1070">					ps.close();</span>
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1072">					db_conn.close();</span>
+			}
+<span class="nc" id="L1074">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1076">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1077">			}</span>
+		}
+
+<span class="nc" id="L1080">		return inv;</span>
+	}
+
+	/**
+	 * vrati vsetky akceptovane pozvanky na zaklade calendarId
+	 * @param calendarId
+	 * @return
+	 */
+	public static List&lt;CalendarInvitationDetails&gt; getAllAcceptedInvitations(int calendarId)
+	{
+<span class="nc" id="L1090">		List&lt;CalendarInvitationDetails&gt; alCalNew = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1091">		List&lt;CalendarInvitationDetails&gt; alCal = getInvitations(calendarId);</span>
+<span class="nc bnc" id="L1092" title="All 2 branches missed.">		if(alCal.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L1094" title="All 2 branches missed.">			for (int i = 0; i &lt; alCal.size(); i++)</span>
+			{
+<span class="nc" id="L1096">				CalendarInvitationDetails inv = alCal.get(i);</span>
+<span class="nc bnc" id="L1097" title="All 2 branches missed.">				if(inv.getStatus().equals(&quot;A&quot;))</span>
+<span class="nc" id="L1098">					alCalNew.add(inv);</span>
+			}
+		}
+
+<span class="nc" id="L1102">		return alCalNew;</span>
+	}
+
+	/**
+	 * ulozi pozvanku do DB (bez poslania mailu)
+	 * @param calendarId
+	 * @param userId
+	 * @return
+	 */
+	public static boolean saveCalendarInvitation(int calendarId, int userId)
+	{
+<span class="nc" id="L1113">		Connection db_conn = null;</span>
+<span class="nc" id="L1114">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1117">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1118">			ps = db_conn.prepareStatement(&quot;INSERT INTO calendar_invitation (calendar_id, user_id, sent_date, status, domain_id) VALUES (?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L1119">			int psIndex = 1;</span>
+<span class="nc" id="L1120">			ps.setInt(psIndex++, calendarId);</span>
+<span class="nc" id="L1121">			ps.setInt(psIndex++, userId);</span>
+<span class="nc" id="L1122">			ps.setTimestamp(psIndex++, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L1123">			ps.setString(psIndex++, &quot;-&quot;);</span>
+<span class="nc" id="L1124">			ps.setInt(psIndex++, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L1125">			ps.execute();</span>
+<span class="nc" id="L1126">			ps.close();</span>
+<span class="nc" id="L1127">			db_conn.close();</span>
+<span class="nc" id="L1128">			ps = null;</span>
+<span class="nc" id="L1129">			db_conn = null;</span>
+		}
+<span class="nc" id="L1131">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1133">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1134">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1140" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1141">					ps.close();</span>
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1143">					db_conn.close();</span>
+			}
+<span class="nc" id="L1145">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1147">			}</span>
+		}
+
+<span class="nc" id="L1150">		return true;</span>
+	}
+
+	/**
+	 * napni CalendarDetails
+	 * @param rs
+	 * @return
+	 */
+	private static CalendarDetails fillCalendarDetails(ResultSet rs)
+	{
+<span class="nc" id="L1160">		CalendarDetails cal = new CalendarDetails();</span>
+		try
+		{
+<span class="nc" id="L1163">			cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L1164">			cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1165">			cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+			try
+			{
+				//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L1170" title="All 4 branches missed.">				if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+				{
+<span class="nc" id="L1172">					int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L1173" title="All 2 branches missed.">					if (docId &gt; 0)</span>
+					{
+<span class="nc" id="L1175">						DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L1176">						DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L1177" title="All 2 branches missed.">						if (doc != null)</span>
+						{
+<span class="nc" id="L1179">							cal.setDescription(doc.getData());</span>
+						}
+					}
+				}
+			}
+<span class="nc" id="L1184">			catch (Exception ex)</span>
+			{
+				//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L1187">			}</span>
+
+<span class="nc" id="L1189">			cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L1190">			cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L1191">			cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L1192">			cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L1193">			cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L1194">			cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L1195">			cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L1196">			cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L1197">			cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L1198">			cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L1199">			cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L1200">			cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L1201">			cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L1202">			cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L1203">			cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L1204">			cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L1205">			cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L1206">			cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L1207">			cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L1208">			cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L1209">			cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L1210">			cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+		}
+<span class="nc" id="L1212">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1214">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1215">		}</span>
+<span class="nc" id="L1216">		return cal;</span>
+	}
+
+	/**
+	 * vrati vsetky neschvalene udalosti ktore ma user s userId schvalit
+	 * @param request
+	 * @param userId
+	 * @param schvalene
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getNotApprovedEvents(int userId)
+	{
+<span class="nc" id="L1228">		Connection db_conn = null;</span>
+<span class="nc" id="L1229">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1230">		ResultSet rs = null;</span>
+<span class="nc" id="L1231">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L1234">			Map&lt;Integer, EventTypeDetails&gt; eventTypes = EventTypeDB.getTypeBySchvalovatelId(userId);</span>
+<span class="nc bnc" id="L1235" title="All 2 branches missed.">			if(eventTypes.size() &lt; 1)</span>
+<span class="nc" id="L1236">				return result;</span>
+<span class="nc" id="L1237">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1238">			ps = db_conn.prepareStatement(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND (c.approve = ? OR c.approve = ?)&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+<span class="nc" id="L1239">			ps.setInt(1, -1);</span>
+<span class="nc" id="L1240">			ps.setInt(2, 0);</span>
+<span class="nc" id="L1241">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1242" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1244">				int typeId = rs.getInt(&quot;type_id&quot;);</span>
+<span class="nc bnc" id="L1245" title="All 2 branches missed.">				if(eventTypes.containsKey(Integer.valueOf(typeId)))</span>
+<span class="nc" id="L1246">							result.add(fillCalendarDetails(rs));</span>
+<span class="nc" id="L1247">			}</span>
+<span class="nc" id="L1248">			rs.close();</span>
+<span class="nc" id="L1249">			ps.close();</span>
+<span class="nc" id="L1250">			db_conn.close();</span>
+<span class="nc" id="L1251">			rs = null;</span>
+<span class="nc" id="L1252">			ps = null;</span>
+<span class="nc" id="L1253">			db_conn = null;</span>
+		}
+<span class="nc" id="L1255">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1257">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1263" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1264">					rs.close();</span>
+<span class="nc bnc" id="L1265" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1266">					ps.close();</span>
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1268">					db_conn.close();</span>
+			}
+<span class="nc" id="L1270">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1272">			}</span>
+		}
+
+<span class="nc" id="L1275">		return result;</span>
+	}
+
+	/**
+	 * vrati vsetky uzivatelove udalosti
+	 * @param userId
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getEventsByUserId(int userId)
+	{
+<span class="nc" id="L1285">		Connection db_conn = null;</span>
+<span class="nc" id="L1286">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1287">		ResultSet rs = null;</span>
+<span class="nc" id="L1288">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L1291">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1292">			ps = db_conn.prepareStatement(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND c.creator_id = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+<span class="nc" id="L1293">			ps.setInt(1, userId);</span>
+<span class="nc" id="L1294">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1295" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1297">				result.add(fillCalendarDetails(rs));</span>
+			}
+<span class="nc" id="L1299">			rs.close();</span>
+<span class="nc" id="L1300">			ps.close();</span>
+<span class="nc" id="L1301">			db_conn.close();</span>
+<span class="nc" id="L1302">			rs = null;</span>
+<span class="nc" id="L1303">			ps = null;</span>
+<span class="nc" id="L1304">			db_conn = null;</span>
+		}
+<span class="nc" id="L1306">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1308">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1314" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1315">					rs.close();</span>
+<span class="nc bnc" id="L1316" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1317">					ps.close();</span>
+<span class="nc bnc" id="L1318" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1319">					db_conn.close();</span>
+			}
+<span class="nc" id="L1321">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1323">			}</span>
+		}
+
+<span class="nc" id="L1326">		return result;</span>
+	}
+
+	public static boolean saveEventToDB(EventForm event)
+	{
+<span class="nc" id="L1331">		Connection db_conn = null;</span>
+<span class="nc" id="L1332">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1335">			Prop prop = Prop.getInstance(Constants.getServletContext(), event.getLng(), false);</span>
+<span class="nc" id="L1336">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1337">			String sql = &quot;INSERT INTO calendar (title, date_from, date_to, type_id, description, time_range, area, city, address, info_1, info_2, info_3, info_4, info_5, notify_hours_before, notify_emails, notify_sender, notify_introtext, notify_sendsms, lng, creator_id, approve, suggest, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L1338">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1339">			DB.setClob(ps, 1, event.getTitle());</span>
+<span class="nc bnc" id="L1340" title="All 2 branches missed.">			if (event.getDateFrom().length()&gt;12)</span>
+			{
+<span class="nc" id="L1342">				ps.setTimestamp(2, new Timestamp(DB.getTimestamp(event.getDateFrom())));</span>
+			}
+			else
+			{
+<span class="nc" id="L1346">				ps.setDate(2, new java.sql.Date(DB.getTimestamp(event.getDateFrom(), &quot;01:01&quot;)));</span>
+			}
+<span class="nc bnc" id="L1348" title="All 2 branches missed.">			if (event.getDateTo().length()&gt;12)</span>
+			{
+<span class="nc" id="L1350">				ps.setTimestamp(3, new Timestamp(DB.getTimestamp(event.getDateTo())));</span>
+			}
+			else
+			{
+<span class="nc" id="L1354">				ps.setDate(3, new java.sql.Date(DB.getTimestamp(event.getDateTo(), &quot;23:59&quot;)));</span>
+			}
+<span class="nc" id="L1356">			ps.setInt(4, event.getTypeId());</span>
+<span class="nc" id="L1357">			DB.setClob(ps, 5, event.getDescription());</span>
+<span class="nc" id="L1358">			ps.setString(6, event.getTimeRange());</span>
+<span class="nc" id="L1359">			ps.setString(7, event.getArea());</span>
+<span class="nc" id="L1360">			ps.setString(8, event.getCity());</span>
+<span class="nc" id="L1361">			ps.setString(9, event.getAddress());</span>
+<span class="nc" id="L1362">			ps.setString(10, event.getInfo1());</span>
+<span class="nc" id="L1363">			ps.setString(11, event.getInfo2());</span>
+<span class="nc" id="L1364">			ps.setString(12, event.getInfo3());</span>
+<span class="nc" id="L1365">			ps.setString(13, event.getInfo4());</span>
+<span class="nc" id="L1366">			ps.setString(14, event.getInfo5());</span>
+<span class="nc" id="L1367">			ps.setInt(15, event.getNotifyHoursBefore());</span>
+<span class="nc" id="L1368">			ps.setString(16, event.getNotifyEmails());</span>
+<span class="nc" id="L1369">			ps.setString(17, event.getNotifySender());</span>
+<span class="nc" id="L1370">			DB.setClob(ps, 18, event.getNotifyIntrotext());</span>
+<span class="nc" id="L1371">			ps.setBoolean(19, event.isNotifySendSMS());</span>
+<span class="nc" id="L1372">			ps.setString(20, event.getLng());</span>
+<span class="nc" id="L1373">			ps.setInt(21, event.getCreatorId());</span>
+<span class="nc" id="L1374">			ps.setInt(22, event.getApprove());</span>
+<span class="nc" id="L1375">			ps.setBoolean(23, false);</span>
+<span class="nc" id="L1376">			ps.setInt(24, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L1377">			ps.execute();</span>
+<span class="nc" id="L1378">			ps.close();</span>
+
+<span class="nc bnc" id="L1380" title="All 2 branches missed.">			if (event.getCalendarId()&lt;1)</span>
+			{
+				//ziskaj ID z db
+<span class="nc" id="L1383">				ps = db_conn.prepareStatement(&quot;SELECT max(calendar_id) as calendar_id FROM calendar WHERE title=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1384">				ps.setString(1, event.getTitle());</span>
+<span class="nc" id="L1385">				ResultSet rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1386" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L1388">					event.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+				}
+<span class="nc" id="L1390">				rs.close();</span>
+<span class="nc" id="L1391">				ps.close();</span>
+			}
+
+<span class="nc" id="L1394">			db_conn.close();</span>
+<span class="nc" id="L1395">			ps = null;</span>
+<span class="nc" id="L1396">			db_conn = null;</span>
+
+
+			// v pripade ze treba dat schvalit udalost posli mail schvalovatelovi
+<span class="nc" id="L1400">			UserDetails creator = UsersDB.getUser(event.getCreatorId());</span>
+<span class="nc bnc" id="L1401" title="All 2 branches missed.">			if(creator != null)</span>
+			{
+<span class="nc" id="L1403">				EventTypeDetails eventType = EventTypeDB.getTypeById(event.getTypeId());</span>
+				// posli iba v pripade, ze treba schvalit
+<span class="nc bnc" id="L1405" title="All 2 branches missed.">				if(event.getApprove() == -1)</span>
+				{
+<span class="nc" id="L1407">					UserDetails schvalovatel = UsersDB.getUser(eventType.getSchvalovatelId());</span>
+<span class="nc bnc" id="L1408" title="All 4 branches missed.">					if(eventType == null || schvalovatel == null)</span>
+<span class="nc" id="L1409">						return false;</span>
+					//pokial schvalovatel a tvorca akcie je ten isty, tak nastav akciu za schvalenu
+<span class="nc bnc" id="L1411" title="All 2 branches missed.">					if(schvalovatel.getUserId() == creator.getUserId())</span>
+					{
+<span class="nc" id="L1413">						boolean saveOk = CalendarDB.saveApproveStatus(event.getCalendarId(), 1, false);</span>
+<span class="nc bnc" id="L1414" title="All 2 branches missed.">						if(saveOk == false)</span>
+<span class="nc" id="L1415">							return false;</span>
+<span class="nc" id="L1416">					}</span>
+					else
+					{
+<span class="nc" id="L1419">						String datumAkcie = &quot;&quot;;</span>
+<span class="nc bnc" id="L1420" title="All 2 branches missed.">						if(Tools.isNotEmpty(event.getDateFrom()))</span>
+<span class="nc" id="L1421">							datumAkcie = event.getDateFrom();</span>
+<span class="nc bnc" id="L1422" title="All 2 branches missed.">						if(Tools.isNotEmpty(event.getDateTo()))</span>
+<span class="nc" id="L1423">							datumAkcie = datumAkcie.concat(&quot; - &quot;+event.getDateTo());</span>
+<span class="nc bnc" id="L1424" title="All 2 branches missed.">						if(Tools.isNotEmpty(event.getTimeRange()))</span>
+<span class="nc" id="L1425">							datumAkcie = datumAkcie.concat(&quot; o &quot;+event.getTimeRange());</span>
+<span class="nc" id="L1426">						StringBuilder emailClientData=new StringBuilder();</span>
+<span class="nc" id="L1427">						emailClientData.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L1428">						emailClientData.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L1429">						emailClientData.append(&quot;body{&quot;);</span>
+<span class="nc" id="L1430">						emailClientData.append(&quot;font-family: Arial;&quot;);</span>
+<span class="nc" id="L1431">						emailClientData.append(&quot;font-size: 11pt;&quot;);</span>
+<span class="nc" id="L1432">						emailClientData.append('}');</span>
+<span class="nc" id="L1433">						emailClientData.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L1434">						emailClientData.append(prop.getText(&quot;calendar.vytvoril_akciu&quot;, creator.getFullName(), event.getTitle(), datumAkcie));</span>
+<span class="nc" id="L1435">						emailClientData.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L1436">						boolean saveOk = SendMail.send(creator.getFullName(), creator.getEmailAddress(), schvalovatel.getEmailAddress(), prop.getText(&quot;calendar.na_schvalenie&quot;), emailClientData.toString());</span>
+<span class="nc bnc" id="L1437" title="All 2 branches missed.">						if(saveOk == false)</span>
+<span class="nc" id="L1438">							return false;</span>
+					}
+				}
+<span class="nc" id="L1441">			}else</span>
+<span class="nc" id="L1442">				return false;</span>
+			//****************************************
+		}
+<span class="nc" id="L1445">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1447">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1448">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1454" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1455">					ps.close();</span>
+<span class="nc bnc" id="L1456" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1457">					db_conn.close();</span>
+			}
+<span class="nc" id="L1459">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1461">			}</span>
+		}
+
+<span class="nc" id="L1464">		return true;</span>
+	}
+
+	/**
+	 * nastavi status udalosti o jej schvaleni/neschvaleni
+	 * @param eventId
+	 * @param status
+	 * @param sendEmail - ak je false, tak sa neposle mail o schvaleni/meschvaleni udalosti
+	 * @return
+	 */
+	public static boolean saveApproveStatus(int eventId, int status, boolean sendEmail)
+	{
+<span class="nc" id="L1476">		Connection db_conn = null;</span>
+<span class="nc" id="L1477">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1480">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1481">			ps = db_conn.prepareStatement(&quot;UPDATE calendar SET approve = ? WHERE calendar_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1482">			ps.setInt(1, status);</span>
+<span class="nc" id="L1483">			ps.setInt(2, eventId);</span>
+<span class="nc" id="L1484">			ps.execute();</span>
+<span class="nc" id="L1485">			ps.close();</span>
+<span class="nc" id="L1486">			db_conn.close();</span>
+<span class="nc" id="L1487">			ps = null;</span>
+<span class="nc" id="L1488">			db_conn = null;</span>
+
+			//poslat mail tvorcovi udalosti o statuse
+<span class="nc" id="L1491">			CalendarDetails event = CalendarDB.getEvent(eventId);</span>
+<span class="nc" id="L1492">			UserDetails creator = UsersDB.getUser(event.getCreatorId());</span>
+<span class="nc bnc" id="L1493" title="All 4 branches missed.">			if(event != null &amp;&amp; creator != null)</span>
+			{
+<span class="nc" id="L1495">				EventTypeDetails eventType = EventTypeDB.getTypeById(event.getTypeId());</span>
+<span class="nc" id="L1496">				UserDetails schvalovatel = UsersDB.getUser(eventType.getSchvalovatelId());</span>
+<span class="nc" id="L1497">				Prop prop = Prop.getInstance(Constants.getServletContext(), event.getLng(), false);</span>
+<span class="nc bnc" id="L1498" title="All 4 branches missed.">				if(eventType == null || schvalovatel == null)</span>
+<span class="nc" id="L1499">					return false;</span>
+<span class="nc" id="L1500">				String statusString = &quot;&quot;;</span>
+<span class="nc bnc" id="L1501" title="All 2 branches missed.">				if(event.getApprove() == 1)</span>
+<span class="nc" id="L1502">					statusString = prop.getText(&quot;calendar.schvalena&quot;);</span>
+<span class="nc bnc" id="L1503" title="All 2 branches missed.">				else if(event.getApprove() == 0)</span>
+<span class="nc" id="L1504">					statusString = prop.getText(&quot;calendar.neschvalena&quot;);</span>
+
+<span class="nc" id="L1506">				String datumAkcie = &quot;&quot;;</span>
+<span class="nc bnc" id="L1507" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getFromString()))</span>
+<span class="nc" id="L1508">					datumAkcie = event.getFromString();</span>
+<span class="nc bnc" id="L1509" title="All 4 branches missed.">				if(Tools.isNotEmpty(event.getToString()) &amp;&amp; event.getToString().trim().equals(event.getFromString().trim()) == false)</span>
+<span class="nc" id="L1510">					datumAkcie = datumAkcie.concat(&quot; - &quot;+event.getToString());</span>
+<span class="nc bnc" id="L1511" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getTimeRange()))</span>
+<span class="nc" id="L1512">					datumAkcie = datumAkcie.concat(&quot; o &quot;+event.getTimeRange());</span>
+<span class="nc" id="L1513">				StringBuilder emailClientData=new StringBuilder(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L1514">				emailClientData.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L1515">				emailClientData.append(&quot;body{&quot;);</span>
+<span class="nc" id="L1516">				emailClientData.append(&quot;font-family: Arial;&quot;);</span>
+<span class="nc" id="L1517">				emailClientData.append(&quot;font-size: 11pt;&quot;);</span>
+<span class="nc" id="L1518">				emailClientData.append('}');</span>
+<span class="nc" id="L1519">				emailClientData.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L1520">				emailClientData.append(prop.getText(&quot;calendar.approve_email_body&quot;,event.getTitle(),datumAkcie,statusString)+&quot; &quot;+schvalovatel.getFullName());</span>
+<span class="nc" id="L1521">				emailClientData.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc bnc" id="L1522" title="All 2 branches missed.">				if(sendEmail)</span>
+				{
+<span class="nc" id="L1524">					boolean sendOK = SendMail.send(schvalovatel.getFullName(), schvalovatel.getEmailAddress(), creator.getEmailAddress(), prop.getText(&quot;calendar.approve_email_subject&quot;,statusString), emailClientData.toString());</span>
+<span class="nc bnc" id="L1525" title="All 2 branches missed.">					if(sendOK == false)</span>
+<span class="nc" id="L1526">						return false;</span>
+				}
+<span class="nc" id="L1528">			}else</span>
+<span class="nc" id="L1529">				return false;</span>
+			//****************************************
+		}
+<span class="nc" id="L1532">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1534">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1535">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1541" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1542">					ps.close();</span>
+<span class="nc bnc" id="L1543" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1544">					db_conn.close();</span>
+			}
+<span class="nc" id="L1546">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1548">			}</span>
+		}
+
+<span class="nc" id="L1551">		return true;</span>
+	}
+
+	/**
+	 * vrati vsetky udalosti od-do(dateFrom-dateTo) ktorych sa zucastni/nezucasti uzival userId
+	 * @param userId
+	 * @param dateTo
+	 * @param dateFrom
+	 * @param status - 'A'/'D'- vrati udalosti kde uzivatel potvrdil/zamietol ucast, '-' - vrati vsetky udalosti
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getEventsByUserIdDateStatus(int userId, String dateFrom, String dateTo, String status)
+	{
+<span class="nc" id="L1564">		Connection db_conn = null;</span>
+<span class="nc" id="L1565">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1566">		ResultSet rs = null;</span>
+<span class="nc" id="L1567">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L1570">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1571">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c,calendar_invitation ci,calendar_types ct WHERE c.calendar_id=ci.calendar_id AND c.type_id=ct.type_id AND approve = 1 AND  ci.user_id=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+<span class="nc bnc" id="L1572" title="All 2 branches missed.">			if(Tools.isNotEmpty(dateFrom))</span>
+<span class="nc" id="L1573">				sql.append(&quot; AND c.date_to &gt;= ?&quot;);</span>
+<span class="nc bnc" id="L1574" title="All 2 branches missed.">			if(Tools.isNotEmpty(dateTo))</span>
+<span class="nc" id="L1575">				sql.append(&quot; AND c.date_from &lt;= ?&quot;);</span>
+<span class="nc bnc" id="L1576" title="All 4 branches missed.">			if (status.equals(&quot;A&quot;) || status.equals(&quot;D&quot;))</span>
+<span class="nc" id="L1577">				sql.append(&quot; AND ci.status=?&quot;);</span>
+<span class="nc" id="L1578">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L1579">			int ind = 1;</span>
+<span class="nc" id="L1580">			ps.setInt(ind++, userId);</span>
+<span class="nc bnc" id="L1581" title="All 2 branches missed.">			if(Tools.isNotEmpty(dateFrom))</span>
+<span class="nc" id="L1582">				ps.setTimestamp(ind++, new Timestamp(DB.getTimestamp(dateFrom, &quot;00:00&quot;)));</span>
+<span class="nc bnc" id="L1583" title="All 2 branches missed.">			if(Tools.isNotEmpty(dateTo))</span>
+<span class="nc" id="L1584">				ps.setTimestamp(ind++, new Timestamp(DB.getTimestamp(dateTo, &quot;23:59&quot;)));</span>
+<span class="nc bnc" id="L1585" title="All 4 branches missed.">			if (status.equals(&quot;A&quot;) || status.equals(&quot;D&quot;))</span>
+<span class="nc" id="L1586">				ps.setString(ind++, status);</span>
+<span class="nc" id="L1587">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1588" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1590">				result.add(fillCalendarDetails(rs));</span>
+			}
+<span class="nc" id="L1592">			rs.close();</span>
+<span class="nc" id="L1593">			ps.close();</span>
+<span class="nc" id="L1594">			db_conn.close();</span>
+<span class="nc" id="L1595">			rs = null;</span>
+<span class="nc" id="L1596">			ps = null;</span>
+<span class="nc" id="L1597">			db_conn = null;</span>
+		}
+<span class="nc" id="L1599">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1601">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1607" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1608">					rs.close();</span>
+<span class="nc bnc" id="L1609" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1610">					ps.close();</span>
+<span class="nc bnc" id="L1611" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1612">					db_conn.close();</span>
+			}
+<span class="nc" id="L1614">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1616">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1617">			}</span>
+		}
+
+<span class="nc" id="L1620">		return result;</span>
+	}
+
+	/**
+	 * vrati akcie podla urcitych regionov a podla typu akcie
+	 * @param request
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static List&lt;CalendarDetails&gt; getEventsByRegionAndType(HttpServletRequest request, int[] eventTypes, String region)
+	{
+<span class="nc" id="L1631">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L1632">		PageParams pageParams = new PageParams(request);</span>
+<span class="nc" id="L1633">		String cacheKey = &quot;sk.iway.iwcm.calendar.CalendarDB.allEvents&quot;;</span>
+<span class="nc" id="L1634">		int cacheInMinutes = pageParams.getIntValue(&quot;cacheInMinutes&quot;, 5);</span>
+<span class="nc" id="L1635">		String calStart = (String)request.getAttribute(&quot;calStart&quot;);</span>
+<span class="nc" id="L1636">		String calEnd = (String)request.getAttribute(&quot;calEnd&quot;);</span>
+
+<span class="nc" id="L1638">		List&lt;CalendarDetails&gt; allEvents = null;</span>
+		//cachujem, len vsetky udalosti
+<span class="nc bnc" id="L1640" title="All 6 branches missed.">		if(Tools.isNotEmpty(calStart) &amp;&amp; Tools.isEmpty(calEnd) &amp;&amp; Tools.formatDate(Tools.getNow()).equals(calStart))</span>
+		{
+<span class="nc" id="L1642">			allEvents = (List&lt;CalendarDetails&gt;)c.getObject(cacheKey);</span>
+<span class="nc bnc" id="L1643" title="All 4 branches missed.">			if (allEvents == null || allEvents.size() &lt; 1)</span>
+			{
+<span class="nc" id="L1645">				allEvents = getEvents(request);</span>
+<span class="nc" id="L1646">			   c.setObjectSeconds(cacheKey, allEvents , cacheInMinutes*60, true);</span>
+			}
+		}
+		else
+		{
+<span class="nc" id="L1651">			allEvents = getEvents(request);</span>
+		}
+<span class="nc" id="L1653">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1654">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L1655" title="All 2 branches missed.">		if (user == null)</span>
+<span class="nc" id="L1656">			return allEvents;</span>
+<span class="nc" id="L1657">		Map&lt;Integer, EventTypeDetails&gt; htCheckedRegions = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L1658" title="All 2 branches missed.">		for(int i=0; i &lt; eventTypes.length;i++)</span>
+		{
+<span class="nc" id="L1660">			EventTypeDetails eventType = EventTypeDB.getTypeById(eventTypes[i]);</span>
+<span class="nc" id="L1661">			htCheckedRegions.put(Integer.valueOf(eventType.getTypeId()), eventType);</span>
+		}
+		//tried podla typu udalosti
+<span class="nc bnc" id="L1664" title="All 4 branches missed.">		if(htCheckedRegions != null &amp;&amp; htCheckedRegions.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L1666" title="All 2 branches missed.">			for (CalendarDetails calendarDetails : allEvents)</span>
+			{
+<span class="nc bnc" id="L1668" title="All 2 branches missed.">				if(htCheckedRegions.containsKey(calendarDetails.getTypeId()))</span>
+				{
+					//tried podla regionu ak je nastaveny
+<span class="nc bnc" id="L1671" title="All 6 branches missed.">					if(region != null &amp;&amp; region.equals(&quot;-1&quot;) == false &amp;&amp; Tools.isNotEmpty(calendarDetails.getArea()))</span>
+					{
+<span class="nc bnc" id="L1673" title="All 2 branches missed.">						if(region.equals(calendarDetails.getArea()))</span>
+<span class="nc" id="L1674">							result.add(calendarDetails);</span>
+					}else
+					{
+<span class="nc" id="L1677">						result.add(calendarDetails);</span>
+					}
+				}
+<span class="nc" id="L1680">			}</span>
+		}
+		else
+<span class="nc" id="L1683">			return allEvents;</span>
+
+<span class="nc" id="L1685">		return result;</span>
+	}
+
+	/**
+	 * vrati akcie podla urcitych regionov a podla typu akcie, ktore ma uzivatel nastavene
+	 * @param request
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static List&lt;CalendarDetails&gt; getEventsByRegionAndType(HttpServletRequest request, int userId)
+	{
+<span class="nc" id="L1696">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L1697">		PageParams pageParams = new PageParams(request);</span>
+<span class="nc" id="L1698">		String cacheKey = &quot;sk.iway.iwcm.calendar.CalendarDB.allEvents&quot;;</span>
+<span class="nc" id="L1699">		int cacheInMinutes = pageParams.getIntValue(&quot;cacheInMinutes&quot;, 5);</span>
+<span class="nc" id="L1700">		String calStart = (String)request.getAttribute(&quot;calStart&quot;);</span>
+<span class="nc" id="L1701">		String calEnd = (String)request.getAttribute(&quot;calEnd&quot;);</span>
+
+<span class="nc" id="L1703">		List&lt;CalendarDetails&gt; allEvents = null;</span>
+		//cachujem, len vsetky udalosti
+<span class="nc bnc" id="L1705" title="All 6 branches missed.">		if(Tools.isNotEmpty(calStart) &amp;&amp; Tools.isEmpty(calEnd) &amp;&amp; Tools.formatDate(Tools.getNow()).equals(calStart))</span>
+		{
+<span class="nc" id="L1707">			allEvents = (List&lt;CalendarDetails&gt;)c.getObject(cacheKey);</span>
+<span class="nc bnc" id="L1708" title="All 4 branches missed.">			if (allEvents == null || allEvents.size() &lt; 1)</span>
+			{
+<span class="nc" id="L1710">				allEvents = getEvents(request);</span>
+<span class="nc" id="L1711">			   c.setObjectSeconds(cacheKey, allEvents, cacheInMinutes*60, true);</span>
+			}
+		}
+		else
+		{
+<span class="nc" id="L1716">			allEvents = getEvents(request);</span>
+		}
+
+<span class="nc" id="L1719">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1720">		UserDetails user = UsersDB.getUser(userId);</span>
+<span class="nc bnc" id="L1721" title="All 2 branches missed.">		if (user == null)</span>
+<span class="nc" id="L1722">			return allEvents;</span>
+<span class="nc" id="L1723">		List&lt;EventTypeDetails&gt; eventTypes = EventTypeDB.getTypes();</span>
+<span class="nc" id="L1724">		Map&lt;Integer, EventTypeDetails&gt; htCheckedRegions = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L1725" title="All 2 branches missed.">		for(int i=0; i &lt; eventTypes.size();i++)</span>
+		{
+<span class="nc" id="L1727">			EventTypeDetails eventType = eventTypes.get(i);</span>
+<span class="nc" id="L1728">			SettingsBean sbPerms = user.getSettings().get(&quot;kaOblast&quot;+eventType.getTypeId());</span>
+<span class="nc bnc" id="L1729" title="All 4 branches missed.">			if(sbPerms != null &amp;&amp; sbPerms.getSvalue1().equals(&quot;true&quot;))</span>
+			{
+<span class="nc" id="L1731">				htCheckedRegions.put(Integer.valueOf(eventType.getTypeId()), eventType);</span>
+			}
+		}
+		//tried podla typu udalosti
+<span class="nc bnc" id="L1735" title="All 4 branches missed.">		if(htCheckedRegions != null &amp;&amp; htCheckedRegions.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L1737" title="All 2 branches missed.">			for (CalendarDetails calendarDetails : allEvents)</span>
+			{
+<span class="nc bnc" id="L1739" title="All 2 branches missed.">				if(htCheckedRegions.containsKey(calendarDetails.getTypeId()))</span>
+				{
+					//tried podla regionu ak je nastaveny
+<span class="nc" id="L1742">					SettingsBean sbPerms2 = user.getSettings().get(&quot;kaRegion&quot;);</span>
+<span class="nc bnc" id="L1743" title="All 6 branches missed.">					if(sbPerms2 != null &amp;&amp; sbPerms2.getSvalue1().equals(&quot;-1&quot;) == false &amp;&amp; Tools.isNotEmpty(calendarDetails.getArea()))</span>
+					{
+<span class="nc bnc" id="L1745" title="All 2 branches missed.">						if(sbPerms2.getSvalue1().equals(calendarDetails.getArea()))</span>
+<span class="nc" id="L1746">							result.add(calendarDetails);</span>
+					}else
+					{
+<span class="nc" id="L1749">						result.add(calendarDetails);</span>
+					}
+				}
+<span class="nc" id="L1752">			}</span>
+		}
+		else
+<span class="nc" id="L1755">			return allEvents;</span>
+
+<span class="nc" id="L1757">		return result;</span>
+	}
+
+	/**
+	 * vrati akcie podla urcitych regionov a podla typu akcie, ktore ma uzivatel nastavene
+	 * @param request
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static List&lt;CalendarDetails&gt; getEventsByRegionAndType(HttpServletRequest request)
+	{
+<span class="nc" id="L1768">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L1769">		PageParams pageParams = new PageParams(request);</span>
+<span class="nc" id="L1770">		String cacheKey = &quot;sk.iway.iwcm.calendar.CalendarDB.allEvents&quot;;</span>
+<span class="nc" id="L1771">		int cacheInMinutes = pageParams.getIntValue(&quot;cacheInMinutes&quot;, 5);</span>
+<span class="nc" id="L1772">		String calStart = (String)request.getAttribute(&quot;calStart&quot;);</span>
+<span class="nc" id="L1773">		String calEnd = (String)request.getAttribute(&quot;calEnd&quot;);</span>
+
+<span class="nc" id="L1775">		List&lt;CalendarDetails&gt; allEvents = null;</span>
+		//cachujem, len vsetky udalosti
+<span class="nc bnc" id="L1777" title="All 6 branches missed.">		if(Tools.isNotEmpty(calStart) &amp;&amp; Tools.isEmpty(calEnd) &amp;&amp; Tools.formatDate(Tools.getNow()).equals(calStart))</span>
+		{
+<span class="nc" id="L1779">			allEvents = (List&lt;CalendarDetails&gt;)c.getObject(cacheKey);</span>
+<span class="nc bnc" id="L1780" title="All 4 branches missed.">			if (allEvents == null || allEvents.size() &lt; 1)</span>
+			{
+<span class="nc" id="L1782">				allEvents = getEvents(request);</span>
+<span class="nc" id="L1783">			   c.setObjectSeconds(cacheKey, allEvents , cacheInMinutes*60, true);</span>
+			}
+		}
+		else
+		{
+<span class="nc" id="L1788">			allEvents = getEvents(request);</span>
+		}
+
+<span class="nc" id="L1791">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1792">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L1793" title="All 2 branches missed.">		if (user == null)</span>
+<span class="nc" id="L1794">			return allEvents;</span>
+
+<span class="nc" id="L1796">		List&lt;EventTypeDetails&gt; eventTypes = EventTypeDB.getTypes();</span>
+
+<span class="nc" id="L1798">		Map&lt;Integer, EventTypeDetails&gt; htCheckedRegions = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L1799" title="All 2 branches missed.">		for(int i=0; i &lt; eventTypes.size();i++)</span>
+		{
+<span class="nc" id="L1801">			EventTypeDetails eventType = eventTypes.get(i);</span>
+<span class="nc" id="L1802">			SettingsBean sbPerms = user.getSettings().get(&quot;kaOblast&quot;+eventType.getTypeId());</span>
+<span class="nc bnc" id="L1803" title="All 4 branches missed.">			if(sbPerms != null &amp;&amp; sbPerms.getSvalue1().equals(&quot;true&quot;))</span>
+			{
+<span class="nc" id="L1805">				htCheckedRegions.put(Integer.valueOf(eventType.getTypeId()), eventType);</span>
+			}
+		}
+		//tried podla typu udalosti
+<span class="nc bnc" id="L1809" title="All 4 branches missed.">		if(htCheckedRegions != null &amp;&amp; htCheckedRegions.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L1811" title="All 2 branches missed.">			for (CalendarDetails calendarDetails : allEvents)</span>
+			{
+<span class="nc bnc" id="L1813" title="All 2 branches missed.">				if(htCheckedRegions.containsKey(calendarDetails.getTypeId()))</span>
+				{
+					//tried podla regionu ak je nastaveny
+<span class="nc" id="L1816">					SettingsBean sbPerms2 = user.getSettings().get(&quot;kaRegion&quot;);</span>
+<span class="nc bnc" id="L1817" title="All 6 branches missed.">					if(sbPerms2 != null &amp;&amp; sbPerms2.getSvalue1().equals(&quot;-1&quot;) == false &amp;&amp; Tools.isNotEmpty(calendarDetails.getArea()))</span>
+					{
+<span class="nc bnc" id="L1819" title="All 2 branches missed.">						if(sbPerms2.getSvalue1().equals(calendarDetails.getArea()))</span>
+<span class="nc" id="L1820">							result.add(calendarDetails);</span>
+					}else
+					{
+<span class="nc" id="L1823">						result.add(calendarDetails);</span>
+					}
+				}
+<span class="nc" id="L1826">			}</span>
+		}
+		else
+<span class="nc" id="L1829">			return allEvents;</span>
+
+<span class="nc" id="L1831">		return result;</span>
+	}
+
+	/**
+	 * nastavi odporucane udalosti podla akcie
+	 * @param odporucitAkcia
+	 * @param odporuceneId
+	 * @return
+	 */
+	public static boolean setSuggestEvents(int odporucitAkcia, String odporuceneId)
+	{
+<span class="nc bnc" id="L1842" title="All 2 branches missed.">		if(Tools.isEmpty(odporuceneId))</span>
+<span class="nc" id="L1843">			return false;</span>
+<span class="nc" id="L1844">		boolean odporucitAkciaDb = false;</span>
+<span class="nc bnc" id="L1845" title="All 2 branches missed.">		if(odporucitAkcia == 1)</span>
+<span class="nc" id="L1846">			odporucitAkciaDb = true;</span>
+		else
+<span class="nc" id="L1848">			odporucitAkciaDb = false;</span>
+<span class="nc" id="L1849">		String[] odporuceneIdDb = odporuceneId.split(&quot;,&quot;);</span>
+<span class="nc" id="L1850">		Connection db_conn = null;</span>
+<span class="nc" id="L1851">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1854">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L1855" title="All 2 branches missed.">			for (int i = 0; i &lt; odporuceneIdDb.length; i++)</span>
+			{
+<span class="nc" id="L1857">				ps = db_conn.prepareStatement(&quot;UPDATE calendar SET suggest = ? WHERE calendar_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1858">				ps.setBoolean(1, odporucitAkciaDb);</span>
+<span class="nc" id="L1859">				ps.setInt(2, Tools.getIntValue(odporuceneIdDb[i], -1));</span>
+<span class="nc" id="L1860">				ps.execute();</span>
+<span class="nc" id="L1861">				ps.close();</span>
+			}
+<span class="nc" id="L1863">			db_conn.close();</span>
+<span class="nc" id="L1864">			ps = null;</span>
+<span class="nc" id="L1865">			db_conn = null;</span>
+		}
+<span class="nc" id="L1867">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1869">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1870">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1876" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1877">					ps.close();</span>
+<span class="nc bnc" id="L1878" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1879">					db_conn.close();</span>
+			}
+<span class="nc" id="L1881">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1883">			}</span>
+		}
+<span class="nc" id="L1885">		return true;</span>
+	}
+
+	/**
+	 * fulltext vyhladavanie v title,description
+	 * @param vyraz
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; fullTextSearch(String vyraz)
+	{
+<span class="nc" id="L1895">		Connection db_conn = null;</span>
+<span class="nc" id="L1896">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1897">		ResultSet rs = null;</span>
+<span class="nc" id="L1898">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L1901">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L1902" title="All 2 branches missed.">			if(Tools.isNotEmpty(vyraz))</span>
+			{
+<span class="nc bnc" id="L1904" title="All 4 branches missed.">				if(vyraz.indexOf(&quot;AND&quot;) == -1 &amp;&amp; vyraz.indexOf(&quot;OR&quot;) == -1)</span>
+				{
+<span class="nc" id="L1906">					vyraz = &quot;\&quot;&quot;+vyraz+&quot;\&quot;&quot;;</span>
+				}
+<span class="nc bnc" id="L1908" title="All 4 branches missed.">				else if(vyraz.indexOf(&quot;AND&quot;) &gt; -1 &amp;&amp; vyraz.indexOf(&quot;OR&quot;) == -1)</span>
+				{
+<span class="nc" id="L1910">					String[] pom = vyraz.split(&quot;AND&quot;);</span>
+<span class="nc" id="L1911">					vyraz = &quot;\&quot;&quot;+pom[0].trim()+&quot;\&quot;&quot;+&quot; AND &quot;+&quot;\&quot;&quot;+pom[1].trim()+&quot;\&quot;&quot;;</span>
+<span class="nc" id="L1912">				}</span>
+<span class="nc bnc" id="L1913" title="All 4 branches missed.">				else if(vyraz.indexOf(&quot;OR&quot;) &gt; -1 &amp;&amp; vyraz.indexOf(&quot;AND&quot;) == -1)</span>
+				{
+<span class="nc" id="L1915">					String[] pom = vyraz.split(&quot;OR&quot;);</span>
+<span class="nc" id="L1916">					vyraz = &quot;\&quot;&quot;+pom[0].trim()+&quot;\&quot;&quot;+&quot; OR &quot;+&quot;\&quot;&quot;+pom[1].trim()+&quot;\&quot;&quot;;</span>
+<span class="nc" id="L1917">				}</span>
+<span class="nc bnc" id="L1918" title="All 4 branches missed.">				else if(vyraz.indexOf(&quot;AND&quot;) &gt; -1 &amp;&amp; vyraz.indexOf(&quot;OR&quot;) &gt; -1)</span>
+				{
+<span class="nc" id="L1920">					int pomInd1 = vyraz.indexOf(&quot;AND&quot;);</span>
+<span class="nc" id="L1921">					int pomInd2 = vyraz.indexOf(')');</span>
+<span class="nc" id="L1922">					int pomInd3 = vyraz.indexOf(&quot;OR&quot;);</span>
+
+<span class="nc" id="L1924">					String pom1 = vyraz.substring(1, pomInd1-1);</span>
+<span class="nc" id="L1925">					String pom2 = vyraz.substring(pomInd1+3, pomInd2);</span>
+<span class="nc" id="L1926">					String pom3 = vyraz.substring(pomInd3+3, vyraz.length());</span>
+
+
+<span class="nc" id="L1929">					vyraz = &quot;(\&quot;&quot;+pom1.trim()+&quot;\&quot;&quot;+&quot; AND &quot;+&quot;\&quot;&quot;+pom2.trim()+&quot;\&quot;) OR &quot;+&quot;\&quot;&quot;+pom3+&quot;\&quot;&quot;;</span>
+				}
+			}
+<span class="nc" id="L1932">			ps = db_conn.prepareStatement(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND c.approve = ? AND c.date_to &gt;= ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;)+&quot; AND ((CONTAINS(c.title, ?) OR CONTAINS(c.description, ?)))&quot;);</span>
+<span class="nc" id="L1933">			int ind = 1;</span>
+<span class="nc" id="L1934">			ps.setInt(ind++, 1);</span>
+<span class="nc" id="L1935">			ps.setTimestamp(ind++, new Timestamp(DB.getTimestamp(Tools.formatDate(Tools.getNow()), &quot;00:00&quot;)));</span>
+<span class="nc" id="L1936">			ps.setString(ind++, vyraz);</span>
+<span class="nc" id="L1937">			ps.setString(ind++, vyraz);</span>
+<span class="nc" id="L1938">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1939" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1941">				result.add(fillCalendarDetails(rs));</span>
+			}
+
+<span class="nc" id="L1944">			rs.close();</span>
+<span class="nc" id="L1945">			ps.close();</span>
+<span class="nc" id="L1946">			db_conn.close();</span>
+<span class="nc" id="L1947">			rs = null;</span>
+<span class="nc" id="L1948">			ps = null;</span>
+<span class="nc" id="L1949">			db_conn = null;</span>
+		}
+<span class="nc" id="L1951">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1953">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1959" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1960">					rs.close();</span>
+<span class="nc bnc" id="L1961" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1962">					ps.close();</span>
+<span class="nc bnc" id="L1963" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1964">					db_conn.close();</span>
+			}
+<span class="nc" id="L1966">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1968">			}</span>
+		}
+
+<span class="nc" id="L1971">		return result;</span>
+	}
+
+	/**
+	 * vrati udalosti pre notifikacie
+	 * @param calStart
+	 * @param calEnd
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getEventsForNotify(long calStart, long calEnd)
+	{
+<span class="nc" id="L1982">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L1984">		Connection db_conn = null;</span>
+<span class="nc" id="L1985">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1986">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L1990">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1991">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND date_from &gt;= ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+
+<span class="nc" id="L1993">			long now = (new java.util.Date()).getTime();</span>
+<span class="nc" id="L1994">			now = now - 86400000;</span>
+<span class="nc" id="L1995">			long end = 0;</span>
+
+<span class="nc bnc" id="L1997" title="All 2 branches missed.">			if (calStart &gt; 0)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L2000">				now = DB.getTimestamp(Tools.formatDate(calStart), &quot;00:00&quot;);</span>
+			}
+<span class="nc bnc" id="L2002" title="All 2 branches missed.">			if (calEnd &gt; 0)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L2005">				end = DB.getTimestamp(Tools.formatDate(calEnd), &quot;23:59&quot;);</span>
+<span class="nc" id="L2006">				sql.append(&quot; AND date_from &lt;= ? &quot;);</span>
+			}
+
+<span class="nc" id="L2009">			sql.append(&quot; AND approve = 1&quot;);</span>
+<span class="nc" id="L2010">			sql.append(&quot; ORDER BY date_from&quot;);</span>
+<span class="nc" id="L2011">			int psIndex = 1;</span>
+<span class="nc" id="L2012">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L2013">			ps.setTimestamp(psIndex++, new Timestamp(now));</span>
+<span class="nc bnc" id="L2014" title="All 2 branches missed.">			if (end &gt; 0) ps.setTimestamp(psIndex++, new Timestamp(end));</span>
+<span class="nc" id="L2015">			rs = ps.executeQuery();</span>
+			CalendarDetails cal;
+<span class="nc bnc" id="L2017" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L2019">				cal = new CalendarDetails();</span>
+<span class="nc" id="L2020">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L2021">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L2022">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+				try
+				{
+					//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L2027" title="All 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+					{
+<span class="nc" id="L2029">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L2030" title="All 2 branches missed.">						if (docId &gt; 0)</span>
+						{
+<span class="nc" id="L2032">							DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L2033">							DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L2034" title="All 2 branches missed.">							if (doc != null)</span>
+							{
+<span class="nc" id="L2036">								cal.setDescription(doc.getData());</span>
+							}
+						}
+					}
+				}
+<span class="nc" id="L2041">				catch (Exception ex)</span>
+				{
+					//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L2044">				}</span>
+
+<span class="nc" id="L2046">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L2047">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L2048">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L2049">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L2050">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L2051">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L2052">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L2053">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L2054">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L2055">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L2056">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L2057">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L2058">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L2059">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L2060">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L2061">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L2062">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L2063">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L2064">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L2065">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L2066">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L2067">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+<span class="nc" id="L2068">				events.add(cal);</span>
+			}
+
+<span class="nc" id="L2071">			rs.close();</span>
+<span class="nc" id="L2072">			ps.close();</span>
+<span class="nc" id="L2073">			db_conn.close();</span>
+<span class="nc" id="L2074">			rs = null;</span>
+<span class="nc" id="L2075">			ps = null;</span>
+<span class="nc" id="L2076">			db_conn = null;</span>
+		}
+<span class="nc" id="L2078">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2080">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L2086" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L2087">					rs.close();</span>
+<span class="nc bnc" id="L2088" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L2089">					ps.close();</span>
+<span class="nc bnc" id="L2090" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L2091">					db_conn.close();</span>
+			}
+<span class="nc" id="L2093">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L2095">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2096">			}</span>
+		}
+
+<span class="nc" id="L2099">		return (events);</span>
+	}
+
+
+	/**
+	 * posle mail so zoznamom udalosti podla notifikacnych nastaveni uzivatela
+	 */
+	public static void sendListEventsNotify(String serverName)
+	{
+<span class="nc" id="L2108">		List&lt;UserDetails&gt; users = UsersDB.getUsers();</span>
+<span class="nc" id="L2109">		String subject =&quot;&quot;;</span>
+<span class="nc" id="L2110">		String emptyBody =&quot;&quot;;</span>
+<span class="nc" id="L2111">		Prop prop = Prop.getInstance();</span>
+<span class="nc bnc" id="L2112" title="All 4 branches missed.">		if(users != null &amp;&amp; users.size() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L2114" title="All 2 branches missed.">			for(int i = 0; i &lt; users.size(); i++)</span>
+			{
+<span class="nc" id="L2116">				UserDetails user = users.get(i);</span>
+				//okrem testovacieho usera
+<span class="nc bnc" id="L2118" title="All 2 branches missed.">				if(user.getLogin().equals(&quot;VUBNETgrp&quot;) == false)</span>
+				{
+<span class="nc" id="L2120">					int showEvents = 2;</span>
+<span class="nc" id="L2121">					Calendar datumOd = Calendar.getInstance();</span>
+<span class="nc" id="L2122">					Calendar datumDo = Calendar.getInstance();</span>
+<span class="nc" id="L2123">					datumOd.setTimeInMillis(DB.getTimestamp(Tools.formatDate(datumOd.getTimeInMillis())));</span>
+<span class="nc" id="L2124">					datumDo.setTimeInMillis(DB.getTimestamp(Tools.formatDate(datumDo.getTimeInMillis())));</span>
+<span class="nc" id="L2125">					Map&lt;String, SettingsBean&gt; userSetings = user.getSettings();</span>
+<span class="nc bnc" id="L2126" title="All 4 branches missed.">					if(userSetings == null || userSetings.size() &lt; 0)</span>
+<span class="nc" id="L2127">						continue;</span>
+<span class="nc" id="L2128">					SettingsBean notif = userSetings.get(&quot;kaEmailoveNotifikacie&quot;);</span>
+					//ziskaj datum poslednej poslanej notifikacie
+<span class="nc" id="L2130">					SettingsBean notifDate = userSetings.get(&quot;kaEmailoveNotifikacieDate&quot;);</span>
+<span class="nc bnc" id="L2131" title="All 2 branches missed.">					if(notif == null)</span>
+<span class="nc" id="L2132">						continue;</span>
+<span class="nc" id="L2133">					String notifValue = notif.getSvalue1();</span>
+<span class="nc bnc" id="L2134" title="All 2 branches missed.">					if(notifValue.equals(&quot;vypnute&quot;))</span>
+					{
+						//odstranenie datumu poslednej poslanej notifikacie, lebo je to potrebne len pre tyzdenne notifikacie
+<span class="nc bnc" id="L2137" title="All 2 branches missed.">						if(notifDate != null)</span>
+<span class="nc" id="L2138">							userSetings.remove(&quot;kaEmailoveNotifikacieDate&quot;);</span>
+<span class="nc" id="L2139">						UsersDB.setSettings(user.getUserId(), userSetings);</span>
+<span class="nc" id="L2140">						continue;</span>
+					}
+<span class="nc bnc" id="L2142" title="All 2 branches missed.">					else if(notifValue.equals(&quot;denne&quot;))</span>
+					{
+<span class="nc bnc" id="L2144" title="All 2 branches missed.">						if(notifDate != null)</span>
+<span class="nc" id="L2145">							userSetings.remove(&quot;kaEmailoveNotifikacieDate&quot;);</span>
+<span class="nc" id="L2146">						UsersDB.setSettings(user.getUserId(), userSetings);</span>
+<span class="nc" id="L2147">						datumDo.add(Calendar.DATE, 1);</span>
+<span class="nc" id="L2148">						subject=prop.getText(&quot;calendar.prehlad_48hodin&quot;);</span>
+<span class="nc" id="L2149">						emptyBody =prop.getText(&quot;calendar.prehlad_ziadne_48hodin&quot;);</span>
+<span class="nc" id="L2150">						showEvents = 2;</span>
+					}
+<span class="nc bnc" id="L2152" title="All 2 branches missed.">					else if(notifValue.equals(&quot;tyzdenne&quot;))</span>
+					{
+<span class="nc" id="L2154">						long notifDateValue = 0;</span>
+<span class="nc bnc" id="L2155" title="All 4 branches missed.">						if(notifDate != null &amp;&amp; notifDate.getSdate() != null)</span>
+<span class="nc" id="L2156">							notifDateValue = notifDate.getSdate().getTime();</span>
+						else//ak datum poslednej poslanej notifikacie neexistuje, tak nastav na aktualny datum
+						{
+<span class="nc" id="L2159">							SettingsBean newSett = new SettingsBean();</span>
+<span class="nc" id="L2160">							newSett.setSdate(new Timestamp(datumOd.getTimeInMillis()));</span>
+<span class="nc" id="L2161">							newSett.setSvalue1(&quot;&quot;);</span>
+<span class="nc" id="L2162">							newSett.setSvalue2(&quot;&quot;);</span>
+<span class="nc" id="L2163">							newSett.setSvalue3(&quot;&quot;);</span>
+<span class="nc" id="L2164">							newSett.setSvalue4(&quot;&quot;);</span>
+<span class="nc" id="L2165">							userSetings.put(&quot;kaEmailoveNotifikacieDate&quot;, newSett);</span>
+<span class="nc" id="L2166">							UsersDB.setSettings(user.getUserId(), userSetings);</span>
+						}
+
+<span class="nc bnc" id="L2169" title="All 2 branches missed.">						if(notifDateValue == 0)</span>
+<span class="nc" id="L2170">							datumDo.add(Calendar.DATE, 7);</span>
+						else
+						{
+							//zisti rozdiel dni medzi datumom poslednej poslanej notifikacie a aktualnym datumom
+<span class="nc" id="L2174">							long pocetDni = (datumOd.getTimeInMillis() - notifDateValue) / (1000 * 60 * 60 * 24);</span>
+<span class="nc bnc" id="L2175" title="All 2 branches missed.">							if(pocetDni == 7)</span>
+							{
+<span class="nc" id="L2177">								datumDo.add(Calendar.DATE, 7);</span>
+							}else
+								continue;
+						}
+
+						//nastav datum poslanej notifikacie
+<span class="nc" id="L2183">						notifDate = userSetings.get(&quot;kaEmailoveNotifikacieDate&quot;);</span>
+<span class="nc" id="L2184">						notifDate.setSdate(new Timestamp(datumOd.getTimeInMillis()));</span>
+<span class="nc" id="L2185">						userSetings.put(&quot;kaEmailoveNotifikacieDate&quot;, notifDate);</span>
+<span class="nc" id="L2186">						UsersDB.setSettings(user.getUserId(), userSetings);</span>
+
+<span class="nc" id="L2188">						subject=prop.getText(&quot;calendar.prehlad_7dni&quot;);</span>
+<span class="nc" id="L2189">						emptyBody =prop.getText(&quot;calendar.prehlad_ziadne_7dni&quot;);</span>
+<span class="nc" id="L2190">						showEvents = 7;</span>
+					}
+
+
+<span class="nc" id="L2194">					List&lt;CalendarDetails&gt; events = getEventsForNotify(datumOd.getTimeInMillis(), datumDo.getTimeInMillis());</span>
+<span class="nc bnc" id="L2195" title="All 4 branches missed.">					if(events != null &amp;&amp; events.size() &gt; 0)</span>
+					{
+<span class="nc" id="L2197">						StringBuilder body= new StringBuilder(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L2198">						body.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L2199">						body.append(&quot;body table td{&quot;);</span>
+<span class="nc" id="L2200">						body.append(&quot;font-family: Arial;&quot;);</span>
+<span class="nc" id="L2201">						body.append(&quot;font-size: 10pt;&quot;);</span>
+<span class="nc" id="L2202">						body.append('}');</span>
+<span class="nc" id="L2203">						body.append(&quot;&lt;/style&gt;&quot;);</span>
+<span class="nc" id="L2204">						body.append(&quot;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L2205">						body.append(&quot;&lt;table border='0' cellspacing='0' cellpadding='0'&gt;\n&quot;);</span>
+<span class="nc bnc" id="L2206" title="All 2 branches missed.">						for (CalendarDetails calendarDetails : events)</span>
+						{
+							/*
+							String datumAkcie = &quot;&quot;;
+							if(Tools.isNotEmpty(calendarDetails.getFromString()))
+								datumAkcie = calendarDetails.getFromString();
+							if(Tools.isNotEmpty(calendarDetails.getToString()))
+								datumAkcie = datumAkcie.concat(&quot; - &quot;+calendarDetails.getToString());
+							if(Tools.isNotEmpty(calendarDetails.getTimeRange()))
+								datumAkcie = datumAkcie.concat(&quot; o &quot;+calendarDetails.getTimeRange());
+							*/
+<span class="nc" id="L2217">							body.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L2218">							body.append(&quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.title&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2219">							body.append(&quot;   &lt;td&gt;&quot;).append(calendarDetails.getTitle()).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2220">							body.append(&quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L2222">							body.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L2223">							body.append(&quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.begin&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2224">							body.append(&quot;   &lt;td&gt;&quot;).append(calendarDetails.getFromString()).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2225">							body.append(&quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L2227">							body.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L2228">							body.append(&quot;   &lt;td valign='top' nowrap&gt;&lt;b&gt;&quot;).append(prop.getText(&quot;calendar_edit.description&quot;)).append(&quot;:&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2229">							body.append(&quot;&lt;td&gt;&quot; ).append(calendarDetails.getDescription()).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2230">							body.append(&quot;&lt;/tr&gt;\n&quot;);</span>
+
+<span class="nc" id="L2232">							body.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L2233">							body.append(&quot;&lt;td&gt;&amp;nbsp;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2234">							body.append(&quot;&lt;td&gt;&amp;nbsp;&lt;/td&gt;&quot;);</span>
+<span class="nc" id="L2235">							body.append(&quot;&lt;/tr&gt;\n&quot;);</span>
+<span class="nc" id="L2236">						}</span>
+<span class="nc" id="L2237">						body.append(&quot;&lt;/table&gt;&quot;);</span>
+						//tento link sa dava iba v pripade VUB, alebo pri testovani
+<span class="nc bnc" id="L2239" title="All 8 branches missed.">						if(Tools.isNotEmpty(serverName) &amp;&amp; (&quot;testvubnet&quot;.equals(serverName) || &quot;vubnet&quot;.equals(serverName) || &quot;iwcm.interway.sk&quot;.equals(serverName)))</span>
+						{
+<span class="nc" id="L2241">							body.append(&quot;&lt;p&gt;&quot;);</span>
+<span class="nc" id="L2242">							body.append(&quot;&lt;a href=\&quot;http://&quot;).append(serverName).append(&quot;/aplikacie/kalendar-akcii/kalendar-akcii.html?showEvents=&quot;).append(showEvents).append(&quot;\&quot;&gt;Zobraziť Kalendár akcií&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L2243">							body.append(&quot;&lt;/p&gt;&quot;);</span>
+						}
+<span class="nc" id="L2245">						body.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+
+<span class="nc" id="L2247">						SendMail.send(Constants.getString(&quot;notifyEmail&quot;), Constants.getString(&quot;notifyEmail&quot;), user.getEmailAddress(), subject, body.toString());</span>
+<span class="nc bnc" id="L2248" title="All 2 branches missed.">					}else if(events != null)</span>
+					{
+<span class="nc" id="L2250">						SendMail.send(Constants.getString(&quot;notifyEmail&quot;), Constants.getString(&quot;notifyEmail&quot;), user.getEmailAddress(), subject, emptyBody);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L2255">	}</span>
+
+	/**
+	 * vrati akcie pre zadany den z ArrayListu
+	 * @param events
+	 * @param datum
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getEventsForDay(List&lt;CalendarDetails&gt; events, long datum)
+	{
+<span class="nc" id="L2265">		List&lt;CalendarDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2266">		datum = DB.getTimestamp(Tools.formatDate(datum));</span>
+<span class="nc bnc" id="L2267" title="All 2 branches missed.">		for (CalendarDetails event : events)</span>
+		{
+<span class="nc" id="L2269">			long calFrom = -1;</span>
+<span class="nc" id="L2270">			long calTo = -1;</span>
+<span class="nc bnc" id="L2271" title="All 2 branches missed.">			if(Tools.isNotEmpty(event.getFromString()))</span>
+<span class="nc" id="L2272">				calFrom =  DB.getTimestamp(event.getFromString());</span>
+<span class="nc bnc" id="L2273" title="All 2 branches missed.">			if(Tools.isNotEmpty(event.getToString()))</span>
+<span class="nc" id="L2274">				calTo =  DB.getTimestamp(event.getToString());</span>
+
+<span class="nc bnc" id="L2276" title="All 4 branches missed.">			if(calFrom != -1 &amp;&amp; calTo == -1)</span>
+			{
+<span class="nc bnc" id="L2278" title="All 2 branches missed.">				if(calFrom == datum)</span>
+<span class="nc" id="L2279">					result.add(event);</span>
+			}
+<span class="nc bnc" id="L2281" title="All 4 branches missed.">			else if(calFrom != -1 &amp;&amp; calTo != -1)</span>
+			{
+<span class="nc bnc" id="L2283" title="All 4 branches missed.">				if(calFrom &lt;= datum &amp;&amp; datum &lt;= calTo)</span>
+<span class="nc" id="L2284">					result.add(event);</span>
+			}
+<span class="nc" id="L2286">		}</span>
+
+<span class="nc" id="L2288">		return result;</span>
+	}
+
+	/**
+	 * vrati vsetky schvalene udalosti
+	 * @param request
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getApprovedEvents(HttpServletRequest request)
+	{
+<span class="nc" id="L2298">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2299">		Connection db_conn = null;</span>
+<span class="nc" id="L2300">		PreparedStatement ps = null;</span>
+<span class="nc" id="L2301">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L2305">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L2306">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND date_to &gt;= ? AND approve!=-1 &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+
+<span class="nc" id="L2308">			long now = (new java.util.Date()).getTime();</span>
+<span class="nc" id="L2309">			now = now - 86400000;</span>
+<span class="nc" id="L2310">			long end = 0;</span>
+
+<span class="nc bnc" id="L2312" title="All 2 branches missed.">			if (getParamAttribute(&quot;calAllEvents&quot;, request) != null)</span>
+			{
+				//chce vsetky zaznamy uplne od zaciatku
+<span class="nc" id="L2315">				now = 1000;</span>
+			}
+<span class="nc bnc" id="L2317" title="All 2 branches missed.">			if (getParamAttribute(&quot;calStart&quot;, request) != null)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L2320">				now = DB.getTimestamp(getParamAttribute(&quot;calStart&quot;, request), &quot;0:00&quot;, DBPool.getDBName(request));</span>
+			}
+<span class="nc bnc" id="L2322" title="All 2 branches missed.">			if (getParamAttribute(&quot;calEnd&quot;, request) != null)</span>
+			{
+				//chce zaznamy od datumu
+<span class="nc" id="L2325">				end = DB.getTimestamp(getParamAttribute(&quot;calEnd&quot;, request), &quot;23:59&quot;, DBPool.getDBName(request));</span>
+<span class="nc" id="L2326">				sql.append(&quot; AND date_from &lt;= ? &quot;);</span>
+			}
+
+			int i;
+<span class="nc" id="L2330">			i = getParamAttributeInt(&quot;calTypeId&quot;, request);</span>
+<span class="nc bnc" id="L2331" title="All 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L2333">				sql.append(&quot; AND c.type_id = ?&quot;);</span>
+			}
+<span class="nc" id="L2335">			String typNazvy = getParamAttribute(&quot;typyNazvy&quot;, request);</span>
+<span class="nc" id="L2336">			StringBuilder typyInSQL = new StringBuilder(&quot; AND ct.name IN (&quot;);</span>
+<span class="nc" id="L2337">			List&lt;String&gt; typyIn = null;</span>
+<span class="nc bnc" id="L2338" title="All 2 branches missed.">			if (Tools.isNotEmpty(typNazvy))</span>
+			{
+<span class="nc" id="L2340">				StringTokenizer st = new StringTokenizer(typNazvy, &quot;,+ &quot;);</span>
+<span class="nc bnc" id="L2341" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+				{
+<span class="nc" id="L2343">					String nazov = DB.removeSlashes(st.nextToken());</span>
+<span class="nc bnc" id="L2344" title="All 2 branches missed.">					if (Tools.isNotEmpty(nazov))</span>
+					{
+<span class="nc bnc" id="L2346" title="All 2 branches missed.">						if (typyIn == null)</span>
+						{
+<span class="nc" id="L2348">							typyIn = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2349">							typyIn.add(nazov);</span>
+<span class="nc" id="L2350">							typyInSQL.append(&quot;?&quot;);</span>
+						}
+						else
+						{
+<span class="nc" id="L2354">							typyIn.add(nazov);	//pripravim si hodnoty do IN</span>
+<span class="nc" id="L2355">							typyInSQL.append(&quot;,?&quot;);</span>
+						}
+					}
+<span class="nc" id="L2358">				}</span>
+<span class="nc" id="L2359">				typyInSQL.append(&quot;)&quot;);</span>
+<span class="nc bnc" id="L2360" title="All 4 branches missed.">				if (typyIn!=null &amp;&amp; typyIn.size() &gt; 0)</span>
+				{
+<span class="nc" id="L2362">					sql.append(typyInSQL);	//pridam IN SQL</span>
+				}
+			}
+<span class="nc bnc" id="L2365" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+			{
+<span class="nc" id="L2367">				sql.append(&quot; AND approve = ?&quot;);</span>
+			}
+
+<span class="nc bnc" id="L2370" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+			{
+<span class="nc" id="L2372">				sql.append(&quot; AND suggest = ?&quot;);</span>
+			}
+<span class="nc" id="L2374">			sql.append(&quot; ORDER BY date_from&quot;);</span>
+<span class="nc" id="L2375">			Logger.debug(CalendarDB.class, &quot;sql=&quot;+sql.toString());</span>
+<span class="nc" id="L2376">			int psIndex = 1;</span>
+<span class="nc" id="L2377">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L2378">			ps.setTimestamp(psIndex++, new Timestamp(0));</span>
+<span class="nc bnc" id="L2379" title="All 2 branches missed.">			if (end &gt; 0) ps.setTimestamp(psIndex++, new Timestamp(end));</span>
+<span class="nc bnc" id="L2380" title="All 2 branches missed.">			if(i &gt; 0)</span>
+			{
+<span class="nc" id="L2382">				ps.setInt(psIndex++, i);</span>
+			}
+<span class="nc bnc" id="L2384" title="All 4 branches missed.">			if (typyIn != null &amp;&amp; typyIn.size() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L2386" title="All 2 branches missed.">				for(String s: typyIn)</span>
+				{
+<span class="nc" id="L2388">					ps.setString(psIndex++, s);	//postupne nastavim hodnoty do IN</span>
+<span class="nc" id="L2389">				}</span>
+			}
+<span class="nc bnc" id="L2391" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+			{
+<span class="nc bnc" id="L2393" title="All 2 branches missed.">				int showApprove = &quot;1&quot;.equals(getParamAttribute(&quot;showApprove&quot;, request)) ? 1 : 0;</span>
+<span class="nc" id="L2394">				ps.setInt(psIndex++, showApprove);</span>
+			}
+<span class="nc bnc" id="L2396" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+<span class="nc" id="L2397">				ps.setBoolean(psIndex++, (Boolean)request.getAttribute(&quot;suggest&quot;));</span>
+			//if (Tools.isNotEmpty(typyIn)) ps.setString(psIndex++, typyIn);
+<span class="nc" id="L2399">			rs = ps.executeQuery();</span>
+			CalendarDetails cal;
+<span class="nc bnc" id="L2401" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L2403">				cal = new CalendarDetails();</span>
+<span class="nc" id="L2404">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L2405">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L2406">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+				try
+				{
+					//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L2411" title="All 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+					{
+<span class="nc" id="L2413">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L2414" title="All 2 branches missed.">						if (docId &gt; 0)</span>
+						{
+<span class="nc" id="L2416">							DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L2417">							DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L2418" title="All 2 branches missed.">							if (doc != null)</span>
+							{
+<span class="nc" id="L2420">								cal.setDescription(doc.getData());</span>
+							}
+						}
+					}
+				}
+<span class="nc" id="L2425">				catch (Exception ex)</span>
+				{
+					//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L2428">				}</span>
+
+<span class="nc" id="L2430">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L2431">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L2432">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L2433">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L2434">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L2435">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L2436">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L2437">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L2438">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L2439">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L2440">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L2441">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L2442">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L2443">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L2444">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L2445">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L2446">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L2447">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L2448">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L2449">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L2450">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L2451">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+<span class="nc" id="L2452">				events.add(cal);</span>
+			}
+
+<span class="nc" id="L2455">			rs.close();</span>
+<span class="nc" id="L2456">			ps.close();</span>
+<span class="nc" id="L2457">			db_conn.close();</span>
+<span class="nc" id="L2458">			rs = null;</span>
+<span class="nc" id="L2459">			ps = null;</span>
+<span class="nc" id="L2460">			db_conn = null;</span>
+		}
+<span class="nc" id="L2462">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2464">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L2470" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L2471">					rs.close();</span>
+<span class="nc bnc" id="L2472" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L2473">					ps.close();</span>
+<span class="nc bnc" id="L2474" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L2475">					db_conn.close();</span>
+			}
+<span class="nc" id="L2477">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L2479">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2480">			}</span>
+		}
+
+<span class="nc" id="L2483">		return (events);</span>
+	}
+
+	/**
+	 * ulozi verejnu udalost do databazy ako neschvalenu a posle mail schvalovatelovi
+	 * @param event
+	 * @param domain
+	 * @param approverMail
+	 * @return
+	 */
+	public static boolean saveEventPublicToDB(EventForm event, String domain, String approverMail, Prop prop)
+	{
+<span class="nc" id="L2495">		Connection db_conn = null;</span>
+<span class="nc" id="L2496">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L2499">			String pass = Password.generatePassword(32);</span>
+<span class="nc" id="L2500">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L2501">			String sql = &quot;INSERT INTO calendar (title, date_from, date_to, type_id, description, time_range, area, city, address, info_1, info_2, info_3, info_4, info_5, notify_hours_before, notify_emails, notify_sender, notify_introtext, notify_sendsms, lng, creator_id, approve, suggest, domain_id, hash_string) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L2502">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L2503">			DB.setClob(ps, 1, event.getTitle());</span>
+<span class="nc bnc" id="L2504" title="All 2 branches missed.">			if (event.getDateFrom().length()&gt;12)</span>
+			{
+<span class="nc" id="L2506">				ps.setTimestamp(2, new Timestamp(DB.getTimestamp(event.getDateFrom())));</span>
+			}
+			else
+			{
+<span class="nc" id="L2510">				ps.setDate(2, new java.sql.Date(DB.getTimestamp(event.getDateFrom(), &quot;01:01&quot;)));</span>
+			}
+<span class="nc bnc" id="L2512" title="All 2 branches missed.">			if (event.getDateTo().length()&gt;12)</span>
+			{
+<span class="nc" id="L2514">				ps.setTimestamp(3, new Timestamp(DB.getTimestamp(event.getDateTo())));</span>
+			}
+			else
+			{
+<span class="nc" id="L2518">				ps.setDate(3, new java.sql.Date(DB.getTimestamp(event.getDateTo(), &quot;23:59&quot;)));</span>
+			}
+<span class="nc" id="L2520">			ps.setInt(4, event.getTypeId());</span>
+<span class="nc" id="L2521">			DB.setClob(ps, 5, event.getDescription());</span>
+<span class="nc" id="L2522">			ps.setString(6, event.getTimeRange());</span>
+<span class="nc" id="L2523">			ps.setString(7, event.getArea());</span>
+<span class="nc" id="L2524">			ps.setString(8, event.getCity());</span>
+<span class="nc" id="L2525">			ps.setString(9, event.getAddress());</span>
+<span class="nc" id="L2526">			ps.setString(10, event.getInfo1());</span>
+<span class="nc" id="L2527">			ps.setString(11, event.getInfo2());</span>
+<span class="nc" id="L2528">			ps.setString(12, event.getInfo3());</span>
+<span class="nc" id="L2529">			ps.setString(13, event.getInfo4());</span>
+<span class="nc" id="L2530">			ps.setString(14, event.getInfo5());</span>
+<span class="nc" id="L2531">			ps.setInt(15, event.getNotifyHoursBefore());</span>
+<span class="nc" id="L2532">			ps.setString(16, event.getNotifyEmails());</span>
+<span class="nc" id="L2533">			ps.setString(17, event.getNotifySender());</span>
+<span class="nc" id="L2534">			DB.setClob(ps, 18, event.getNotifyIntrotext());</span>
+<span class="nc" id="L2535">			ps.setBoolean(19, event.isNotifySendSMS());</span>
+<span class="nc" id="L2536">			ps.setString(20, event.getLng());</span>
+<span class="nc" id="L2537">			ps.setInt(21, event.getCreatorId());</span>
+<span class="nc" id="L2538">			ps.setInt(22, event.getApprove());</span>
+<span class="nc" id="L2539">			ps.setBoolean(23, false);</span>
+<span class="nc" id="L2540">			ps.setInt(24, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L2541">			ps.setString(25, pass);</span>
+<span class="nc" id="L2542">			ps.execute();</span>
+<span class="nc" id="L2543">			ps.close();</span>
+
+<span class="nc bnc" id="L2545" title="All 2 branches missed.">			if (event.getCalendarId()&lt;1)</span>
+			{
+				//ziskaj ID z db
+<span class="nc" id="L2548">				ps = db_conn.prepareStatement(&quot;SELECT max(calendar_id) as calendar_id FROM calendar WHERE title=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L2549">				ps.setString(1, event.getTitle());</span>
+<span class="nc" id="L2550">				ResultSet rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L2551" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L2553">					event.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+				}
+<span class="nc" id="L2555">				rs.close();</span>
+<span class="nc" id="L2556">				ps.close();</span>
+			}
+
+<span class="nc" id="L2559">			db_conn.close();</span>
+<span class="nc" id="L2560">			ps = null;</span>
+<span class="nc" id="L2561">			db_conn = null;</span>
+
+<span class="nc bnc" id="L2563" title="All 2 branches missed.">			if(Tools.isEmail(approverMail))</span>
+			{
+				//String hash=CryptoUtil.encrypt(pass);
+<span class="nc" id="L2566">				String hash = PasswordSecurity.calculateHash(pass, &quot;5671203548520459&quot;);</span>
+<span class="nc" id="L2567">				hash = hash.replace(&quot;=&quot;, &quot;|&quot;);</span>
+
+<span class="nc" id="L2569">				String datumAkcie = &quot;&quot;;</span>
+<span class="nc" id="L2570">				String potvrdenieLink = domain+&quot;/components/cloud/calendar/potvrd_akciu_verejnost.jsp?calendarID=&quot;+event.getCalendarId()+&quot;&amp;hash=&quot;+Tools.URLEncode(hash)+&quot;&amp;schvalit=ano&quot;;</span>
+<span class="nc" id="L2571">				String zrusenieLink = domain+&quot;/components/cloud/calendar/potvrd_akciu_verejnost.jsp?calendarID=&quot;+event.getCalendarId()+&quot;&amp;hash=&quot;+Tools.URLEncode(hash)+&quot;&amp;schvalit=nie&quot;;</span>
+<span class="nc bnc" id="L2572" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getDateFrom()))</span>
+<span class="nc" id="L2573">					datumAkcie = event.getDateFrom();</span>
+<span class="nc bnc" id="L2574" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getDateTo()))</span>
+<span class="nc" id="L2575">					datumAkcie = datumAkcie.concat(&quot; - &quot;+event.getDateTo());</span>
+<span class="nc bnc" id="L2576" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getTimeRange()))</span>
+<span class="nc" id="L2577">					datumAkcie = datumAkcie.concat(&quot; o &quot;+event.getTimeRange());</span>
+
+<span class="nc" id="L2579">				StringBuilder emailClientData=new StringBuilder();</span>
+<span class="nc" id="L2580">				emailClientData.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L2581">				emailClientData.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L2582">				emailClientData.append(&quot;body{&quot;);</span>
+<span class="nc" id="L2583">				emailClientData.append(&quot;font-family: Arial;&quot;);</span>
+<span class="nc" id="L2584">				emailClientData.append(&quot;font-size: 11pt;&quot;);</span>
+<span class="nc" id="L2585">				emailClientData.append('}');</span>
+<span class="nc" id="L2586">				emailClientData.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+
+<span class="nc bnc" id="L2588" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getTitle()))</span>
+<span class="nc" id="L2589">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info1&quot;, event.getTitle()));</span>
+<span class="nc bnc" id="L2590" title="All 2 branches missed.">				if(Tools.isNotEmpty(datumAkcie))</span>
+<span class="nc" id="L2591">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info2&quot;, datumAkcie));</span>
+<span class="nc bnc" id="L2592" title="All 2 branches missed.">				if(Tools.isNotEmpty(EventTypeDB.getTypeById(event.getTypeId()).getName()))</span>
+<span class="nc" id="L2593">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info3&quot;, EventTypeDB.getTypeById(event.getTypeId()).getName()));</span>
+<span class="nc bnc" id="L2594" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getCity()))</span>
+<span class="nc" id="L2595">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info4&quot;, event.getCity()));</span>
+<span class="nc bnc" id="L2596" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getAddress()))</span>
+<span class="nc" id="L2597">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info5&quot;, event.getAddress()));</span>
+<span class="nc bnc" id="L2598" title="All 2 branches missed.">				if(Tools.isNotEmpty(event.getDescription()))</span>
+<span class="nc" id="L2599">					emailClientData.append(prop.getText(&quot;calendar.verejna_akcia_info6&quot;, event.getDescription()));</span>
+
+<span class="nc" id="L2601">				emailClientData.append(prop.getText(&quot;calendar.potvrdit_verejnu_akciu&quot;, potvrdenieLink));</span>
+<span class="nc" id="L2602">				emailClientData.append(prop.getText(&quot;calendar.zmazat_verejnu_akciu&quot;, zrusenieLink));</span>
+
+<span class="nc" id="L2604">				emailClientData.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L2605">				SendMail.send(domain, approverMail, approverMail, prop.getText(&quot;calendar.na_schvalenie&quot;), emailClientData.toString());</span>
+			}
+
+		}
+<span class="nc" id="L2609">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2611">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2612">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L2618" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L2619">					ps.close();</span>
+<span class="nc bnc" id="L2620" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L2621">					db_conn.close();</span>
+			}
+<span class="nc" id="L2623">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L2625">			}</span>
+		}
+
+<span class="nc" id="L2628">		return true;</span>
+	}
+
+	/**
+	 * nastavi status verejnej udalosti o jej schvaleni/neschvaleni
+	 * @param eventId
+	 * @param status
+	 * @return
+	 */
+	public static boolean savePublicApproveStatus(int eventId, int status)
+	{
+<span class="nc" id="L2639">		Connection db_conn = null;</span>
+<span class="nc" id="L2640">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L2643">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L2644">			ps = db_conn.prepareStatement(&quot;UPDATE calendar SET approve = ? WHERE calendar_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L2645">			ps.setInt(1, status);</span>
+<span class="nc" id="L2646">			ps.setInt(2, eventId);</span>
+<span class="nc" id="L2647">			ps.execute();</span>
+<span class="nc" id="L2648">			ps.close();</span>
+<span class="nc" id="L2649">			db_conn.close();</span>
+<span class="nc" id="L2650">			ps = null;</span>
+<span class="nc" id="L2651">			db_conn = null;</span>
+
+		}
+<span class="nc" id="L2654">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2656">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2657">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L2663" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L2664">					ps.close();</span>
+<span class="nc bnc" id="L2665" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L2666">					db_conn.close();</span>
+			}
+<span class="nc" id="L2668">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L2670">			}</span>
+		}
+
+<span class="nc" id="L2673">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

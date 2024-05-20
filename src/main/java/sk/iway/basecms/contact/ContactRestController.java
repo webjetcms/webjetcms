@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -53,11 +54,12 @@ public class ContactRestController extends DatatableRestControllerV2<ContactEnti
      * @return
      */
     public static List<LabelValue> getCountries() {
+        Prop prop = Prop.getInstance();
         //vytvor zoznam krajin, toto by sa idealne malo citat z nejakeho ciselnika
         List<LabelValue> countries = new ArrayList<>();
-        countries.add(new LabelValue("Slovenská republika", "sk"));
-        countries.add(new LabelValue("Česká republika", "cz"));
-        countries.add(new LabelValue("Rakúsko", "at"));
+        countries.add(new LabelValue(prop.getText("apps.contact.country.sk"), "sk"));
+        countries.add(new LabelValue(prop.getText("apps.contact.country.cz"), "cz"));
+        countries.add(new LabelValue(prop.getText("apps.contact.country.at"), "at"));
 
         return countries;
     }

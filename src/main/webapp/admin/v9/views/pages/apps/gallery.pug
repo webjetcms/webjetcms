@@ -204,7 +204,7 @@ block content
 
                     galleryTable.button().add(0, {
                         extends: 'create',
-                        text: '<i class="far fa-plus"></i>',
+                        text: '<i class="ti ti-plus"></i>',
                         className: 'btn-success buttons-divider',
                         action: function (e, dt, node) {
                             adminUpload.hiddenFileInput.click();
@@ -218,7 +218,7 @@ block content
                     var buttonCounter = 5;
 
                     galleryTable.button().add(buttonCounter++, {
-                        text: '<i class="far fa-eye"></i>',
+                        text: '<i class="ti ti-eye"></i>',
                         action: function (e, dt, node) {
                             let selectedRows = dt.rows({ selected: true }).data();
                             for (let i=0; i<selectedRows.length; i++) {
@@ -239,7 +239,7 @@ block content
                     galleryTable.button().add(buttonCounter++, {
                         extends: 'remove',
                         editor: galleryTable.EDITOR,
-                        text: '<i class="far fa-rotate-left"></i>',
+                        text: '<i class="ti ti-rotate"></i>',
                         action: function (e, dt, node) {
                             //console.log("Rotate, e=",e," dt=",dt," node=",node);
                             galleryTable.executeAction("rotateLeft");
@@ -257,7 +257,7 @@ block content
                     galleryTable.button().add(buttonCounter++, {
                         extends: 'remove',
                         editor: galleryTable.EDITOR,
-                        text: '<i class="far fa-rotate-right"></i>',
+                        text: '<i class="ti ti-rotate-clockwise"></i>',
                         action: function (e, dt, node) {
                             //console.log("Rotate, e=",e," dt=",dt," node=",node);
                             galleryTable.executeAction("rotateRight");
@@ -312,7 +312,7 @@ block content
                     });
 
                     galleryTable.button().add(buttonCounter++, {
-                        'text': '<i class="far fa-th-list"></i>',
+                        'text': '<i class="ti ti-list"></i>',
                         'action': function (e, dt, node) {
                             switchGallerySize(e, dt, node, '');
                             galleryTable.columns.adjust();
@@ -352,7 +352,7 @@ block content
                         if (node === false) return;
 
                         var isEditable = true;
-                        if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("folder-times")!=-1) isEditable = false;
+                        if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
                         setCurrentGalleryDimension(node.original.galleryDimension, isEditable);
 
                         if (node == null) {
@@ -374,7 +374,7 @@ block content
                         setGalleryTablePath(dir);
 
                         var isEditable = true;
-                        if (typeof node.icon != "undefined" && node.icon.indexOf("folder-times")!=-1) isEditable = false;
+                        if (typeof node.icon != "undefined" && node.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
                         setCurrentGalleryDimension(node.galleryDimension, isEditable);
                     });
 

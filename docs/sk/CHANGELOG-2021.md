@@ -364,7 +364,7 @@ WebJET integruje možnosť [prekladu textov](admin/setup/translation.md), aktuá
 - Pridané pole typu ```jstree``` pre zobrazenie [stromovej štruktúry](developer/datatables-editor/field-jstree.md) s výberovými polami uzlov stromu.
 - Pole typu ```json``` rozšírené o možnosť [výberu zoznamu adresárov súborového systému](developer/datatables-editor/field-json.md).
 - Pridané polia ```HIDDEN, RADIO, PASSWORD``` pre ```DatatableColumnType```.
-- Zjednodušený proces práce s [doplnkovými/vnorenými atribútmi](developer/datatables-editor/datatable-columns.md#vnorené-atribúty) ```editorFields``` v REST controlleri. Implementáciou metód ```processFromEntity``` a ```processToEntity``` zabezpečíte korektné mapovanie dát medzi entitou a ```editorFields``` objektom.
+- Zjednodušený proces práce s [doplnkovými/vnorenými atribútmi](developer/datatables-editor/datatable-columns.md#vnorené-atribúty), ```editorFields``` v REST controlleri. Implementáciou metód ```processFromEntity``` a ```processToEntity``` zabezpečíte korektné mapovanie dát medzi entitou a ```editorFields``` objektom.
 - Import - doplnené podmienky pre ```domainId``` aby sa pri importe aktualizovali len záznamy aktuálnej domény.
 - Import - upravený import s párovaním záznamov podľa vybraného stĺpca na používanie API ```insertItem``` a ```editItem``` aby import fungoval aj pre REST rozhrania nepoužívajúce Spring DATA repozitáre.
 - Import - upravené dialógové okno tak, aby sa zobrazila chybová správa zo servera pri chybe importu.
@@ -529,7 +529,7 @@ Pripravili sme dokumentáciu s informáciami o [nastavení voliteľných polí](
 
 ## 2021.18
 
-> Verzia 2021.18 automaticky vytvorí [doménový](frontend/setup/README.md) ```System``` priečinok, pridáva editáciu [značiek](redactor/webpages/perexgroups.md) (perex skupín), vylepšuje správanie editácie bunky a opravuje chybu zobrazenia číselníkových hodnôt v datatabuľke. Administrácia používa nové písmo ```Asap```.
+> Verzia 2021.18 automaticky vytvorí [doménový](frontend/setup/README.md), ```System``` priečinok, pridáva editáciu [značiek](redactor/webpages/perexgroups.md) (perex skupín), vylepšuje správanie editácie bunky a opravuje chybu zobrazenia číselníkových hodnôt v datatabuľke. Administrácia používa nové písmo ```Asap```.
 
 **Web stránky**
 
@@ -604,7 +604,7 @@ Optimalizovali sme [rýchlosť zobrazenia zoznamu web stránok](developer/apps/w
 
 **Administrácia**
 
-- Pridané [publikovanie udalosti](developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu) ```ThymeleafEvent``` pri zobrazení stránky administrácie. Umožňuje dynamicky vkladať objekty do modelu stránky.
+- Pridané [publikovanie udalosti](developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu), ```ThymeleafEvent``` pri zobrazení stránky administrácie. Umožňuje dynamicky vkladať objekty do modelu stránky.
 
 **Preklady**
 

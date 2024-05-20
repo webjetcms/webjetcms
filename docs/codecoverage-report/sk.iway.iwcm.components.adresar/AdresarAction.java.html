@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdresarAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.adresar</a> &gt; <span class="el_source">AdresarAction.java</span></div><h1>AdresarAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.adresar;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.HandlesEvent;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.users.UserDetails;
+
+/**
+ *  AdresarAction.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: bhric $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 1.10.2009 16:28:53
+ *@modified     $Date: 2009/10/08 08:06:38 $
+ */
+<span class="nc" id="L24">public class AdresarAction extends WebJETActionBean</span>
+{
+	private String filter;
+	private String vyraz;
+	private int oddelenieId;
+
+	public String getFilter()
+	{
+<span class="nc" id="L32">		return filter;</span>
+	}
+	public void setFilter(String filter)
+	{
+<span class="nc" id="L36">		this.filter = filter;</span>
+<span class="nc" id="L37">	}</span>
+	public String getVyraz()
+	{
+<span class="nc" id="L40">		return vyraz;</span>
+	}
+	public void setVyraz(String vyraz)
+	{
+<span class="nc" id="L44">		this.vyraz = vyraz;</span>
+<span class="nc" id="L45">	}</span>
+	public int getOddelenieId() {
+<span class="nc" id="L47">		return oddelenieId;</span>
+	}
+
+	public void setOddelenieId(int oddelenieId) {
+<span class="nc" id="L51">		this.oddelenieId = oddelenieId;</span>
+<span class="nc" id="L52">	}</span>
+
+	@DefaultHandler
+   @HandlesEvent(&quot;hladaj&quot;)
+   public Resolution hladaj()
+   {
+<span class="nc" id="L58">		List&lt;UserDetails&gt; users = null;</span>
+		try
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		{	if (&quot;all&quot;.equals(filter)) {</span>
+<span class="nc" id="L61">				users = AdresarDB.listUsers(filter,vyraz, getRequest());</span>
+			} else {
+<span class="nc" id="L63">		        List&lt;Integer&gt; oddelenieIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L64">		        oddelenieIds.add(this.getOddelenieId());</span>
+<span class="nc" id="L65">				users = AdresarDB.listUsers(oddelenieIds, vyraz, getRequest());</span>
+			}
+		}
+<span class="nc" id="L68">		catch (Exception e)</span>
+		{
+<span class="nc" id="L70">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L71">		}</span>
+<span class="nc" id="L72">		getRequest().setAttribute(&quot;users&quot;, users);</span>
+<span class="nc" id="L73">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WJGenSequence.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">WJGenSequence.java</span></div><h1>WJGenSequence.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
+
+import java.util.Vector;
+
+import org.eclipse.persistence.internal.databaseaccess.Accessor;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
+
+import sk.iway.iwcm.PkeyGenerator;
+
+/**
+ * &lt;p&gt;
+ * &lt;b&gt;Purpose&lt;/b&gt;: Defines sequencing through using a SEQUENCE table.
+ * &lt;p&gt;
+ * &lt;b&gt;Description&lt;/b&gt;
+ * This is the default sequencing mechanism.
+ *
+ * JRASKA: WebJET override povodnej TableSequence. Namiesto defaultnej JPA
+ * &lt;code&gt;TableSequence&lt;/code&gt;, ktora pouziva tabulku SEQUENCE (pripadne nazov zadany v anotaciach)
+ * sa na generovanie primarnych klucov pouzije &lt;code&gt;PkeyGenerator&lt;/code&gt; z WJ.
+ *
+ * Tato funkcionalita je dosiahnuta odstranenim overridovanych protected metod &lt;code&gt;buildSelectQuery()&lt;/code&gt; a
+ * &lt;code&gt;buildUpdateQuery()&lt;/code&gt; a overridom metod &lt;code&gt;getGeneratedValue()&lt;/code&gt; (vracia PkeyGenerator hodnotu) a
+ * &lt;code&gt;getGeneratedVector&lt;/code&gt; (vracia &lt;code&gt;null&lt;/code&gt;). Nakolko sa prepopulaciu stara &lt;code&gt;PkeyGenerator&lt;/code&gt;, JPA nesmie
+ * pri volani sekvencie pouzit &lt;code&gt;getGeneratedVector()&lt;/code&gt;, toto dosiahneme overridom boolean metod
+ * &lt;code&gt;shouldAcquireValueAfterInsert()&lt;/code&gt; a &lt;code&gt;shouldUsePreallocation&lt;/code&gt;, obidve vracaju &lt;code&gt;false&lt;/code&gt;.
+ */
+@SuppressWarnings(&quot;rawtypes&quot;)
+public class WJGenSequence extends org.eclipse.persistence.sequencing.TableSequence {
+
+    public WJGenSequence() {
+<span class="nc" id="L31">        super();</span>
+<span class="nc" id="L32">    }</span>
+
+    public WJGenSequence(String name) {
+<span class="fc" id="L35">        super(name);</span>
+<span class="fc" id="L36">    }</span>
+
+   /**
+    * Override metody, namiesto vratenia hodnot za pouzitia SEQUENCE tabulky sa vrati hodnota z
+    * &lt;code&gt;PkeyGenerator.getNextValue(seqName)&lt;/code&gt;
+    *
+    * Vo faze persistovania JPA entity, kde sa zo sekvencie generuje hodnota PK, sa do parametra
+    * &lt;b&gt;seqName&lt;/b&gt; ulozi hodnota z anotacneho parametra &lt;code&gt;pkColumnValue&lt;/code&gt;
+    */
+   @Override
+   public Object getGeneratedValue(Accessor accessor,	AbstractSession writeSession, String seqName)
+	{
+<span class="fc" id="L48">		return PkeyGenerator.getNextValue(seqName);</span>
+	}
+
+	/**
+	 * Override metody, vracia null, nakolko o prepopulaciu PK hodnot sa stara &lt;code&gt;PkeyGenerator&lt;/code&gt;
+	 */
+   @Override
+	public Vector getGeneratedVector(Accessor accessor, AbstractSession writeSession, String seqName, int size)
+	{
+<span class="nc" id="L57">		return null;</span>
+	}
+
+	@Override
+	public boolean shouldAcquireValueAfterInsert()
+	{
+<span class="fc" id="L63">		return false;</span>
+	}
+
+	@Override
+	public boolean shouldUseTransaction()
+	{
+<span class="fc" id="L69">		return false;</span>
+	}
+
+    @Override
+	public boolean shouldUsePreallocation()
+	{
+<span class="fc" id="L75">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

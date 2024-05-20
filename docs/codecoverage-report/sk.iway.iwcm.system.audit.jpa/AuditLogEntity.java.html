@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditLogEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.audit.jpa</a> &gt; <span class="el_source">AuditLogEntity.java</span></div><h1>AuditLogEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.audit.jpa;
+
+import java.sql.Timestamp;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@Entity
+@Table(name = &quot;_adminlog_&quot;)
+@Getter
+@Setter
+public class AuditLogEntity {
+
+<span class="fc" id="L29">	public AuditLogEntity() {</span>
+<span class="fc" id="L30">	}</span>
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY, generator=&quot;S_webjet_adminlog&quot;)
+	@Column(name = &quot;log_id&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ID, tab=&quot;main&quot;)
+	private Long id;
+
+	@Column(name = &quot;create_date&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.DATETIME, tab=&quot;main&quot;, renderFormat = &quot;dt-format-date-time&quot;, editor = {
+			@DataTableColumnEditor(type = &quot;datetime&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private Timestamp createDate;
+
+	@Column(name = &quot;log_type&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.SELECT, tab=&quot;main&quot;, renderFormat = &quot;dt-format-select&quot;, editor = {
+			@DataTableColumnEditor(type = &quot;select&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private Integer logType;
+
+	@Column(name = &quot;user_id&quot;)
+	// @DataTableColumn(inputType = DataTableColumnType.TEXT)
+	private Integer userId;
+
+	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab=&quot;main&quot;, renderFormat = &quot;dt-format-text&quot;, orderable = false, editor = {
+			@DataTableColumnEditor(type = &quot;text&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private String userFullName;
+
+	public String getUserFullName() {
+<span class="pc bpc" id="L61" title="2 of 6 branches missed.">		if (userFullName == null &amp;&amp; userId != null &amp;&amp; userId.intValue()&gt;0) {</span>
+<span class="fc" id="L62">			UserDetails user = UsersDB.getUserCached(userId.intValue());</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">			if (user!=null)	userFullName = user.getFullName();</span>
+<span class="nc" id="L64">			else userFullName = &quot;&quot;;</span>
+		}
+<span class="fc" id="L66">		return userFullName;</span>
+	}
+
+	public void setUserFullName(String userFullName) {
+<span class="nc" id="L70">		this.userFullName = userFullName;</span>
+<span class="nc" id="L71">	}</span>
+
+	@Size(max = 1000)
+	@Column(name = &quot;description&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = &quot;dt-format-text&quot;, tab=&quot;description&quot;, editor = {
+			@DataTableColumnEditor(type = &quot;textarea&quot;, attr = {
+					//disabled nedame, z UX hladiska je lepsie, ked tam viem dat kurzor a selectovat text z napr. SQL chyb @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;),
+					@DataTableColumnEditorAttr(key = &quot;class&quot;, value = &quot;textarea-code&quot;) }) })
+	private String description;
+
+	@Column(name = &quot;sub_id1&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.NUMBER, tab=&quot;main&quot;, renderFormat = &quot;dt-format-number&quot;,
+		editor = { @DataTableColumnEditor(attr = {	@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) }
+	)
+	private Integer subId1;
+
+	@Column(name = &quot;sub_id2&quot;)
+	// @DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER)
+	private Integer subId2;
+
+	@Size(max = 255)
+	@Column(name = &quot;ip&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab=&quot;main&quot;, renderFormat = &quot;dt-format-text&quot;, editor = {
+			@DataTableColumnEditor(type = &quot;text&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private String ip;
+
+	@Size(max = 255)
+	@Column(name = &quot;hostname&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab=&quot;main&quot;, renderFormat = &quot;dt-format-text&quot;, editor = {
+			@DataTableColumnEditor(type = &quot;text&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private String hostname;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

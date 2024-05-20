@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrowsersRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">BrowsersRestController.java</span></div><h1>BrowsersRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatGraphDB;
+import sk.iway.iwcm.stat.StatTableDB;
+import sk.iway.iwcm.stat.jpa.BrowsersDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/browser&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat')&quot;)
+@Datatable
+public class BrowsersRestController extends DatatableRestControllerV2&lt;BrowsersDTO, Long&gt; {
+    private static final int MAX_ROWS = 100;
+
+    @Autowired
+    public BrowsersRestController() {
+<span class="fc" id="L39">        super(null);</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public void beforeSave(BrowsersDTO entity) {
+<span class="nc" id="L44">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L45">    }</span>
+
+    @Override
+    public Page&lt;BrowsersDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="nc" id="L50">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+
+<span class="nc" id="L52">        List&lt;Column&gt; columns = StatTableDB.getBrowser(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery(), filter.getFilterBotsOut());</span>
+<span class="nc" id="L53">        DatatablePageImpl&lt;BrowsersDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(columns));</span>
+<span class="nc" id="L54">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;BrowsersDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, BrowsersDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L60">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+
+<span class="fc" id="L62">        List&lt;Column&gt; columns = StatTableDB.getBrowser(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery(), filter.getFilterBotsOut());</span>
+<span class="fc" id="L63">        DatatablePageImpl&lt;BrowsersDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(columns));</span>
+<span class="fc" id="L64">        return page;</span>
+    }
+
+    private List&lt;BrowsersDTO&gt; columnsToItems(List&lt;Column&gt; columns) {
+<span class="fc" id="L68">        List&lt;BrowsersDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+        //Compute sum of all visits
+<span class="fc" id="L71">        int sum = 0;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L73">            sum += column.getIntColumn3();</span>
+<span class="fc" id="L74">        }</span>
+
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (sum &gt; 0) {</span>
+<span class="fc" id="L77">            int order = 1;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            for(Column column : columns) {</span>
+<span class="fc" id="L79">                BrowsersDTO item = new BrowsersDTO();</span>
+<span class="fc" id="L80">                item.setOrder(order);</span>
+<span class="fc" id="L81">                item.setBrowser(column.getColumn1());</span>
+<span class="fc" id="L82">                item.setPlatform(column.getColumn2());</span>
+<span class="fc" id="L83">                item.setVisits(column.getIntColumn3());</span>
+<span class="fc" id="L84">                item.setPercentage((double) item.getVisits() * 100 / sum);</span>
+<span class="fc" id="L85">                items.add(item);</span>
+<span class="fc" id="L86">                order++;</span>
+<span class="fc" id="L87">            }</span>
+        }
+<span class="fc" id="L89">        return items;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/pieChartData&quot;,
+        params={&quot;dayDate&quot;, &quot;rootDir&quot;, &quot;filterBotsOut&quot;, &quot;keyValueName&quot;})
+    @ResponseBody
+    public List&lt;BrowsersDTO&gt; getPieChartData(
+                @RequestParam(&quot;dayDate&quot;) String stringRange,
+                @RequestParam(&quot;rootDir&quot;) int rootGroupId,
+                @RequestParam(&quot;filterBotsOut&quot;) boolean filterBotsOut,
+                @RequestParam(&quot;keyValueName&quot;) String keyValueName) {
+
+        //Key - browser/platform, value - sum of visits
+<span class="fc" id="L103">        Map&lt;String, Integer&gt; dataMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L104">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L105">        List&lt;Column&gt; columns = StatTableDB.getBrowser(5000, dateRangeArr[0], dateRangeArr[1], FilterHeaderDto.groupIdToQuery(rootGroupId), filterBotsOut);</span>
+
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L108">            String key = &quot;&quot;;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if(keyValueName.equals(&quot;browser&quot;)) {</span>
+<span class="fc" id="L110">                key = column.getColumn1(); // get browser</span>
+<span class="fc" id="L111">                int space = key.lastIndexOf(&quot; &quot;);</span>
+                //Logger.debug(getClass(), &quot;key=&quot;+key);
+                //odstran verziu prehliadaca
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                if (space &gt; 4) key = key.substring(0, space).trim();</span>
+<span class="fc" id="L115">            }</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">            else if(keyValueName.equals(&quot;platform&quot;))</span>
+<span class="fc" id="L117">                key = column.getColumn2(); //get platform</span>
+
+<span class="fc" id="L119">            Integer visitsCount = dataMap.get(key);</span>
+
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if(visitsCount == null)</span>
+<span class="fc" id="L122">                dataMap.put(key, Integer.valueOf(column.getIntColumn3()));</span>
+            else
+<span class="nc" id="L124">                dataMap.put(key, Integer.valueOf(column.getIntColumn3()) + visitsCount);</span>
+<span class="fc" id="L125">        }</span>
+
+<span class="fc" id="L127">        List&lt;BrowsersDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        for(Map.Entry&lt;String, Integer&gt; entry : dataMap.entrySet()) {</span>
+<span class="fc" id="L129">            BrowsersDTO item = new BrowsersDTO();</span>
+<span class="fc" id="L130">            item.setVisits(entry.getValue());</span>
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if(keyValueName.equals(&quot;browser&quot;))</span>
+<span class="fc" id="L133">                item.setBrowser(entry.getKey());</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">            else if(keyValueName.equals(&quot;platform&quot;))</span>
+<span class="fc" id="L135">                item.setPlatform(entry.getKey());</span>
+<span class="fc" id="L136">            items.add(item);</span>
+<span class="fc" id="L137">        }</span>
+
+        //usporiadaj podla hodnoty
+<span class="fc" id="L140">        List&lt;BrowsersDTO&gt; sortedList = items.stream()</span>
+<span class="fc" id="L141">			.sorted(Comparator.comparing(BrowsersDTO::getVisits, Comparator.nullsFirst(Comparator.naturalOrder())).reversed())</span>
+<span class="fc" id="L142">            .limit(5)</span>
+<span class="fc" id="L143">			.collect(Collectors.toList());</span>
+
+<span class="fc" id="L145">        return sortedList;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/lineChartData&quot;,
+        params={&quot;dayDate&quot;, &quot;rootDir&quot;, &quot;filterBotsOut&quot;})
+    @ResponseBody
+    public Map&lt;String, List&lt;BrowsersDTO&gt;&gt; getLineChartData(
+                @RequestParam(&quot;dayDate&quot;) String stringRange,
+                @RequestParam(&quot;rootDir&quot;) int rootGroupId,
+                @RequestParam(&quot;filterBotsOut&quot;) boolean filterBotsOut) {
+
+<span class="fc" id="L157">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L158">        HashMap&lt;String, Map&lt;Date, Number&gt;&gt; hashTableData = new HashMap&lt;&gt;(StatGraphDB.getBrowserTimeData(5, dateRangeArr[0], dateRangeArr[1], FilterHeaderDto.groupIdToQuery(rootGroupId), filterBotsOut));</span>
+<span class="fc" id="L159">        Map&lt;String, List&lt;BrowsersDTO&gt;&gt; chartData = hashtableToLineChartData(hashTableData);</span>
+<span class="fc" id="L160">        return chartData;</span>
+    }
+
+    private Map&lt;String, List&lt;BrowsersDTO&gt;&gt; hashtableToLineChartData(HashMap&lt;String,  Map&lt;Date, Number&gt;&gt; hashtable) {
+        //represent chart data
+<span class="fc" id="L165">        Map&lt;String, List&lt;BrowsersDTO&gt;&gt; chartData = new HashMap&lt;&gt;();</span>
+
+        //setOfKeys represent page names
+<span class="fc" id="L168">        Set&lt;String&gt; setOfKeys = hashtable.keySet();</span>
+
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        for(String key : setOfKeys) {</span>
+            //items is list of BrowserBean values for one page
+<span class="fc" id="L172">            List&lt;BrowsersDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L173">            Map&lt;Date, Number&gt; dayViews = hashtable.get(key);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
+<span class="fc" id="L175">                BrowsersDTO item = new BrowsersDTO();</span>
+<span class="fc" id="L176">                item.setBrowser(key);</span>
+<span class="fc" id="L177">                item.setDayDate(entry.getKey());</span>
+<span class="fc" id="L178">                item.setVisits(entry.getValue().intValue());</span>
+<span class="fc" id="L179">                items.add(item);</span>
+<span class="fc" id="L180">            }</span>
+<span class="fc" id="L181">            chartData.put(key, items);</span>
+<span class="fc" id="L182">        }</span>
+<span class="fc" id="L183">        return chartData;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

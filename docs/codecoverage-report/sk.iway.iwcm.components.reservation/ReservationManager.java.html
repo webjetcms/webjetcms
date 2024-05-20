@@ -1,0 +1,1959 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationManager.java</span></div><h1>ReservationManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ * ReservationManager.java - vykonava pracu s databazou, posiela e-mail,
+ * generuje hash pre ReservationAjaxAction.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.9 $
+ * @created Date: 20.12.2008 14:55:51
+ * @modified $Date: 2010/01/20 08:41:45 $
+ */
+public class ReservationManager
+{
+<span class="nc" id="L45">	protected ReservationManager() {</span>
+		//utility class
+<span class="nc" id="L47">	}</span>
+
+	private static ReservationBean fillReservationBean(ResultSet rs)
+	{
+<span class="nc" id="L51">		ReservationBean rb = new ReservationBean();</span>
+		try
+		{
+<span class="nc" id="L54">			rb.setReservationId(rs.getInt(&quot;reservation_id&quot;));</span>
+<span class="nc" id="L55">			rb.setReservationObjectId(rs.getInt(&quot;reservation_object_id&quot;));</span>
+<span class="nc" id="L56">			long datum = DB.getDbTimestamp(rs, &quot;date_from&quot;);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			rb.setDateFrom(datum &gt; 0 ? new Date(datum) : null);</span>
+<span class="nc" id="L58">			datum = DB.getDbTimestamp(rs, &quot;date_to&quot;);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			rb.setDateTo(datum &gt; 0 ? new Date(datum) : null);</span>
+<span class="nc" id="L60">			rb.setName(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L61">			rb.setSurname(DB.getDbString(rs, &quot;surname&quot;));</span>
+<span class="nc" id="L62">			rb.setEmail(DB.getDbString(rs, &quot;email&quot;));</span>
+<span class="nc" id="L63">			rb.setPurpose(DB.getDbString(rs, &quot;purpose&quot;));</span>
+<span class="nc" id="L64">			rb.setAccepted(rs.getBoolean(&quot;accepted&quot;));</span>
+<span class="nc" id="L65">			rb.setHashValue(DB.getDbString(rs, &quot;hash_value&quot;));</span>
+<span class="nc" id="L66">			rb.setPhoneNumber(DB.getDbString(rs, &quot;phone_number&quot;));</span>
+		}
+<span class="nc" id="L68">		catch (Exception e)</span>
+		{
+<span class="nc" id="L70">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L71">		}</span>
+<span class="nc" id="L72">		return rb;</span>
+	}
+
+	private static ReservationObjectBean fillReservationObjectBean(ResultSet rs)
+	{
+<span class="nc" id="L77">		Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L78">		ReservationObjectBean rob = new ReservationObjectBean();</span>
+		try
+		{
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (rs.getInt(&quot;reservation_object_id&quot;) == 0)</span>
+			{
+<span class="nc" id="L83">				return null;</span>
+			}
+<span class="nc" id="L85">			rob.setReservationObjectId(rs.getInt(&quot;reservation_object_id&quot;));</span>
+<span class="nc" id="L86">			rob.setName(rs.getString(&quot;name&quot;));</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			if (rs.getBoolean(&quot;must_accepted&quot;))</span>
+<span class="nc" id="L88">				rob.setMustAcceptedString(prop.getText(&quot;components.reservation.admin_object_list.yes&quot;));</span>
+			else
+<span class="nc" id="L90">				rob.setMustAcceptedString(prop.getText(&quot;components.reservation.admin_object_list.no&quot;));</span>
+<span class="nc" id="L91">			rob.setEmailAccepter(rs.getString(&quot;email_accepter&quot;));</span>
+<span class="nc" id="L92">			rob.setMaxReservations(rs.getInt(&quot;max_reservations&quot;));</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (rob.getMaxReservations() &lt; 1)</span>
+<span class="nc" id="L94">				rob.setMaxReservations(1);</span>
+<span class="nc" id="L95">			rob.setCancelTimeBefor(rs.getInt(&quot;cancel_time_befor&quot;));</span>
+<span class="nc" id="L96">			String timeFrom = DB.getDbString(rs, &quot;reservation_time_from&quot;);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			rob.setReservationTimeFrom(Tools.isEmpty(timeFrom) ? &quot;0:00&quot; : timeFrom);</span>
+<span class="nc" id="L98">			String timeTo = DB.getDbString(rs, &quot;reservation_time_to&quot;);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			rob.setReservationTimeTo(Tools.isEmpty(timeTo) ? &quot;23:59&quot; : timeTo);</span>
+<span class="nc" id="L100">			rob.setPriceForDay(rs.getDouble(&quot;price_for_day&quot;));</span>
+<span class="nc" id="L101">			rob.setPriceForHour(rs.getDouble(&quot;price_for_hour&quot;));</span>
+<span class="nc" id="L102">			rob.setPriceForDayString(rs.getDouble(&quot;price_for_day&quot;));</span>
+<span class="nc" id="L103">			rob.setPriceForHourString(rs.getDouble(&quot;price_for_hour&quot;));</span>
+<span class="nc" id="L104">			rob.setReservationForAllDay(rs.getBoolean(&quot;reservation_for_all_day&quot;));</span>
+<span class="nc" id="L105">			rob.setPhotoLink(DB.getDbString(rs, &quot;photo_link&quot;));</span>
+<span class="nc" id="L106">			rob.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+<span class="nc" id="L107">			rob.setTimeUnit(DB.getDbString(rs, &quot;time_unit&quot;));</span>
+		}
+<span class="nc" id="L109">		catch (Exception e)</span>
+		{
+<span class="nc" id="L111">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L112">		}</span>
+<span class="nc" id="L113">		return rob;</span>
+	}
+
+	/**
+	 * Vrati vsetky rezervacne objekty z tabulky reservation_object
+	 *
+	 * @return List naplneny rezervacnymi objektami, ktore je mozne si
+	 *         rezervovat - z tabulky reservation_object
+	 */
+	public static List&lt;ReservationObjectBean&gt; getReservationObjects()
+	{
+<span class="nc" id="L124">		List&lt;ReservationObjectBean&gt; reservationObjects = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L125">		Connection db_conn = null;</span>
+<span class="nc" id="L126">		PreparedStatement ps = null;</span>
+<span class="nc" id="L127">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L130">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L131">			ps = db_conn.prepareStatement(&quot;SELECT * FROM reservation_object WHERE &quot; + CloudToolsForCore.getDomainIdSqlWhere(false)</span>
+						+ &quot; ORDER BY name&quot;);
+<span class="nc" id="L133">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L136">				reservationObjects.add(fillReservationObjectBean(rs));</span>
+			}
+<span class="nc" id="L138">			rs.close();</span>
+<span class="nc" id="L139">			ps.close();</span>
+<span class="nc" id="L140">			db_conn.close();</span>
+<span class="nc" id="L141">			rs = null;</span>
+<span class="nc" id="L142">			ps = null;</span>
+<span class="nc" id="L143">			db_conn = null;</span>
+		}
+<span class="nc" id="L145">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L147">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L154">					rs.close();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L156">					ps.close();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L158">					db_conn.close();</span>
+			}
+<span class="nc" id="L160">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L162">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L163">			}</span>
+		}
+<span class="nc" id="L165">		return reservationObjects;</span>
+	}
+
+	/**
+	 * Vrati vsetky rezervacne objekty z tabulky reservation_object
+	 *
+	 * @param email
+	 *           , podla ktoreho chceme vyfiltrovat objekty
+	 *
+	 * @return List naplneny rezervacnymi objektami, ktore je mozne si
+	 *         rezervovat - z tabulky reservation_object vyfiltrovane podla
+	 *         parametra email
+	 */
+	public static List&lt;ReservationObjectBean&gt; getReservationObjects(String email)
+	{
+<span class="nc" id="L180">		List&lt;ReservationObjectBean&gt; reservationObjects = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L181">		Connection db_conn = null;</span>
+<span class="nc" id="L182">		PreparedStatement ps = null;</span>
+<span class="nc" id="L183">		ResultSet rs = null;</span>
+<span class="nc" id="L184">		StringBuilder sql = new StringBuilder(&quot;SELECT * FROM reservation_object WHERE reservation_object_id &gt; 0&quot;</span>
+<span class="nc" id="L185">					+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+		try
+		{
+<span class="nc" id="L188">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (Tools.isNotEmpty(email))</span>
+<span class="nc" id="L190">				sql.append(&quot; AND email_accepter = ?&quot;);</span>
+<span class="nc" id="L191">			sql.append(&quot; ORDER BY name&quot;);</span>
+<span class="nc" id="L192">			Logger.debug(ReservationManager.class, &quot;sql=&quot; + sql.toString());</span>
+<span class="nc" id="L193">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (Tools.isNotEmpty(email))</span>
+			{
+<span class="nc" id="L196">				int psCounter = 1;</span>
+<span class="nc" id="L197">				ps.setString(psCounter++, email);</span>
+			}
+<span class="nc" id="L199">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L202">				reservationObjects.add(fillReservationObjectBean(rs));</span>
+			}
+<span class="nc" id="L204">			rs.close();</span>
+<span class="nc" id="L205">			ps.close();</span>
+<span class="nc" id="L206">			db_conn.close();</span>
+<span class="nc" id="L207">			rs = null;</span>
+<span class="nc" id="L208">			ps = null;</span>
+<span class="nc" id="L209">			db_conn = null;</span>
+		}
+<span class="nc" id="L211">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L213">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L220">					rs.close();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L222">					ps.close();</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L224">					db_conn.close();</span>
+			}
+<span class="nc" id="L226">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L228">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L229">			}</span>
+		}
+<span class="nc" id="L231">		return reservationObjects;</span>
+	}
+
+	/**
+	 * Vrati vsetky rezervacne objekty z tabulky reservation_object - ci su to
+	 * celodenne rezervacie
+	 *
+	 * @param reservationForAllDay
+	 *           - ci su to celodenne rezervacie
+	 *
+	 * @return List
+	 */
+	public static List&lt;ReservationObjectBean&gt; getReservationObjectsForAllDay(boolean reservationForAllDay)
+	{
+<span class="nc" id="L245">		List&lt;ReservationObjectBean&gt; reservationObjects = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L246">		Connection db_conn = null;</span>
+<span class="nc" id="L247">		PreparedStatement ps = null;</span>
+<span class="nc" id="L248">		ResultSet rs = null;</span>
+<span class="nc" id="L249">		StringBuilder sql = new StringBuilder(&quot;SELECT * FROM reservation_object WHERE reservation_object_id &gt; 0&quot;</span>
+<span class="nc" id="L250">					+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+		try
+		{
+<span class="nc" id="L253">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L254">			sql.append(&quot; AND reservation_for_all_day = ?&quot;);</span>
+<span class="nc" id="L255">			sql.append(&quot; ORDER BY name&quot;);</span>
+<span class="nc" id="L256">			Logger.debug(ReservationManager.class, &quot;sql=&quot; + sql.toString());</span>
+<span class="nc" id="L257">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L258">			int psCounter = 1;</span>
+<span class="nc" id="L259">			ps.setBoolean(psCounter++, reservationForAllDay);</span>
+<span class="nc" id="L260">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L263">				reservationObjects.add(fillReservationObjectBean(rs));</span>
+			}
+<span class="nc" id="L265">			rs.close();</span>
+<span class="nc" id="L266">			ps.close();</span>
+<span class="nc" id="L267">			db_conn.close();</span>
+<span class="nc" id="L268">			rs = null;</span>
+<span class="nc" id="L269">			ps = null;</span>
+<span class="nc" id="L270">			db_conn = null;</span>
+		}
+<span class="nc" id="L272">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L274">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L281">					rs.close();</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L283">					ps.close();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L285">					db_conn.close();</span>
+			}
+<span class="nc" id="L287">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L289">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L290">			}</span>
+		}
+<span class="nc" id="L292">		return reservationObjects;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati zoznam vsetkych emailovych adries schvalovatelov
+	 * rezervacii
+	 */
+	public static List&lt;String&gt; getAccepterEmails()
+	{
+<span class="nc" id="L301">		Connection db_conn = null;</span>
+<span class="nc" id="L302">		PreparedStatement ps = null;</span>
+<span class="nc" id="L303">		ResultSet rs = null;</span>
+<span class="nc" id="L304">		List&lt;String&gt; emails = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L305">		String sql = &quot;SELECT DISTINCT email_accepter FROM reservation_object WHERE &quot; + CloudToolsForCore.getDomainIdSqlWhere(false);</span>
+		try
+		{
+<span class="nc" id="L308">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L309">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L310">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L313">				String email = DB.getDbString(rs, &quot;email_accepter&quot;);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">				if (Tools.isNotEmpty(email))</span>
+<span class="nc" id="L315">					emails.add(email);</span>
+<span class="nc" id="L316">			}</span>
+<span class="nc" id="L317">			rs.close();</span>
+<span class="nc" id="L318">			ps.close();</span>
+<span class="nc" id="L319">			db_conn.close();</span>
+<span class="nc" id="L320">			rs = null;</span>
+<span class="nc" id="L321">			ps = null;</span>
+<span class="nc" id="L322">			db_conn = null;</span>
+		}
+<span class="nc" id="L324">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L326">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L332" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L333">					rs.close();</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L335">					ps.close();</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L337">					db_conn.close();</span>
+			}
+<span class="nc" id="L339">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L341">			}</span>
+		}
+<span class="nc" id="L343">		return (emails);</span>
+	}
+
+	/**
+	 * Vrati (naplni) rezervacny objekt so zadanym identifikatorom
+	 *
+	 * @param reservationObjectId
+	 *           - identifikator rezervacneho objektu, ktory chceme ziskat
+	 * @return bean s properties rezervacneho objektu s identifikatorom
+	 *         reservationObjectId
+	 */
+	public static ReservationObjectBean getReservationObjectById(int reservationObjectId)
+	{
+<span class="nc" id="L356">		ReservationObjectBean reservationObject = new ReservationObjectBean();</span>
+<span class="nc" id="L357">		Connection db_conn = null;</span>
+<span class="nc" id="L358">		PreparedStatement ps = null;</span>
+<span class="nc" id="L359">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L362">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L363">			ps = db_conn.prepareStatement(&quot;SELECT * FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L364">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L365">			ps.setInt(1, reservationObjectId);</span>
+<span class="nc" id="L366">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L369">				reservationObject = fillReservationObjectBean(rs);</span>
+			}
+<span class="nc" id="L371">			rs.close();</span>
+<span class="nc" id="L372">			ps.close();</span>
+<span class="nc" id="L373">			db_conn.close();</span>
+<span class="nc" id="L374">			rs = null;</span>
+<span class="nc" id="L375">			ps = null;</span>
+<span class="nc" id="L376">			db_conn = null;</span>
+		}
+<span class="nc" id="L378">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L380">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L387">					rs.close();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L389">					ps.close();</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L391">					db_conn.close();</span>
+			}
+<span class="nc" id="L393">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L395">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L396">			}</span>
+		}
+<span class="nc" id="L398">		return reservationObject;</span>
+	}
+
+	public static ReservationObjectBean getReservationObjectForAllDayById(int reservationObjectId, boolean reservationForAllDay)
+	{
+<span class="nc" id="L403">		ReservationObjectBean reservationObject = new ReservationObjectBean();</span>
+<span class="nc" id="L404">		Connection db_conn = null;</span>
+<span class="nc" id="L405">		PreparedStatement ps = null;</span>
+<span class="nc" id="L406">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L409">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L410">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L411">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">			if (reservationForAllDay)</span>
+			{
+<span class="nc" id="L414">				sql.append(&quot; AND reservation_object_id in (SELECT reservation_object_id FROM reservation_object WHERE reservation_for_all_day = ?&quot;);</span>
+<span class="nc" id="L415">				sql.append(CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;)&quot;);</span>
+			}
+<span class="nc" id="L417">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L418">			ps.setInt(1, reservationObjectId);</span>
+<span class="nc" id="L419">			ps.setBoolean(2, reservationForAllDay);</span>
+<span class="nc" id="L420">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L423">				reservationObject = fillReservationObjectBean(rs);</span>
+			}
+<span class="nc" id="L425">			rs.close();</span>
+<span class="nc" id="L426">			ps.close();</span>
+<span class="nc" id="L427">			db_conn.close();</span>
+<span class="nc" id="L428">			rs = null;</span>
+<span class="nc" id="L429">			ps = null;</span>
+<span class="nc" id="L430">			db_conn = null;</span>
+		}
+<span class="nc" id="L432">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L434">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L440" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L441">					rs.close();</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L443">					ps.close();</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L445">					db_conn.close();</span>
+			}
+<span class="nc" id="L447">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L449">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L450">			}</span>
+		}
+<span class="nc" id="L452">		return reservationObject;</span>
+	}
+
+	/**
+	 * Vyfiltruje a vrati rezervacie z tabulky reservation podla zadanych
+	 * parametrov
+	 *
+	 * @param filterDateFrom
+	 *           od ktoreho datumu sa maju vyselektovat rezervacie
+	 * @param filterDateTo
+	 *           do ktoreho datumu sa maju vyselektovat rezervacie
+	 * @param filterObjectId
+	 *           identifikator rezervacneho objektu, podla ktoreho sa maju
+	 *           rezervacie vyfiltrovat
+	 * @return List naplneny rezervaciami, ktore splnaju podmienky udane
+	 *         vstupnymi parametrami
+	 */
+	public static List&lt;ReservationBean&gt; getReservations(Date filterDateFrom, Date filterDateTo, int filterObjectId)
+	{
+<span class="nc" id="L471">		List&lt;ReservationBean&gt; reservations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L472">		Connection db_conn = null;</span>
+<span class="nc" id="L473">		PreparedStatement ps = null;</span>
+<span class="nc" id="L474">		ResultSet rs = null;</span>
+<span class="nc" id="L475">		String sqlItemDateTo = &quot;&quot;;</span>
+<span class="nc" id="L476">		String sqlItemObject = &quot;&quot;;</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">		if (filterDateTo != null)</span>
+<span class="nc" id="L478">			sqlItemDateTo = &quot;AND date_to &lt;= ?&quot;;</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">		if (filterObjectId != 0)</span>
+<span class="nc" id="L480">			sqlItemObject = &quot;AND reservation_object_id = ?&quot;;</span>
+		try
+		{
+<span class="nc" id="L483">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L484">			String sql = &quot;SELECT * FROM reservation WHERE date_to &gt;= ?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + sqlItemDateTo + &quot; &quot;</span>
+						+ sqlItemObject + &quot; ORDER BY date_from ASC&quot;;
+<span class="nc" id="L486">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L487">			int psIndex = 1;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (filterDateFrom == null)</span>
+			{
+				// nastavuje od zaciatku dnesneho dna
+<span class="nc" id="L491">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L492">				cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L493">				cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L494">				cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L495">				ps.setTimestamp(psIndex++, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L496">			}</span>
+			else
+<span class="nc" id="L498">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateFrom.getTime()), &quot;00:00:00&quot;)));</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">			if (filterDateTo != null)</span>
+<span class="nc" id="L500">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateTo.getTime()), &quot;23:59:59&quot;)));</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">			if (filterObjectId != 0)</span>
+<span class="nc" id="L502">				ps.setInt(psIndex++, filterObjectId);</span>
+<span class="nc" id="L503">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L506">				ReservationBean reservation = fillReservationBean(rs);</span>
+<span class="nc" id="L507">				reservations.add(reservation);</span>
+<span class="nc" id="L508">			}</span>
+<span class="nc" id="L509">			rs.close();</span>
+<span class="nc" id="L510">			ps.close();</span>
+<span class="nc" id="L511">			db_conn.close();</span>
+<span class="nc" id="L512">			rs = null;</span>
+<span class="nc" id="L513">			ps = null;</span>
+<span class="nc" id="L514">			db_conn = null;</span>
+		}
+<span class="nc" id="L516">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L518">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L525">					rs.close();</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L527">					ps.close();</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L529">					db_conn.close();</span>
+			}
+<span class="nc" id="L531">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L533">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L534">			}</span>
+		}
+<span class="nc" id="L536">		return reservations;</span>
+	}
+
+	public static List&lt;ReservationBean&gt; getAllReservationsForAllDay(Date filterDateFrom, Date filterDateTo,
+				boolean reservationForAllDay)
+	{
+<span class="nc" id="L542">		List&lt;ReservationBean&gt; reservations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L543">		Connection db_conn = null;</span>
+<span class="nc" id="L544">		PreparedStatement ps = null;</span>
+<span class="nc" id="L545">		ResultSet rs = null;</span>
+<span class="nc" id="L546">		String sqlItemDateTo = &quot;&quot;;</span>
+<span class="nc" id="L547">		StringBuilder sqlItemObject = new StringBuilder(&quot;&quot;);</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">		if (filterDateTo != null)</span>
+		{
+<span class="nc" id="L550">			sqlItemDateTo = &quot;AND date_to &lt;= ?&quot;;</span>
+		}
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		if (reservationForAllDay)</span>
+		{
+<span class="nc" id="L554">			sqlItemObject.append(&quot;AND reservation_object_id in (SELECT reservation_object_id FROM reservation_object WHERE reservation_for_all_day = ?&quot;);</span>
+<span class="nc" id="L555">			sqlItemObject.append(CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;)&quot;);</span>
+		}
+		try
+		{
+<span class="nc" id="L559">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L560">			String sql = &quot;SELECT * FROM reservation WHERE date_to &gt;= ?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + sqlItemDateTo + &quot; &quot;</span>
+<span class="nc" id="L561">						+ sqlItemObject.toString() + &quot; ORDER BY date_from ASC&quot;;</span>
+<span class="nc" id="L562">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L563">			int psIndex = 1;</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			if (filterDateFrom == null)</span>
+			{
+				// nastavuje od zaciatku dnesneho dna
+<span class="nc" id="L567">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L568">				cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L569">				cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L570">				cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L571">				ps.setTimestamp(psIndex++, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L572">			}</span>
+			else
+<span class="nc" id="L574">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateFrom.getTime()), &quot;00:00:00&quot;)));</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">			if (filterDateTo != null)</span>
+			{
+<span class="nc" id="L577">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateTo.getTime()), &quot;23:59:59&quot;)));</span>
+			}
+<span class="nc bnc" id="L579" title="All 2 branches missed.">			if (reservationForAllDay)</span>
+			{
+<span class="nc" id="L581">				ps.setBoolean(psIndex++, reservationForAllDay);</span>
+			}
+<span class="nc" id="L583">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L584" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L586">				ReservationBean reservation = fillReservationBean(rs);</span>
+<span class="nc" id="L587">				reservations.add(reservation);</span>
+<span class="nc" id="L588">			}</span>
+<span class="nc" id="L589">			rs.close();</span>
+<span class="nc" id="L590">			ps.close();</span>
+<span class="nc" id="L591">			db_conn.close();</span>
+<span class="nc" id="L592">			rs = null;</span>
+<span class="nc" id="L593">			ps = null;</span>
+<span class="nc" id="L594">			db_conn = null;</span>
+		}
+<span class="nc" id="L596">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L598">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L604" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L605">					rs.close();</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L607">					ps.close();</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L609">					db_conn.close();</span>
+			}
+<span class="nc" id="L611">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L613">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L614">			}</span>
+		}
+<span class="nc" id="L616">		return reservations;</span>
+	}
+
+	public static List&lt;ReservationBean&gt; getAllReservationsForAllDayObjectId(Date filterDateFrom, Date filterDateTo,
+				boolean reservationForAllDay, String reservationObjectIdString)
+	{
+<span class="nc" id="L622">		List&lt;ReservationBean&gt; reservations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L623">		Connection db_conn = null;</span>
+<span class="nc" id="L624">		PreparedStatement ps = null;</span>
+<span class="nc" id="L625">		ResultSet rs = null;</span>
+<span class="nc" id="L626">		String sqlItemDateTo = &quot;&quot;;</span>
+<span class="nc" id="L627">		StringBuilder sqlItemObject = new StringBuilder(&quot;&quot;);</span>
+<span class="nc" id="L628">		String sqlItemObjectId = &quot;&quot;;</span>
+<span class="nc bnc" id="L629" title="All 2 branches missed.">		if (filterDateTo != null)</span>
+		{
+			//musi byt date_from aby nam naslo tie co zacinaju pred koncovym datumom
+<span class="nc" id="L632">			sqlItemDateTo = &quot;AND date_from &lt;= ?&quot;;</span>
+		}
+<span class="nc" id="L634">		int reservationObjectId = Integer.valueOf(reservationObjectIdString);</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">		if (reservationForAllDay)</span>
+		{
+<span class="nc" id="L637">			sqlItemObject.append(&quot;AND reservation_object_id in (SELECT reservation_object_id FROM reservation_object WHERE reservation_for_all_day = ?&quot;);</span>
+<span class="nc" id="L638">			sqlItemObject.append(CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;)&quot;);</span>
+		}
+<span class="nc bnc" id="L640" title="All 2 branches missed.">		if (reservationObjectId != 0)</span>
+		{
+<span class="nc" id="L642">			sqlItemObjectId = &quot;AND reservation_object_id = ?&quot;;</span>
+		}
+		try
+		{
+<span class="nc" id="L646">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L647">			String sql = &quot;SELECT * FROM reservation WHERE date_to &gt;= ?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + sqlItemDateTo + &quot; &quot;</span>
+<span class="nc" id="L648">						+ sqlItemObject.toString() + &quot; &quot; + sqlItemObjectId + &quot; ORDER BY date_from ASC&quot;;</span>
+<span class="nc" id="L649">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L650">			int psIndex = 1;</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">			if (filterDateFrom == null)</span>
+			{
+				// nastavuje od zaciatku dnesneho dna
+<span class="nc" id="L654">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L655">				cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L656">				cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L657">				cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L658">				ps.setTimestamp(psIndex++, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L659">			}</span>
+			else
+<span class="nc" id="L661">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateFrom.getTime()), &quot;00:00:00&quot;)));</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">			if (filterDateTo != null)</span>
+			{
+<span class="nc" id="L664">				ps.setTimestamp(psIndex++, new Timestamp(DB.getTimestamp(Tools.formatDate(filterDateTo.getTime()), &quot;23:59:59&quot;)));</span>
+			}
+<span class="nc bnc" id="L666" title="All 2 branches missed.">			if (reservationForAllDay)</span>
+			{
+<span class="nc" id="L668">				ps.setBoolean(psIndex++, reservationForAllDay);</span>
+			}
+<span class="nc bnc" id="L670" title="All 2 branches missed.">			if (reservationObjectId != 0)</span>
+			{
+<span class="nc" id="L672">				ps.setInt(psIndex++, reservationObjectId);</span>
+			}
+<span class="nc" id="L674">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L675" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L677">				ReservationBean reservation = fillReservationBean(rs);</span>
+<span class="nc" id="L678">				reservations.add(reservation);</span>
+<span class="nc" id="L679">			}</span>
+<span class="nc" id="L680">			rs.close();</span>
+<span class="nc" id="L681">			ps.close();</span>
+<span class="nc" id="L682">			db_conn.close();</span>
+<span class="nc" id="L683">			rs = null;</span>
+<span class="nc" id="L684">			ps = null;</span>
+<span class="nc" id="L685">			db_conn = null;</span>
+		}
+<span class="nc" id="L687">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L689">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L695" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L696">					rs.close();</span>
+<span class="nc bnc" id="L697" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L698">					ps.close();</span>
+<span class="nc bnc" id="L699" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L700">					db_conn.close();</span>
+			}
+<span class="nc" id="L702">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L704">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L705">			}</span>
+		}
+<span class="nc" id="L707">		return reservations;</span>
+	}
+
+	/**
+	 * Vygeneruje md5 hash zo zadaneho Stringu
+	 *
+	 * @param code
+	 *           - Retazec, ktory chceme zahashovat
+	 * @return vrati zakodovany md5 retazec z &lt;b&gt;code&lt;/b&gt;
+	 */
+	private static String generateHash(String code)
+	{
+<span class="nc" id="L719">		String hashword = null;</span>
+		try
+		{
+<span class="nc" id="L722">			MessageDigest md5 = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="nc" id="L723">			md5.update(code.getBytes());</span>
+<span class="nc" id="L724">			BigInteger hash = new BigInteger(1, md5.digest());</span>
+<span class="nc" id="L725">			hashword = hash.toString(16);</span>
+		}
+<span class="nc" id="L727">		catch (NoSuchAlgorithmException nsae)</span>
+		{
+<span class="nc" id="L729">			sk.iway.iwcm.Logger.error(nsae);</span>
+<span class="nc" id="L730">		}</span>
+<span class="nc" id="L731">		return hashword;</span>
+	}
+
+	/**
+	 * Ulozi rezervaciu do tabulky reservation
+	 *
+	 * @param reservation
+	 *           - objekt, v ktorom su ulozene jednotlive vlastnosti danej
+	 *           rezervacie
+	 * @param serverName
+	 *           - nazov serveru, aby sme vedeli vyskladat spravny odkaz do mejlu
+	 * @param prop
+	 *           - properties, ktore sa pouzije na pisanie emailu
+	 * @return 0 - ak ulozenie do databazy prebehlo v poriadku, 1 - ak pouzivatel
+	 *         nezadal objekt
+	 * @throws ParseException
+	 */
+	public static int addReservation(ReservationBean reservation, String serverName, Prop prop, String lng) throws ParseException
+	{
+<span class="nc" id="L750">		int returnValue = 0; // uspesne pridanie rezervacie</span>
+<span class="nc" id="L751">		String dateFrom = &quot;&quot;;</span>
+<span class="nc" id="L752">		String dateTo = &quot;&quot;;</span>
+<span class="nc bnc" id="L753" title="All 2 branches missed.">		if (reservation.getReservationObjectId() == 0)</span>
+<span class="nc" id="L754">			return (1); // je potrebne vybrat objekt</span>
+<span class="nc" id="L755">		boolean mustReservationAccepted = ReservationManager.mustReservationObjectAccepted(reservation.getReservationObjectId());</span>
+<span class="nc bnc" id="L756" title="All 2 branches missed.">		if (mustReservationAccepted)</span>
+<span class="nc" id="L757">			reservation.setHashValue(ReservationManager.generateHash(reservation.getName() + reservation.getDateFrom()));</span>
+		else
+<span class="nc" id="L759">			reservation.setHashValue(&quot;&quot;);</span>
+
+		//toto sa deje iba pri novej rezervacii, pri existujucej to meni admin
+<span class="nc bnc" id="L762" title="All 2 branches missed.">		if(reservation.getReservationId()&lt;1)</span>
+		{
+<span class="nc bnc" id="L764" title="All 2 branches missed.">			if (!mustReservationAccepted)</span>
+<span class="nc" id="L765">				reservation.setAccepted(true);</span>
+			else
+<span class="nc" id="L767">				reservation.setAccepted(false);</span>
+		}
+		// ak musi byt rezervacia schvalena, nastav, ze to este nie je schvalene
+		// ak nemusi byt schvalena, nastav true, cize uz je to akoze schvalene
+<span class="nc" id="L771">		boolean accept = false;</span>
+<span class="nc bnc" id="L772" title="All 2 branches missed.">		if (reservation.isAccepted())</span>
+<span class="nc" id="L773">			accept = true;</span>
+		// formatovanie datumov do stringu kvoli rozdeleniu casu a datumu na dve
+		// polozky
+<span class="nc" id="L776">		DateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L777">		dateFrom = formatter.format(reservation.getDateFrom());</span>
+<span class="nc" id="L778">		dateTo = formatter.format(reservation.getDateTo());</span>
+<span class="nc" id="L779">		DateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L780">		Date from = sdf.parse(dateFrom + &quot; &quot; + reservation.getStartTime());</span>
+<span class="nc" id="L781">		Date to = sdf.parse(dateTo + &quot; &quot; + reservation.getFinishTime());</span>
+<span class="nc" id="L782">		Connection db_conn = null;</span>
+<span class="nc" id="L783">		PreparedStatement ps = null;</span>
+
+<span class="nc" id="L785">		String sql = &quot;INSERT INTO reservation (reservation_object_id, date_from, date_to, name, surname, email, &quot;</span>
+					+ &quot;purpose, accepted, hash_value, phone_number, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
+<span class="nc bnc" id="L787" title="All 2 branches missed.">		if(reservation.getReservationId()&gt;0)</span>
+<span class="nc" id="L788">			sql = &quot;UPDATE reservation SET reservation_object_id=?, date_from=?, date_to=?, name=?, surname=?, email=?, &quot;</span>
+						+ &quot;purpose=?, accepted=?, hash_value=?, phone_number=?, domain_id=? WHERE reservation_id=?&quot;;
+
+		try
+		{
+<span class="nc" id="L793">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L794">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L795">			int psCounter = 1;</span>
+<span class="nc" id="L796">			ps.setInt(psCounter++, reservation.getReservationObjectId());</span>
+<span class="nc" id="L797">			ps.setTimestamp(psCounter++, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L798">			ps.setTimestamp(psCounter++, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L799">			ps.setString(psCounter++, reservation.getName());</span>
+<span class="nc" id="L800">			ps.setString(psCounter++, reservation.getSurname());</span>
+<span class="nc" id="L801">			ps.setString(psCounter++, reservation.getEmail());</span>
+<span class="nc" id="L802">			ps.setString(psCounter++, reservation.getPurpose());</span>
+<span class="nc" id="L803">			ps.setBoolean(psCounter++, accept);</span>
+<span class="nc" id="L804">			ps.setString(psCounter++, reservation.getHashValue());</span>
+<span class="nc" id="L805">			ps.setString(psCounter++, reservation.getPhoneNumber());</span>
+<span class="nc" id="L806">			ps.setInt(psCounter++, CloudToolsForCore.getDomainId());</span>
+			//ak je to update nastavime co updateujeme
+<span class="nc bnc" id="L808" title="All 2 branches missed.">			if(reservation.getReservationId()&gt;0)</span>
+<span class="nc" id="L809">				ps.setInt(psCounter++, reservation.getReservationId());</span>
+<span class="nc" id="L810">			ps.executeUpdate();</span>
+<span class="nc" id="L811">			ps.close();</span>
+<span class="nc" id="L812">			db_conn.close();</span>
+<span class="nc" id="L813">			ps = null;</span>
+<span class="nc" id="L814">			db_conn = null;</span>
+		}
+<span class="nc" id="L816">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L818">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L819">			returnValue = 2;</span>
+<span class="nc" id="L820">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L826" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L827">					ps.close();</span>
+<span class="nc bnc" id="L828" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L829">					db_conn.close();</span>
+			}
+<span class="nc" id="L831">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L833">			}</span>
+		}
+<span class="nc bnc" id="L835" title="All 4 branches missed.">		if (mustReservationAccepted &amp;&amp; reservation.getReservationId()&lt;1)</span>
+<span class="nc" id="L836">			ReservationManager.sendAcceptationEmail(reservation, serverName, prop, lng);</span>
+<span class="nc" id="L837">		return returnValue;</span>
+	}
+
+	private static String notNull(String s) {
+<span class="nc bnc" id="L841" title="All 2 branches missed.">		if (s == null) return &quot;&quot;;</span>
+<span class="nc" id="L842">		return s;</span>
+	}
+
+	/**
+	 * Posle akceptacny e-mail na adresu schvalovatela, hned po submitnuti
+	 * rezervacie
+	 *
+	 * @param reservation
+	 *           - objekt, v ktorom su ulozene jednotlive vlastnosti danej
+	 *           rezervacie
+	 * @param serverName
+	 *           - nazov serveru, aby sme vedeli vyskladat spravny odkaz do mejlu
+	 * @param prop
+	 *           - properties, ktore sa pouzije na pisanie emailu
+	 */
+	private static void sendAcceptationEmail(ReservationBean reservation, String serverName, Prop prop, String lng)
+	{
+<span class="nc" id="L859">		int reservationId = -1;</span>
+<span class="nc" id="L860">		Connection db_conn = null;</span>
+<span class="nc" id="L861">		PreparedStatement ps = null;</span>
+<span class="nc" id="L862">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L865">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L866">			ps = db_conn</span>
+<span class="nc" id="L867">						.prepareStatement(&quot;SELECT MAX(reservation_id) AS reservation_id FROM reservation WHERE reservation_object_id = ? AND&quot;</span>
+<span class="nc" id="L868">									+ &quot; name = ? AND surname = ? AND email = ? &quot; + CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L869">			int psCounter = 1;</span>
+<span class="nc" id="L870">			ps.setInt(psCounter++, reservation.getReservationObjectId());</span>
+<span class="nc" id="L871">			ps.setString(psCounter++, reservation.getName());</span>
+<span class="nc" id="L872">			ps.setString(psCounter++, reservation.getSurname());</span>
+<span class="nc" id="L873">			ps.setString(psCounter++, reservation.getEmail());</span>
+<span class="nc" id="L874">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L875" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L877">				reservationId = rs.getInt(&quot;reservation_id&quot;);</span>
+			}
+<span class="nc" id="L879">			rs.close();</span>
+<span class="nc" id="L880">			ps.close();</span>
+<span class="nc" id="L881">			db_conn.close();</span>
+<span class="nc" id="L882">			rs = null;</span>
+<span class="nc" id="L883">			ps = null;</span>
+<span class="nc" id="L884">			db_conn = null;</span>
+		}
+<span class="nc" id="L886">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L888">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L894" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L895">					rs.close();</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L897">					ps.close();</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L899">					db_conn.close();</span>
+			}
+<span class="nc" id="L901">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L903">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L904">			}</span>
+		}
+<span class="nc" id="L906">		String recipientEmail = ReservationManager.getEmailAccepter(reservation.getReservationObjectId());</span>
+<span class="nc" id="L907">		String senderName = notNull(reservation.getName()) + &quot; &quot; + notNull(reservation.getSurname());</span>
+<span class="nc" id="L908">		String senderEmail = notNull(reservation.getEmail());</span>
+<span class="nc" id="L909">		String reservationObject = getReservationObjectName(reservation.getReservationObjectId());</span>
+<span class="nc" id="L910">		String dateTimeFrom = Tools.formatDate(reservation.getDateFrom()) + &quot; &quot; + reservation.getStartTime();</span>
+<span class="nc" id="L911">		String dateTimeTo = Tools.formatDate(reservation.getDateTo()) + &quot; &quot; + reservation.getFinishTime();</span>
+<span class="nc" id="L912">		String subject = prop.getText(&quot;components.reservation.mail.title&quot;) + senderName + &quot; - &quot; + reservationObject;</span>
+<span class="nc" id="L913">		String phoneNumber = notNull(reservation.getPhoneNumber());</span>
+<span class="nc" id="L914">		String message = prop.getText(&quot;components.reservation.mail.greeting&quot;) + &quot;,&lt;br /&gt;&lt;br /&gt;&quot; + senderName</span>
+<span class="nc" id="L915">					+ &quot; (&quot; + prop.getText(&quot;user.phone&quot;) + &quot; )&quot; + phoneNumber + &quot; &quot;</span>
+<span class="nc" id="L916">					+ prop.getText(&quot;components.reservation.mail.next&quot;) + &quot; &lt;b&gt;&quot; + reservationObject + &quot;&lt;/b&gt; &quot;</span>
+<span class="nc" id="L917">					+ prop.getText(&quot;components.reservation.mail.next2&quot;) + dateTimeFrom + &quot; &quot;</span>
+<span class="nc" id="L918">					+ prop.getText(&quot;components.reservation.mail.next3&quot;) + dateTimeTo + &quot; &quot;</span>
+<span class="nc" id="L919">					+ prop.getText(&quot;components.reservation.mail.next4&quot;) + &quot;&lt;br/&gt; &quot; + reservation.getPurpose() + &quot; &lt;br /&gt;&lt;br /&gt;&quot;</span>
+<span class="nc" id="L920">					+ prop.getText(&quot;components.reservation.mail.next5&quot;) + &quot;&lt;a href=\&quot;/sk/iway/&quot;</span>
+					+ &quot;iwcm/components/reservation/ReservationAjax.action?accept&amp;reservation.reservationId=&quot; + reservationId
+<span class="nc" id="L922">					+ &quot;&amp;reservation.hashValue=&quot; + reservation.getHashValue() + &quot;&amp;language=&quot;+lng+&quot;\&quot;&gt;&quot;</span>
+<span class="nc" id="L923">					+ prop.getText(&quot;components.reservation.mail.accept&quot;) + &quot;&lt;/a&gt;&quot;;</span>
+<span class="nc" id="L924">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, null, subject, message, &quot;http://&quot; + serverName, null);</span>
+<span class="nc" id="L925">	}</span>
+
+	/** JVY - zatial iba rozpracovane - POKUS
+	 * Posle e-mail po schvaleni rezervacie schvalovatelom na adresu hosta, hned po schvaleni
+	 * rezervacie
+	 *
+	 * @param reservation
+	 *           - objekt, v ktorom su ulozene jednotlive vlastnosti danej
+	 *           rezervacie
+	 * @param serverName
+	 *           - nazov serveru, aby sme vedeli vyskladat spravny odkaz do mejlu
+	 * @param prop
+	 *           - properties, ktore sa pouzije na pisanie emailu
+	 */
+	/*private static void sendConfirmationEmail(ReservationBean reservation, String serverName, Prop prop, String lng)
+	{
+		int reservationId = -1;
+		SimpleDateFormat sqlDateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try
+		{
+			db_conn = DBPool.getConnection();
+			ps = db_conn
+						.prepareStatement(&quot;SELECT reservation_id FROM reservation WHERE reservation_object_id = ? AND date_from = ? AND date_to = ? AND&quot;
+									+ &quot; name = ? AND surname = ? AND email = ? AND purpose = ? AND phone_number = ?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true));
+			int psCounter = 1;
+			ps.setInt(psCounter++, reservation.getReservationObjectId());
+			ps.setString(psCounter++, (sqlDateFormat.format(reservation.getDateFrom()) + &quot; &quot; + reservation.getStartTime()));
+			ps.setString(psCounter++, (sqlDateFormat.format(reservation.getDateTo()) + &quot; &quot; + reservation.getFinishTime()));
+			ps.setString(psCounter++, reservation.getName());
+			ps.setString(psCounter++, reservation.getSurname());
+			ps.setString(psCounter++, reservation.getEmail());
+			ps.setString(psCounter++, reservation.getPurpose());
+			ps.setString(psCounter++, reservation.getPhoneNumber());
+			rs = ps.executeQuery();
+			while (rs.next())
+			{
+				reservationId = rs.getInt(&quot;reservation_id&quot;);
+			}
+			rs.close();
+			ps.close();
+			db_conn.close();
+			rs = null;
+			ps = null;
+			db_conn = null;
+		}
+		catch (Exception ex)
+		{
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		finally
+		{
+			try
+			{
+				if (rs != null)
+					rs.close();
+				if (ps != null)
+					ps.close();
+				if (db_conn != null)
+					db_conn.close();
+			}
+			catch (Exception ex2)
+			{
+				sk.iway.iwcm.Logger.error(ex2);
+			}
+		}
+		if (reservationId &gt; 0) {
+			String recipientEmail = reservation.getEmail();
+			String visitorName = reservation.getName() + &quot; &quot; + reservation.getSurname();
+			String senderName = &quot;Penzion Cucoriedka: &quot; + serverName; // JVY - prerobit!!
+			String senderEmail = ReservationManager.getEmailAccepter(reservation.getReservationObjectId());
+			String reservationObject = getReservationObjectName(reservation.getReservationObjectId());
+			String dateTimeFrom = reservation.getStartTime() + &quot; &quot; + Tools.formatDate(reservation.getDateFrom());
+			String dateTimeTo = reservation.getFinishTime() + &quot; &quot; + Tools.formatDate(reservation.getDateFrom());
+			String subject = prop.getText(&quot;components.reservation.mail.title&quot;) + senderName + &quot; - &quot; + reservationObject;
+			//String phoneNumber = reservation.getPhoneNumber();
+
+
+					// Dobry den pan/pani {meno hosta},
+					// Vasa rezervacia objektu {izba} v {nazov hotela} v datume od {od} do {do} bola potvrdena schvalovatelom.
+					// Cena za pobyt je: {cena}
+					// Prosim dokoncite svoju objednavku kliknutim &lt;a href=&quot;{reservationManager.getLink?}&quot;&gt;SEM&lt;/a&gt; a naslednym zaplatenim pobytu.
+					// Dakujeme! Tesime sa na Vas!
+					// {Nazov hotela}
+			String message = prop.getText(&quot;components.reservation.mail.greeting&quot;) + visitorName + &quot;,&lt;br /&gt;&lt;br /&gt;&quot;
+						+ &quot;Vasa rezervacia objektu&quot; + &quot; &lt;b&gt;&quot; + reservationObject + &quot;&lt;/b&gt; &quot;
+						+ &quot; v datume od: &quot; + dateTimeFrom + &quot; &quot;
+						+ &quot; do: &quot; + dateTimeTo + &quot; &quot;
+						+ &quot;bola potvrdena schvalovatelom.&quot;+&quot;&lt;br&gt;&quot;
+						+ &quot;Cena za pobyt je: &quot; + &quot;{cena}&quot; + &quot;&lt;br&gt;&quot;
+						+ &quot;Dovod navstevy: &quot; + &quot;&lt;br/&gt; &quot; + reservation.getPurpose() + &quot; &lt;br /&gt;&lt;br /&gt;&quot;
+						+ &quot;Prosim dokoncite svoju objednavku kliknutim &quot; + &quot;&lt;a href='&quot; + &quot;{reservationManager.getLink?}&quot;+&quot;'&gt;&quot;
+						+ &quot;SEM&quot; + &quot;&lt;/a&gt;&quot; + &quot; a naslednym zaplatenim pobytu.&quot;
+						+ &quot;V pripade akychkolvek otazok alebo pre zmenu udajov nas prosim kontaktujte na mail:&quot;
+						+ senderEmail + &quot;&lt;br&gt;&lt;br&gt;&quot;
+						+ &quot;Dakujeme a tesime sa na vas!&quot;;
+
+			SendMail.send(senderName, senderEmail, recipientEmail, senderEmail, null, null, subject, message, &quot;http://&quot; + serverName, null);
+		}
+	}*/
+
+
+
+	/**
+	 * Vrati e-mailovu adresu schvalovatela na zaklade id rezervacneho objektu
+	 *
+	 * @param reservationObjectId
+	 *           - identifikacne cislo rezervacneho objektu
+	 * @return e-mail schvalovatela daneho objektu, ak rezervacny objekt
+	 *         nepotrebuje schvalenie vrati null
+	 */
+	private static String getEmailAccepter(int reservationObjectId)
+	{
+<span class="nc" id="L1040">		String emailAccepter = &quot;&quot;;</span>
+<span class="nc" id="L1041">		Connection db_conn = null;</span>
+<span class="nc" id="L1042">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1043">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1046">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1047">			ps = db_conn.prepareStatement(&quot;SELECT email_accepter FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1048">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1049">			int psCounter = 1;</span>
+<span class="nc" id="L1050">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1051">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1054">				emailAccepter = rs.getString(&quot;email_accepter&quot;);</span>
+			}
+<span class="nc" id="L1056">			rs.close();</span>
+<span class="nc" id="L1057">			ps.close();</span>
+<span class="nc" id="L1058">			db_conn.close();</span>
+<span class="nc" id="L1059">			rs = null;</span>
+<span class="nc" id="L1060">			ps = null;</span>
+<span class="nc" id="L1061">			db_conn = null;</span>
+		}
+<span class="nc" id="L1063">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1065">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1072">					rs.close();</span>
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1074">					ps.close();</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1076">					db_conn.close();</span>
+			}
+<span class="nc" id="L1078">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1080">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1081">			}</span>
+		}
+<span class="nc" id="L1083">		return emailAccepter;</span>
+	}
+
+	/**
+	 * Zisti, ci musi byt rezervacia daneho rezervacneho objektu schvalena
+	 *
+	 * @param reservationObjectId
+	 *           id rezervacneho objektu, u ktoreho zistujeme potrebu schvalenia
+	 * @return true ak musi byt schvaleny, false ak nepotrebuje schvalenie
+	 */
+	public static boolean mustReservationObjectAccepted(int reservationObjectId)
+	{
+<span class="nc" id="L1095">		boolean mustAccepted = true;</span>
+<span class="nc" id="L1096">		Connection db_conn = null;</span>
+<span class="nc" id="L1097">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1098">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1101">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1102">			ps = db_conn.prepareStatement(&quot;SELECT must_accepted FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1103">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1104">			int psCounter = 1;</span>
+<span class="nc" id="L1105">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1106">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1107" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1109">				mustAccepted = rs.getBoolean(&quot;must_accepted&quot;);</span>
+			}
+<span class="nc" id="L1111">			rs.close();</span>
+<span class="nc" id="L1112">			ps.close();</span>
+<span class="nc" id="L1113">			db_conn.close();</span>
+<span class="nc" id="L1114">			rs = null;</span>
+<span class="nc" id="L1115">			ps = null;</span>
+<span class="nc" id="L1116">			db_conn = null;</span>
+		}
+<span class="nc" id="L1118">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1120">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1126" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1127">					rs.close();</span>
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1129">					ps.close();</span>
+<span class="nc bnc" id="L1130" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1131">					db_conn.close();</span>
+			}
+<span class="nc" id="L1133">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1135">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1136">			}</span>
+		}
+<span class="nc" id="L1138">		return mustAccepted;</span>
+	}
+
+	/**
+	 * Vymaze rezervaciu z tabulky reservation
+	 *
+	 * @param reservationId
+	 *           - identifikacne cislo rezervacie, ktoru chceme vymazat
+	 * @param passwd
+	 *           - heslo na vymazanie rezervacie, zadava sa pri pridavani objektu
+	 * @param currUserEmail
+	 *           - email prihlaseneho uzivatela
+	 * @return 0 ak vymazanie z databazy prebehlo v poriadku, 1 ak pouzivatel
+	 *         zadal nespravne heslo, 2 - ina SQL chyba
+	 */
+	public static int deleteReservation(int reservationId, String passwd, String currUserEmail)
+	{
+<span class="nc" id="L1155">		int returnValue = 0; // rezervacia bola vymazana</span>
+<span class="nc" id="L1156">		String resEmail = getReservationEmailById(reservationId); // nekontrolujem</span>
+																						// heslo ak
+																						// som
+																						// vytvoril
+																						// rezervaciu
+<span class="nc bnc" id="L1161" title="All 4 branches missed.">		if (!ReservationManager.isDeletedWithoutPass(reservationId) &amp;&amp; !resEmail.equals(currUserEmail))</span>
+		{
+<span class="nc bnc" id="L1163" title="All 2 branches missed.">			if (!ReservationManager.getReservationObjectPasswd(ReservationManager.getReservationObjectId(reservationId)).equals(</span>
+<span class="nc" id="L1164">						ReservationManager.generateHash(passwd))) // overuje heslo</span>
+<span class="nc" id="L1165">				return 1; // nespravne heslo, chyba</span>
+		}
+		// skontrolujem ci nieje neskoro uz vymazat rezervaciu
+<span class="nc" id="L1168">		int hoursBefor = ReservationManager.getReservationObject(ReservationManager.getReservationObjectId(reservationId))</span>
+<span class="nc" id="L1169">					.getCancelTimeBefor();</span>
+<span class="nc bnc" id="L1170" title="All 2 branches missed.">		if (hoursBefor &gt; 0)</span>
+		{
+<span class="nc" id="L1172">			Calendar nowBefore = Calendar.getInstance();</span>
+<span class="nc" id="L1173">			ReservationBean reservation = ReservationManager.getReservationById(reservationId);</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">			if (reservation == null) return 2;</span>
+<span class="nc" id="L1175">			nowBefore.setTimeInMillis(reservation.getDateFrom().getTime());</span>
+<span class="nc" id="L1176">			nowBefore.add(Calendar.HOUR_OF_DAY, -hoursBefor);</span>
+<span class="nc" id="L1177">			Logger.debug(ReservationManager.class, Tools.formatDateTime(nowBefore.getTimeInMillis()));</span>
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">			if (Tools.getNow() &gt; nowBefore.getTimeInMillis())</span>
+<span class="nc" id="L1179">				return 3;</span>
+		}
+<span class="nc" id="L1181">		Connection db_conn = null;</span>
+<span class="nc" id="L1182">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1183">		int delRows = 0;</span>
+		try
+		{
+<span class="nc" id="L1186">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1187">			ps = db_conn.prepareStatement(&quot;DELETE FROM reservation WHERE reservation_id = ?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1188">			int psCounter = 1;</span>
+<span class="nc" id="L1189">			ps.setInt(psCounter++, reservationId);</span>
+<span class="nc" id="L1190">			delRows = ps.executeUpdate();</span>
+<span class="nc" id="L1191">			ps.close();</span>
+<span class="nc" id="L1192">			db_conn.close();</span>
+<span class="nc" id="L1193">			ps = null;</span>
+<span class="nc" id="L1194">			db_conn = null;</span>
+		}
+<span class="nc" id="L1196">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L1198">			returnValue = 2;</span>
+<span class="nc" id="L1199">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1205" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1206">					ps.close();</span>
+<span class="nc bnc" id="L1207" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1208">					db_conn.close();</span>
+			}
+<span class="nc" id="L1210">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1212">			}</span>
+		}
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">		if (delRows != 0)</span>
+<span class="nc" id="L1215">			return 0; // delete sa podaril</span>
+<span class="nc" id="L1216">		return returnValue;</span>
+	}
+
+	/**
+	 * Ulozi alebo zmeni vlastnosti rezervacneho objektu do tabulky
+	 * reservation_object
+	 *
+	 * @param reservationObject
+	 *           - objekt, v ktorom su ulozene jednotlive vlastnosti daneho
+	 *           rezervacneho objektu
+	 * @param reservationObjectId
+	 *           - identifikator objektu, ktoreho vlastnosti sa maju zmenit
+	 * @return 0 - ak ulozenie do databazy prebehlo v poriadku, 1 - ak pouzivatel
+	 *         nezadal email schvalovatela, hoci zadal, ze schvalenie je
+	 *         potrebne, 2 - ak nazov objektu uz existuje, 3 - ina SQL chyba, 4 -
+	 *         nezhoduju sa hesla
+	 */
+	public static int addEditReservationObject(ReservationObjectBean reservationObject, int reservationObjectId)
+	{
+<span class="nc" id="L1235">		int returnValue = 0; // vsetko OK, uspesne vlozenie</span>
+<span class="nc" id="L1236">		String sql = &quot;&quot;;</span>
+<span class="nc bnc" id="L1237" title="All 2 branches missed.">		if (!reservationObject.isChangePass())</span>
+		{
+<span class="nc" id="L1239">			reservationObject.setPasswd(null); // ak prehliadac automaticky vlozi</span>
+															// heslo
+<span class="nc" id="L1241">			reservationObject.setPasswdRepeat(null);</span>
+		}
+<span class="nc bnc" id="L1243" title="All 2 branches missed.">		if (reservationObject.getMaxReservations() &lt; 1)</span>
+<span class="nc" id="L1244">			reservationObject.setMaxReservations(1);</span>
+<span class="nc bnc" id="L1245" title="All 2 branches missed.">		if (reservationObject.getCancelTimeBefor() &lt; 1)</span>
+<span class="nc" id="L1246">			reservationObject.setCancelTimeBefor(0);</span>
+<span class="nc bnc" id="L1247" title="All 2 branches missed.">		if (reservationObject.getPasswd() != null)</span>
+		{
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">			if (reservationObject.getPasswdRepeat() == null)</span>
+<span class="nc" id="L1250">				return 4;</span>
+<span class="nc bnc" id="L1251" title="All 2 branches missed.">			if (!reservationObject.getPasswdRepeat().equals(reservationObject.getPasswd()))</span>
+<span class="nc" id="L1252">				return 4;</span>
+		}
+<span class="nc bnc" id="L1254" title="All 4 branches missed.">		if (reservationObject.isMustAccepted() &amp;&amp; reservationObject.getEmailAccepter() == null)</span>
+<span class="nc" id="L1255">			return 1; // musi sa zadat email schvalovatela, ak je to potrebne</span>
+<span class="nc" id="L1256">		int saveRows = 0;</span>
+<span class="nc" id="L1257">		Connection db_conn = null;</span>
+<span class="nc" id="L1258">		PreparedStatement ps = null;</span>
+<span class="nc bnc" id="L1259" title="All 4 branches missed.">		if (reservationObjectId &gt; 0 &amp;&amp; reservationObject.isChangePass()) // pri</span>
+																								// zmene,
+																								// chce
+																								// zmenit
+																								// aj
+																								// heslo
+<span class="nc" id="L1265">			sql = &quot;UPDATE reservation_object SET name = ?, must_accepted = ?, email_accepter = ?, passwd = ?, max_reservations = ?, cancel_time_befor = ?, reservation_time_from = ?, reservation_time_to = ?, price_for_day = ?, price_for_hour = ?, reservation_for_all_day = ?, photo_link = ?, description = ?, time_unit=?, domain_id = ? WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1266">						+ CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc bnc" id="L1267" title="All 4 branches missed.">		if (reservationObjectId &gt; 0 &amp;&amp; !reservationObject.isChangePass()) // pri</span>
+																								// zmene
+																								// nechce
+																								// zmenit
+																								// heslo
+<span class="nc" id="L1272">			sql = &quot;UPDATE reservation_object SET name = ?, must_accepted = ?, email_accepter = ?, max_reservations = ?, cancel_time_befor = ?, reservation_time_from = ?, reservation_time_to = ? , price_for_day = ?, price_for_hour = ?, reservation_for_all_day = ?, photo_link = ?, description = ?, time_unit=?, domain_id = ? WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1273">						+ CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc bnc" id="L1274" title="All 2 branches missed.">		if (reservationObjectId &lt;= 0)</span>
+<span class="nc" id="L1275">			sql = &quot;INSERT INTO reservation_object (name, must_accepted, email_accepter, passwd, max_reservations, cancel_time_befor, reservation_time_from, reservation_time_to, price_for_day, price_for_hour, reservation_for_all_day, photo_link, description, time_unit, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+		try
+		{
+<span class="nc" id="L1278">			Logger.debug(ReservationManager.class, sql);</span>
+<span class="nc" id="L1279">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1280">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1281">			int psCounter = 1;</span>
+<span class="nc" id="L1282">			ps.setString(psCounter++, reservationObject.getName());</span>
+<span class="nc" id="L1283">			ps.setBoolean(psCounter++, reservationObject.isMustAccepted());</span>
+<span class="nc bnc" id="L1284" title="All 2 branches missed.">			ps.setString(psCounter++, (reservationObject.getEmailAccepter() == null) ? &quot;&quot; : reservationObject.getEmailAccepter());</span>
+<span class="nc bnc" id="L1285" title="All 2 branches missed.">			if (reservationObjectId &lt;= 0)</span>
+<span class="nc" id="L1286">				ps.setString(</span>
+							psCounter++,
+<span class="nc bnc" id="L1288" title="All 2 branches missed.">							(reservationObject.getPasswd() == null)</span>
+<span class="nc" id="L1289">										? &quot;&quot;</span>
+<span class="nc" id="L1290">										: ReservationManager.generateHash(reservationObject.getPasswd()));</span>
+<span class="nc bnc" id="L1291" title="All 4 branches missed.">			if (reservationObjectId &gt; 0 &amp;&amp; reservationObject.isChangePass())</span>
+<span class="nc" id="L1292">				ps.setString(</span>
+							psCounter++,
+<span class="nc bnc" id="L1294" title="All 2 branches missed.">							(reservationObject.getPasswd() == null)</span>
+<span class="nc" id="L1295">										? &quot;&quot;</span>
+<span class="nc" id="L1296">										: ReservationManager.generateHash(reservationObject.getPasswd()));</span>
+<span class="nc" id="L1297">			ps.setInt(psCounter++, reservationObject.getMaxReservations());</span>
+<span class="nc" id="L1298">			ps.setInt(psCounter++, reservationObject.getCancelTimeBefor());</span>
+<span class="nc" id="L1299">			ps.setString(psCounter++, reservationObject.getReservationTimeFrom());</span>
+<span class="nc" id="L1300">			ps.setString(psCounter++, reservationObject.getReservationTimeTo());</span>
+<span class="nc bnc" id="L1301" title="All 2 branches missed.">			if (reservationObject.getReservationForAllDay())</span>
+			{
+<span class="nc" id="L1303">				ps.setDouble(psCounter++, reservationObject.getPriceForDay());</span>
+<span class="nc" id="L1304">				ps.setDouble(psCounter++, 0);// price_for_hour</span>
+			}
+			else
+			{
+<span class="nc" id="L1308">				ps.setDouble(psCounter++, 0);// price_for_day</span>
+<span class="nc" id="L1309">				ps.setDouble(psCounter++, reservationObject.getPriceForHour());</span>
+			}
+<span class="nc" id="L1311">			ps.setBoolean(psCounter++, reservationObject.getReservationForAllDay());</span>
+<span class="nc" id="L1312">			ps.setString(psCounter++, reservationObject.getPhotoLink());</span>
+<span class="nc" id="L1313">			ps.setString(psCounter++, reservationObject.getDescription());</span>
+<span class="nc" id="L1314">			ps.setString(psCounter++, reservationObject.getTimeUnit());</span>
+<span class="nc" id="L1315">			ps.setInt(psCounter++, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L1316" title="All 2 branches missed.">			if (reservationObjectId &gt; 0)</span>
+			{
+<span class="nc" id="L1318">				ps.setInt(psCounter++, reservationObjectId);</span>
+			}
+<span class="nc" id="L1320">			saveRows = ps.executeUpdate();</span>
+<span class="nc" id="L1321">			ps.close();</span>
+<span class="nc" id="L1322">			db_conn.close();</span>
+<span class="nc" id="L1323">			ps = null;</span>
+<span class="nc" id="L1324">			db_conn = null;</span>
+		}
+		/*
+		 * catch (MySQLIntegrityConstraintViolationException eUnique) {
+		 * returnValue = 2; // rovnake meno }
+		 */
+<span class="nc" id="L1330">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L1332">			returnValue = 3;</span>
+<span class="nc" id="L1333">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1339" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1340">					ps.close();</span>
+<span class="nc bnc" id="L1341" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1342">					db_conn.close();</span>
+			}
+<span class="nc" id="L1344">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1346">			}</span>
+		}
+<span class="nc bnc" id="L1348" title="All 2 branches missed.">		if (saveRows &gt; 0)</span>
+<span class="nc" id="L1349">			return (0); // insert sa podaril</span>
+		else
+<span class="nc" id="L1351">			return (returnValue);</span>
+	}
+
+	/**
+	 * Vymaze rezervacny objekt z tabulky reservation_object
+	 *
+	 * @param reservationObjectId
+	 *           - identifikacne cislo rezervacneho objektu, ktory chceme vymazat
+	 * @return 0 ak vymazanie z databazy prebehlo v poriadku, 1 ak je objekt
+	 *         rezervovany, 2 - ina SQL chyba
+	 */
+	public static int deleteReservationObject(int reservationObjectId)
+	{
+<span class="nc" id="L1364">		int returnValue = 0; // uspech</span>
+<span class="nc" id="L1365">		Connection db_conn = null;</span>
+<span class="nc" id="L1366">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1369">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1370">			ps = db_conn.prepareStatement(&quot;DELETE FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1371">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1372">			int psCounter = 1;</span>
+<span class="nc" id="L1373">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1374">			ps.executeUpdate();</span>
+<span class="nc" id="L1375">			ps.close();</span>
+<span class="nc" id="L1376">			db_conn.close();</span>
+<span class="nc" id="L1377">			ps = null;</span>
+<span class="nc" id="L1378">			db_conn = null;</span>
+		}
+<span class="nc" id="L1380">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L1382">			returnValue = 2; // nepodarilo sa vymazat</span>
+<span class="nc" id="L1383">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1389" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1390">					ps.close();</span>
+<span class="nc bnc" id="L1391" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1392">					db_conn.close();</span>
+			}
+<span class="nc" id="L1394">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1396">			}</span>
+		}
+<span class="nc" id="L1398">		return returnValue;</span>
+	}
+
+	/**
+	 * Vrati heslo rezervacneho objektu, ktore je potrebne zadat na vymazanie
+	 * jeho rezervacie
+	 *
+	 * @param reservationObjectId
+	 *           - identifikacne cislo rezervacneho objektu
+	 * @return heslo zahashovane md5 z tabulky reservation_object
+	 */
+	public static String getReservationObjectPasswd(int reservationObjectId)
+	{
+<span class="nc" id="L1411">		String passwd = &quot;&quot;;</span>
+<span class="nc" id="L1412">		Connection db_conn = null;</span>
+<span class="nc" id="L1413">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1414">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1417">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1418">			ps = db_conn.prepareStatement(&quot;SELECT passwd FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1419">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1420">			int psCounter = 1;</span>
+<span class="nc" id="L1421">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1422">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1423" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1425">				passwd = rs.getString(&quot;passwd&quot;);</span>
+			}
+<span class="nc" id="L1427">			rs.close();</span>
+<span class="nc" id="L1428">			ps.close();</span>
+<span class="nc" id="L1429">			db_conn.close();</span>
+<span class="nc" id="L1430">			rs = null;</span>
+<span class="nc" id="L1431">			ps = null;</span>
+<span class="nc" id="L1432">			db_conn = null;</span>
+		}
+<span class="nc" id="L1434">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1436">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1442" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1443">					rs.close();</span>
+<span class="nc bnc" id="L1444" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1445">					ps.close();</span>
+<span class="nc bnc" id="L1446" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1447">					db_conn.close();</span>
+			}
+<span class="nc" id="L1449">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1451">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1452">			}</span>
+		}
+<span class="nc" id="L1454">		return passwd;</span>
+	}
+
+	/**
+	 * Vrati identifikator rezervacneho objektu podla identifikatora, na ktory je
+	 * vystavena rezervacia
+	 *
+	 * @param reservationId
+	 *           - identifikacne cislo rezervacie
+	 * @return identifikator rezervacneho objektu, na ktory je vystavena
+	 *         rezervacia
+	 */
+	public static int getReservationObjectId(int reservationId)
+	{
+<span class="nc" id="L1468">		int reservationObjectId = 0;</span>
+<span class="nc" id="L1469">		Connection db_conn = null;</span>
+<span class="nc" id="L1470">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1471">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1474">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1475">			ps = db_conn.prepareStatement(&quot;SELECT reservation_object_id FROM reservation WHERE reservation_id = ?&quot;</span>
+<span class="nc" id="L1476">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1477">			int psCounter = 1;</span>
+<span class="nc" id="L1478">			ps.setInt(psCounter++, reservationId);</span>
+<span class="nc" id="L1479">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1480" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1482">				reservationObjectId = rs.getInt(&quot;reservation_object_id&quot;);</span>
+			}
+<span class="nc" id="L1484">			rs.close();</span>
+<span class="nc" id="L1485">			ps.close();</span>
+<span class="nc" id="L1486">			db_conn.close();</span>
+<span class="nc" id="L1487">			rs = null;</span>
+<span class="nc" id="L1488">			ps = null;</span>
+<span class="nc" id="L1489">			db_conn = null;</span>
+		}
+<span class="nc" id="L1491">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1493">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1499" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1500">					rs.close();</span>
+<span class="nc bnc" id="L1501" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1502">					ps.close();</span>
+<span class="nc bnc" id="L1503" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1504">					db_conn.close();</span>
+			}
+<span class="nc" id="L1506">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1508">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1509">			}</span>
+		}
+<span class="nc" id="L1511">		return reservationObjectId;</span>
+	}
+
+	/**
+	 * Naplni a vrati Bean rezervacny objekt podla jeho identifikatora
+	 *
+	 * @param reservationObjectId
+	 *           - identifikacne cislo rezervacneho objektu
+	 * @return naplneny reservationObjectBean
+	 */
+	public static ReservationObjectBean getReservationObject(int reservationObjectId)
+	{
+<span class="nc" id="L1523">		ReservationObjectBean reservationObject = new ReservationObjectBean();</span>
+<span class="nc" id="L1524">		Connection db_conn = null;</span>
+<span class="nc" id="L1525">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1526">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1529">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1530">			ps = db_conn.prepareStatement(&quot;SELECT * FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1531">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1532">			int psCounter = 1;</span>
+<span class="nc" id="L1533">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1534">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1535" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1537">				reservationObject = fillReservationObjectBean(rs);</span>
+			}
+<span class="nc" id="L1539">			rs.close();</span>
+<span class="nc" id="L1540">			ps.close();</span>
+<span class="nc" id="L1541">			db_conn.close();</span>
+<span class="nc" id="L1542">			rs = null;</span>
+<span class="nc" id="L1543">			ps = null;</span>
+<span class="nc" id="L1544">			db_conn = null;</span>
+		}
+<span class="nc" id="L1546">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1548">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1554" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1555">					rs.close();</span>
+<span class="nc bnc" id="L1556" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1557">					ps.close();</span>
+<span class="nc bnc" id="L1558" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1559">					db_conn.close();</span>
+			}
+<span class="nc" id="L1561">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1563">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1564">			}</span>
+		}
+<span class="nc" id="L1566">		return reservationObject;</span>
+	}
+
+	/**
+	 * Vrati nazov rezervacneho objektu na zaklade jeho id
+	 *
+	 * @param reservationObjectId
+	 *           - identifikacne cislo rezervacneho objektu
+	 * @return nazov rezervacneho objektu
+	 */
+	public static String getReservationObjectName(int reservationObjectId)
+	{
+<span class="nc" id="L1578">		String reservationObjectName = &quot;&quot;;</span>
+<span class="nc" id="L1579">		Connection db_conn = null;</span>
+<span class="nc" id="L1580">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1581">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1584">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1585">			ps = db_conn.prepareStatement(&quot;SELECT name FROM reservation_object WHERE reservation_object_id = ?&quot;</span>
+<span class="nc" id="L1586">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1587">			int psCounter = 1;</span>
+<span class="nc" id="L1588">			ps.setInt(psCounter++, reservationObjectId);</span>
+<span class="nc" id="L1589">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1590" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1592">				reservationObjectName = rs.getString(&quot;name&quot;);</span>
+			}
+<span class="nc" id="L1594">			rs.close();</span>
+<span class="nc" id="L1595">			ps.close();</span>
+<span class="nc" id="L1596">			db_conn.close();</span>
+<span class="nc" id="L1597">			rs = null;</span>
+<span class="nc" id="L1598">			ps = null;</span>
+<span class="nc" id="L1599">			db_conn = null;</span>
+		}
+<span class="nc" id="L1601">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1603">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1609" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1610">					rs.close();</span>
+<span class="nc bnc" id="L1611" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1612">					ps.close();</span>
+<span class="nc bnc" id="L1613" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1614">					db_conn.close();</span>
+			}
+<span class="nc" id="L1616">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1618">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1619">			}</span>
+		}
+<span class="nc" id="L1621">		return reservationObjectName;</span>
+	}
+
+	/**
+	 * Vrati hash danej rezervacie na zaklade id rezervacneho objektu, kvoli
+	 * spekulacnym schvalovaniam
+	 *
+	 * @param reservationId
+	 *           - identifikacne cislo rezervacie
+	 * @return unikatnu hashovu hodnotu rezervacie z tabulky reservation
+	 */
+	public static String getHashValue(int reservationId)
+	{
+<span class="nc" id="L1634">		String hashValue = &quot;&quot;;</span>
+<span class="nc" id="L1635">		Connection db_conn = null;</span>
+<span class="nc" id="L1636">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1637">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1640">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1641">			ps = db_conn.prepareStatement(&quot;SELECT hash_value FROM reservation WHERE reservation_id = ?&quot;</span>
+<span class="nc" id="L1642">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1643">			int psCounter = 1;</span>
+<span class="nc" id="L1644">			ps.setInt(psCounter++, reservationId);</span>
+<span class="nc" id="L1645">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1646" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1648">				hashValue = rs.getString(&quot;hash_value&quot;);</span>
+			}
+<span class="nc" id="L1650">			rs.close();</span>
+<span class="nc" id="L1651">			ps.close();</span>
+<span class="nc" id="L1652">			db_conn.close();</span>
+<span class="nc" id="L1653">			rs = null;</span>
+<span class="nc" id="L1654">			ps = null;</span>
+<span class="nc" id="L1655">			db_conn = null;</span>
+		}
+<span class="nc" id="L1657">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1659">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1665" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1666">					rs.close();</span>
+<span class="nc bnc" id="L1667" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1668">					ps.close();</span>
+<span class="nc bnc" id="L1669" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1670">					db_conn.close();</span>
+			}
+<span class="nc" id="L1672">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1674">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1675">			}</span>
+		}
+<span class="nc" id="L1677">		return hashValue;</span>
+	}
+
+	/**
+	 * Akceptacia rezervacie odkazom z mejlu
+	 *
+	 * @param reservationId
+	 *           - identifikacne cislo rezervacie, ktoru chceme schvalit
+	 * @param hash
+	 *           - kod, ktory je potrebne zadat, aby sa predislo spekulativnym
+	 *           schvalovaniam
+	 * @return true ak sa schvalenie rezervacie podarilo, inak false
+	 */
+	public static boolean acceptReservation(int reservationId, String hash)
+	{
+<span class="nc bnc" id="L1692" title="All 2 branches missed.">		if (!hash.equals(ReservationManager.getHashValue(reservationId)))</span>
+<span class="nc" id="L1693">			return false;</span>
+<span class="nc" id="L1694">		int saveRows = 0;</span>
+<span class="nc" id="L1695">		Connection db_conn = null;</span>
+<span class="nc" id="L1696">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1699">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1700">			ps = db_conn.prepareStatement(&quot;UPDATE reservation SET accepted = 1 WHERE reservation_id = ?&quot;</span>
+<span class="nc" id="L1701">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1702">			int psCounter = 1;</span>
+<span class="nc" id="L1703">			ps.setInt(psCounter++, reservationId);</span>
+<span class="nc" id="L1704">			saveRows = ps.executeUpdate();</span>
+<span class="nc" id="L1705">			ps.close();</span>
+<span class="nc" id="L1706">			db_conn.close();</span>
+<span class="nc" id="L1707">			ps = null;</span>
+<span class="nc" id="L1708">			db_conn = null;</span>
+		}
+<span class="nc" id="L1710">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1712">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1718" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1719">					ps.close();</span>
+<span class="nc bnc" id="L1720" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1721">					db_conn.close();</span>
+			}
+<span class="nc" id="L1723">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1725">			}</span>
+		}
+<span class="nc bnc" id="L1727" title="All 2 branches missed.">		if (saveRows != 0)</span>
+<span class="nc" id="L1728">			return true; // update sa podaril</span>
+<span class="nc" id="L1729">		return false;</span>
+	}
+
+	/**
+	 * Zisti, ci na vymazanie danej rezervacie je potrebne heslo
+	 *
+	 * @param reservationId
+	 *           - identifikacne cislo rezervacie, o ktorej chceme zistit, ci na
+	 *           jej vymazanie je potrebne heslo
+	 * @return true ak je mozne tuto rezervaciu vymazat bez hesla, inak false
+	 */
+	public static boolean isDeletedWithoutPass(int reservationId)
+	{
+<span class="nc bnc" id="L1742" title="All 2 branches missed.">		if (Tools.isEmpty(ReservationManager.getReservationObjectPasswd(ReservationManager.getReservationObjectId(reservationId))))</span>
+<span class="nc" id="L1743">			return true;</span>
+<span class="nc" id="L1744">		return false;</span>
+	}
+
+	/**
+	 * Zisti, ci rezervacia nie je v konflikte s inou, uz ulozenou rezervaciou.
+	 * Konflikt znamena ze sa rezervacie prekryvaju v case bez ohladu na to ci su
+	 * schvalene alebo nie, jedna sa o rezervacie an ten isty objekt samozrejme
+	 *
+	 * @param reservation
+	 * @return
+	 * @throws ParseException
+	 */
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	public static int isConflict(ReservationBean reservation) throws ParseException
+	{
+<span class="nc" id="L1759">		String from = &quot;&quot;;</span>
+<span class="nc" id="L1760">		String to = &quot;&quot;;</span>
+<span class="nc" id="L1761">		Timestamp dateFrom = null;</span>
+<span class="nc" id="L1762">		Timestamp dateTo = null;</span>
+<span class="nc" id="L1763">		DateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L1764">		DateFormat sdf = new SimpleDateFormat(&quot;yyy-MM-dd HH:mm&quot;);</span>
+<span class="nc" id="L1765">		from = formatter.format(reservation.getDateFrom());</span>
+<span class="nc" id="L1766">		to = formatter.format(reservation.getDateTo());</span>
+<span class="nc" id="L1767">		dateFrom = new Timestamp(sdf.parse(from + &quot; &quot; + reservation.getStartTime()).getTime());</span>
+<span class="nc" id="L1768">		dateTo = new Timestamp(sdf.parse(to + &quot; &quot; + reservation.getFinishTime()).getTime());</span>
+<span class="nc" id="L1769">		List conflictReservations = new SimpleQuery()</span>
+<span class="nc" id="L1770">					.forList(&quot;Select * from reservation where &quot;</span>
+<span class="nc" id="L1771">								+ CloudToolsForCore.getDomainIdSqlWhere(false)</span>
+								+ &quot; AND reservation_object_id = ? AND (&quot;
+								+ &quot; (date_from &gt; ? AND date_from &lt; ?) OR (date_to &gt; ? AND date_to &lt; ?) OR (date_from = ? AND date_to = ?)&quot;
+								+ &quot; OR (? &gt; date_from AND ? &lt; date_to) OR (? &gt; date_from AND ? &lt; date_to) ) AND reservation_id != ?&quot;,
+<span class="nc" id="L1775">								reservation.getReservationObjectId(), dateFrom, dateTo, dateFrom, dateTo, dateFrom, dateTo, dateTo,</span>
+<span class="nc" id="L1776">								dateTo, dateFrom, dateFrom, reservation.getReservationId());</span>
+<span class="nc" id="L1777">		return conflictReservations.size();</span>
+	}
+
+	/**
+	 * vrati email uzivatela, ktory si rezervoval
+	 *
+	 * @param reservationId
+	 * @return
+	 */
+	public static String getReservationEmailById(int reservationId)
+	{
+<span class="nc" id="L1788">		String result = &quot;&quot;;</span>
+<span class="nc" id="L1789">		Connection db_conn = null;</span>
+<span class="nc" id="L1790">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1791">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1794">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1795">			ps = db_conn.prepareStatement(&quot;SELECT email FROM reservation WHERE reservation_id = ?&quot;</span>
+<span class="nc" id="L1796">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1797">			ps.setInt(1, reservationId);</span>
+<span class="nc" id="L1798">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1799" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L1800">				result = rs.getString(&quot;email&quot;);</span>
+<span class="nc" id="L1801">			rs.close();</span>
+<span class="nc" id="L1802">			ps.close();</span>
+<span class="nc" id="L1803">			db_conn.close();</span>
+<span class="nc" id="L1804">			rs = null;</span>
+<span class="nc" id="L1805">			ps = null;</span>
+<span class="nc" id="L1806">			db_conn = null;</span>
+		}
+<span class="nc" id="L1808">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1810">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1816" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1817">					rs.close();</span>
+<span class="nc bnc" id="L1818" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1819">					ps.close();</span>
+<span class="nc bnc" id="L1820" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1821">					db_conn.close();</span>
+			}
+<span class="nc" id="L1823">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1825">			}</span>
+		}
+<span class="nc" id="L1827">		return result;</span>
+	}
+
+	/**
+	 * vrati rezervaciu
+	 *
+	 * @param reservationId
+	 * @return
+	 */
+	public static ReservationBean getReservationById(int reservationId)
+	{
+<span class="nc" id="L1838">		ReservationBean result = null;</span>
+<span class="nc" id="L1839">		Connection db_conn = null;</span>
+<span class="nc" id="L1840">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1841">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1844">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1845">			ps = db_conn.prepareStatement(&quot;SELECT * FROM reservation WHERE reservation_id = ?&quot;</span>
+<span class="nc" id="L1846">						+ CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1847">			ps.setInt(1, reservationId);</span>
+<span class="nc" id="L1848">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1849" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L1850">				result = fillReservationBean(rs);</span>
+<span class="nc" id="L1851">			rs.close();</span>
+<span class="nc" id="L1852">			ps.close();</span>
+<span class="nc" id="L1853">			db_conn.close();</span>
+<span class="nc" id="L1854">			rs = null;</span>
+<span class="nc" id="L1855">			ps = null;</span>
+<span class="nc" id="L1856">			db_conn = null;</span>
+		}
+<span class="nc" id="L1858">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1860">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1866" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1867">					rs.close();</span>
+<span class="nc bnc" id="L1868" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1869">					ps.close();</span>
+<span class="nc bnc" id="L1870" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1871">					db_conn.close();</span>
+			}
+<span class="nc" id="L1873">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1875">			}</span>
+		}
+<span class="nc" id="L1877">		return result;</span>
+	}
+
+	public static int getReservationObjectId(ReservationObjectBean bean)
+	{
+<span class="nc" id="L1882">		int result = 0;</span>
+
+<span class="nc" id="L1884">		Connection db_conn = null;</span>
+<span class="nc" id="L1885">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1886">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1889">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1890">			ps = db_conn.prepareStatement(&quot;SELECT reservation_object_id FROM reservation_object WHERE name=? AND description=? ORDER BY reservation_object_id DESC&quot;);</span>
+<span class="nc" id="L1891">			ps.setString(1, bean.getName());</span>
+<span class="nc" id="L1892">			ps.setString(2, bean.getDescription());</span>
+<span class="nc" id="L1893">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1894" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L1896">				result = rs.getInt(&quot;reservation_object_id&quot;);</span>
+			}
+<span class="nc" id="L1898">			rs.close();</span>
+<span class="nc" id="L1899">			ps.close();</span>
+<span class="nc" id="L1900">			db_conn.close();</span>
+<span class="nc" id="L1901">			rs = null;</span>
+<span class="nc" id="L1902">			ps = null;</span>
+<span class="nc" id="L1903">			db_conn = null;</span>
+		}
+<span class="nc" id="L1905">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1907">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1913" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1914">					rs.close();</span>
+<span class="nc bnc" id="L1915" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1916">					ps.close();</span>
+<span class="nc bnc" id="L1917" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1918">					db_conn.close();</span>
+			}
+<span class="nc" id="L1920">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1922">			}</span>
+		}
+<span class="nc" id="L1924">		return result;</span>
+	}
+
+	public static void sendApprovalStatusChangedEmail(ReservationBean reservation, boolean approved, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L1929" title="All 6 branches missed.">		if(reservation==null || reservation.getReservationId()&lt;0 || Tools.isEmpty(reservation.getEmail()))</span>
+<span class="nc" id="L1930">			return;</span>
+<span class="nc" id="L1931">		ReservationObjectBean reservationObject = ReservationManager.getReservationObjectById(reservation.getReservationObjectId());</span>
+<span class="nc bnc" id="L1932" title="All 4 branches missed.">		if(reservationObject==null || Tools.isEmpty(reservationObject.getName()))</span>
+<span class="nc" id="L1933">			return;</span>
+
+<span class="nc" id="L1935">		Prop prop = Prop.getInstance(PageLng.getUserLng(request));</span>
+
+<span class="nc" id="L1937">		String emailUrl = &quot;/components/reservation/email_reservation.jsp&quot;;</span>
+<span class="nc" id="L1938">		String canceledString = &quot;&quot;;</span>
+<span class="nc bnc" id="L1939" title="All 2 branches missed.">		if(approved==false)</span>
+<span class="nc" id="L1940">			canceledString = &quot;&amp;cancel=true&quot;;</span>
+
+		//data emailu
+<span class="nc" id="L1943">		String downloadUrl = Tools.getBaseHrefLoopback(request) + emailUrl + &quot;?reservationId=&quot; + reservation.getReservationId() + &quot;&amp;hash=&quot;+reservation.getHashValue() + canceledString;</span>
+<span class="nc" id="L1944">		String data = Tools.downloadUrl(downloadUrl);</span>
+
+<span class="nc" id="L1946">		String senderName = reservationObject.getName();</span>
+<span class="nc" id="L1947">		String fromEmail = &quot;no-reply@&quot;+Tools.getBaseHref(request).replace(&quot;https://&quot;, &quot;&quot;).replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;www.&quot;, &quot;&quot;);</span>
+<span class="nc" id="L1948">		String toEmail = reservation.getEmail();</span>
+<span class="nc" id="L1949">		String subject = prop.getText(&quot;components.reservation.approved&quot;);</span>
+<span class="nc bnc" id="L1950" title="All 2 branches missed.">		if(approved==false)</span>
+<span class="nc" id="L1951">			subject = prop.getText(&quot;components.reservation.canceled&quot;);</span>
+
+<span class="nc bnc" id="L1953" title="All 4 branches missed.">		if (Tools.isNotEmpty(data) &amp;&amp; toEmail.indexOf('@')!=-1)</span>
+		{
+<span class="nc" id="L1955">			SendMail.send(senderName, fromEmail, toEmail, subject, data, request);</span>
+		}
+<span class="nc" id="L1957">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

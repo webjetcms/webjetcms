@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
@@ -16,6 +17,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -40,6 +42,12 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
         this.recipientEmail = recipientEmail;
         this.recipientName = recipientName;
     }
+
+    //Set entity domain id
+	@PrePersist
+	public void prePersist() {
+		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+	}
 
     @Id
     @Column(name = "email_id")
@@ -148,6 +156,9 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
 
     @Column(name = "send_at")
     private Date sendAt;
+
+    @Column(name = "domain_id")
+    private Integer domainId;
 
     public void setId(Long id) {
 		this. id = id;

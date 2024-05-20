@@ -104,7 +104,7 @@ public class KalendarUdalostiDB {
 			String groupNamesIn = "";
 			db_conn = DBPool.getConnection();
 
-			StringBuffer sql = new StringBuffer("SELECT "+D_DOCUMENT_FIELDS_NODATA+" FROM documents d WHERE d.group_id IN ("+groupIds+") AND d.available = 1 AND d.show_in_menu = 1");
+			StringBuffer sql = new StringBuffer("SELECT "+D_DOCUMENT_FIELDS_NODATA+" FROM documents d WHERE d.group_id IN ("+groupIds+") AND d.available = "+DB.getBooleanSql(true)+" AND d.show_in_menu = "+DB.getBooleanSql(true));
 			if(perexGroupIdsArray != null)
 			{
 				if(perexGroupUseJoin)

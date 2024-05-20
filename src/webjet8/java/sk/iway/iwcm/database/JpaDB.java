@@ -361,6 +361,19 @@ public class JpaDB<T extends ActiveRecordBase>
 		};
 	}
 
+	protected static JpaTools.Condition filterEquals(final String property, final boolean value)
+	{
+		return new JpaTools.Condition() {
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+				return object.getField(property).equal(value);
+			}
+
+		};
+	}
+
 	/**
 	 * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny) alebo ak hodnota vlastnosti obsahuje tento podretazec.
 	 *

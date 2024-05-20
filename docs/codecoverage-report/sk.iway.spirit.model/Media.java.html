@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Media.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.spirit.model</a> &gt; <span class="el_source">Media.java</span></div><h1>Media.java</h1><pre class="source lang-java linenums">package sk.iway.spirit.model;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+/**
+ * JPA bean pre zaznam z tabulky media
+ *  Media.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 21.7.2011 9:27:20
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;media&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MEDIA)
+<span class="fc" id="L52">public class Media extends ActiveRecordRepository implements Serializable</span>
+{
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_media&quot;)
+	@TableGenerator(name=&quot;WJGen_media&quot;,pkColumnValue=&quot;media&quot;)
+	@Column(name=&quot;media_id&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;editor.cell.id&quot;)
+	private Long id;
+
+	@NotBlank
+	@Column(name=&quot;media_title_sk&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = &quot;editor.media.title&quot;, sortAfter = &quot;mediaLink&quot;, tab = &quot;basic&quot;,
+	editor = {
+        @DataTableColumnEditor(type = &quot;text&quot;) })
+	String mediaTitleSk;
+
+	@Column(name=&quot;media_sort_order&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;editor.media.sortOrder&quot;, sortAfter = &quot;mediaThumbLink&quot;, tab = &quot;basic&quot;,
+	editor = {
+        @DataTableColumnEditor(type = &quot;text&quot;) })
+	Integer mediaSortOrder;
+
+	@Column(name=&quot;media_thumb_link&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = &quot;editor.perex.image&quot;, className = &quot;image&quot;, renderFormat = &quot;dt-format-image&quot;, sortAfter = &quot;editorFields.groups&quot;, tab = &quot;basic&quot;)
+	String mediaThumbLink;
+
+	@JsonIgnore
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = &quot;media_group_to_media&quot;,
+			joinColumns = { @JoinColumn(name = &quot;media_id&quot;, referencedColumnName = &quot;media_id&quot;) },
+			inverseJoinColumns = { @JoinColumn(name = &quot;media_group_id&quot;, referencedColumnName = &quot;media_group_id&quot;),  })
+	private List&lt;MediaGroupBean&gt; groups;
+
+	@Column(name=&quot;media_link&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = &quot;editor.media.link&quot;, renderFormat = &quot;dt-format-link&quot;, tab = &quot;basic&quot;)
+	String mediaLink;
+
+	@Column(name=&quot;media_fk_table_name&quot;)
+	String mediaFkTableName;
+
+	@JsonIgnore
+	@Column(name=&quot;media_group&quot;)
+	String mediaGroup;
+
+	@Column(name=&quot;media_fk_id&quot;)
+	Integer mediaFkId;
+
+	@JsonIgnore
+	@Lob
+	@Column(name=&quot;media_info_cz&quot;)
+	String mediaInfoCz;
+
+	@JsonIgnore
+	@Lob
+	@Column(name=&quot;media_info_de&quot;)
+	String mediaInfoDe;
+
+	@JsonIgnore
+	@Lob
+	@Column(name=&quot;media_info_en&quot;)
+	String mediaInfoEn;
+
+	@JsonIgnore
+	@Lob
+	@Column(name=&quot;media_info_sk&quot;)
+	String mediaInfoSk;
+
+	@JsonIgnore
+	@Column(name=&quot;media_title_cz&quot;)
+	String mediaTitleCz;
+
+	@JsonIgnore
+	@Column(name=&quot;media_title_de&quot;)
+	String mediaTitleDe;
+
+	@JsonIgnore
+	@Column(name=&quot;media_title_en&quot;)
+	String mediaTitleEn;
+
+	@Column(name=&quot;last_update&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	Date lastUpdate;
+
+	@Column(name = &quot;field_a&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_a&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldA;
+
+	@Column(name = &quot;field_b&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_b&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldB;
+
+	@Column(name = &quot;field_c&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_c&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldC;
+
+	@Column(name = &quot;field_d&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_d&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldD;
+
+	@Column(name = &quot;field_e&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_e&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldE;
+
+	@Column(name = &quot;field_f&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.media.field_f&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldF;
+
+<span class="fc" id="L191">	@Transient</span>
+	@DataTableColumnNested
+	private MediaEditorFields editorFields = null;
+
+	@Column(name = &quot;domain_id&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Integer domainId;
+
+	public List&lt;MediaGroupBean&gt; getGroups() {
+<span class="fc" id="L200">		return groups;</span>
+	}
+
+	public void setGroups(List&lt;MediaGroupBean&gt; groups) {
+<span class="fc" id="L204">		this.groups = groups;</span>
+<span class="fc" id="L205">	}</span>
+
+	public int getMediaId()
+	{
+<span class="fc bfc" id="L209" title="All 2 branches covered.">		if (id == null) return 0;</span>
+<span class="fc" id="L210">		return id.intValue();</span>
+	}
+
+	public void setMediaId(int mediaId)
+	{
+<span class="fc" id="L215">		this.id = Long.valueOf(mediaId);</span>
+<span class="fc" id="L216">	}</span>
+
+	@Override
+	public void setId(Long id)
+	{
+<span class="fc" id="L221">		this.id = id;</span>
+<span class="fc" id="L222">	}</span>
+
+	@Override
+	public Long getId()
+	{
+<span class="fc" id="L227">		return id;</span>
+	}
+
+	public Integer getMediaFkId()
+	{
+<span class="fc" id="L232">		return mediaFkId;</span>
+	}
+
+	public void setMediaFkId(Integer mediaFkId)
+	{
+<span class="fc" id="L237">		this.mediaFkId = mediaFkId;</span>
+<span class="fc" id="L238">	}</span>
+
+	public String getMediaFkTableName()
+	{
+<span class="fc" id="L242">		return mediaFkTableName;</span>
+	}
+
+	public void setMediaFkTableName(String mediaFkTableName)
+	{
+<span class="fc" id="L247">		this.mediaFkTableName = mediaFkTableName;</span>
+<span class="fc" id="L248">	}</span>
+
+	public String getMediaGroup()
+	{
+<span class="fc" id="L252">		return mediaGroup;</span>
+	}
+
+	public void setMediaGroup(String mediaGroup)
+	{
+<span class="fc" id="L257">		this.mediaGroup = mediaGroup;</span>
+<span class="fc" id="L258">	}</span>
+
+	public String getMediaInfoCz()
+	{
+<span class="fc" id="L262">		return mediaInfoCz;</span>
+	}
+
+	public void setMediaInfoCz(String mediaInfoCz)
+	{
+<span class="nc" id="L267">		this.mediaInfoCz = mediaInfoCz;</span>
+<span class="nc" id="L268">	}</span>
+
+	public String getMediaInfoDe()
+	{
+<span class="fc" id="L272">		return mediaInfoDe;</span>
+	}
+
+	public void setMediaInfoDe(String mediaInfoDe)
+	{
+<span class="nc" id="L277">		this.mediaInfoDe = mediaInfoDe;</span>
+<span class="nc" id="L278">	}</span>
+
+	public String getMediaInfoEn()
+	{
+<span class="fc" id="L282">		return mediaInfoEn;</span>
+	}
+
+	public void setMediaInfoEn(String mediaInfoEn)
+	{
+<span class="nc" id="L287">		this.mediaInfoEn = mediaInfoEn;</span>
+<span class="nc" id="L288">	}</span>
+
+	public String getMediaInfoSk()
+	{
+<span class="fc" id="L292">		return mediaInfoSk;</span>
+	}
+
+	public void setMediaInfoSk(String mediaInfoSk)
+	{
+<span class="nc" id="L297">		this.mediaInfoSk = mediaInfoSk;</span>
+<span class="nc" id="L298">	}</span>
+
+	public String getMediaLink()
+	{
+<span class="fc" id="L302">		return mediaLink;</span>
+	}
+
+	public void setMediaLink(String mediaLink)
+	{
+<span class="fc" id="L307">		this.mediaLink = mediaLink;</span>
+<span class="fc" id="L308">	}</span>
+
+	public Integer getMediaSortOrder()
+	{
+		//if (mediaSortOrder==null) return Integer.valueOf(0);
+<span class="fc" id="L313">		return mediaSortOrder;</span>
+	}
+
+	public void setMediaSortOrder(Integer mediaSortOrder)
+	{
+<span class="fc" id="L318">		this.mediaSortOrder = mediaSortOrder;</span>
+<span class="fc" id="L319">	}</span>
+
+	public String getMediaThumbLink()
+	{
+<span class="fc" id="L323">		return mediaThumbLink;</span>
+	}
+
+	public void setMediaThumbLink(String mediaThumbLink)
+	{
+<span class="fc" id="L328">		this.mediaThumbLink = mediaThumbLink;</span>
+<span class="fc" id="L329">	}</span>
+
+	public String getMediaTitleCz()
+	{
+<span class="fc" id="L333">		return mediaTitleCz;</span>
+	}
+
+	public void setMediaTitleCz(String mediaTitleCz)
+	{
+<span class="nc" id="L338">		this.mediaTitleCz = mediaTitleCz;</span>
+<span class="nc" id="L339">	}</span>
+
+	public String getMediaTitleDe()
+	{
+<span class="fc" id="L343">		return mediaTitleDe;</span>
+	}
+
+	public void setMediaTitleDe(String mediaTitleDe)
+	{
+<span class="nc" id="L348">		this.mediaTitleDe = mediaTitleDe;</span>
+<span class="nc" id="L349">	}</span>
+
+	public String getMediaTitleEn()
+	{
+<span class="fc" id="L353">		return mediaTitleEn;</span>
+	}
+
+	public void setMediaTitleEn(String mediaTitleEn)
+	{
+<span class="nc" id="L358">		this.mediaTitleEn = mediaTitleEn;</span>
+<span class="nc" id="L359">	}</span>
+
+	public String getMediaTitleSk()
+	{
+<span class="fc" id="L363">		return mediaTitleSk;</span>
+	}
+
+	public void setMediaTitleSk(String mediaTitleSk)
+	{
+<span class="fc" id="L368">		this.mediaTitleSk = mediaTitleSk;</span>
+<span class="fc" id="L369">	}</span>
+
+	public Date getLastUpdate()
+	{
+<span class="fc bfc" id="L373" title="All 2 branches covered.">		if (lastUpdate == null) return null;</span>
+<span class="fc" id="L374">		return new Date(lastUpdate.getTime());</span>
+	}
+
+	@JsonIgnore
+	public String getGroupsToString(){
+<span class="fc" id="L379">		String groupsString = &quot;&quot;;</span>
+<span class="pc bpc" id="L380" title="2 of 4 branches missed.">		if (groups==null || groups.size()&lt;1) return groupsString;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">		for(int groupIt=0; groupIt&lt;groups.size();groupIt++ ){</span>
+<span class="fc" id="L382">			MediaGroupBean group = groups.get(groupIt);</span>
+<span class="fc" id="L383">			groupsString+=group.getMediaGroupName();</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">			if(groupIt != groups.size()-1){</span>
+<span class="fc" id="L385">				groupsString+=&quot;, &quot;;</span>
+			}
+		}
+<span class="fc" id="L388">		return groupsString;</span>
+	}
+	public void addGroup(MediaGroupBean group){
+<span class="nc bnc" id="L391" title="All 2 branches missed.">	    if (groups == null) {</span>
+<span class="nc" id="L392">	        groups = new ArrayList&lt;&gt;();</span>
+        }
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		for(MediaGroupBean g:groups){</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			if(g.getMediaGroupId() == group.getMediaGroupId()) return;</span>
+<span class="nc" id="L396">		}</span>
+<span class="nc" id="L397">		groups.add(group);</span>
+<span class="nc" id="L398">	}</span>
+
+	public void setLastUpdate(Date lastUpdate)
+	{
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">	    if (lastUpdate==null) this.lastUpdate = null;</span>
+<span class="fc" id="L403">		else this.lastUpdate = new Date(lastUpdate.getTime());</span>
+<span class="fc" id="L404">	}</span>
+
+	public MediaEditorFields getEditorFields() {
+<span class="fc bfc" id="L407" title="All 2 branches covered.">		if(editorFields == null) {</span>
+			//make MediaEditorFields instance and call fromMedia to initialize MediaEditorFields.groups
+<span class="fc" id="L409">			editorFields = new MediaEditorFields();</span>
+<span class="fc" id="L410">			editorFields.fromMedia(this);</span>
+		}
+<span class="fc" id="L412">		return editorFields;</span>
+	}
+
+	public void setEditorFields(MediaEditorFields editorFields) {
+<span class="fc" id="L416">		this.editorFields = editorFields;</span>
+<span class="fc" id="L417">	}</span>
+
+	//Set entity domain id
+	@PrePersist
+	public void prePersist() {
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L423">	}</span>
+
+	public Integer getDomainId() {
+<span class="fc" id="L426">		return domainId;</span>
+	}
+
+	public void setDomainId(Integer domainId) {
+<span class="fc" id="L430">		this.domainId = domainId;</span>
+<span class="fc" id="L431">	}</span>
+
+	public String getFieldA() {
+<span class="fc" id="L434">		return fieldA;</span>
+	}
+
+	public void setFieldA(String fieldA) {
+<span class="fc" id="L438">		this.fieldA = fieldA;</span>
+<span class="fc" id="L439">	}</span>
+
+	public String getFieldB() {
+<span class="fc" id="L442">		return fieldB;</span>
+	}
+
+	public void setFieldB(String fieldB) {
+<span class="fc" id="L446">		this.fieldB = fieldB;</span>
+<span class="fc" id="L447">	}</span>
+
+	public String getFieldC() {
+<span class="fc" id="L450">		return fieldC;</span>
+	}
+
+	public void setFieldC(String fieldC) {
+<span class="fc" id="L454">		this.fieldC = fieldC;</span>
+<span class="fc" id="L455">	}</span>
+
+	public String getFieldD() {
+<span class="fc" id="L458">		return fieldD;</span>
+	}
+
+	public void setFieldD(String fieldD) {
+<span class="fc" id="L462">		this.fieldD = fieldD;</span>
+<span class="fc" id="L463">	}</span>
+
+	public String getFieldE() {
+<span class="fc" id="L466">		return fieldE;</span>
+	}
+
+	public void setFieldE(String fieldE) {
+<span class="fc" id="L470">		this.fieldE = fieldE;</span>
+<span class="fc" id="L471">	}</span>
+
+	public String getFieldF() {
+<span class="fc" id="L474">		return fieldF;</span>
+	}
+
+	public void setFieldF(String fieldF) {
+<span class="fc" id="L478">		this.fieldF = fieldF;</span>
+<span class="fc" id="L479">	}</span>
+
+	
+}
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TatraPayFileExporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.file_export</a> &gt; <span class="el_source">TatraPayFileExporter.java</span></div><h1>TatraPayFileExporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.file_export;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  TatraPayFileExporter.java
+ * 	Exporter with Tatrapay specific behaviour
+ *
+ * 	for public API, @see PaymentFileExporter
+ * 
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 25.8.2009 16:46:15
+ *@modified     $Date: 2009/09/30 13:17:33 $
+ */
+<span class="nc" id="L24">public class TatraPayFileExporter extends PaymentFileExporter</span>
+{
+	
+	static final String SINGLE_PAYMENT_SEQUENCE = &quot;11&quot;;
+	
+	static final String DELIMITER_SEQUENCE = &quot;;&quot;;
+	
+	@Override
+	protected String getExporterIdentifierForFileName()
+	{
+<span class="nc" id="L34">		return &quot;tatra_pay&quot;;</span>
+	}
+	
+	@Override
+	public String createRowFrom(Payment payment)
+	{
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if (isSourceAccountIncorrect())</span>
+<span class="nc" id="L41">			throw new IllegalStateException(&quot;Call setAccount() first - source account as Payment's account &quot;);</span>
+				
+<span class="nc" id="L43">		return new StringBuilder().</span>
+<span class="nc" id="L44">			append(SINGLE_PAYMENT_SEQUENCE).</span>
+<span class="nc" id="L45">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L46">			append(getSourceAccount().getAccountNumber()).</span>
+<span class="nc" id="L47">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L48">			append(payment.getAccountPrefix()).</span>
+<span class="nc" id="L49">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L50">			append(payment.getAccountNumber()).</span>
+<span class="nc" id="L51">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L52">			append(payment.getBankCode()).</span>
+<span class="nc" id="L53">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L54">			append(payment.getCurrency()).</span>
+<span class="nc" id="L55">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L56">			append(payment.getAmountString()).</span>
+<span class="nc" id="L57">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L58">			append(new SimpleDateFormat(&quot;yyyy-MM-dd&quot;).format(new Date())).</span>
+<span class="nc" id="L59">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L60">			append(payment.getConstantSymbol()).			</span>
+<span class="nc" id="L61">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L62">			append(payment.getVariableSymbol()).</span>
+<span class="nc" id="L63">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L64">			append(payment.getSpecificSymbol()).			</span>
+<span class="nc" id="L65">			append(DELIMITER_SEQUENCE).			</span>
+<span class="nc" id="L66">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L67">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L68">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L69">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L70">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L71">			append(DB.internationalToEnglish(payment.getDescription())).</span>
+<span class="nc" id="L72">			append(System.getProperty(&quot;line.separator&quot;)).</span>
+<span class="nc" id="L73">			toString();</span>
+	}	
+
+	private boolean isSourceAccountIncorrect()
+	{
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		return getSourceAccount() == null || </span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			Tools.isAnyEmpty(getSourceAccount().getAccountPrefix(), getSourceAccount().getAccountNumber());</span>
+	}
+
+	@Override
+	protected String getFileExtension()
+	{
+<span class="nc" id="L85">		return &quot;csv&quot;;</span>
+	}	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

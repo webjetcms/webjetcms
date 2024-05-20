@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CookieManagerDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr</a> &gt; <span class="el_source">CookieManagerDB.java</span></div><h1>CookieManagerDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.jpa.JpaTools.Condition;
+
+/**
+ *  CookieManagerDB.java
+ *
+ *	DAO class for manipulating with CookieManagerBean
+ *
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 19.05.2018 10:43:50
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class CookieManagerDB extends JpaDB&lt;CookieManagerBean&gt;
+{
+	public CookieManagerDB()
+	{
+<span class="fc" id="L30">		super(CookieManagerBean.class);</span>
+<span class="fc" id="L31">	}</span>
+
+	public List&lt;CookieManagerBean&gt; findByNameAndProvider(String cookieName, String provider)
+	{
+<span class="nc" id="L35">		List&lt;Condition&gt; conditions = new ArrayList&lt;JpaTools.Condition&gt;();</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if(Tools.isNotEmpty(cookieName))</span>
+<span class="nc" id="L37">			conditions.add(CookieManagerDB.filterSubstringIgnoringCase(&quot;cookie_name&quot;, cookieName));</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		if(Tools.isNotEmpty(provider))</span>
+<span class="nc" id="L39">			conditions.add(CookieManagerDB.filterSubstringIgnoringCase(&quot;provider&quot;, provider));</span>
+<span class="nc" id="L40">		return JpaTools.findBy(CookieManagerBean.class,  conditions.toArray(new Condition[]{}));</span>
+	}
+		
+	public List&lt;CookieManagerBean&gt; findByDomainId(int domainId)
+	{
+<span class="fc" id="L45">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;domainId&quot;, domainId);</span>
+	}
+	
+	public CookieManagerBean findFirstByDomainId(int domainId)
+	{
+<span class="nc" id="L50">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;domainId&quot;, domainId);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByUserId(int userId)
+	{
+<span class="nc" id="L54">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;userId&quot;, userId);</span>
+	}
+	
+	public CookieManagerBean findFirstByUserId(int userId)
+	{
+<span class="nc" id="L59">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;userId&quot;, userId);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findBySaveDate(Date saveDate)
+	{
+<span class="nc" id="L63">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;saveDate&quot;, saveDate);</span>
+	}
+	
+	public CookieManagerBean findFirstBySaveDate(Date saveDate)
+	{
+<span class="nc" id="L68">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;saveDate&quot;, saveDate);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByCookieName(String cookieName)
+	{
+<span class="nc" id="L72">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;cookieName&quot;, cookieName);</span>
+	}
+	
+	public CookieManagerBean findFirstByCookieName(String cookieName)
+	{
+<span class="nc" id="L77">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;cookieName&quot;, cookieName);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByDescription(String description)
+	{
+<span class="nc" id="L81">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;description&quot;, description);</span>
+	}
+	
+	public CookieManagerBean findFirstByDescription(String description)
+	{
+<span class="nc" id="L86">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;description&quot;, description);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByProvider(String provider)
+	{
+<span class="nc" id="L90">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;provider&quot;, provider);</span>
+	}
+	
+	public CookieManagerBean findFirstByProvider(String provider)
+	{
+<span class="nc" id="L95">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;provider&quot;, provider);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByPurpouse(String purpouse)
+	{
+<span class="nc" id="L99">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;purpouse&quot;, purpouse);</span>
+	}
+	
+	public CookieManagerBean findFirstByPurpouse(String purpouse)
+	{
+<span class="nc" id="L104">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;purpouse&quot;, purpouse);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByValidity(String validity)
+	{
+<span class="nc" id="L108">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;validity&quot;, validity);</span>
+	}
+	
+	public CookieManagerBean findFirstByValidity(String validity)
+	{
+<span class="nc" id="L113">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;validity&quot;, validity);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByType(String type)
+	{
+<span class="nc" id="L117">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;type&quot;, type);</span>
+	}
+	
+	public CookieManagerBean findFirstByType(String type)
+	{
+<span class="nc" id="L122">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;type&quot;, type);</span>
+	}	
+	public List&lt;CookieManagerBean&gt; findByClassification(String classification)
+	{
+<span class="nc" id="L126">		return JpaTools.findByMatchingProperty(CookieManagerBean.class, &quot;classification&quot;, classification);</span>
+	}
+	
+	public CookieManagerBean findFirstByClassification(String classification)
+	{
+<span class="nc" id="L131">		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, &quot;classification&quot;, classification);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

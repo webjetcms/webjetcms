@@ -6,7 +6,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.system.*,sk.iway.iwcm.users.*,sk.iway.iwcm.*,java.util.*,java.io.*,sk.iway.iwcm.i18n.Prop"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
-%><iwcm:checkLogon admin="true" perms="menuWebpages"/><% request.setAttribute("closeTable", true);
+%><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/><% request.setAttribute("closeTable", true);
 %><%
 	//Cache c = Cache.getInstance();
 	//c.removeObject("cloud.AppManager.appsList");
@@ -237,17 +237,17 @@ function componentClick(componentName, width, height)
 		text-align: center;
 	}
 	div.menu-app .fa-icon {
-		font-size: 38px;
+		font-size: 40px;
 		vertical-align: middle;
 		padding-top: 14px;
 	}
 	div.promoBox .fa-icon {
-		font-size: 45px;
+		font-size: 52px;
 		line-height: 60px;
 	}
 	div.app-info .fa-icon {
 		font-size: 60px;
-		line-height: 83px;
+		line-height: 68px;
 	}
 </style>
 
@@ -311,7 +311,7 @@ function componentClick(componentName, width, height)
 							<div class="img">
 								<%
 								if (app.getImagePath().contains("/") )out.println("<img src=\""+app.getImagePath()+"\" alt=\"\" />");
-								else if (app.getImagePath().startsWith("fa") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
+								else if (app.getImagePath().startsWith("ti") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
 								%>
 							</div>
 							<div class="info">
@@ -353,7 +353,7 @@ function componentClick(componentName, width, height)
 							<div class="col-sm-2 img">
 								<%
 								if (app.getImagePath().contains("/") )out.println("<img src=\""+app.getImagePath()+"\" alt=\"\" />");
-								else if (app.getImagePath().startsWith("fa") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
+								else if (app.getImagePath().startsWith("ti") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
 								%>
 							</div>
 							<div class="col-sm-6 app-name">
@@ -424,7 +424,7 @@ function componentClick(componentName, width, height)
 								<div class="img">
 									<%
 									if (app.getImagePath().contains("/") )out.println("<img src=\""+app.getImagePath()+"\" alt=\"\" />");
-									else if (app.getImagePath().startsWith("fa") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
+									else if (app.getImagePath().startsWith("ti") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
 									%>
 								</div>
 							</div>

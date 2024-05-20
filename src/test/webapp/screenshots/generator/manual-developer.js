@@ -6,13 +6,24 @@ Before(({ I, login }) => {
 
 Scenario('field-json', async({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/apps/insert-script/");
-    I.click("Testovaci 1x", "#insertScriptTable");
+
+    I.clickCss("button.buttons-create");
     DTE.waitForEditor("insertScriptTable");
     I.click("#pills-dt-insertScriptTable-scriptPerms-tab");
 
+    //Add group and webpage for screenshot
+    I.clickCss("#editorAppDTE_Field_groupIds > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-vue-jstree-add");
+    I.waitForElement("#jsTree");
+    I.click( locate(".jstree-anchor").withText("Newsletter") );
+
+    I.clickCss("#editorAppDTE_Field_docIds > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-vue-jstree-add");
+    I.waitForElement("#jsTree");
+    I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
+    I.click( locate(".jstree-anchor").withText("Formular") );
+
     I.executeScript(function() {
-        $('div.DTE_Action_Edit div.DTE_Field_Type_json').css("padding-top", "10px");
-        $('div.DTE_Action_Edit div.DTE_Field_Type_json').css("padding-bottom", "10px");
+        $('div.DTE_Action_Create div.DTE_Field_Type_json').css("padding-top", "10px");
+        $('div.DTE_Action_Create div.DTE_Field_Type_json').css("padding-bottom", "10px");
     });
 
     Document.screenshotElement("div.DTE_Field_Name_groupIds", "/developer/datatables-editor/field-json-group-array.png");
@@ -95,9 +106,12 @@ Scenario('appstore', ({ I, DTE, Document }) => {
 
     I.click("a.cke_button__components");
 
+    I.waitForVisible("div.cke_dialog_body");
+    I.wait(2);
+
     Document.screenshot("/custom-apps/appstore/appstore.png");
 
-    //demo komponenta
+    I.say("demo komponenta");
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
@@ -105,13 +119,19 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.wait(3);
 
     Document.screenshot("/custom-apps/appstore/democomponent-desc.png");
-    I.click("Vložiť do stránky");
+
+    if("sk" === I.getConfLng()) {
+        I.click("Vložiť do stránky");
+    } else if("en" === I.getConfLng()) {
+        I.click("Add to page");
+    }
+
     I.wait(6);
 
     Document.screenshot("/custom-apps/appstore/democomponent-prop.png");
 
 
-    //Kontakty
+    I.say("Kontakty");
     I.switchTo();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=27032");
     DTE.waitForEditor();
@@ -122,9 +142,15 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.click("#kontakty");
+    I.click("#apps-contact-title");
     I.wait(3);
-    I.click("Vložiť do stránky");
+
+    if("sk" === I.getConfLng()) {
+        I.click("Vložiť do stránky");
+    } else if("en" === I.getConfLng()) {
+        I.click("Add to page");
+    }
+
     I.wait(6);
 
     Document.screenshot("/custom-apps/appstore/contacts-prop.png");

@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.forms;
 
+import org.apache.struts.util.ResponseUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -289,13 +291,25 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                             if (value.startsWith("^")) value = value.substring(1)+"%";
                             else if (value.endsWith("$")) value = "%"+value.substring(0, value.length()-1);
                             else value = "%"+value+"%";
-                            predicates.add(builder.like(root.get(key), value));
+                            if (Constants.DB_TYPE==Constants.DB_ORACLE) {
+                                predicates.add(builder.like(builder.lower(root.get(key)), value.toLowerCase()));
+                            } else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+                                predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(key))), DB.internationalToEnglish(value).toLowerCase()));
+                            } else {
+                                predicates.add(builder.like(root.get(key), value));
+                            }
                         }
                     } else {
                         String value = DatatableRestControllerV2.getCleanValue(paramsEntry.getValue());
                         if (key.startsWith("col_")) key = key.substring(4);
                         String searchParam = "%" + key + "~" + value + "%";
-                        predicates.add(builder.like(root.get("data"), searchParam));
+                        if (Constants.DB_TYPE==Constants.DB_ORACLE) {
+                            predicates.add(builder.like(builder.lower(root.get("data")), searchParam.toLowerCase()));
+                        } else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+                            predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get("data"))), DB.internationalToEnglish(searchParam).toLowerCase()));
+                        } else {
+                            predicates.add(builder.like(root.get("data"), searchParam));
+                        }
                     }
                 }
             }
@@ -334,12 +348,39 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             String[] columns = (entity.getData().split("\\|", -1));
             Map<String, String> columnNamesAndValues = new HashMap<>();
 
+            boolean containsWysiwyg = false;
+            //didnt find better way to check if HTML is enabled in the column
+            String WYSIWYG_HTML = ResponseUtils.filter("<span class='form-control emailInput-textarea formsimple-wysiwyg' style='height: auto;'>");
+            if (entity.getHtml()!=null && entity.getHtml().contains(WYSIWYG_HTML)) {
+                containsWysiwyg = true;
+            }
+
             for (String c : columns) {
                 String[] nameAndValueArray = c.split("~");
                 if (nameAndValueArray.length == 1) {
                     columnNamesAndValues.put(nameAndValueArray[0], "");
                 } else {
                     columnNamesAndValues.put(nameAndValueArray[0], CryptoFactory.decrypt(nameAndValueArray[1]));
+                }
+
+                //allow HTML for cleditor - unescape entities
+                if (containsWysiwyg) {
+                    String value = columnNamesAndValues.get(nameAndValueArray[0]);
+                    if (Tools.isNotEmpty(value) && entity.getHtml().contains(WYSIWYG_HTML+value)) {
+                        //unescape entities
+                        value = value.replace("&lt;", "<");
+                        value = value.replace("&gt;", ">");
+                        value = value.replace("&amp;", "&");
+                        value = value.replace("&quot;", "\"");
+                        value = value.replace("&#39;", "'");
+                        columnNamesAndValues.put(nameAndValueArray[0], value);
+                    }
+                }
+                //unescape double escape
+                String value = columnNamesAndValues.get(nameAndValueArray[0]);
+                if (Tools.isNotEmpty(value)) {
+                    value = value.replace("&amp;", "&");
+                    columnNamesAndValues.put(nameAndValueArray[0], value);
                 }
             }
 
@@ -358,7 +399,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @return
      */
     public E getById(long id) {
-        return formsRepository.getById(id);
+        return formsRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
     }
 
     /**

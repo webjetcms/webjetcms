@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeatMapDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.heat_map</a> &gt; <span class="el_source">HeatMapDB.java</span></div><h1>HeatMapDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.heat_map;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.beanutils.DynaBean;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.StatWriteBuffer;
+
+/**
+ *  HeatMapDB.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 26.5.2010 16:16:54
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class HeatMapDB
+{
+	private static final int NO_DATE = -1;
+<span class="nc" id="L45">	private static Map&lt;Integer, Integer&gt; clicksMap = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L47">	protected HeatMapDB() {</span>
+		//utility class
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Tranforms cookie values into corresponding clicks
+	 * @param
+	 */
+	public static void recordCookie(String value)
+	{
+<span class="nc bnc" id="L57" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;statEnableClickTracking&quot;) == false || &quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
+<span class="nc" id="L58">			return;</span>
+		try
+		{
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (value == null) return;</span>
+<span class="nc" id="L62">			value = value.trim();</span>
+<span class="nc" id="L63">			Logger.debug(HeatMapDB.class, &quot;Clicking cookie received: &quot;+value);</span>
+<span class="nc" id="L64">			String[] decomposited = value.split(&quot;\\[&quot;);</span>
+			//document id is on the beginning
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (decomposited.length &lt; 2)</span>
+<span class="nc" id="L67">				return;</span>
+
+<span class="nc" id="L69">			Integer docId = Integer.valueOf(decomposited[0]);</span>
+<span class="nc" id="L70">			int today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			for (String tuple : decomposited)</span>
+			{
+<span class="nc" id="L74">				String[] parts = tuple.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">				if (isEmpty(tuple) || parts.length != 2) continue;</span>
+<span class="nc" id="L76">				Integer x = Integer.valueOf(parts[0].trim());</span>
+<span class="nc" id="L77">				Integer y = Integer.valueOf(parts[1].replace(&quot;]&quot;, &quot;&quot;).trim());</span>
+<span class="nc" id="L78">				StatWriteBuffer.add(&quot;INSERT INTO stat_clicks&quot;+StatNewDB.getTableSuffix(&quot;stat_clicks&quot;)+&quot; (x, y, document_id, day_of_month) VALUES(?,?,?,?)&quot;, &quot;stat_clicks&quot;, x,y,docId,today);</span>
+			}
+		}
+<span class="nc" id="L81">		catch (NumberFormatException e)</span>
+		{
+			//malformed expression, just ignore, nothing wrong is happening
+<span class="nc" id="L84">		}</span>
+<span class="nc" id="L85">	}</span>
+
+	public static IwcmFile generateHeatMap(HttpServletRequest request)
+	{
+		try{
+<span class="nc" id="L90">			int documentId = Integer.parseInt(request.getParameter(&quot;document_id&quot;));</span>
+<span class="nc" id="L91">			Date startDate = (Date)request.getSession().getAttribute(&quot;startDate&quot;);</span>
+<span class="nc" id="L92">			Date endDate = (Date)request.getSession().getAttribute(&quot;endDate&quot;);</span>
+<span class="nc" id="L93">			StringBuilder stringBuilder = new StringBuilder().append(&quot;/WEB-INF/tmp/heat_map/heat_map_&quot;).append(documentId).</span>
+<span class="nc" id="L94">				append(&quot;_&quot;).append(Tools.formatDate(startDate)).append('_').append(Tools.formatDate(endDate)).append(&quot;.png&quot;);</span>
+<span class="nc" id="L95">			String fileName = stringBuilder.toString();</span>
+<span class="nc" id="L96">			IwcmFile image = new IwcmFile(Tools.getRealPath(fileName));</span>
+<span class="nc" id="L97">			image.getParentFile().mkdirs();</span>
+
+<span class="nc" id="L99">			final long now = System.currentTimeMillis();</span>
+<span class="nc" id="L100">			final long TOO_OLD = Constants.getInt(&quot;statHeatMapImageTimeout&quot;)*1000L;</span>
+
+<span class="nc bnc" id="L102" title="All 4 branches missed.">			if (!image.exists() || (now - image.lastModified() &gt; TOO_OLD))</span>
+			{
+<span class="nc" id="L104">				HeatMapDB.createHeatMap(image, documentId, startDate.getTime(), endDate.getTime());</span>
+			}
+
+<span class="nc" id="L107">			return image;</span>
+		}
+<span class="nc" id="L109">		catch (NoRecordException e)</span>
+		{
+<span class="nc" id="L111">			return new IwcmFile(Tools.getRealPath(&quot;/components/stat/images/heat_map_no_clicks.gif&quot;));</span>
+		}
+<span class="nc" id="L113">		catch (IOException e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L114">		throw new IllegalStateException(&quot;Unexpected code path in.&quot;);</span>
+	}
+
+	public static void createHeatMap(IwcmFile out, int documentId, long from, long to) throws IOException
+	{
+		//caller gets table names starting with table creation date unless null is supplied
+<span class="nc" id="L120">		String[] suffices = StatNewDB.getTableSuffix(&quot;stat_clicks&quot;, from, to);</span>
+<span class="nc" id="L121">		int dayFrom = getDayFromDate(from);</span>
+<span class="nc" id="L122">		int dayTo = getDayFromDate(to);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (suffices.length == 0) return;</span>
+
+<span class="nc" id="L125">		String startSuffix = suffices[0];</span>
+<span class="nc" id="L126">		String endSuffix = null;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (suffices.length &gt; 1)</span>
+<span class="nc" id="L128">			endSuffix = suffices[suffices.length - 1];</span>
+<span class="nc" id="L129">		List&lt;String&gt; middleSuffices = new ArrayList&lt;&gt;(Arrays.asList(suffices));</span>
+<span class="nc" id="L130">		middleSuffices.remove(0);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (middleSuffices.size() &gt; 0)</span>
+<span class="nc" id="L132">			middleSuffices.remove(middleSuffices.size() - 1);</span>
+
+<span class="nc" id="L134">		List&lt;Click&gt; clicks = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L136">		clicks.addAll(clicksFor(startSuffix, documentId, dayFrom, NO_DATE));</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		for (String suffix : middleSuffices)</span>
+<span class="nc" id="L138">			clicks.addAll(clicksFor(suffix, documentId, NO_DATE, NO_DATE));</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (endSuffix != null)</span>
+<span class="nc" id="L140">			clicks.addAll(clicksFor(endSuffix, documentId, NO_DATE, dayTo));</span>
+
+<span class="nc" id="L142">		new HeatMapGenerator(clicks, out).generate();</span>
+<span class="nc" id="L143">	}</span>
+
+	private static int getDayFromDate(long date)
+	{
+<span class="nc" id="L147">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L148">		cal.setTime(new Date(date));</span>
+<span class="nc" id="L149">		return cal.get(Calendar.DAY_OF_MONTH);</span>
+	}
+
+	private static Collection&lt;Click&gt; clicksFor(String tableSuffix, int documentId, int dayFrom, int dayTo)
+	{
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (isEmpty(tableSuffix)) return new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L155">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L156">		StringBuilder sql = new StringBuilder().</span>
+<span class="nc" id="L157">			append(&quot;SELECT x, y FROM stat_clicks&quot;).append(tableSuffix).append(&quot; WHERE document_id = ?&quot;);</span>
+
+<span class="nc" id="L159">		params.add(documentId);</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (dayFrom != NO_DATE)</span>
+		{
+<span class="nc" id="L163">			sql.append(&quot; AND day_of_month &gt;= ?&quot;);</span>
+<span class="nc" id="L164">			params.add(dayFrom);</span>
+		}
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (dayTo != NO_DATE)</span>
+		{
+<span class="nc" id="L168">			sql.append(&quot; AND day_of_month &lt;= ?&quot;);</span>
+<span class="nc" id="L169">			params.add(dayTo);</span>
+		}
+
+<span class="nc" id="L172">		List&lt;DynaBean&gt; results = DB.getDynaList(sql.toString(), params);</span>
+<span class="nc" id="L173">		List&lt;Click&gt; clicks = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L175">		int statHeatMapMaxWidth = Constants.getInt(&quot;statHeatMapMaxWidth&quot;);</span>
+<span class="nc" id="L176">		int statHeatMapMaxHeight = Constants.getInt(&quot;statHeatMapMaxHeight&quot;);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		for (DynaBean dynaBean : results)</span>
+		{
+<span class="nc" id="L179">			int x = (int)Double.parseDouble(dynaBean.get(&quot;x&quot;).toString());</span>
+<span class="nc" id="L180">			int y = (int)Double.parseDouble(dynaBean.get(&quot;y&quot;).toString());</span>
+
+			//TODO: toto by chcelo nejako rozumnejsie nastavovat, nie takto natvrdo, pri velkych cislach to hadzalo OOM
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (x&gt;statHeatMapMaxWidth) continue;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (y&gt;statHeatMapMaxHeight) continue;</span>
+
+<span class="nc" id="L186">			clicks.add(new Click().setX(x).setY(y));</span>
+<span class="nc" id="L187">		}</span>
+
+<span class="nc" id="L189">		return clicks;</span>
+	}
+
+	/**
+	 * Prida k zadanej HashMap-e dokumenty podla zadaneho datumu
+	 * ak sa tableSuffix rovna null, vrati uz nacitanu hashmapu clicksMap
+	 * @param tableSuffix
+	 * @param dayFrom
+	 * @param dayTo
+	 * @param clicks
+	 * @return
+	 */
+	public static Map&lt;Integer, Integer&gt; getClicksInDate(String tableSuffix, int dayFrom, int dayTo, Map&lt;Integer, Integer&gt; clicks){
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if(tableSuffix == null) return clicksMap;</span>
+
+<span class="nc" id="L204">		clicksMap = clicks;</span>
+<span class="nc" id="L205">		Connection db_conn = null;</span>
+<span class="nc" id="L206">		PreparedStatement ps = null;</span>
+<span class="nc" id="L207">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L210">			String sql = &quot;SELECT DISTINCT document_id FROM stat_clicks_&quot;+tableSuffix+&quot; WHERE day_of_month &gt;= ? AND day_of_month &lt;= ?&quot;;</span>
+<span class="nc" id="L211">			Logger.debug(HeatMapDB.class, &quot;sql=&quot; + sql +&quot; from=&quot; + dayFrom+&quot; to=&quot;+dayTo);</span>
+<span class="nc" id="L212">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L214">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (dayFrom != NO_DATE)</span>
+			{
+<span class="nc" id="L217">				ps.setInt(1, dayFrom);</span>
+			}
+<span class="nc" id="L219">			else ps.setInt(1, 1);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (dayTo != NO_DATE)</span>
+			{
+<span class="nc" id="L222">				ps.setInt(2, dayTo);</span>
+			}
+<span class="nc" id="L224">			else ps.setInt(2, 31);</span>
+<span class="nc" id="L225">			rs = ps.executeQuery();</span>
+<span class="nc" id="L226">			List&lt;Integer&gt; documentList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L229">				documentList.add(rs.getInt(&quot;document_id&quot;));</span>
+			}
+<span class="nc" id="L231">			rs.close();</span>
+<span class="nc" id="L232">			ps.close();</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			for(Integer id: documentList)</span>
+			{
+<span class="nc" id="L235">				sql = &quot;SELECT COUNT(document_id) FROM stat_clicks_&quot;+tableSuffix+&quot; WHERE document_id=?&quot;;</span>
+<span class="nc" id="L236">				Logger.debug(HeatMapDB.class, &quot;sql=&quot;+sql);</span>
+<span class="nc" id="L237">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L238">				ps.setInt(1, id);</span>
+<span class="nc" id="L239">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">				while(rs.next())</span>
+				{
+<span class="nc bnc" id="L242" title="All 2 branches missed.">					if(!clicksMap.containsKey(id)){</span>
+<span class="nc" id="L243">						clicksMap.put(id, rs.getInt(1));	//count</span>
+					}
+					else {
+<span class="nc" id="L246">						int count = clicksMap.get(id);</span>
+<span class="nc" id="L247">						clicksMap.put(id, count+rs.getInt(1));	//ak uz existuje - napr. v inom mesiaci - pripocitam</span>
+<span class="nc" id="L248">					}</span>
+				}
+<span class="nc" id="L250">				rs.close();</span>
+<span class="nc" id="L251">				ps.close();</span>
+<span class="nc" id="L252">			}</span>
+
+<span class="nc" id="L254">			db_conn.close();</span>
+<span class="nc" id="L255">			rs = null;</span>
+<span class="nc" id="L256">			ps = null;</span>
+<span class="nc" id="L257">			db_conn = null;</span>
+		}
+<span class="nc" id="L259">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+		finally{
+			try{
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				if (db_conn != null)	db_conn.close();</span>
+			}
+<span class="nc" id="L266">			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}</span>
+		}
+<span class="nc" id="L268">		return clicksMap;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -19,9 +19,11 @@ taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
 taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
-taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%
+taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/><%
 
 String lng = PageLng.getUserLng(request);
+//In case if user is logged in EN lng (for example) and in banner preview he want this language (not group language) 
+String origLng = lng;
 int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docid"), 0);
 if (docId > 0) {
 	DocDetails doc = DocDB.getInstance().getDoc(docId);
@@ -483,13 +485,14 @@ else
 			<%
 			String device = myPageParams.getValue("device", null);
 			if (Tools.isNotEmpty(device)) {
-				Prop prop = Prop.getInstance(lng);
+				Prop prop = Prop.getInstance(origLng);
+
 				device = Tools.replace(device, "pc", prop.getText("apps.devices.pc"));
 				device = Tools.replace(device, "tablet", prop.getText("apps.devices.tablet"));
 				device = Tools.replace(device, "phone", prop.getText("apps.devices.phone"));
 				%>
 				<div class="deviceInfo">
-					<span class="deviceInfoTitle"><iwcm:text key="apps.devices.title"/>:</span>
+					<span class="deviceInfoTitle"><%=prop.getText("apps.devices.title")%>:</span>
 					<span class="deviceInfoTypes"><%=device%></span>
 				</div>
 				<%

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>V9SpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.webjet.v9</a> &gt; <span class="el_source">V9SpringConfig.java</span></div><h1>V9SpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.webjet.v9;
+
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ConversionServiceFactoryBean;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
+import sk.iway.iwcm.system.spring.ConfigurableSecurity;
+
+/**
+ * SpringConfig - konfiguracia, aby sme vedeli co treba potom pridat do standardnej WJ konfiguracie
+ */
+@EnableSpringDataWebSupport
+@Configuration
+@EnableWebMvc
+@ComponentScan({
+    &quot;sk.iway.iwcm.admin.upload&quot;,
+    &quot;sk.iway.iwcm.doc&quot;,
+    &quot;sk.iway.iwcm.components.gallery&quot;,
+    &quot;sk.iway.iwcm.components.redirects&quot;,
+    &quot;sk.iway.iwcm.components.insertScript.rest&quot;,
+    &quot;sk.iway.iwcm.components.domain_redirects&quot;,
+    &quot;sk.iway.iwcm.components.forms&quot;,
+    &quot;sk.iway.iwcm.components.forms.archive&quot;,
+    &quot;sk.iway.iwcm.components.memory_cleanup.cache_objects&quot;,
+    &quot;sk.iway.iwcm.editor.rest&quot;,
+    &quot;sk.iway.iwcm.components.translation_keys.rest&quot;,
+    &quot;sk.iway.webjet.v9&quot;,
+    &quot;sk.iway.iwcm.system.audit.rest&quot;,
+    &quot;sk.iway.iwcm.system.monitoring.rest&quot;,
+    &quot;sk.iway.iwcm.system.elfinder&quot;,
+    &quot;sk.iway.iwcm.system.logging&quot;,
+    &quot;sk.iway.iwcm.system.ntlm&quot;,
+    &quot;sk.iway.iwcm.components.media&quot;,
+    &quot;sk.iway.iwcm.components.welcome&quot;,
+    &quot;sk.iway.iwcm.components.perex_groups&quot;,
+    &quot;sk.iway.iwcm.components.user&quot;,
+    &quot;sk.iway.iwcm.components.users.userdetail&quot;,
+    &quot;sk.iway.iwcm.components.users.groups_approve&quot;,
+    &quot;sk.iway.iwcm.components.users.usergroups&quot;,
+    &quot;sk.iway.iwcm.components.users.permgroups&quot;,
+    &quot;sk.iway.iwcm.components.gdpr.rest&quot;,
+    &quot;sk.iway.iwcm.components.qa.rest&quot;,
+    &quot;sk.iway.iwcm.components.tooltip&quot;,
+    &quot;sk.iway.iwcm.components.export&quot;,
+    &quot;sk.iway.iwcm.dmail.rest&quot;,
+    &quot;sk.iway.iwcm.system.datatable.editorlocking&quot;,
+    &quot;sk.iway.iwcm.components.banner&quot;,
+    &quot;sk.iway.iwcm.dmail.jpa&quot;,
+    &quot;sk.iway.iwcm.stat.rest&quot;,
+    &quot;sk.iway.iwcm.components.calendar.rest&quot;,
+    &quot;sk.iway.iwcm.components.reservation.rest&quot;,
+    &quot;sk.iway.iwcm.components.inquiry.rest&quot;,
+    &quot;sk.iway.iwcm.doc.attributes.jpa&quot;,
+    &quot;sk.iway.iwcm.components.proxy.rest&quot;,
+    &quot;sk.iway.iwcm.components.enumerations.rest&quot;,
+    &quot;sk.iway.iwcm.components.response_header.rest&quot;,
+    &quot;sk.iway.iwcm.findexer&quot;,
+    &quot;sk.iway.iwcm.filebrowser&quot;,
+    &quot;sk.iway.iwcm.components.forum.rest&quot;,
+    &quot;sk.iway.iwcm.components.seo.rest&quot;,
+    &quot;sk.iway.iwcm.setup&quot;,
+    &quot;sk.iway.iwcm.doc.clone_structure&quot;,
+    &quot;sk.iway.iwcm.update&quot;,
+    &quot;sk.iway.iwcm.xls&quot;,
+    &quot;sk.iway.iwcm.components.restaurant_menu.rest&quot;,
+    &quot;sk.iway.iwcm.components.quiz.rest&quot;,
+    &quot;sk.iway.iwcm.components.blog.rest&quot;
+})
+<span class="fc" id="L87">public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {</span>
+
+    @Bean
+    public AcceptHeaderLocaleResolver localeResolver() {
+<span class="fc" id="L91">        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {</span>
+            @Override
+            public Locale resolveLocale(HttpServletRequest request) {
+<span class="fc" id="L94">                String lng = Prop.getLng(request, false);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
+<span class="fc" id="L97">                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll(&quot;-&quot;, &quot;_&quot;));</span>
+            }
+        };
+
+<span class="fc" id="L101">        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString(&quot;defaultLanguage&quot;)).replaceAll(&quot;-&quot;, &quot;_&quot;)));</span>
+<span class="fc" id="L102">        return localeResolver;</span>
+    }
+
+    @Bean(name = &quot;multipartResolver&quot;)
+    public CommonsMultipartResolver multipartResolver() {
+<span class="fc" id="L107">        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();</span>
+<span class="fc" id="L108">        multipartResolver.setMaxUploadSize(-1);</span>
+<span class="fc" id="L109">        return multipartResolver;</span>
+    }
+
+    /**
+     * Servis sluzi na konvertovanie typov premennych, napr. String -&gt; Double
+     * @return ConversionService
+     */
+    @Bean(name = &quot;conversionService&quot;)
+    public ConversionService conversionService() {
+<span class="fc" id="L118">        ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();</span>
+<span class="fc" id="L119">        conversionServiceFactoryBean.afterPropertiesSet();</span>
+<span class="fc" id="L120">        return conversionServiceFactoryBean.getObject();</span>
+    }
+
+    @Override
+    public void configureSecurity(HttpSecurity http) throws Exception {
+        //pridaj filter na prihlasovanie cez ApiToken
+<span class="fc" id="L126">        http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);</span>
+<span class="fc" id="L127">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

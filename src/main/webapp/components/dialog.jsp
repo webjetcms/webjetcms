@@ -1,6 +1,9 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%>
+%>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%>
+<%@page import="sk.iway.iwcm.i18n.Prop"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -11,6 +14,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%
 if (request.getAttribute("/common/dialog.jsp-inserted")!=null) return;
 request.setAttribute("/common/dialog.jsp-inserted", "1");
+Prop prop = Prop.getInstance( request.getParameter("language") );
 %>
 
 <script type="text/javascript">
@@ -76,14 +80,14 @@ request.setAttribute("/common/dialog.jsp-inserted", "1");
 						click: function() {
 							closeDialog();
 						},
-						text: '<iwcm:text key="components.send_link.buttons.close" />',
+						text: '<%=prop.getText("components.send_link.buttons.close") %>',
 						class: 'btn btn-secondary'
 					},
 					'send': {
 						click: function() {
 							sendForm();
 						},
-						text: '<iwcm:text key="components.send_link.buttons.send" />',
+						text: '<%=prop.getText("components.send_link.buttons.send") %>',
 						class: "btn btn-primary"
 					}
 				});
@@ -108,7 +112,7 @@ request.setAttribute("/common/dialog.jsp-inserted", "1");
 								click: function() {
 									closeDialog();
 								},
-								text: '<iwcm:text key="components.send_link.buttons.close" />',
+								text: '<%=prop.getText("components.send_link.buttons.close") %>',
 								class: "btn btn-primary"
 							}
 						});
@@ -123,7 +127,7 @@ request.setAttribute("/common/dialog.jsp-inserted", "1");
 								clearTimeout(timeSet);
 								closeDialog();
 							},
-							text: '<iwcm:text key="components.send_link.buttons.close" />',
+							text: '<%=prop.getText("components.send_link.buttons.close") %>',
 							class: "btn btn-primary"
 						}
 					});
@@ -211,7 +215,7 @@ request.setAttribute("/common/dialog.jsp-inserted", "1");
 											closeDialog();
 											try { clearTimeout(timeSet); } catch (e) {}
 										},
-										text: '<iwcm:text key="components.send_link.buttons.close" />',
+										text: '<%=prop.getText("components.send_link.buttons.close") %>',
 										class: 'btn btn-primary'
 									}
 								});
@@ -228,7 +232,7 @@ request.setAttribute("/common/dialog.jsp-inserted", "1");
 								click: function() {
 									closeDialog();
 								},
-								text: '<iwcm:text key="components.send_link.buttons.close" />',
+								text: '<%=prop.getText("components.send_link.buttons.close") %>',
 								class: 'btn btn-primary'
 							}
 						});

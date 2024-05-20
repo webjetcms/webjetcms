@@ -1,0 +1,1462 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">FileTools.java</span></div><h1>FileTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import static sk.iway.iwcm.Tools.isNotEmpty;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.upload.FormFile;
+
+import sk.iway.iwcm.common.EditTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.filebrowser.UnusedFile;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFileFilter;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.io.JarPackaging;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.StatNewDB;
+
+/**
+ *  FileTools.java - podporne nastroje pre pracu so subormi
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.35 $
+ *@created      Date: 16.8.2004 10:49:27
+ *@modified     $Date: 2010/01/20 11:13:38 $
+ */
+public class FileTools
+{
+<span class="nc" id="L65">	protected FileTools() {</span>
+		//utility class
+<span class="nc" id="L67">	}</span>
+
+<span class="fc" id="L69">	public static final List&lt;String&gt; pictureExtensions = Collections.unmodifiableList(Arrays.asList(</span>
+				&quot;.jpg&quot;, &quot;.jpeg&quot;, &quot;.gif&quot;, &quot;.bmp&quot;, &quot;tiff&quot;, &quot;.tif&quot;, &quot;.png&quot;, &quot;.eps&quot;));
+
+<span class="fc" id="L72">	public static final List&lt;String&gt; videoExtensions = Collections.unmodifiableList(Arrays.asList(</span>
+				&quot;.mp4&quot;, &quot;.wmv&quot;, &quot;.mpeg&quot;, &quot;.3gp&quot;, &quot;mkv&quot;));
+
+	/**
+	 * Skopiruje subor src do dest
+	 * @param src
+	 * @param dest
+	 * @return
+	 */
+	public static boolean copyFile(IwcmFile src, IwcmFile dest)
+	{
+<span class="fc" id="L83">		boolean ret = false;</span>
+		try
+		{
+<span class="fc" id="L86">			Logger.debug(FileTools.class,&quot;copyFile: &quot; + src.getAbsolutePath() + &quot;-&gt;&quot; + dest.getAbsolutePath());</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">			if (dest.getParentFile().exists()==false)</span>
+			{
+<span class="nc" id="L89">				Logger.debug(FileTools.class,&quot;   creating dir&quot;);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if(dest.getParentFile().mkdirs() == false) return false;</span>
+			}
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">			if (dest.exists()==false)</span>
+			{
+<span class="nc" id="L94">				Logger.debug(FileTools.class,&quot;   creating new file&quot;);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				if(dest.createNewFile() == false) return false;</span>
+			}
+<span class="fc" id="L97">			IwcmInputStream is = new IwcmInputStream(src);</span>
+<span class="fc" id="L98">			IwcmOutputStream os = new IwcmOutputStream(dest);</span>
+<span class="fc" id="L99">			byte[] buff = new byte[8000];</span>
+			int size;
+			while (true)
+			{
+<span class="fc" id="L103">				size = is.read(buff);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">				if (size &lt; 1) break;</span>
+<span class="fc" id="L105">				os.write(buff, 0, size);</span>
+			}
+<span class="fc" id="L107">			os.close();</span>
+<span class="fc" id="L108">			is.close();</span>
+<span class="fc" id="L109">			ret = true;</span>
+		}
+<span class="nc" id="L111">		catch (Exception e)</span>
+		{
+<span class="nc" id="L113">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L114">		}</span>
+<span class="fc" id="L115">		return(ret);</span>
+	}
+
+	/**
+	 * POZOR pre normalne kopirovanie pouzite verziu s IwcmFile
+	 * @param src
+	 * @param dest
+	 * @return
+	 */
+	public static boolean copyFile(File src, File dest)
+	{
+<span class="nc" id="L126">		boolean ret = false;</span>
+		try
+		{
+<span class="nc" id="L129">			Logger.debug(FileTools.class,&quot;copyFile: &quot; + src.getAbsolutePath() + &quot;-&gt;&quot; + dest.getAbsolutePath());</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (dest.getParentFile().exists()==false)</span>
+			{
+<span class="nc" id="L132">				Logger.debug(FileTools.class,&quot;   creating dir&quot;);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if(dest.getParentFile().mkdirs() == false) return false;</span>
+			}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (dest.exists()==false)</span>
+			{
+<span class="nc" id="L137">				Logger.debug(FileTools.class,&quot;   creating new file&quot;);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if(dest.createNewFile() == false) return false;</span>
+			}
+<span class="nc" id="L140">			FileInputStream is = new FileInputStream(src);</span>
+			try
+			{
+<span class="nc" id="L143">				FileOutputStream os = new FileOutputStream(dest);</span>
+				try
+				{
+<span class="nc" id="L146">					byte[] buff = new byte[8000];</span>
+					int size;
+					while (true)
+					{
+<span class="nc" id="L150">						size = is.read(buff);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">						if (size &lt; 1) break;</span>
+<span class="nc" id="L152">						os.write(buff, 0, size);</span>
+					}
+				}
+<span class="nc" id="L155">				finally { os.close(); }</span>
+			}
+<span class="nc" id="L157">			finally { is.close(); }</span>
+<span class="nc" id="L158">			ret = true;</span>
+		}
+<span class="nc" id="L160">		catch (Exception e)</span>
+		{
+<span class="nc" id="L162">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L163">		}</span>
+<span class="nc" id="L164">		return(ret);</span>
+	}
+
+	/**
+	 * Copy InputStream to IwcmFile and close InputStream
+	 * @param is - InputStream
+	 * @param dest
+	 * @return
+	 */
+	public static boolean copyFile(InputStream is, IwcmFile dest)
+	{
+<span class="nc" id="L175">		boolean ret = false;</span>
+		try
+		{
+<span class="nc" id="L178">			Logger.debug(FileTools.class,&quot;copyFile: MultipartFile/InputStreamSource to &quot; + dest.getAbsolutePath());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (dest.getParentFile().exists()==false)</span>
+			{
+<span class="nc" id="L181">				Logger.debug(FileTools.class,&quot;   creating dir&quot;);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				if(dest.getParentFile().mkdirs() == false) return false;</span>
+			}
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if (dest.exists()==false)</span>
+			{
+<span class="nc" id="L186">				Logger.debug(FileTools.class,&quot;   creating new file&quot;);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if(dest.createNewFile() == false) return false;</span>
+			}
+
+			try
+			{
+<span class="nc" id="L192">				IwcmOutputStream os = new IwcmOutputStream(dest);</span>
+				try
+				{
+<span class="nc" id="L195">					byte[] buff = new byte[8000];</span>
+					int size;
+					while (true)
+					{
+<span class="nc" id="L199">						size = is.read(buff);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">						if (size &lt; 1) break;</span>
+<span class="nc" id="L201">						os.write(buff, 0, size);</span>
+					}
+				}
+<span class="nc" id="L204">				finally { os.close(); }</span>
+			}
+<span class="nc" id="L206">			finally { is.close(); }</span>
+<span class="nc" id="L207">			ret = true;</span>
+		}
+<span class="nc" id="L209">		catch (Exception e)</span>
+		{
+<span class="nc" id="L211">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L212">		}</span>
+<span class="nc" id="L213">		return(ret);</span>
+	}
+
+	/**
+	 * Presunie subor z URL adresy orig na dest
+	 * @param origUrl
+	 * @param destUrl
+	 * @return
+	 */
+	public static boolean moveFile(String origUrl, String destUrl)
+	{
+<span class="nc" id="L224">		IwcmFile origFile = new IwcmFile(Tools.getRealPath(origUrl));</span>
+<span class="nc" id="L225">		IwcmFile destFile = new IwcmFile(Tools.getRealPath(destUrl));</span>
+
+<span class="nc" id="L227">		return moveFile(origFile, destFile);</span>
+	}
+
+	/**
+	 * Presunie subor, ak sa presun nepodari na urovni FS pokusi sa subor prekopirovat a povodny zmazat
+	 * @param origFile
+	 * @param destFile
+	 * @return
+	 */
+	public static boolean moveFile(IwcmFile origFile, IwcmFile destFile)
+	{
+		try
+		{
+<span class="nc" id="L240">			Logger.debug(FileTools.class, &quot;moveFile &quot;+origFile.getAbsolutePath()+&quot; to &quot;+destFile.getAbsolutePath());</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (destFile.getParentFile().exists()==false) destFile.getParentFile().mkdirs();</span>
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			if (origFile.renameTo(destFile)) return true;</span>
+
+<span class="nc" id="L246">			Logger.debug(FileTools.class, &quot;moveFile &quot;+origFile.getAbsolutePath()+&quot; to &quot;+destFile.getAbsolutePath()+&quot; fail, trying copy&quot;);</span>
+
+			//premenovanie sa nepodarilo, subor moze byt locknuty, sprav kopiu
+<span class="nc" id="L249">			copyFile(origFile, destFile);</span>
+<span class="nc" id="L250">			boolean deleted = origFile.delete();</span>
+
+<span class="nc" id="L252">			Logger.debug(FileTools.class, &quot;moveFile &quot;+origFile.getAbsolutePath()+&quot; deleted=&quot;+deleted);</span>
+
+<span class="nc" id="L254">			return deleted;</span>
+		}
+<span class="nc" id="L256">		catch (Exception e)</span>
+		{
+<span class="nc" id="L258">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L260">		return false;</span>
+	}
+
+	/**
+	 * Rekurzivne vymaze adr. strukturu
+	 *
+	 * @param file
+	 * @return
+	 */
+    public static boolean deleteDirTree(IwcmFile file)
+    {
+<span class="fc" id="L271">        return deleteDirTree(file, 0);</span>
+    }
+
+    /**
+     * Zmaze v adresarovej strukture subory starsie ako zadany pocet milisekund, zmaze aj prazdne adresare
+     * @param file
+     * @param minFileAge
+     * @return
+     */
+	public static boolean deleteDirTree(IwcmFile file, long minFileAge)
+	{
+<span class="fc" id="L282">		boolean result = true;</span>
+
+<span class="fc" id="L284">		long minLastModified = Tools.getNow() - minFileAge;</span>
+
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">		if (file != null)</span>
+		{
+			int size;
+			int i;
+
+			try
+			{
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">				if (file.isDirectory())</span>
+				{
+					IwcmFile f;
+<span class="nc" id="L296">					IwcmFile[] files = file.listFiles();</span>
+<span class="nc" id="L297">					size = files.length;</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">					for (i=0; i&lt;size; i++)</span>
+					{
+<span class="nc" id="L300">						f = files[i];</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">						if (f.isDirectory())</span>
+						{
+<span class="nc" id="L303">							result = deleteDirTree(f, minFileAge);</span>
+						}
+						else
+						{
+<span class="nc bnc" id="L307" title="All 4 branches missed.">						    if (minFileAge&lt;1 || f.lastModified() &lt; minLastModified)</span>
+                            {
+<span class="nc" id="L309">                                result = f.delete();</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                                if (f.getVirtualPath().startsWith(&quot;/files&quot;))</span>
+                                {
+                                    //vymazanie full text indexu
+<span class="nc" id="L313">                                    FileIndexerTools.deleteIndexedFile(f.getVirtualPath());</span>
+                                }
+                            }
+                            else
+                            {
+<span class="nc" id="L318">                                result = false;</span>
+                            }
+						}
+					}
+<span class="nc bnc" id="L322" title="All 2 branches missed.">					if (result) result = file.delete();</span>
+				}
+			}
+<span class="nc" id="L325">			catch (Exception e)</span>
+			{
+<span class="nc" id="L327">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L328">			}</span>
+		}
+<span class="fc" id="L330">		return (result);</span>
+	}
+
+	public static boolean saveFileContent(String url, String data)
+	{
+<span class="nc" id="L335">		return saveFileContent(url, data, Constants.FILE_ENCODING);</span>
+	}
+
+	/**
+	 * Ulozi obsah retazca do suboru zadaneho URL so zadanym kodovanim
+	 * @param url - napr. /files/subor.txt
+	 * @param data - obsah suboru
+	 * @param encoding - kodovanie, napr. windows-1250
+	 * @return
+	 */
+	public static boolean saveFileContent(String url, String data, String encoding)
+	{
+<span class="fc" id="L347">		boolean ret = false;</span>
+
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">		if (encoding == null) encoding = Constants.FILE_ENCODING;</span>
+
+		try
+		{
+<span class="fc" id="L353">			IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+
+<span class="pc bpc" id="L355" title="1 of 2 branches missed.">			if (f.getParentFile().exists()==false)</span>
+			{
+<span class="nc bnc" id="L357" title="All 2 branches missed.">				if(f.getParentFile().mkdirs() == false) return false;</span>
+			}
+
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">			if (f.exists()==false)</span>
+			{
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">				if(f.createNewFile() == false) return false;</span>
+			}
+
+<span class="fc" id="L365">			IwcmOutputStream ios = new IwcmOutputStream(f);</span>
+<span class="fc" id="L366">			OutputStreamWriter osw = new OutputStreamWriter( ios, encoding);</span>
+<span class="fc" id="L367">			osw.write(data);</span>
+<span class="fc" id="L368">			osw.close();</span>
+<span class="fc" id="L369">			ios.close();</span>
+
+<span class="fc" id="L371">			ret = true;</span>
+		}
+<span class="nc" id="L373">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L375">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L376">		}</span>
+
+<span class="fc" id="L378">		return(ret);</span>
+	}
+
+	/**
+	 * Vrati URL obrazku s ikonou suboru
+	 * @param url
+	 * @return
+	 */
+	public static String getFileIcon(String url)
+	{
+<span class="fc" id="L388">		String icon = &quot;/components/_common/mime/default.gif&quot;;</span>
+		try
+		{
+<span class="fc" id="L391">			String ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();</span>
+<span class="fc" id="L392">			ext = ext.trim().toLowerCase();</span>
+<span class="fc" id="L393">			IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;));</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">			if (f.exists())</span>
+			{
+<span class="fc" id="L396">				icon = &quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;;</span>
+			}
+		}
+<span class="nc" id="L399">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L401">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L402">		}</span>
+<span class="fc" id="L403">		return(icon);</span>
+	}
+
+	private static final DecimalFormat decimalFormat;
+	private static final DecimalFormat decimalFormatBezMiest;
+	private static final DecimalFormat decimalFormatJednoMiesto;
+
+	static
+	{
+<span class="fc" id="L412">		decimalFormat = new DecimalFormat(&quot;0.##&quot;);</span>
+<span class="fc" id="L413">		decimalFormatBezMiest = new DecimalFormat(&quot;0&quot;);</span>
+<span class="fc" id="L414">		decimalFormatJednoMiesto = new DecimalFormat(&quot;0.#&quot;);</span>
+<span class="fc" id="L415">	}</span>
+
+	/**
+	 * Vrati naformatovanu velkost suboru v B, kB, MB
+	 * @param url
+	 * @return
+	 */
+	public static String getFileLength(String url)
+	{
+<span class="fc" id="L424">		return getFileLength(url, true);</span>
+	}
+
+	/**
+	 * Vrati naformatovanu velkost suboru v B, kB, MB
+	 * @param url
+	 * @param exactFormat - ak je nastavene na false, tak iba MB vracia s desatinnymi miestami
+	 * @return
+	 */
+	public static String getFileLength(String url, boolean exactFormat)
+	{
+<span class="fc" id="L435">		double lengthDouble = 0;</span>
+<span class="fc" id="L436">		IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+
+<span class="fc" id="L438">		IwcmFile fCusom = null;</span>
+<span class="fc" id="L439">		String customPath = PathFilter.getCustomPath();</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">		if (customPath != null)</span>
+		{
+			//skontroluj, ci pozadovany subor nie je custom
+<span class="nc" id="L443">			fCusom = new IwcmFile(customPath + File.separatorChar + Constants.getInstallName() + url.replace('/', File.separatorChar));</span>
+<span class="nc bnc" id="L444" title="All 4 branches missed.">			if (fCusom.exists() &amp;&amp; fCusom.canRead()) f = fCusom;</span>
+		}
+
+<span class="pc bpc" id="L447" title="1 of 4 branches missed.">		if (f.isDirectory() || f.exists()==false) return(&quot;&quot;);</span>
+
+<span class="fc" id="L449">		lengthDouble = f.length();</span>
+<span class="fc" id="L450">		return getFormatFileSize((long)lengthDouble, exactFormat);</span>
+	}
+
+	/**
+	 * Vrati naformatovanu velkost suboru v B, kB, MB
+	 * @param lengthLong
+	 * @param exactFormat - ak je nastavene na false, tak iba MB vracia s desatinnymi miestami
+	 * @return
+	 */
+	public static String getFormatFileSize(long lengthLong, boolean exactFormat)
+	{
+<span class="fc" id="L461">		String length = &quot;&quot;;</span>
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">		if (lengthLong &gt; (1024 * 1024))</span>
+		{
+<span class="nc bnc" id="L464" title="All 2 branches missed.">			if (exactFormat)</span>
+			{
+<span class="nc" id="L466">				length = decimalFormat.format(lengthLong / (1024d * 1024d)) + &quot; MB&quot;;</span>
+<span class="nc" id="L467">				Logger.debug(FileTools.class, &quot;DecimalFormat: &quot;+decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)));</span>
+			}
+			else
+			{
+<span class="nc" id="L471">				length = decimalFormatJednoMiesto.format(lengthLong / (1024d * 1024d)) + &quot; MB&quot;;</span>
+			}
+		}
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">		else if (lengthLong &gt; 1024)</span>
+		{
+<span class="fc bfc" id="L476" title="All 2 branches covered.">			if (exactFormat) length = decimalFormat.format(lengthLong / 1024d) + &quot; kB&quot;;</span>
+<span class="fc" id="L477">			else length = decimalFormatBezMiest.format(lengthLong / 1024d) + &quot; kB&quot;;</span>
+		}
+		else
+		{
+<span class="nc bnc" id="L481" title="All 2 branches missed.">			if (exactFormat) length = decimalFormat.format(lengthLong) + &quot; B&quot;;</span>
+<span class="nc" id="L482">			else length = decimalFormatBezMiest.format(lengthLong) + &quot; B&quot;;</span>
+		}
+<span class="fc" id="L484">		return(length);</span>
+	}
+
+	/**
+	 * Metoda vrati zoznam stranok (url+nazov) a suborov kde sa nachadza
+	 * @param url - url adresa suboru, napr. /images/wjlogo.gif
+	 * @return
+	 */
+	public static List&lt;Column&gt; getFileUsage(String url)
+	{
+<span class="fc" id="L494">		Logger.debug(FileTools.class, &quot;getFileUsage: url=&quot;+url);</span>
+
+<span class="fc" id="L496">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L497">		List&lt;DocDetails&gt; pages = docDB.searchTextAll(url, -1, null, false);</span>
+<span class="fc" id="L498">		List&lt;Column&gt; dokumenty = new ArrayList&lt;&gt;();</span>
+	   Column col;
+
+<span class="fc bfc" id="L501" title="All 2 branches covered.">		for(int i=0;i&lt;pages.size();i++)</span>
+		{
+<span class="fc" id="L503">			DocDetails doc = pages.get(i);</span>
+<span class="pc bpc" id="L504" title="2 of 4 branches missed.">			if(Tools.isNotEmpty(doc.getVirtualPath()) &amp;&amp; doc.getVirtualPath().startsWith(&quot;/files&quot;))</span>
+<span class="nc" id="L505">				continue;</span>
+<span class="fc" id="L506">   	   col = new Column();</span>
+<span class="fc" id="L507">   	   col.setIntColumn1(doc.getDocId());</span>
+<span class="fc" id="L508">		   col.setColumn1(doc.getTitle());</span>
+<span class="fc" id="L509">		   col.setColumn2(doc.getDocLink());</span>
+<span class="fc" id="L510">		   dokumenty.add(col);</span>
+      }
+
+<span class="fc" id="L513">		List&lt;Column&gt; cesty = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L514">		cesty.addAll(dirRekurzia(&quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot;, url));</span>
+<span class="fc" id="L515">		cesty.addAll(dirRekurzia(&quot;/templates/&quot;, url));</span>
+<span class="fc" id="L516">		cesty.addAll(dokumenty);</span>
+
+<span class="fc" id="L518">		return(cesty);</span>
+	}
+
+
+	private static List&lt;Column&gt; dirRekurzia(String rootURL, String testPath)
+	{
+<span class="fc" id="L524">		List&lt;Column&gt; foundFiles = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">		if (rootURL.endsWith(&quot;/&quot;)== false) rootURL = rootURL + &quot;/&quot;;</span>
+
+<span class="fc" id="L528">		IwcmFile rootDir = new IwcmFile(Tools.getRealPath(rootURL));</span>
+<span class="fc" id="L529">		IwcmFile[] files = rootDir.listFiles();</span>
+		IwcmFile myFile;
+	   Column col;
+		int i;
+<span class="fc bfc" id="L533" title="All 2 branches covered.">		for (i=0; i&lt;files.length; i++)</span>
+		{
+<span class="fc" id="L535">			myFile = files[i];</span>
+<span class="fc bfc" id="L536" title="All 2 branches covered.">			if (myFile.isDirectory())</span>
+			{
+<span class="fc" id="L538">				foundFiles.addAll(dirRekurzia(rootURL + myFile.getName() + &quot;/&quot;, testPath));</span>
+			}
+			else
+			{
+				//nacitanie suboru
+<span class="fc" id="L543">				String data = readFileContent(rootURL + myFile.getName());</span>
+
+<span class="pc bpc" id="L545" title="1 of 2 branches missed.">				if (data.indexOf(testPath)!=-1)</span>
+				{
+<span class="nc" id="L547">					col = new Column();</span>
+<span class="nc" id="L548">				   col.setColumn1(myFile.getName());</span>
+<span class="nc" id="L549">				   col.setColumn2(rootURL + myFile.getName());</span>
+<span class="nc" id="L550">				   foundFiles.add(col);</span>
+
+				}
+			}
+		}
+
+<span class="fc" id="L556">		return(foundFiles);</span>
+	}
+	/**
+	 * Skopiruje subor src do out
+	 * @param src
+	 * @param out
+	 * @return
+	 */
+	public static boolean copyFile(FormFile src, File out)
+	{
+<span class="nc" id="L566">		IwcmFile dest=new IwcmFile(out);</span>
+<span class="nc" id="L567">		boolean ret = false;</span>
+		try
+		{
+			//Logger.debug(FileTools.class,&quot;copyFile: &quot; + src.getAbsolutePath() + &quot;-&gt;&quot; + dest.getAbsolutePath());
+<span class="nc bnc" id="L571" title="All 2 branches missed.">			if (dest.getParentFile().exists() == false)</span>
+			{
+<span class="nc" id="L573">				Logger.debug(FileTools.class,&quot;   creating dir&quot;);</span>
+<span class="nc bnc" id="L574" title="All 2 branches missed.">				if(dest.getParentFile().mkdirs() == false) return false;</span>
+			}
+<span class="nc bnc" id="L576" title="All 2 branches missed.">			if (dest.exists()==false)</span>
+			{
+<span class="nc" id="L578">				Logger.debug(FileTools.class,&quot;   creating new file&quot;);</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">				if(dest.createNewFile() == false) return false;</span>
+			}
+<span class="nc" id="L581">			InputStream is = src.getInputStream();</span>
+<span class="nc" id="L582">			IwcmFsDB.writeFiletoDest(is,out,src.getFileSize());</span>
+<span class="nc" id="L583">			ret = true;</span>
+		}
+<span class="nc" id="L585">		catch (Exception e)</span>
+		{
+<span class="nc" id="L587">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L588">		}</span>
+<span class="nc" id="L589">		return(ret);</span>
+	}
+
+	/**
+	 * Skontroluje, ci subor na zadanom URL existuje a je to citatelny subor
+	 * @param url
+	 * @return
+	 */
+	public static boolean isFile(String url)
+	{
+<span class="fc" id="L599">		IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="pc bpc" id="L600" title="2 of 6 branches missed.">		if (f.exists() &amp;&amp; f.isFile() &amp;&amp; f.canRead()) return true;</span>
+
+<span class="fc" id="L602">		return false;</span>
+	}
+
+    public static boolean isDirectory(String url)
+    {
+<span class="fc" id="L607">        IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="pc bpc" id="L608" title="2 of 6 branches missed.">        if (f.exists() &amp;&amp; f.isDirectory() &amp;&amp; f.canRead()) return true;</span>
+
+<span class="fc" id="L610">        return false;</span>
+    }
+
+	public static boolean exists(String url)
+	{
+<span class="fc" id="L615">		IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="pc bpc" id="L616" title="1 of 4 branches missed.">		if (f.exists() &amp;&amp; f.canRead()) return true;</span>
+
+<span class="fc" id="L618">		return false;</span>
+	}
+
+	public static String getFileExtension(String fileName)
+	{
+<span class="pc bpc" id="L623" title="1 of 2 branches missed.">		if (!fileName.contains(&quot;.&quot;))</span>
+<span class="nc" id="L624">			return &quot;&quot;;</span>
+<span class="fc" id="L625">		return fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();</span>
+	}
+
+	public static String getFileNameWithoutExtension(String fileName)
+	{
+<span class="nc" id="L630">		fileName = fileName.substring( fileName.lastIndexOf(File.separator) + 1);</span>
+<span class="nc bnc" id="L631" title="All 2 branches missed.">		if (!fileName.contains(&quot;.&quot;))</span>
+<span class="nc" id="L632">			return fileName;</span>
+
+<span class="nc" id="L634">		return fileName.substring(0, fileName.indexOf('.'));</span>
+	}
+
+	public static String getFilePathWithoutExtension(String filePath)
+	{
+<span class="fc bfc" id="L639" title="All 2 branches covered.">		if (!filePath.contains(&quot;.&quot;))</span>
+<span class="fc" id="L640">			return filePath;</span>
+
+<span class="fc" id="L642">		return filePath.substring(0, filePath.lastIndexOf('.'));</span>
+	}
+
+
+	public static void copyDirectory(IwcmFile from, IwcmFile to) throws IOException
+	{
+<span class="nc bnc" id="L648" title="All 4 branches missed.">		if (!from.isDirectory() || !to.isDirectory())</span>
+<span class="nc" id="L649">			throw new IllegalArgumentException(&quot;Invalid function call FileTools.copyDirectory() Both arguments have to be a directory&quot;);</span>
+
+<span class="nc bnc" id="L651" title="All 2 branches missed.">		for (IwcmFile child : from.listFiles())</span>
+		{
+<span class="nc" id="L653">			IwcmFile newChild = new IwcmFile(to.getAbsolutePath(), child.getName());</span>
+			try
+			{
+<span class="nc bnc" id="L656" title="All 2 branches missed.">				if (!child.isDirectory())</span>
+				{
+<span class="nc" id="L658">					newChild.createNewFile();</span>
+<span class="nc" id="L659">					copyFile(child, newChild);</span>
+				}
+				else
+				{
+<span class="nc" id="L663">					newChild.mkdir();</span>
+<span class="nc" id="L664">					copyDirectory(child, newChild);</span>
+				}
+			}
+<span class="nc" id="L667">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L670">			}</span>
+		}
+<span class="nc" id="L672">	}</span>
+
+	public static boolean downloadFile(String url, String localPath)
+	{
+<span class="nc" id="L676">		return downloadFile(url, localPath, null, 0, -1);</span>
+	}
+
+	public static boolean downloadFile(String url, String localPath, String[] reqProperty)
+	{
+<span class="nc" id="L681">		return downloadFile(url, localPath, reqProperty, 0, -1);</span>
+	}
+
+	/**
+	 * Stiahne subor so zadanym URL do lokalneho suboru
+	 * @param url
+	 * @param localPath
+	 * @param reqProperty - prida RequestProperty
+	 * @return
+	 */
+	public static boolean downloadFile(String url, String localPath, String[] reqProperty, int redirectCounter, int timeOutSeconds)
+	{
+<span class="nc bnc" id="L693" title="All 4 branches missed.">		if (url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;))</span>
+		{
+			try
+			{
+
+<span class="nc" id="L698">				url = Tools.natUrl(url);</span>
+
+<span class="nc bnc" id="L700" title="All 2 branches missed.">				if (url.startsWith(&quot;https://&quot;))</span>
+				{
+<span class="nc" id="L702">					Tools.doNotVerifyCertificates();</span>
+				}
+
+<span class="nc" id="L705">				Logger.debug(Tools.class, &quot;DownloadUrl: &quot; + url);</span>
+
+				//body obsahuje URL adresu, ktoru je treba stiahnut
+<span class="nc" id="L708">				HttpURLConnection conn = null;</span>
+<span class="nc" id="L709">				URL urlObj = new URL(url);</span>
+<span class="nc" id="L710">				conn = (HttpURLConnection) urlObj.openConnection();</span>
+
+<span class="nc bnc" id="L712" title="All 2 branches missed.">                if(timeOutSeconds &gt; 0)</span>
+                {
+<span class="nc" id="L714">                    conn.setConnectTimeout(timeOutSeconds*1000);</span>
+<span class="nc" id="L715">                    conn.setReadTimeout(timeOutSeconds*1000);</span>
+                }
+
+<span class="nc" id="L718">				conn.addRequestProperty(&quot;User-Agent&quot;, Constants.getString(&quot;downloadUrlUserAgent&quot;));</span>
+
+<span class="nc bnc" id="L720" title="All 2 branches missed.">				if(reqProperty != null)</span>
+<span class="nc bnc" id="L721" title="All 2 branches missed.">					for (String rp : reqProperty)</span>
+					{
+<span class="nc" id="L723">						String[] prop = Tools.getTokens(rp, &quot;;&quot;);</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">						if(prop.length &gt; 1)</span>
+<span class="nc" id="L725">							conn.setRequestProperty(prop[0],prop[1]);</span>
+					}
+
+<span class="nc" id="L728">				conn.setAllowUserInteraction(false);</span>
+<span class="nc" id="L729">				conn.setDoInput(true);</span>
+<span class="nc" id="L730">				conn.setDoOutput(false);</span>
+<span class="nc" id="L731">				conn.connect();</span>
+
+<span class="nc" id="L733">				int responseCode = conn.getResponseCode();</span>
+<span class="nc bnc" id="L734" title="All 4 branches missed.">				if ((responseCode / 100) == 3 &amp;&amp; redirectCounter &lt; 10) {</span>
+<span class="nc" id="L735">					String newLocation = conn.getHeaderField( &quot;Location&quot; );</span>
+<span class="nc" id="L736">					return downloadFile(newLocation, localPath, reqProperty, redirectCounter++, timeOutSeconds);</span>
+				}
+
+<span class="nc" id="L739">				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());</span>
+
+<span class="nc" id="L741">				IwcmFile localFile = new IwcmFile(Tools.getRealPath(localPath));</span>
+<span class="nc" id="L742">				localFile.getParentFile().mkdirs();</span>
+
+<span class="nc" id="L744">				IwcmOutputStream ios = new IwcmOutputStream(localFile);</span>
+
+<span class="nc" id="L746">				byte[] buffer = new byte[8000];</span>
+<span class="nc" id="L747">				int n = 0;</span>
+				while (true)
+				{
+<span class="nc" id="L750">					 n = is.read(buffer);</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">					 if (n &lt; 1) break;</span>
+<span class="nc" id="L752">					 ios.write(buffer, 0, n);</span>
+				}
+<span class="nc" id="L754">				is.close();</span>
+<span class="nc" id="L755">				ios.close();</span>
+
+<span class="nc" id="L757">				return true;</span>
+			}
+<span class="nc" id="L759">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L761">				Logger.error(Tools.class,&quot;ERROR downloadUrl(&quot;+url+&quot;)&quot;);</span>
+<span class="nc" id="L762">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+		}
+<span class="nc" id="L765">		return false;</span>
+	}
+
+
+	public static boolean isImage(String name)
+	{
+<span class="pc bpc" id="L771" title="1 of 2 branches missed.">		if (name == null)</span>
+<span class="nc" id="L772">			return false;</span>
+		//.jpg is not equal to .JPG
+<span class="fc" id="L774">		name = name.toLowerCase();</span>
+
+<span class="pc bpc" id="L776" title="1 of 2 branches missed.">		for (String extension : pictureExtensions)</span>
+<span class="fc bfc" id="L777" title="All 2 branches covered.">			if (name.endsWith(extension))</span>
+<span class="fc" id="L778">				return true;</span>
+
+<span class="nc" id="L780">		return false;</span>
+	}
+	public static boolean isVideoFile(String name)
+	{
+<span class="nc bnc" id="L784" title="All 2 branches missed.">		if (name == null)</span>
+<span class="nc" id="L785">			return false;</span>
+		//.jpg is not equal to .JPG
+<span class="nc" id="L787">		name = name.toLowerCase();</span>
+
+<span class="nc bnc" id="L789" title="All 2 branches missed.">		for (String extension : videoExtensions)</span>
+<span class="nc bnc" id="L790" title="All 2 branches missed.">			if (name.endsWith(extension))</span>
+<span class="nc" id="L791">				return true;</span>
+
+<span class="nc" id="L793">		return false;</span>
+	}
+	/**
+	 * Usortuje subory podla mena
+	 * @param arrayfile
+	 * @return
+	 */
+	public static IwcmFile[] sortFilesByName(IwcmFile[] arrayfile)
+	{
+		try
+		{
+			//usortuj to podla abecedy
+<span class="fc" id="L805">			Arrays.sort(arrayfile,</span>
+				new Comparator&lt;IwcmFile&gt;()
+<span class="fc" id="L807">				{</span>
+				@Override
+					public int compare(IwcmFile f1, IwcmFile f2)
+					{
+<span class="fc" id="L811">						return (f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase()));</span>
+					}
+				});
+		}
+<span class="nc" id="L815">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L817">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L818">		}</span>
+
+<span class="fc" id="L820">		return arrayfile;</span>
+	}
+
+	/**
+	 * Usortuje subory podla mena
+	 * @param files
+	 * @return
+	 */
+	public static List&lt;IwcmFile&gt; sortFilesByName(List&lt;IwcmFile&gt; files)
+	{
+		try
+		{
+			//usortuj to podla abecedy
+<span class="fc" id="L833">			Collections.sort(files,</span>
+				new Comparator&lt;IwcmFile&gt;()
+<span class="fc" id="L835">				{</span>
+				@Override
+					public int compare(IwcmFile f1, IwcmFile f2)
+					{
+<span class="fc" id="L839">						return (f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase()));</span>
+					}
+				});
+		}
+<span class="nc" id="L843">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L845">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L846">		}</span>
+
+<span class="fc" id="L848">		return files;</span>
+	}
+
+	public static boolean isFileEditable(String url)
+	{
+<span class="nc bnc" id="L853" title="All 2 branches missed.">		if (Tools.isEmpty(url)) return false;</span>
+
+<span class="nc" id="L855">		String ext = getFileExtension(url).toLowerCase();</span>
+
+<span class="nc bnc" id="L857" title="All 12 branches missed.">		if (isImage(url) || ext.equals(&quot;doc&quot;) || ext.equals(&quot;docx&quot;) || ext.equals(&quot;xls&quot;) || ext.equals(&quot;xlsx&quot;) || ext.equals(&quot;pdf&quot;) ||</span>
+<span class="nc bnc" id="L858" title="All 4 branches missed.">			ext.equals(&quot;zip&quot;) || ext.equals(&quot;rar&quot;) ||</span>
+<span class="nc bnc" id="L859" title="All 12 branches missed.">			ext.equals(&quot;flv&quot;) || ext.equals(&quot;avi&quot;) || ext.equals(&quot;mpg&quot;) || ext.equals(&quot;mov&quot;) || ext.equals(&quot;mp4&quot;) || ext.equals(&quot;mp3&quot;))</span>
+		{
+<span class="nc" id="L861">			return false;</span>
+		}
+
+<span class="nc" id="L864">		boolean editable = true;</span>
+
+<span class="nc" id="L866">		String encoding = Constants.FILE_ENCODING;</span>
+
+		try
+		{
+<span class="nc" id="L870">			IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+
+<span class="nc" id="L872">			IwcmFile fCusom = null;</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">			if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+			{
+				//skontroluj, ci pozadovany subor nie je custom
+<span class="nc" id="L876">				fCusom = new IwcmFile(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + url.replace('/', File.separatorChar));</span>
+<span class="nc bnc" id="L877" title="All 4 branches missed.">				if (fCusom.exists() &amp;&amp; fCusom.canRead()) f = fCusom;</span>
+			}
+
+<span class="nc bnc" id="L880" title="All 4 branches missed.">			if (f.exists() &amp;&amp; f.canRead())</span>
+			{
+<span class="nc" id="L882">				IwcmInputStream is = new IwcmInputStream(f);</span>
+<span class="nc" id="L883">				InputStreamReader isr = new InputStreamReader(is, encoding);</span>
+<span class="nc" id="L884">				char[] buff = new char[64000];</span>
+				int len;
+<span class="nc bnc" id="L886" title="All 2 branches missed.">				while ((len = isr.read(buff))!=-1)</span>
+				{
+					//Logger.debug(FileTools.class, &quot;Reading: &quot;+len+&quot; total: &quot;+contextFile.length());
+<span class="nc" id="L889">					String data = new String(buff, 0, len);</span>
+<span class="nc bnc" id="L890" title="All 2 branches missed.">					if (EditTools.parseLine(data)==false)</span>
+					{
+<span class="nc" id="L892">						editable = false;</span>
+<span class="nc" id="L893">						break;</span>
+					}
+<span class="nc" id="L895">				}</span>
+<span class="nc" id="L896">				is.close();</span>
+<span class="nc" id="L897">				isr.close();</span>
+			}
+		}
+<span class="nc" id="L900">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L902">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L903">		}</span>
+		//System.out.println(&quot;!!!! in fileContent &quot;+url);
+<span class="nc" id="L905">   	return editable;</span>
+	}
+
+	/**
+	 * vrati rekurzivne vsetky subory, ktore vyhovuju vlozenemu filtru
+	 *
+	 * @param root adresar v ktorom chceme vyhladat subory
+	 * @param filter instancia rozhrania filter s podmienkami akceptacie suborov
+	 * @return
+	 */
+	public static List&lt;IwcmFile&gt; getFilesRecursive(IwcmFile root, IwcmFileFilter filter)
+	{
+<span class="nc" id="L917">		List&lt;IwcmFile&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L918" title="All 4 branches missed.">		if (root.exists() &amp;&amp; root.isDirectory())</span>
+		{
+<span class="nc" id="L920">			IwcmFile[] files = root.listFiles();</span>
+<span class="nc bnc" id="L921" title="All 2 branches missed.">			for (IwcmFile file : files)</span>
+			{
+<span class="nc bnc" id="L923" title="All 2 branches missed.">				if (file.isDirectory())</span>
+				{
+<span class="nc" id="L925">					result.addAll(getFilesRecursive(file, filter));</span>
+				}
+<span class="nc bnc" id="L927" title="All 2 branches missed.">				if (filter.accept(file))</span>
+				{
+<span class="nc" id="L929">					result.add(file);</span>
+				}
+			}
+		}
+<span class="nc" id="L933">		return result;</span>
+	}
+
+	/**
+	 * Overi, ci je mozne nahrat dany subor na server
+	 * @param user
+	 * @param fileName
+	 * @return
+	 */public static boolean isFileAllowedForUpload(Identity user, String fileName)
+	{
+		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
+<span class="pc bpc" id="L944" title="2 of 4 branches missed.">		if (fileName == null || Tools.isEmpty(fileName)) return true;</span>
+
+<span class="pc bpc" id="L946" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; user.isAdmin()) return true;</span>
+
+<span class="nc" id="L948">		String ext = FileTools.getFileExtension(fileName);</span>
+<span class="nc bnc" id="L949" title="All 2 branches missed.">		if (ext==null) return false;</span>
+
+<span class="nc" id="L951">		ext = ext.toLowerCase();</span>
+
+<span class="nc bnc" id="L953" title="All 6 branches missed.">		if (ext.equals(&quot;jsp&quot;) || ext.equals(&quot;class&quot;) || ext.equals(&quot;java&quot;)) return false;</span>
+<span class="nc bnc" id="L954" title="All 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;</span>
+
+<span class="nc" id="L956">		return true;</span>
+	}
+
+	/**
+	 * Na Tomcat8/Java8 sa symlinky interpretuju cez servletContext.getRealPath ako cesty mimo rootu a nie ako root/images,
+	 * z /www/tomcat-test/webapps/webjet/images sa stane /mnt/agluster/images co robi potom bordel
+	 * tato metoda zabezpeci spatne premenovanie cesty zacinajucu na root
+	 * @param path
+	 * @return
+	 */
+	public static String symlinkReplaceToRootPath(String path)
+	{
+<span class="fc" id="L968">		String symlinkTranslate = Constants.getString(&quot;symlinkTranslate&quot;);</span>
+<span class="pc bpc" id="L969" title="1 of 2 branches missed.">		if (Tools.isEmpty(symlinkTranslate)) return path;</span>
+
+<span class="nc" id="L971">		String pathOriginal = path;</span>
+
+		try
+		{
+<span class="nc" id="L975">			String[] paths = Tools.getTokens(symlinkTranslate, &quot;\n&quot;);</span>
+<span class="nc bnc" id="L976" title="All 4 branches missed.">			if (paths==null || paths.length==0) return path;</span>
+<span class="nc bnc" id="L977" title="All 2 branches missed.">			for (String pathPair : paths)</span>
+			{
+<span class="nc bnc" id="L979" title="All 2 branches missed.">				if (Tools.isEmpty(pathPair)) continue;</span>
+<span class="nc" id="L980">				String[] pathPairArray = pathPair.split(&quot;\\|&quot;);</span>
+<span class="nc bnc" id="L981" title="All 4 branches missed.">				if (pathPairArray==null || pathPairArray.length!=2) continue;</span>
+
+<span class="nc bnc" id="L983" title="All 4 branches missed.">				if (path.startsWith(pathPairArray[0])==true &amp;&amp; path.startsWith(pathPairArray[1])==false)</span>
+				{
+<span class="nc" id="L985">					path = Tools.replace(path, pathPairArray[0], pathPairArray[1]);</span>
+<span class="nc" id="L986">					Logger.debug(FileTools.class, &quot;symlinkReplaceToRootPath: &quot;+pathOriginal+&quot;-&gt;&quot;+path);</span>
+				}
+			}
+		}
+<span class="nc" id="L990">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L992">		}</span>
+
+<span class="nc" id="L994">		return path;</span>
+	}
+
+	/**
+	 * Vytvori defaultne adresare pre file system (/images,/files,/images/gallery,/images/video)
+	 */
+	public static void createDefaultStaticContentFolders()
+	{
+		//ak neexistuju, vytvor foldre pre domenu
+<span class="fc" id="L1003">		String[] prefixes = {&quot;/images&quot;, &quot;/files&quot;, &quot;/images/gallery&quot;, &quot;/images/video&quot;};</span>
+<span class="fc bfc" id="L1004" title="All 2 branches covered.">		for (String prefix : prefixes)</span>
+		{
+<span class="fc" id="L1006">			IwcmFile dirFile = new IwcmFile(Tools.getRealPath(prefix));</span>
+<span class="pc bpc" id="L1007" title="1 of 2 branches missed.">			if (dirFile.exists()==false)</span>
+			{
+<span class="nc" id="L1009">				boolean ret = dirFile.mkdirs();</span>
+<span class="nc" id="L1010">				Logger.debug(FileTools.class, &quot;CREATING DIR: &quot;+dirFile.getAbsolutePath()+&quot; ret=&quot;+ret);</span>
+			}
+		}
+<span class="fc" id="L1013">	}</span>
+
+	public static List&lt;String&gt; getDirsNames(String rootURL) {
+<span class="fc" id="L1016">	    String root_URL = rootURL;</span>
+<span class="fc" id="L1017">		List&lt;String&gt; foundDirNames = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1018" title="All 2 branches covered.">		if (root_URL.endsWith(&quot;/&quot;)== false)</span>
+<span class="fc" id="L1019">            root_URL = root_URL + &quot;/&quot;;</span>
+<span class="fc" id="L1020">		IwcmFile rootDir = new IwcmFile(Tools.getRealPath(root_URL));</span>
+<span class="fc bfc" id="L1021" title="All 2 branches covered.">		for (IwcmFile file : rootDir.listFiles()) {</span>
+<span class="pc bpc" id="L1022" title="1 of 2 branches missed.">			if (file.isDirectory())</span>
+<span class="fc" id="L1023">				foundDirNames.add(file.getName());</span>
+		}
+<span class="fc" id="L1025">		Collections.sort(foundDirNames);</span>
+<span class="fc" id="L1026">		return foundDirNames;</span>
+	}
+
+	/**
+	 * Nacita obsah suboru na zadanej ceste do retazca
+	 * @param url - cesta k suboru typu /files/admin.txt
+	 * @return
+	 */
+	public static String readFileContent(String url)
+	{
+<span class="fc" id="L1036">		return readFileContent(url, Constants.FILE_ENCODING);</span>
+	}
+
+	/**
+	 * Nacita obsah suboru na zadanom URL do retazca
+	 * @param url - cesta k suboru typu /files/admin.txt
+	 * @param encoding - kodovanie suboru, napr. windows-1250
+	 * @return
+	 */
+	public static String readFileContent(String url, String encoding)
+	{
+<span class="pc bpc" id="L1047" title="1 of 2 branches missed.">		if (url == null) return &quot;&quot;;</span>
+
+		//Logger.debug(FileTools.class, &quot;Reading file: &quot; + url + &quot; encoding=&quot;+encoding);
+
+<span class="fc" id="L1051">		StringBuilder contextFile = new StringBuilder();</span>
+
+<span class="pc bpc" id="L1053" title="1 of 2 branches missed.">		if (encoding == null) encoding = Constants.FILE_ENCODING;</span>
+
+		try
+		{
+<span class="fc" id="L1057">			IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+
+<span class="fc" id="L1059">			IwcmFile fCusom = null;</span>
+<span class="pc bpc" id="L1060" title="1 of 2 branches missed.">			if (isNotEmpty(PathFilter.getCustomPath()))</span>
+			{
+				//skontroluj, ci pozadovany subor nie je custom
+<span class="nc" id="L1063">				fCusom = new IwcmFile(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + url.replace('/', File.separatorChar));</span>
+<span class="nc bnc" id="L1064" title="All 4 branches missed.">				if (fCusom.exists() &amp;&amp; fCusom.canRead()) f = fCusom;</span>
+			}
+
+<span class="pc bpc" id="L1067" title="1 of 4 branches missed.">			if (f.exists() &amp;&amp; f.canRead())</span>
+			{
+				InputStream is;
+<span class="pc bpc" id="L1070" title="1 of 2 branches missed.">				if (f.isJarPackaging()) is = JarPackaging.getInputStream(url);</span>
+<span class="fc" id="L1071">				else is = new IwcmInputStream(f);</span>
+
+<span class="fc" id="L1073">				InputStreamReader isr = new InputStreamReader(is, encoding);</span>
+<span class="fc" id="L1074">				char[] buff = new char[64000];</span>
+				int len;
+<span class="fc bfc" id="L1076" title="All 2 branches covered.">				while ((len = isr.read(buff))!=-1)</span>
+				{
+					//Logger.debug(FileTools.class, &quot;Reading: &quot;+len+&quot; total: &quot;+contextFile.length());
+<span class="fc" id="L1079">					contextFile.append(buff, 0, len);</span>
+				}
+<span class="fc" id="L1081">				isr.close();</span>
+<span class="fc" id="L1082">				is.close();</span>
+			}
+		}
+<span class="nc" id="L1085">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1087">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1088">		}</span>
+
+		//System.out.println(&quot;!!!! in fileContent &quot;+url);
+<span class="fc" id="L1091">   	return(contextFile.toString());</span>
+	}
+
+	/**
+	 * Metoda vrati zoznam stranok triedy UnusedFile (nazov suboru + virtualna parent cesta) a suborov, ktore nie su pouzivane t.z. nenachadzaju sa na ziadnej stranke&lt;br /&gt;
+	 * prehladava aj tieto umiestnenia: &lt;br /&gt;
+	 * 	banner_banners stlpec banner_location a banner_redirect&lt;br /&gt;
+	 * 	calendar stlpec description&lt;br /&gt;
+	 *		document_forum stlpec question&lt;br /&gt;
+	 *		gallery stlpec image_path (iba pre subory v /images)&lt;br /&gt;
+	 *		media stlpec media_link&lt;br /&gt;
+	 *		tips_of_the_day stlpec tip_text&lt;br /&gt;
+	 *
+	 * @author jraska
+	 *
+	 * @param rootUrl - url adresa, napr. /files/mac, ktoreho obsah sa prehladava rekurzivne
+	 * @param request - request, z ktoreho zistime domeny
+	 *
+	 * @return
+	 */
+	public static List&lt;UnusedFile&gt; getDirFileUsage(String rootUrl, HttpServletRequest request)
+	{
+<span class="nc" id="L1113">		DebugTimer dt = new DebugTimer(&quot;getDirFileUsage&quot;);</span>
+
+<span class="nc" id="L1115">		dt.diff(&quot;reading files&quot;);</span>
+
+<span class="nc" id="L1117">		List&lt;UnusedFile&gt; unusedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1118">		List&lt;Column&gt; allFiles = directoryScan(rootUrl, &quot;*&quot;);</span>
+<span class="nc" id="L1119">		SortedSet&lt;String&gt; unusedFileNames = new TreeSet&lt;&gt;();</span>
+<span class="nc" id="L1120">		Set&lt;String&gt; toRemove = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">		for(Column c : allFiles)</span>
+		{
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/WEB-INF&quot;)) continue;</span>
+<span class="nc bnc" id="L1124" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/META-INF&quot;)) continue;</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/wjerrorpages&quot;)) continue;</span>
+<span class="nc bnc" id="L1126" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/admin&quot;)) continue;</span>
+<span class="nc bnc" id="L1127" title="All 4 branches missed.">			if (c.getColumn2().startsWith(&quot;/components&quot;) &amp;&amp; c.getColumn2().startsWith(&quot;/components/&quot;+Constants.getInstallName())==false) continue;</span>
+
+<span class="nc bnc" id="L1129" title="All 4 branches missed.">			if(c.getColumn2().indexOf(&quot;CVS&quot;)==-1 &amp;&amp; c.getColumn2().indexOf(&quot;/.&quot;)==-1)</span>
+			{
+<span class="nc" id="L1131">				unusedFileNames.add(c.getColumn2());</span>
+			}
+<span class="nc" id="L1133">		}</span>
+
+<span class="nc" id="L1135">		dt.diff(&quot;files done, size=&quot;+unusedFileNames.size());</span>
+
+		//#15279 - treba nacitavat z data lebo v data_asc a nenachadzaju &quot;a href&quot; tagy
+<span class="nc" id="L1138">		StringBuilder sql = new StringBuilder(&quot;SELECT data FROM documents d WHERE (data LIKE ?) &quot;);</span>
+<span class="nc bnc" id="L1139" title="All 4 branches missed.">		if (rootUrl.length()&gt;4 &amp;&amp; Constants.DB_TYPE == Constants.DB_MSSQL) sql = new StringBuilder(&quot;SELECT data FROM documents d WHERE CONTAINS(data, ?) &quot;);</span>
+<span class="nc bnc" id="L1140" title="All 4 branches missed.">		else if (rootUrl.length()&gt;4 &amp;&amp; Constants.DB_TYPE == Constants.DB_MYSQL) sql = new StringBuilder(&quot;SELECT data FROM documents d WHERE MATCH(title, data) AGAINST (? IN BOOLEAN MODE) &quot;);</span>
+<span class="nc" id="L1141">		sql.append(&quot; AND (virtual_path IS NULL OR virtual_path='' OR virtual_path NOT LIKE '/files/%') AND available = 1&quot;);</span>
+
+<span class="nc" id="L1143">		Connection db_conn = null;</span>
+<span class="nc" id="L1144">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1145">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L1149">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1150">			ps = StatNewDB.prepareStatement(db_conn, sql.toString());</span>
+<span class="nc bnc" id="L1151" title="All 4 branches missed.">			if (rootUrl.length()&gt;4 &amp;&amp; Constants.DB_TYPE == Constants.DB_MSSQL) ps.setString(1, &quot;\&quot;&quot;+rootUrl+&quot;*\&quot;&quot;);</span>
+<span class="nc bnc" id="L1152" title="All 4 branches missed.">			else if (rootUrl.length()&gt;4 &amp;&amp; Constants.DB_TYPE == Constants.DB_MYSQL) ps.setString(1, &quot;\&quot;&quot;+rootUrl+&quot;\&quot;&quot;);</span>
+<span class="nc" id="L1153">			else ps.setString(1, &quot;%&quot;+rootUrl+&quot;%&quot;);</span>
+
+<span class="nc" id="L1155">			toRemove.clear();</span>
+
+<span class="nc" id="L1157">			dt.diff(&quot;Executing sql=&quot;+sql);</span>
+
+<span class="nc" id="L1159">			rs = ps.executeQuery();</span>
+
+<span class="nc" id="L1161">			dt.diff(&quot;Reading database&quot;);</span>
+
+<span class="nc bnc" id="L1163" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">				if(unusedFileNames.size() == 0) break;</span>
+
+<span class="nc" id="L1167">				String dataAsc = DB.getDbString(rs, &quot;data&quot;);</span>
+				//WAY faster than dataAsc.indexOf...
+<span class="nc" id="L1169">				List&lt;String&gt; excerpts = findFilesExcerpts(dataAsc, rootUrl);</span>
+
+<span class="nc bnc" id="L1171" title="All 2 branches missed.">				for(String fileName : unusedFileNames)</span>
+				{
+<span class="nc bnc" id="L1173" title="All 2 branches missed.">					if(!unusedFileNames.contains(fileName)) continue;</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">					for(String excerpt : excerpts)</span>
+					{
+<span class="nc bnc" id="L1176" title="All 2 branches missed.">						if(toRemove.contains(fileName)) continue;</span>
+						//Logger.debug(FileTools.class, &quot;Excerpt: &quot;+excerpt);
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">						if(excerpt.contains(fileName))</span>
+						{
+<span class="nc" id="L1180">							toRemove.add(fileName);</span>
+						}
+<span class="nc" id="L1182">					}</span>
+<span class="nc" id="L1183">				}</span>
+<span class="nc" id="L1184">				unusedFileNames.removeAll(toRemove);</span>
+<span class="nc" id="L1185">				toRemove.clear();</span>
+<span class="nc" id="L1186">			}</span>
+<span class="nc" id="L1187">			rs.close();</span>
+<span class="nc" id="L1188">			ps.close();</span>
+<span class="nc" id="L1189">			db_conn.close();</span>
+<span class="nc" id="L1190">			rs = null;</span>
+<span class="nc" id="L1191">			ps = null;</span>
+<span class="nc" id="L1192">			db_conn = null;</span>
+
+<span class="nc" id="L1194">			dt.diff(&quot;database readed&quot;);</span>
+		}
+<span class="nc" id="L1196">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1198">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1204" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1205">					rs.close();</span>
+<span class="nc bnc" id="L1206" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1207">					ps.close();</span>
+<span class="nc bnc" id="L1208" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1209">					db_conn.close();</span>
+			}
+<span class="nc" id="L1211">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1213">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1214">			}</span>
+		}
+
+<span class="nc" id="L1217">		dt.diff(&quot;Scanning /components/&quot;+Constants.getInstallName());</span>
+
+<span class="nc" id="L1219">		List&lt;Column&gt; jspFiles = directoryScan(rootUrl, &quot;/components/&quot;+Constants.getInstallName()+&quot;/*&quot;,&quot;/templates/*&quot;);</span>
+<span class="nc" id="L1220">		toRemove.clear();</span>
+
+<span class="nc bnc" id="L1222" title="All 2 branches missed.">		for(Column c : jspFiles)</span>
+		{
+<span class="nc bnc" id="L1224" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/WEB-INF&quot;)) continue;</span>
+<span class="nc bnc" id="L1225" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/META-INF&quot;)) continue;</span>
+<span class="nc bnc" id="L1226" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/wjerrorpages&quot;)) continue;</span>
+<span class="nc bnc" id="L1227" title="All 2 branches missed.">			if (c.getColumn2().startsWith(&quot;/admin&quot;)) continue;</span>
+
+<span class="nc" id="L1229">			String jspData = readFileContent(c.getColumn2());</span>
+<span class="nc bnc" id="L1230" title="All 2 branches missed.">			for(String fileName : unusedFileNames)</span>
+			{
+<span class="nc bnc" id="L1232" title="All 2 branches missed.">				if (jspData.indexOf(fileName) &gt; -1)</span>
+				{
+<span class="nc" id="L1234">					toRemove.add(fileName);</span>
+				}
+<span class="nc" id="L1236">			}</span>
+<span class="nc" id="L1237">			unusedFileNames.removeAll(toRemove);</span>
+<span class="nc" id="L1238">			toRemove.clear();</span>
+<span class="nc" id="L1239">		}</span>
+
+<span class="nc" id="L1241">		dt.diff(&quot;scanning usage in database (components)&quot;);</span>
+
+<span class="nc" id="L1243">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;documents&quot;, &quot;external_link&quot;, &quot;AND (virtual_path IS NULL OR virtual_path='' OR virtual_path NOT LIKE '/files/%') AND available = 1&quot;));</span>
+
+<span class="nc" id="L1245">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;banner_banners&quot;, &quot;banner_location&quot;, null));</span>
+<span class="nc" id="L1246">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;calendar&quot;, &quot;description&quot;, null));</span>
+<span class="nc" id="L1247">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;document_forum&quot;, &quot;question&quot;, null));</span>
+
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">		if(rootUrl.startsWith(&quot;/images/&quot;))	//iba pre subory v images</span>
+<span class="nc" id="L1250">			toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;gallery&quot;, &quot;image_path&quot;, null));</span>
+<span class="nc" id="L1251">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;media&quot;, &quot;media_link&quot;, null));</span>
+<span class="nc" id="L1252">		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, &quot;tips_of_the_day&quot;, &quot;tip_text&quot;, null));</span>
+
+<span class="nc" id="L1254">		unusedFileNames.removeAll(toRemove);</span>
+<span class="nc" id="L1255">		toRemove.clear();</span>
+
+<span class="nc" id="L1257">		Logger.debug(FileTools.class, &quot;Checking files&quot;);</span>
+
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">		for(String fileName : unusedFileNames)</span>
+		{
+<span class="nc" id="L1261">			IwcmFile unusedFile = new IwcmFile(Tools.getRealPath(fileName));</span>
+<span class="nc bnc" id="L1262" title="All 2 branches missed.">			if(unusedFiles.add(new UnusedFile(unusedFile.getName(), unusedFile.getVirtualParent(), unusedFile.lastModified(), unusedFile.length())))</span>
+			{
+<span class="nc" id="L1264">				Logger.debug(FileTools.class, &quot;\t\t&quot; + unusedFile.getVirtualPath() + &quot; added &quot;);</span>
+			}
+<span class="nc" id="L1266">		}</span>
+
+<span class="nc" id="L1268">		return unusedFiles;</span>
+	}
+
+	private static List&lt;String&gt; findFilesExcerpts(String dataAsc, String fileDirectory)
+	{
+<span class="nc" id="L1273">		List&lt;String&gt; excerpts = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1274">		Pattern pattern = Pattern.compile(fileDirectory+&quot;.*?[&lt;&gt;\\n]&quot;, Pattern.MULTILINE);</span>
+<span class="nc" id="L1275">		Matcher matcher = pattern.matcher(dataAsc);</span>
+
+<span class="nc bnc" id="L1277" title="All 2 branches missed.">		while (matcher.find())</span>
+		{
+<span class="nc" id="L1279">			excerpts.add(matcher.group(0));</span>
+		}
+
+<span class="nc" id="L1282">		return excerpts;</span>
+	}
+
+	/**
+	 * Metoda vrati boolean hodnotu, ze ci sa zadana URL pouziva v casti databazy urcenej parametrami: &lt;br /&gt;
+	 *
+	 * @author jraska
+	 *
+	 * @param unusedFileNames - mnozina obsahujuca relativne cesty suborov ktore sa budu prehladavat po tom, ako sa z DB nacitaju zaznamy obsahujuce korenovy adresar
+	 * @param rootUrl - String, ktory vyhladavame v databaze, ide o relativnu virtualnu cestu ku korenovemu adresaru napr. images/gallery/
+	 * @param tableName - nazov tabulky v ktorej sa vyhladava
+	 * @param columnName - nazov stlpca v ktorom sa vyhladava
+	 * @return
+	 */
+	private static Set&lt;String&gt; checkDbUsage(Set&lt;String&gt; unusedFileNames, String rootUrl, String tableName, String columnName, String addWhereSql)
+	{
+<span class="nc" id="L1298">		Set&lt;String&gt; toRemove = new HashSet&lt;&gt;();</span>
+
+<span class="nc" id="L1300">		String sql = &quot;SELECT &quot;+ columnName + &quot; FROM &quot; + tableName + &quot; WHERE &quot; + columnName + &quot; LIKE ?&quot;;</span>
+
+<span class="nc bnc" id="L1302" title="All 2 branches missed.">		if (isNotEmpty(addWhereSql)) sql += &quot; &quot; + addWhereSql;</span>
+
+<span class="nc" id="L1304">		Connection db_conn = null;</span>
+<span class="nc" id="L1305">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1306">		ResultSet rs = null;</span>
+		try
+		{
+			//ziskaj udaje z db
+<span class="nc" id="L1310">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1311">			ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+
+<span class="nc" id="L1313">			ps.setString(1, &quot;%&quot;+rootUrl+&quot;%&quot;);</span>
+
+<span class="nc" id="L1315">			toRemove.clear();</span>
+<span class="nc" id="L1316">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1317" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1319">				String data = DB.getDbString(rs, columnName);</span>
+<span class="nc bnc" id="L1320" title="All 2 branches missed.">				for(String fileName : unusedFileNames)</span>
+				{
+<span class="nc bnc" id="L1322" title="All 2 branches missed.">					if(data.indexOf(fileName) &gt; -1)</span>
+					{
+<span class="nc" id="L1324">						toRemove.add(fileName);</span>
+					}
+<span class="nc" id="L1326">				}</span>
+<span class="nc" id="L1327">			}</span>
+<span class="nc" id="L1328">			rs.close();</span>
+<span class="nc" id="L1329">			ps.close();</span>
+<span class="nc" id="L1330">			db_conn.close();</span>
+<span class="nc" id="L1331">			rs = null;</span>
+<span class="nc" id="L1332">			ps = null;</span>
+<span class="nc" id="L1333">			db_conn = null;</span>
+		}
+<span class="nc" id="L1335">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1337">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1343" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1344">					rs.close();</span>
+<span class="nc bnc" id="L1345" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1346">					ps.close();</span>
+<span class="nc bnc" id="L1347" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1348">					db_conn.close();</span>
+			}
+<span class="nc" id="L1350">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1352">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1353">			}</span>
+		}
+
+<span class="nc" id="L1356">		return toRemove;</span>
+	}
+
+	/**
+	 * Vyhlada rekurzivne subory, ktore vyhovuju zadanemu pattern-u
+	 * @param rootUrl - korenovy adresar z ktoreho zacina vyhladavanie
+	 * @param patterns - wild-card patterny (pouzije regex kde &quot;*&quot; nahradi &quot;.*&quot;, &quot;?&quot; nahradi &quot;.?&quot; a odescapuje &quot;.&quot;). Prefix &quot;-&quot; pred patternom znamena
+	 * ze subory nesmu vyhovovat danemu patternu
+	 * @return zoznam suborov v &lt;code&gt;Column&lt;/code&gt; strukture
+	 */
+	public static List&lt;Column&gt; directoryScan(String rootUrl, String... patterns)
+	{
+<span class="nc" id="L1368">		Logger.debug(FileTools.class, &quot;directoryScan, rootUrl=&quot;+rootUrl);</span>
+
+<span class="nc" id="L1370">		List&lt;Column&gt; foundFiles = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1372" title="All 2 branches missed.">		if (rootUrl.endsWith(&quot;/&quot;)== false)</span>
+<span class="nc" id="L1373">			rootUrl = rootUrl + &quot;/&quot;;</span>
+
+<span class="nc" id="L1375">		IwcmFile rootDir = new IwcmFile(Tools.getRealPath(rootUrl));</span>
+<span class="nc" id="L1376">		IwcmFile[] files = rootDir.listFiles();</span>
+		IwcmFile myFile;
+	   Column col;
+		int i;
+<span class="nc bnc" id="L1380" title="All 2 branches missed.">		for (i=0; i&lt;files.length; i++)</span>
+		{
+<span class="nc" id="L1382">			myFile = files[i];</span>
+<span class="nc bnc" id="L1383" title="All 2 branches missed.">			if (myFile.isDirectory())</span>
+			{
+<span class="nc" id="L1385">				foundFiles.addAll(directoryScan(rootUrl + myFile.getName() + &quot;/&quot;, patterns));</span>
+			}
+			else
+			{
+				//nacitanie suboru
+<span class="nc" id="L1390">				String filePath = rootUrl + myFile.getName();</span>
+<span class="nc" id="L1391">				boolean matches = false;</span>
+<span class="nc bnc" id="L1392" title="All 2 branches missed.">				for(int j=0;j&lt;patterns.length;j++)</span>
+				{
+<span class="nc" id="L1394">					boolean substract = false;</span>
+<span class="nc" id="L1395">					String pattern = patterns[j].replace(&quot;.&quot;, &quot;\\.&quot;);</span>
+<span class="nc" id="L1396">					pattern = pattern.replace(&quot;*&quot;, &quot;.*&quot;);</span>
+<span class="nc" id="L1397">					pattern = pattern.replace(&quot;?&quot;, &quot;.?&quot;);</span>
+<span class="nc bnc" id="L1398" title="All 2 branches missed.">					if(pattern.charAt(0) == ('-'))</span>
+					{
+<span class="nc" id="L1400">						substract = true;</span>
+<span class="nc" id="L1401">						pattern = pattern.substring(1);</span>
+					}
+<span class="nc bnc" id="L1403" title="All 4 branches missed.">					if(filePath.matches(pattern) &amp;&amp; substract)</span>
+					{
+<span class="nc" id="L1405">						matches = false;</span>
+<span class="nc" id="L1406">						break;</span>
+					}
+<span class="nc bnc" id="L1408" title="All 2 branches missed.">					if(filePath.matches(pattern))</span>
+					{
+<span class="nc" id="L1410">						matches = true;</span>
+					}
+<span class="nc bnc" id="L1412" title="All 2 branches missed.">					else if(!substract)</span>
+					{
+<span class="nc" id="L1414">						matches = false;</span>
+<span class="nc" id="L1415">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L1418" title="All 2 branches missed.">				if (matches)</span>
+				{
+<span class="nc" id="L1420">					col = new Column();</span>
+<span class="nc" id="L1421">				   col.setColumn1(myFile.getName());</span>
+<span class="nc" id="L1422">				   col.setColumn2(filePath);</span>
+<span class="nc" id="L1423">				   foundFiles.add(col);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L1428">		return foundFiles;</span>
+	}
+
+    /**
+     * Vyhlada rekurzivne dany typ suborov.
+     * @param directory
+     * @param type
+     * @return
+     */
+	public static List&lt;File&gt; listFilesByType(File directory, String type){
+<span class="nc" id="L1438">		List&lt;File&gt; ret = new ArrayList&lt;&gt;();</span>
+		try {
+<span class="nc" id="L1440">		FilenameFilter filter = new FilenameFilter() {</span>
+			@Override
+			public boolean accept(File dir, String name) {
+<span class="nc bnc" id="L1443" title="All 4 branches missed.">				return name.endsWith(type) || new File(dir, name).isDirectory();</span>
+			}
+		};
+<span class="nc" id="L1446">			File[] fList = directory.listFiles(filter);</span>
+<span class="nc bnc" id="L1447" title="All 2 branches missed.">			if (fList != null) {</span>
+<span class="nc bnc" id="L1448" title="All 2 branches missed.">				for (File file : fList)</span>
+<span class="nc bnc" id="L1449" title="All 2 branches missed.">					if (file.isFile())</span>
+<span class="nc" id="L1450">						ret.add(file);</span>
+<span class="nc bnc" id="L1451" title="All 2 branches missed.">					else if (file.isDirectory()) {</span>
+<span class="nc" id="L1452">						ret.addAll(listFilesByType(file, type));</span>
+					}
+			}
+<span class="nc" id="L1455">		} catch (Exception e) {</span>
+<span class="nc" id="L1456">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1457">		}</span>
+
+<span class="nc" id="L1459">		return ret;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

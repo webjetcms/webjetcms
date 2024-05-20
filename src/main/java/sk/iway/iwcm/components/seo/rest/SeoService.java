@@ -312,7 +312,7 @@ public class SeoService {
 	private static String getFilterSeoKeywordsSql(FilterHeaderDto filter, String suffix) {
 		StringBuilder sql = new StringBuilder("SELECT query, COUNT(query) AS total FROM stat_searchengine");
 		sql.append(suffix);
-		sql.append(" WHERE doc_id >= 0 AND query = ?");
+		sql.append(" WHERE doc_id >= 0 AND "+DB.fixAiCiCol("query")+" = ?");
 		sql.append(" AND search_date >= ? AND search_date <= ? ");
 
 		if(Tools.isNotEmpty(filter.getSearchEngineName()))
@@ -337,7 +337,7 @@ public class SeoService {
 			for (String seoKeyword : seoKeywords) {
 
 				String sql = getFilterSeoKeywordsSql(filter, suffix);
-				params[0] = seoKeyword;
+				params[0] = DB.fixAiCiValue(seoKeyword);
 				String key = seoKeyword.toLowerCase();
 
 				new ComplexQuery().setSql(sql).setParams(params).list(new Mapper<StatKeywordsDTO>() {
@@ -400,7 +400,8 @@ public class SeoService {
 		sql.append(suffix);
 		sql.append(" WHERE doc_id >= 0 ").append(filter.getRootGroupIdQuery());
 		sql.append(" AND search_date >= ? AND search_date <= ? ");
-		sql.append(" AND query = ? ");
+		sql.append(" AND "+DB.fixAiCiCol("query")+" = ? ");
+		sql.append(" GROUP BY server");
 		return sql.toString();
 	}
 
@@ -410,7 +411,7 @@ public class SeoService {
 		for (String suffix : StatNewDB.getTableSuffix("stat_searchengine", filter.getDateFrom().getTime(), filter.getDateTo().getTime())) {
 			String sql = getSearchEnginesCountSql(filter, suffix);
 
-			new ComplexQuery().setSql(sql).setParams(filter.getDateFrom(), filter.getDateTo(), filter.getUrl()).setMaxSize(MAX_ROWS).list(new Mapper<SearchEnginesDTO>() {
+			new ComplexQuery().setSql(sql).setParams(filter.getDateFrom(), filter.getDateTo(), DB.fixAiCiValue(filter.getUrl())).setMaxSize(MAX_ROWS).list(new Mapper<SearchEnginesDTO>() {
 				@Override
 				public SearchEnginesDTO map(ResultSet rs) throws SQLException {
 					String serverName =  DB.prepareString(DB.getDbString(rs, "server"), 25);

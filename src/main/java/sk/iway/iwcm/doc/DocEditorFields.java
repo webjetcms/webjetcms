@@ -203,13 +203,13 @@ public class DocEditorFields extends BaseEditorFields {
         if (doc.isPublishAfterStart()) setPublishAfterStart(doc.isPublishAfterStart());
 
         //ikony
-        if (group!=null && group.getDefaultDocId()==doc.getDocId()) addStatusIcon("fas fa-star");
-        if (doc.isShowInMenu()) addStatusIcon("fas fa-map-marker-alt");
-        else addStatusIcon("far fa-map-marker-alt-slash");
-        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon("fas fa-external-link-alt");
-        if (doc.isSearchable()==false) addStatusIcon("fas fa-eye-slash");
-        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon("fas fa-lock");
-        if (doc.getVirtualPath()!=null && doc.getVirtualPath().contains(Constants.getString("ABTestingName"))) addStatusIcon("fas fa-restroom");
+        if (group!=null && group.getDefaultDocId()==doc.getDocId()) addStatusIcon("ti ti-star");
+        if (doc.isShowInMenu()) addStatusIcon("ti ti-map-pin");
+        else addStatusIcon("ti ti-map-pin-off");
+        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon("ti ti-external-link");
+        if (doc.isSearchable()==false) addStatusIcon("ti ti-eye-off");
+        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon("ti ti-lock");
+        if (doc.getVirtualPath()!=null && doc.getVirtualPath().contains(Constants.getString("ABTestingName"))) addStatusIcon("ti ti-a-b");
 
         StringBuilder iconsHtml = new StringBuilder();
         //pridaj odkaz na zobrazenie stranky
@@ -219,7 +219,7 @@ public class DocEditorFields extends BaseEditorFields {
             //v history je otocene docid a historyid
             link = "/showdoc.do?docid="+doc.getId()+"&historyId="+doc.getDocId();
         }
-        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" class=\"preview-page-link\" title=\""+ResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"far fa-eye\"></i></a> ");
+        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" class=\"preview-page-link\" title=\""+ResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"ti ti-eye\"></i></a> ");
         iconsHtml.append(getStatusIconsHtml());
         statusIcons = iconsHtml.toString();
 

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnswerForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.inquiry</a> &gt; <span class="el_source">AnswerForm.java</span></div><h1>AnswerForm.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.inquiry;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+
+
+/**
+ *  AnswerForm.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 22.11.2004 20:41:19
+ *@modified     $Date: 2004/08/09 08:42:03 $
+ */
+<span class="fc" id="L23">public class AnswerForm extends ActionForm</span>
+{
+   private static final long serialVersionUID = 1L;
+
+   private String answerString;
+   private String questionString;
+   private int answerID;
+   private int questionID;
+<span class="fc" id="L31">   private int answerClicks=0;</span>
+<span class="fc" id="L32">   private double percentage=0;</span>
+   //pocet obrazkov, ktore sa generuju ako stlpcek v JSP
+<span class="fc" id="L34">   private int images=0;</span>
+   private String percentageString;
+<span class="fc" id="L36">   private int hours = 24;</span>
+<span class="fc" id="L37">   private String group = &quot;default&quot;;</span>
+<span class="fc" id="L38">   private String imgRootDir = &quot;/images/inquiry/&quot;;</span>
+   private String answerTextOk;
+   private String answerTextFail;
+   private String dateFrom;
+   private String dateFromTime;
+   private String dateTo;
+   private String dateToTime;
+<span class="fc" id="L45">   private boolean active = true;</span>
+   private boolean multiple;
+   private int totalClicks;
+   private String imagePath;
+   private String url;
+
+   public String getUrl() {
+<span class="fc" id="L52">   	return url;</span>
+   }
+   public void setUrl(String url) {
+<span class="fc" id="L55">   	this.url = url;</span>
+<span class="fc" id="L56">   }</span>
+   public String getImagePath()
+	{
+<span class="fc" id="L59">		return imagePath;</span>
+	}
+	public void setImagePath(String imagePath)
+	{
+<span class="fc" id="L63">		this.imagePath = imagePath;</span>
+<span class="fc" id="L64">	}</span>
+	public int getTotalClicks()
+	{
+<span class="nc" id="L67">		return totalClicks;</span>
+	}
+	public void setTotalClicks(int totalClicks)
+	{
+<span class="fc" id="L71">		this.totalClicks = totalClicks;</span>
+<span class="fc" id="L72">	}</span>
+<span class="fc" id="L73">	private int[] selectedAnswers = {};</span>
+
+   public int[] getSelectedAnswers()
+	{
+<span class="nc" id="L77">		return selectedAnswers;</span>
+	}
+	public void setSelectedAnswers(int[] selectedAnswers)
+	{
+<span class="nc" id="L81">		this.selectedAnswers = selectedAnswers;</span>
+<span class="nc" id="L82">	}</span>
+
+   public boolean isMultiple()
+	{
+<span class="nc" id="L86">		return multiple;</span>
+	}
+
+	public void setMultiple(boolean multiple)
+	{
+<span class="fc" id="L91">		this.multiple = multiple;</span>
+<span class="fc" id="L92">	}</span>
+	@Override
+	public void reset(ActionMapping mapping, HttpServletRequest request)
+	{
+<span class="nc" id="L96">		active = false;</span>
+<span class="nc" id="L97">	}</span>
+
+   /**
+    * Vrati true, ak su platne datumy pre zobrazenie ankety
+    * @return
+    */
+   public boolean isDateValid()
+   {
+<span class="nc" id="L105">   	long now = Tools.getNow();</span>
+<span class="nc" id="L106">   	long start = 0;</span>
+<span class="nc" id="L107">   	long end = Long.MAX_VALUE;</span>
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">   	if (Tools.isNotEmpty(getDateFrom()))</span>
+   	{
+<span class="nc" id="L111">   		start = DB.getTimestamp(getDateFrom(), getDateFromTime());</span>
+   	}
+<span class="nc bnc" id="L113" title="All 2 branches missed.">   	if (Tools.isNotEmpty(getDateTo()))</span>
+   	{
+<span class="nc" id="L115">   		end = DB.getTimestamp(getDateTo(), getDateToTime());</span>
+   	}
+
+<span class="nc bnc" id="L118" title="All 4 branches missed.">   	if (start &lt; now &amp;&amp; now &lt; end)</span>
+   	{
+<span class="nc" id="L120">   		return(true);</span>
+   	}
+<span class="nc" id="L122">   	return(false);</span>
+   }
+
+   public void setAnswerString(String newAnswerString)
+   {
+<span class="fc" id="L127">      answerString = newAnswerString;</span>
+<span class="fc" id="L128">   }</span>
+
+   public String getAnswerString()
+   {
+<span class="fc" id="L132">      return answerString;</span>
+   }
+
+   public void setAnswerID(int newAnswerID)
+   {
+<span class="fc" id="L137">      answerID = newAnswerID;</span>
+<span class="fc" id="L138">   }</span>
+
+   public int getAnswerID()
+   {
+<span class="fc" id="L142">      return answerID;</span>
+   }
+   public void setAnswerClicks(int answerClicks)
+   {
+<span class="fc" id="L146">      this.answerClicks = answerClicks;</span>
+<span class="fc" id="L147">   }</span>
+
+   public int getAnswerClicks()
+   {
+<span class="fc" id="L151">      return answerClicks;</span>
+   }
+
+   public void setQuestionID(int newQuestionID)
+   {
+<span class="fc" id="L156">      questionID = newQuestionID;</span>
+<span class="fc" id="L157">   }</span>
+
+   public int getQuestionID()
+   {
+<span class="fc" id="L161">      return questionID;</span>
+   }
+
+   public void setQuestionString(String newQuestionString)
+   {
+<span class="fc" id="L166">      questionString = newQuestionString;</span>
+<span class="fc" id="L167">   }</span>
+
+   public String getQuestionString()
+   {
+<span class="fc" id="L171">      return questionString;</span>
+   }
+
+   public void setPercentage(double newPercentage)
+   {
+<span class="fc" id="L176">      percentage = newPercentage;</span>
+<span class="fc" id="L177">   }</span>
+
+   public double getPercentage()
+   {
+<span class="fc" id="L181">      return percentage;</span>
+   }
+
+   public int getImages()
+   {
+<span class="nc" id="L186">      return images;</span>
+   }
+   public void setImages(int images)
+   {
+<span class="fc" id="L190">      this.images = images;</span>
+<span class="fc" id="L191">   }</span>
+   public String getImagesBar()
+   {
+<span class="nc" id="L194">      StringBuilder out= new StringBuilder();</span>
+		int i;
+      //obrazky su indexovane od 1
+<span class="nc bnc" id="L197" title="All 2 branches missed.">      for (i=1; i&lt;=images; i++)</span>
+      {
+<span class="nc" id="L199">         out.append(&quot;&lt;img src='&quot;).append(imgRootDir).append(i).append(&quot;.gif' style='border:0px' alt='' /&gt;&quot;);</span>
+      }
+<span class="nc" id="L201">   	return(out.toString());</span>
+   }
+   public String getPercentageString()
+   {
+<span class="fc" id="L205">      return percentageString;</span>
+   }
+   public void setPercentageString(String percentageString)
+   {
+<span class="fc" id="L209">      this.percentageString = percentageString;</span>
+<span class="fc" id="L210">   }</span>
+   public void setHours(int hours)
+   {
+<span class="fc" id="L213">      this.hours = hours;</span>
+<span class="fc" id="L214">   }</span>
+   public int getHours()
+   {
+<span class="nc" id="L217">      return hours;</span>
+   }
+   public void setGroup(String group)
+   {
+<span class="fc" id="L221">      this.group = group;</span>
+<span class="fc" id="L222">   }</span>
+   public String getGroup()
+   {
+<span class="fc" id="L225">      return group;</span>
+   }
+   public String getImgRootDir()
+   {
+<span class="nc" id="L229">      return imgRootDir;</span>
+   }
+   public void setImgRootDir(String imgRootDir)
+   {
+<span class="fc" id="L233">      this.imgRootDir = imgRootDir;</span>
+<span class="fc" id="L234">   }</span>
+   public void setAnswerTextOk(String answerTextOk)
+   {
+<span class="fc" id="L237">      this.answerTextOk = answerTextOk;</span>
+<span class="fc" id="L238">   }</span>
+   public String getAnswerTextOk()
+   {
+<span class="fc" id="L241">      return answerTextOk;</span>
+   }
+   public void setAnswerTextFail(String answerTextFail)
+   {
+<span class="fc" id="L245">      this.answerTextFail = answerTextFail;</span>
+<span class="fc" id="L246">   }</span>
+   public String getAnswerTextFail()
+   {
+<span class="fc" id="L249">      return answerTextFail;</span>
+   }
+
+
+	/**
+	 * @return Returns the dateFrom.
+	 */
+	public String getDateFrom()
+	{
+<span class="nc" id="L258">		return dateFrom;</span>
+	}
+	/**
+	 * @param dateFrom The dateFrom to set.
+	 */
+	public void setDateFrom(String dateFrom)
+	{
+<span class="fc" id="L265">		this.dateFrom = dateFrom;</span>
+<span class="fc" id="L266">	}</span>
+	/**
+	 * @return Returns the dateFromTime.
+	 */
+	public String getDateFromTime()
+	{
+<span class="nc" id="L272">		return dateFromTime;</span>
+	}
+	/**
+	 * @param dateFromTime The dateFromTime to set.
+	 */
+	public void setDateFromTime(String dateFromTime)
+	{
+<span class="fc" id="L279">		this.dateFromTime = dateFromTime;</span>
+<span class="fc" id="L280">	}</span>
+	/**
+	 * @return Returns the dateTo.
+	 */
+	public String getDateTo()
+	{
+<span class="nc" id="L286">		return dateTo;</span>
+	}
+	/**
+	 * @param dateTo The dateTo to set.
+	 */
+	public void setDateTo(String dateTo)
+	{
+<span class="fc" id="L293">		this.dateTo = dateTo;</span>
+<span class="fc" id="L294">	}</span>
+	/**
+	 * @return Returns the dateToTime.
+	 */
+	public String getDateToTime()
+	{
+<span class="fc" id="L300">		return dateToTime;</span>
+	}
+	/**
+	 * @param dateToTime The dateToTime to set.
+	 */
+	public void setDateToTime(String dateToTime)
+	{
+<span class="fc" id="L307">		this.dateToTime = dateToTime;</span>
+<span class="fc" id="L308">	}</span>
+
+	/**
+	 * @return Returns the active.
+	 */
+	public boolean isActive()
+	{
+<span class="nc" id="L315">		return active;</span>
+	}
+	/**
+	 * @param active The active to set.
+	 */
+	public void setActive(boolean active)
+	{
+<span class="fc" id="L322">		this.active = active;</span>
+<span class="fc" id="L323">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

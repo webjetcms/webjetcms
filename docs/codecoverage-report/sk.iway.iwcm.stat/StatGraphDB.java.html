@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatGraphDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatGraphDB.java</span></div><h1>StatGraphDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.inquiry.AnswerForm;
+import sk.iway.iwcm.inquiry.InquiryDB;
+
+/**
+ *
+ *  StatGraphDB.java
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.13 $
+ *@created      Date: 10.12.2004 14:33:14
+ */
+public class StatGraphDB
+{
+<span class="nc" id="L36">	protected StatGraphDB() {</span>
+		//utility class
+<span class="nc" id="L38">	}</span>
+
+	/**
+	 * Povodne sa zobrazovali iba domeny, napr. .com, .sk a podobne.
+	 * Stara funkcionalita sa zachovava pomocou tohoto volania.
+	 *
+	 * @see 	StatGraphDB#getCountryTimeData(int, java.util.Date, java.util.Date, String, boolean, HttpServletRequest)
+	 * @param max_size	int  kolko zaznamov chceme zobrazit
+	 * @param from 		Date odkedy
+	 * @param to 			Date dokedy
+	 * @param groupIdsQuery
+	 * @return TimeSeriesCollection zoznam podkladov pre graf
+	 */
+	public static Map&lt;String, Map&lt;Date, Number&gt;&gt; getCountryTimeData(int max_size, java.util.Date from, java.util.Date to, String groupIdsQuery)
+	{
+<span class="nc" id="L53">		HttpServletRequest noRequest = null;</span>
+<span class="nc" id="L54">		return getCountryTimeData(max_size, from,to,groupIdsQuery,COUNTRY_NAMES_AS_TLD,noRequest);</span>
+	}
+
+	//konstanty pre lepsiu citatelnost
+	public static final boolean COUNTRY_NAMES_AS_TLD = true;
+
+	public static final boolean FULL_COUNTRY_NAMES = false;
+
+
+	public static Map&lt;String, Map&lt;Date, Number&gt;&gt; getCountryTimeData(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery,boolean countryNameAsTld,HttpServletRequest request)
+	{
+<span class="nc" id="L65">		return getCountryTimeData(maxRows, from, to, groupIdsQuery, countryNameAsTld, request, false);</span>
+	}
+
+	/**
+	 *  Gets the countryTimeData attribute of the StatDB object
+	 *
+	 *@param  max_size  Description of the Parameter
+	 *@param  from      Description of the Parameter
+	 *@param  to        Description of the Parameter
+	 *@return           The countryTimeData value
+	 */
+	public static Map&lt;String, Map&lt;Date, Number&gt;&gt; getCountryTimeData(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery,boolean countryNameAsTld,HttpServletRequest request, boolean withoutBots)
+	{
+		//TimeSeriesCollection collection = new TimeSeriesCollection();
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (groupIdsQuery == null)</span>
+		{
+<span class="nc" id="L82">			groupIdsQuery = &quot;&quot;;</span>
+		}
+
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		Prop texts = (request != null ? Prop.getInstance(request) : Prop.getInstance(&quot;sk&quot;));</span>
+
+<span class="fc" id="L87">		List&lt;Column&gt; topCountry = StatTableDB.getCountry(maxRows, from, to, groupIdsQuery, withoutBots);</span>
+
+		//uprav max_size podla realneho poctu zaznamov
+<span class="fc" id="L90">		maxRows = topCountry.size();</span>
+<span class="fc" id="L91">		Map&lt;String, Map&lt;Date, Number&gt;&gt; timeSeriesTable = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L93">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L95">			whitelistedQuery = StatNewDB.getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L97">		String[] suffixes = StatNewDB.getTableSuffix(null, from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L100">			Connection db_conn = null;</span>
+<span class="fc" id="L101">			PreparedStatement ps = null;</span>
+<span class="fc" id="L102">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L105">				db_conn = DBPool.getConnection();</span>
+
+				//ok mame zoznam top pages, vytvor data pre graf
+<span class="fc" id="L108">				int count = 0;</span>
+
+<span class="fc" id="L110">				Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L111">				cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L112">				String sql = &quot;SELECT &quot;+StatNewDB.getDMYSelect(&quot;view_time&quot;)+&quot;, count(country) as views FROM stat_views&quot;+suffixes[s]+&quot; WHERE country=? AND view_time&gt;=? AND view_time&lt;? &quot; + groupIdsQuery + whitelistedQuery;</span>
+<span class="fc" id="L113">				sql += &quot; GROUP BY &quot;+StatNewDB.getDMYGroupBy(&quot;view_time&quot;);</span>
+
+<span class="fc" id="L115">				Logger.debug(StatGraphDB.class, &quot;getCountryTimeData sql=&quot;+sql);</span>
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">				while (count &lt; maxRows)</span>
+				{
+<span class="fc" id="L119">					Column col2 = topCountry.get(count);</span>
+
+					//alebo chceme ako meno plny nazov krajiny
+					String key;
+
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">					if (!countryNameAsTld) key = texts.getText (&quot;stat.countries.tld.&quot;+col2.getColumn1());</span>
+<span class="nc" id="L125">					else key = col2.getColumn1();</span>
+<span class="fc" id="L126">					Map&lt;Date, Number&gt; bts = timeSeriesTable.get(key);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">					if (bts == null)</span>
+					{
+<span class="fc" id="L129">						bts = new HashMap&lt;&gt;();</span>
+						//collection.addSeries(bts);
+<span class="fc" id="L131">						timeSeriesTable.put(key, bts);</span>
+					}
+
+<span class="fc" id="L134">					ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L135">					ps.setString(1, col2.getColumn1());</span>
+<span class="fc" id="L136">					ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L137">					ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L138">					rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">					while (rs.next())</span>
+					{
+<span class="fc" id="L141">						cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L142">						cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L143">						cal.set(Calendar.DATE, rs.getInt(&quot;vt_day&quot;));</span>
+
+<span class="fc" id="L145">						Logger.debug(StatGraphDB.class, &quot;Adding &quot;+Tools.formatDate(cal.getTimeInMillis())+&quot; views=&quot;+rs.getInt(&quot;views&quot;));</span>
+
+						try
+						{
+<span class="fc" id="L149">							bts.put(new java.util.Date(cal.getTime().getTime()), Integer.valueOf(rs.getInt(&quot;views&quot;)));</span>
+						}
+<span class="nc" id="L151">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L153">							Logger.error(StatGraphDB.class,&quot;getCountryTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L154">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L155">						}</span>
+					}
+<span class="fc" id="L157">					rs.close();</span>
+<span class="fc" id="L158">					ps.close();</span>
+<span class="fc" id="L159">					count++;</span>
+<span class="fc" id="L160">				}</span>
+
+<span class="fc" id="L162">				db_conn.close();</span>
+<span class="fc" id="L163">				rs = null;</span>
+<span class="fc" id="L164">				ps = null;</span>
+<span class="fc" id="L165">				db_conn = null;</span>
+			}
+<span class="nc" id="L167">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if (ex.getMessage().indexOf(&quot;Invalid&quot;)==-1)</span>
+				{
+<span class="nc" id="L171">					sk.iway.iwcm.Logger.error(ex);</span>
+				}
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L179">						rs.close();</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L181">						ps.close();</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L183">						db_conn.close();</span>
+				}
+<span class="nc" id="L185">				catch (Exception ex2)</span>
+				{
+<span class="fc" id="L187">				}</span>
+			}
+		}
+
+<span class="fc" id="L191">		return (timeSeriesTable);</span>
+	}
+
+	public static Map&lt;String, Map&lt;Date, Number&gt;&gt; getBrowserTimeData(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery)
+	{
+<span class="nc" id="L196">		return getBrowserTimeData(maxRows, from, to, groupIdsQuery, false);</span>
+	}
+
+	/**
+	 *  Gets the browserTimeData attribute of the StatDB object
+	 *
+	 *@param  max_size  Description of the Parameter
+	 *@param  from      Description of the Parameter
+	 *@param  to        Description of the Parameter
+	 *@return           The browserTimeData value
+	 */
+	public static Map&lt;String, Map&lt;Date, Number&gt;&gt; getBrowserTimeData(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery, boolean withoutBots)
+	{
+		//TimeSeriesCollection collection = new TimeSeriesCollection();
+
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">		if (groupIdsQuery == null)</span>
+		{
+<span class="nc" id="L213">			groupIdsQuery = &quot;&quot;;</span>
+		}
+
+<span class="fc" id="L216">		List&lt;Column&gt; topBrowsers = StatTableDB.getBrowser(maxRows, from, to, groupIdsQuery, withoutBots);</span>
+
+		//uprav max_size podla realneho poctu zaznamov
+<span class="fc" id="L219">		maxRows = topBrowsers.size();</span>
+
+<span class="fc" id="L221">		Map&lt;String, Map&lt;Date, Number&gt;&gt; timeSeriesTable = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L223">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L225">			whitelistedQuery = StatNewDB.getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L227">		String[] suffixes = StatNewDB.getTableSuffix(null, from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L230">			Connection db_conn = null;</span>
+<span class="fc" id="L231">			PreparedStatement ps = null;</span>
+<span class="fc" id="L232">			ResultSet rs = null;</span>
+			try
+			{
+<span class="fc" id="L235">				db_conn = DBPool.getConnection();</span>
+
+				//ok mame zoznam top pages, vytvor data pre graf
+<span class="fc" id="L238">				int count = 0;</span>
+
+<span class="fc" id="L240">				Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L241">				cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L242">				String sql = &quot;SELECT &quot;+StatNewDB.getDMYSelect(&quot;view_time&quot;)+&quot;, count(browser_ua_id) as views FROM stat_views&quot;+suffixes[s]+&quot; WHERE browser_ua_id=? AND platform_id=? AND view_time&gt;=? AND view_time&lt;? &quot; + groupIdsQuery + whitelistedQuery;</span>
+<span class="fc" id="L243">				sql += &quot; GROUP BY &quot;+StatNewDB.getDMYGroupBy(&quot;view_time&quot;);</span>
+
+<span class="fc" id="L245">				Logger.debug(StatGraphDB.class, &quot;getBrowserTimeData sql=&quot;+sql);</span>
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">				while (count &lt; maxRows)</span>
+				{
+<span class="fc" id="L249">					Column col = topBrowsers.get(count);</span>
+
+<span class="fc" id="L251">					String key = col.getColumn1() + &quot; (&quot; + col.getColumn2() + &quot;)&quot;;</span>
+<span class="fc" id="L252">					Map&lt;Date, Number&gt; bts = timeSeriesTable.get(key);</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">					if (bts == null)</span>
+					{
+<span class="fc" id="L255">						bts = new HashMap&lt;&gt;();</span>
+						//collection.addSeries(bts);
+<span class="fc" id="L257">						timeSeriesTable.put(key, bts);</span>
+					}
+<span class="fc" id="L259">					ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="fc" id="L260">					ps.setInt(1, col.getIntColumn1());</span>
+<span class="fc" id="L261">					ps.setInt(2, col.getIntColumn2());</span>
+<span class="fc" id="L262">					ps.setTimestamp(3, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L263">					ps.setTimestamp(4, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L264">					rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">					while (rs.next())</span>
+					{
+<span class="fc" id="L267">						cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L268">						cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L269">						cal.set(Calendar.DATE, rs.getInt(&quot;vt_day&quot;));</span>
+
+						try
+						{
+<span class="fc" id="L273">							bts.put(new java.util.Date(cal.getTime().getTime()), Integer.valueOf(rs.getInt(&quot;views&quot;)));</span>
+						}
+<span class="nc" id="L275">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L277">							Logger.error(StatGraphDB.class,&quot;getBrowserTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L278">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L279">						}</span>
+					}
+<span class="fc" id="L281">					rs.close();</span>
+<span class="fc" id="L282">					ps.close();</span>
+<span class="fc" id="L283">					count++;</span>
+<span class="fc" id="L284">				}</span>
+
+<span class="fc" id="L286">				db_conn.close();</span>
+<span class="fc" id="L287">				rs = null;</span>
+<span class="fc" id="L288">				ps = null;</span>
+<span class="fc" id="L289">				db_conn = null;</span>
+			}
+<span class="nc" id="L291">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L293">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L300">						rs.close();</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L302">						ps.close();</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L304">						db_conn.close();</span>
+				}
+<span class="nc" id="L306">				catch (Exception ex2)</span>
+				{
+<span class="fc" id="L308">				}</span>
+			}
+		}
+
+<span class="fc" id="L312">		return (timeSeriesTable);</span>
+	}
+
+	/**
+	 *  Gets the InquiryTimeData attribute of the StatDB object
+	 *
+	 *@param  max_size  Description of the Parameter
+	 *@param  from      Description of the Parameter
+	 *@param  to        Description of the Parameter
+	 *@param questionId
+	 *@param request
+	 *@return           The inquiryTimeData value
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getInquiryTimeData(int maxRows, java.util.Date from, java.util.Date to, int questionId, int userId, HttpServletRequest request)
+	{
+		//TimeSeriesCollection collection = new TimeSeriesCollection();
+
+<span class="nc" id="L329">		List&lt;AnswerForm&gt; answers = InquiryDB.getAnswers(questionId, request);	//ziskam odpovede</span>
+
+		//Map&lt;String, TimeSeries&gt; timeSeriesTable = new Hashtable&lt;String, TimeSeries&gt;();
+<span class="nc" id="L332">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; timeSeriesTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L334">			Connection db_conn = null;</span>
+<span class="nc" id="L335">			PreparedStatement ps = null;</span>
+<span class="nc" id="L336">			ResultSet rs = null;</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			for(AnswerForm af: answers){</span>
+			try
+			{
+<span class="nc" id="L340">				db_conn = DBPool.getConnection();</span>
+
+				//ok mame zoznam top pages, vytvor data pre graf
+
+<span class="nc" id="L344">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L345">				cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="nc" id="L346">				String sql = &quot;SELECT &quot;+StatNewDB.getDMYSelect(&quot;create_date&quot;)+&quot;, count(answer_id) as answers FROM inquiry_users WHERE create_date&gt;=? AND create_date&lt;? AND answer_id = ?&quot;;</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">				if(userId &gt;= 0) sql += &quot; AND user_id = ? &quot;;</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">				if(userId == -1) sql += &quot; AND user_id = -1 &quot;;	//neprihlaseni pouzivatelia</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">				if(userId == -2) sql += &quot; AND user_id &gt;= 0 &quot;;	//prihlaseni pouzivatelia</span>
+<span class="nc" id="L350">				sql += &quot; GROUP BY &quot;+StatNewDB.getDMYGroupBy(&quot;create_date&quot;);</span>
+
+<span class="nc" id="L352">				Logger.debug(StatGraphDB.class, &quot;getInquiryTimeData sql=&quot;+sql);</span>
+
+<span class="nc" id="L354">					String key = af.getAnswerString();</span>
+<span class="nc" id="L355">					Map&lt;Date, Number&gt; bts = timeSeriesTable.get(key);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">					if (bts == null)</span>
+					{
+<span class="nc" id="L358">						bts = new HashMap&lt;&gt;();</span>
+						//collection.addSeries(bts);
+<span class="nc" id="L360">						timeSeriesTable.put(key, bts);</span>
+					}
+<span class="nc" id="L362">					ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L363">					ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L364">					ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L365">					ps.setInt(3, af.getAnswerID());</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">					if(userId &gt;= 0) ps.setInt(4, userId);</span>
+<span class="nc" id="L367">					rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L370">						cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="nc" id="L371">						cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="nc" id="L372">						cal.set(Calendar.DATE, rs.getInt(&quot;vt_day&quot;));</span>
+
+						try
+						{
+<span class="nc" id="L376">							bts.put(new java.util.Date(cal.getTime().getTime()), Integer.valueOf(rs.getInt(&quot;answers&quot;)));</span>
+						}
+<span class="nc" id="L378">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L380">							Logger.error(StatGraphDB.class,&quot;getInquiryTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L381">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L382">						}</span>
+					}
+<span class="nc" id="L384">					rs.close();</span>
+<span class="nc" id="L385">					ps.close();</span>
+
+
+<span class="nc" id="L388">				db_conn.close();</span>
+<span class="nc" id="L389">				rs = null;</span>
+<span class="nc" id="L390">				ps = null;</span>
+<span class="nc" id="L391">				db_conn = null;</span>
+			}
+<span class="nc" id="L393">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L395">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L401" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L402">						rs.close();</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L404">						ps.close();</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L406">						db_conn.close();</span>
+				}
+<span class="nc" id="L408">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L410">				}</span>
+			}
+<span class="nc" id="L412">		}</span>
+		//return (collection);
+<span class="nc" id="L414">		return (timeSeriesTable);</span>
+	}
+
+	/**
+	 *  Gets the InquiryPieData attribute of the StatDB object
+	 *
+	 *@param  from  Description of the Parameter
+	 *@param  to    Description of the Parameter
+	 *@param  questionId    Description of the Parameter
+	 *@param  request    Description of the Parameter
+	 *@return       The inquiryPieData value
+	 */
+
+	public static Map&lt;String, Number&gt; getInquiryPieData(java.util.Date from, java.util.Date to, int questionId, int userId, Prop prop, HttpServletRequest request)
+	{
+<span class="nc" id="L429">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L430">		List&lt;AnswerForm&gt; answers = InquiryDB.getAnswers(questionId, request);	//ziskam odpovede</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		for(AnswerForm af: answers){</span>
+<span class="nc" id="L432">			Connection db_conn = null;</span>
+<span class="nc" id="L433">			PreparedStatement ps = null;</span>
+<span class="nc" id="L434">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L437">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L439">				String sql = &quot;SELECT count(answer_id) as answers FROM inquiry_users WHERE create_date&gt;=? AND create_date&lt;? AND answer_id = ?&quot;;</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">				if(userId &gt;= 0) sql += &quot; AND user_id = ? &quot;;</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">				if(userId == -1) sql += &quot; AND user_id = -1 &quot;;	//neprihlaseni pouzivatelia</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if(userId == -2) sql += &quot; AND user_id &gt;= 0 &quot;;	//prihlaseni pouzivatelia</span>
+<span class="nc" id="L443">				ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L444">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L445">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L446">				ps.setInt(3, af.getAnswerID());</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">				if(userId &gt;= 0) ps.setInt(4, userId);</span>
+<span class="nc" id="L448">				rs = ps.executeQuery();	//pocet odpovedi pre dane rozmedzie</span>
+
+<span class="nc bnc" id="L450" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L452">					map.put(af.getAnswerString(), Integer.valueOf(rs.getInt(&quot;answers&quot;)));</span>
+				}
+<span class="nc" id="L454">				rs.close();</span>
+<span class="nc" id="L455">				ps.close();</span>
+
+<span class="nc" id="L457">				db_conn.close();</span>
+<span class="nc" id="L458">				rs = null;</span>
+<span class="nc" id="L459">				ps = null;</span>
+<span class="nc" id="L460">				db_conn = null;</span>
+			}
+<span class="nc" id="L462">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L464">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L470" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L471">						rs.close();</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L473">						ps.close();</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L475">						db_conn.close();</span>
+				}
+<span class="nc" id="L477">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L479">				}</span>
+			}
+<span class="nc" id="L481">		}</span>
+
+<span class="nc" id="L483">		map = StatDB.sortByValue(map);</span>
+
+<span class="nc" id="L485">		return (map);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

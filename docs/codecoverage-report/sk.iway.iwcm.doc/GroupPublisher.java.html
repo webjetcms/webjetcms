@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupPublisher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupPublisher.java</span></div><h1>GroupPublisher.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  GroupPublisher.java
+ *
+ *  Encapsulates operations over groups_scheduler SQL table.
+ *  Publishes scheduled changes made to the {@link GroupDetails} instance
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 31.8.2009 17:53:21
+ *@modified     $Date: 2009/09/07 10:52:39 $
+ */
+<span class="nc" id="L35">public class GroupPublisher</span>
+{
+<span class="fc" id="L37">	static final SimpleQuery query = new SimpleQuery();</span>
+
+	static final long MINUTE = 60*1000L;
+
+	public static boolean addRecord(GroupDetails group, Date publishDate, int userId)
+	{
+<span class="fc" id="L43">		Connection db_conn = null;</span>
+<span class="fc" id="L44">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="fc" id="L47">			GroupDetails g = group;</span>
+<span class="fc" id="L48">			Timestamp pd = null;</span>
+
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">			if(publishDate!=null)</span>
+<span class="nc" id="L51">				pd = new Timestamp(publishDate.getTime());</span>
+
+<span class="fc" id="L53">			String[] additionalFields = DataAccessHelper.getGroupFields();</span>
+<span class="fc" id="L54">			StringBuilder addFieldsInsert = new StringBuilder();</span>
+<span class="fc" id="L55">			StringBuilder addFieldsInsertParams = new StringBuilder();</span>
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">			if (additionalFields != null &amp;&amp; additionalFields.length&gt;0) {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">				for (String field : additionalFields) {</span>
+<span class="fc" id="L58">					addFieldsInsert.append(&quot;, &quot;).append(field);</span>
+<span class="fc" id="L59">					addFieldsInsertParams.append(&quot;, ?&quot;);</span>
+				}
+			}
+
+<span class="fc" id="L63">			String sql = &quot;INSERT INTO groups_scheduler (save_date, group_id, group_name, internal, parent_group_id, navbar, &quot; +</span>
+					&quot;default_doc_id, temp_id, sort_priority, password_protected, menu_type, url_dir_name,&quot; +
+					&quot; html_head, logon_page_doc_id, domain_name, new_page_docid_template, install_name, &quot; +
+					&quot;field_a, field_b, field_c, field_d, logged_menu_type, link_group_id,&quot; +
+					&quot;when_to_publish, user_id, lng, hidden_in_admin&quot; +
+<span class="fc" id="L68">					addFieldsInsert.toString() +</span>
+<span class="fc" id="L69">					&quot;) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?&quot;+addFieldsInsertParams.toString()+&quot;)&quot;;</span>
+
+<span class="fc" id="L71">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L72">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="fc" id="L74">			Object[] parameters = {new Date(), g.getGroupId(), g.getGroupName(), g.isInternal(), g.getParentGroupId(), g.getNavbarName(), g.getDefaultDocId(),</span>
+<span class="fc" id="L75">				g.getTempId(), g.getSortPriority(), g.getPasswordProtected(), g.getMenuType(), g.getUrlDirName(),</span>
+<span class="fc" id="L76">				g.getHtmlHead(), g.getLogonPageDocId(), g.getDomainName(), g.getNewPageDocIdTemplate(), g.getInstallName(),</span>
+<span class="fc" id="L77">				g.getFieldA(), g.getFieldB(), g.getFieldC(), g.getFieldD(), g.getLoggedMenuType(), g.getLinkGroupId(), pd, userId, g.getLng(), g.isHiddenInAdmin()};</span>
+
+<span class="fc" id="L79">			SimpleQuery.bindParameters(ps, parameters);</span>
+
+<span class="fc" id="L81">			DataAccessHelper.setGroupPreparedStatement(ps, g, parameters.length+1);</span>
+
+<span class="fc" id="L83">			ps.execute();</span>
+<span class="fc" id="L84">			ps.close();</span>
+<span class="fc" id="L85">			db_conn.close();</span>
+<span class="fc" id="L86">			ps = null;</span>
+<span class="fc" id="L87">			db_conn = null;</span>
+
+<span class="fc" id="L89">			return true;</span>
+		}
+<span class="nc" id="L91">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L93">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L100">					ps.close();</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L102">					db_conn.close();</span>
+			}
+<span class="nc" id="L104">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L106">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L107">			}</span>
+		}
+
+<span class="nc" id="L110">		return false;</span>
+	}
+
+	public static boolean addRecord(GroupDetails group, Date publishDate)
+	{
+<span class="nc" id="L115">		return addRecord(group, publishDate, -1);</span>
+	}
+
+	public static void deleteRecord(int scheduleId)
+	{
+<span class="nc" id="L120">		query.execute(&quot;DELETE FROM groups_scheduler WHERE schedule_id = ?&quot;, scheduleId);</span>
+<span class="nc" id="L121">	}</span>
+
+	public static void markAsPublished(int scheduleId)
+	{
+<span class="nc" id="L125">		query.execute(&quot;UPDATE groups_scheduler SET date_published=? WHERE schedule_id = ? AND date_published IS NULL&quot;, new Timestamp(Tools.getNow()), scheduleId);</span>
+<span class="nc" id="L126">	}</span>
+
+	/**
+	 * Publishes scheduled changes in {@link GroupDetails} attributes
+	 * Called main because of Cron's naming restrictions, @see {@link Crontab}
+	 */
+	public static void main(String[] args)
+	{
+		try{
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L136">		List&lt;Number&gt; rowIds = query.forList(</span>
+<span class="fc" id="L137">			&quot;SELECT schedule_id FROM groups_scheduler WHERE when_to_publish IS NOT NULL AND date_published IS NULL AND when_to_publish &lt;= ?&quot;, new Timestamp(System.currentTimeMillis())</span>
+		);
+
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">		if (rowIds.size() == 0)</span>
+<span class="fc" id="L141">			return;</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		for (Number id : rowIds)</span>
+		{
+<span class="nc" id="L145">			publish(id.intValue());</span>
+<span class="nc" id="L146">			markAsPublished(id.intValue());</span>
+<span class="nc" id="L147">		}</span>
+
+<span class="nc" id="L149">		GroupsDB.getInstance(true);</span>
+		//mohla sa zmenit URL linka adresara
+<span class="nc" id="L151">		DocDB.getInstance(true);</span>
+		}
+<span class="nc" id="L153">		catch (Exception e) {</span>
+<span class="nc" id="L154">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L155">		}</span>
+<span class="nc" id="L156">	}</span>
+
+	private static void publish(int historyId)
+	{
+<span class="nc" id="L160">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L161">		GroupDetails group = getGroupFromGroupsHistory(historyId);</span>
+
+<span class="nc" id="L163">		GroupDetails origGroup = groupsDB.getGroup(group.getGroupId());</span>
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if(origGroup != null)</span>
+		{
+			// zisti ci sme v adresari /System/Trash (kos), ak ano, nepublikuj
+<span class="nc" id="L168">	      String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(origGroup.getGroupId())).toLowerCase();</span>
+	      //tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
+<span class="nc" id="L170">	      Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="nc" id="L171">	      String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">	   	if (navbarNoHref.startsWith(DB.internationalToEnglish(trashDirName).toLowerCase())==false)</span>
+	      {
+<span class="nc" id="L175">	   		GroupsDB.getInstance().setGroup(group);</span>
+	      }
+		}
+<span class="nc" id="L178">	}</span>
+
+
+	public static Map&lt;Integer, Date&gt; getScheduledChangesForGroupWithId(int groupId)
+	{
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L184">		List&lt;Number&gt; historyIds = query.forList(</span>
+<span class="nc" id="L185">			&quot;SELECT schedule_id FROM groups_scheduler WHERE group_id = ? AND when_to_publish IS NOT NULL&quot;, groupId</span>
+		);
+
+<span class="nc" id="L188">		Map&lt;Integer, Date&gt; scheduled = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L190">		Connection db_conn = null;</span>
+<span class="nc" id="L191">		PreparedStatement ps = null;</span>
+<span class="nc" id="L192">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L195">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L196">			ps = db_conn.prepareStatement(&quot;SELECT when_to_publish FROM groups_scheduler WHERE schedule_id = ? AND when_to_publish IS NOT NULL&quot;);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			for (Number id : historyIds)</span>
+			{
+<span class="nc" id="L199">				ps.setInt(1, id.intValue());</span>
+<span class="nc" id="L200">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L203">					scheduled.put(id.intValue(), new java.util.Date(DB.getDbTimestamp(rs, &quot;when_to_publish&quot;)));</span>
+				}
+<span class="nc" id="L205">				rs.close();</span>
+<span class="nc" id="L206">			}</span>
+<span class="nc" id="L207">			ps.close();</span>
+<span class="nc" id="L208">			db_conn.close();</span>
+<span class="nc" id="L209">			rs = null;</span>
+<span class="nc" id="L210">			ps = null;</span>
+<span class="nc" id="L211">			db_conn = null;</span>
+		}
+<span class="nc" id="L213">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L215">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L222">					rs.close();</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L224">					ps.close();</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L226">					db_conn.close();</span>
+			}
+<span class="nc" id="L228">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L230">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L231">			}</span>
+		}
+
+<span class="nc" id="L234">		return scheduled;</span>
+	}
+
+	public static List&lt;GroupSchedulerDetails&gt; getGroupsFromGroupsHistory(int groupId)
+	{
+<span class="nc" id="L239">		Connection db_conn = null;</span>
+<span class="nc" id="L240">		PreparedStatement ps = null;</span>
+<span class="nc" id="L241">		ResultSet rs = null;</span>
+<span class="nc" id="L242">		List&lt;GroupSchedulerDetails&gt; listGroupsSchedulerDetails = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L245">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L246">			ps = db_conn.prepareStatement(&quot;SELECT * FROM groups_scheduler WHERE group_id = ?&quot;);</span>
+<span class="nc" id="L247">			ps.setInt(1, groupId);</span>
+<span class="nc" id="L248">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L251">				listGroupsSchedulerDetails.add(GroupsDB.fillFieldsByResultSetFromScheduler(rs));</span>
+			}
+<span class="nc" id="L253">			rs.close();</span>
+<span class="nc" id="L254">			ps.close();</span>
+<span class="nc" id="L255">			db_conn.close();</span>
+<span class="nc" id="L256">			rs = null;</span>
+<span class="nc" id="L257">			ps = null;</span>
+<span class="nc" id="L258">			db_conn = null;</span>
+		}
+<span class="nc" id="L260">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L262">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L269">					rs.close();</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L271">					ps.close();</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L273">					db_conn.close();</span>
+			}
+<span class="nc" id="L275">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L277">			}</span>
+		}
+<span class="nc" id="L279">		return listGroupsSchedulerDetails;</span>
+	}
+
+	public static GroupDetails getGroupFromGroupsHistory(int scheduleId)
+	{
+<span class="nc" id="L284">		Connection db_conn = null;</span>
+<span class="nc" id="L285">		PreparedStatement ps = null;</span>
+<span class="nc" id="L286">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L289">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L290">			ps = db_conn.prepareStatement(&quot;SELECT * FROM groups_scheduler WHERE schedule_id = ?&quot;);</span>
+<span class="nc" id="L291">			ps.setInt(1, scheduleId);</span>
+<span class="nc" id="L292">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L295">				return GroupsDB.fillFieldsByResultSet(rs);</span>
+			}
+<span class="nc" id="L297">			rs.close();</span>
+<span class="nc" id="L298">			ps.close();</span>
+<span class="nc" id="L299">			db_conn.close();</span>
+<span class="nc" id="L300">			rs = null;</span>
+<span class="nc" id="L301">			ps = null;</span>
+<span class="nc" id="L302">			db_conn = null;</span>
+		}
+<span class="nc" id="L304">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L306">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L312" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L313">					rs.close();</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L315">					ps.close();</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L317">					db_conn.close();</span>
+			}
+<span class="nc" id="L319">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L321">			}</span>
+		}
+<span class="nc" id="L323">		throw new IllegalStateException(&quot;No row found for scheduleId: &quot;+scheduleId);</span>
+	}
+
+	/**
+	 * Returns list of publicable directories
+	 * @return list of publicable directories
+	 */
+	public static List&lt;GroupDetails&gt; getPublicableDirs()
+	{
+<span class="nc" id="L332">		Connection db_conn = null;</span>
+<span class="nc" id="L333">		PreparedStatement ps = null;</span>
+<span class="nc" id="L334">		ResultSet rs = null;</span>
+<span class="nc" id="L335">		GroupDetails gd = null;</span>
+<span class="nc" id="L336">		GroupDetails groupDet = null;</span>
+<span class="nc" id="L337">		List&lt;GroupDetails&gt; publicableGroups = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L340">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L341">			ps = db_conn.prepareStatement(&quot;SELECT * FROM groups_scheduler&quot;);</span>
+<span class="nc" id="L342">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L345">				groupDet = (GroupsDB.getInstance()).getGroup(rs.getInt(&quot;group_id&quot;));</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			  	if(groupDet == null) continue;</span>
+
+<span class="nc" id="L348">			  	String link = groupDet.getFullPath();	//cesta adresara</span>
+
+<span class="nc" id="L350">			  	gd = new GroupDetails();</span>
+<span class="nc" id="L351">				gd.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="nc" id="L352">				gd.setGroupName(DB.getDbString(rs, &quot;group_name&quot;));</span>
+<span class="nc" id="L353">				SimpleDateFormat sdf = new SimpleDateFormat(&quot;dd.MM.yyyy&quot;);</span>
+<span class="nc" id="L354">				gd.setFieldA(sdf.format(rs.getDate(&quot;when_to_publish&quot;)));</span>
+<span class="nc" id="L355">				gd.setTempId(rs.getInt(&quot;schedule_id&quot;));</span>
+<span class="nc" id="L356">				gd.setFullPath(link);</span>
+<span class="nc" id="L357">				publicableGroups.add(gd);</span>
+<span class="nc" id="L358">			}</span>
+<span class="nc" id="L359">			rs.close();</span>
+<span class="nc" id="L360">			ps.close();</span>
+<span class="nc" id="L361">			db_conn.close();</span>
+<span class="nc" id="L362">			rs = null;</span>
+<span class="nc" id="L363">			ps = null;</span>
+<span class="nc" id="L364">			db_conn = null;</span>
+		}
+<span class="nc" id="L366">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L368">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L375">					rs.close();</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L377">					ps.close();</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L379">					db_conn.close();</span>
+			}
+<span class="nc" id="L381">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L383">			}</span>
+		}
+<span class="nc" id="L385">		return publicableGroups;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

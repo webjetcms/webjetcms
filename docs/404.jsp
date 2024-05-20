@@ -15,7 +15,7 @@
 				return;
 			}
 		}
-    	
+
     	//System.out.println(currentYearPrefix);
     	if (path.startsWith("/latest")) {
 		    if (path.contains(".")==false) {
@@ -24,9 +24,13 @@
 		    	return;
 		    }
 		} else if (path.startsWith(currentYearPrefix)) {
-			response.sendRedirect("/latest"+path.substring(currentYearPrefix.length()));
+			if (path.contains("/sk/") || path.contains("/en/") || path.contains("/cs/")) {
+				response.sendRedirect("/latest"+path.substring(currentYearPrefix.length()));
+			} else {
+				response.sendRedirect("/latest/sk"+path.substring(currentYearPrefix.length()));
+			}
 			return;
-		}		
+		}
 	}
 %>
 Page not found

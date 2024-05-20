@@ -1,0 +1,770 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UpdateService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.update</a> &gt; <span class="el_source">UpdateService.java</span></div><h1>UpdateService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.update;
+
+import java.beans.XMLDecoder;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts.util.ResponseUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.editor.rest.WebPagesListener;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stripes.SyncDirAction;
+import sk.iway.iwcm.sync.WarningListener;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.system.zip.ZipEntry;
+import sk.iway.iwcm.system.zip.ZipInputStream;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="nc" id="L48">public class UpdateService {</span>
+
+<span class="fc" id="L50">	private static final String[] COMPONENTS_DIRS = {&quot;/components/&quot;, &quot;/apps/&quot;};</span>
+	private static final String RESFRESHER = &quot;/admin/update/update_refresher&quot;;
+
+	/************************************************** GET VERSIONS LOGIC SECTION *******************************************************************/
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+    public static List&lt;VersionBean&gt; getUpdateVersionsData(HttpServletRequest request) {
+        try {
+            //HttpServletRequest request = event.getSource().getRequest();
+<span class="fc" id="L59">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L60">            String lng = PageLng.getUserLng(request);</span>
+
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (user.isEnabledItem(&quot;modUpdate&quot;)) {</span>
+<span class="fc" id="L63">                List&lt;VersionBean&gt; versions = (List&lt;VersionBean&gt;) downloadObject(&quot;type=VersionList&quot;, lng);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">				if (versions != null) {</span>
+<span class="fc" id="L65">					Logger.debug(UpdateService.class,&quot;Mam versions: &quot; + versions.size());</span>
+
+<span class="fc" id="L67">                    return versions;</span>
+				}
+            }
+<span class="nc" id="L70">        }  catch (Exception ex) {</span>
+<span class="nc" id="L71">            Logger.error(WebPagesListener.class, ex);</span>
+<span class="nc" id="L72">        }</span>
+
+<span class="nc" id="L74">        return (new ArrayList&lt;VersionBean&gt;());</span>
+    }
+
+	/************************************************** UPDATE LOGIC SECTION *******************************************************************/
+
+	public static String prepareUpdateFile(MultipartFile uploadFile) throws IOException, ServletException {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (Tools.isNotEmpty(uploadFile.getName())) {</span>
+<span class="nc" id="L81">			String version = DocTools.removeChars(&quot;upload-&quot; + Tools.formatDateTime(Tools.getNow()));</span>
+<span class="nc" id="L82">			String versionDir = version;</span>
+
+<span class="nc" id="L84">			FileTools.copyFile(uploadFile.getInputStream(), new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/update/&quot; + versionDir + &quot;/archive.dat&quot;)));</span>
+
+<span class="nc" id="L86">			return version;</span>
+		}
+
+<span class="nc" id="L89">		return null;</span>
+	}
+
+	public static void prepareUpdate(String version, HttpServletRequest request, HttpServletResponse response, boolean viaFile) throws IOException, ServletException {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if(Tools.isEmpty(version)) return;</span>
+
+		String inputVersion;
+		String inputVersionDir;
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		if(viaFile) {</span>
+			//Check version location name formatt
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if(!version.startsWith(&quot;upload-&quot;)) return;</span>
+
+<span class="nc" id="L102">			inputVersion = version;</span>
+<span class="nc" id="L103">			inputVersionDir = version;</span>
+		} else {
+<span class="nc" id="L105">			inputVersion = version;</span>
+<span class="nc" id="L106">			inputVersionDir = version + &quot;-&quot; + Tools.formatDate(Tools.getNow());</span>
+		}
+
+<span class="nc" id="L109">		prepareUpdateLogic(inputVersion, inputVersionDir, request, response);</span>
+<span class="nc" id="L110">	}</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private static void prepareUpdateLogic(String version, String versionDir, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+		//Check's first
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if(request == null) {</span>
+<span class="nc" id="L116">			SpringUrlMapping.redirectToLogon(response);</span>
+<span class="nc" id="L117">			return;</span>
+		}
+
+<span class="nc" id="L120">		HttpSession session = request.getSession();</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (session == null) {</span>
+<span class="nc" id="L122">			SpringUrlMapping.redirectToLogon(response);</span>
+<span class="nc" id="L123">			return;</span>
+		}
+
+<span class="nc" id="L126">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		if (!(user != null &amp;&amp; user.isAdmin())) {</span>
+<span class="nc" id="L128">			SpringUrlMapping.redirectToLogon(response);</span>
+<span class="nc" id="L129">			return;</span>
+		}
+
+<span class="nc" id="L132">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L133">		String lng = Prop.getLng(request, false);</span>
+
+<span class="nc" id="L135">		response.setContentType(&quot;text/html; charset=windows-1250&quot;);</span>
+<span class="nc" id="L136">		PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L137">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;LINK rel='stylesheet' href='&quot;+request.getContextPath()+&quot;/admin/css/style.css'&gt;&lt;META http-equiv='Content-Type' content='text/html; charset=windows-1250'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L138">		out.println(&quot;&lt;h3&gt;&quot;+prop.getText(&quot;update.preparing_update_files&quot;)+&quot;&lt;/h3&gt;&quot;);</span>
+
+<span class="nc" id="L140">		out.flush();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		for (int i = 0; i &lt; 100; i++) {</span>
+<span class="nc" id="L142">			out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="nc" id="L143">			out.flush();</span>
+		}
+
+		//stiahni zoznam verzii
+<span class="nc" id="L147">		Map&lt;String, String&gt; modules = null;</span>
+		try {
+<span class="nc" id="L149">			modules = (Map&lt;String, String&gt;)downloadObject(&quot;type=ModList&quot;, lng);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (modules != null) modules.put(&quot;cmp__common&quot;, &quot;true&quot;);</span>
+		}
+<span class="nc" id="L152">		catch (Exception ex) {</span>
+			//padlo stahovanie
+<span class="nc" id="L154">		}</span>
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (modules == null) {</span>
+<span class="nc" id="L157">			modules = new Hashtable&lt;&gt;();</span>
+			//sme offline, modules pouzijeme podla aktualnej verzie
+<span class="nc" id="L159">			Modules mod = Modules.getInstance();</span>
+<span class="nc" id="L160">			List&lt;ModuleInfo&gt; modList = mod.getAvailableModules();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			for (ModuleInfo m : modList) {</span>
+<span class="nc" id="L162">				modules.put(m.getItemKey(), &quot;true&quot;);</span>
+				//lebo cmp_dmail ma kluc menuEmail
+<span class="nc" id="L164">                String path = m.getLeftMenuLink();</span>
+<span class="nc bnc" id="L165" title="All 4 branches missed.">                if (m.getItemKey().startsWith(&quot;cmp_&quot;) == false &amp;&amp; path != null) {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					for (String dir : COMPONENTS_DIRS) {</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">						if (path.startsWith(dir)) {</span>
+<span class="nc" id="L168">							int i = dir.length();</span>
+<span class="nc" id="L169">							int j = path.indexOf(&quot;/&quot;, i+1);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">							if (j &gt; i) {</span>
+<span class="nc" id="L171">								String name = &quot;cmp_&quot;+path.substring(i, j);</span>
+<span class="nc" id="L172">								modules.put(name, &quot;true&quot;);</span>
+							}
+						}
+					}
+                }
+<span class="nc" id="L177">			}</span>
+		}
+
+		//pridaj meno instalacie ktore mame nastavene
+<span class="nc" id="L181">		modules.put(&quot;cmp_&quot; + Constants.getInstallName(), &quot;true&quot;);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (Tools.isNotEmpty(Constants.getLogInstallName())) modules.put(&quot;cmp_&quot;+Constants.getLogInstallName(), &quot;true&quot;);</span>
+
+		//out.println(&quot;&lt;!-- modlist size: &quot;+modules.size()+&quot; --&gt;&quot;);
+
+<span class="nc" id="L186">		out.println(&quot;&lt;div id='msgDiv'&gt;&quot; + prop.getText(&quot;update.downloading_files_please_wait&quot;) + &quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L187">		out.println(&quot;&lt;script type='text/javascript' src='/admin/update/timerbar.jsp'&gt;&lt;/script&gt;&quot;);</span>
+
+		//stiahni archiv zo servera
+<span class="nc" id="L190">		boolean ok = downloadArchiveFile(version, versionDir, out);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (ok) {</span>
+<span class="nc" id="L192">			out.println(&quot;&lt;script type='text/javascript'&gt;printMessage('msgDiv', '&quot;+prop.getText(&quot;update.backing_old_files&quot;)+&quot;');&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L193">			updateProgressBar(0, out);</span>
+		} else {
+<span class="nc" id="L195">			out.println(&quot; &lt;span style='color: red'&gt;Error: can't download archive&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L196">			out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L197">			out.flush();</span>
+<span class="nc" id="L198">			return;</span>
+		}
+<span class="nc" id="L200">		out.println(&quot;&lt;br&gt;&quot;);</span>
+
+<span class="nc" id="L202">		String archiveRealPath = Tools.getRealPath(&quot;/WEB-INF/update/&quot; + versionDir + &quot;/archive.dat&quot;);</span>
+<span class="nc" id="L203">		File archiveFile = new File(archiveRealPath);</span>
+
+		// Read in the bytes
+<span class="nc" id="L206">        int offset = 0;</span>
+<span class="nc" id="L207">        int numRead = 0;</span>
+
+<span class="nc" id="L209">		int updateFilesCount = 0;</span>
+		try {
+			File outFile;
+	   		FileOutputStream fos;
+
+<span class="nc" id="L214">	   		InputStream fis = new FileInputStream(archiveFile);</span>
+
+	   		//rozbal si zip subor a prepisuj jednotlive subory
+<span class="nc" id="L217">	   		ZipInputStream zis = new ZipInputStream(fis);</span>
+	   		ZipEntry entry;
+	   		String fileName;
+	   		File localFile;
+	   		boolean fileEquals;
+
+	   		// ziskaj pocet zaznamov
+<span class="nc" id="L224">			int total = 0;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			while ((entry = zis.getNextEntry()) != null) { total ++; }</span>
+<span class="nc" id="L226">			zis.close();</span>
+
+<span class="nc" id="L228">			Logger.debug(UpdateService.class,&quot;total: &quot; + total);</span>
+
+<span class="nc" id="L230">			fis.close();</span>
+<span class="nc" id="L231">			fis = new FileInputStream(archiveFile);</span>
+<span class="nc" id="L232">			zis = new ZipInputStream(fis);</span>
+
+<span class="nc" id="L234">			int lastPercentage = 0;</span>
+<span class="nc" id="L235">			int actualPercentage = 0;</span>
+<span class="nc" id="L236">			int counter = 0;</span>
+
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			while ((entry = zis.getNextEntry()) != null) {</span>
+<span class="nc" id="L239">				fileName = entry.getName();</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">				if (!fileName.startsWith(&quot;/&quot;))</span>
+<span class="nc" id="L241">					fileName = &quot;/&quot; + fileName; //NOSONAR</span>
+
+<span class="nc" id="L243">				actualPercentage = (int) ( ((double)counter++ / (double)total) * 100 );</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (actualPercentage!=lastPercentage) {</span>
+<span class="nc" id="L245">					updateProgressBar(actualPercentage, out);</span>
+<span class="nc" id="L246">					lastPercentage = actualPercentage;</span>
+				}
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				if (fileName.indexOf(&quot;/CVS/&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">					 fileName.equals(&quot;.cvsignore&quot;) ||</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">					 fileName.equals(&quot;poolman.xml&quot;) ||</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">					 fileName.equals(&quot;web.xml&quot;) ||</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">					 fileName.indexOf(&quot;/admin/FCKeditor/editor/_source&quot;)==0)</span>
+				{
+					//je to CVS adresar, preskakujeme
+<span class="nc" id="L256">					continue;</span>
+				}
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">				if (fileName.indexOf(&quot;/admin/spec/&quot;) == 0) {</span>
+					//je to adresar a nie je to pre nas
+<span class="nc bnc" id="L261" title="All 4 branches missed.">					if (fileName.lastIndexOf('/') &gt; 14 &amp;&amp; fileName.indexOf(&quot;/admin/spec/&quot; + Constants.getInstallName() + &quot;/&quot;) != 0)</span>
+<span class="nc" id="L262">						continue;</span>
+				}
+
+				//Logger.println(this,&quot;zip: dir=&quot; + entry.isDirectory()+&quot; name=&quot;+fileName);
+<span class="nc" id="L266">				localFile = new File(Tools.getRealPath(fileName));</span>
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (entry.isDirectory()) {</span>
+					//toto netreba, adresar sa vytvori pri vytvoreni suboru
+					/*outFile = new File(servlet.getServletContext().getRealPath(&quot;/WEB-INF/update/&quot;+versionDir + fileName));
+					if (outFile.exists()==false)
+					{
+						Logger.println(this,&quot;Vytvaram adresar&quot;);
+						outFile.mkdirs();
+					}*/
+				} else {
+					//kontroluj prava na komponenty
+<span class="nc" id="L278">					boolean isDisabled = false;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					for (String componentDir : COMPONENTS_DIRS) {</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">						if (fileName.toLowerCase().indexOf(componentDir) == 0) {</span>
+							//ziskaj nazov komponenty
+<span class="nc" id="L282">							int start = fileName.indexOf(componentDir);</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">							if (start != -1) {</span>
+<span class="nc" id="L284">								start = start + componentDir.length();</span>
+<span class="nc" id="L285">								int end = fileName.indexOf(&quot;/&quot;, start + 1);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">								if (end &gt; start) {</span>
+<span class="nc" id="L287">									String componentName = fileName.substring(start, end);</span>
+									//Logger.println(this,&quot;CMP: &quot; + componentName + &quot; f:&quot; + fileName);
+
+									//skontroluj prava
+<span class="nc bnc" id="L291" title="All 2 branches missed.">									if (isModuleAvailable(componentName, modules)==false) {</span>
+										//tato komponenta nie je povolena
+<span class="nc" id="L293">										Logger.debug(UpdateService.class,&quot;--&gt; DISABLED component: &quot; + componentName + &quot; f:&quot; + fileName);</span>
+<span class="nc" id="L294">										isDisabled = true;</span>
+<span class="nc" id="L295">										break;</span>
+									}
+								}
+							}
+						}
+					}
+
+<span class="nc bnc" id="L302" title="All 2 branches missed.">					if (isDisabled) continue;</span>
+
+					//nacitak ZIP entry do pola
+<span class="nc" id="L305">					byte[] zipBuff = new byte[(int)entry.getSize()];</span>
+
+					//nacitaj subor 1 do buffera
+<span class="nc" id="L308">					offset = 0;</span>
+<span class="nc" id="L309">					numRead = 0;</span>
+<span class="nc bnc" id="L310" title="All 4 branches missed.">					while (offset &lt; zipBuff.length &amp;&amp; (numRead=zis.read(zipBuff, offset, zipBuff.length - offset)) &gt;= 0)</span>
+					{
+<span class="nc" id="L312">					   offset += numRead;</span>
+					}
+
+<span class="nc bnc" id="L315" title="All 2 branches missed.">					if (localFile.exists()) {</span>
+						//skontroluj ci sa zmenil (porovnaj obsah)
+<span class="nc" id="L317">						fileEquals = fileContentEquals(localFile, zipBuff);</span>
+
+						//Ak su rovnake, nema zmysel to prepisovat
+<span class="nc bnc" id="L320" title="All 2 branches missed.">						if (fileEquals) continue;</span>
+
+						//backup subor
+<span class="nc" id="L323">					   	outFile = new File(Tools.getRealPath(&quot;/WEB-INF/update/&quot; + versionDir + &quot;_backup&quot; + fileName));</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">					   	if (outFile.getParentFile().exists() == false)</span>
+<span class="nc" id="L325">							outFile.getParentFile().mkdirs();</span>
+
+						//vytvor zalohu suboru
+<span class="nc" id="L328">						FileTools.copyFile(localFile, outFile);</span>
+					}
+
+					//	zapis subor na disk
+<span class="nc" id="L332">					outFile = new File(Constants.getServletContext().getRealPath(&quot;/WEB-INF/update/&quot; + versionDir + fileName));</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">					if (outFile.getParentFile().exists() == false)</span>
+<span class="nc" id="L334">						outFile.getParentFile().mkdirs();</span>
+
+<span class="nc" id="L336">					fos = new FileOutputStream(outFile);</span>
+<span class="nc" id="L337">					fos.write(zipBuff);</span>
+<span class="nc" id="L338">					fos.close();</span>
+<span class="nc" id="L339">					updateFilesCount++;</span>
+<span class="nc" id="L340">				}</span>
+			}
+<span class="nc" id="L342">			updateProgressBar(100, out);</span>
+<span class="nc" id="L343">			zis.close();</span>
+<span class="nc" id="L344">			fis.close();</span>
+		}
+<span class="nc" id="L346">		catch (Exception ex) {</span>
+<span class="nc" id="L347">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L348">			out.println(&quot; &lt;span style='color: red'&gt;Error: &quot; + ex.getMessage() + &quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L349">			out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L350">			out.flush();</span>
+<span class="nc" id="L351">			return;</span>
+<span class="nc" id="L352">		}</span>
+
+		//vymaz archiv
+<span class="nc" id="L355">   		File toDel = new File(archiveRealPath);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">   		if(!toDel.delete())</span>
+<span class="nc" id="L357">   			Logger.error(UpdateService.class, &quot;Unable to delete file/dir: &quot; + archiveRealPath);</span>
+
+<span class="nc" id="L359">   		out.println(&quot;&lt;br&gt;&lt;br&gt;&quot; + prop.getText(&quot;update.update_files_count&quot;) + &quot;: &quot; + updateFilesCount);</span>
+<span class="nc" id="L360">   		out.println(&quot;&lt;br&gt;&lt;br&gt;&lt;a href='/admin/update/restart?version=&quot; + ResponseUtils.filter(versionDir) + &quot;'&gt;&quot; + prop.getText(&quot;update.restart&quot;) + &quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L361">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L362">		out.flush();</span>
+
+<span class="nc" id="L364">		return;</span>
+	}
+
+	private static boolean isModuleAvailable(String directoryName, Map&lt;String, String&gt; modules) {
+<span class="nc bnc" id="L368" title="All 2 branches missed.">		if (modules == null) return true;</span>
+
+<span class="nc" id="L370">		String moduleKey = directoryName;</span>
+
+		//allowed modules
+<span class="nc bnc" id="L373" title="All 2 branches missed.">		if (&quot;universal_component&quot;.equals(moduleKey)) return true;</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">		if (&quot;cta&quot;.equals(moduleKey)) return true;</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		if (&quot;webjet9&quot;.equals(moduleKey)) return true;</span>
+
+		//fix renames in /apps folder
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		if (&quot;enumeration&quot;.equals(moduleKey)) moduleKey = &quot;enumerations&quot;;</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		if (&quot;export-dat&quot;.equals(moduleKey)) moduleKey = &quot;export&quot;;</span>
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		if (&quot;dmail&quot;.equals(moduleKey)) moduleKey = &quot;menuEmail&quot;;</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		if (&quot;forum&quot;.equals(moduleKey)) moduleKey = &quot;diskusia&quot;;</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">		if (&quot;gallery&quot;.equals(moduleKey)) moduleKey = &quot;menuGallery&quot;;</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		if (&quot;gdpr&quot;.equals(moduleKey)) moduleKey = &quot;menuGdpr&quot;;</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">		if (&quot;import_web_pages&quot;.equals(moduleKey)) moduleKey = &quot;importWebPages&quot;;</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">		if (&quot;inquiry&quot;.equals(moduleKey)) moduleKey = &quot;menuInquiry&quot;;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (&quot;messages&quot;.equals(moduleKey)) moduleKey = &quot;menuMessages&quot;;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">		if (&quot;qa&quot;.equals(moduleKey)) moduleKey = &quot;menuQa&quot;;</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		if (&quot;sharing_icons&quot;.equals(moduleKey)) moduleKey = &quot;sharedIcons&quot;;</span>
+
+		//test if module is available
+<span class="nc bnc" id="L392" title="All 6 branches missed.">		if (modules.get(&quot;cmp_&quot;+directoryName) != null || modules.get(&quot;cmp_&quot;+moduleKey) != null || modules.get(moduleKey) != null) return true;</span>
+<span class="nc" id="L393">		return false;</span>
+	}
+
+	/**
+	 * Stiahne remote subor a ulozi ho na disk
+	 * @return
+	*/
+	private static boolean downloadArchiveFile(String version, String versionDir, PrintWriter out) {
+<span class="nc" id="L401">		boolean ret = false;</span>
+
+		try {
+<span class="nc" id="L404">			File outFile = new File(Tools.getRealPath(&quot;/WEB-INF/update/&quot;+versionDir+&quot;/archive.dat&quot;));</span>
+<span class="nc" id="L405">			File parentDir = outFile.getParentFile();</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">			if (!parentDir.exists()) {</span>
+<span class="nc" id="L407">				Logger.println(UpdateService.class,&quot;Vytvaram adresare:&quot; + parentDir.getAbsolutePath());</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">				if(parentDir.mkdirs() == false) return false;</span>
+			}
+
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			if (outFile.exists()) return true;</span>
+
+<span class="nc" id="L413">			URLConnection conn = null;</span>
+
+<span class="nc" id="L415">			String updateRemoteServer = Constants.getString(&quot;updateRemoteServer&quot;);</span>
+<span class="nc" id="L416">			updateRemoteServer += &quot;/getObject.do?type=GetArchive&amp;licenseId=&quot;+InitServlet.getLicenseId()+&quot;&amp;version=&quot;+version+&quot;&amp;JAR=&quot;+Constants.getBoolean(&quot;enableJspJarPackaging&quot;);</span>
+
+<span class="nc" id="L418">			URL urlCon = new URL(updateRemoteServer);</span>
+<span class="nc" id="L419">			conn = urlCon.openConnection();</span>
+<span class="nc" id="L420">			conn.setAllowUserInteraction(false);</span>
+<span class="nc" id="L421">			conn.setDoInput(true);</span>
+<span class="nc" id="L422">			conn.setDoOutput(false);</span>
+<span class="nc" id="L423">			conn.connect();</span>
+
+<span class="nc" id="L425">			int contentLength = conn.getContentLength();</span>
+<span class="nc" id="L426">			int totalRead = 0;</span>
+<span class="nc" id="L427">			int lastPercentage = 0;</span>
+<span class="nc" id="L428">			int actualPercentage = 0;</span>
+
+<span class="nc" id="L430">			BufferedInputStream is = new BufferedInputStream(conn.getInputStream());</span>
+<span class="nc" id="L431">			FileOutputStream fos = new FileOutputStream(outFile);</span>
+<span class="nc" id="L432">			byte[] buffer = new byte[640000];</span>
+<span class="nc" id="L433">			int n = 0;</span>
+			while (true) {
+<span class="nc" id="L435">				n = is.read(buffer);</span>
+
+				//	progress bar na stranke
+<span class="nc" id="L438">				totalRead+=n;</span>
+<span class="nc" id="L439">				actualPercentage = (int) ( ((double)totalRead++ / (double)contentLength) * 100 );</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">				if (actualPercentage!=lastPercentage) {</span>
+<span class="nc" id="L441">					updateProgressBar(actualPercentage, out);</span>
+<span class="nc" id="L442">					lastPercentage = actualPercentage;</span>
+				}
+
+<span class="nc" id="L445">				Logger.debug(UpdateService.class,&quot;UpdateService write dat file: &quot; + n + &quot; &quot; + actualPercentage+&quot;%&quot;);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">				if (n &lt; 1) break;</span>
+<span class="nc" id="L447">				fos.write(buffer, 0, n);</span>
+			}
+<span class="nc" id="L449">			fos.close();</span>
+<span class="nc" id="L450">			is.close();</span>
+
+			//nastav suboru datum
+			//zmena: nechame najnovsi subor, aby to tomcat spoznal a skompiloval
+			//outFile.setLastModified(fb.getLastModified());
+
+<span class="nc" id="L456">			ret = true;</span>
+		}
+<span class="nc" id="L458">		catch (Exception e) {</span>
+<span class="nc" id="L459">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L460">		}</span>
+
+<span class="nc" id="L462">		return ret;</span>
+	}
+
+	/**
+	 * Zvysenie hodnoty progress baru
+	 * @param p
+	 * @param out
+	 */
+	public static void updateProgressBar(int p, PrintWriter out) {
+<span class="nc bnc" id="L471" title="All 2 branches missed.">		if (out != null) {</span>
+<span class="nc" id="L472">			out.println(&quot;&lt;script language='JavaScript'&gt;setCount(&quot;+p+&quot;);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L473">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L474">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L475">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L476">			out.flush();</span>
+<span class="nc" id="L477">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L478">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L479">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L480">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L481">			out.flush();</span>
+<span class="nc" id="L482">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L483">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L484">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L485">			out.flush();</span>
+<span class="nc" id="L486">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L487">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L488">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L489">			out.flush();</span>
+<span class="nc" id="L490">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L491">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L492">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L493">			out.flush();</span>
+<span class="nc" id="L494">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L495">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L496">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L497">			out.flush();</span>
+<span class="nc" id="L498">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L499">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L500">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L501">			out.flush();</span>
+<span class="nc" id="L502">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L503">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L504">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L505">			out.flush();</span>
+<span class="nc" id="L506">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L507">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L508">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L509">			out.flush();</span>
+<span class="nc" id="L510">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L511">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L512">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L513">			out.flush();</span>
+<span class="nc" id="L514">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L515">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L516">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L517">			out.flush();</span>
+<span class="nc" id="L518">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L519">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L520">			out.println(&quot;                                                                         &quot;);</span>
+<span class="nc" id="L521">			out.flush();</span>
+		}
+<span class="nc" id="L523">	}</span>
+
+	/**
+	 * Porovna obsah 2 suborov
+	 * @param f1
+	 * @param b2
+	 * @return - true ak je ich obsah rovnaky, inak false
+	 */
+	public static boolean fileContentEquals(File f1, byte[] b2) {
+<span class="nc bnc" id="L532" title="All 4 branches missed.">		if (f1 == null || f1.exists() == false)</span>
+<span class="nc" id="L533">			return false;</span>
+
+<span class="nc" id="L535">		long f1Size = f1.length();</span>
+
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		if (f1Size != b2.length)</span>
+<span class="nc" id="L538">			return false;</span>
+
+		//WEB-INF/lib musi zostat cele, inak sa nebude vediet co sa ma vymazat
+<span class="nc bnc" id="L541" title="All 2 branches missed.">		if (f1.getAbsolutePath().indexOf(&quot;WEB-INF&quot; + File.separatorChar + &quot;lib&quot;) != -1)</span>
+<span class="nc" id="L542">			return false;</span>
+
+		try {
+<span class="nc" id="L545">			byte[] f1Buff = new byte[(int)f1Size];</span>
+			//nacitaj subor 2 a porovnavaj
+<span class="nc" id="L547">			FileInputStream fis = new FileInputStream(f1);</span>
+			int i;
+<span class="nc" id="L549">			int offset = 0;</span>
+			int numRead;
+<span class="nc bnc" id="L551" title="All 4 branches missed.">			while (offset &lt; f1Buff.length &amp;&amp; (numRead=fis.read(f1Buff, offset, f1Buff.length-offset)) &gt;= 0) {</span>
+				//porovnaj buffre
+<span class="nc bnc" id="L553" title="All 2 branches missed.">				for (i = 0; i &lt; numRead; i++) {</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">					if (f1Buff[offset + i] != b2[offset + i]){</span>
+<span class="nc" id="L555">						Logger.debug(UpdateService.class,&quot;Nasiel som rozdiel na pozicii: &quot; + (offset+i));</span>
+<span class="nc" id="L556">						fis.close();</span>
+<span class="nc" id="L557">						return false;</span>
+					}
+				}
+<span class="nc" id="L560">			   offset += numRead;</span>
+			}
+<span class="nc" id="L562">			fis.close();</span>
+<span class="nc" id="L563">		} catch (Exception ex) {</span>
+<span class="nc" id="L564">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L565">			return false;</span>
+<span class="nc" id="L566">		}</span>
+<span class="nc" id="L567">		return true;</span>
+	}
+
+	/************************************************** RESTART LOGIC SECTION *******************************************************************/
+
+	public static String doRestart(String version, HttpServletRequest request, HttpServletResponse response) throws IOException{
+<span class="nc" id="L573">      	Logger.println(UpdateService.class, &quot;RESTART version=&quot; + version);</span>
+
+<span class="nc" id="L575">		Prop prop = Prop.getInstance(request);</span>
+
+<span class="nc bnc" id="L577" title="All 2 branches missed.">		if (version == null) return RESFRESHER;</span>
+
+<span class="nc" id="L579">		response.setContentType(&quot;text/html; charset=windows-1250&quot;);</span>
+<span class="nc" id="L580">		PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L581">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;meta http-equiv='refresh' content='10; url=update_refresher.jsp'&gt;&lt;LINK rel='stylesheet' href='&quot;+request.getContextPath()+&quot;/admin/css/style.css'&gt;&lt;META http-equiv='Content-Type' content='text/html; charset=windows-1250'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L582">		out.println(&quot;&lt;h3&gt;&quot;+prop.getText(&quot;update.restarting_system&quot;)+&quot;&lt;/h3&gt;&quot;);</span>
+<span class="nc" id="L583">		out.println(prop.getText(&quot;update.restarting_system_note&quot;));</span>
+<span class="nc" id="L584">		out.println(&quot;&quot;);</span>
+<span class="nc" id="L585">		out.flush();</span>
+<span class="nc bnc" id="L586" title="All 2 branches missed.">		for (int i = 0; i &lt; 100; i++) {</span>
+<span class="nc" id="L587">			out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="nc" id="L588">			out.flush();</span>
+		}
+
+		//skopiruj web.xml na web-before_update.xml
+<span class="nc" id="L592">		copyFile(&quot;/WEB-INF/web.xml&quot;, &quot;/WEB-INF/web-before_update.xml&quot;);</span>
+
+		//vygeneruj novy web.xml
+		@SuppressWarnings(&quot;java:S2479&quot;)
+<span class="nc" id="L596">		String webXML = &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;ISO-8859-1\&quot;?&gt;\r\n&quot; +</span>
+		   	&quot;&lt;web-app xmlns=\&quot;http://java.sun.com/xml/ns/j2ee\&quot; xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot; xsi:schemaLocation=\&quot;http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd\&quot; version=\&quot;2.4\&quot;&gt;\r\n&quot; +
+		   	&quot;  &lt;servlet&gt;\r\n&quot; +
+		   	&quot;      &lt;servlet-name&gt;ResponseServlet&lt;/servlet-name&gt;\r\n&quot; +
+		   	&quot;      &lt;servlet-class&gt;sk.updater.ResponseServlet&lt;/servlet-class&gt;\r\n&quot; +
+		   	&quot;  &lt;/servlet&gt;\r\n&quot; +
+		   	&quot;  &lt;servlet&gt;\r\n&quot; +
+		   	&quot;     &lt;servlet-name&gt;updaterinit&lt;/servlet-name&gt;\r\n&quot; +
+		   	&quot;     &lt;servlet-class&gt;sk.updater.InitServlet&lt;/servlet-class&gt;\r\n&quot; +
+				&quot;		&lt;init-param&gt;\r\n&quot; +
+				&quot;       &lt;param-name&gt;version&lt;/param-name&gt;\r\n&quot; +
+				&quot;       &lt;param-value&gt;&quot;+version+&quot;&lt;/param-value&gt;\r\n&quot; +
+				&quot;     &lt;/init-param&gt;\r\n&quot; +
+				&quot;		&lt;init-param&gt;\r\n&quot; +
+				&quot;       &lt;param-name&gt;installName&lt;/param-name&gt;\r\n&quot; +
+<span class="nc" id="L611">				&quot;       &lt;param-value&gt;&quot;+Constants.getInstallName()+&quot;&lt;/param-value&gt;\r\n&quot; +</span>
+				&quot;     &lt;/init-param&gt;\r\n&quot; +
+		   	&quot;     &lt;load-on-startup&gt;1&lt;/load-on-startup&gt;\r\n&quot; +
+		   	&quot;  &lt;/servlet&gt;\r\n&quot; +
+		   	&quot;  &lt;!-- Standard Action Servlet Mapping --&gt;\r\n&quot; +
+		   	&quot;  &lt;servlet-mapping&gt;\r\n&quot; +
+		   	&quot;    &lt;servlet-name&gt;ResponseServlet&lt;/servlet-name&gt;\r\n&quot; +
+		   	&quot;    &lt;url-pattern&gt;/nejakastrasnahaluskalebototorobitomcatuproblem/*&lt;/url-pattern&gt;\r\n&quot; +
+		   	&quot;  &lt;/servlet-mapping&gt;\r\n&quot; +
+		   	&quot;&lt;/web-app&gt;&quot;;
+
+		//zapis sk.updater.* (ak je nove)
+<span class="nc" id="L623">		String updaterDir = &quot;/WEB-INF/update/&quot; + version + &quot;/WEB-INF/classes/sk/updater/&quot;;</span>
+<span class="nc" id="L624">		File dir = new File(Tools.getRealPath(updaterDir));</span>
+<span class="nc bnc" id="L625" title="All 4 branches missed.">		if (dir.exists() &amp;&amp; dir.isDirectory()) {</span>
+<span class="nc" id="L626">			File[] files = dir.listFiles();</span>
+<span class="nc" id="L627">			int size = files.length;</span>
+			int i;
+<span class="nc bnc" id="L629" title="All 2 branches missed.">			for (i = 0; i &lt; size; i++) {</span>
+<span class="nc" id="L630">				out.println(&quot;Kopirujem: &quot; + files[i].getName());</span>
+<span class="nc" id="L631">				copyFile(updaterDir+files[i].getName(), &quot;/WEB-INF/classes/sk/updater/&quot;+files[i].getName());</span>
+			}
+		}
+
+		//zapis nove web.xml
+<span class="nc" id="L636">		FileOutputStream fos = new FileOutputStream(Tools.getRealPath(&quot;/WEB-INF/web.xml&quot;));</span>
+<span class="nc" id="L637">		fos.write(webXML.getBytes());</span>
+<span class="nc" id="L638">		fos.close();</span>
+
+<span class="nc" id="L640">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L641">		out.flush();</span>
+
+<span class="nc" id="L643">		UpdateService.restart();</span>
+
+<span class="nc" id="L645">		return null;</span>
+	}
+
+	public static boolean restart() {
+<span class="nc" id="L649">		boolean ret = true;</span>
+<span class="nc" id="L650">		touch(&quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet.class&quot;);</span>
+<span class="nc" id="L651">		touch(&quot;/WEB-INF/web.xml&quot;);</span>
+<span class="nc" id="L652">		touch(&quot;/WEB-INF/classes/sk/updater/ResponseServlet.class&quot;);</span>
+<span class="nc" id="L653">		touch(&quot;/WEB-INF/classes/sk/updater/InitServlet.class&quot;);</span>
+
+<span class="nc" id="L655">		touch(&quot;/WEB-INF/lib/webjet-8.7-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L656">		touch(&quot;/WEB-INF/lib/webjet-8.8-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L657">		touch(&quot;/WEB-INF/lib/webjet-8.9-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L658">		touch(&quot;/WEB-INF/lib/webjet-2021.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L659">		touch(&quot;/WEB-INF/lib/webjet-2022.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L660">		touch(&quot;/WEB-INF/lib/webjet-2023.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L661">		touch(&quot;/WEB-INF/lib/webjet-2024.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L662">		touch(&quot;/WEB-INF/lib/webjet-2025.0-SNAPSHOT.jar&quot;);</span>
+
+<span class="nc" id="L664">		touch(&quot;/WEB-INF/lib/wjstripes-1.6.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L665">		touch(&quot;/WEB-INF/lib/wjcron4j-2.2.5-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L666">		touch(&quot;/WEB-INF/lib/wjdisplaytag-1.2-SNAPSHOT.jar&quot;);</span>
+
+<span class="nc" id="L668">		Logger.println(UpdateService.class,&quot;RESTART request ret=&quot;+ret);</span>
+<span class="nc" id="L669">		Logger.error(UpdateService.class,&quot;RESTART request ret=&quot;+ret);</span>
+
+<span class="nc" id="L671">		return(ret);</span>
+	}
+
+	private static boolean touch(String url) {
+<span class="nc" id="L675">		boolean ret = false;</span>
+<span class="nc" id="L676">		File f = new File(Tools.getRealPath(url));</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">		if (f.exists()) {</span>
+<span class="nc" id="L678">			Logger.println(UpdateService.class,&quot;RESTART request InitServlet &quot; + f.getAbsolutePath());</span>
+<span class="nc" id="L679">			f.setLastModified(Tools.getNow()); //NOSONAR</span>
+<span class="nc" id="L680">			ret = true;</span>
+		}
+
+<span class="nc" id="L683">		return ret;</span>
+	}
+
+	/**
+	 * Skopiruje subor
+	 * @param fromPath - zdrojova adresa (URL)
+	 * @param toPath - cielova adresa (URL)
+	 * @return
+	 */
+	private static boolean copyFile(String fromPath, String toPath) {
+<span class="nc" id="L693">		Logger.println(UpdateService.class,&quot;   Copy file: &quot; + fromPath + &quot; -&gt; &quot; + toPath);</span>
+
+<span class="nc" id="L695">		boolean copyied = false;</span>
+
+		try {
+<span class="nc" id="L698">			File fromFile = new File(Tools.getRealPath(fromPath));</span>
+<span class="nc" id="L699">			File toFile = new File(Tools.getRealPath(toPath));</span>
+<span class="nc" id="L700">			File toFileParent = toFile.getParentFile();</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">			if(toFileParent.exists() == false) {</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">				if(toFileParent.mkdirs() == false) {</span>
+<span class="nc" id="L703">					Logger.println(UpdateService.class, &quot; [FAIL] can't create parent dir&quot;);</span>
+<span class="nc" id="L704">					return false;</span>
+				}
+			}
+
+<span class="nc bnc" id="L708" title="All 4 branches missed.">			if(toFile.exists() == false &amp;&amp; toFile.createNewFile() == false) {</span>
+<span class="nc" id="L709">				Logger.println(UpdateService.class, &quot; [FAIL] can't create new file&quot;);</span>
+<span class="nc" id="L710">				return false;</span>
+			}
+<span class="nc" id="L712">			FileInputStream inStream = new FileInputStream(fromFile);</span>
+<span class="nc" id="L713">			FileOutputStream out = new FileOutputStream(toFile);</span>
+
+			int c;
+<span class="nc" id="L716">			byte[] buff = new byte[150000];</span>
+<span class="nc bnc" id="L717" title="All 2 branches missed.">			while ((c = inStream.read(buff)) != -1)</span>
+<span class="nc" id="L718">				out.write(buff, 0, c);</span>
+
+<span class="nc" id="L720">			out.close();</span>
+<span class="nc" id="L721">			inStream.close();</span>
+
+<span class="nc" id="L723">			copyied = true;</span>
+<span class="nc" id="L724">		} catch (Exception ex) {</span>
+<span class="nc" id="L725">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L726">		}</span>
+
+<span class="nc bnc" id="L728" title="All 2 branches missed.">		if (copyied)</span>
+<span class="nc" id="L729">		   Logger.println(UpdateService.class,&quot; [OK]&quot;);</span>
+		else
+<span class="nc" id="L731">			Logger.println(UpdateService.class,&quot; [FAIL]&quot;);</span>
+
+<span class="nc" id="L733">		return(copyied);</span>
+	}
+
+	/************************************************** Shared logic SECTION *******************************************************************/
+
+	/**
+    /**
+	 * Stiahne a dekoduje objekt zo vzdialeneho servera
+	 * @param params
+	 * @return
+	 */
+	@SuppressWarnings(&quot;resource&quot;)
+	private static Object downloadObject(String params, String lng) {
+<span class="fc" id="L746">		String updateRemoteServer = Constants.getString(&quot;updateRemoteServer&quot;);</span>
+<span class="fc" id="L747">		updateRemoteServer += &quot;/getObject.do?licenseId=&quot; + InitServlet.getLicenseId() + &quot;&amp;&quot;;</span>
+<span class="fc" id="L748">		Logger.debug(UpdateService.class,&quot;SYNC: downloadObject url=&quot;+updateRemoteServer+params);</span>
+
+		try {
+<span class="fc" id="L751">			String data = Tools.downloadUrl(updateRemoteServer + params + &quot;&amp;lng=&quot; + lng + &quot;&amp;UTF8=true&amp;JAR=&quot;+Constants.getBoolean(&quot;enableJspJarPackaging&quot;), &quot;utf-8&quot;);</span>
+<span class="fc" id="L752">			data = Tools.replace(data, &quot;sk.iway.updater.&quot;, &quot;sk.iway.iwcm.update.&quot;);</span>
+
+<span class="fc" id="L754">			InputStream bais = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L755">			bais = SyncDirAction.checkXmlForAttack(bais);</span>
+<span class="fc" id="L756">			XMLDecoder decoder = new XMLDecoder(bais, null, new WarningListener());</span>
+<span class="fc" id="L757">			Object obj = decoder.readObject();</span>
+<span class="fc" id="L758">			decoder.close();</span>
+<span class="fc" id="L759">			bais.close();</span>
+
+<span class="fc" id="L761">			return obj;</span>
+		}
+<span class="nc" id="L763">		catch (Exception e) {</span>
+<span class="nc" id="L764">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+
+<span class="nc" id="L767">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

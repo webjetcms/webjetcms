@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminlogFile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">AdminlogFile.java</span></div><h1>AdminlogFile.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  AdminlogFile.java
+ *  Ticket 11595
+ *  Zapis Auditlogov do suboru pre potreby Tatrabanky.
+ *
+ * Zapisuje zaznamy auditLogu do .log suboru. Cesta k suboru sa zaznamenava v konfiguracnej premennej 'auditFileLocation'
+ * format zapisu je nasledovny:
+ *    datum a cas udalosti - format: yyyy-mm-dd HH:mm:ss|zatial konstanta - SessioID|UserId|konstanta - 0|remoteIp|AuditLogGateway|konstanta nastavuje sa v konfiguracii - browser|konstanta nastavuje sa v konfiguracii - audit|Typ logu|funkcia - totozne s predchadz.zaznamom| textovy popis udalosti |konstanta - OK
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author:  mbocko $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 3.8.2012 9:13:21
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class AdminlogFile
+{
+<span class="fc" id="L34">	private static LinkedList&lt;String&gt; fifo = new LinkedList&lt;String&gt;(); //uklada zaznamy do fifo pre pripad zlyhania zapisu suboru</span>
+
+	private AdminlogFile()	{	} //volaju sa iba staticke metody, nieje ziaduce aby bolo mozne vytvarat instancie
+
+	/**
+	 * @param timestamp
+	 * @param userId
+	 * @param remoteIp
+	 * @param logType
+	 * @param description
+	 */
+	public static void write(Timestamp timestamp, RequestBean requestBean, int logType, String description)
+	{
+<span class="fc" id="L47">		String fileLoc = Constants.getString(&quot;auditFileLocation&quot;);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">		if(fileLoc.length()&lt;5)</span>
+		{
+<span class="fc" id="L50">			return;</span>
+		}
+<span class="nc" id="L52">		String logItem = null;</span>
+<span class="nc" id="L53">		String logItemsSeparator = Constants.getString(&quot;auditLogSeparator&quot;);</span>
+
+<span class="nc" id="L55">		Pattern patternToSearch = Pattern.compile(&quot;[.][A-Za-z-_]*[.]&quot;);</span>
+<span class="nc" id="L56">		Matcher matcher = patternToSearch.matcher(fileLoc);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if(matcher.find())</span>
+		{
+<span class="nc" id="L59">			String datePattern = matcher.group();</span>
+<span class="nc" id="L60">			datePattern = datePattern.substring(1, datePattern.length() - 1);</span>
+<span class="nc" id="L61">			String date = new SimpleDateFormat(datePattern).format(timestamp);</span>
+
+<span class="nc" id="L63">			fileLoc = fileLoc.replaceFirst(datePattern, date);</span>
+		}
+<span class="nc" id="L65">		String logTypeName = Prop.getInstance().getText(&quot;components.adminlog.&quot;+logType);</span>
+
+<span class="nc" id="L67">		logItem = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).format(timestamp);</span>
+<span class="nc" id="L68">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L69">		logItem += requestBean.getSessionId(); //sessionID</span>
+<span class="nc" id="L70">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L71">		int userId = requestBean.getUserId();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		logItem += (userId!=0) ? (String.valueOf(userId)) : (&quot;-1&quot;);//vracia userId, ak nieje prihlaseny, vracia -1</span>
+<span class="nc" id="L73">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L74">		logItem += &quot;0&quot;;//tallerId - konstanta</span>
+<span class="nc" id="L75">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L76">		logItem += requestBean.getRemoteIP();//remoteIp</span>
+<span class="nc" id="L77">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L78">		logItem += Constants.getString(&quot;auditLogGateway&quot;)+Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="nc" id="L79">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L80">		logItem += Constants.getString(&quot;auditLogClient&quot;);</span>
+<span class="nc" id="L81">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L82">		logItem += Constants.getString(&quot;auditLogtype&quot;);</span>
+<span class="nc" id="L83">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L84">		logItem += logTypeName;</span>
+<span class="nc" id="L85">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L86">		logItem += logTypeName;</span>
+<span class="nc" id="L87">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L88">		description = description.replaceAll(&quot;\n&quot;, &quot; &quot;);</span>
+<span class="nc" id="L89">		description = description.replaceAll(&quot;\r&quot;, &quot; &quot;);</span>
+<span class="nc" id="L90">		logItem += description;</span>
+<span class="nc" id="L91">		logItem += logItemsSeparator;</span>
+<span class="nc" id="L92">		logItem += &quot;OK&quot;;</span>
+<span class="nc" id="L93">		fifo.addLast(logItem);//ulozi zaznam do fifo, aby zostal pristupny v pripade zlyhania zapisu do suboru</span>
+
+<span class="nc" id="L95">		FileOutputStream fos = null;</span>
+<span class="nc" id="L96">		OutputStreamWriter osw = null;</span>
+		try
+		{
+<span class="nc" id="L99">			File f = new File(fileLoc);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (f.exists()==false) f.createNewFile();</span>
+
+<span class="nc" id="L102">			fos = new FileOutputStream(fileLoc, true);</span>
+			//poziadavka z TB, aby sa subor zapisal v specifikovanom kodovani
+<span class="nc" id="L104">			osw = new OutputStreamWriter(fos, Constants.getString(&quot;auditLogEncoding&quot;));</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			for(String row : fifo)</span>
+			{
+<span class="nc" id="L108">				osw.write(row+&quot;\n&quot;);</span>
+<span class="nc" id="L109">			}</span>
+
+<span class="nc" id="L111">			osw.close();</span>
+<span class="nc" id="L112">			osw = null;</span>
+<span class="nc" id="L113">			fos.close();</span>
+<span class="nc" id="L114">			fos = null;</span>
+<span class="nc" id="L115">			fifo.clear();//ak sa nevyhodi vynimka IOException, vymaze sa obsah FIFO, v opacnom pripade sa pokusa zapisat obsah fifa pri dalsom pokuse</span>
+		}
+<span class="nc" id="L117">		catch (IOException e)</span>
+		{
+<span class="nc" id="L119">			Logger.error(AdminlogFile.class, &quot;!!! Nieje mozne zapisovat do suboru: &quot;+fileLoc+&quot;\n&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			for(String row : fifo)</span>
+			{
+<span class="nc" id="L122">				Logger.debug(AdminlogFile.class, &quot;!!! Adminlog Item: &quot;+row+&quot;\n&quot;);</span>
+<span class="nc" id="L123">			}</span>
+		}
+		finally
+		{
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (fos != null) try { fos.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (osw != null) try { osw.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+		}
+<span class="nc" id="L130">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

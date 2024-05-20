@@ -3,222 +3,222 @@
         {
             "name": "WebJET Update",
             "category": "REST backend + DT",
-            "icon": "far fa-cloud-download",
+            "icon": "ti ti-cloud-download",
             "link": "/admin/v9/settings/update/"
         },{
             "name": "Restaurant menu",
             "category": "REST backend + DT",
-            "icon": "far fa-utensils",
+            "icon": "ti ti-tools-kitchen-2",
             "link": "/apps/restaurant-menu/admin/meals/"
         },
         {
             "name": "SEO",
             "category": "REST backend + DT + grafy",
-            "icon": "fab fa-searchengin",
+            "icon": "ti ti-seo",
             "link": "/apps/seo/admin/"
         },
         {
             "name": "News",
             "category": "REST backend + DT",
-            "icon": "far fa-newspaper",
+            "icon": "ti ti-news",
             "link": "/apps/news/admin/"
         },
         {
             "name": "Discussion Forum",
             "category": "REST backend + DT",
-            "icon": "far fa-comments-alt",
+            "icon": "ti ti-messages",
             "link": "/apps/forum/admin/"
         },
         {
             "name": "Enumeration",
             "category": "REST backend + DT",
-            "icon": "far fa-th-list",
+            "icon": "ti ti-table",
             "link": "/apps/enumeration/admin/"
         },
         {
             "name": "Proxy",
             "category": "REST backend + DT",
-            "icon": "far fa-dungeon",
+            "icon": "ti ti-network",
             "link": "/apps/proxy/admin/"
         },
         {
             "name": "Survey",
             "category": "REST backend + DT",
-            "icon": "far fa-poll",
+            "icon": "ti ti-user-question",
             "link": "/apps/inquiry/admin/"
         },
         {
             "name": "Page Attributes",
             "category": "Defining attributes",
-            "icon": "far fa-file-invoice",
+            "icon": "ti ti-file-info",
             "link": "/admin/v9/webpages/attributes/"
         },
         {
             "name": "Link Checker",
             "category": "+blank pages",
-            "icon": "far fa-link-slash",
+            "icon": "ti ti-unlink",
             "link": "/admin/v9/webpages/web-pages-list/"
         },
         {
             "name": "Statistics",
             "category": "REST backend + DT + amcharts",
-            "icon": "far fa-chart-bar",
+            "icon": "ti ti-device-analytics",
             "link": "/apps/stat/admin/"
         },
         {
             "name": "Reservations",
             "category": "REST backend + DT",
-            "icon": "far fa-calendar-check",
+            "icon": "ti ti-calendar-check",
             "link": "/apps/reservation/admin/"
         },
         {
             "name": "Calendar of events/List and types",
             "category": "REST backend + DT",
-            "icon": "far fa-calendar",
+            "icon": "ti ti-calendar-month",
             "link": "/apps/calendar/admin/"
         },
         {
             "name": "Bulk Email/Campaigns",
             "category": "REST backend + DT",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail",
             "link": "/apps/dmail/admin/"
         },
         {
             "name": "Forms/Regular Expressions",
             "category": "REST backend + DT",
-            "icon": "far fa-book",
+            "icon": "ti ti-forms",
             "link": "/apps/form/admin/regexps/"
         },
         {
             "name": "Bulk email/Unsubscribed emails",
             "category": "DT + REST",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail",
             "link": "/apps/dmail/admin/unsubscribed/"
         },
         {
             "name": "Banner System",
             "category": "DT + REST",
-            "icon": "far fa-ad",
+            "icon": "ti ti-ad",
             "link": "/apps/banner/admin/"
         },
         {
             "name": "Bulk Email/Domain Limits",
             "category": "DT + REST",
-            "icon": "far fa-envelope",
+            "icon": "ti ti-mail-exclamation",
             "link": "/apps/dmail/admin/domain-limits/"
         },
         {
             "name": "Export data",
             "category": "DT + REST",
-            "icon": "far fa-cloud-download",
+            "icon": "ti ti-database-export",
             "link": "/apps/export-dat/admin/"
         },
         {
             "name": "Tooltip",
             "category": "DT + REST + creditor",
-            "icon": "far fa-question-circle",
+            "icon": "ti ti-info-circle",
             "link": "/apps/tooltip/admin/"
         },
         {
             "name": "Questions and answers",
             "category": "DT + REST + cleditor + HTML code filtering",
-            "icon": "far fa-question-circle",
+            "icon": "ti ti-help",
             "link": "/apps/qa/admin/"
         },
         {
             "name": "GDPR",
             "category": "DT + REST + Vue directory and site selection",
-            "icon": "far fa-shield-alt",
+            "icon": "ti ti-shield-half",
             "link": "/apps/gdpr/admin/"
         },
         {
             "name": "Users",
             "category": "DT + REST + Vue directory and site selection",
-            "icon": "far fa-user-friends",
+            "icon": "ti ti-users",
             "link": "/admin/v9/users/user-list"
         },
         {
             "name": "Tags (group perex)",
             "category": "DT + REST + Vue directory selection",
-            "icon": "far fa-hashtag",
+            "icon": "ti ti-tags",
             "link": "/admin/v9/webpages/perex/"
         },
         {
             "name": "Media and group media",
             "category": "DT + REST + Vue directory and site selection + elfinder",
-            "icon": "far fa-file-medical",
+            "icon": "ti ti-photo",
             "link": "/admin/v9/webpages/media/"
         },
         {
             "name": "Scripts",
             "category": "DT + REST + Vue directory and site selection",
-            "icon": "far fa-file-code",
+            "icon": "ti ti-code",
             "link": "/admin/v9/apps/insert-script"
         },
         {
             "name": "Audit",
             "category": "Search and list of notifications",
-            "icon": "far fa-file-search",
+            "icon": "ti ti-shield-search",
             "link": "/admin/v9/apps/audit-search"
         },
         {
             "name": "Photo Gallery",
             "category": "REST backend + tabs in DT + custom button + image editor + vue. area of ​​interest",
-            "icon": "far fa-photo-video",
+            "icon": "ti ti-library-photo",
             "link": "/admin/v9/apps/gallery"
         },
         {
             "name": "Forms",
             "category": "REST backend + DT + vue router",
-            "icon": "far fa-book",
+            "icon": "ti ti-forms",
             "link": "/apps/form/admin/"
         },
         {
             "name": "Configuration",
             "category": "DT + REST",
-            "icon": "far fa-sliders-v-square",
+            "icon": "ti ti-adjustments",
             "link": "/admin/v9/settings/configuration"
         },
         {
             "name": "Automated Tasks",
             "category": "Background tasks - DT + REST",
-            "icon": "far fa-repeat",
+            "icon": "ti ti-settings-automation",
             "link": "/admin/v9/settings/cronjob"
         },
         {
             "name": "Redirects + domain redirection",
             "category": "DT + REST",
-            "icon": "far fa-file-upload",
+            "icon": "ti ti-arrow-autofit-up",
             "link": "/admin/v9/settings/redirect"
         },
         {
             "name": "Clean memory",
             "category": "Data deletion, cache objects, audit + DT + REST",
-            "icon": "far fa-database",
+            "icon": "ti ti-database",
             "link": "/admin/v9/settings/database-delete"
         },
         {
             "name": "Translation keys",
             "category": "Text editing + DT + REST",
-            "icon": "far fa-key",
+            "icon": "ti ti-language",
             "link": "/admin/v9/settings/translation-keys"
         },
         {
             "name": "Server Monitoring",
             "category": "Logged values + CPU monitor + DT + REST + graphs + vue",
-            "icon": "far fa-chart-line",
+            "icon": "ti ti-device-heart-monitor",
             "link": "/admin/v9/settings/server-monitoring"
         },
         {
             "name": "Page Templates",
             "category": "Template Groups + DT + REST",
-            "icon": "far fa-window-maximize",
+            "icon": "ti ti-template",
             "link": "/admin/v9/templates/temps-list"
         },
         {
             "name": "List of websites",
             "category": "Website + jstree + DT + REST + ckeditor",
-            "icon": "far fa-file-alt",
+            "icon": "ti ti-layers-subtract",
             "link": "/admin/v9/webpages/web-pages-list"
         }
     ]

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGroupsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.usergroups</a> &gt; <span class="el_source">UserGroupsEntity.java</span></div><h1>UserGroupsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.usergroups;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.admin.layout.DocDetailsDto;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsNotNullConverter;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ * Entita skupin pouzivatelov
+ */
+@Entity
+@Table(name = &quot;user_groups&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_GROUP_UPDATE)
+public class UserGroupsEntity {
+
+<span class="fc" id="L41">    public UserGroupsEntity() {</span>
+        //
+<span class="fc" id="L43">    }</span>
+
+    @Id
+	@Column(name = &quot;user_group_id&quot;)
+    @GeneratedValue(strategy=GenerationType.IDENTITY, generator = &quot;S_user_groups&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;[[#{editor.cell.id}]]&quot;)
+	private Long id;
+
+    @Size(max = 255)
+    @NotBlank
+    @Column(name = &quot;user_group_name&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;[[#{groupedit.name}]]&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(type = &quot;text&quot;)
+        }
+    )
+    private String userGroupName;
+
+    @Column(name = &quot;user_group_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;groupedit.type&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;groupedit.type_perms&quot;, value = &quot;0&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;groupedit.type_email&quot;, value = &quot;1&quot;)
+                }
+            )
+        }
+    )
+    private Integer userGroupType;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;folders&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/groups?userGroupId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.doc.GroupDetails&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;groupId,groupName,fullPath&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-updateColumnsFunction&quot;, value = &quot;updateColumnsGroupDetails&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;user.group.groups_title&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;)
+            }
+        )
+    })
+    private List&lt;GroupDetails&gt; groupDetailsList;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;sites&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/web-pages?userGroupId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.doc.DocDetails&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,title,fullPath&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-updateColumnsFunction&quot;, value = &quot;updateColumnsDocDetails&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;user.group.doc_title&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;)
+            }
+        )
+    })
+    private List&lt;DocDetails&gt; docDetailsList;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;users&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/users?userGroupId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.users.userdetail.UserDetailsEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,login,firstName,lastName,email&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-updateColumnsFunction&quot;, value = &quot;updateColumnsUserDetails&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;user.group.users_title&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;)
+            }
+        )
+    })
+    private List&lt;UserDetailsEntity&gt; usersList;
+
+    @Column(name = &quot;user_group_comment&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = &quot;[[#{groupedit.comment}]]&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String userGroupComment;
+
+    @Column(name = &quot;require_approve&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;[[#{groupedit.require_approve}]]&quot;,
+        tab = &quot;basic&quot;    )
+    private Boolean requireApprove;
+
+    @Column(name = &quot;allow_user_edit&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;[[#{groupedit.allow_user_edit}]]&quot;,
+        tab = &quot;basic&quot;
+    )
+    private Boolean allowUserEdit;
+
+
+    @Column(name = &quot;require_email_verification&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;[[#{components.user.require_email_verification_title}]]&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                message = &quot;[[#{components.user.require_email_verification_info}]]&quot;
+            )
+        }
+    )
+    private Boolean requireEmailVerification;
+
+    @Column(name = &quot;email_doc_id&quot;)
+    @Convert(converter = DocDetailsNotNullConverter.class)
+    @DataTableColumn(
+        inputType = DataTableColumnType.JSON,
+        className = &quot;dt-tree-page-null&quot;,
+        title = &quot;[[#{groupedit.email_doc_id}]]&quot;,
+        tab = &quot;basic&quot;,
+        visible = false
+    )
+    private DocDetailsDto emailDoc;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

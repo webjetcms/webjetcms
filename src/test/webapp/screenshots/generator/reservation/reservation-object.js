@@ -10,7 +10,8 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('reservation object screens', async ({ I, DataTables, Document, DTE }) => {
+Scenario('reservation object screens', async ({ I, DT, DTE, Document }) => {
+    let confLng = I.getConfLng();
     let reservationObjectName = "autotest-reservation_object_screen-" + randomNumber;
 
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
@@ -39,9 +40,7 @@ Scenario('reservation object screens', async ({ I, DataTables, Document, DTE }) 
     DTE.save();
     I.wait(1);
 
-    I.fillField("input.dt-filter-name", reservationObjectName);
-    I.pressKey('Enter', "dt-filter-name");
-    I.wait(1);
+    DT.filter("name", reservationObjectName);
     I.click(reservationObjectName);
 
     I.click("#pills-dt-reservationObjectDataTable-specialPrice-tab");
@@ -56,6 +55,12 @@ Scenario('reservation object screens', async ({ I, DataTables, Document, DTE }) 
 
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    
+    if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    } else { //default SK
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
 });

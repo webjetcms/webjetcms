@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportDatEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.export</a> &gt; <span class="el_source">ExportDatEditorFields.java</span></div><h1>ExportDatEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.export;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+public class ExportDatEditorFields implements Serializable {
+
+<span class="fc" id="L21">    public ExportDatEditorFields(){}</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;components.export.groups&quot;, sortAfter = &quot;numberItems&quot;, filter = false, className = &quot;dt-tree-group-array&quot;, tab=&quot;filter&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addGroup&quot;) })
+    })
+    private List&lt;GroupDetails&gt; groups;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;[[#{editor.perex.group}]]&quot;,
+        sortAfter = &quot;publishType&quot;,
+        tab=&quot;filter&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+                }
+            )
+        }
+    )
+	private String[] perexGroupsIds;
+
+    public void fromExportDatBean(ExportDatBean exportDatBeanOriginal) {
+
+        // Get group ids from ExportDatBean, get entities using this ids and push them into editorFields.groups
+<span class="fc" id="L47">        groups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L48">        int groupsIds[] = Tools.getTokensInt(exportDatBeanOriginal.getGroupIds(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if(groupsIds.length &gt; 0) {</span>
+<span class="fc" id="L50">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            for(int groupId : groupsIds) {</span>
+<span class="fc" id="L53">                GroupDetails tmp = groupsDB.getGroup(groupId);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">                if (tmp != null) groups.add(tmp);</span>
+            }
+        }
+
+        // Get perex group ids as String, parse String and ids set into perexGroupsIds array
+<span class="fc" id="L59">        perexGroupsIds = Tools.getTokens(exportDatBeanOriginal.getPerexGroup(), &quot;,&quot;);</span>
+<span class="fc" id="L60">    }</span>
+
+    public void toExportDatBean(ExportDatBean exportDatBeanOriginal) {
+
+        // From list selectedGroups build String of this GroupDetails ids (separated using comma)
+        // Next set this builded string as new exportDatBeanOriginal.groupsIds value
+<span class="fc" id="L66">        List&lt;GroupDetails&gt; selectedGroups = exportDatBeanOriginal.getEditorFields().getGroups();</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (selectedGroups != null) {</span>
+<span class="fc" id="L68">            String groupsIdsString = &quot;&quot;;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            for(int i = 0; i &lt; selectedGroups.size(); i++) {</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                if(groupsIdsString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L72">                    groupsIdsString = &quot;&quot; + selectedGroups.get(i).getGroupId();</span>
+                } else {
+<span class="nc" id="L74">                    groupsIdsString += &quot;,&quot; + selectedGroups.get(i).getGroupId();</span>
+                }
+            }
+            //Set new string of selected editabled groups
+<span class="fc" id="L78">            exportDatBeanOriginal.setGroupIds(groupsIdsString);</span>
+        }
+
+        // From array perexGroupIds build String perexGroupString (perex group ids separated using comma)
+        // Next set his builded string as new exportDatBeanOriginal.perexGroup value
+<span class="fc" id="L83">        String perexGroupString = &quot;&quot;;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for(String perexGroupId : exportDatBeanOriginal.getEditorFields().getPerexGroupsIds()) {</span>
+
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if(perexGroupString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L87">                perexGroupString = &quot;&quot; + perexGroupId;</span>
+            } else {
+<span class="nc" id="L89">                perexGroupString += &quot;,&quot; + perexGroupId;</span>
+            }
+        }
+<span class="fc" id="L92">        exportDatBeanOriginal.setPerexGroup(perexGroupString);</span>
+<span class="fc" id="L93">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

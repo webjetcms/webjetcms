@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.inquirySimple</a> &gt; <span class="el_source">InquiryService.java</span></div><h1>InquiryService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.inquirySimple;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.utils.Pair;
+
+@SuppressWarnings(&quot;rawtypes&quot;)
+@RestController
+<span class="fc" id="L23">public class InquiryService {</span>
+
+    @RequestMapping(path=&quot;/rest/inquirySimple/saveAnswer/&quot;, method={RequestMethod.POST})
+    public Object saveAnswer(@RequestBody InquiryAnswerTransferBean answer, HttpServletRequest request)
+    {
+<span class="nc" id="L28">        String userId = getUserId(request);</span>
+
+<span class="nc" id="L30">        Object result = saveAnswer(answer.getFormId(), userId, answer.getAnswers());</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        if(result == null)</span>
+        {
+<span class="nc" id="L33">            Map&lt;String, String&gt; result2 = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L34">            result2.put(&quot;error&quot;, &quot;V tejto ankete si uz hlasoval&quot;);</span>
+<span class="nc" id="L35">            return result2;</span>
+        }
+<span class="nc" id="L37">        return result;</span>
+    }
+
+    public Map&lt;String, InquiryResultBean&gt; saveAnswer(String formId, String userId, List&lt;String&gt; answers)
+    {
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if(canSaveAnswer(formId, userId))</span>
+        {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            for(String item : answers)</span>
+            {
+<span class="nc" id="L46">                InquiryAnswerBean newItem = new InquiryAnswerBean();</span>
+<span class="nc" id="L47">                newItem.setFormId(formId);</span>
+<span class="nc" id="L48">                newItem.setUserId(userId);</span>
+<span class="nc" id="L49">                newItem.setQuestionId(item);</span>
+<span class="nc" id="L50">                newItem.save();</span>
+<span class="nc" id="L51">            }</span>
+<span class="nc" id="L52">            return getResultsForForm(formId);</span>
+        }
+<span class="nc" id="L54">        return null;</span>
+    }
+
+    protected List getResults(EntityManager em, String formId)
+    {
+<span class="nc" id="L59">        Query q = em.createQuery(&quot;select i.questionId,count(i.id) as cnt from InquiryAnswerBean i where i.formId = :formId group by i.questionId&quot;);</span>
+<span class="nc" id="L60">        q.setParameter(&quot;formId&quot;, formId);</span>
+<span class="nc" id="L61">        return q.getResultList();</span>
+    }
+
+    protected Long getTotalCount(EntityManager em, String formId)
+    {
+<span class="nc" id="L66">        Query q = em.createQuery(&quot;select count(i.id) as cnt from InquiryAnswerBean i where i.formId = :formId group by i.formId&quot;);</span>
+<span class="nc" id="L67">        q.setParameter(&quot;formId&quot;, formId);</span>
+<span class="nc" id="L68">        List result = q.getResultList();</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        if(result != null &amp;&amp; result.size() &gt; 0)</span>
+        {
+<span class="nc" id="L71">            return (Long)result.get(0);</span>
+        }
+<span class="nc" id="L73">        return 0L;</span>
+    }
+
+    public Map&lt;String, InquiryResultBean&gt; getResultsForForm(String formId)
+    {
+<span class="nc" id="L78">        Map&lt;String, InquiryResultBean&gt; valueToReturn = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L80">        EntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L81">        List result = getResults(em, formId);</span>
+<span class="nc" id="L82">        Long count = getTotalCount(em, formId);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if(result != null)</span>
+        {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            for(int i = 0; i &lt; result.size(); i++)</span>
+            {
+<span class="nc" id="L87">                Object[] o = (Object[])result.get(i);</span>
+<span class="nc" id="L88">                InquiryResultBean ir = new InquiryResultBean();</span>
+<span class="nc" id="L89">                ir.setCount((Long)o[1]);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                double p = Math.round((count &gt; 0 ? (Long)o[1] / (double)count * 100 : 0) * 100) / 100;</span>
+<span class="nc" id="L91">                ir.setPercent(p);</span>
+
+<span class="nc" id="L93">                valueToReturn.put((String)o[0], ir);</span>
+            }
+        }
+<span class="nc" id="L96">        return valueToReturn;</span>
+    }
+
+    public String getUserId(HttpServletRequest request)
+    {
+<span class="nc" id="L101">        Cookie[] cookies = request.getCookies();</span>
+        try
+        {
+<span class="nc" id="L104">            return Tools.getCookieValue(cookies, &quot;JSESSIONID&quot;, null);</span>
+        }
+<span class="nc" id="L106">        catch(Exception e)</span>
+        {
+<span class="nc" id="L108">            return null;</span>
+        }
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public boolean canSaveAnswer(String formId, String userId)
+    {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if(userId == null)</span>
+        {
+<span class="nc" id="L117">            return false;</span>
+        }
+
+<span class="nc" id="L120">        InquiryAnswerBean item = new JpaDB&lt;InquiryAnswerBean&gt;(InquiryAnswerBean.class).findFirstByProperties(new Pair(&quot;formId&quot;, formId), new Pair(&quot;userId&quot;, userId));</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        return item == null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

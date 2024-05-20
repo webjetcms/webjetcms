@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmArchivFsVolume.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmArchivFsVolume.java</span></div><h1>IwcmArchivFsVolume.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsVolume;
+import cn.bluejoe.elfinder.util.MimeTypesUtils;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorSearchBean;
+import sk.iway.iwcm.io.IwcmFile;
+
+public class IwcmArchivFsVolume implements FsVolume {
+
+    public static final String VOLUME_ID = &quot;iwcm_archiv_volume&quot;;
+
+    protected String _name;
+
+    public IwcmArchivFsVolume(String name)
+<span class="fc" id="L30">    {</span>
+<span class="fc" id="L31">        this._name = name;</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public void createFile(FsItem fsi) throws IOException {
+<span class="nc" id="L36">        throw new NotImplementedException();</span>
+    }
+
+    @Override
+    public void createFolder(FsItem fsi) throws IOException {
+<span class="nc" id="L41">        throw new NotImplementedException();</span>
+    }
+
+    @Override
+    public boolean deleteFile(FsItem fsi) throws IOException {
+
+<span class="nc" id="L47">        return false;</span>
+    }
+
+    @Override
+    public boolean deleteFolder(FsItem fsi) throws IOException {
+<span class="nc" id="L52">        return false;</span>
+    }
+
+    @Override
+    public boolean exists(FsItem newFile) {
+<span class="nc" id="L57">        return false;</span>
+    }
+
+    @Override
+    public FsItem fromPath(String relativePath) {
+
+<span class="nc" id="L63">        IwcmFile iwFile = new IwcmFile(Tools.getRealPath(relativePath));</span>
+
+        //Logger.debug(this, &quot;iwFile.fromPath(&quot;+relativePath+&quot;): &quot;);
+<span class="nc" id="L66">        return new IwcmArchivItem(this, iwFile.getVirtualPath(),FileArchivatorDB.getByUrl(relativePath));</span>
+
+    }
+
+    @Override
+    public String getDimensions(FsItem fsi) {
+<span class="nc" id="L72">        return null;</span>
+    }
+
+    @Override
+    public long getLastModified(FsItem fsi) {
+<span class="fc" id="L77">        IwcmArchivItem item = asArchivGroup(fsi);</span>
+
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        if (item.getFab() != null)</span>
+<span class="nc" id="L80">            return  Math.round((double)item.getFab().getDateInsert().getTime() / 1000);</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(item.getPath()) )</span>
+        {
+<span class="fc" id="L83">            IwcmFile iwFile = new IwcmFile(Tools.getRealPath(item.getPath()));</span>
+<span class="fc" id="L84">            return Math.round((double)iwFile.lastModified() / 1000);</span>
+        }
+
+<span class="nc" id="L87">        return 0;</span>
+    }
+
+    @Override
+    public String getMimeType(FsItem fsi) {
+<span class="fc" id="L92">        IwcmArchivItem item = asArchivGroup(fsi);</span>
+<span class="pc bpc" id="L93" title="2 of 4 branches missed.">        if (item.getPath()!=null &amp;&amp; item.getPath().indexOf(&quot;.&quot;) == -1)</span>
+<span class="fc" id="L94">            return &quot;directory&quot;;</span>
+
+<span class="nc" id="L96">        String ext = FileArchivatorKit.getFileExtension(item.getPath(),true);</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">        if (ext != null &amp;&amp; !ext.isEmpty())</span>
+        {
+<span class="nc" id="L99">            String mimeType = MimeTypesUtils.getMimeType(ext);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            return mimeType == null ? MimeTypesUtils.UNKNOWN_MIME_TYPE : mimeType;</span>
+        }
+
+<span class="nc" id="L103">        return MimeTypesUtils.UNKNOWN_MIME_TYPE;</span>
+    }
+
+    @Override
+    public String getName() {
+
+<span class="fc" id="L109">        return _name;</span>
+    }
+
+    @Override
+    public String getName(FsItem fsi) {
+<span class="fc" id="L114">        IwcmArchivItem item = asArchivGroup(fsi);</span>
+<span class="fc" id="L115">        return item.getName();</span>
+    }
+
+    @Override
+    public FsItem getParent(FsItem fsi) {
+<span class="fc" id="L120">        IwcmArchivItem item = asArchivGroup(fsi);</span>
+        //Logger.debug(this, &quot;getParent(): &quot;+asArchivGroup(fsi).getPath()+&quot; fab: &quot;+(item.getFab() != null ? item.getFab().getId():&quot;-&quot;));
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if(item.getFab() != null)</span>
+        {
+<span class="nc" id="L124">            String path = &quot;&quot;;</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if(Tools.isNotEmpty(item.getFab().getFieldA()))//kategoria 2 existuje (a 1 by mala tiez)</span>
+            {
+<span class="nc" id="L127">                path = asArchivGroup(getRoot()).getPath()+&quot;/&quot;+item.getFab().getCategory()+&quot;/&quot;+item.getFab().getFieldA();</span>
+                //Logger.debug(this, &quot;getParent() fab return : &quot; + path );
+<span class="nc" id="L129">                return  new IwcmArchivItem(((IwcmArchivFsVolume) fsi.getVolume()), path, null);</span>
+            }
+<span class="nc bnc" id="L131" title="All 4 branches missed.">            else if(Tools.isEmpty(item.getFab().getFieldA()) &amp;&amp; Tools.isNotEmpty(item.getFab().getCategory()))//kategoria 2</span>
+            {
+<span class="nc" id="L133">                path = asArchivGroup(getRoot()).getPath()+&quot;/&quot;+item.getFab().getCategory();</span>
+                //Logger.debug(this, &quot;getParent() fab return : &quot; + path );
+<span class="nc" id="L135">                return  new IwcmArchivItem(((IwcmArchivFsVolume) fsi.getVolume()), path, null);</span>
+            }
+        }
+<span class="pc bpc" id="L138" title="2 of 4 branches missed.">        if(item != null &amp;&amp; item.getPath() != null)</span>
+        {
+<span class="fc" id="L140">            String itemPath = item.getPath();</span>
+<span class="pc bpc" id="L141" title="2 of 4 branches missed.">            if(itemPath.indexOf(&quot;.&quot;) == -1 &amp;&amp; !itemPath.endsWith(&quot;/&quot;))</span>
+<span class="fc" id="L142">                itemPath += &quot;/&quot;;</span>
+
+<span class="fc" id="L144">            String pathWihoutRoot = removeRootFrompath(itemPath);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(pathWihoutRoot))</span>
+            {
+<span class="fc" id="L147">                int indexOfSlash = pathWihoutRoot.indexOf(&quot;/&quot;);</span>
+<span class="fc" id="L148">                int lastIndexOfSlash = pathWihoutRoot.lastIndexOf(&quot;/&quot;);</span>
+                //Logger.debug(this, &quot;getParent() pathWihoutRoot : &quot; + pathWihoutRoot + &quot; [&quot; + indexOfSlash + &quot;,&quot; + lastIndexOfSlash + &quot;]&quot;);
+<span class="pc bpc" id="L150" title="3 of 4 branches missed.">                if(!pathWihoutRoot.endsWith(&quot;/&quot;) &amp;&amp; pathWihoutRoot.indexOf(&quot;.&quot;) != -1)</span>
+                {
+<span class="nc" id="L152">                    String vp = &quot;/&quot;+FileArchivatorKit.getArchivPath()+pathWihoutRoot.substring(0,lastIndexOfSlash+1);</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">                    if(Tools.isNotEmpty(vp) &amp;&amp; vp.endsWith(&quot;/&quot;))</span>
+                    {
+<span class="nc" id="L155">                        vp = vp.substring(0,vp.length()-1);</span>
+                    }
+                    //vratim retazec medzi archiv &quot;rootom&quot; a poslednou lomkou.
+<span class="nc" id="L158">                    return new IwcmArchivItem(((IwcmArchivFsVolume) fsi.getVolume()), vp, FileArchivatorDB.getByUrl(vp));</span>
+                }
+<span class="pc bpc" id="L160" title="3 of 6 branches missed.">                else if(indexOfSlash != -1 &amp;&amp; lastIndexOfSlash != -1 &amp;&amp; lastIndexOfSlash != indexOfSlash )</span>
+                {
+<span class="nc" id="L162">                    String vp = &quot;/&quot;+FileArchivatorKit.getArchivPath()+pathWihoutRoot.substring(0,pathWihoutRoot.lastIndexOf(&quot;/&quot;,pathWihoutRoot.length()-2)+1 /*lastIndexOfSlash+1*/);</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">                    if(Tools.isNotEmpty(vp) &amp;&amp; vp.endsWith(&quot;/&quot;))</span>
+                    {
+<span class="nc" id="L165">                        vp = vp.substring(0,vp.length()-1);</span>
+                    }
+                    //Logger.debug(this, &quot;getParent() priecinok return : &quot; + vp);
+                    //vratim retazec medzi archiv &quot;rootom&quot; a predposlednou lomkou.
+<span class="nc" id="L169">                    return new IwcmArchivItem(((IwcmArchivFsVolume) fsi.getVolume()), vp, FileArchivatorDB.getByUrl(vp));</span>
+                }
+
+            }
+        }
+        //Logger.debug(this, &quot;getParent() vraciam Root &quot;);
+<span class="fc" id="L175">        return getRoot();</span>
+
+    }
+
+    @Override
+    public String getPath(FsItem fsi) throws IOException {
+<span class="fc" id="L181">        IwcmArchivItem item = asArchivGroup(fsi);</span>
+<span class="fc" id="L182">        String path = item.getPath();</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        if (path.endsWith(&quot;/&quot;))</span>
+        {
+<span class="nc" id="L185">            path = path.substring(0,path.length()-1);</span>
+        }
+
+        //Logger.debug(this,&quot;getPath(&quot;+item.getPath()+&quot;) return: &quot;+path);
+<span class="fc" id="L189">        return path;</span>
+    }
+
+    @Override
+    public FsItem getRoot() {
+<span class="fc" id="L194">        String archivePath = FileArchivatorKit.getArchivPath();</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if(archivePath.endsWith(&quot;/&quot;))</span>
+        {
+<span class="fc" id="L197">            archivePath = archivePath.substring(0,archivePath.length()-1);</span>
+        }
+<span class="fc" id="L199">        return new IwcmArchivItem(this, &quot;/&quot; + archivePath,FileArchivatorDB.getByUrl(null));</span>
+    }
+
+    @Override
+    public long getSize(FsItem fsi) {
+<span class="fc" id="L204">        return asArchivGroup(fsi).getSortPriority();</span>
+    }
+
+    public int getSortPriority(FsItem fsi)
+    {
+<span class="nc" id="L209">        return asArchivGroup(fsi).getSortPriority();</span>
+    }
+
+    @Override
+    public String getThumbnailFileName(FsItem fsi) {
+<span class="nc" id="L214">        return null;</span>
+    }
+
+    @Override
+    public boolean hasChildFolder(FsItem fsi) {
+<span class="fc" id="L219">        String path = asArchivGroup(fsi).getPath();</span>
+        //Logger.debug(this, &quot;hasChildFolder() path: &quot;+path);
+<span class="fc" id="L221">        int countMatches = StringUtils.countMatches(removeRootFrompath(path),&quot;/&quot;);</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if(path.endsWith(asArchivGroup(getRoot()).getPath()))// je to Root</span>
+        {
+            //Logger.debug(this,&quot;hasChildFolder(&quot;+asArchivGroup(fsi).getPath()+&quot;) true&quot;);
+<span class="fc" id="L225">            return true;</span>
+        }
+<span class="pc bpc" id="L227" title="2 of 4 branches missed.">        else if (Tools.isNotEmpty(removeRootFrompath(path)) &amp;&amp; countMatches == 0 )</span>
+        {
+            //Logger.debug(this, &quot;hasChildFolder() countMatches: &quot;+StringUtils.countMatches(removeRootFrompath(path),&quot;/&quot;)+&quot; true&quot;);
+<span class="fc" id="L230">            return true;</span>
+        }
+
+        //Logger.debug(this,&quot;hasChildFolder(&quot;+path+&quot;) false&quot;);
+<span class="nc" id="L234">        return false;</span>
+    }
+
+    @Override
+    public boolean isFolder(FsItem fsi) {
+<span class="fc" id="L239">        boolean ret = false;</span>
+<span class="fc" id="L240">        String actPath = asArchivGroup(fsi).getPath();</span>
+        //Logger.debug(this,&quot;isFolder(&quot;+actPath+&quot;)&quot;);
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if(isRoot(fsi))</span>
+        {
+<span class="fc" id="L244">            ret = true;</span>
+        }
+
+<span class="fc" id="L247">        String pathWithoutRoot = removeRootFrompath(actPath);</span>
+<span class="pc bpc" id="L248" title="3 of 6 branches missed.">        if(Tools.isNotEmpty(pathWithoutRoot) &amp;&amp; StringUtils.countMatches(pathWithoutRoot,&quot;/&quot;) &lt;= 1 &amp;&amp; pathWithoutRoot.indexOf(&quot;.&quot;) == -1)</span>
+        {
+            //Logger.debug(this,&quot;isFolder (&quot;+actPath+&quot;) result potencialne (ano)&quot;);
+<span class="fc" id="L251">            ret = true;</span>
+        }
+
+        //Logger.debug(this,&quot;isFolder (&quot;+actPath+&quot;) result(&quot;+ret+&quot;)&quot;);
+<span class="fc" id="L255">        return ret;</span>
+    }
+
+    private String removeRootFrompath(String path)
+    {
+<span class="fc" id="L260">        String pathNew = Tools.replace(path,&quot;/&quot;+FileArchivatorKit.getArchivPath(),&quot;&quot;);</span>
+<span class="fc" id="L261">        pathNew = Tools.replace(pathNew,FileArchivatorKit.getArchivPath(),&quot;&quot;);</span>
+<span class="fc" id="L262">        pathNew = Tools.replace(pathNew,FileArchivatorKit.getArchivPath().substring(0,FileArchivatorKit.getArchivPath().length()-1),&quot;&quot;);</span>
+<span class="fc" id="L263">        return pathNew;</span>
+    }
+
+    /**Vrati aktualnu kategoriu
+     *
+     * @param fsi
+     * @return
+     */
+    private String getActualCategory(FsItem fsi, int level)
+    {
+<span class="fc" id="L273">        String actPath = asArchivGroup(fsi).getPath();</span>
+        //Logger.debug(this,&quot;getActualCategory &quot;+level+&quot;(&quot;+actPath+&quot; / &quot;+removeRootFrompath(actPath)+&quot;)&quot;);
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">        if(isRoot(fsi))</span>
+        {
+            //Logger.debug(this,&quot;getActualCategory &quot;+level+&quot; return: &quot;+null);
+<span class="fc" id="L278">            return null;</span>
+        }
+<span class="nc" id="L280">        String category = removeRootFrompath(actPath);</span>
+
+
+<span class="nc" id="L283">        int countSlash = StringUtils.countMatches(category,&quot;/&quot;);</span>
+<span class="nc" id="L284">        countSlash++;</span>
+        //Logger.debug(this,&quot;getActualCategory &quot;+level+&quot; countSlash: &quot;+countSlash);
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if(level == 2)</span>
+        {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if (countSlash == level)//   kategoria1/kategoria2/</span>
+            {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">                if(category.startsWith(&quot;/&quot;))</span>
+                {
+<span class="nc" id="L292">                    category = category.substring(category.lastIndexOf(&quot;/&quot; , category.length()));</span>
+                }
+                else
+                {
+<span class="nc" id="L296">                    category = category.substring(category.lastIndexOf(&quot;/&quot; ) +1,category.length());</span>
+                }
+            }
+            else
+            {
+<span class="nc" id="L301">                return null;</span>
+            }
+        }
+<span class="nc bnc" id="L304" title="All 4 branches missed.">        if(countSlash == level &amp;&amp; countSlash == 1)//   kategoria1/</span>
+        {
+            //category = category.substring(0, category.length() - 1);
+        }
+<span class="nc bnc" id="L308" title="All 4 branches missed.">        else if (level == 1 &amp;&amp; countSlash == 2)</span>
+        {
+<span class="nc" id="L310">            category = category.substring(0, category.indexOf(&quot;/&quot;));</span>
+        }
+
+        //Logger.debug(this,&quot;getActualCategory &quot;+level+&quot; return: &quot;+category);
+<span class="nc" id="L314">        return category;</span>
+    }
+
+    @Override
+    public boolean isRoot(FsItem fsi) {
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">        return ((&quot;/&quot;+FileArchivatorKit.getArchivPath()).equals(((IwcmArchivItem)fsi).getPath()))</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">                || ((&quot;/&quot;+FileArchivatorKit.getArchivPath()).equals(((IwcmArchivItem)fsi).getPath()+&quot;/&quot;));</span>
+    }
+
+    @Override
+    public FsItem[] listChildren(FsItem fsi) {
+<span class="fc" id="L325">        String helpPath = &quot;&quot;;</span>
+<span class="fc" id="L326">        List&lt;FsItem&gt; resultList = new ArrayList&lt;FsItem&gt;();</span>
+        //Logger.debug(this,&quot;listChildren (&quot;+asArchivGroup(fsi).getPath()+&quot;)&quot;);
+<span class="pc bpc" id="L328" title="3 of 4 branches missed.">        if(getActualCategory(fsi,1) != null &amp;&amp; !&quot;/&quot;.equals(asArchivGroup(fsi).getPath()))// vrati true iba ak sme v kategoriach</span>
+        {
+            //Logger.debug(this,&quot;listChildren(&quot;+asArchivGroup(fsi).getPath()+&quot;) category&quot;);
+            //vratime kategorie (ako priecinky) + subory bez kategorie
+<span class="nc" id="L332">            FileArchivatorSearchBean fabSearch = new FileArchivatorSearchBean();</span>
+<span class="nc" id="L333">            fabSearch.setShowFile(true);</span>
+<span class="nc" id="L334">            fabSearch.setIncludeSubdirs(false);</span>
+<span class="nc" id="L335">            fabSearch.setOnlyMain(true);</span>
+<span class="nc" id="L336">            fabSearch.setCategory(new ArrayList&lt;&gt;(Arrays.asList(getActualCategory(fsi, 1))));//new ArrayList&lt;&gt;(Arrays.asList(category))</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">            if(getActualCategory(fsi, 2) != null )</span>
+            {
+<span class="nc" id="L339">                fabSearch.setFieldA(getActualCategory(fsi, 2));</span>
+            }
+<span class="nc" id="L341">            List&lt;FileArchivatorBean&gt; filesArchiv = FileArchivatorDB.search(fabSearch);</span>
+            //pridame vsetky subory + kategorie
+<span class="nc bnc" id="L343" title="All 2 branches missed.">            for(FileArchivatorBean fab:filesArchiv )</span>
+            {
+<span class="nc" id="L345">                String newVirtualpath = &quot;/&quot;+fab.getVirtualPath();</span>
+                //musime vratit cestu podla aktualnej kategorie
+<span class="nc" id="L347">                resultList.add(new IwcmArchivItem(this, newVirtualpath/*file.getVirtualPath()*/,fab));</span>
+<span class="nc" id="L348">            }</span>
+
+            //este musime pridat kategorie 2
+<span class="nc bnc" id="L351" title="All 2 branches missed.">            for(String category2 :FileArchivatorDB.getAllCategories2(getActualCategory(fsi,1)))</span>
+            {
+<span class="nc bnc" id="L353" title="All 2 branches missed.">                if(category2 == null)</span>
+<span class="nc" id="L354">                    continue;</span>
+<span class="nc" id="L355">                helpPath = asArchivGroup(getRoot()).getPath()+&quot;/&quot;+getActualCategory(fsi,1)+&quot;/&quot;+category2;//+&quot;/&quot;</span>
+                //Logger.debug(this,&quot;listChildren add category 2 (&quot;+helpPath+&quot;)&quot;);
+<span class="nc" id="L357">                resultList.add(new IwcmArchivItem(this, helpPath, null));</span>
+<span class="nc" id="L358">            }</span>
+
+<span class="nc" id="L360">        }</span>
+        else
+        {
+            // vraciame subory z Roota
+<span class="fc" id="L364">            FileArchivatorSearchBean fabSearch = new FileArchivatorSearchBean();</span>
+<span class="fc" id="L365">            fabSearch.setShowFile(true);</span>
+<span class="fc" id="L366">            fabSearch.setIncludeSubdirs(false);</span>
+<span class="fc" id="L367">            fabSearch.setOnlyMain(true);</span>
+<span class="fc" id="L368">            fabSearch.setExcludeCategory(FileArchivatorDB.getAllCategories());//new ArrayList&lt;&gt;(Arrays.asList(category))</span>
+<span class="fc" id="L369">            List&lt;FileArchivatorBean&gt; filesArchiv = FileArchivatorDB.search(fabSearch);</span>
+            //pridame vsetky subory bez kategorie
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">            for(FileArchivatorBean fab:filesArchiv )</span>
+            {
+                //IwcmFile file = new IwcmFile(Tools.getRealPath(&quot;/&quot;+fab.getVirtualPath()));
+<span class="nc" id="L374">                String newVirtualpath = asArchivGroup(fsi).getPath()+fab.getFileName();</span>
+                //Logger.debug(this,&quot;listChildren add file(&quot;+newVirtualpath+&quot;) &quot;+getActualCategory(fsi, 1));
+<span class="nc" id="L376">                resultList.add(new IwcmArchivItem(this, newVirtualpath/*file.getVirtualPath()*/, fab));</span>
+<span class="nc" id="L377">            }</span>
+
+<span class="fc bfc" id="L379" title="All 2 branches covered.">            for(String category :FileArchivatorDB.getAllCategories())</span>
+            {
+                //Logger.debug(this,&quot;listChildren add category(&quot;+asArchivGroup(getRoot()).getPath()+&quot;/&quot;+category);
+<span class="fc" id="L382">                resultList.add(new IwcmArchivItem(this, asArchivGroup(getRoot()).getPath()+&quot;/&quot;+category,null));</span>
+<span class="fc" id="L383">            }</span>
+        }
+<span class="fc" id="L385">        return resultList.toArray(new FsItem[0]);</span>
+    }
+
+    @Override
+    public InputStream openInputStream(FsItem fsi) throws IOException {
+<span class="nc" id="L390">        return null;</span>
+    }
+
+    @Override
+    public OutputStream openOutputStream(FsItem fsi) throws IOException {
+<span class="nc" id="L395">        return null;</span>
+    }
+
+    @Override
+    public void rename(FsItem src, FsItem dst) throws IOException {
+
+<span class="nc" id="L401">    }</span>
+
+    protected IwcmArchivItem asArchivGroup(FsItem fsi)
+    {
+<span class="fc" id="L405">        return ((IwcmArchivItem) fsi);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

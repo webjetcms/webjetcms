@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirTreeItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">DirTreeItem.java</span></div><h1>DirTreeItem.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.admin.jstree.JsTreeItemState;
+import sk.iway.iwcm.admin.jstree.JsTreeItemType;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ * Entita pre jsTree reprezentujuca adresar v suborovom systeme
+ */
+@Getter
+@Setter
+public class DirTreeItem extends JsTreeItem {
+
+    public DirTreeItem() {
+<span class="fc" id="L19">        super();</span>
+<span class="fc" id="L20">    }</span>
+
+    public DirTreeItem(IwcmFile f) {
+<span class="fc" id="L23">        super();</span>
+<span class="fc" id="L24">        setId(f.getVirtualPath());</span>
+<span class="fc" id="L25">        setText(f.getName());</span>
+<span class="fc" id="L26">        setVirtualPath(f.getVirtualPath());</span>
+
+<span class="fc" id="L28">        setIcon(&quot;fa fa-folder&quot;);</span>
+<span class="fc" id="L29">        setState(new JsTreeItemState());</span>
+
+<span class="fc" id="L31">        setType(JsTreeItemType.DIR);</span>
+<span class="fc" id="L32">        setChildren(hasChildren(f));</span>
+<span class="fc" id="L33">    }</span>
+
+    public DirTreeItem(String virtualPath) {
+<span class="fc" id="L36">        this(new IwcmFile(Tools.getRealPath(virtualPath)));</span>
+<span class="fc" id="L37">    }</span>
+
+    private boolean hasChildren(IwcmFile f) {
+<span class="fc" id="L40">        IwcmFile[] subfiles = f.listFiles();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (subfiles.length&gt;0) return true;</span>
+<span class="fc" id="L42">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

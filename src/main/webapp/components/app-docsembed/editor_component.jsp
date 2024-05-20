@@ -78,7 +78,7 @@ taglib
 					value="<%=url%>"
 					maxlength="250" size="60" class="form-control" />
 					<div class="input-group-append">
-						<button onclick="openLinkDialogWindow('textForm', 'url', null, '/');" class="btn btn-outline-secondary"><i class="far fa-crosshairs"></i></button>
+						<button onclick="openLinkDialogWindow('textForm', 'url', null, '/');" class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
 					</div>
 				</div>
 

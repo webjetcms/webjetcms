@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LayoutService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">LayoutService.java</span></div><h1>LayoutService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.admin.AdminPropRestController;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * LayoutService - sluzby pre zakladny layout WJ
+ * Primarne do modelu pre Thymeleaf nastavi potrebne data
+ */
+public class LayoutService
+{
+    private HttpServletRequest request;
+    private Identity user;
+    LayoutBean layout;
+
+<span class="fc" id="L28">    public LayoutService(HttpServletRequest request) {</span>
+<span class="fc" id="L29">        this.request = request;</span>
+<span class="fc" id="L30">        user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L31">    }</span>
+
+    public LayoutBean getLayoutBean() {
+<span class="pc bpc" id="L34" title="2 of 4 branches missed.">        if (layout == null &amp;&amp; user != null) {</span>
+<span class="fc" id="L35">            layout = new LayoutBean();</span>
+<span class="fc" id="L36">            HeaderBean header = new HeaderBean();</span>
+<span class="fc" id="L37">            layout.setHeader(header);</span>
+
+<span class="fc" id="L39">            setGlobalData();</span>
+<span class="fc" id="L40">            setHeaderData();</span>
+<span class="fc" id="L41">            setMenuData();</span>
+
+        }
+<span class="fc" id="L44">        return layout;</span>
+    }
+
+    public LayoutService setGlobalData() {
+<span class="fc" id="L48">        String brand = InitServlet.getBrandSuffix();</span>
+        //if (request.getParameter(&quot;brand&quot;)!=null) brand = request.getParameter(&quot;brand&quot;);
+<span class="fc" id="L50">        layout.setBrand(brand);</span>
+<span class="fc" id="L51">        layout.setVersion(InitServlet.getActualVersionLong());</span>
+<span class="fc" id="L52">        setUser();</span>
+<span class="fc" id="L53">        String lng = Prop.getLngForJavascript(request);</span>
+<span class="fc" id="L54">        layout.setLng(lng);</span>
+<span class="fc" id="L55">        String lngWebjet = lng;</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (&quot;cs&quot;.equals(lngWebjet)) lngWebjet = &quot;cz&quot;;</span>
+<span class="fc" id="L57">        layout.setLngWebjet(lngWebjet);</span>
+<span class="fc" id="L58">        layout.setCsrfToken(CSRF.getCsrfToken(request.getSession(), true));</span>
+<span class="fc" id="L59">        layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));</span>
+<span class="fc" id="L60">        setNopermsCss();</span>
+<span class="fc" id="L61">        return this;</span>
+    }
+
+    public LayoutService setHeaderData() {
+<span class="fc" id="L65">        setDomainNameSelect();</span>
+<span class="fc" id="L66">        return this;</span>
+    }
+
+    public LayoutService setMenuData() {
+<span class="fc" id="L70">        MenuService menuService = new MenuService(request);</span>
+<span class="fc" id="L71">        layout.setMenu(menuService.getMenu());</span>
+<span class="fc" id="L72">        return this;</span>
+    }
+
+
+    /************************* GLOBAL *************************/
+
+    private void setUser()
+    {
+<span class="fc" id="L80">        layout.setUser(user);</span>
+<span class="fc" id="L81">    }</span>
+
+    private void setNopermsCss() {
+<span class="fc" id="L84">        StringBuilder css = new StringBuilder();</span>
+<span class="fc" id="L85">        StringBuilder javascript = new StringBuilder(&quot;var nopermsJavascript = new Array();\n&quot;);</span>
+<span class="pc bpc" id="L86" title="3 of 6 branches missed.">        if (user != null &amp;&amp; user.getDisabledItemsTable() != null &amp;&amp; user.isAdmin()) {</span>
+            try {
+<span class="fc" id="L88">                Iterator&lt;String&gt; e = user.getDisabledItemsTable().keySet().iterator();</span>
+                String name;
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                while (e.hasNext()) {</span>
+<span class="fc" id="L91">                    name = e.next();</span>
+<span class="fc" id="L92">                    name = Tools.replace(name, &quot;.&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L93">                    css.append(&quot;.noperms-&quot;).append(name).append(&quot; { display: none !important; }\n&quot;);</span>
+<span class="fc" id="L94">                    javascript.append(&quot;nopermsJavascript[\&quot;&quot;).append(name).append(&quot;\&quot;]=true;\n&quot;);</span>
+                }
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">                if (&quot;B&quot;.equals(Constants.getString(&quot;wjVersion&quot;))) {</span>
+<span class="nc" id="L97">                    css.append(&quot;.noperms-ver-bas { display: none !important; }\n&quot;);</span>
+<span class="nc" id="L98">                    javascript.append(&quot;nopermsJavascript[\&quot;ver-bas\&quot;]=true;\n&quot;);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                } else if (&quot;P&quot;.equals(Constants.getString(&quot;wjVersion&quot;))) {</span>
+<span class="nc" id="L100">                    css.append(&quot;.noperms-ver-pro { display: none !important; }\n&quot;);</span>
+<span class="nc" id="L101">                    javascript.append(&quot;nopermsJavascript[\&quot;ver-pro\&quot;]=true;\n&quot;);</span>
+                }
+<span class="nc" id="L103">            } catch (Exception ex) {</span>
+<span class="nc" id="L104">                Logger.error(LayoutService.class, ex);</span>
+<span class="fc" id="L105">            }</span>
+        }
+<span class="fc" id="L107">        javascript.append(&quot;window.nopermsJavascript=nopermsJavascript;\n&quot;);</span>
+<span class="fc" id="L108">        layout.setNopermsCss(css.toString());</span>
+<span class="fc" id="L109">        layout.setNopermsJavascript(javascript.toString());</span>
+<span class="fc" id="L110">    }</span>
+
+    /************************* HEADER *************************/
+
+    /**
+     * Pripravi data pre select box vyberu aktualnej domeny
+     */
+    private void setDomainNameSelect()
+    {
+        List&lt;String&gt; userDomains;
+<span class="fc" id="L120">        String currentDomain = CloudToolsForCore.getDomainName();</span>
+        //tu pouzijeme multiDomainEnabled a nie enableStaticFilesExternalDir aby sa vyberove menu zobrazovalo aj v multidomain prostredi pre filtrovanie vo web strankach
+<span class="pc bpc" id="L122" title="2 of 4 branches missed.">        if (InitServlet.isTypeCloud()==false &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
+        {
+<span class="fc" id="L124">            userDomains = GroupsDB.getInstance().getUserRootDomainNames(user.getEditableGroups());</span>
+        }
+        else
+        {
+<span class="nc" id="L128">            userDomains = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L129">            userDomains.add(currentDomain);</span>
+        }
+
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; userDomains.isEmpty()==false) {</span>
+            //over, ze currentDomain je v zozname, ak nie, setni ako current prvu v zozname
+<span class="fc" id="L134">            boolean found = false;</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            for (String domainName : userDomains) {</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                if (domainName.equals(currentDomain)) {</span>
+<span class="fc" id="L137">                    found = true;</span>
+<span class="fc" id="L138">                    break;</span>
+                }
+<span class="fc" id="L140">            }</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (found==false) {</span>
+<span class="nc" id="L142">                String firstDomain = userDomains.get(0);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                if (Tools.isNotEmpty(firstDomain)) {</span>
+                    //musime setnut domenu do session
+<span class="nc" id="L145">                    request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, firstDomain);</span>
+<span class="nc" id="L146">                    RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                    if (rb != null) {</span>
+<span class="nc" id="L148">                        rb.setDomain(firstDomain);</span>
+                    }
+                }
+            }
+        }
+
+<span class="fc" id="L154">        layout.getHeader().setDomains(userDomains);</span>
+<span class="fc" id="L155">        layout.getHeader().setCurrentDomain(currentDomain);</span>
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * Vrati zoznam dostupnych jazykov, prvy v poradi bude jazyk podla konf. premennej defaultLanguage
+     * @param addFirstEmpty - ak je true, prida na zaciatok prazdnu hodnotu
+     * @param translateValue - ak je true prelozi aj hodnotu (namiesto sk vypise Slovensky)
+     * @return
+     */
+    public List&lt;LabelValueDetails&gt; getLanguages(boolean addFirstEmpty, boolean translateValue) {
+<span class="fc" id="L165">        return getLanguages(addFirstEmpty, translateValue, null);</span>
+    }
+
+    /**
+     * Vrati zoznam dostupnych jazykov, prvy v poradi bude jazyk podla konf. premennej defaultLanguage
+     * @param addFirstEmpty - ak je true, prida na zaciatok prazdnu hodnotu
+     * @param translateValue - ak je true prelozi aj hodnotu (namiesto sk vypise Slovensky)
+     * @param appendTextKey - textovy kluc, ktoreho text sa prida za hodnotu (value)
+     * @return
+     */
+    public List&lt;LabelValueDetails&gt; getLanguages(boolean addFirstEmpty, boolean translateValue, String appendTextKey) {
+<span class="fc" id="L176">        List&lt;LabelValueDetails&gt; languages = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L178">        String[] lngArr = Constants.getArray(&quot;languages&quot;);</span>
+<span class="fc" id="L179">        String defaultLang = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc" id="L180">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L182">        String appendText = null;</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (Tools.isNotEmpty(appendTextKey)) appendText = prop.getText(appendTextKey);</span>
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        for (String lng : lngArr) {</span>
+<span class="fc" id="L186">            LabelValueDetails lvd = new LabelValueDetails(lng, lng);</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">            if (translateValue) lvd.setLabel(prop.getText(&quot;language.&quot;+lng));</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            if (appendText != null) lvd.setLabel(lvd.getLabel()+&quot; &quot;+appendText);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">            if (lng.equals(defaultLang)) languages.add(0, lvd);</span>
+<span class="fc" id="L190">            else languages.add(lvd);</span>
+        }
+
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">        if (addFirstEmpty) languages.add(0, new LabelValueDetails(&quot;&quot;, &quot;&quot;));</span>
+
+<span class="fc" id="L195">        return languages;</span>
+    }
+
+    /**
+     * Vrati Locale objekt pre prihlaseneho pouzivatela (alebo predvoleny jazyk)
+     * @param request
+     * @return
+     */
+    public static Locale getUserLocale(HttpServletRequest request) {
+<span class="nc" id="L204">        String lng = Prop.getLng(request, false);</span>
+<span class="nc" id="L205">        return getUserLocale(lng);</span>
+    }
+
+    /**
+     * Vrati Locale objekt pre zadany jazyk, riesi aj problem cz/cs
+     * @param lng
+     * @return
+     */
+    public static Locale getUserLocale(String lng) {
+<span class="fc" id="L214">        String[] isoLocale = Tools.getTokens(PageLng.getUserLngIso(lng), &quot;-&quot;);</span>
+        Locale loc;
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        if (isoLocale.length==2) {</span>
+<span class="fc" id="L217">            loc = new Locale(isoLocale[0], isoLocale[1]);</span>
+        } else {
+<span class="nc" id="L219">            loc = Locale.getDefault();</span>
+        }
+<span class="fc" id="L221">        return loc;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

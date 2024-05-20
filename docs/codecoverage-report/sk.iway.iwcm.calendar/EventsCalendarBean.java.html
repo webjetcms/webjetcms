@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EventsCalendarBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">EventsCalendarBean.java</span></div><h1>EventsCalendarBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.swagger.annotations.ApiModelProperty;
+import sk.iway.iwcm.database.ActiveRecord;
+
+@Entity
+@Table(name=&quot;calendar&quot;)
+@JsonIgnoreProperties(ignoreUnknown = true)
+<span class="fc" id="L26">public class EventsCalendarBean extends ActiveRecord implements Serializable {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(name=&quot;calendar_id&quot;)
+    @GeneratedValue(strategy=GenerationType.IDENTITY, generator=&quot;S_calendar&quot;)
+    private int id;
+
+    @NotEmpty(message = &quot;validation.not_null.error&quot;)
+    @Column
+    private String title;
+
+    @Column
+    private String description;
+
+    @NotNull(message = &quot;validation.not_null.error&quot;)
+    @ApiModelProperty(dataType = &quot;long&quot;, value=&quot;1521154800000&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name=&quot;date_from&quot;)
+    private Date from;
+
+    @NotNull(message = &quot;validation.not_null.error&quot;)
+    @ApiModelProperty(dataType = &quot;long&quot;, value=&quot;1521154800000&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name=&quot;date_to&quot;)
+    private Date to;
+
+    @NotNull(message = &quot;validation.not_null.error&quot;)
+    @ManyToOne
+    @JoinColumn(name=&quot;type_id&quot;)
+    private CalendarTypeBean type;
+
+    @Column(name=&quot;time_range&quot;)
+    private String timeRange;
+
+    @Column
+    private String area;
+
+    @Column
+    private String city;
+
+    @Column
+    private String address;
+
+    @Column(name=&quot;info_1&quot;)
+    private String info1;
+
+    @Column(name=&quot;info_2&quot;)
+    private String info2;
+
+    @Column(name=&quot;info_3&quot;)
+    private String info3;
+
+    @Column(name=&quot;info_4&quot;)
+    private String info4;
+
+    @Column(name=&quot;info_5&quot;)
+    private String info5;
+
+    @Column(name=&quot;notify_hours_before&quot;)
+    private int notifyHoursBefore;
+
+    @Column(name=&quot;notify_emails&quot;)
+    private String notifyEmails;
+
+    @Column(name=&quot;notify_sender&quot;)
+    private String notifySender;
+
+    @Column(name=&quot;notify_introtext&quot;)
+    private String notifyIntrotext;
+
+    @Column(name=&quot;notify_sendsms&quot;)
+    private boolean notifySendSMS;
+
+    @Column
+    private String lng;
+
+    @Column(name=&quot;creator_id&quot;)
+    private int creatorId;
+
+    @Column
+    private boolean approve;
+
+    @Column
+    private boolean suggest;
+
+    @Column(name=&quot;hash_string&quot;)
+    private String hashString;
+
+    @Column(name=&quot;domain_id&quot;)
+    private int domainId;
+
+    @Override
+    public int getId() {
+<span class="nc" id="L121">        return id;</span>
+    }
+
+    @Override
+    public void setId(int id) {
+<span class="nc" id="L126">        this.id = id;</span>
+<span class="nc" id="L127">    }</span>
+
+    public String getTitle() {
+<span class="nc" id="L130">        return title;</span>
+    }
+
+    public void setTitle(String title) {
+<span class="nc" id="L134">        this.title = title;</span>
+<span class="nc" id="L135">    }</span>
+
+    public CalendarTypeBean getType() {
+<span class="nc" id="L138">        return type;</span>
+    }
+
+    public void setType(CalendarTypeBean type) {
+<span class="nc" id="L142">        this.type = type;</span>
+<span class="nc" id="L143">    }</span>
+
+    public String getTimeRange() {
+<span class="nc" id="L146">        return timeRange;</span>
+    }
+
+    public void setTimeRange(String timeRange) {
+<span class="nc" id="L150">        this.timeRange = timeRange;</span>
+<span class="nc" id="L151">    }</span>
+
+    public String getArea() {
+<span class="nc" id="L154">        return area;</span>
+    }
+
+    public void setArea(String area) {
+<span class="nc" id="L158">        this.area = area;</span>
+<span class="nc" id="L159">    }</span>
+
+    public String getCity() {
+<span class="nc" id="L162">        return city;</span>
+    }
+
+    public void setCity(String city) {
+<span class="nc" id="L166">        this.city = city;</span>
+<span class="nc" id="L167">    }</span>
+
+    public String getAddress() {
+<span class="nc" id="L170">        return address;</span>
+    }
+
+    public void setAddress(String address) {
+<span class="nc" id="L174">        this.address = address;</span>
+<span class="nc" id="L175">    }</span>
+
+    public String getDescription() {
+<span class="nc" id="L178">        return description;</span>
+    }
+
+    public void setDescription(String description) {
+<span class="nc" id="L182">        this.description = description;</span>
+<span class="nc" id="L183">    }</span>
+
+    public String getInfo1() {
+<span class="nc" id="L186">        return info1;</span>
+    }
+
+    public void setInfo1(String info1) {
+<span class="nc" id="L190">        this.info1 = info1;</span>
+<span class="nc" id="L191">    }</span>
+
+    public String getInfo2() {
+<span class="nc" id="L194">        return info2;</span>
+    }
+
+    public void setInfo2(String info2) {
+<span class="nc" id="L198">        this.info2 = info2;</span>
+<span class="nc" id="L199">    }</span>
+
+    public String getInfo3() {
+<span class="nc" id="L202">        return info3;</span>
+    }
+
+    public void setInfo3(String info3) {
+<span class="nc" id="L206">        this.info3 = info3;</span>
+<span class="nc" id="L207">    }</span>
+
+    public String getInfo4() {
+<span class="nc" id="L210">        return info4;</span>
+    }
+
+    public void setInfo4(String info4) {
+<span class="nc" id="L214">        this.info4 = info4;</span>
+<span class="nc" id="L215">    }</span>
+
+    public String getInfo5() {
+<span class="nc" id="L218">        return info5;</span>
+    }
+
+    public void setInfo5(String info5) {
+<span class="nc" id="L222">        this.info5 = info5;</span>
+<span class="nc" id="L223">    }</span>
+
+    public int getNotifyHoursBefore() {
+<span class="nc" id="L226">        return notifyHoursBefore;</span>
+    }
+
+    public void setNotifyHoursBefore(int notifyHoursBefore) {
+<span class="nc" id="L230">        this.notifyHoursBefore = notifyHoursBefore;</span>
+<span class="nc" id="L231">    }</span>
+
+    public String getNotifyEmails() {
+<span class="nc" id="L234">        return notifyEmails;</span>
+    }
+
+    public void setNotifyEmails(String notifyEmails) {
+<span class="nc" id="L238">        this.notifyEmails = notifyEmails;</span>
+<span class="nc" id="L239">    }</span>
+
+    public String getNotifySender() {
+<span class="nc" id="L242">        return notifySender;</span>
+    }
+
+    public void setNotifySender(String notifySender) {
+<span class="nc" id="L246">        this.notifySender = notifySender;</span>
+<span class="nc" id="L247">    }</span>
+
+    public String getNotifyIntrotext() {
+<span class="nc" id="L250">        return notifyIntrotext;</span>
+    }
+
+    public void setNotifyIntrotext(String notifyIntrotext) {
+<span class="nc" id="L254">        this.notifyIntrotext = notifyIntrotext;</span>
+<span class="nc" id="L255">    }</span>
+
+    public boolean isNotifySendSMS() {
+<span class="nc" id="L258">        return notifySendSMS;</span>
+    }
+
+    public void setNotifySendSMS(boolean notifySendSMS) {
+<span class="nc" id="L262">        this.notifySendSMS = notifySendSMS;</span>
+<span class="nc" id="L263">    }</span>
+
+    public String getLng() {
+<span class="nc" id="L266">        return lng;</span>
+    }
+
+    public void setLng(String lng) {
+<span class="nc" id="L270">        this.lng = lng;</span>
+<span class="nc" id="L271">    }</span>
+
+    public int getCreatorId() {
+<span class="nc" id="L274">        return creatorId;</span>
+    }
+
+    public void setCreatorId(int creatorId) {
+<span class="nc" id="L278">        this.creatorId = creatorId;</span>
+<span class="nc" id="L279">    }</span>
+
+    public boolean getApprove() {
+<span class="nc" id="L282">        return approve;</span>
+    }
+
+    public void setApprove(boolean approve) {
+<span class="nc" id="L286">        this.approve = approve;</span>
+<span class="nc" id="L287">    }</span>
+
+    public boolean isSuggest() {
+<span class="nc" id="L290">        return suggest;</span>
+    }
+
+    public void setSuggest(boolean suggest) {
+<span class="nc" id="L294">        this.suggest = suggest;</span>
+<span class="nc" id="L295">    }</span>
+
+    public String getHashString() {
+<span class="nc" id="L298">        return hashString;</span>
+    }
+
+    public void setHashString(String hashString) {
+<span class="nc" id="L302">        this.hashString = hashString;</span>
+<span class="nc" id="L303">    }</span>
+
+    public int getDomainId() {
+<span class="nc" id="L306">        return domainId;</span>
+    }
+
+    public void setDomainId(int domainId) {
+<span class="nc" id="L310">        this.domainId = domainId;</span>
+<span class="nc" id="L311">    }</span>
+
+    public Date getFrom() {
+<span class="nc" id="L314">        return from;</span>
+    }
+
+    public void setFrom(Date from) {
+<span class="nc" id="L318">        this.from = from;</span>
+<span class="nc" id="L319">    }</span>
+
+    public Date getTo() {
+<span class="nc" id="L322">        return to;</span>
+    }
+
+    public void setTo(Date to) {
+<span class="nc" id="L326">        this.to = to;</span>
+<span class="nc" id="L327">    }</span>
+
+    public Date getStart() {
+<span class="nc" id="L330">        return from;</span>
+    }
+
+    public void setStart(Date from) {
+<span class="nc" id="L334">        this.from = from;</span>
+<span class="nc" id="L335">    }</span>
+
+    public Date getEnd() {
+<span class="nc" id="L338">        return to;</span>
+    }
+
+    public void setEnd(Date to) {
+<span class="nc" id="L342">        this.to = to;</span>
+<span class="nc" id="L343">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

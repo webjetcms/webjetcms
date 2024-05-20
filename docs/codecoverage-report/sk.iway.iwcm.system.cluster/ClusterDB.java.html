@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClusterDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cluster</a> &gt; <span class="el_source">ClusterDB.java</span></div><h1>ClusterDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cluster;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+
+/**
+ *  ClusterDB.java - objekt pre podporu clustra
+ *  riesi primarne refreshovanie instancii objektov na jednotlivych nodoch
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.5 $
+ *@created      Date: 17.11.2008 16:24:56
+ *@modified     $Date: 2010/01/28 15:40:03 $
+ */
+public class ClusterDB
+{
+<span class="nc" id="L30">	protected ClusterDB() {</span>
+		//utility class
+<span class="nc" id="L32">	}</span>
+
+	/**
+	 * Poznaci do databazy informaciu o refreshi objektu (=ziskanie getInstance())
+	 * @param clas
+	 */
+	public static void addRefresh(Class&lt;?&gt; clas)
+	{
+<span class="fc" id="L40">		addRefresh(clas, (Long)null);</span>
+<span class="fc" id="L41">	}</span>
+
+	public static void addRefresh(Class&lt;?&gt; clas, Long id)
+	{
+<span class="fc" id="L45">		String className = clas.getName();</span>
+<span class="fc" id="L46">		addRefresh(className, id);</span>
+<span class="fc" id="L47">	}</span>
+
+	/**
+	 * Poznaci do databazy informaciu o refreshi objektu (=ziskanie getInstance())
+	 * @param className
+	 */
+	public static void addRefresh(String className)
+	{
+<span class="fc" id="L55">		addRefresh(className, (Long)null);</span>
+<span class="fc" id="L56">	}</span>
+
+	/**
+	 * Poznaci do databazy informaciu o refreshi objektu/zaznamu v DB
+	 * @param className - trieda
+	 * @param id - id zaznamu alebo NULL pre refresh celej triedy
+	 */
+	public static void addRefresh(String className, Long id)
+	{
+		//kontrola thread name na refresher thread
+<span class="fc" id="L66">		Logger.debug(ClusterDB.class, &quot;thread: &quot; + Thread.currentThread().getName());</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">		if (ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName())) return;</span>
+
+<span class="fc" id="L69">		String clusterMyNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc" id="L70">		String clusterNames = Constants.getString(&quot;clusterNames&quot;);</span>
+<span class="pc bpc" id="L71" title="1 of 4 branches missed.">		if (Tools.isEmpty(clusterNames) || Tools.isEmpty(clusterMyNodeName)) return;</span>
+
+		try
+		{
+<span class="fc" id="L75">			Timestamp t = new Timestamp(Tools.getNow());</span>
+
+<span class="fc" id="L77">			SimpleQuery query = new SimpleQuery();</span>
+
+<span class="fc" id="L79">			String idAppend = &quot;&quot;;</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">			if (id != null) idAppend = &quot;-&quot;+id;</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">			for (String nodeName : getClusterNodeNames())</span>
+			{
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">				if (nodeName.equalsIgnoreCase(clusterMyNodeName)) continue;</span>
+
+<span class="fc" id="L86">				query.execute(&quot;INSERT INTO cluster_refresher (node_name, class_name, refresh_time) VALUES (?, ?, ?)&quot;,</span>
+						nodeName, className+idAppend, t
+				);
+<span class="fc" id="L89">			}</span>
+		}
+<span class="nc" id="L91">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L93">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L94">		}</span>
+<span class="fc" id="L95">	}</span>
+
+	public static void addRefreshClusterMonitoring(String nodeName, Class&lt;?&gt; clas) {
+		//Before refresh delete all data's
+
+		//delete cluster monitoring data
+<span class="fc" id="L101">		new SimpleQuery().execute(&quot;DELETE FROM cluster_monitoring WHERE node = ?&quot;, nodeName);</span>
+
+		//ask for refresh
+<span class="fc" id="L104">		String className = clas.getName();</span>
+<span class="fc" id="L105">		SimpleQuery query = new SimpleQuery();</span>
+<span class="fc" id="L106">		query.execute(&quot;INSERT INTO cluster_refresher (node_name, class_name, refresh_time) VALUES (?, ?, ?)&quot;,</span>
+<span class="fc" id="L107">					nodeName, className, new Timestamp(Tools.getNow())</span>
+		);
+<span class="fc" id="L109">	}</span>
+
+	/**
+	 * Vymaze info o refreshoch pre aktualny objekt po inicializacii systemu
+	 */
+	public static void cleanup()
+	{
+		try
+		{
+<span class="fc" id="L118">			String clusterMyNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">			if (Tools.isEmpty(clusterMyNodeName)) return;</span>
+
+<span class="fc" id="L121">			new SimpleQuery().execute(&quot;DELETE FROM cluster_refresher WHERE node_name=?&quot;, clusterMyNodeName);</span>
+		}
+<span class="nc" id="L123">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L125">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L126">		}</span>
+<span class="fc" id="L127">	}</span>
+
+	public static boolean isServerRunningInClusterMode()
+	{
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">		if(Tools.isEmpty(Constants.getString(&quot;clusterMyNodeName&quot;)))</span>
+<span class="nc" id="L132">			return false;</span>
+<span class="fc" id="L133">		String clusterNames = Constants.getString(&quot;clusterNames&quot;);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (Tools.isEmpty(clusterNames))</span>
+<span class="nc" id="L135">			return false;</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if (&quot;auto&quot;.equalsIgnoreCase(clusterNames)) return true;</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		return getClusterNodeNames().size() &gt; 1;</span>
+	}
+
+	public static List&lt;String&gt; getClusterNodeNames()
+	{
+<span class="fc" id="L144">		String clusterNames = Constants.getString(&quot;clusterNames&quot;);</span>
+
+<span class="fc" id="L146">		String[] nodesAsArray = Tools.getTokens(clusterNames, &quot;,&quot;);</span>
+<span class="fc" id="L147">		return new ArrayList&lt;&gt;(Arrays.asList(nodesAsArray));</span>
+	}
+
+	/**
+	 * Vrati zoznam nodov expandnutych pre rezim auto (napr. pre vyber nodu v monitoringu)
+	 * expand sa robi distinct selectom z databazy za posledny mesiac
+	 * @return
+	 */
+	public static List&lt;String&gt; getClusterNodeNamesExpandedAuto()
+	{
+<span class="fc" id="L157">		return getClusterNodeNamesExpandedAuto(0);</span>
+	}
+
+	public static List&lt;String&gt; getClusterNodeNamesExpandedAuto(long dateFrom)
+	{
+<span class="fc" id="L162">		String clusterNames = Constants.getString(&quot;clusterNames&quot;);</span>
+
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">		if (&quot;auto&quot;.equalsIgnoreCase(clusterNames))</span>
+		{
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">			if (dateFrom &lt; 1)</span>
+			{
+<span class="fc" id="L168">				Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L169">				cal.add(Calendar.MONTH, -1);</span>
+<span class="fc" id="L170">				cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L171">				cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L172">				cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L173">				cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L174">				dateFrom = cal.getTimeInMillis();</span>
+			}
+
+			//Logger.debug(ClusterDB.class, &quot;Getting cluster node names from date &quot;+Tools.formatDateTimeSeconds(dateFrom));
+
+<span class="fc" id="L179">			Cache c = Cache.getInstance();</span>
+<span class="fc" id="L180">			String CACHE_KEY = &quot;ClusterDB.autoNames-&quot;+dateFrom;</span>
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L182">			List&lt;String&gt; names = (List&lt;String&gt;)c.getObject(CACHE_KEY);</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">			if (names != null) return names;</span>
+
+<span class="fc" id="L185">			names = new SimpleQuery().forListString(&quot;SELECT DISTINCT node_name FROM monitoring WHERE date_insert&gt;?&quot;, new Timestamp(dateFrom));</span>
+
+<span class="fc" id="L187">			List&lt;String&gt; currentValues = new SimpleQuery().forListString(&quot;SELECT DISTINCT cluster_node FROM crontab&quot;);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">			for (String node : currentValues) {</span>
+<span class="fc bfc" id="L189" title="All 4 branches covered.">				if (&quot;all&quot;.equals(node) || Tools.isEmpty(node)) continue;</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">				if (names.contains(node)==false) names.add(node);</span>
+<span class="fc" id="L191">			}</span>
+
+<span class="fc" id="L193">			Collections.sort(names);</span>
+
+<span class="fc" id="L195">			c.setObjectSeconds(CACHE_KEY, names, 5*60, true);</span>
+<span class="fc" id="L196">			return names;</span>
+		}
+
+<span class="nc" id="L199">		String[] nodesAsArray = Tools.getTokens(clusterNames, &quot;,&quot;);</span>
+<span class="nc" id="L200">		return new ArrayList&lt;&gt;(Arrays.asList(nodesAsArray));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

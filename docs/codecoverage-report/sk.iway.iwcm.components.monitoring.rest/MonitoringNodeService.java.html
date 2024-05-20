@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringNodeService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.rest</a> &gt; <span class="el_source">MonitoringNodeService.java</span></div><h1>MonitoringNodeService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.rest;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
+import sk.iway.iwcm.system.monitoring.MonitoringDB;
+
+public class MonitoringNodeService {
+
+    //What kind page is calling
+<span class="fc" id="L20">    private static enum ShowType {</span>
+<span class="fc" id="L21">        COMPONENTS, //server_monitoring/admin/components/</span>
+<span class="fc" id="L22">        DOCUMENTS, //server_monitoring/admin/documents/</span>
+<span class="fc" id="L23">        SQL, //server_monitoring/admin/sql/</span>
+<span class="fc" id="L24">        UNKNOW //something wrong</span>
+	}
+
+    private ShowType showType;
+    private String node;
+
+<span class="fc" id="L30">    public MonitoringNodeService(HttpServletRequest request) {</span>
+<span class="fc" id="L31">        showType = getShowType(Tools.getRequestParameter(request, &quot;showType&quot;));</span>
+<span class="fc" id="L32">        node = Tools.getRequestParameter(request, &quot;selectedNode&quot;);</span>
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * Transform string text to one of ShowType enum values.
+     * IF text is invalid or doesn't match enum values, return ShowType.UNKNOW value (compare is using toLowerCase).
+     * @param showType
+     * @return ShowType enum value
+     */
+    private static ShowType getShowType(String showType) {
+<span class="pc bpc" id="L42" title="2 of 4 branches missed.">        if(showType == null || showType.isEmpty()) return ShowType.UNKNOW;</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        else if(showType.toLowerCase().equals(&quot;components&quot;)) return ShowType.COMPONENTS;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        else if(showType.toLowerCase().equals(&quot;documents&quot;)) return ShowType.DOCUMENTS;</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        else if(showType.toLowerCase().equals(&quot;sql&quot;)) return ShowType.SQL;</span>
+<span class="nc" id="L46">        else return ShowType.UNKNOW;</span>
+    }
+
+    /**
+     * Based on request values &quot;showType&quot; and &quot;selectedNode&quot;, return list of corresponding data's.
+     * @param request
+     * @return List&lt;ExecutionEntry&gt;
+     */
+    public List&lt;ExecutionEntry&gt; getAll() {
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        if(isNodeSupported(node) &amp;&amp; !isNodeActual(node)) {</span>
+<span class="fc" id="L56">            return diffNodeData(showType, node);</span>
+        }
+<span class="fc" id="L58">        else return currentNodeData(showType);</span>
+    }
+
+    /**
+     * By inserted param's value's, return List&lt;ExecutionEntry&gt; data of current node (local data).
+     * In case any problem return just empty list new ArrayList&lt;&gt;().
+     * @param showType
+     * @param node
+     * @return
+     */
+    private static List&lt;ExecutionEntry&gt; diffNodeData(ShowType showType, String node) {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if(showType == ShowType.COMPONENTS)</span>
+<span class="fc" id="L70">           return MonitoringDB.getComponentStatsFor(node);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        else if(showType == ShowType.DOCUMENTS)</span>
+<span class="fc" id="L72">            return MonitoringDB.getDocumentStatsFor(node);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        else if(showType == ShowType.SQL)</span>
+<span class="fc" id="L74">            return MonitoringDB.getSqlStatsFor(node);</span>
+        else
+<span class="nc" id="L76">            return new ArrayList&lt;&gt;();</span>
+    }
+
+    /**
+     * Returns last update of data for remote nodes or NULL if there are no data or node is local
+     * @return
+     */
+    public Date getLastUpdate() {
+<span class="fc" id="L84">        Date date = null;</span>
+<span class="fc" id="L85">        String sql = &quot;SELECT created_at FROM cluster_monitoring WHERE type=? AND node=?&quot;;</span>
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">        if(isNodeSupported(node) &amp;&amp; !isNodeActual(node)) {</span>
+<span class="fc" id="L87">            String type = &quot;sql&quot;;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (showType == ShowType.COMPONENTS) type=&quot;component&quot;;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            else if (showType == ShowType.DOCUMENTS) type=&quot;document&quot;;</span>
+
+<span class="fc" id="L91">            date = (new SimpleQuery()).forDate(sql, type, node);</span>
+        }
+<span class="fc" id="L93">        return date;</span>
+    }
+
+    /**
+     * By inserted param's value's, return List&lt;ExecutionEntry&gt; data of NOT current node (data from DB).
+     * In case any problem return just empty list new ArrayList&lt;&gt;().
+     * @param showType
+     * @return
+     */
+    private static List&lt;ExecutionEntry&gt; currentNodeData(ShowType showType) {
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if(showType == ShowType.COMPONENTS)</span>
+<span class="fc" id="L104">            return ExecutionTimeMonitor.statsForComponents();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        else if(showType == ShowType.DOCUMENTS)</span>
+<span class="fc" id="L106">            return ExecutionTimeMonitor.statsForDocuments();</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        else if(showType == ShowType.SQL)</span>
+<span class="fc" id="L108">            return ExecutionTimeMonitor.statsForSqls();</span>
+        else
+<span class="nc" id="L110">            return new ArrayList&lt;&gt;();</span>
+    }
+
+    /**
+     * Get list of all supported node's and check, if value from input is in this list.
+     * @param node
+     * @return True - value is inside list of supported nodes, else False
+     */
+    private static boolean isNodeSupported(String node) {
+<span class="pc bpc" id="L119" title="1 of 4 branches missed.">        if(node == null || node.isEmpty()) return false;</span>
+<span class="fc" id="L120">        List&lt;String&gt; allNodes = ClusterDB.getClusterNodeNamesExpandedAuto();</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if(allNodes != null) {</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            for(String oneNode : allNodes) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                if(oneNode.equals(node)) {</span>
+<span class="fc" id="L124">                    return true;</span>
+                }
+<span class="fc" id="L126">            }</span>
+        }
+<span class="nc" id="L128">        return false;</span>
+    }
+
+    /**
+     * Get actual node and check, if if value from input equal actual node.
+     * @param node
+     * @return True - value is equal to actual node, else False
+     */
+    private static boolean isNodeActual(String node) {
+<span class="fc" id="L137">        String actualNode = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        return actualNode.equals(node) ? true : false;</span>
+    }
+
+    /**
+     * Return list of all nodes, only if isServerRunningInClusterMode.
+     * The current node will be always on 1st place.
+     * @return
+     */
+    public static List&lt;String&gt; getAllNodes() {
+<span class="fc" id="L147">        List&lt;String&gt; response = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if(ClusterDB.isServerRunningInClusterMode()) {</span>
+<span class="fc" id="L149">            String actualNode = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc" id="L150">            response.add(actualNode);</span>
+
+<span class="fc" id="L152">            List&lt;String&gt; allNodes = ClusterDB.getClusterNodeNamesExpandedAuto();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if(allNodes != null) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">                for(String node : allNodes) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                    if(actualNode.equals(node)) continue;</span>
+<span class="fc" id="L156">                    response.add(node);</span>
+<span class="fc" id="L157">                }</span>
+            }
+        }
+<span class="fc" id="L160">        return response;</span>
+    }
+
+    /**
+     * Do reset data (remove local data), ONLY for actual node, and for selected show type (node is checked that is current).
+     * @param actualShowType
+     * @param selectedNode
+     */
+    public static void resetData(String actualShowType, String selectedNode) {
+        //BE check, reset data ONLY if its current node
+<span class="fc" id="L170">        ShowType showType = getShowType(actualShowType);</span>
+<span class="pc bpc" id="L171" title="2 of 4 branches missed.">        if(isNodeSupported(selectedNode) &amp;&amp; isNodeActual(selectedNode)) {</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            if(showType == ShowType.COMPONENTS)</span>
+<span class="fc" id="L173">                ExecutionTimeMonitor.resetComponentMeasurements();</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">            else if(showType == ShowType.DOCUMENTS)</span>
+<span class="fc" id="L175">                ExecutionTimeMonitor.resetDocumentMeasurements();</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            else if(showType == ShowType.SQL)</span>
+<span class="fc" id="L177">                ExecutionTimeMonitor.resetSqlMeasurements();</span>
+        }
+<span class="fc" id="L179">    }</span>
+
+    /**
+     * Refresh data for specific node, only if node ISN'T actual
+     * @param selectedNode
+     */
+    public static void refreshData(String selectedNode) {
+<span class="pc bpc" id="L186" title="2 of 4 branches missed.">        if(isNodeSupported(selectedNode) &amp;&amp; !isNodeActual(selectedNode))</span>
+<span class="fc" id="L187">            ClusterDB.addRefreshClusterMonitoring(selectedNode, MonitoringDB.class);</span>
+<span class="fc" id="L188">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

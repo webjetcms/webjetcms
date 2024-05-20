@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JPACryptoConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.database.converter</a> &gt; <span class="el_source">JPACryptoConverter.java</span></div><h1>JPACryptoConverter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.database.converter;
+
+import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.converters.Converter;
+import org.eclipse.persistence.sessions.Session;
+import sk.iway.iwcm.*;
+
+/**
+ * Date: 15.08.2019
+ * Time: 09:00
+ * Project: webjet8
+ * Company: InterWay a. s. (www.interway.sk)
+ * Copyright: InterWay a. s. (c) 2001-2019
+ *
+ * Implementacia pre EclipseLink CryptoConverter (sifrovanie a desifrovanie dat algoritmom RSA s dlzkou kluca 2048 do a z DB)
+ * Converter predpoklada ze je v konstante zadany verejny kluc.
+ * Verejny kluc musi byt zadany ako konstanta v tvare CRYPTO_PUBLIC_KEY-nazovEntity napr.
+ * pre entitu CreditCardBean.java bude nazov kluca vyzerat takto: CRYPTO_PUBLIC_KEY-CreditCardBean.
+ * Sukromny kluc sa cita zo session. Preto je potrebne kluc pridat do session pomocou metody
+ * boolean CryptoTools.addPrivateKeyToSession(HttpSession session, String privateKey).
+ *
+ * Pre spring DATA treba pouzit springovy converter: https://sunitkatkar.blogspot.com/2018/04/spring-boot-2-generic-jpa-converter-to.html
+ *
+ * @author mpijak
+ */
+<span class="nc" id="L26">public class JPACryptoConverter implements Converter {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    private String entityName;
+
+    @Override
+    public String convertObjectValueToDataValue(Object value, Session arg1) {
+<span class="nc" id="L34">        String sensitiveData = &quot;&quot;;</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (value instanceof String) {</span>
+<span class="nc" id="L36">            sensitiveData = (String) value;</span>
+        }
+<span class="nc" id="L38">        return this.encryptSensitiveData(sensitiveData);</span>
+    }
+
+    @Override
+    public String convertDataValueToObjectValue(Object value, Session arg1) {
+<span class="nc" id="L43">        String sensitiveData = &quot;&quot;;</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (value instanceof String) {</span>
+<span class="nc" id="L45">            sensitiveData = (String) value;</span>
+        }
+<span class="nc" id="L47">        return decryptSensitiveData(sensitiveData);</span>
+    }
+
+    /**
+     * Zasifruje data a pripoji prefix ak najde verejny kluc
+     * @param sensitiveData data na sifrovanie
+     * @return zasifrovane data
+     */
+    private String encryptSensitiveData(String sensitiveData) {
+<span class="nc" id="L56">        String publicKey = this.getPublicKey();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (publicKey == null) {</span>
+<span class="nc" id="L58">            Logger.println(JPACryptoConverter.class, &quot;Chyba: verejny kluc neexistuje. Data nebudu zasifrovane&quot;);</span>
+<span class="nc" id="L59">            return sensitiveData;</span>
+        }
+<span class="nc" id="L61">        CryptoFactory crypto = new CryptoFactory();</span>
+<span class="nc" id="L62">        return crypto.encrypt(sensitiveData, publicKey);</span>
+    }
+
+    /**
+     * Metoda najskor skontroluje ci je textovy retazec uz zasifrovany (sufix encrypted) a az potom ho desifruje.
+     * Ak retazec nie je zasifrovany alebo je privatny kluc prazdny, vrati povodny retazec
+     * @param sensitiveData pravdepodobne zasifrovane data
+     * @return desifrovane data
+     */
+    private String decryptSensitiveData(String sensitiveData) {
+<span class="nc" id="L72">        return CryptoFactory.decrypt(sensitiveData);</span>
+    }
+
+    /**
+     * Metoda vrati verejny kluc pre databazovu entitu.
+     * Verejny kluc musi byt zadany ako konstanta v tvare CRYPTO_PUBLIC_KEY-nazovEntity napr.
+     * pre entitu CraditCardBean.java bude nazov kluca vyzerat takto CRYPTO_PUBLIC_KEY-CreditCardBean
+     * @return enkodovany verejny kluc
+     */
+    private String getPublicKey() {
+<span class="nc" id="L82">        String publicKey = Constants.getString(&quot;CRYPTO_PUBLIC_KEY-&quot; + this.getEntityName());</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (Tools.isEmpty(publicKey)) {</span>
+<span class="nc" id="L84">            return null;</span>
+        }
+//        return CryptoTools.INSTANCE.cleanKey(publicKey);
+<span class="nc" id="L87">        return CryptoFactory.removeRedundantPrefix(publicKey);</span>
+    }
+
+    /**
+     * Metoda vrati sukromny kluc pre databazovu entitu. Tento kluc by mal byt ulozeny
+     * v session pod nazvom JPACryptoConverter.privateKey
+     * @return enkodovany privatny kluc
+     */
+    /*private String getPrivateKey() {
+        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if (requestBean == null) {
+            return null;
+        }
+        String privateKey = requestBean.getCryptoPrivateKey();
+        if (Tools.isEmpty(privateKey)) {
+            return null;
+        }
+        return CryptoFactory.removeRedundantPrefix(privateKey);
+    }*/
+
+    @Override
+    public boolean isMutable() {
+<span class="nc" id="L109">        return false;</span>
+    }
+
+    @Override
+    public void initialize(DatabaseMapping databaseMapping, Session session) {
+<span class="nc" id="L114">        this.entityName = databaseMapping.getDescriptor().getAlias();</span>
+<span class="nc" id="L115">    }</span>
+
+    /**
+     * Vrati nazov JPA entity. Napr. pre entitu CreditCardBean.java vrati CreditCardBean
+     * @return nazov beany bez sufixu
+     */
+    public String getEntityName() {
+<span class="nc" id="L122">        return entityName;</span>
+    }
+
+    public void setEntityName(String entityName) {
+<span class="nc" id="L126">        this.entityName = entityName;</span>
+<span class="nc" id="L127">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Month.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">Month.java</span></div><h1>Month.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+
+import java.util.Calendar;
+import java.util.Date;
+
+public class Month {
+    private Calendar calendar;
+
+<span class="nc" id="L9">    public Month(int year, int month) {</span>
+<span class="nc" id="L10">        calendar = Calendar.getInstance();</span>
+<span class="nc" id="L11">        calendar.set(year, month, 1);</span>
+<span class="nc" id="L12">    }</span>
+
+    public Date getStartDate() {
+<span class="nc" id="L15">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
+
+<span class="nc" id="L17">        return getBeginOfDate(calendar.getTime());</span>
+    }
+
+    public Date getEndDate() {
+<span class="nc" id="L21">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
+
+<span class="nc" id="L23">        return getEndOfDay(calendar.getTime());</span>
+    }
+
+    public static Date getBeginOfDate(Date date)
+    {
+<span class="nc" id="L28">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L29">        calendar.setTime(date);</span>
+<span class="nc" id="L30">        calendar.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L31">        calendar.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L32">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L33">        calendar.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="nc" id="L35">        return calendar.getTime();</span>
+    }
+
+    public static Date getEndOfDay(Date date)
+    {
+<span class="nc" id="L40">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L41">        calendar.setTime(date);</span>
+<span class="nc" id="L42">        calendar.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L43">        calendar.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L44">        calendar.set(Calendar.SECOND, 59);</span>
+<span class="nc" id="L45">        calendar.set(Calendar.MILLISECOND, 999);</span>
+
+<span class="nc" id="L47">        return calendar.getTime();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

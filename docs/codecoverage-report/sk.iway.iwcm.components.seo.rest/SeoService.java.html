@@ -1,0 +1,713 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.rest</a> &gt; <span class="el_source">SeoService.java</span></div><h1>SeoService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.rest;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.validation.ConstraintViolationException;
+
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.seo.SeoKeyword;
+import sk.iway.iwcm.components.seo.SeoManager;
+import sk.iway.iwcm.components.seo.jpa.BotsDTO;
+import sk.iway.iwcm.components.seo.jpa.BotsDetailsDTO;
+import sk.iway.iwcm.components.seo.jpa.NumberKeywordsDTO;
+import sk.iway.iwcm.components.seo.jpa.StatKeywordsDTO;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.jpa.SearchEnginesDTO;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+
+<span class="nc" id="L53">public class SeoService {</span>
+
+	private static final int MAX_ROWS = 100;
+
+	/********************************** SEO - BOTS  SECTIONS **************************************************/
+	public static List&lt;BotsDTO&gt; getBotsTableData(Date from, Date to, int groupId) {
+<span class="fc" id="L59">		List&lt;BotsDTO&gt; listItems = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L60">		Map&lt;Integer, BotsDTO&gt; mapItems = getSeoBots(from, to, groupId);</span>
+
+<span class="fc" id="L62">        float sum = 0.0f;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for(Entry&lt;Integer, BotsDTO&gt; entry: mapItems.entrySet()) {</span>
+<span class="fc" id="L64">            listItems.add(entry.getValue());</span>
+<span class="fc" id="L65">            sum += entry.getValue().getVisits();</span>
+<span class="fc" id="L66">        }</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">		if (sum &gt; 0) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">			for(BotsDTO item : listItems) {</span>
+<span class="fc" id="L70">				Float percentual = Float.valueOf( (item.getVisits() / sum) * 100 );</span>
+<span class="fc" id="L71">				item.setPercentual( percentual );</span>
+<span class="fc" id="L72">			}</span>
+		}
+
+<span class="fc" id="L75">		return listItems;</span>
+	}
+
+	public static List&lt;BotsDTO&gt; getBotsPieChartData(Date from, Date to, int groupId) {
+<span class="fc" id="L79">		Map&lt;Integer, BotsDTO&gt; mapItems = getSeoBots(from, to, groupId);</span>
+<span class="fc" id="L80">		List&lt;BotsDTO&gt; pieChartData = new ArrayList&lt;&gt;(mapItems.values());</span>
+		//Neded soft (for better overal look)
+<span class="fc" id="L82">		Collections.sort(pieChartData, (BotsDTO botA, BotsDTO botB) -&gt; botB.getVisits() - botA.getVisits());</span>
+<span class="fc" id="L83">		return pieChartData;</span>
+	}
+
+	private static Map&lt;Integer, BotsDTO&gt; getSeoBots(Date from, Date to, int groupId) {
+<span class="fc" id="L87">		Map&lt;Integer, BotsDTO&gt; bots = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		for (String suffix : StatNewDB.getTableSuffix(from.getTime(), to.getTime())) {</span>
+<span class="fc" id="L89">			String sql = getBotSqlString(suffix, groupId, from, to);</span>
+
+<span class="fc" id="L91">			new ComplexQuery().setSql(sql).setParams(from, to).setMaxSize(MAX_ROWS).list(new Mapper&lt;BotsDTO&gt;() {</span>
+				@Override
+				public BotsDTO map(ResultSet rs) throws SQLException {
+<span class="fc" id="L94">					BotsDTO botDTO =</span>
+						new BotsDTO(
+<span class="fc" id="L96">							rs.getInt(&quot;botId&quot;),</span>
+<span class="fc" id="L97">							rs.getString(&quot;name&quot;),</span>
+<span class="fc" id="L98">							rs.getInt(&quot;visits&quot;),</span>
+<span class="fc" id="L99">							rs.getDate(&quot;dayDate&quot;)</span>
+						);
+
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">					if (!bots.containsKey(botDTO.getBotId()))</span>
+<span class="fc" id="L103">						bots.put(botDTO.getBotId(), botDTO);</span>
+					else {
+<span class="nc" id="L105">						BotsDTO tempBot = bots.get(botDTO.getBotId());</span>
+<span class="nc" id="L106">						tempBot.setVisits(tempBot.getVisits() + botDTO.getVisits()); // zvys pocet navstev</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">						if (botDTO.getDayDate().after(tempBot.getDayDate()))		// ak je navsteva vyssieho datumu, prepis ju</span>
+<span class="nc" id="L108">							tempBot.setDayDate(botDTO.getDayDate());</span>
+					}
+
+<span class="fc" id="L111">					return null;</span>
+				}
+			});
+		}
+<span class="fc" id="L115">		return bots;</span>
+	}
+
+	private static String getBotSqlString(String suffix, int groupId, Date from, Date to) {
+<span class="fc" id="L119">		StringBuilder sql = new StringBuilder(&quot;SELECT DISTINCT s.browser_id AS botId, seo_bots.name AS name,COUNT(DISTINCT s.session_id) AS visits, &quot;);</span>
+<span class="fc" id="L120">		sql.append(&quot;MAX(s.view_time) AS dayDate&quot;);</span>
+<span class="fc" id="L121">		sql.append(&quot; FROM stat_views&quot;);</span>
+<span class="fc" id="L122">		sql.append(suffix);</span>
+<span class="fc" id="L123">		sql.append(&quot; s JOIN seo_bots ON s.browser_id = seo_bots.seo_bots_id&quot;);</span>
+<span class="fc" id="L124">		sql.append(&quot; WHERE s.browser_id &lt; &quot;);</span>
+<span class="fc" id="L125">		sql.append(Constants.getInt(&quot;loggedUserBrowserId&quot;));</span>
+<span class="fc" id="L126">		sql.append(&quot; AND s.view_time &gt;= ? AND &quot;);</span>
+<span class="fc" id="L127">		sql.append(&quot;s.view_time &lt;= ? &quot;);</span>
+<span class="fc" id="L128">		sql.append(StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupId));</span>
+<span class="fc" id="L129">		sql.append(&quot; GROUP BY s.browser_id, seo_bots.name&quot;);</span>
+<span class="fc" id="L130">		return sql.toString();</span>
+	}
+
+	public static Map&lt;String, List&lt;BotsDTO&gt;&gt; getLineChartData(Date from, Date to, int groupId) {
+<span class="fc" id="L134">		return getSeoBotsTime(</span>
+<span class="fc" id="L135">			getBotsPieChartData(from, to, groupId),</span>
+			from,
+			to,
+			groupId
+		);
+	}
+
+	private static Map&lt;String, List&lt;BotsDTO&gt;&gt; getSeoBotsTime(List&lt;BotsDTO&gt; bots, Date from, Date to, int groupId) {
+<span class="fc" id="L143">		Map&lt;String, List&lt;BotsDTO&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">		for (BotsDTO bot : bots)  {</span>
+<span class="fc" id="L146">			Map&lt;Date, Integer&gt; visitDays = new Hashtable&lt;&gt;();</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">			for (String suffix : StatNewDB.getTableSuffix(from.getTime(), to.getTime())) {</span>
+<span class="fc" id="L148">				String sql = getBotTimeSqlString(suffix, groupId);</span>
+
+<span class="fc" id="L150">				new ComplexQuery().setSql(sql).setParams(bot.getBotId(), from, to).list(new Mapper&lt;BotsDTO&gt;() {</span>
+					@Override
+					public BotsDTO map(ResultSet rs) throws SQLException {
+<span class="fc" id="L153">						Date day = getEditedDate( rs.getDate(&quot;dayDate&quot;) );</span>
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">						if (!visitDays.containsKey(day))</span>
+<span class="fc" id="L156">							visitDays.put(day, 1);</span>
+						else
+<span class="fc" id="L158">							visitDays.put(day, (visitDays.get(day)+1));</span>
+
+<span class="fc" id="L160">						return null;</span>
+					}
+				});
+			}
+<span class="fc" id="L164">			collection.put( bot.getName(), convertMapBotsToList(visitDays) );</span>
+<span class="fc" id="L165">		}</span>
+<span class="fc" id="L166">		return collection;</span>
+	}
+
+	private static String getBotTimeSqlString(String suffix, int groupId) {
+<span class="fc" id="L170">		StringBuilder sql = new StringBuilder(&quot;SELECT MAX(s.view_time) AS dayDate FROM stat_views&quot;);</span>
+<span class="fc" id="L171">		sql.append(suffix).append(&quot; s &quot;);</span>
+<span class="fc" id="L172">		sql.append(&quot;WHERE s.browser_id = ? AND s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;);</span>
+<span class="fc" id="L173">		sql.append(StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupId));</span>
+<span class="fc" id="L174">		sql.append(&quot; GROUP BY s.session_id&quot;);</span>
+<span class="fc" id="L175">		return sql.toString();</span>
+	}
+
+	private static List&lt;BotsDTO&gt; convertMapBotsToList(Map&lt;Date, Integer&gt; mapBots) {
+<span class="fc" id="L179">		List&lt;BotsDTO&gt; listBots = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">		for(Map.Entry&lt;Date, Integer&gt; entry : mapBots.entrySet())</span>
+<span class="fc" id="L181">			listBots.add( new BotsDTO(entry.getKey(), entry.getValue()) );</span>
+<span class="fc" id="L182">		return listBots;</span>
+	}
+
+	private static Date getEditedDate(Date timestamp) {
+<span class="fc" id="L186">		Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L187">		calendar.setTime(timestamp);</span>
+<span class="fc" id="L188">		calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L189">		calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="fc" id="L190">		calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="fc" id="L191">		calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="fc" id="L192">		return calendar.getTime();</span>
+	}
+
+	/********************************** SEO - NUMBER KEYWORDS  SECTIONS **************************************************/
+	public static List&lt;NumberKeywordsDTO&gt; getNumberKeywordsTableData(FilterHeaderDto filter) {
+<span class="fc" id="L197">		return getNumberSeoKeywordsOnPage(filter);</span>
+	}
+
+	public static List&lt;NumberKeywordsDTO&gt; getNumberKeywordsBarChartData(FilterHeaderDto filter) {
+<span class="fc" id="L201">		List&lt;NumberKeywordsDTO&gt; barChartData = getNumberKeywordsTableData(filter);</span>
+		//Neded soft (for better overal look)
+<span class="fc" id="L203">		Collections.sort(barChartData, new Comparator&lt;NumberKeywordsDTO&gt;() {</span>
+			public int compare(NumberKeywordsDTO nkA, NumberKeywordsDTO nkB) {
+<span class="fc" id="L205">				return nkB.getNumberOfKeywords() - nkA.getNumberOfKeywords();</span>
+			}
+		});
+<span class="fc" id="L208">		return barChartData;</span>
+	}
+
+	private static String getNumberSeoKeywordsOnPageSql(FilterHeaderDto filter) {
+<span class="fc" id="L212">		StringBuilder sql = new StringBuilder(&quot;SELECT data_asc, title FROM documents WHERE (data_asc LIKE ? OR title LIKE ?) &quot;);</span>
+
+<span class="fc bfc" id="L214" title="All 2 branches covered.">		if(filter.getWebPageId() &gt; 0)</span>
+<span class="fc" id="L215">			sql.append(&quot; AND doc_id = &quot;).append(filter.getWebPageId()).append(&quot; &quot;);</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">		else if (Tools.isNotEmpty(filter.getRootGroupIdQuery()))</span>
+<span class="fc" id="L217">			sql.append(&quot; &quot;).append(filter.getRootGroupIdQuery());</span>
+
+<span class="fc" id="L219">		return sql.toString();</span>
+	}
+
+	private static List&lt;NumberKeywordsDTO&gt; getNumberSeoKeywordsOnPage(FilterHeaderDto filter) {
+<span class="fc" id="L223">		List&lt;NumberKeywordsDTO&gt; filterSeoKeywords = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L225">		int order = 1;</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">		for (String seoKeyword : getDistinctSeoKeywords()) {</span>
+
+<span class="fc" id="L228">			String sql = getNumberSeoKeywordsOnPageSql(filter);</span>
+<span class="fc" id="L229">			Object[] params = {</span>
+<span class="fc" id="L230">				&quot;%&quot; + DB.internationalToEnglish(seoKeyword.toLowerCase()) + &quot;%&quot;,</span>
+				&quot;%&quot; + seoKeyword + &quot;%&quot;
+			};
+
+<span class="fc" id="L234">			List&lt;Integer&gt; counter = Arrays.asList(0);</span>
+<span class="fc" id="L235">			List&lt;Integer&gt; tempCount = Arrays.asList(0);</span>
+<span class="fc" id="L236">			List&lt;Integer&gt; counterB = Arrays.asList(0);</span>
+<span class="fc" id="L237">			new ComplexQuery().setSql(sql).setParams(params).list(new Mapper&lt;NumberKeywordsDTO&gt;() {</span>
+				@Override
+				public NumberKeywordsDTO map(ResultSet rs) throws SQLException {
+<span class="fc" id="L240">					int counterValue = Tools.getNumberSubstring((DB.internationalToEnglish(rs.getString(&quot;title&quot;)) + &quot; &quot; + DB.getDbString(rs, &quot;data_asc&quot;)), DB.internationalToEnglish(seoKeyword.toLowerCase()));</span>
+<span class="fc" id="L241">					counter.set(0, counter.get(0) + counterValue);</span>
+
+<span class="fc" id="L243">					int counterValueB = getNumberSubstringNoBoundary((DB.internationalToEnglish(rs.getString(&quot;title&quot;)) + &quot; &quot; + DB.getDbString(rs, &quot;data_asc&quot;)), DB.internationalToEnglish(seoKeyword.toLowerCase()));</span>
+<span class="fc" id="L244">					counterB.set(0, counterB.get(0) + counterValueB);</span>
+
+<span class="fc" id="L246">					tempCount.set(0, tempCount.get(0) + 1);</span>
+<span class="fc" id="L247">					return null;</span>
+				}
+			});
+
+<span class="fc" id="L251">			filterSeoKeywords.add(</span>
+				new NumberKeywordsDTO(
+<span class="fc" id="L253">					order++,</span>
+<span class="fc" id="L254">					seoKeyword.toLowerCase(),</span>
+<span class="fc" id="L255">					tempCount.get(0),</span>
+<span class="fc" id="L256">					counter.get(0),</span>
+<span class="fc" id="L257">					counterB.get(0)</span>
+				)
+			);
+<span class="fc" id="L260">		}</span>
+<span class="fc" id="L261">		return filterSeoKeywords;</span>
+	}
+
+	private static int getNumberSubstringNoBoundary(String src, String subString) {
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">		if (src == null)</span>
+<span class="nc" id="L266">			return (-1);</span>
+
+<span class="pc bpc" id="L268" title="3 of 6 branches missed.">		if (src.indexOf(subString) == -1 || src.isEmpty() || subString.isEmpty())</span>
+<span class="nc" id="L269">			return (0);</span>
+
+<span class="fc" id="L271">	   	int counter = 0;</span>
+<span class="fc" id="L272">	   	Pattern p = Pattern.compile(subString);</span>
+<span class="fc" id="L273">	   	Matcher m = p.matcher(src); // v com sa to ma matchovat</span>
+
+<span class="fc bfc" id="L275" title="All 2 branches covered.">	   	while(m.find())	counter++;</span>
+
+<span class="fc" id="L277">		return (counter);</span>
+	}
+
+	/********************************** SEO - STAT KEYWORDS  SECTIONS **************************************************/
+	public static List&lt;StatKeywordsDTO&gt; getStatKeywordsTableData(FilterHeaderDto filter) {
+<span class="fc" id="L282">		Map&lt;String, StatKeywordsDTO&gt; mapData = getFilterSeoKeywords(filter);</span>
+
+		//Convert map to list
+<span class="fc" id="L285">		List&lt;StatKeywordsDTO&gt; listData = new ArrayList&lt;&gt;(mapData.values());</span>
+
+		//Sort list by accessCount
+<span class="fc" id="L288">		Collections.sort(listData, new Comparator&lt;StatKeywordsDTO&gt;() {</span>
+			public int compare(StatKeywordsDTO o1, StatKeywordsDTO o2) {
+<span class="fc" id="L290">				return o2.getQueryCount().compareTo(o1.getQueryCount());</span>
+			}
+		});
+
+		//Count all access counts and set order
+<span class="fc" id="L295">		int order = 1;</span>
+<span class="fc" id="L296">        int allQueryCounts = 0;</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">		for(StatKeywordsDTO entity : listData) {</span>
+<span class="fc" id="L298">			entity.setOrder(order++);</span>
+<span class="fc" id="L299">			allQueryCounts += entity.getQueryCount();</span>
+<span class="fc" id="L300">		}</span>
+
+		//Count percentage
+<span class="fc bfc" id="L303" title="All 2 branches covered.">		if (allQueryCounts &gt; 0) {</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">			for(StatKeywordsDTO entity : listData) {</span>
+<span class="fc" id="L305">				entity.setPercentage( (double) entity.getQueryCount() * 100 / allQueryCounts );</span>
+<span class="fc" id="L306">			}</span>
+		}
+
+<span class="fc" id="L309">		return listData;</span>
+	}
+
+	private static String getFilterSeoKeywordsSql(FilterHeaderDto filter, String suffix) {
+<span class="fc" id="L313">		StringBuilder sql = new StringBuilder(&quot;SELECT query, COUNT(query) AS total FROM stat_searchengine&quot;);</span>
+<span class="fc" id="L314">		sql.append(suffix);</span>
+<span class="fc" id="L315">		sql.append(&quot; WHERE doc_id &gt;= 0 AND &quot;+DB.fixAiCiCol(&quot;query&quot;)+&quot; = ?&quot;);</span>
+<span class="fc" id="L316">		sql.append(&quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;);</span>
+
+<span class="fc bfc" id="L318" title="All 2 branches covered.">		if(Tools.isNotEmpty(filter.getSearchEngineName()))</span>
+<span class="fc" id="L319">			sql.append(&quot; AND server = '&quot;).append(filter.getSearchEngineName()).append(&quot;' &quot;);</span>
+
+<span class="fc bfc" id="L321" title="All 2 branches covered.">		if (filter.getWebPageId() &gt; 0)</span>
+<span class="fc" id="L322">			sql.append(&quot; AND doc_id = &quot;).append(filter.getWebPageId()).append(&quot; &quot;);</span>
+
+<span class="fc" id="L324">		sql.append(filter.getRootGroupIdQuery());</span>
+
+<span class="fc" id="L326">		sql.append(&quot; GROUP BY query&quot;);</span>
+<span class="fc" id="L327">		sql.append(&quot; ORDER BY total DESC&quot;);</span>
+<span class="fc" id="L328">		return sql.toString();</span>
+	}
+
+	private static Map&lt;String, StatKeywordsDTO&gt; getFilterSeoKeywords(FilterHeaderDto filter) {
+<span class="fc" id="L332">		Map&lt;String, StatKeywordsDTO&gt; mapData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L333">		List&lt;String&gt; seoKeywords = getDistinctSeoKeywords();</span>
+<span class="fc" id="L334">		Object[] params = {&quot;&quot;, filter.getDateFrom(), filter.getDateTo()};</span>
+
+<span class="fc bfc" id="L336" title="All 2 branches covered.">		for (String suffix : StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, filter.getDateFrom().getTime(), filter.getDateTo().getTime())) {</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">			for (String seoKeyword : seoKeywords) {</span>
+
+<span class="fc" id="L339">				String sql = getFilterSeoKeywordsSql(filter, suffix);</span>
+<span class="fc" id="L340">				params[0] = DB.fixAiCiValue(seoKeyword);</span>
+<span class="fc" id="L341">				String key = seoKeyword.toLowerCase();</span>
+
+<span class="fc" id="L343">				new ComplexQuery().setSql(sql).setParams(params).list(new Mapper&lt;StatKeywordsDTO&gt;() {</span>
+					@Override
+					public StatKeywordsDTO map(ResultSet rs) throws SQLException {
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">						if(mapData.get(key) == null) mapData.put(key, new StatKeywordsDTO(key, rs.getInt(&quot;total&quot;)));</span>
+						else {
+<span class="nc" id="L348">							StatKeywordsDTO tmp = mapData.get(key);</span>
+<span class="nc" id="L349">							tmp.setQueryCount( tmp.getQueryCount() + rs.getInt(&quot;total&quot;) );</span>
+<span class="nc" id="L350">							mapData.put(key, tmp);</span>
+						}
+
+<span class="fc" id="L353">						return null;</span>
+					}
+				});
+
+				//If there was no data for this seoKeyword
+<span class="fc bfc" id="L358" title="All 2 branches covered.">				if(mapData.get(key) == null)</span>
+<span class="fc" id="L359">					mapData.put(key, new StatKeywordsDTO(key, 0));</span>
+<span class="fc" id="L360">			}</span>
+		}
+<span class="fc" id="L362">		return mapData;</span>
+	}
+
+	/********************************** SEO - STAT KEYWORDS DETAILS SECTIONS **************************************************/
+	public static List&lt;SearchEnginesDTO&gt; getStatKeywordsDetailsTableData(FilterHeaderDto filter) {
+<span class="fc" id="L367">        Map&lt;String, SearchEnginesDTO&gt; mapData = getStatKeywordsDetails(filter);</span>
+
+        //Convert map to list
+<span class="fc" id="L370">		List&lt;SearchEnginesDTO&gt; listData = new ArrayList&lt;&gt;(mapData.values());</span>
+
+		//Sort list by accessCount
+<span class="fc" id="L373">		Collections.sort(listData, new Comparator&lt;SearchEnginesDTO&gt;() {</span>
+			public int compare(SearchEnginesDTO o1, SearchEnginesDTO o2) {
+<span class="nc" id="L375">				return o2.getAccesCount().compareTo(o1.getAccesCount());</span>
+			}
+		});
+
+		//Count all access counts and set order
+<span class="fc" id="L380">		int order = 1;</span>
+<span class="fc" id="L381">        int allAccessCounts = 0;</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">		for(SearchEnginesDTO entity : listData) {</span>
+<span class="fc" id="L383">			entity.setOrder(order++);</span>
+<span class="fc" id="L384">			allAccessCounts += entity.getAccesCount();</span>
+<span class="fc" id="L385">		}</span>
+
+		//Count percentage
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">		if (allAccessCounts &gt; 0) {</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">			for(SearchEnginesDTO entity : listData) {</span>
+<span class="fc" id="L390">				entity.setPercentage( (double) entity.getAccesCount() * 100 / allAccessCounts );</span>
+<span class="fc" id="L391">			}</span>
+		}
+
+<span class="fc" id="L394">		return listData;</span>
+	}
+
+
+	private static String getSearchEnginesCountSql(FilterHeaderDto filter, String suffix) {
+<span class="fc" id="L399">		StringBuilder sql = new StringBuilder(&quot;SELECT server, COUNT(server) AS total FROM stat_searchengine&quot;);</span>
+<span class="fc" id="L400">		sql.append(suffix);</span>
+<span class="fc" id="L401">		sql.append(&quot; WHERE doc_id &gt;= 0 &quot;).append(filter.getRootGroupIdQuery());</span>
+<span class="fc" id="L402">		sql.append(&quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;);</span>
+<span class="fc" id="L403">		sql.append(&quot; AND &quot;+DB.fixAiCiCol(&quot;query&quot;)+&quot; = ? &quot;);</span>
+<span class="fc" id="L404">		sql.append(&quot; GROUP BY server&quot;);</span>
+<span class="fc" id="L405">		return sql.toString();</span>
+	}
+
+	private static Map&lt;String, SearchEnginesDTO&gt; getStatKeywordsDetails(FilterHeaderDto filter) {
+<span class="fc" id="L409">		Map&lt;String, SearchEnginesDTO&gt; mapData = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L411" title="All 2 branches covered.">		for (String suffix : StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, filter.getDateFrom().getTime(), filter.getDateTo().getTime())) {</span>
+<span class="fc" id="L412">			String sql = getSearchEnginesCountSql(filter, suffix);</span>
+
+<span class="fc" id="L414">			new ComplexQuery().setSql(sql).setParams(filter.getDateFrom(), filter.getDateTo(), DB.fixAiCiValue(filter.getUrl())).setMaxSize(MAX_ROWS).list(new Mapper&lt;SearchEnginesDTO&gt;() {</span>
+				@Override
+				public SearchEnginesDTO map(ResultSet rs) throws SQLException {
+<span class="fc" id="L417">					String serverName =  DB.prepareString(DB.getDbString(rs, &quot;server&quot;), 25);</span>
+
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">					if(mapData.get(serverName) == null) mapData.put(serverName, new SearchEnginesDTO(serverName, rs.getInt(&quot;total&quot;)));</span>
+					else {
+<span class="nc" id="L421">						SearchEnginesDTO tmp = mapData.get(serverName);</span>
+<span class="nc" id="L422">						tmp.setAccesCount( tmp.getAccesCount() +  rs.getInt(&quot;total&quot;));</span>
+<span class="nc" id="L423">						mapData.put(serverName, tmp);</span>
+					}
+
+<span class="fc" id="L426">					return null;</span>
+				}
+			});
+		}
+<span class="fc" id="L430">		return mapData;</span>
+	}
+
+	/********************************** SEO - BOTS  SECTIONS **************************************************/
+	public static List&lt;BotsDetailsDTO&gt; getUserStatViews(FilterHeaderDto filter, Integer botId) {
+<span class="fc" id="L435">		botId = Tools.getIntValue(botId, -1);</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">		if(botId == -1) throw new ConstraintViolationException(&quot;Invalid parameter botId, cant be empty.&quot;, null);</span>
+
+<span class="fc" id="L438">		List&lt;Column&gt; columns = StatNewDB.getUserStatViews(botId, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId());</span>
+
+<span class="fc" id="L440">		return convert(columns);</span>
+	}
+
+	private static List&lt;BotsDetailsDTO&gt; convert(List&lt;Column&gt; columns) {
+<span class="fc" id="L444">        List&lt;BotsDetailsDTO&gt; data = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L445" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L446">            data.add(</span>
+                new BotsDetailsDTO(
+<span class="fc" id="L448">                    Tools.getIntValue(column.getColumn4(), -1),</span>
+<span class="fc" id="L449">                    column.getDateColumn1(),</span>
+<span class="fc" id="L450">                    column.getColumn1(),</span>
+<span class="fc" id="L451">                    column.getColumn2(),</span>
+<span class="fc" id="L452">                    column.getColumn3()</span>
+                )
+            );
+<span class="fc" id="L455">        }</span>
+<span class="fc" id="L456">        return data;</span>
+    }
+
+	public static Map&lt;String, List&lt;BotsDetailsDTO&gt;&gt; getBotsDetailsLineChartData(Date from, Date to, int botId, int rootGroupId) {
+<span class="fc" id="L460">        Map&lt;Date, Integer&gt; viewsCount = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L461">		Map&lt;String, List&lt;BotsDetailsDTO&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L462">        result.put(&quot;&quot;, new ArrayList&lt;&gt;());</span>
+
+<span class="fc bfc" id="L464" title="All 2 branches covered.">        for(Column column : StatNewDB.getUserStatViews(botId, from, to, rootGroupId)) {</span>
+<span class="fc" id="L465">            Date dayDate = formatDate( column.getDateColumn1() );</span>
+
+<span class="fc bfc" id="L467" title="All 2 branches covered.">            if(viewsCount.get(dayDate) == null)</span>
+<span class="fc" id="L468">                viewsCount.put(dayDate, 1);</span>
+            else
+<span class="fc" id="L470">                viewsCount.put(dayDate, viewsCount.get(dayDate) + 1);</span>
+<span class="fc" id="L471">        }</span>
+
+<span class="fc bfc" id="L473" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; entry : viewsCount.entrySet()) {</span>
+<span class="fc" id="L474">            result.get(&quot;&quot;).add(</span>
+                new BotsDetailsDTO(
+<span class="fc" id="L476">                    entry.getKey(),</span>
+<span class="fc" id="L477">                    entry.getValue()</span>
+                )
+            );
+<span class="fc" id="L480">        }</span>
+<span class="fc" id="L481">        return result;</span>
+	}
+
+	private static Date formatDate(Date dateToFormat) {
+<span class="fc" id="L485">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L486">        cal.setTime(dateToFormat);</span>
+<span class="fc" id="L487">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L488">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L489">        cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L490">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L491">		return cal.getTime();</span>
+	}
+
+	/********************************** SUPPORT METHODS **************************************************/
+	private static String getSearchEnginesSelectSql(String suffix, Integer webPageId, String rootGroupIdQuery) {
+<span class="fc" id="L496">		StringBuilder sql = new StringBuilder(&quot;SELECT DISTINCT server FROM stat_searchengine&quot;).append(suffix);</span>
+<span class="fc" id="L497">		sql.append(&quot; WHERE &quot;);</span>
+		//Now we must speify date range
+<span class="fc" id="L499">		sql.append(&quot; search_date &gt;= ? AND search_date &lt;= ? &quot;);</span>
+
+		//For specific webpage
+<span class="fc bfc" id="L502" title="All 2 branches covered.">		if(webPageId &gt; 0) {</span>
+<span class="fc" id="L503">			sql.append(&quot; AND &quot;).append(&quot;doc_id=&quot;).append(webPageId);</span>
+<span class="fc bfc" id="L504" title="All 2 branches covered.">		} else if(!Tools.isEmpty(rootGroupIdQuery)){</span>
+			//Make sure that not doc_id &gt; 0 (in case when docId is not specified)
+<span class="fc" id="L506">			sql.append(&quot; AND doc_id &gt; 0 &quot;);</span>
+		}
+
+		//Append rootGroupIdQuery
+<span class="fc" id="L510">		sql.append(rootGroupIdQuery);</span>
+
+<span class="fc" id="L512">		return sql.toString();</span>
+	}
+
+	public static List&lt;String&gt; getSearchEnginesSelectValues(String dayDate, Integer rootDir, Integer webPageId) {
+<span class="fc" id="L516">		Set&lt;String&gt; finalList = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L517">		Date[] dateRangeArr = StatService.processDateRangeString(dayDate);</span>
+<span class="fc" id="L518">		String rootGroupIdQuery = FilterHeaderDto.groupIdToQuery(rootDir);</span>
+<span class="fc" id="L519">		webPageId = Tools.getIntValue(webPageId, -1);</span>
+
+<span class="fc" id="L521">		String[] suffixis = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, dateRangeArr[0].getTime(), dateRangeArr[1].getTime());</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">		for(String suffix : suffixis) {</span>
+<span class="fc" id="L523">			List&lt;String&gt; searchEngines = new SimpleQuery().forListString(getSearchEnginesSelectSql(suffix, webPageId, rootGroupIdQuery), dateRangeArr[0], dateRangeArr[1]);</span>
+
+<span class="fc" id="L525">			finalList.addAll(searchEngines);</span>
+		}
+
+<span class="fc" id="L528">		return new ArrayList&lt;&gt;(finalList);</span>
+	}
+
+	public static Map&lt;Integer, String&gt; getWebPageSelectValues(int rootGroupId, DocDetailsRepository repo) {
+<span class="fc" id="L532">		Map&lt;Integer, String&gt; webPagesSelectData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L533">        rootGroupId = Tools.getIntValue(rootGroupId, -1);</span>
+<span class="fc bfc" id="L534" title="All 2 branches covered.">        if(rootGroupId == -1) return webPagesSelectData;</span>
+
+<span class="fc" id="L536">        List&lt;DocDetails&gt; webPages = repo.findAllByGroupId(rootGroupId);</span>
+<span class="fc bfc" id="L537" title="All 2 branches covered.">        for(DocDetails webpage : webPages)</span>
+<span class="fc" id="L538">            webPagesSelectData.put(webpage.getDocId(), webpage.getTitle());</span>
+
+<span class="fc" id="L540">        return webPagesSelectData;</span>
+	}
+
+	public static List&lt;UserDetails&gt; getUsersFromIds(List&lt;Integer&gt; userIds) {
+<span class="fc" id="L544">		List&lt;UserDetails&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">        for(Integer userId : userIds) {</span>
+<span class="fc" id="L546">            UserDetails user = UsersDB.getUserCached(userId);</span>
+<span class="pc bpc" id="L547" title="1 of 2 branches missed.">            if(user != null) users.add(user);</span>
+<span class="fc" id="L548">        }</span>
+<span class="fc" id="L549">		return users;</span>
+	}
+
+	private static List&lt;String&gt; getDistinctSeoKeywords() {
+<span class="fc" id="L553">		return new SimpleQuery().forListString(&quot;SELECT DISTINCT name FROM seo_keywords&quot;);</span>
+	}
+
+
+	public static void saveKeywordsPositions() {
+<span class="nc bnc" id="L558" title="All 2 branches missed.">		if (Tools.isEmpty(Constants.getString(&quot;seo.serpApiKey&quot;))) return;</span>
+
+<span class="nc bnc" id="L560" title="All 2 branches missed.">		for(SeoKeyword keyword : SeoManager.getSeoKeywords(-1)) {</span>
+<span class="nc" id="L561">			Integer position = getSeoKeywordActualPosition(keyword);</span>
+			//Add new seo_google_position record
+<span class="nc" id="L563">			(new SimpleQuery()).execute(&quot;INSERT INTO seo_google_position (keyword_id, position, search_datetime) VALUES (?, ?, ?)&quot;, keyword.getSeoKeywordId(), position, new Date());</span>
+			//Update seo_keywords, set new actual position
+<span class="nc" id="L565">			(new SimpleQuery()).execute(&quot;UPDATE seo_keywords SET actual_position=? WHERE seo_keyword_id=?&quot;, position, keyword.getSeoKeywordId());</span>
+<span class="nc" id="L566">		}</span>
+<span class="nc" id="L567">	}</span>
+
+	/********************************** LOGIC TO HANDLE KEYWORDS POSITION UPDATING **************************************************/
+<span class="nc" id="L570">	private enum EngineType {</span>
+<span class="nc" id="L571">		GOOGLE,</span>
+<span class="nc" id="L572">		BING,</span>
+<span class="nc" id="L573">		YAHOO,</span>
+<span class="nc" id="L574">		NOT_SUPPORTED</span>
+	}
+
+	private static EngineType getEngineType(String searchBot) {
+<span class="nc bnc" id="L578" title="All 4 branches missed.">		if(searchBot == null || searchBot.isEmpty()) return EngineType.NOT_SUPPORTED;</span>
+
+<span class="nc bnc" id="L580" title="All 2 branches missed.">		if(searchBot.indexOf(&quot;google&quot;) != -1)</span>
+<span class="nc" id="L581">			return EngineType.GOOGLE;</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		else if(searchBot.indexOf(&quot;yahoo&quot;) != -1)</span>
+<span class="nc" id="L583">			return EngineType.YAHOO;</span>
+<span class="nc bnc" id="L584" title="All 2 branches missed.">		else if(searchBot.indexOf(&quot;bing&quot;) != -1)</span>
+<span class="nc" id="L585">			return EngineType.BING;</span>
+<span class="nc" id="L586">		return EngineType.NOT_SUPPORTED;</span>
+	}
+
+	private static String prepareUrlForRequest(SeoKeyword keyword) {
+<span class="nc" id="L590">		String searchBot = keyword.getSearchBot();</span>
+<span class="nc" id="L591">		EngineType engineType = getEngineType(searchBot);</span>
+
+		//For example is we have seynam.cz (SerpAPI does NOT support seznam.cz)
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if(engineType == EngineType.NOT_SUPPORTED) return null;</span>
+
+<span class="nc" id="L596">		String query = keyword.getName();</span>
+<span class="nc" id="L597">		StringBuilder url = new StringBuilder(&quot;https://serpapi.com/search.json?&quot;);</span>
+
+<span class="nc bnc" id="L599" title="All 2 branches missed.">		if(engineType == EngineType.GOOGLE) {</span>
+<span class="nc" id="L600">			url.append(&quot;q=&quot;).append(query);</span>
+<span class="nc" id="L601">			url.append(&quot;&amp;engine=google&quot;);</span>
+
+<span class="nc" id="L603">			String postfix = null;</span>
+<span class="nc" id="L604">			String[] parseByDot = searchBot.split(&quot;\\.&quot;);</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">			if(parseByDot.length &gt; 1) postfix = parseByDot[parseByDot.length - 1];</span>
+
+<span class="nc bnc" id="L607" title="All 2 branches missed.">			if(postfix != null) {</span>
+				//Set google domain
+<span class="nc" id="L609">				url.append(&quot;&amp;google_domain=google.&quot;).append(postfix);</span>
+
+				//postfix .com represent USA - when we are speaking about &quot;location&quot;
+<span class="nc bnc" id="L612" title="All 2 branches missed.">				url.append(&quot;&amp;gl=&quot;).append(postfix.equals(&quot;com&quot;) ? &quot;us&quot; : postfix);</span>
+
+				//postfix .com represent English - when we are speaking about &quot;language&quot;
+<span class="nc bnc" id="L615" title="All 2 branches missed.">				String language = postfix.equals(&quot;com&quot;) ? &quot;en&quot; : postfix;</span>
+				//CZ language is represented by CS
+<span class="nc bnc" id="L617" title="All 2 branches missed.">				language = language.equals(&quot;cz&quot;) ? &quot;cs&quot; : language;</span>
+<span class="nc" id="L618">				url.append(&quot;&amp;hl=&quot;).append(language);</span>
+			}
+			//Max number of results
+<span class="nc" id="L621">			url.append(&quot;&amp;num=&quot;).append(Constants.getInt(&quot;seo.serpApiGoogleMaxResult&quot;));</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">		} else if(engineType == EngineType.YAHOO) {</span>
+<span class="nc" id="L623">			url.append(&quot;p=&quot;).append(query);</span>
+<span class="nc" id="L624">			url.append(&quot;&amp;engine=yahoo&quot;);</span>
+
+<span class="nc" id="L626">			String prefix = null;</span>
+<span class="nc" id="L627">			String[] parseByDot = searchBot.split(&quot;\\.&quot;);</span>
+			//Test if domain is default one, without country prefix
+<span class="nc" id="L629">			boolean isDefault = false;</span>
+<span class="nc bnc" id="L630" title="All 2 branches missed.">			if(parseByDot[0].equals(&quot;yahoo&quot;)) isDefault = true;</span>
+<span class="nc bnc" id="L631" title="All 4 branches missed.">			if(parseByDot[0].equals(&quot;search&quot;) &amp;&amp; parseByDot[1].equals(&quot;yahoo&quot;)) isDefault = true;</span>
+
+			//If start is not &quot;yahoo&quot; nor &quot;search.yahoo&quot;, prefix is country code (pl, fr ..)
+<span class="nc bnc" id="L634" title="All 2 branches missed.">			if(!isDefault) {</span>
+<span class="nc" id="L635">				prefix = parseByDot[0];</span>
+
+				//Set Yahoo domain
+<span class="nc" id="L638">				url.append(&quot;&amp;yahoo_domain=&quot;).append(prefix);</span>
+
+				//Yahoo engines does NOT support many country like sk. / cz. / hu.
+<span class="nc" id="L641">				url.append(&quot;&amp;vc=&quot;).append(prefix); //Position</span>
+
+				//Set language
+<span class="nc" id="L644">				url.append(&quot;&amp;vl=&quot;).append(prefix);</span>
+			} else {
+				//Domain HAS NO prefix
+
+				//Set default country as US
+<span class="nc" id="L649">				url.append(&quot;&amp;vc=&quot;).append(&quot;us&quot;);</span>
+
+				//Set default language
+<span class="nc" id="L652">				url.append(&quot;&amp;vl=&quot;).append(&quot;en&quot;);</span>
+			}
+			//Result number filter not supported
+<span class="nc bnc" id="L655" title="All 2 branches missed.">		} else if(engineType == EngineType.BING) {</span>
+<span class="nc" id="L656">			url.append(&quot;q=&quot;).append(query);</span>
+<span class="nc" id="L657">			url.append(&quot;&amp;engine=bing&quot;);</span>
+
+			//BING does NOT support country prefix or postfix (we cant figure out country by domain)
+
+			//Use it as country
+<span class="nc" id="L662">			url.append(&quot;&amp;cc=&quot;).append( getBingCountry( Constants.getString(&quot;defaultLanguage&quot;) ) );</span>
+		}
+		//Set API key
+<span class="nc" id="L665">		url.append(&quot;&amp;api_key=&quot;).append(Constants.getString(&quot;seo.serpApiKey&quot;));</span>
+<span class="nc" id="L666">		return url.toString();</span>
+	}
+
+	private static String getBingCountry(String code) {
+<span class="nc" id="L670">		String[] supportedCountries =</span>
+			{&quot;AR&quot;, &quot;AU&quot;, &quot;AT&quot;, &quot;BE&quot;, &quot;BR&quot;, &quot;CA&quot;, &quot;CL&quot;, &quot;DK&quot;, &quot;FI&quot;, &quot;FR&quot;, &quot;DE&quot;, &quot;HK&quot;, &quot;IN&quot;, &quot;ID&quot;, &quot;IT&quot;, &quot;JP&quot;, &quot;KR&quot;, &quot;MY&quot;, &quot;MX&quot;, &quot;NL&quot;, &quot;NZ&quot;, &quot;NO&quot;, &quot;PL&quot;, &quot;PT&quot;, &quot;PH&quot;, &quot;SA&quot;, &quot;ZA&quot;, &quot;ES&quot;, &quot;SE&quot;, &quot;CH&quot;, &quot;TW&quot;, &quot;TR&quot;, &quot;GB&quot;, &quot;US&quot;};
+
+<span class="nc bnc" id="L673" title="All 2 branches missed.">		for(String country : supportedCountries)</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">			if(country.equalsIgnoreCase(code)) return code;</span>
+
+		//If not suspported, return US as default
+<span class="nc" id="L677">		return &quot;us&quot;;</span>
+	}
+
+	private static Integer getSeoKeywordActualPosition(SeoKeyword keyword) {
+<span class="nc" id="L681">		RestTemplate restTemplate = new RestTemplate();</span>
+<span class="nc" id="L682">		ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="nc" id="L683">		Integer position = -1;</span>
+
+<span class="nc" id="L685">		String url = prepareUrlForRequest(keyword);</span>
+<span class="nc bnc" id="L686" title="All 2 branches missed.">		if(url == null) return position;</span>
+
+		try {
+<span class="nc" id="L689">			String response = restTemplate.getForObject(url, String.class);</span>
+<span class="nc" id="L690">			String resultsStringArr = JsonTools.getValue(response, &quot;organic_results&quot;);</span>
+
+			//JsonTools.getValue can return null is parsing JSON gone wrong
+<span class="nc bnc" id="L693" title="All 2 branches missed.">			if(resultsStringArr == null) return position;</span>
+
+<span class="nc" id="L695">			JsonNode rootNode = objectMapper.readTree(resultsStringArr);</span>
+<span class="nc bnc" id="L696" title="All 2 branches missed.">			for(JsonNode node : rootNode) {</span>
+				//If node has NOT &quot;link&quot; or &quot;position&quot; param, it's useless for us, skip this node
+<span class="nc bnc" id="L698" title="All 4 branches missed.">				if(!node.has(&quot;link&quot;) || !node.has(&quot;position&quot;)) continue;</span>
+
+<span class="nc" id="L700">				String link = node.get(&quot;link&quot;).toString();</span>
+<span class="nc bnc" id="L701" title="All 4 branches missed.">				if(link != null &amp;&amp; (link.indexOf(keyword.getDomain()) != -1)) {</span>
+<span class="nc" id="L702">					position = node.get(&quot;position&quot;).intValue();</span>
+<span class="nc" id="L703">					break;</span>
+				}
+<span class="nc" id="L705">			}</span>
+<span class="nc" id="L706">		} catch(Exception e) {</span>
+<span class="nc" id="L707">			e.printStackTrace();</span>
+<span class="nc" id="L708">		}</span>
+
+<span class="nc" id="L710">		return position;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

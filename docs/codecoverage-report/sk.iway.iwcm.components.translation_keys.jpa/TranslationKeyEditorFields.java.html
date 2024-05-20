@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.jpa</a> &gt; <span class="el_source">TranslationKeyEditorFields.java</span></div><h1>TranslationKeyEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.jpa;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.editor.FieldType;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+
+@Getter
+@Setter
+<span class="fc" id="L20">public class TranslationKeyEditorFields {</span>
+
+    //List of Free FieldsNconf
+    private List&lt;Field&gt; fieldsDefinition;
+
+    //String keyPrefix = &quot;language.&quot;;
+    private static final String KEY_PREFIX = &quot;language.&quot;;
+
+    //Represent how much custom-field's contains TranslationKeyEntity class
+    private static final char LAST_ALPHABET = 'J';
+
+    @JsonIgnore
+    public void from(Map&lt;String, String&gt; languageFieldCombination, ProcessItemAction action) {
+<span class="fc" id="L33">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L34">        fieldsDefinition = new ArrayList&lt;&gt;();</span>
+
+        //Trere are no set language-fieldAlphabet combination's
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if(languageFieldCombination == null) return;</span>
+
+        //Set language value fields
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for(Map.Entry&lt;String,String&gt; entry : languageFieldCombination.entrySet()) {</span>
+<span class="fc" id="L41">            String lng = entry.getKey();</span>
+<span class="fc" id="L42">            String fieldAlphabet = entry.getValue();</span>
+            try {
+<span class="fc" id="L44">                Field valueField = new Field(); //Represent value of translation key in specific language</span>
+<span class="fc" id="L45">                valueField.setKey(fieldAlphabet.toLowerCase());</span>
+<span class="fc" id="L46">                String label = prop.getText(KEY_PREFIX + lng);</span>
+<span class="fc" id="L47">                valueField.setLabel(label);</span>
+<span class="fc" id="L48">                valueField.setType(FieldType.TEXTAREA.name().toLowerCase());</span>
+<span class="fc" id="L49">                valueField.setMaxlength(65000);</span>
+
+<span class="fc" id="L51">                fieldsDefinition.add(valueField);</span>
+<span class="nc" id="L52">            } catch (Exception ex) {</span>
+<span class="nc" id="L53">                Logger.error(TranslationKeyEditorFields.class, ex);</span>
+<span class="fc" id="L54">            }</span>
+<span class="fc" id="L55">        }</span>
+
+        //Set language original value fields
+<span class="fc" id="L58">        String originalKeyValue = prop.getText(&quot;translation_key.original_value&quot;);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for(Map.Entry&lt;String,String&gt; entry : languageFieldCombination.entrySet()) {</span>
+<span class="fc" id="L60">            String lng = entry.getKey();</span>
+<span class="fc" id="L61">            String fieldAlphabet = entry.getValue();</span>
+            try {
+<span class="fc" id="L63">                Field originalValueField = new Field(); //Represent ORIGINAL value of translation key in specific language (load from file replaced by value in DB)</span>
+<span class="fc" id="L64">                originalValueField.setKey(fieldAlphabet.toLowerCase());</span>
+<span class="fc" id="L65">                String label = prop.getText(KEY_PREFIX + lng) + &quot;, &quot; + originalKeyValue;</span>
+<span class="fc" id="L66">                originalValueField.setLabel(label);</span>
+<span class="fc" id="L67">                originalValueField.setType(FieldType.LABEL.name().toLowerCase());</span>
+<span class="fc" id="L68">                originalValueField.setDisabled(true);</span>
+<span class="fc" id="L69">                originalValueField.setCustomPrefix(&quot;originalValue&quot;);</span>
+<span class="fc" id="L70">                fieldsDefinition.add(originalValueField);</span>
+<span class="nc" id="L71">            } catch (Exception ex) {</span>
+<span class="nc" id="L72">                Logger.error(TranslationKeyEditorFields.class, ex);</span>
+<span class="fc" id="L73">            }</span>
+<span class="fc" id="L74">        }</span>
+
+        //Hide redundant fields
+<span class="fc" id="L77">        String[] lngArr = Constants.getArray(&quot;languages&quot;);</span>
+<span class="fc" id="L78">        char lastUsedAlphabet = (char)(((int)'A') + lngArr.length);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for(char alphabet = lastUsedAlphabet; alphabet &lt;= LAST_ALPHABET; alphabet++) {</span>
+            try {
+<span class="fc" id="L81">                Field valueField = new Field();</span>
+<span class="fc" id="L82">                valueField.setKey((alphabet + &quot;&quot;).toLowerCase());</span>
+<span class="fc" id="L83">                valueField.setType(FieldType.NONE.name().toLowerCase());</span>
+<span class="fc" id="L84">                fieldsDefinition.add(valueField);</span>
+
+<span class="fc" id="L86">                Field originalValueField = new Field();</span>
+<span class="fc" id="L87">                originalValueField.setKey((alphabet + &quot;&quot;).toLowerCase());</span>
+<span class="fc" id="L88">                originalValueField.setType(FieldType.NONE.name().toLowerCase());</span>
+<span class="fc" id="L89">                originalValueField.setCustomPrefix(&quot;originalValue&quot;);</span>
+<span class="fc" id="L90">                fieldsDefinition.add(originalValueField);</span>
+<span class="nc" id="L91">            } catch (Exception e) {</span>
+<span class="nc" id="L92">                Logger.error(TranslationKeyEditorFields.class, e);</span>
+<span class="fc" id="L93">            }</span>
+        }
+<span class="fc" id="L95">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

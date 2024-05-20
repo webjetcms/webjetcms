@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.junit.jupiter.api.Test;
@@ -26,6 +26,6 @@ public class AdminlogTest extends BaseWebjetTest
 	{
 		Integer[] types = Adminlog.getTypes();
 		assertFalse(ArrayUtils.contains(types, null));
-		assertEquals(0, ArrayUtils.getLength(types));
+		assertTrue(ArrayUtils.getLength(types)>=122);
 	}
 }

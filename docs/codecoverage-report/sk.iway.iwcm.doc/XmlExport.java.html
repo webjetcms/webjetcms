@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlExport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">XmlExport.java</span></div><h1>XmlExport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.io.File;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  XmlExport.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 12.2.2006 21:54:05
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+<span class="nc" id="L33">public class XmlExport</span>
+{
+	public static boolean flashExport(String fileURL, int docId)
+	{
+<span class="nc" id="L37">		boolean ret = false;</span>
+
+<span class="nc" id="L39">		DocDetails doc = DocDB.getInstance().getDoc(docId);</span>
+
+		try
+		{
+<span class="nc" id="L43">			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L44">			DocumentBuilder builder = factory.newDocumentBuilder();</span>
+<span class="nc" id="L45">			DOMImplementation impl = builder.getDOMImplementation();</span>
+<span class="nc" id="L46">			Document document = impl.createDocument(null, &quot;webpage&quot;, null);</span>
+<span class="nc" id="L47">			Element root = document.getDocumentElement();</span>
+			//Document document = builder.newDocument();
+			//Element root = (Element)base.appendChild(document.createElement(&quot;webpage&quot;));
+<span class="nc" id="L50">			root.appendChild(getTextNode(document, &quot;title&quot;, doc.getTitle()));</span>
+<span class="nc" id="L51">			root.appendChild(getCDataNode(document, &quot;perex&quot;, doc.getHtmlData()));</span>
+<span class="nc" id="L52">			root.appendChild(getTextNode(document, &quot;perexImage&quot;, doc.getPerexImage()));</span>
+
+<span class="nc" id="L54">			String txtData = doc.getData(); // SearchAction.htmlToPlain(data);</span>
+<span class="nc" id="L55">			txtData = txtData.replace('\n', ' ');</span>
+<span class="nc" id="L56">			txtData = txtData.replace('\r', ' ');</span>
+<span class="nc" id="L57">			txtData = Tools.replace(txtData, &quot;&lt;STRONG&gt;&quot;, &quot;&lt;B&gt;&quot;);</span>
+<span class="nc" id="L58">			txtData = Tools.replace(txtData, &quot;&lt;/STRONG&gt;&quot;, &quot;&lt;/B&gt;&quot;);</span>
+<span class="nc" id="L59">			txtData = Tools.replace(txtData, &quot;&lt;EM&gt;&quot;, &quot;&lt;I&gt;&quot;);</span>
+<span class="nc" id="L60">			txtData = Tools.replace(txtData, &quot;&lt;/EM&gt;&quot;, &quot;&lt;/I&gt;&quot;);</span>
+
+<span class="nc" id="L62">			root.appendChild(getCDataNode(document, &quot;body&quot;, txtData));</span>
+
+			//zapis atributy (ak nejake mame)
+<span class="nc" id="L65">			List&lt;AtrBean&gt; atrList = AtrDB.getAtributes(docId, null, null);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (atrList.size()&gt;0)</span>
+			{
+<span class="nc" id="L68">				Element attributes = document.createElement(&quot;attributes&quot;);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				for (AtrBean atr : atrList)</span>
+				{
+<span class="nc bnc" id="L71" title="All 4 branches missed.">					if (Tools.isNotEmpty(atr.getValue()) &amp;&amp; atr.getDocId()&gt;0)</span>
+					{
+<span class="nc" id="L73">						Element e = document.createElement(&quot;attribute&quot;);</span>
+<span class="nc" id="L74">						Node n = document.createCDATASection(&quot;attribute&quot;);</span>
+<span class="nc" id="L75">						n.setNodeValue(atr.getValue());</span>
+<span class="nc" id="L76">						e.appendChild(n);</span>
+<span class="nc" id="L77">						e.setAttribute(&quot;name&quot;, atr.getAtrName());</span>
+<span class="nc" id="L78">						e.setAttribute(&quot;atrId&quot;, Integer.toString(atr.getAtrId()));</span>
+
+<span class="nc" id="L80">						attributes.appendChild(e);</span>
+					}
+<span class="nc" id="L82">				}</span>
+<span class="nc" id="L83">				root.appendChild(attributes);</span>
+			}
+
+<span class="nc" id="L86">			Source source = new DOMSource(document);</span>
+<span class="nc" id="L87">			File f = new File(Tools.getRealPath(fileURL));</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">			if (f.getParentFile().exists()==false) if(f.getParentFile().mkdirs() == false) return false;</span>
+
+<span class="nc" id="L90">			Result result = new StreamResult(f);</span>
+         // Write the DOM document to the file
+<span class="nc" id="L92">         Transformer xformer = TransformerFactory.newInstance().newTransformer();</span>
+<span class="nc" id="L93">         xformer.transform(source, result);</span>
+		}
+<span class="nc" id="L95">		catch (Exception e)</span>
+		{
+<span class="nc" id="L97">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L98">		}</span>
+
+<span class="nc" id="L100">		return(ret);</span>
+	}
+
+	private static Element getTextNode(Document document, String name, String value)
+	{
+<span class="nc" id="L105">		Element e = document.createElement(name);</span>
+<span class="nc" id="L106">		Node n = document.createTextNode(name);</span>
+<span class="nc" id="L107">		n.setNodeValue(value);</span>
+<span class="nc" id="L108">		e.appendChild(n);</span>
+<span class="nc" id="L109">		return(e);</span>
+	}
+
+	private static Element getCDataNode(Document document, String name, String value)
+	{
+<span class="nc" id="L114">		Element e = document.createElement(name);</span>
+<span class="nc" id="L115">		Node n = document.createCDATASection(name);</span>
+<span class="nc" id="L116">		n.setNodeValue(value);</span>
+<span class="nc" id="L117">		e.appendChild(n);</span>
+<span class="nc" id="L118">		return(e);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminlogNotifyManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.adminlog</a> &gt; <span class="el_source">AdminlogNotifyManager.java</span></div><h1>AdminlogNotifyManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.adminlog;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.audit.jpa.AuditNotifyEntity;
+
+/**
+ *	AdminlogNotifyManager.java - vykonava pracu s databazou, posiela e-mail
+ *	@Title        webjet4
+ *	@Company      Interway s.r.o. (www.interway.sk)
+ *	@Copyright    Interway s.r.o. (c) 2001-2008
+ *	@author       $Author: jeeff $
+ *	@version      $Revision: 1.4 $
+ *	@created      Date: 28.01.2009 12:05:51
+ *	@modified     $Date: 2009/02/09 10:18:13 $
+ */
+public class AdminlogNotifyManager
+{
+<span class="nc" id="L31">	protected AdminlogNotifyManager() {</span>
+		//utility class
+<span class="nc" id="L33">	}</span>
+
+	/**
+ 	 * Posle notifikacne spravy na vsetky e-maily, ktore su priradene k danej akcii v tabulke adminlog_notify
+ 	 * @param logType typ adminlogu, ktory sa pridal do DB a chceme na nho poslat notifikacie
+ 	 * @param requestBean dolezite informacie z requestu, ktore zahrnieme v sprave (IP adresa, domena, id pouzivatela...)
+ 	 * @param timestamp datum a cas, kedy bola akcia vykonana
+ 	 * @param description opis akcie, ktora bola zaznamenana
+ 	 * @return true, ak sa poslu nejake notifikacie, false ak nebol poslany ziadny email
+ 	 */
+	public static boolean sendNotification(int logType, RequestBean requestBean, Timestamp timestamp, String description, boolean writeToAuditLog)
+	{
+<span class="fc" id="L45">		List&lt;AuditNotifyEntity&gt; notifyBeans = AdminlogNotifyManager.getNotifyEmails(logType);</span>
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		if (notifyBeans.size() == 0)</span>
+<span class="fc" id="L48">			return(false);</span>
+
+<span class="fc" id="L50">		Prop prop = Prop.getInstance();</span>
+
+<span class="fc" id="L52">		String subject = (prop.getText((&quot;components.adminlog.subject&quot;)) + prop.getText((&quot;components.adminlog.&quot;+logType)));</span>
+<span class="fc" id="L53">		StringBuilder text = new StringBuilder(prop.getText((&quot;components.adminlog.action&quot;))).append(' ').append(prop.getText((&quot;components.adminlog.&quot;+logType))).append('\n');</span>
+<span class="fc" id="L54">		text.append(prop.getText((&quot;components.adminlog.datetime&quot;))).append(' ').append(Tools.formatDateTime(timestamp.getTime())).append('\n');</span>
+<span class="fc" id="L55">		text.append(prop.getText((&quot;components.adminlog.userid&quot;))).append(' ').append(requestBean.getUserId()).append('\n');</span>
+<span class="fc" id="L56">		text.append(prop.getText((&quot;components.adminlog.description&quot;))).append(' ').append(description).append('\n');</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (requestBean.getRemoteIP() != null)</span>
+<span class="fc" id="L58">			text.append(prop.getText((&quot;components.adminlog.IPaddress&quot;))).append(' ').append(requestBean.getRemoteIP()).append('\n');</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">		if (requestBean.getRemoteHost() != null)</span>
+<span class="fc" id="L60">			text.append(prop.getText((&quot;components.adminlog.domain&quot;))).append(' ').append(requestBean.getRemoteHost()).append('\n');</span>
+
+<span class="fc" id="L62">		String descIntToLower = DB.internationalToEnglish(description.toLowerCase());</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">		for(AuditNotifyEntity anb : notifyBeans)</span>
+		{
+			//ak sa ma poslat email len ak obsahuje nejaky text
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(anb.getText()))</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">				if(!descIntToLower.contains(DB.internationalToEnglish(anb.getText().toLowerCase()))) continue;</span>
+
+<span class="nc" id="L69">			SendMail.sendCapturingException(prop.getText(&quot;components.adminlog.senderEmail.name&quot;), anb.getEmail(), anb.getEmail(), null, null, null, subject, text.toString(), null, null, true, writeToAuditLog);</span>
+<span class="nc" id="L70">		}</span>
+
+<span class="fc" id="L72">		return(true);</span>
+	}
+
+	/**
+ 	 * Vyselektuje vsetky e-maily, na ktore je potrebne poslat notifikaciu o zaznamenanom adminlogu
+ 	 * @param logType typ adminlogu, ktory sa pridal do DB a chceme na nho poslat notifikacie
+ 	 * @return List naplneny e-mailami, na ktore sa posle notifikacna sprava
+ 	 */
+	private static synchronized List&lt;AuditNotifyEntity&gt; getNotifyEmails(int logType)
+	{
+
+<span class="fc" id="L83">		String CACHE_KEY = &quot;AdminlogNotifyEmails.type&quot;+logType;</span>
+<span class="fc" id="L84">		Cache c = Cache.getInstance();</span>
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L86">		List&lt;AuditNotifyEntity&gt; notifyBeans = (List&lt;AuditNotifyEntity&gt;)c.getObject(CACHE_KEY);</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (notifyBeans != null) return notifyBeans;</span>
+
+<span class="fc" id="L90">		notifyBeans = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L92">		Connection db_conn = null;</span>
+<span class="fc" id="L93">		PreparedStatement ps = null;</span>
+<span class="fc" id="L94">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="fc" id="L98">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L99">			ps = db_conn.prepareStatement(&quot;SELECT * FROM adminlog_notify WHERE adminlog_type = ?&quot;);</span>
+
+<span class="fc" id="L101">			ps.setInt(1, logType);</span>
+
+<span class="fc" id="L103">			rs = ps.executeQuery();</span>
+<span class="fc" id="L104">			AuditNotifyEntity anb = null;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L107">				anb = new AuditNotifyEntity();</span>
+<span class="fc" id="L108">				anb.setId(rs.getLong(&quot;adminlog_notify_id&quot;));</span>
+<span class="fc" id="L109">				anb.setAdminlogType(rs.getInt(&quot;adminlog_type&quot;));</span>
+<span class="fc" id="L110">				anb.setEmail(rs.getString(&quot;email&quot;));</span>
+<span class="fc" id="L111">				anb.setText(rs.getString(&quot;text&quot;));</span>
+<span class="fc" id="L112">				notifyBeans.add(anb);</span>
+			}
+
+<span class="fc" id="L115">			rs.close();</span>
+<span class="fc" id="L116">			ps.close();</span>
+<span class="fc" id="L117">			db_conn.close();</span>
+<span class="fc" id="L118">			rs = null;</span>
+<span class="fc" id="L119">			ps = null;</span>
+<span class="fc" id="L120">			db_conn = null;</span>
+		}
+<span class="nc" id="L122">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L124">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L131">					rs.close();</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L133">					ps.close();</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L135">					db_conn.close();</span>
+			}
+<span class="nc" id="L137">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L139">			}</span>
+		}
+
+<span class="fc" id="L142">		c.setObjectSeconds(CACHE_KEY, notifyBeans, 60*60);</span>
+
+<span class="fc" id="L144">		return notifyBeans;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

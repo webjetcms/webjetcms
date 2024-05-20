@@ -10,7 +10,11 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
 
     Document.screenshot("/redactor/apps/form/detail.png");
 
-    I.click("08.07.2019 14:31:40");
+    if("sk" === I.getConfLng()) {
+        I.click("08.07.2019 14:31:40");
+    } else if("en" === I.getConfLng()) { 
+        I.click("07/08/2019 14:31:40");
+    }
 
     Document.screenshot("/redactor/apps/form/detail-editnote.png");
 

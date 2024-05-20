@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAgent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.ninja</a> &gt; <span class="el_source">UserAgent.java</span></div><h1>UserAgent.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.ninja;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.BrowserDetector;
+
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
+
+public class UserAgent {
+    private Ninja ninja;
+<span class="fc" id="L12">    private Map&lt;String, Integer&gt; minimalBrowserVersion = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L13">    BrowserDetector bd = null;</span>
+
+<span class="fc" id="L15">    public UserAgent(Ninja ninja) {</span>
+<span class="fc" id="L16">        this.ninja = ninja;</span>
+
+<span class="fc bfc" id="L18" title="All 2 branches covered.">        for (BrowserType browserType : BrowserType.values()) {</span>
+<span class="fc" id="L19">            minimalBrowserVersion.put(browserType.getBrowser(), Tools.getIntValue(ninja.getConfig(&quot;minBrowserVersion.&quot;+browserType), browserType.defaultMinimalVersion));</span>
+        }
+<span class="fc" id="L21">        Properties config = ninja.getConfig();</span>
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">        if (config != null) {</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">            for (Object key : config.keySet()) {</span>
+<span class="fc" id="L24">                String keyStr = (String) key;</span>
+<span class="fc bfc" id="L25" title="All 4 branches covered.">                if (keyStr.startsWith(&quot;minBrowserVersion.&quot;) &amp;&amp; keyStr.length() &gt; 20) {</span>
+<span class="fc" id="L26">                    String browser = keyStr.substring(18);</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">                    if (minimalBrowserVersion.containsKey(browser)==false) {</span>
+<span class="fc" id="L28">                        minimalBrowserVersion.put(browser, Tools.getIntValue(ninja.getConfig(keyStr), 0));</span>
+                    }
+                }
+<span class="fc" id="L31">            }</span>
+        }
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * Funkcia na vr?tenie verzie prehliada?a. Verzia sa zis?uje na z?klade UserAdent
+     * @return String - verzia prehliada?a
+     */
+    public String getBrowserVersion(){
+<span class="fc" id="L40">        String browserVersion = String.valueOf(Math.round(getBrowserDetector().getBrowserVersion()));</span>
+<span class="fc" id="L41">        return browserVersion;</span>
+    }
+
+    /**
+     * Funkcia ktora vrati nazov prehliadaca
+     * @return String - nazov prehliadaca:
+     * ie
+     * chrome
+     * safari
+     * firefox
+     * opera
+     * edge
+     * webview
+     * android browser
+     * maxthon
+     * blackberry
+     */
+    public String getBrowserName(){
+<span class="fc" id="L59">        String browserName = getBrowserDetector().getBrowserName();</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (browserName != null) {</span>
+<span class="fc" id="L61">            return browserName.toLowerCase();</span>
+        }
+<span class="nc" id="L63">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Metoda vracajuca typ zariadenia
+     * @return String - ketegoria zariadenia:
+     * game console
+     * other
+     * pda
+     * personal computer
+     * smart tv
+     * smartphone
+     * tablet
+     * wearable computer
+     * prazdny string ak nepozna typ
+     */
+    public String getDeviceType(){
+<span class="fc" id="L80">        String deviceType = getBrowserDetector().getBrowserDeviceType();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (deviceType == null) deviceType = &quot;desktop&quot;;</span>
+<span class="fc" id="L82">        return deviceType.toLowerCase();</span>
+    }
+
+    public String getDeviceOS(){
+<span class="fc" id="L86">        String deviceOs = getBrowserDetector().getBrowserPlatform()+&quot; &quot;+getBrowserDetector().getBrowserSubplatform();</span>
+<span class="fc" id="L87">        return deviceOs.toLowerCase();</span>
+    }
+
+    public boolean isBrowserOutdated()
+    {
+<span class="fc" id="L92">        int browserVersion = getMinimalBrowserVersion(getBrowserName());</span>
+        //pre nezdetekovany browser vratime false, zhodni sme sa na tom s MHO ze to je lepsie
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (browserVersion &lt; 1) return false;</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        return Tools.getIntValue(getBrowserVersion(), 999) &lt; browserVersion;</span>
+    }
+
+    public int getMinimalBrowserVersion(String browser){
+<span class="fc" id="L99">        Integer version =  minimalBrowserVersion.get(browser);</span>
+<span class="pc bpc" id="L100" title="2 of 4 branches missed.">        if (version == null || version &lt;1) return -1;</span>
+<span class="fc" id="L101">        return version;</span>
+    }
+
+    public boolean isBlind(){
+<span class="fc" id="L105">        BrowserDetector instance = BrowserDetector.getInstance(ninja.getRequest());</span>
+<span class="fc" id="L106">        boolean isBlind = false;</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if(&quot;blind&quot;.equals(instance.getBrowserDeviceType())){</span>
+<span class="nc" id="L108">            isBlind = true;</span>
+        }
+<span class="fc" id="L110">        return isBlind;</span>
+    }
+
+    private BrowserDetector getBrowserDetector()
+    {
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (bd == null) bd = BrowserDetector.getInstance(ninja.getRequest());</span>
+<span class="fc" id="L116">        return bd;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

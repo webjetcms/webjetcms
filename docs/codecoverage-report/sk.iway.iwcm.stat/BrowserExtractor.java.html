@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrowserExtractor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">BrowserExtractor.java</span></div><h1>BrowserExtractor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import static sk.iway.iwcm.Tools.firstNonNull;
+import static sk.iway.iwcm.Tools.getDoubleValue;
+import static sk.iway.iwcm.Tools.isNotEmpty;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import sk.iway.iwcm.Logger;
+
+
+/**
+ *  BrowserExtractor.java
+ *
+ *  Extracts browsers from User-Agent string
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 12.5.2011 13:58:20
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+class BrowserExtractor
+{
+<span class="fc" id="L31">	private static final List&lt;String&gt; correctlyBehavingBrowsers = Arrays.asList(</span>
+		&quot;Firefox&quot;, &quot;Netscape&quot;, &quot;Safari&quot;, &quot;Chrome&quot;, &quot;Camino&quot;, &quot;Mosaic&quot;, &quot;Opera&quot;, &quot;Galeon&quot;
+	);
+
+<span class="fc" id="L35">	private static final List&lt;String&gt; browsersIgnoringRfc = Arrays.asList(</span>
+		&quot;Crazy Browser&quot;, &quot;Avant Browser&quot;
+	);
+
+<span class="fc" id="L39">	private static final Pattern commentedProductPattern = Pattern.compile(</span>
+				&quot;;[ ]*([^/]+?)[/ ]+([0-9.ab]+)&quot;,
+				Pattern.CASE_INSENSITIVE | Pattern.MULTILINE
+	);
+
+	private final RfcBrowserDetector detector;
+
+	public BrowserExtractor(RfcBrowserDetector browserDetector)
+<span class="fc" id="L47">	{</span>
+<span class="fc" id="L48">		this.detector = browserDetector;</span>
+<span class="fc" id="L49">	}</span>
+
+	public String getBrowserName()
+	{
+<span class="fc" id="L53">		return getBrowser().name;</span>
+	}
+
+	public Product getBrowser()
+	{
+		try
+		{
+<span class="fc bfc" id="L60" title="All 2 branches covered.">			if (detector.nothingFound())</span>
+<span class="fc" id="L61">				return unknownBrowser();</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">			if (correctlyIdentifiesItself())</span>
+<span class="fc" id="L63">				return extractCorrectlyIdentifiedBrowser();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">			if (cloaksAsMozilla())</span>
+<span class="fc" id="L65">				return extractFromComment(detector.firstProduct().comment);</span>
+			//browsers cloaked as MSIE should already be detected in previous steps
+<span class="fc bfc" id="L67" title="All 2 branches covered.">			if (isInternetExplorer())</span>
+<span class="fc" id="L68">				return extractInternetExplorerFrom(detector.firstProduct().comment);</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">			if (isObsoleteMozzila())</span>
+<span class="nc" id="L70">				return new Product(&quot;Netscape&quot;);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">			if (isRealMozilla())</span>
+<span class="nc" id="L72">				return new Product(&quot;Mozilla&quot;);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">			if (isNotEmpty(detector.firstProduct().name))</span>
+<span class="fc" id="L74">				return detector.firstProduct();</span>
+		}
+<span class="nc" id="L76">		catch(Exception e)</span>
+		{
+<span class="nc" id="L78">			Logger.printf(BrowserExtractor.class, &quot;Unable to parser user agent: %s&quot;, detector.userAgent);</span>
+<span class="nc" id="L79">		}</span>
+<span class="nc" id="L80">		return unknownBrowser();</span>
+	}
+
+	private Product unknownBrowser()
+	{
+<span class="fc" id="L85">		return new Product(&quot;Unknown&quot;);</span>
+	}
+
+	private boolean correctlyIdentifiesItself()
+	{
+<span class="fc bfc" id="L90" title="All 2 branches covered.">		return extractCorrectlyIdentifiedBrowser() != null;</span>
+	}
+
+	private Product extractCorrectlyIdentifiedBrowser()
+	{
+<span class="fc" id="L95">		Product browser = null;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">		for (String browserName : correctlyBehavingBrowsers)</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">			for (Product product : detector.products)</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">				if (browserName.equalsIgnoreCase(product.name))</span>
+<span class="fc" id="L99">					browser = product;</span>
+<span class="fc bfc" id="L100" title="All 4 branches covered.">		if (browser != null &amp;&amp; isVersionOutsideOfProduct())</span>
+<span class="fc" id="L101">			browser.version = extractVersionFromAnExternalProduct();</span>
+
+<span class="fc" id="L103">		return browser;</span>
+	}
+
+	private boolean cloaksAsMozilla()
+	{
+<span class="fc" id="L108">		Product firstBrowser = detector.firstProduct();</span>
+<span class="pc bpc" id="L109" title="1 of 4 branches missed.">		return &quot;Mozilla&quot;.equals(firstBrowser.name) &amp;&amp;</span>
+			firstBrowser.comment != null &amp;&amp;
+<span class="fc bfc" id="L111" title="All 2 branches covered.">			firstBrowser.comment.toLowerCase().startsWith(&quot;compatible;&quot;);</span>
+	}
+
+	/**
+	 * General rule for comments containing
+	 * &quot;compatible;&quot; is as follows:
+	 * 	(compatible; BROWSER VERSION; OS VERSION;...)
+	 *
+	 * Microsoft is, naturally, an exception
+	 */
+	private Product extractFromComment(String comment)
+	{
+<span class="fc" id="L123">		Product product = new Product();</span>
+<span class="fc" id="L124">		String illBehavingBrowser = findIllBehavedBrowsersIn(comment);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">		if (illBehavingBrowser != null)</span>
+		{
+<span class="fc" id="L127">			product.name = illBehavingBrowser;</span>
+			try {
+<span class="fc" id="L129">				int i = comment.indexOf(illBehavingBrowser);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">				if (i&gt;0) {</span>
+<span class="fc" id="L131">					StringTokenizer st = new StringTokenizer(comment.substring(i+illBehavingBrowser.length()), &quot;;) &quot;);</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">					if (st.hasMoreTokens()) product.version = detector.stripSubVersions(st.nextToken());</span>
+				}
+<span class="nc" id="L134">			} catch (Exception e) {</span>
+				//bad UA string
+<span class="fc" id="L136">			}</span>
+<span class="fc" id="L137">			return product;</span>
+		}
+
+<span class="fc" id="L140">		Matcher matcher = commentedProductPattern.matcher(comment.replace(&quot;compatible&quot;, &quot;&quot;));</span>
+
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		if (matcher.find()) {</span>
+<span class="fc" id="L143">			product.name = firstNonNull(matcher.group(1), &quot;Unknown&quot;);</span>
+<span class="fc" id="L144">			product.version = detector.stripSubVersions(matcher.group(2));</span>
+		}
+
+<span class="fc" id="L147">		return product;</span>
+	}
+
+	private String findIllBehavedBrowsersIn(String comment)
+	{
+<span class="fc bfc" id="L152" title="All 2 branches covered.">		for (String browser : browsersIgnoringRfc)</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">			if (comment.contains(browser))</span>
+<span class="fc" id="L154">				return browser;</span>
+<span class="fc" id="L155">		return null;</span>
+	}
+
+	private boolean isVersionOutsideOfProduct()
+	{
+<span class="fc bfc" id="L160" title="All 2 branches covered.">		return extractVersionFromAnExternalProduct() != null;</span>
+	}
+
+	/**
+	 * Some browsers, namely and mainly Safari identifies itself as
+	 * Safari/523.10. This &quot;523.10&quot; is not the version number, however.
+	 *
+	 * Version number can be found in a separate product format string,
+	 * such as &quot;Version/5.0&quot;
+	 */
+	private String extractVersionFromAnExternalProduct()
+	{
+<span class="fc bfc" id="L172" title="All 2 branches covered.">		for (Product product : detector.products)</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">			if (&quot;Version&quot;.equalsIgnoreCase(product.name))</span>
+<span class="fc" id="L174">				return product.version;</span>
+<span class="fc" id="L175">		return null;</span>
+	}
+
+	private boolean isInternetExplorer()
+	{
+<span class="fc bfc" id="L180" title="All 2 branches covered.">		return detector.firstProduct().comment != null &amp;&amp;</span>
+<span class="pc bpc" id="L181" title="1 of 4 branches missed.">			(detector.firstProduct().comment.contains(&quot;MSIE&quot;) || detector.firstProduct().comment.contains(&quot;Trident/&quot;));</span>
+	}
+
+	private Product extractInternetExplorerFrom(String comment)
+	{
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">		if (comment.indexOf(&quot;MSIE&quot;)!=-1)</span>
+		{
+<span class="fc" id="L188">			Pattern msIePattern = Pattern.compile(&quot;MSIE[ /]+([0-9.ab]+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="fc" id="L189">			Matcher matcher = msIePattern.matcher(comment);</span>
+<span class="fc" id="L190">			matcher.find();</span>
+<span class="fc" id="L191">			return new Product(&quot;MSIE&quot;, detector.stripSubVersions(matcher.group(1)));</span>
+		}
+		else
+		{
+			//IE11+
+<span class="nc" id="L196">			Pattern msIePattern = Pattern.compile(&quot;rv:([0-9.]+)&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L197">			Matcher matcher = msIePattern.matcher(comment);</span>
+<span class="nc" id="L198">			matcher.find();</span>
+<span class="nc" id="L199">			return new Product(&quot;MSIE&quot;, detector.stripSubVersions(matcher.group(1)));</span>
+		}
+	}
+
+	private boolean isRealMozilla()
+	{
+<span class="fc" id="L205">		Product product = detector.firstProduct();</span>
+<span class="fc" id="L206">		Double version = getDoubleValue(product.version, Double.MAX_VALUE);</span>
+<span class="pc bpc" id="L207" title="3 of 4 branches missed.">		return &quot;Mozilla&quot;.equalsIgnoreCase(product.name) &amp;&amp; version &gt;= 5.0;</span>
+	}
+
+	private boolean isObsoleteMozzila()
+	{
+<span class="fc" id="L212">		Product product = detector.firstProduct();</span>
+<span class="fc" id="L213">		Double version = getDoubleValue(product.version, Double.MAX_VALUE);</span>
+<span class="pc bpc" id="L214" title="3 of 4 branches missed.">		return &quot;Mozilla&quot;.equalsIgnoreCase(product.name) &amp;&amp; version &lt; 5.0;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

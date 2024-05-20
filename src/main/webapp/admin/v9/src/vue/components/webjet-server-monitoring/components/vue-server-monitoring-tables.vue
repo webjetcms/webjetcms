@@ -1,6 +1,6 @@
 <template>
     <section class="col">
-        <h6 class="server-monitoring-table-header"><i :class="keyIndex === 0 ? 'fal fa-info-square' : 'fal fa-server'" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
+        <h6 class="server-monitoring-table-header"><i :class="keyIndex === 0 ? 'ti ti-info-square' : 'ti ti-server'" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
         <table class="monitoring-table">
             <tr v-for="(data, key, index) in sortedData" :key="index" class="table-data" :data-index="index">
                 <td v-text="translate(key)"></td>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.appstore</a> &gt; <span class="el_source">AppBean.java</span></div><h1>AppBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.appstore;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  AppBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2014
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 17.3.2014 14:59:52
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="fc" id="L22">public class AppBean</span>
+{
+	private String nameKey;
+	private String componentClickAction;
+	private String imagePath;
+	private BigDecimal priceEur;
+<span class="fc" id="L28">	private List&lt;String&gt; galleryImages = null;</span>
+<span class="fc" id="L29">	private String domainName = null;</span>
+<span class="fc" id="L30">	private String itemKey = &quot;&quot;; //pouziva sa v AppManager kvoli filtracii prav</span>
+
+    private String descKey;
+
+	public boolean isFree()
+	{
+<span class="pc bpc" id="L36" title="3 of 4 branches missed.">		if (priceEur == null || priceEur.intValue()==0) return true;</span>
+
+<span class="nc" id="L38">		return false;</span>
+	}
+
+	public String getDescriptionKey()
+	{
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (Tools.isNotEmpty(descKey)) return descKey;</span>
+
+<span class="fc" id="L45">		int index = nameKey.lastIndexOf(&quot;.title&quot;);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">		if (index &gt; 0) return nameKey.substring(0, index)+&quot;.desc&quot;;</span>
+
+<span class="fc" id="L48">		return nameKey+&quot;.desc&quot;;</span>
+	}
+
+	/**
+	 * Vrati zoznam obrazkov do galerie, ktore su zhodne z imagePath ale cislovane ako ...-0.jpg, ...-1.jpg atd
+	 * @return
+	 */
+	public List&lt;String&gt; getGalleryImages()
+	{
+<span class="fc bfc" id="L57" title="All 2 branches covered.">		if (galleryImages != null) return galleryImages;</span>
+
+<span class="fc" id="L59">		List&lt;String&gt; images = new ArrayList&lt;String&gt;();</span>
+
+<span class="fc" id="L61">		int lastSlash = imagePath.lastIndexOf('/');</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (lastSlash &gt; 0)</span>
+		{
+<span class="fc" id="L64">			String basePath = imagePath.substring(0, lastSlash);</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">			for (int i=0; i&lt;10; i++)</span>
+			{
+<span class="fc" id="L68">				String imagePathJpg = basePath+&quot;/screenshot-&quot;+i+&quot;.jpg&quot;;</span>
+<span class="fc" id="L69">				String imagePathGif = basePath+&quot;/screenshot-&quot;+i+&quot;.gif&quot;;</span>
+<span class="fc" id="L70">				String imagePathPng = basePath+&quot;/screenshot-&quot;+i+&quot;.png&quot;;</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">				if (FileTools.isFile(imagePathJpg))</span>
+				{
+<span class="fc" id="L73">					images.add(imagePathJpg);</span>
+				}
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">				else if (FileTools.isFile(imagePathGif))</span>
+				{
+<span class="nc" id="L77">					images.add(imagePathGif);</span>
+				}
+<span class="fc bfc" id="L79" title="All 2 branches covered.">				else if (FileTools.isFile(imagePathPng))</span>
+				{
+<span class="fc" id="L81">					images.add(imagePathPng);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L86">		galleryImages = images;</span>
+
+<span class="fc" id="L88">		return images;</span>
+	}
+
+	public String getNameKey()
+	{
+<span class="fc" id="L93">		return nameKey;</span>
+	}
+	public void setNameKey(String nameKey)
+	{
+<span class="fc" id="L97">		this.nameKey = nameKey;</span>
+<span class="fc" id="L98">	}</span>
+	public String getComponentClickAction()
+	{
+<span class="fc" id="L101">		return componentClickAction;</span>
+	}
+	public void setComponentClickAction(String componentClickAction)
+	{
+<span class="fc" id="L105">		this.componentClickAction = componentClickAction;</span>
+<span class="fc" id="L106">	}</span>
+	public String getImagePath()
+	{
+<span class="fc" id="L109">		return imagePath;</span>
+	}
+	public void setImagePath(String imagePath)
+	{
+<span class="fc" id="L113">		this.imagePath = imagePath;</span>
+<span class="fc" id="L114">	}</span>
+	public BigDecimal getPriceEur()
+	{
+<span class="nc" id="L117">		return priceEur;</span>
+	}
+	public void setPriceEur(BigDecimal priceEur)
+	{
+<span class="nc" id="L121">		this.priceEur = priceEur;</span>
+<span class="nc" id="L122">	}</span>
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L127">		StringBuilder builder = new StringBuilder();</span>
+<span class="nc" id="L128">		builder.append(&quot;AppBean [nameKey=&quot;).append(nameKey)</span>
+<span class="nc" id="L129">				.append(&quot;, componentClickAction=&quot;).append(componentClickAction)</span>
+<span class="nc" id="L130">				.append(&quot;, imagePath=&quot;).append(imagePath).append(&quot;, priceEur=&quot;)</span>
+<span class="nc" id="L131">				.append(priceEur).append(&quot;, galleryImages=&quot;)</span>
+<span class="nc" id="L132">				.append(galleryImages).append(&quot;, domainName=&quot;)</span>
+<span class="nc" id="L133">				.append(domainName).append(&quot;, itemKey=&quot;).append(itemKey)</span>
+<span class="nc" id="L134">				.append(&quot;]&quot;);</span>
+<span class="nc" id="L135">		return builder.toString();</span>
+	}
+
+	public String getDomainName()
+	{
+<span class="fc" id="L140">		return domainName;</span>
+	}
+
+	public void setDomainName(String domainName)
+	{
+<span class="fc" id="L145">		this.domainName = domainName;</span>
+<span class="fc" id="L146">	}</span>
+
+	public String getItemKey()
+	{
+<span class="fc" id="L150">		return itemKey;</span>
+	}
+
+	public void setItemKey(String itemKey)
+	{
+<span class="fc" id="L155">		this.itemKey = itemKey;</span>
+<span class="fc" id="L156">	}</span>
+
+    public String getDescKey()
+    {
+<span class="nc" id="L160">        return descKey;</span>
+    }
+
+    public void setDescKey(String descKey)
+    {
+<span class="fc" id="L165">        this.descKey = descKey;</span>
+<span class="fc" id="L166">    }</span>
+
+    public void setGalleryImages(String images)
+    {
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(images))</span>
+        {
+<span class="fc" id="L172">            String[] galleryImagesArr = Tools.getTokens(images, &quot;,&quot;, true);</span>
+<span class="fc" id="L173">            this.galleryImages = Arrays.asList(galleryImagesArr);</span>
+        }
+
+<span class="fc" id="L176">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

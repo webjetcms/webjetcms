@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDimenstionRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryDimenstionRestController.java</span></div><h1>GalleryDimenstionRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/components/gallery-dimension&quot;)
+public class GalleryDimenstionRestController extends DatatableRestControllerV2&lt;GalleryDimension, Long&gt; {
+
+    private final GalleryDimensionRepository repository;
+
+    @Autowired
+    public GalleryDimenstionRestController(GalleryDimensionRepository repository) {
+<span class="fc" id="L39">        super(repository);</span>
+<span class="fc" id="L40">        this.repository = repository;</span>
+<span class="fc" id="L41">    }</span>
+
+    @Override
+    public Page&lt;GalleryDimension&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L46">        int dimensionId = Tools.getIntValue(getRequest().getParameter(&quot;dimensionId&quot;), -1);</span>
+<span class="fc" id="L47">        List&lt;GalleryDimension&gt; list = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if(dimensionId != -1) {</span>
+            try {
+<span class="fc" id="L51">                Optional&lt;GalleryDimension&gt; optional = repository.findById(Long.valueOf(dimensionId));</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                if (optional.isPresent()) {</span>
+<span class="fc" id="L53">                    GalleryDimension entity = optional.get();</span>
+<span class="fc" id="L54">                    list.add(entity);</span>
+                }
+<span class="nc" id="L56">            } catch (Exception ex) {</span>
+                //zaznam uz neexistuje/bol zmazany
+<span class="pc" id="L58">            }</span>
+        } else {
+            //asi sa edituje zaznam, ktory nie je ulozeny v DB
+<span class="nc" id="L61">            String path = getRequest().getParameter(&quot;path&quot;);</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">            if (Tools.isNotEmpty(path) &amp;&amp; FileBrowserTools.hasForbiddenSymbol(path)==false) {</span>
+<span class="nc" id="L63">                list.add(getNewEntity(path));</span>
+            }
+        }
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for(int i = 0; i &lt; list.size(); i++) {</span>
+
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">            if(list.get(i).getEditorFields() == null) {</span>
+<span class="fc" id="L70">                GalleryDimensionEditorFields editorFields = new GalleryDimensionEditorFields();</span>
+<span class="fc" id="L71">                list.get(i).setEditorFields(editorFields);</span>
+            }
+        }
+
+<span class="fc" id="L75">        return new PageImpl&lt;&gt;(list);</span>
+    }
+
+    @Override
+    public GalleryDimension insertItem(GalleryDimension entity) {
+
+        //Get entity path (this path we are setting in getOne) and add entity name to path, get entity from DB by path
+        //If DB return entity, path is allready in use throw error, or set new path to entity
+<span class="fc" id="L83">        String path = getPathForNewEntity(entity.getPath(), entity.getName());</span>
+<span class="fc" id="L84">        Identity user = getUser();</span>
+
+<span class="fc" id="L86">        Optional&lt;GalleryDimension&gt; tmp = repository.findFirstByPathAndDomainId(path, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if(tmp.isPresent()) {</span>
+<span class="nc" id="L88">            throwError(&quot;components.gallery.path_error&quot;);</span>
+<span class="nc" id="L89">            return null;</span>
+        }
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (!user.isFolderWritable(entity.getPath()+&quot;/&quot;)) {</span>
+<span class="nc" id="L92">            throwError(&quot;user.rights.no_folder_rights&quot;);</span>
+        }
+
+<span class="fc" id="L95">        entity.setPath(path);</span>
+
+<span class="fc" id="L97">        IwcmFile file = new IwcmFile(Tools.getRealPath(entity.getPath()));</span>
+<span class="fc" id="L98">        file.mkdirs();</span>
+
+        //domain id and date must by fill, cant be null
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if(entity.getDomainId() == null) {</span>
+<span class="nc" id="L102">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L103">            entity.setDomainId(domainId);</span>
+        }
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if(entity.getDate() == null) {</span>
+<span class="nc" id="L107">            Date date = new Date(System.currentTimeMillis());</span>
+<span class="nc" id="L108">            entity.setDate(date);</span>
+        }
+
+<span class="fc" id="L111">        repository.save(entity);</span>
+<span class="fc" id="L112">        return entity;</span>
+    }
+
+    @Override
+    public GalleryDimension editItem(GalleryDimension entity, long id) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (!getUser().isFolderWritable(entity.getPath()+&quot;/&quot;)) {</span>
+<span class="nc" id="L118">            throwError(&quot;user.rights.no_folder_rights&quot;);</span>
+        }
+
+<span class="nc" id="L121">        GalleryDimension saved = super.editItem(entity, id);</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (entity.getEditorFields().isForceResizeModeToSubgroups()) {</span>
+<span class="nc" id="L124">            GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());</span>
+        }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (entity.getEditorFields().isRegenerateImages()) {</span>
+<span class="nc" id="L127">            GalleryDB.resizePicturesInDirectory(entity.getPath(), entity.getEditorFields().isForceResizeModeToSubgroups(), getProp(), null);</span>
+        }
+
+<span class="nc" id="L130">        return saved;</span>
+    }
+
+    @Override
+    public GalleryDimension getOneItem(long id) {
+
+<span class="fc" id="L136">        GalleryDimension entity = super.getOneItem(id);</span>
+
+        //If entity is null, create entity instance for editor
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if(entity == null) {</span>
+            //Get dimension id (who is calling, who is parent gallery)
+<span class="fc" id="L141">            int dimensionId = Tools.getIntValue(getRequest().getParameter(&quot;dimensionId&quot;), -1);</span>
+            //If dimension id is present, get parent gallery and set his path to child (in insertItem we will adding to path new entity name)
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if(dimensionId != -1) {</span>
+<span class="fc" id="L144">                GalleryDimension parentGallery = repository.getById(Long.valueOf(dimensionId));</span>
+<span class="fc" id="L145">                entity = getNewEntity(parentGallery.getPath());</span>
+<span class="fc" id="L146">                entity.setName(&quot;&quot;);</span>
+<span class="fc" id="L147">                entity.setResizeMode(parentGallery.getResizeMode());</span>
+<span class="fc" id="L148">                entity.setImageWidth(parentGallery.getImageWidth());</span>
+<span class="fc" id="L149">                entity.setImageHeight(parentGallery.getImageHeight());</span>
+<span class="fc" id="L150">                entity.setNormalWidth(parentGallery.getNormalWidth());</span>
+<span class="fc" id="L151">                entity.setNormalHeight(parentGallery.getNormalHeight());</span>
+<span class="fc" id="L152">                entity.setWatermark(parentGallery.getWatermark());</span>
+<span class="fc" id="L153">                entity.setWatermarkPlacement(parentGallery.getWatermarkPlacement());</span>
+<span class="fc" id="L154">                entity.setWatermarkSaturation(parentGallery.getWatermarkSaturation());</span>
+<span class="fc" id="L155">            } else {</span>
+                //If dimension id is not present, set default path
+<span class="fc" id="L157">                String parentPath = getRequest().getParameter(&quot;path&quot;);</span>
+<span class="pc bpc" id="L158" title="3 of 4 branches missed.">                if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = &quot;/images&quot;; //NOSONAR</span>
+                //tu nemozeme poslat cestu, lebo by sa nastavil nazov, nevieme rozlisit ci sa jedna o edit, alebo o pridanie
+<span class="fc" id="L160">                entity = getNewEntity(&quot;&quot;);</span>
+<span class="fc" id="L161">                entity.setPath(parentPath);</span>
+            }
+        }
+
+<span class="fc" id="L165">        return entity;</span>
+    }
+
+    @Override
+    public void beforeSave(GalleryDimension entity) {
+<span class="fc" id="L170">        IwcmFile file = new IwcmFile(Tools.getRealPath(entity.getPath()));</span>
+<span class="fc" id="L171">        file.mkdirs();</span>
+
+        //domain id and date must by fill, cant be null
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if(entity.getDomainId() == null) {</span>
+<span class="fc" id="L175">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L176">            entity.setDomainId(domainId);</span>
+        }
+
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if(entity.getDate() == null) {</span>
+<span class="nc" id="L180">            Date date = new Date(System.currentTimeMillis());</span>
+<span class="nc" id="L181">            entity.setDate(date);</span>
+        }
+<span class="fc" id="L183">    }</span>
+
+    @Override
+    public boolean beforeDelete(GalleryDimension entity) {
+        //zmaz z disku subory a z DB zaznamy o obrazkoch
+
+<span class="fc" id="L189">        Identity user = getUser();</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (!user.isFolderWritable(entity.getPath()+&quot;/&quot;)) {</span>
+<span class="nc" id="L191">            throwError(&quot;user.rights.no_folder_rights&quot;);</span>
+        }
+
+<span class="fc" id="L194">        boolean success = GalleryDB.deleteGallery(entity.getPath());</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if(success) {</span>
+<span class="fc" id="L196">            setForceReload(true);</span>
+        } else {
+<span class="nc" id="L198">            throwError(&quot;components.gallery.path_delete_error&quot;);</span>
+        }
+
+<span class="fc" id="L201">        return super.beforeDelete(entity);</span>
+    }
+
+    /**
+     * Returns new GalleryDimension entity with given path
+     * @param path
+     * @return
+     */
+    public static GalleryDimension getNewEntity(String path) {
+<span class="fc" id="L210">        GalleryDimension entity = new GalleryDimension();</span>
+<span class="fc" id="L211">        entity.setId(Long.valueOf(-1));</span>
+<span class="fc" id="L212">        entity.setResizeMode(&quot;S&quot;);</span>
+<span class="fc" id="L213">        GalleryDimensionEditorFields editorFields = new GalleryDimensionEditorFields();</span>
+<span class="fc" id="L214">        entity.setEditorFields(editorFields);</span>
+<span class="fc" id="L215">        entity.setPath(path);</span>
+<span class="fc" id="L216">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L217">        entity.setDate(new Date());</span>
+
+<span class="fc" id="L219">        int lomka = path.lastIndexOf(&quot;/&quot;);</span>
+<span class="pc bpc" id="L220" title="1 of 4 branches missed.">        if (lomka &gt; 1 &amp;&amp; lomka &lt; path.length()) entity.setName(path.substring(lomka+1));</span>
+
+<span class="fc" id="L222">        return entity;</span>
+    }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, GalleryDimension&gt; target, Identity user, Errors errors, Long id, GalleryDimension entity) {
+
+<span class="fc" id="L228">        String path = entity.getPath();</span>
+
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (target.isInsert()) {</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">            if (Tools.isEmpty(entity.getName())) {</span>
+<span class="nc" id="L232">                errors.rejectValue(&quot;errorField.name&quot;, &quot;403&quot;, getProp().getText(&quot;datatables.field.required.error.js&quot;));</span>
+<span class="nc" id="L233">                return;</span>
+            }
+
+            //for insert we must add entity name to path
+<span class="fc" id="L237">            path = getPathForNewEntity(path, entity.getName());</span>
+        }
+
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (isFolderEditable(path, user)==false) {</span>
+<span class="nc" id="L241">            errors.rejectValue(&quot;errorField.path&quot;, &quot;403&quot;, getProp().getText(&quot;components.gallery.folderIsNotEditable&quot;));</span>
+        }
+<span class="fc" id="L243">    }</span>
+
+    /**
+     * Returns path for new entity (merging path with new name)
+     * @param parent
+     * @param name
+     * @return
+     */
+    private static String getPathForNewEntity(String parent, String name) {
+<span class="fc" id="L252">        return parent + &quot;/&quot; + DocTools.removeCharsDir(name, true).toLowerCase(); //NOSONAR</span>
+    }
+
+    /**
+     * Returns true if folder is editable.
+     * Some folders like /images/DOMAIN-ALIAS is protected/not editable
+     * @param path
+     * @return
+     */
+    public static boolean isFolderEditable(String path, Identity user) {
+<span class="fc" id="L262">        String domainAlias = AdminTools.getDomainNameFileAliasAppend();</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(domainAlias)) {</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            if (path.equals(&quot;/images&quot;+domainAlias)) {</span>
+<span class="nc" id="L265">                return false;</span>
+            }
+        }
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">        if (!user.isFolderWritable(path+&quot;/&quot;)) {</span>
+<span class="nc" id="L269">            return false;</span>
+        }
+<span class="fc" id="L271">        return true;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

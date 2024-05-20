@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormsArchiveController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forms.archive</a> &gt; <span class="el_source">FormsArchiveController.java</span></div><h1>FormsArchiveController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forms.archive;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.forms.FormColumns;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableResponse;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/forms/archive-list&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_form')&quot;)
+public class FormsArchiveController extends DatatableRestControllerV2&lt;FormsArchiveEntity, Long&gt; {
+
+    private final FormsArchiveServiceImpl formsService;
+
+    @Autowired
+    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService) {
+<span class="fc" id="L34">        super(formsRepository);</span>
+<span class="fc" id="L35">        this.formsService = formsService;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public Page&lt;FormsArchiveEntity&gt; getAllItems(Pageable pageable) {
+<span class="nc" id="L40">        Page&lt;FormsArchiveEntity&gt; page = new DatatablePageImpl&lt;&gt;(formsService.getFormsList(getUser()));</span>
+<span class="nc" id="L41">        return page;</span>
+    }
+
+    @GetMapping(path = &quot;/columns/{formName}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public FormColumns getColumnNames(@PathVariable String formName) {
+<span class="nc" id="L46">        return formsService.getColumnNames(formName, getUser());</span>
+    }
+
+    @GetMapping(path = &quot;/data/{formName}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page&lt;FormsArchiveEntity&gt; getSubList(@PathVariable String formName, @RequestParam Map&lt;String, String&gt; params, Pageable pageable) {
+        Page&lt;FormsArchiveEntity&gt; data;
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (getRequest().getParameter(&quot;size&quot;)==null) data = formsService.findInDataByColumns(formName, getUser(), params, null);</span>
+<span class="nc" id="L53">        else data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
+<span class="nc" id="L56">            formsService.setExportDate(data.getContent());</span>
+        }
+
+<span class="nc" id="L59">        return data;</span>
+    }
+
+    @GetMapping(path = &quot;/data/{formName}/search/findByColumns&quot;)
+    public Page&lt;FormsArchiveEntity&gt; findInDataByColumns(@PathVariable String formName, @RequestParam Map&lt;String, String&gt; params, Pageable pageable, FormsArchiveEntity search) {
+
+<span class="nc" id="L65">        Page&lt;FormsArchiveEntity&gt; data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
+<span class="nc" id="L68">            formsService.setExportDate(data.getContent());</span>
+        }
+
+<span class="nc" id="L71">        return data;</span>
+    }
+
+    @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
+	@PostMapping(value = &quot;/data/{formName}/editor&quot;, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;DatatableResponse&lt;FormsArchiveEntity&gt;&gt; handleEditorFormDetail(@PathVariable String formName, HttpServletRequest request, @RequestBody DatatableRequest&lt;Long, FormsArchiveEntity&gt; datatableRequest) {
+<span class="nc" id="L77">        return super.handleEditor(request, datatableRequest);</span>
+    }
+
+    @GetMapping(path=&quot;/html&quot;)
+    public String getHtml(@RequestParam long id) {
+<span class="nc" id="L82">        FormsArchiveEntity entity = formsService.getById(id);</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">        if (entity == null || Tools.isEmpty(entity.getFormName())) return null;</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (formsService.isFormAccessible(entity.getFormName(), getUser())==false) return null;</span>
+
+        //html kod necitame v entite, musime ziskat takto
+<span class="nc" id="L88">        String html = (new SimpleQuery()).forString(&quot;SELECT html FROM forms_archive WHERE id=?&quot;, id);</span>
+<span class="nc" id="L89">        return html;</span>
+    }
+
+    @Override
+    public FormsArchiveEntity editItem(FormsArchiveEntity entity, long id) {
+<span class="nc" id="L94">        String note = entity.getNote();</span>
+
+<span class="nc" id="L96">        formsService.updateNote(note, id);</span>
+
+<span class="nc" id="L98">        return formsService.getById(id);</span>
+    }
+
+    @Override
+    public boolean deleteItem(FormsArchiveEntity entity, long id) {
+<span class="nc" id="L103">        return formsService.deleteItem(entity, id);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

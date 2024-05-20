@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">UserTools.java</span></div><h1>UserTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+public class UserTools {
+
+    public static final String PASS_UNCHANGED = &quot;Unch4ng3d.Pwd&quot;;
+    private static final String DEPARTMENT_CONF_NAME = &quot;usersFaxList&quot;;
+    public static final String USE_EMAIL_AS_LOGIN = &quot;useEmailAsLogin&quot;;
+
+	private UserTools() {
+
+	}
+
+    public static String getDepartment(String department, String parentDepartment, int row) {
+<span class="nc" id="L43">        EnumerationDataBean departmentEnumeration = null;</span>
+<span class="nc" id="L44">        EnumerationDataBean parentDepartmentEnumeration = null;</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (Tools.isNotEmpty(department)) {</span>
+<span class="nc" id="L46">            departmentEnumeration = resolveOrCreate(DEPARTMENT_CONF_NAME, department);</span>
+        }
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (Tools.isNotEmpty(parentDepartment)) {</span>
+<span class="nc" id="L50">            parentDepartmentEnumeration = resolveOrCreate(DEPARTMENT_CONF_NAME, parentDepartment);</span>
+        }
+<span class="nc bnc" id="L52" title="All 4 branches missed.">        if (parentDepartmentEnumeration != null &amp;&amp; departmentEnumeration != null) {</span>
+<span class="nc" id="L53">            departmentEnumeration.setParentEnumerationData(parentDepartmentEnumeration);</span>
+<span class="nc" id="L54">            departmentEnumeration.save();</span>
+        }
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (departmentEnumeration != null)</span>
+<span class="nc" id="L58">            return departmentEnumeration.getId()+&quot;&quot;;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (parentDepartmentEnumeration != null)</span>
+<span class="nc" id="L60">            return parentDepartmentEnumeration.getId()+&quot;&quot;;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (Tools.isNotEmpty(department))</span>
+<span class="nc" id="L62">            return department;</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (Tools.isNotEmpty(parentDepartment))</span>
+<span class="nc" id="L64">            return parentDepartment;</span>
+<span class="nc" id="L65">        return &quot;&quot;;</span>
+    }
+
+    public static EnumerationDataBean resolveOrCreate(String constName, String value) {
+<span class="nc" id="L69">        int enumerationId = Tools.getIntValue(Constants.getString(constName).substring(Constants.getString(constName).indexOf(&quot;_&quot;) + 1), -1);</span>
+<span class="nc" id="L70">        EnumerationTypeBean enumerationTypeBean = EnumerationTypeDB.getEnumerationById(enumerationId);</span>
+<span class="nc" id="L71">        List&lt;EnumerationDataBean&gt; enumerationDataBeans = EnumerationDataDB.getEnumerationDataBy(value,enumerationTypeBean.getEnumerationTypeId());</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">        if (enumerationDataBeans != null &amp;&amp; enumerationDataBeans.size() == 1) {</span>
+<span class="nc" id="L73">            return enumerationDataBeans.get(0);</span>
+        } else {
+<span class="nc" id="L75">            EnumerationDataBean enumerationDataBean = new EnumerationDataBean();</span>
+<span class="nc" id="L76">            enumerationDataBean.setType(enumerationTypeBean);</span>
+<span class="nc" id="L77">            enumerationDataBean.setString1(value);</span>
+<span class="nc" id="L78">            enumerationDataBean.save();</span>
+<span class="nc" id="L79">            return enumerationDataBean;</span>
+        }
+    }
+
+    public static void setSuperiorWorker(List&lt;UserDetails&gt; userDetails) {
+        // naplnim pre kazde oddelenie jeho veducim aby som minimzalizoval zataz na databazu
+<span class="nc" id="L85">        HashMap&lt;Integer, Integer&gt; cache = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        for (UserDetails userDetail : userDetails) {</span>
+<span class="nc" id="L87">            int departmentId = Tools.getIntValue(userDetail.getFaxId(),-1);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (userDetail.isInUserGroup(Constants.getInt(&quot;organisation_structure.holiday_approver&quot;,-1))) {</span>
+<span class="nc" id="L89">                EnumerationDataBean department = EnumerationDataDB.getInstance().getById(Tools.getIntValue(userDetail.getFaxId(),-1));</span>
+<span class="nc bnc" id="L90" title="All 4 branches missed.">                if (department != null &amp;&amp; department.getParentEnumerationData() != null)</span>
+<span class="nc" id="L91">                    departmentId = department.getParentEnumerationData().getEnumerationDataId();</span>
+            }
+<span class="nc" id="L93">            Integer superior = cache.get(departmentId);</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (superior == null) {</span>
+<span class="nc" id="L96">                superior = resolveSuperiorWorker(EnumerationDataDB.getEnumerationDataById(departmentId));</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (superior == null)</span>
+<span class="nc" id="L98">                    superior = userDetail.getUserId(); // defaultne je sam sebe nadriadeny</span>
+                else
+<span class="nc" id="L100">                    cache.put(departmentId,superior);</span>
+            }
+<span class="nc" id="L102">            userDetail.setParentId(superior);</span>
+<span class="nc" id="L103">            UsersDB.saveUser(userDetail);</span>
+<span class="nc" id="L104">        }</span>
+<span class="nc" id="L105">    }</span>
+
+    /**
+     *
+     * @param department
+     * @return
+     */
+    public static Integer resolveSuperiorWorker(EnumerationDataBean department) {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (department == null)</span>
+<span class="nc" id="L114">            return null;</span>
+        //todo dorobit checkovanie datumu do UsersDB
+<span class="nc" id="L116">        List&lt;UserDetails&gt; userDetails = UsersDB.getUsersByWhereSql(&quot; AND fax = &quot; + department.getId() + &quot; AND authorized = &quot;+DB.getBooleanSql(true));</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        for (UserDetails userDetail : userDetails) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (userDetail.isInUserGroup(Constants.getInt(&quot;organisation_structure.holiday_approver&quot;,-1))) {</span>
+<span class="nc" id="L119">                return userDetail.getUserId();</span>
+            }
+<span class="nc" id="L121">        }</span>
+<span class="nc" id="L122">        return resolveSuperiorWorker(department.getParentEnumerationData());</span>
+    }
+
+    /**
+	 * Vrati zoznam editovatelnych stranok pre dane skupiny
+	 * @param editablePagesString
+	 * @return
+	 */
+	public static List&lt;DocDetails&gt; getEditablePages(String editablePagesString)
+	{
+<span class="fc" id="L132">		List&lt;DocDetails&gt; editablePages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L133">		StringTokenizer st = new StringTokenizer(editablePagesString, &quot;,&quot;);</span>
+		int id;
+		//LabelValueDetails lvb;
+<span class="fc" id="L136">		DocDB docDB = DocDB.getInstance();</span>
+		DocDetails page;
+<span class="fc" id="L138">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
+		{
+<span class="fc" id="L141">			id = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L142">			page = docDB.getDoc(id);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">			if (page != null)</span>
+			{
+<span class="fc" id="L145">				page.setNavbar(Tools.replace(groupsDB.getNavbarNoHref(page.getGroupId()), &quot; &gt; &quot;, &quot;/&quot;));</span>
+<span class="fc" id="L146">				editablePages.add(page);</span>
+			}
+		}
+<span class="fc" id="L149">		return (editablePages);</span>
+	}
+
+	/**
+	 * Vrati zoznam editovatelnych adresarov ako LabelValueDetails List
+	 * @param editableGroupsString
+	 * @return
+	 */
+	public static List&lt;LabelValueDetails&gt; getEditableGroups(String editableGroupsString)
+	{
+<span class="nc" id="L159">		List&lt;LabelValueDetails&gt; editableGroups = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L160">		StringTokenizer st = new StringTokenizer(editableGroupsString, &quot;,&quot;);</span>
+		int id;
+		GroupDetails group;
+<span class="nc" id="L163">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+		LabelValueDetails lvb;
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L167">			id = Integer.parseInt(st.nextToken());</span>
+<span class="nc" id="L168">			group = groupsDB.getGroup(id);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (group != null)</span>
+			{
+<span class="nc" id="L171">				lvb = new LabelValueDetails(group.getFullPath(), Integer.toString(id));</span>
+<span class="nc" id="L172">				editableGroups.add(lvb);</span>
+			}
+		}
+<span class="nc" id="L175">		return(editableGroups);</span>
+	}
+
+	/**
+	 * Vrati zoznam schvalovani adresarov ako List LabelValueDetails - label=cesta, value=groupId, value2=mode
+	 * @param userId
+	 * @return
+	 */
+	public static List&lt;LabelValueDetails&gt; getApproveGroups(int userId)
+	{
+<span class="nc" id="L185">		List&lt;LabelValueDetails&gt; approveGroups = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L187">		Connection db_conn = null;</span>
+<span class="nc" id="L188">		PreparedStatement ps = null;</span>
+<span class="nc" id="L189">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="nc" id="L193">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+			GroupDetails group;
+<span class="nc" id="L195">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L196">			ps = db_conn.prepareStatement(&quot;SELECT * FROM groups_approve WHERE user_id=? ORDER BY approve_id&quot;);</span>
+<span class="nc" id="L197">			ps.setInt(1, userId);</span>
+<span class="nc" id="L198">			rs = ps.executeQuery();</span>
+
+			int groupId;
+			int mode;
+			String groupName;
+			LabelValueDetails lvb;
+<span class="nc bnc" id="L204" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L206">				groupId = rs.getInt(&quot;group_id&quot;);</span>
+<span class="nc" id="L207">				mode = rs.getInt(&quot;approve_mode&quot;);</span>
+<span class="nc" id="L208">				group = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">				if (group!=null)</span>
+				{
+<span class="nc" id="L211">					groupName = group.getFullPath(); //groupsDB.getNavbarNoHref(groupId);</span>
+<span class="nc" id="L212">					lvb = new LabelValueDetails(groupName, Integer.toString(groupId));</span>
+<span class="nc" id="L213">					lvb.setValue2(Integer.toString(mode));</span>
+<span class="nc" id="L214">					approveGroups.add(lvb);</span>
+				}
+			}
+<span class="nc" id="L217">			rs.close();</span>
+<span class="nc" id="L218">			ps.close();</span>
+
+<span class="nc" id="L220">			rs = null;</span>
+<span class="nc" id="L221">			ps = null;</span>
+		}
+<span class="nc" id="L223">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L225">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L232">					db_conn.close();</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L234">					rs.close();</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L236">					ps.close();</span>
+			}
+<span class="nc" id="L238">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L240">			}</span>
+		}
+<span class="nc" id="L242">		return(approveGroups);</span>
+	}
+
+	/**
+	 * Vrati posle so zoznamom zakazanych poloziek pouzivatela
+	 * @param userId
+	 * @return
+	 */
+	public static String[] getDisabledItems(int userId)
+	{
+<span class="nc" id="L252">		String[] disabledItems = new String[0];</span>
+<span class="nc" id="L253">		Connection db_conn = null;</span>
+<span class="nc" id="L254">		PreparedStatement ps = null;</span>
+<span class="nc" id="L255">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L258">			db_conn = DBPool.getConnection();</span>
+
+			//	nastav disabled items
+<span class="nc" id="L261">			ps = db_conn.prepareStatement(&quot;SELECT count(user_id) FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L262">			ps.setInt(1, userId);</span>
+<span class="nc" id="L263">			rs = ps.executeQuery();</span>
+<span class="nc" id="L264">			int size = 0;</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L267">				size = rs.getInt(1);</span>
+			}
+<span class="nc" id="L269">			rs.close();</span>
+<span class="nc" id="L270">			ps.close();</span>
+
+<span class="nc" id="L272">			disabledItems = new String[size];</span>
+
+<span class="nc" id="L274">			ps = db_conn.prepareStatement(&quot;SELECT * FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L275">			ps.setInt(1, userId);</span>
+<span class="nc" id="L276">			rs = ps.executeQuery();</span>
+<span class="nc" id="L277">			int counter = 0;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L280">				disabledItems[counter++] = DB.getDbString(rs, &quot;item_name&quot;);</span>
+			}
+<span class="nc" id="L282">			rs.close();</span>
+<span class="nc" id="L283">			ps.close();</span>
+<span class="nc" id="L284">			db_conn.close();</span>
+
+<span class="nc" id="L286">			rs = null;</span>
+<span class="nc" id="L287">			ps = null;</span>
+<span class="nc" id="L288">			db_conn = null;</span>
+		}
+<span class="nc" id="L290">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L292">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L299">					db_conn.close();</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L301">					rs.close();</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L303">					ps.close();</span>
+			}
+<span class="nc" id="L305">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L307">			}</span>
+		}
+
+<span class="nc" id="L310">		return(disabledItems);</span>
+	}
+
+	public static int[] getPermGroups(int userId)
+	{
+<span class="nc" id="L315">		List&lt;PermissionGroupBean&gt; permGroups = UserGroupsDB.getPermissionGroupsFor(userId);</span>
+<span class="nc" id="L316">		int[] permGroupIds = new int[permGroups.size()];</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		for (ListIterator&lt;PermissionGroupBean&gt; iterator = permGroups.listIterator(); iterator.hasNext();)</span>
+		{
+<span class="nc" id="L319">			PermissionGroupBean permissionGroup = iterator.next();</span>
+<span class="nc" id="L320">			permGroupIds[iterator.nextIndex()-1] = permissionGroup.getUserPermGroupId();</span>
+<span class="nc" id="L321">		}</span>
+
+<span class="nc" id="L323">		return permGroupIds;</span>
+	}
+
+    /**
+	 * Vrati hash-tabulku s poctom pouzivatelov pre jednotlivu skupinu: key =
+	 * group_id, value = pocet pouzivatelov
+	 *
+	 * @return Map&lt;Integer, Integer&gt;
+	 */
+	public static Map&lt;Integer, Integer&gt; numberOfUsersInGroups()
+	{
+<span class="nc" id="L334">		Map&lt;Integer, Integer&gt; table = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L335">		Connection db_conn = null;</span>
+<span class="nc" id="L336">		PreparedStatement ps = null;</span>
+<span class="nc" id="L337">		ResultSet rs = null;</span>
+		try
+		{
+
+<span class="nc" id="L341">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L342">			ps = db_conn.prepareStatement(&quot;SELECT count(user_id) as pocet, user_groups FROM users WHERE &quot;+UsersDB.getDomainIdSqlWhere(false)+&quot; GROUP BY user_groups&quot;);</span>
+<span class="nc" id="L343">			rs = ps.executeQuery();</span>
+			int pocet;
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L347">				pocet = rs.getInt(&quot;pocet&quot;);</span>
+<span class="nc" id="L348">				String userGroups = rs.getString(&quot;user_groups&quot;);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">				if (userGroups != null)</span>
+				{
+<span class="nc" id="L351">					String[] gids = userGroups.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">					for (int i = 0; i &lt; gids.length; i++)</span>
+					{
+<span class="nc" id="L354">						int key = Tools.getIntValue(gids[i], -1);</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">						if (key &lt; 0)</span>
+<span class="nc" id="L356">							continue;</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">						if (table.containsKey(key))</span>
+						{
+<span class="nc" id="L359">							int oldPocet = table.get(key);</span>
+<span class="nc" id="L360">							table.put(key, pocet + oldPocet);</span>
+<span class="nc" id="L361">						}</span>
+						else
+						{
+<span class="nc" id="L364">							table.put(key, pocet);</span>
+						}
+					}
+				}
+<span class="nc" id="L368">			}</span>
+<span class="nc" id="L369">			rs.close();</span>
+<span class="nc" id="L370">			ps.close();</span>
+<span class="nc" id="L371">			db_conn.close();</span>
+<span class="nc" id="L372">			rs = null;</span>
+<span class="nc" id="L373">			ps = null;</span>
+<span class="nc" id="L374">			db_conn = null;</span>
+		}
+<span class="nc" id="L376">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L378">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L385">					rs.close();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L387">					ps.close();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L389">					db_conn.close();</span>
+			}
+<span class="nc" id="L391">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L393">			}</span>
+		}
+<span class="nc" id="L395">		return (table);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

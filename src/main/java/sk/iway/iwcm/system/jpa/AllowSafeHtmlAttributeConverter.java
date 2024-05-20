@@ -6,7 +6,9 @@ import javax.persistence.Converter;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
 
 /**
  * Attribute konverter pre JPA beany ktory umozni pouzit BEZPECNY HTML kod
@@ -31,22 +33,39 @@ public class AllowSafeHtmlAttributeConverter implements AttributeConverter<Strin
       //V pripade potreby vypnutia je mozne do konf. premennej xssHtmlAllowedFields pridat hodnotu jpaentity
       if (databaseValue!=null && DB.isHtmlAllowed("jpaentity")==false)
       {
-         //odfiltruj nebezpecny kod na zaklade OWASP sanitizera
-         //https://owasp.org/www-project-java-html-sanitizer/
-         PolicyFactory policy = new HtmlPolicyBuilder()
-            .allowCommonInlineFormattingElements()
-            .allowCommonBlockElements()
-            .allowStyling()
-            .allowElements("a")
-            .allowElements("img")
-            .allowUrlProtocols("http", "https", "data")
-            .allowAttributes("href").onElements("a")
-            .allowAttributes("src").onElements("img")
-            .toFactory();
-         String safeHTML = policy.sanitize(databaseValue);
+         String safeHTML = sanitize(databaseValue);
          return safeHTML;
       }
 
       return databaseValue;
+   }
+
+   /**
+    * Sanitize HTML code using Owasp HTML sanitizer, allowed is:
+    * - common inline formatting elements
+    * - common block elements
+    * - styling
+    * - a element
+    * - img element
+    * - href attribute on a element
+    * @param unsafeHtml
+    * @return
+    */
+   public static String sanitize(String unsafeHtml) {
+      //odfiltruj nebezpecny kod na zaklade OWASP sanitizera
+      //https://owasp.org/www-project-java-html-sanitizer/
+      PolicyFactory policy = new HtmlPolicyBuilder()
+         .allowCommonInlineFormattingElements()
+         .allowCommonBlockElements()
+         .allowStyling()
+         .allowElements("a")
+         .allowElements("img")
+         .allowUrlProtocols("http", "https", "data")
+         .allowAttributes("href").onElements("a")
+         .allowAttributes("src").onElements("img")
+         .toFactory();
+      String safeHTML = policy.sanitize(unsafeHtml);
+      safeHTML = Tools.replace(safeHTML, Constants.NON_BREAKING_SPACE, "&nbsp;");
+      return safeHTML;
    }
 }

@@ -1,15 +1,26 @@
 Feature('stat');
 
+let confLng = "sk";
+
 Before(({ I, login }) => {
     login('admin');
+
+    confLng = I.getConfLng();
 });
 
 Scenario('visits', ({ I, DT, Document }) => {
 
     I.amOnPage("/apps/stat/admin/");
     DT.waitForLoader("statsDataTable");
-    I.fillField("#statsDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
-    I.fillField("#statsDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+
+    if("sk" === confLng) {
+        I.fillField("#statsDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
+        I.fillField("#statsDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+    } else if("en" === confLng) {
+        I.fillField("#statsDataTable_extfilter input.dt-filter-from-dayDate", "05/31/2022");
+        I.fillField("#statsDataTable_extfilter input.dt-filter-to-dayDate", "06/30/2022");
+    }
+
     I.click("#statsDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("statsDataTable");
 
@@ -29,12 +40,19 @@ Scenario('visits', ({ I, DT, Document }) => {
     Document.screenshotElement("#statsDataTable_extfilter > div > div.col-auto div.form-switch", "/redactor/apps/stat/stats-filterBotsOut.png");
 });
 
-Scenario('page screenshots', ({ I, DT, Document }) => {
+Scenario('stat - page screenshots', ({ I, DT, Document }) => {
 
     I.amOnPage("/apps/stat/admin/top/");
     DT.waitForLoader();
-    I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
-    I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+
+    if("sk" === confLng) {
+        I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
+        I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+    } else if("en" === confLng) {
+        I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "05/31/2022");
+        I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "06/30/2022");
+    }
+
     I.click("#topDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("topDataTable");
 
@@ -66,8 +84,13 @@ Scenario('page screenshots-vesmir', ({ I, DT, Document }) => {
 
     I.amOnPage("/apps/stat/admin/top/");
     DT.waitForLoader();
-    I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
-    I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+    if("en" === confLng) {
+        I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "05/31/2022");
+        I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "06/30/2022");
+    } else {
+        I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
+        I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
+    }
     I.click("#topDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("topDataTable");
 
@@ -80,11 +103,15 @@ Scenario('page screenshots-vesmir', ({ I, DT, Document }) => {
 Scenario("ext filter - screenshots", ({ I, Document }) => {
     I.amOnPage("/apps/seo/admin/stat-keywords/");
 
-    setDates(I, "#statKeywordsDataTable_extfilter");
+    if("sk" === confLng) {
+        I.fillField("#statKeywordsDataTable_extfilter input.dt-filter-from-dayDate", "01.07.2021");
+        I.fillField("#statKeywordsDataTable_extfilter input.dt-filter-to-dayDate", "30.07.2021");
+    } else if("en" === confLng) {
+        I.fillField("#statKeywordsDataTable_extfilter input.dt-filter-from-dayDate", "07/01/2021");
+        I.fillField("#statKeywordsDataTable_extfilter input.dt-filter-to-dayDate", "30/07/2021");
+    }
 
     Document.screenshotElement("div.md-breadcrumb", "/redactor/apps/stat/ext-filter-1.png");
-
-    I.wait(2);
 
     I.amOnPage("/apps/stat/admin/");
 

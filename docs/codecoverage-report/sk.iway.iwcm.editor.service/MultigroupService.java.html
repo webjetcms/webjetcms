@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultigroupService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">MultigroupService.java</span></div><h1>MultigroupService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
+
+/**
+ * Web stranky je mozne ukladat do viacerych adresarov, deje sa to pomocou tabulky multigroup_mapping,
+ * kde je urceny vztah medzi hlavnou (master) strankou a kopiami (slave) strankami.
+ *
+ * Technicky sa vzdy primarne pracuje s master strankou, ale po jej ulozeni sa jej obsah nakopiruje
+ * aj do slave stranok (v tabulke documents).
+ */
+@Service
+@RequestScope
+public class MultigroupService {
+
+    private DocDB docDB;
+    private GroupsDB groupsDB;
+    private HttpServletRequest request;
+	private EditorService editorService;
+
+    @Autowired
+<span class="fc" id="L39">    public MultigroupService(HttpServletRequest httpServletRequest, EditorService editorService) {</span>
+<span class="fc" id="L40">        this.docDB = DocDB.getInstance();</span>
+<span class="fc" id="L41">        this.groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L42">        this.request = httpServletRequest;</span>
+<span class="fc" id="L43">		this.editorService = editorService;</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+	 * Vyriesi zapis slave mapovani pri ukladani web stranky
+	 * @param editedDoc
+	 * @param docIdOriginal - docid of originally edited doc (aka slave edited docId)
+	 * @param otherGroups
+	 * @param redirect
+	 * @return true, ak je potrebne refreshnut lave menu (pribudla/zmenila sa niekde polozka)
+	 */
+	public boolean multigroupHandleSlaves(DocDetails editedDoc, int docIdOriginal, List&lt;GroupDetails&gt; otherGroups, boolean redirect) {
+
+<span class="fc" id="L56">		boolean refreshMenu = false;</span>
+
+<span class="fc" id="L58">		Map&lt;Integer, Integer&gt; groupMapping = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L59">		List&lt;Integer&gt; toDelete = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">		if (otherGroups != null) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">			for(GroupDetails group : otherGroups) {</span>
+<span class="fc" id="L63">				int groupId = group.getGroupId();</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">				if(groupId &gt; 0)</span>
+<span class="fc" id="L65">					groupMapping.put(groupId, -1);</span>
+<span class="fc" id="L66">			}</span>
+		}
+<span class="fc bfc" id="L68" title="All 2 branches covered.">		for(Integer docId : MultigroupMappingDB.getSlaveDocIds(editedDoc.getDocId())) {</span>
+<span class="fc" id="L69">			DocDetails doc1 = docDB.getBasicDocDetails(docId, true);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">			if(groupMapping.get(doc1.getGroupId()) != null) {</span>
+<span class="fc" id="L71">				groupMapping.put(doc1.getGroupId(), docId);</span>
+			} else {
+				// nejaky adresar bol odstraneny, refreshni lavy strom
+<span class="nc" id="L74">				refreshMenu = true;</span>
+<span class="nc" id="L75">				toDelete.add(docId);</span>
+			}
+<span class="fc" id="L77">		}</span>
+
+		//multikategorie (praca so slave clankami)
+<span class="fc" id="L80">		DocDetails masterDoc = docDB.getDoc(editedDoc.getDocId(), -1, false);</span>
+<span class="fc" id="L81">		int masterId = MultigroupMappingDB.getMasterDocId(editedDoc.getDocId());</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if(masterId &lt; 1) masterId = editedDoc.getDocId();</span>
+
+		//zmaz zapisane hodnoty mapovania (nie stranky)
+<span class="fc" id="L85">		MultigroupMappingDB.deleteSlaves(editedDoc.getDocId());</span>
+
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">		if(redirect) { masterDoc.setExternalLink(masterDoc.getVirtualPath()); }</span>
+
+<span class="fc" id="L89">		boolean multiGroupkeepSortPriority = Constants.getBoolean(&quot;multiGroupKeepSortPriority&quot;);</span>
+<span class="fc" id="L90">		int formSortPriority = editedDoc.getSortPriority();</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">		for(Map.Entry&lt;Integer, Integer&gt; me : groupMapping.entrySet()) {</span>
+<span class="fc" id="L93">			Integer groupId = me.getKey();</span>
+<span class="fc" id="L94">			Integer docId = me.getValue();</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">			if(docId != null) {</span>
+<span class="fc" id="L96">				Logger.debug(MultigroupService.class, &quot;Saving slave doc: &quot;+docId+&quot; to group &quot;+groupId);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">				if(docId &lt; 0) {</span>
+<span class="fc" id="L98">					masterDoc.setVirtualPath(&quot;&quot;);</span>
+				} else {
+<span class="fc" id="L100">					masterDoc.setVirtualPath(docDB.getBasicDocDetails(docId, true).getVirtualPath());</span>
+				}
+
+<span class="fc bfc" id="L103" title="All 2 branches covered.">				if (docIdOriginal == docId.intValue()) {</span>
+					//keep virtual path for edited doc (slave)
+<span class="fc" id="L105">					masterDoc.setVirtualPath(editedDoc.getVirtualPath());</span>
+				}
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">				if(Boolean.TRUE.equals(editedDoc.getGenerateUrlFromTitle())) {</span>
+<span class="fc" id="L109">					masterDoc.setVirtualPath(&quot;&quot;);</span>
+<span class="fc" id="L110">					masterDoc.setEditorVirtualPath(&quot;&quot;);</span>
+				}
+
+				//ak chcem zachovat sort priority
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">				if(multiGroupkeepSortPriority) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">					if(docIdOriginal != docId.intValue()) {</span>
+						//ak to nie je masterDocId zachovaj sort prioritu
+<span class="fc" id="L117">						multiGroupKeepSortPriority(masterDoc, docId);</span>
+					} else {
+<span class="fc" id="L119">						masterDoc.setSortPriority(formSortPriority);</span>
+					}
+				}
+
+<span class="fc" id="L123">				masterDoc.setDocId(docId);</span>
+<span class="fc" id="L124">				masterDoc.setGroupId(groupId.intValue());</span>
+<span class="fc" id="L125">				DocDB.saveDoc(masterDoc);</span>
+<span class="fc" id="L126">				setDefaultDocId(masterDoc.getGroupId(), masterDoc.getDocId());</span>
+				//POZOR: teraz uz mame v masterDoc.getDocId hodnotu ulozeneho SLAVE
+<span class="fc" id="L128">				MultigroupMappingDB.newMultigroupMapping(masterDoc.getDocId(), editedDoc.getDocId(), redirect);</span>
+<span class="fc" id="L129">				docDB.updateInternalCaches(masterDoc.getDocId());</span>
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">				if(docId &lt; 0) {</span>
+					// nejaky adresar bol pridany, refreshni lavy strom
+<span class="fc" id="L133">					refreshMenu = true;</span>
+				}
+
+				//handle AtrDB, always clean because we receive ID of master attributes
+<span class="fc" id="L137">				editorService.saveAttrs(masterDoc, editedDoc.getEditorFields().getAttrs(), true);</span>
+			}
+<span class="fc" id="L139">		}</span>
+
+		// odstranime DocDetails pre zmazane slave mappingy
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		for(Integer docId : toDelete) { DocDB.deleteDoc(docId, request); }</span>
+
+		//ak sme nieco zmazali refreshneme DocDB
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">		if(toDelete.isEmpty()==false)	{</span>
+<span class="nc" id="L146">			DocDB.getInstance(true);</span>
+		} else {
+<span class="fc" id="L148">			docDB.forceRefreshMasterSlaveMappings(); //refreshnem master-slave mapy</span>
+		}
+
+<span class="fc" id="L151">		return refreshMenu;</span>
+	}
+
+    /**
+	 * Skontroluje a nastavi default docid adresara (ak je neplatne alebo nenastavene)
+	 * @param groupId
+	 * @param docId
+	 */
+	public void setDefaultDocId(int groupId, int docId) {
+		//ak je to prva stranka v adresari a adresar nema defaultDoc, nastav
+<span class="fc" id="L161">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		if (group != null) {</span>
+<span class="fc" id="L163">			DocDetails doc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+
+<span class="pc bpc" id="L165" title="2 of 6 branches missed.">			if ((group.getDefaultDocId() &lt; 1 &amp;&amp; group.getNavbar().indexOf(&quot;&lt;a&quot;) == -1) || doc == null) {</span>
+<span class="fc" id="L166">				group.setDefaultDocId(docId);</span>
+<span class="fc" id="L167">				groupsDB.setGroup(group);</span>
+			}
+		}
+<span class="fc" id="L170">	}</span>
+
+	/**
+	 * Slave strankam nastavi prioritu na existujucu hodnotu v DB.
+	 * Pouziva sa, ked maju slave stranky rozdielnu sort prioritu.
+	 * @param doc
+	 * @param slaveDocId
+	 */
+    private void multiGroupKeepSortPriority(DocDetails doc, int slaveDocId) {
+<span class="fc" id="L179">		DocDetails slaveDoc = docDB.getBasicDocDetails(slaveDocId, false);</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">		if(slaveDoc != null) {</span>
+<span class="fc" id="L181">			doc.setSortPriority(slaveDoc.getSortPriority());</span>
+		}
+<span class="fc" id="L183">	}</span>
+
+    /**
+     * Pre zadane docId vrati ID master dokumentu, alebo -1 ak web starnka nie je vo viacerych adresaroch
+     * @param docId
+     * @return
+     */
+    public int getMasterDocId(int docId) {
+<span class="fc" id="L191">        return MultigroupMappingDB.getMasterDocId(docId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

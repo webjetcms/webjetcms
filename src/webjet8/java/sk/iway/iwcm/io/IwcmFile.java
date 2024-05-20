@@ -582,7 +582,7 @@ public class IwcmFile
 
 
 					//mysql oracle
-					if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL)
+					if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 					{
 						ps = db_conn
 									.prepareStatement("update file_fat set virtual_path =CONCAT( ?,SUBSTR(virtual_path,?)) where virtual_path like ? ");
@@ -700,7 +700,7 @@ public class IwcmFile
 		//opravime depth
 
 		//mysql oracle
-		if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL)
+		if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 		{
 			ps = db_conn
 						.prepareStatement("update file_fat set depth = length(virtual_path) - length(replace(virtual_path,'/','')) where virtual_path like ? ");

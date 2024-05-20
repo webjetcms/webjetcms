@@ -1,22 +1,10 @@
 package sk.iway.iwcm.components.calendar.jpa;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-
-import com.drew.lang.annotations.NotNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +13,6 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 @Entity
 @Table(name = "calendar")
@@ -33,26 +20,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CALENDAR_CREATE)
-public class CalendarEventsEntity implements Serializable {
+public class CalendarEventsEntity extends CalendarEventsBasic {
 
     public CalendarEventsEntity(){
         //konstruktor
     }
-
-    @Id
-    @Column(name = "calendar_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
-    private Long id;
-
-    @Column(name = "title")
-    @DataTableColumn(
-        inputType = DataTableColumnType.OPEN_EDITOR,
-        title="calendar.name",
-        tab = "basic"
-    )
-    @NotBlank
-    private String title;
 
     @Column(name = "lng")
     @DataTableColumn(
@@ -60,11 +32,12 @@ public class CalendarEventsEntity implements Serializable {
         title="calendar_edit.language",
         hidden = true,
         tab = "basic",
+        sortAfter = "title",
         editor = {
             @DataTableColumnEditor(
                 options = {
                     @DataTableColumnEditorAttr(key = "temp.slovak", value = "sk"),
-                    @DataTableColumnEditorAttr(key = "temp.english=", value = "en"),
+                    @DataTableColumnEditorAttr(key = "temp.english", value = "en"),
                     @DataTableColumnEditorAttr(key = "temp.czech", value = "cz"),
                     @DataTableColumnEditorAttr(key = "temp.deutsch", value = "de")
                 }
@@ -74,43 +47,15 @@ public class CalendarEventsEntity implements Serializable {
     @Size(max = 3)
     private String lng;
 
-    @Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
-	@DataTableColumn(
-        inputType = DataTableColumnType.DATE,
-        title="calendar.begin",
-        tab = "basic"
-    )
-	private Date dateFrom;
-
-    @Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
-	@DataTableColumn(
-        inputType = DataTableColumnType.DATE,
-        title="calendar.end",
-        tab = "basic"
-    )
-    @NotNull
-	private Date dateTo;
-
     @Column(name = "time_range")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="calendar_edit.time_range",
         tab = "basic",
-        hidden = true
+        hidden = true,
+        sortAfter = "dateTo"
     )
     private String timeRange;
-
-    @Column(name = "area")
-    @DataTableColumn(
-        inputType = DataTableColumnType.TEXT,
-        title="calendar_edit.area",
-        hidden = true,
-        tab="advanced"
-    )
-    @Size(max = 255)
-    private String area;
 
     @Column(name = "city")
     @DataTableColumn(
@@ -182,15 +127,6 @@ public class CalendarEventsEntity implements Serializable {
     @Size(max = 255)
     private String fieldE;
 
-    @Column(name = "type_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.SELECT,
-        title = "calendar.type",
-        tab = "advanced"
-    )
-    @NotNull
-    private Integer typeId;
-
     @Column(name = "description")
     @DataTableColumn(
         inputType = DataTableColumnType.WYSIWYG,
@@ -242,30 +178,4 @@ public class CalendarEventsEntity implements Serializable {
         hidden = true
     )
     private Boolean notifySendsms;
-
-    @Column(name = "creator_id")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
-    @NotNull
-    private Integer creatorId;
-
-    @Column(name = "domain_id")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
-    @NotNull
-    private Integer domainId;
-
-    @Transient
-    @DataTableColumnNested
-	private CalendarEventsEditorFields editorFields = null;
-
-    @Column(name = "approve")
-    private Integer approve;
-
-    // @Column(name = "notify_sent")
-    // private Integer notifySent;
-
-    // @Column(name = "suggest")
-    // private Integer suggest;
-
-    // @Column(name = "hash_string")
-    // private String hashString;
 }

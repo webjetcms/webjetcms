@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ErrorRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">ErrorRestController.java</span></div><h1>ErrorRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatTableDB;
+import sk.iway.iwcm.stat.jpa.ErrorDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/error&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat')&quot;)
+@Datatable
+public class ErrorRestController extends DatatableRestControllerV2&lt;ErrorDTO, Long&gt; {
+    private static final int MAX_ROWS = 1000;
+
+    @Autowired
+    public ErrorRestController() {
+<span class="fc" id="L31">        super(null);</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public void beforeSave(ErrorDTO entity) {
+<span class="nc" id="L36">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L37">    }</span>
+
+    @Override
+    public Page&lt;ErrorDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="nc" id="L42">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+
+<span class="nc" id="L44">        List&lt;ErrorDTO&gt; items = columnsToItems(StatTableDB.getErrorPages(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getUrl()));</span>
+<span class="nc" id="L45">        DatatablePageImpl&lt;ErrorDTO&gt; page = new DatatablePageImpl&lt;&gt;(items);</span>
+<span class="nc" id="L46">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;ErrorDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, ErrorDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L52">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+
+<span class="fc" id="L54">        List&lt;ErrorDTO&gt; items = columnsToItems(StatTableDB.getErrorPages(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getUrl()));</span>
+<span class="fc" id="L55">        DatatablePageImpl&lt;ErrorDTO&gt; page = new DatatablePageImpl&lt;&gt;(items);</span>
+<span class="fc" id="L56">        return page;</span>
+    }
+
+    private List&lt;ErrorDTO&gt; columnsToItems(List&lt;Column&gt; columns) {
+<span class="fc" id="L60">        List&lt;ErrorDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L62">        int order = 1;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L64">            ErrorDTO item = new ErrorDTO();</span>
+<span class="fc" id="L65">            item.setOrder(order);</span>
+<span class="fc" id="L66">            item.setYear(column.getIntColumn1());</span>
+<span class="fc" id="L67">            item.setWeek(column.getIntColumn2());</span>
+<span class="fc" id="L68">            item.setUrl(column.getColumn3());</span>
+<span class="fc" id="L69">            item.setCount(column.getIntColumn5());</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if(column.getColumn4().equals(&quot;&quot;))</span>
+<span class="fc" id="L71">                item.setErrorMessage(&quot;&amp;nbsp;&quot;);</span>
+            else
+<span class="fc" id="L73">                item.setErrorMessage(column.getColumn4());</span>
+<span class="fc" id="L74">            items.add(item);</span>
+<span class="fc" id="L75">            order++;</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc" id="L77">        return items;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaNestedSetManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.database.nestedsets</a> &gt; <span class="el_source">JpaNestedSetManager.java</span></div><h1>JpaNestedSetManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.database.nestedsets;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.database.nestedsets.annotations.LeftColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.LevelColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.RightColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.RootColumn;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+/**
+ *
+ */
+public class JpaNestedSetManager implements NestedSetManager
+{
+	private final JpaEntityManager em;
+	//private final Map&lt;Key, Node&lt;?&gt;&gt; nodes;
+	private final Map&lt;Class&lt;?&gt;, Configuration&gt; configs;
+
+	public JpaNestedSetManager(JpaEntityManager em)
+<span class="nc" id="L41">	{</span>
+<span class="nc" id="L42">		this.em = em;</span>
+		//this.nodes = new HashMap&lt;Key, Node&lt;?&gt;&gt;();
+<span class="nc" id="L44">		this.configs = new HashMap&lt;Class&lt;?&gt;, Configuration&gt;();</span>
+<span class="nc" id="L45">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public JpaEntityManager getEntityManager()
+	{
+<span class="nc" id="L53">		return em;//JpaTools.getEclipseLinkEntityManager();</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void clear()
+	{
+		//this.nodes.clear();
+<span class="nc" id="L63">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Collection&lt;Node&lt;?&gt;&gt; getNodes()
+	{
+<span class="nc" id="L71">		return null;//Collections.unmodifiableCollection(this.nodes.values());</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public &lt;T extends NodeInfo&gt; List&lt;Node&lt;T&gt;&gt; fetchTreeAsList(Class&lt;T&gt; clazz, Expression filtrationCriteria, T parent)
+	{
+<span class="nc" id="L80">		return fetchTreeAsList(clazz, filtrationCriteria, parent, 0);</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public &lt;T extends NodeInfo&gt; List&lt;Node&lt;T&gt;&gt; fetchTreeAsList(Class&lt;T&gt; clazz, Expression filtrationCriteria, T parent, int rootId)
+	{
+<span class="nc" id="L90">		int left = 1;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (parent!=null) left = parent.getLeftValue();</span>
+<span class="nc" id="L92">		Configuration config = getConfig(clazz);</span>
+
+<span class="nc" id="L94">		ReadAllQuery dbQuery = new ReadAllQuery(clazz);</span>
+<span class="nc" id="L95">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L97">		Expression where = builder.get(config.getLeftFieldName()).greaterThanEqual(left);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (filtrationCriteria!=null) where = JpaDB.and(where, filtrationCriteria);//cb.and(where, filtrationCriteria);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (parent!=null) where = JpaDB.and(where, builder.get(config.getRightFieldName()).lessThanEqual(parent.getRightValue()));</span>
+
+<span class="nc" id="L103">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L104">		dbQuery.addAscendingOrdering(config.getLeftFieldName());</span>
+
+<span class="nc" id="L106">		applyRootId(clazz, builder, where, rootId);</span>
+
+<span class="nc" id="L108">		Query q = JpaTools.getEclipseLinkEntityManager().createQuery(dbQuery);</span>
+
+<span class="nc" id="L110">		List&lt;Node&lt;T&gt;&gt; tree = new ArrayList&lt;Node&lt;T&gt;&gt;();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		for (T n : (List&lt;T&gt;)q.getResultList())</span>
+		{
+<span class="nc" id="L113">			tree.add(getNode(n));</span>
+<span class="nc" id="L114">		}</span>
+
+<span class="nc" id="L116">		buildTree(tree, 0);</span>
+
+<span class="nc" id="L118">		return tree;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public &lt;T extends NodeInfo&gt; Node&lt;T&gt; fetchTree(Class&lt;T&gt; clazz, Expression filtrationCriteria, T parent, int rootId)
+	{
+<span class="nc" id="L127">		return fetchTreeAsList(clazz, filtrationCriteria, parent, rootId).get(0);</span>
+	}
+
+	@Override
+	public &lt;T extends NodeInfo&gt; Node&lt;T&gt; fetchTree(Class&lt;T&gt; clazz, Expression filtrationCriteria, T parent)
+	{
+<span class="nc" id="L133">		return fetchTree(clazz, filtrationCriteria, parent, 0);</span>
+	}
+
+	/**
+	 * Establishes all parent/child/ancestor/descendant relationships of all the
+	 * nodes in the given list. As a result, invocations on the corresponding
+	 * methods on these node instances will not trigger any database queries.
+	 *
+	 * @param &lt;T&gt;
+	 * @param treeList
+	 * @param maxLevel
+	 * @return void
+	 */
+	public &lt;T extends NodeInfo&gt; void buildTree(List&lt;Node&lt;T&gt;&gt; treeList, int maxLevel)
+	{
+<span class="nc" id="L148">		Node&lt;T&gt; rootNode = treeList.get(0);</span>
+<span class="nc" id="L149">		Stack&lt;JpaNode&lt;T&gt;&gt; stack = new Stack&lt;JpaNode&lt;T&gt;&gt;();</span>
+<span class="nc" id="L150">		int level = rootNode.getLevel();</span>
+		boolean foundParent;
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		for (Node&lt;T&gt; n : treeList)</span>
+		{
+<span class="nc" id="L154">			JpaNode&lt;T&gt; node = (JpaNode&lt;T&gt;) n;</span>
+<span class="nc" id="L155">			node.setOfflineNode(true);</span>
+
+<span class="nc" id="L157">			foundParent = false;</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">			while(!stack.empty() &amp;&amp; !foundParent)</span>
+			{
+<span class="nc" id="L160">				JpaNode&lt;T&gt; possibleParent = stack.peek();</span>
+/*
+			      A
+			     / \
+			    B   G		If user is NOT in B, C (with children D and E) and F will have A as parent (works with multiple levels as well).
+			   / \   \											|
+			  C  F    H											|
+			 / \												|
+			D   E												|
+			  													|
+			      A												|
+			     /|\											|
+			    C F G	&lt;---------------------------------------|
+			   / \   \
+			  D   E   H
+*/
+<span class="nc bnc" id="L176" title="All 4 branches missed.">				if (node.getLeftValue() &gt; possibleParent.getLeftValue() &amp;&amp; node.getRightValue() &lt; possibleParent.getRightValue())</span>
+				{
+					//found parent, set everything
+<span class="nc" id="L179">					node.internalSetParent(possibleParent); 				// set parent</span>
+
+<span class="nc" id="L181">					possibleParent.internalAddChild(node); 					// add child to parent</span>
+
+<span class="nc" id="L183">					node.internalSetAncestors(new ArrayList&lt;&gt;(stack)); 		// set ancestors</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">					for (JpaNode&lt;T&gt; anc : stack) 							// add descendant to all ancestors</span>
+					{
+<span class="nc" id="L187">						anc.internalAddDescendant(node);</span>
+<span class="nc" id="L188">					}</span>
+<span class="nc" id="L189">					foundParent = true;</span>
+				}else{
+					//did not found parent, pop false parent from stack and try again
+<span class="nc" id="L192">					stack.pop();</span>
+				}
+<span class="nc" id="L194">			}</span>
+
+<span class="nc" id="L196">			level = node.getLevel();</span>
+
+<span class="nc bnc" id="L198" title="All 6 branches missed.">			if (node.hasChildren() &amp;&amp; (maxLevel == 0 || maxLevel &gt; level))</span>
+			{
+<span class="nc" id="L200">				stack.push(node);</span>
+			}
+<span class="nc" id="L202">		}</span>
+<span class="nc" id="L203">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public &lt;T extends NodeInfo&gt; Node&lt;T&gt; createRoot(T root)
+	{
+<span class="nc" id="L211">		Configuration config = getConfig(root.getClass());</span>
+
+		int maximumRight;
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (config.hasManyRoots())</span>
+		{
+<span class="nc" id="L216">			maximumRight = 0;</span>
+		} else
+		{
+<span class="nc" id="L219">			maximumRight = getMaximumRight(root.getClass());</span>
+		}
+<span class="nc" id="L221">		root.setLeftValue(maximumRight + 1);</span>
+<span class="nc" id="L222">		root.setRightValue(maximumRight + 2);</span>
+<span class="nc" id="L223">		root.setLevel(0);</span>
+<span class="nc" id="L224">		JpaTools.getEclipseLinkEntityManager().persist(root);</span>
+<span class="nc" id="L225">		return getNode(root);</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public &lt;T extends NodeInfo&gt; Node&lt;T&gt; getNode(T nodeInfo)
+	{
+//		Key key = new Key(nodeInfo.getClass(), nodeInfo.getId());
+//		if (this.nodes.containsKey(key))
+//		{
+//			@SuppressWarnings(&quot;unchecked&quot;)
+//			Node&lt;T&gt; n = (Node&lt;T&gt;) this.nodes.get(key);
+//			return n;
+//		}
+<span class="nc" id="L241">		Node&lt;T&gt; node = new JpaNode&lt;T&gt;(nodeInfo, this);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if (!node.isValid())</span>
+		{
+<span class="nc" id="L244">			throw new IllegalArgumentException(</span>
+					&quot;The given NodeInfo instance has no position &quot;
+							+ &quot;in a tree and is thus not yet a node.&quot;);
+		}
+		//this.nodes.put(key, node);
+
+<span class="nc" id="L250">		return node;</span>
+	}
+
+	/**
+	 * INTERNAL: Gets the nestedset configuration for the given class.
+	 *
+	 * @param clazz
+	 * @return The configuration.
+	 */
+	@Override
+	public Configuration getConfig(Class&lt;?&gt; clazz)
+	{
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (!this.configs.containsKey(clazz))</span>
+		{
+<span class="nc" id="L264">			Configuration config = new Configuration();</span>
+
+<span class="nc" id="L266">			Entity entity = clazz.getAnnotation(Entity.class);</span>
+<span class="nc" id="L267">			String name = entity.name();</span>
+<span class="nc bnc" id="L268" title="All 4 branches missed.">			config.setEntityName((name != null &amp;&amp; name.length() &gt; 0) ? name</span>
+<span class="nc" id="L269">					: clazz.getSimpleName());</span>
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			for (Field field : clazz.getDeclaredFields())</span>
+			{
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (field.getAnnotation(LeftColumn.class) != null)</span>
+				{
+<span class="nc" id="L275">					config.setLeftFieldName(field.getName());</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">				} else if (field.getAnnotation(RightColumn.class) != null)</span>
+				{
+<span class="nc" id="L278">					config.setRightFieldName(field.getName());</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				} else if (field.getAnnotation(LevelColumn.class) != null)</span>
+				{
+<span class="nc" id="L281">					config.setLevelFieldName(field.getName());</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				} else if (field.getAnnotation(RootColumn.class) != null)</span>
+				{
+<span class="nc" id="L284">					config.setRootIdFieldName(field.getName());</span>
+				}
+			}
+
+			// ak by som nahodou mal preddefinovanu superclassu pre NS
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			if (clazz.getSuperclass() != null</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">					&amp;&amp; clazz.getSuperclass().isAnnotationPresent(</span>
+							MappedSuperclass.class))
+			{
+<span class="nc bnc" id="L293" title="All 2 branches missed.">				for (Field field : clazz.getSuperclass().getDeclaredFields())</span>
+				{
+<span class="nc bnc" id="L295" title="All 2 branches missed.">					if (Tools.isEmpty(config.getLeftFieldName())</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">							&amp;&amp; field.getAnnotation(LeftColumn.class) != null)</span>
+					{
+<span class="nc" id="L298">						config.setLeftFieldName(field.getName());</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">					} else if (Tools.isEmpty(config.getRightFieldName())</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">							&amp;&amp; field.getAnnotation(RightColumn.class) != null)</span>
+					{
+<span class="nc" id="L302">						config.setRightFieldName(field.getName());</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">					} else if (Tools.isEmpty(config.getLevelFieldName())</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">							&amp;&amp; field.getAnnotation(LevelColumn.class) != null)</span>
+					{
+<span class="nc" id="L306">						config.setLevelFieldName(field.getName());</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">					} else if (Tools.isEmpty(config.getRootIdFieldName())</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">							&amp;&amp; field.getAnnotation(RootColumn.class) != null)</span>
+					{
+<span class="nc" id="L310">						config.setRootIdFieldName(field.getName());</span>
+					}
+				}
+			}
+<span class="nc" id="L314">			config.lock();</span>
+<span class="nc" id="L315">			this.configs.put(clazz, config);</span>
+		}
+
+<span class="nc" id="L318">		return this.configs.get(clazz);</span>
+	}
+
+	int getMaximumRight(Class&lt;? extends NodeInfo&gt; clazz)
+	{
+<span class="nc" id="L323">		Configuration config = getConfig(clazz);</span>
+<span class="nc" id="L324">		CriteriaBuilder cb = JpaTools.getEclipseLinkEntityManager().getCriteriaBuilder();</span>
+<span class="nc" id="L325">		CriteriaQuery&lt;? extends NodeInfo&gt; cq = cb.createQuery(clazz);</span>
+<span class="nc" id="L326">		Root&lt;? extends NodeInfo&gt; queryRoot = cq.from(clazz);</span>
+<span class="nc" id="L327">		cq.orderBy(cb.desc(queryRoot.get(config.getRightFieldName())));</span>
+<span class="nc" id="L328">		List&lt;? extends NodeInfo&gt; highestRows = JpaTools.getEclipseLinkEntityManager().createQuery(cq)</span>
+<span class="nc" id="L329">				.setMaxResults(1).getResultList();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		if (highestRows.isEmpty())</span>
+		{
+<span class="nc" id="L332">			return 0;</span>
+		} else
+		{
+<span class="nc" id="L335">			return highestRows.get(0).getRightValue();</span>
+		}
+	}
+
+
+	void applyRootId(Class&lt;?&gt; clazz, ExpressionBuilder builder, Expression expression, int rootId)
+	{
+<span class="nc" id="L342">		Configuration config = getConfig(clazz);</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">		if (config.getRootIdFieldName() != null)</span>
+		{
+<span class="nc" id="L345">			expression = JpaDB.and(expression, builder.get(config.getRootIdFieldName()).equal(rootId));</span>
+		}
+<span class="nc" id="L347">	}</span>
+
+
+//	void updateLeftValues(int minLeft, int maxLeft, int delta, int rootId)
+//	{
+//		for (Node&lt;?&gt; node : this.nodes.values())
+//		{
+//			if (node.getRootValue() == rootId)
+//			{
+//				if (node.getLeftValue() &gt;= minLeft
+//						&amp;&amp; (maxLeft == 0 || node.getLeftValue() &lt;= maxLeft))
+//				{
+//					node.setLeftValue(node.getLeftValue() + delta);
+//					((JpaNode&lt;?&gt;) node).invalidate();
+//				}
+//			}
+//		}
+//	}
+
+
+//	void updateRightValues(int minRight, int maxRight, int delta, int rootId)
+//	{
+//		for (Node&lt;?&gt; node : this.nodes.values())
+//		{
+//			if (node.getRootValue() == rootId)
+//			{
+//				if (node.getRightValue() &gt;= minRight
+//						&amp;&amp; (maxRight == 0 || node.getRightValue() &lt;= maxRight))
+//				{
+//					node.setRightValue(node.getRightValue() + delta);
+//					((JpaNode&lt;?&gt;) node).invalidate();
+//				}
+//			}
+//		}
+//	}
+
+
+//	void updateLevels(int left, int right, int delta, int rootId)
+//	{
+//		for (Node&lt;?&gt; node : this.nodes.values())
+//		{
+//			if (node.getRootValue() == rootId)
+//			{
+//				if (node.getLeftValue() &gt; left &amp;&amp; node.getRightValue() &lt; right)
+//				{
+//					node.setLevel(node.getLevel() + delta);
+//					((JpaNode&lt;?&gt;) node).invalidate();
+//				}
+//			}
+//		}
+//	}
+
+//	void removeNodes(int left, int right, int rootId)
+//	{
+//		Set&lt;Key&gt; removed = new HashSet&lt;Key&gt;();
+//		for (Node&lt;?&gt; node : this.nodes.values())
+//		{
+//			if (node.getRootValue() == rootId)
+//			{
+//				if (node.getLeftValue() &gt;= left
+//						&amp;&amp; node.getRightValue() &lt;= right)
+//				{
+//					removed.add(new Key(node.unwrap().getClass(), node.getId()));
+//				}
+//			}
+//		}
+//		for (Key k : removed)
+//		{
+//			Node&lt;?&gt; n = this.nodes.remove(k);
+//			n.setLeftValue(0);
+//			n.setRightValue(0);
+//			n.setLevel(0);
+//			n.setRootValue(0);
+//			this.em.detach(n.unwrap());
+//		}
+//	}
+	@Override
+	public &lt;T extends NodeInfo&gt; void update(Node&lt;T&gt; node)
+	{
+<span class="nc" id="L426">		update(node.unwrap());</span>
+<span class="nc" id="L427">	}</span>
+	@Override
+	public &lt;T extends NodeInfo&gt; void update(T nodeInfo)
+	{
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		if (nodeInfo.getId()&gt;0)</span>
+		{
+<span class="nc" id="L433">			JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+			try
+			{
+<span class="nc" id="L436">				em.getTransaction().begin();</span>
+<span class="nc" id="L437">				em.merge(nodeInfo);</span>
+<span class="nc" id="L438">				em.getTransaction().commit();</span>
+			}
+<span class="nc" id="L440">			catch (Exception e)</span>
+			{
+<span class="nc" id="L442">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L443">				em.getTransaction().rollback();</span>
+<span class="nc" id="L444">			}</span>
+
+		}
+<span class="nc" id="L447">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

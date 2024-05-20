@@ -1,0 +1,697 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Column.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">Column.java</span></div><h1>Column.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+import java.util.Date;
+/**
+ * 
+ *  Column.java - Bean pre ukladanie roadkovych info (hlavne pre statistiku)
+ *
+ *@Title        webjet
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 30.11.2004 11:19:24
+ *@modified     $Date: 2004/08/09 08:42:03 $
+ */
+public class Column
+{
+   private String[] column;
+
+   private int[] intColumn;
+   
+   private Date[] dateColumn;
+   
+   private double[] doubleColumn;
+   
+   private boolean[] booleanColumn;
+   
+   private int idKey;
+   private String name;
+   
+   public Column()
+<span class="fc" id="L31">   {</span>
+<span class="fc" id="L32">   	column = new String[30];</span>
+<span class="fc" id="L33">      intColumn = new int[30];</span>
+<span class="fc" id="L34">      dateColumn = new Date[30];</span>
+<span class="fc" id="L35">      doubleColumn = new double[30];</span>
+<span class="fc" id="L36">      booleanColumn= new boolean[30];</span>
+<span class="fc" id="L37">   }</span>
+   
+   /**
+    * Konstruktor s nastavenim velkosti poli (ak potrebujeme setrit pamat)
+    * @param strings
+    * @param integers
+    * @param dates
+    * @param doubles
+    * @param booleans
+    */
+   public Column(int strings, int integers, int dates, int doubles, int booleans)
+<span class="nc" id="L48">   {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">   	if (strings&gt;0) column = new String[strings];</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">   	if (integers&gt;0) intColumn = new int[integers];</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">   	if (dates&gt;0) dateColumn = new Date[dates];</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">   	if (doubles&gt;0) doubleColumn = new double[doubles];</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">   	if (booleans&gt;0) booleanColumn= new boolean[booleans];</span>
+<span class="nc" id="L54">   }</span>
+   
+   public String getColumn(int index)
+   {
+<span class="nc" id="L58">      return column[index];</span>
+   }
+   
+   public void setColumn(String value, int index)
+   {
+<span class="nc" id="L63">      this.column[index] = value;</span>
+<span class="nc" id="L64">   }</span>
+   
+   public int getIntColumn(int index)
+   {
+<span class="nc" id="L68">      return intColumn[index];</span>
+   }
+   
+   public void setIntColumn(int value, int index)
+   {
+<span class="nc" id="L73">      this.intColumn[index] = value;</span>
+<span class="nc" id="L74">   }</span>
+   
+   public Date getDateColumn(int index)
+   {
+<span class="nc" id="L78">      return dateColumn[index];</span>
+   }
+   
+   public void setDateColumn(Date value, int index)
+   {
+<span class="nc" id="L83">      this.dateColumn[index] = value;</span>
+<span class="nc" id="L84">   }</span>
+   
+   public double getDoubleColumn(int index)
+   {
+<span class="nc" id="L88">      return doubleColumn[index];</span>
+   }
+   
+   public void setDoubleColumn(double value, int index)
+   {
+<span class="nc" id="L93">      this.doubleColumn[index] = value;</span>
+<span class="nc" id="L94">   }</span>
+
+   /**
+    *  Gets the column1 attribute of the Column object
+    *
+    *@return    The column1 value
+    */
+   public String getColumn1()
+   {
+<span class="fc" id="L103">      return column[1];</span>
+   }
+
+   /**
+    *  Sets the column1 attribute of the Column object
+    *
+    *@param  column1  The new column1 value
+    */
+   public void setColumn1(String column1)
+   {
+<span class="fc" id="L113">      this.column[1] = column1;</span>
+<span class="fc" id="L114">   }</span>
+
+   /**
+    *  Sets the column2 attribute of the Column object
+    *
+    *@param  column2  The new column2 value
+    */
+   public void setColumn2(String column2)
+   {
+<span class="fc" id="L123">      this.column[2] = column2;</span>
+<span class="fc" id="L124">   }</span>
+
+   /**
+    *  Gets the column2 attribute of the Column object
+    *
+    *@return    The column2 value
+    */
+   public String getColumn2()
+   {
+<span class="fc" id="L133">      return column[2];</span>
+   }
+
+   /**
+    *  Sets the column3 attribute of the Column object
+    *
+    *@param  column3  The new column3 value
+    */
+   public void setColumn3(String column3)
+   {
+<span class="fc" id="L143">      this.column[3] = column3;</span>
+<span class="fc" id="L144">   }</span>
+
+   /**
+    *  Gets the column3 attribute of the Column object
+    *
+    *@return    The column3 value
+    */
+   public String getColumn3()
+   {
+<span class="fc" id="L153">      return column[3];</span>
+   }
+
+   /**
+    *  Sets the column4 attribute of the Column object
+    *
+    *@param  column4  The new column4 value
+    */
+   public void setColumn4(String column4)
+   {
+<span class="fc" id="L163">      this.column[4] = column4;</span>
+<span class="fc" id="L164">   }</span>
+
+   /**
+    *  Gets the column4 attribute of the Column object
+    *
+    *@return    The column4 value
+    */
+   public String getColumn4()
+   {
+<span class="fc" id="L173">      return column[4];</span>
+   }
+
+   /**
+    *  Sets the column5 attribute of the Column object
+    *
+    *@param  column5  The new column5 value
+    */
+   public void setColumn5(String column5)
+   {
+<span class="fc" id="L183">      this.column[5] = column5;</span>
+<span class="fc" id="L184">   }</span>
+
+   /**
+    *  Gets the column5 attribute of the Column object
+    *
+    *@return    The column5 value
+    */
+   public String getColumn5()
+   {
+<span class="nc" id="L193">      return column[5];</span>
+   }
+
+   /**
+    *  Sets the column6 attribute of the Column object
+    *
+    *@param  column6  The new column6 value
+    */
+   public void setColumn6(String column6)
+   {
+<span class="fc" id="L203">      this.column[6] = column6;</span>
+<span class="fc" id="L204">   }</span>
+
+   /**
+    *  Gets the column6 attribute of the Column object
+    *
+    *@return    The column6 value
+    */
+   public String getColumn6()
+   {
+<span class="fc" id="L213">      return column[6];</span>
+   }
+
+   /**
+    *  Sets the column7 attribute of the Column object
+    *
+    *@param  column7  The new column7 value
+    */
+   public void setColumn7(String column7)
+   {
+<span class="fc" id="L223">      this.column[7] = column7;</span>
+<span class="fc" id="L224">   }</span>
+
+   /**
+    *  Gets the column7 attribute of the Column object
+    *
+    *@return    The column7 value
+    */
+   public String getColumn7()
+   {
+<span class="nc" id="L233">      return column[7];</span>
+   }
+
+   /**
+    *  Sets the column8 attribute of the Column object
+    *
+    *@param  column8  The new column8 value
+    */
+   public void setColumn8(String column8)
+   {
+<span class="fc" id="L243">      this.column[8] = column8;</span>
+<span class="fc" id="L244">   }</span>
+
+   /**
+    *  Gets the column8 attribute of the Column object
+    *
+    *@return    The column8 value
+    */
+   public String getColumn8()
+   {
+<span class="fc" id="L253">      return column[8];</span>
+   }
+
+   /**
+    *  Sets the column9 attribute of the Column object
+    *
+    *@param  column9  The new column9 value
+    */
+   public void setColumn9(String column9)
+   {
+<span class="fc" id="L263">      this.column[9] = column9;</span>
+<span class="fc" id="L264">   }</span>
+
+   /**
+    *  Gets the column9 attribute of the Column object
+    *
+    *@return    The column9 value
+    */
+   public String getColumn9()
+   {
+<span class="fc" id="L273">      return column[9];</span>
+   }
+
+   /**
+    *  Sets the column10 attribute of the Column object
+    *
+    *@param  column10  The new column10 value
+    */
+   public void setColumn10(String column10)
+   {
+<span class="nc" id="L283">      this.column[10] = column10;</span>
+<span class="nc" id="L284">   }</span>
+
+   /**
+    *  Gets the column10 attribute of the Column object
+    *
+    *@return    The column10 value
+    */
+   public String getColumn10()
+   {
+<span class="nc" id="L293">      return column[10];</span>
+   }
+
+   /**
+    *  Sets the column11 attribute of the Column object
+    *
+    *@param  column11  The new column11 value
+    */
+   public void setColumn11(String column11)
+   {
+<span class="nc" id="L303">      this.column[11] = column11;</span>
+<span class="nc" id="L304">   }</span>
+
+   /**
+    *  Gets the column11 attribute of the Column object
+    *
+    *@return    The column11 value
+    */
+   public String getColumn11()
+   {
+<span class="nc" id="L313">      return column[11];</span>
+   }
+
+   /**
+    *  Sets the column12 attribute of the Column object
+    *
+    *@param  column12  The new column12 value
+    */
+   public void setColumn12(String column12)
+   {
+<span class="nc" id="L323">      this.column[12] = column12;</span>
+<span class="nc" id="L324">   }</span>
+
+   /**
+    *  Gets the column12 attribute of the Column object
+    *
+    *@return    The column12 value
+    */
+   public String getColumn12()
+   {
+<span class="nc" id="L333">      return column[12];</span>
+   }
+
+   /**
+    *  Sets the column13 attribute of the Column object
+    *
+    *@param  column13  The new column13 value
+    */
+   public void setColumn13(String column13)
+   {
+<span class="nc" id="L343">      this.column[13] = column13;</span>
+<span class="nc" id="L344">   }</span>
+
+   /**
+    *  Gets the column13 attribute of the Column object
+    *
+    *@return    The column13 value
+    */
+   public String getColumn13()
+   {
+<span class="nc" id="L353">      return column[13];</span>
+   }
+
+   /**
+    *  Sets the column14 attribute of the Column object
+    *
+    *@param  column14  The new column14 value
+    */
+   public void setColumn14(String column14)
+   {
+<span class="nc" id="L363">      this.column[14] = column14;</span>
+<span class="nc" id="L364">   }</span>
+
+   /**
+    *  Gets the column14 attribute of the Column object
+    *
+    *@return    The column14 value
+    */
+   public String getColumn14()
+   {
+<span class="nc" id="L373">      return column[14];</span>
+   }
+
+   /**
+    *  Sets the column15 attribute of the Column object
+    *
+    *@param  column15  The new column15 value
+    */
+   public void setColumn15(String column15)
+   {
+<span class="nc" id="L383">      this.column[15] = column15;</span>
+<span class="nc" id="L384">   }</span>
+
+   /**
+    *  Gets the column15 attribute of the Column object
+    *
+    *@return    The column15 value
+    */
+   public String getColumn15()
+   {
+<span class="nc" id="L393">      return column[15];</span>
+   }
+
+   /**
+    *  Sets the column16 attribute of the Column object
+    *
+    *@param  column16  The new column16 value
+    */
+   public void setColumn16(String column16)
+   {
+<span class="nc" id="L403">      this.column[16] = column16;</span>
+<span class="nc" id="L404">   }</span>
+
+   /**
+    *  Gets the column16 attribute of the Column object
+    *
+    *@return    The column16 value
+    */
+   public String getColumn16()
+   {
+<span class="nc" id="L413">      return column[16];</span>
+   }
+
+   /**
+    *  Sets the column17 attribute of the Column object
+    *
+    *@param  column17  The new column17 value
+    */
+   public void setColumn17(String column17)
+   {
+<span class="nc" id="L423">      this.column[17] = column17;</span>
+<span class="nc" id="L424">   }</span>
+
+   /**
+    *  Gets the column17 attribute of the Column object
+    *
+    *@return    The column17 value
+    */
+   public String getColumn17()
+   {
+<span class="nc" id="L433">      return column[17];</span>
+   }
+
+   /**
+    *  Sets the column18 attribute of the Column object
+    *
+    *@param  column18  The new column18 value
+    */
+   public void setColumn18(String column18)
+   {
+<span class="nc" id="L443">      this.column[18] = column18;</span>
+<span class="nc" id="L444">   }</span>
+
+   /**
+    *  Gets the column18 attribute of the Column object
+    *
+    *@return    The column18 value
+    */
+   public String getColumn18()
+   {
+<span class="nc" id="L453">      return column[18];</span>
+   }
+
+   /**
+    *  Sets the column19 attribute of the Column object
+    *
+    *@param  column19  The new column19 value
+    */
+   public void setColumn19(String column19)
+   {
+<span class="nc" id="L463">      this.column[19] = column19;</span>
+<span class="nc" id="L464">   }</span>
+
+   /**
+    *  Gets the column19 attribute of the Column object
+    *
+    *@return    The column19 value
+    */
+   public String getColumn19()
+   {
+<span class="nc" id="L473">      return column[19];</span>
+   }
+
+   /**
+    *  Sets the column20 attribute of the Column object
+    *
+    *@param  column20  The new column20 value
+    */
+   public void setColumn20(String column20)
+   {
+<span class="nc" id="L483">      this.column[20] = column20;</span>
+<span class="nc" id="L484">   }</span>
+
+   /**
+    *  Gets the column20 attribute of the Column object
+    *
+    *@return    The column20 value
+    */
+   public String getColumn20()
+   {
+<span class="nc" id="L493">      return column[20];</span>
+   }
+
+	public int getIntColumn1()
+	{
+<span class="fc" id="L498">		return intColumn[1];</span>
+	}
+	public void setIntColumn1(int intColumn1)
+	{
+<span class="fc" id="L502">		this.intColumn[1] = intColumn1;</span>
+<span class="fc" id="L503">	}</span>
+	public int getIntColumn11()
+	{
+<span class="nc" id="L506">		return intColumn[11];</span>
+	}
+	public void setIntColumn11(int intColumn11)
+	{
+<span class="nc" id="L510">		this.intColumn[11] = intColumn11;</span>
+<span class="nc" id="L511">	}</span>
+	public int getIntColumn2()
+	{
+<span class="fc" id="L514">		return intColumn[2];</span>
+	}
+	public void setIntColumn2(int intColumn2)
+	{
+<span class="fc" id="L518">		this.intColumn[2] = intColumn2;</span>
+<span class="fc" id="L519">	}</span>
+	public int getIntColumn3()
+	{
+<span class="fc" id="L522">		return intColumn[3];</span>
+	}
+	public void setIntColumn3(int intColumn3)
+	{
+<span class="fc" id="L526">		this.intColumn[3] = intColumn3;</span>
+<span class="fc" id="L527">	}</span>
+	public int getIntColumn4()
+	{
+<span class="fc" id="L530">		return intColumn[4];</span>
+	}
+	public void setIntColumn4(int intColumn4)
+	{
+<span class="fc" id="L534">		this.intColumn[4] = intColumn4;</span>
+<span class="fc" id="L535">	}</span>
+	public int getIntColumn5()
+	{
+<span class="fc" id="L538">		return intColumn[5];</span>
+	}
+	public void setIntColumn5(int intColumn5)
+	{
+<span class="fc" id="L542">		this.intColumn[5] = intColumn5;</span>
+<span class="fc" id="L543">	}</span>
+	public int getIntColumn6()
+	{
+<span class="fc" id="L546">		return intColumn[6];</span>
+	}
+	public void setIntColumn6(int intColumn6)
+	{
+<span class="fc" id="L550">		this.intColumn[6] = intColumn6;</span>
+<span class="fc" id="L551">	}</span>
+	public int getIntColumn7()
+	{
+<span class="nc" id="L554">		return intColumn[7];</span>
+	}
+	public void setIntColumn7(int intColumn7)
+	{
+<span class="fc" id="L558">		this.intColumn[7] = intColumn7;</span>
+<span class="fc" id="L559">	}</span>
+	public int getIntColumn8()
+	{
+<span class="nc" id="L562">		return intColumn[8];</span>
+	}
+	public void setIntColumn8(int intColumn8)
+	{
+<span class="nc" id="L566">		this.intColumn[8] = intColumn8;</span>
+<span class="nc" id="L567">	}</span>
+	public int getIntColumn9()
+	{
+<span class="nc" id="L570">		return intColumn[9];</span>
+	}
+	public void setIntColumn9(int intColumn9)
+	{
+<span class="nc" id="L574">		this.intColumn[9] = intColumn9;</span>
+<span class="nc" id="L575">	}</span>
+	public int getIntColumn10()
+	{
+<span class="nc" id="L578">		return intColumn[10];</span>
+	}
+	public void setIntColumn10(int intColumn10)
+	{
+<span class="nc" id="L582">		this.intColumn[10] = intColumn10;</span>
+<span class="nc" id="L583">	}</span>
+	public Date getDateColumn1()
+	{
+<span class="fc" id="L586">		return dateColumn[1];</span>
+	}
+	public void setDateColumn1(Date dateColumn1)
+	{
+<span class="fc" id="L590">		this.dateColumn[1] = dateColumn1;</span>
+<span class="fc" id="L591">	}</span>
+	public Date getDateColumn2()
+	{
+<span class="nc" id="L594">		return dateColumn[2];</span>
+	}
+	public void setDateColumn2(Date dateColumn2)
+	{
+<span class="nc" id="L598">		this.dateColumn[2] = dateColumn2;</span>
+<span class="nc" id="L599">	}</span>
+	public Date getDateColumn3()
+	{
+<span class="nc" id="L602">		return dateColumn[3];</span>
+	}
+	public void setDateColumn3(Date dateColumn3)
+	{
+<span class="nc" id="L606">		this.dateColumn[3] = dateColumn3;</span>
+<span class="nc" id="L607">	}</span>
+	public Date getDateColumn4()
+	{
+<span class="nc" id="L610">		return dateColumn[4];</span>
+	}
+	public void setDateColumn4(Date dateColumn4)
+	{
+<span class="nc" id="L614">		this.dateColumn[4] = dateColumn4;</span>
+<span class="nc" id="L615">	}</span>
+	public Date getDateColumn5()
+	{
+<span class="nc" id="L618">		return dateColumn[5];</span>
+	}
+	public void setDateColumn5(Date dateColumn5)
+	{
+<span class="nc" id="L622">		this.dateColumn[5] = dateColumn5;</span>
+<span class="nc" id="L623">	}</span>
+	public double getDoubleColumn1()
+	{
+<span class="nc" id="L626">		return doubleColumn[1];</span>
+	}
+	public void setDoubleColumn1(double doubleColumn1)
+	{
+<span class="nc" id="L630">		this.doubleColumn[1] = doubleColumn1;</span>
+<span class="nc" id="L631">	}</span>
+	public double getDoubleColumn2()
+	{
+<span class="nc" id="L634">		return doubleColumn[2];</span>
+	}
+	public void setDoubleColumn2(double doubleColumn2)
+	{
+<span class="nc" id="L638">		this.doubleColumn[2] = doubleColumn2;</span>
+<span class="nc" id="L639">	}</span>
+	public double getDoubleColumn3()
+	{
+<span class="nc" id="L642">		return doubleColumn[3];</span>
+	}
+	public void setDoubleColumn3(double doubleColumn3)
+	{
+<span class="nc" id="L646">		this.doubleColumn[3] = doubleColumn3;</span>
+<span class="nc" id="L647">	}</span>
+	public double getDoubleColumn4()
+	{
+<span class="nc" id="L650">		return doubleColumn[4];</span>
+	}
+	public void setDoubleColumn4(double doubleColumn4)
+	{
+<span class="nc" id="L654">		this.doubleColumn[4] = doubleColumn4;</span>
+<span class="nc" id="L655">	}</span>
+	public double getDoubleColumn5()
+	{
+<span class="nc" id="L658">		return doubleColumn[5];</span>
+	}
+	public void setDoubleColumn5(double doubleColumn5)
+	{
+<span class="nc" id="L662">		this.doubleColumn[5] = doubleColumn5;</span>
+<span class="nc" id="L663">	}</span>
+	public int getIdKey()
+	{
+<span class="nc" id="L666">		return idKey;</span>
+	}
+	public void setIdKey(int idKey)
+	{
+<span class="nc" id="L670">		this.idKey = idKey;</span>
+<span class="nc" id="L671">	}</span>
+	/**
+	 * @return Returns the booleanColumn.
+	 */
+	public boolean isBooleanColumn1()
+	{
+<span class="fc" id="L677">		return booleanColumn[0];</span>
+	}
+	/**
+	 * @param booleanColumn The booleanColumn to set.
+	 */
+	public void setBooleanColumn1(boolean booleanColumn)
+	{
+<span class="fc" id="L684">		this.booleanColumn[0] = booleanColumn;</span>
+<span class="fc" id="L685">	}</span>
+
+	public String getName()
+	{
+<span class="nc" id="L689">		return name;</span>
+	}
+
+	public void setName(String name)
+	{
+<span class="nc" id="L694">		this.name = name;</span>
+<span class="nc" id="L695">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

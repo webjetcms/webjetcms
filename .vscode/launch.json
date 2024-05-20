@@ -54,6 +54,18 @@
         },
         {
             "type": "java",
+            "name": "Debug eShop DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartEshopDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
             "name": "Debug NN DB",
             "request": "attach",
             "hostName": "localhost",
@@ -71,6 +83,18 @@
             "hostName": "localhost",
             "port": 5005,
             "preLaunchTask": "appStartOracleDB",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "projectName": "webjetcms",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug PgSQL DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartPgSQLDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
             "projectName": "webjetcms",

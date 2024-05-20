@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGroupDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">UserGroupDetails.java</span></div><h1>UserGroupDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionMapping;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  Informacie o skupine pouzivatelov
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Štvrtok, 2002, august 15
+ *@modified     $Date: 2004/01/09 18:40:31 $
+ */
+<span class="fc" id="L20">public class UserGroupDetails</span>
+{
+	public static final int TYPE_PERMS = 0;
+	public static final int TYPE_EMAIL = 1;
+
+<span class="fc" id="L25">	private int userGroupId=-1;</span>
+	private String userGroupName;
+<span class="fc" id="L27">	private int userGroupType = 0;</span>
+	private String userGroupComment;
+<span class="fc" id="L29">	private boolean requireApprove = true;</span>
+<span class="fc" id="L30">	private int emailDocId = -1;</span>
+	private boolean allowUserEdit;
+<span class="fc" id="L32">	private boolean requireEmailVerification = false;</span>
+
+	public void reset(ActionMapping mapping, HttpServletRequest request)
+	{
+		//Logger.println(this,&quot;EditorForm: reset()&quot;);
+<span class="nc" id="L37">		requireApprove = false;</span>
+<span class="nc" id="L38">		allowUserEdit = false;</span>
+<span class="nc" id="L39">	}</span>
+
+	public String getUserGroupNameComment()
+	{
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (Tools.isEmpty(userGroupComment)) return userGroupName;</span>
+<span class="nc" id="L44">		return userGroupName + &quot; - &quot; + userGroupComment;</span>
+	}
+
+	/**
+	 *  Gets the userGroupId attribute of the UserGroupDetails object
+	 *
+	 *@return    The userGroupId value
+	 */
+	public int getUserGroupId()
+	{
+<span class="fc" id="L54">		return userGroupId;</span>
+	}
+
+	/**
+	 *  Sets the userGroupId attribute of the UserGroupDetails object
+	 *
+	 *@param  userGroupId  The new userGroupId value
+	 */
+	public void setUserGroupId(int userGroupId)
+	{
+<span class="fc" id="L64">		this.userGroupId = userGroupId;</span>
+<span class="fc" id="L65">	}</span>
+
+	/**
+	 *  Sets the userGroupName attribute of the UserGroupDetails object
+	 *
+	 *@param  userGroupName  The new userGroupName value
+	 */
+	public void setUserGroupName(String userGroupName)
+	{
+<span class="fc" id="L74">		this.userGroupName = userGroupName;</span>
+<span class="fc" id="L75">	}</span>
+
+	/**
+	 *  Gets the userGroupName attribute of the UserGroupDetails object
+	 *
+	 *@return    The userGroupName value
+	 */
+	public String getUserGroupName()
+	{
+<span class="fc" id="L84">		return userGroupName;</span>
+	}
+	public int getUserGroupType()
+	{
+<span class="fc" id="L88">		return userGroupType;</span>
+	}
+	public void setUserGroupType(int userGroupType)
+	{
+<span class="fc" id="L92">		this.userGroupType = userGroupType;</span>
+<span class="fc" id="L93">	}</span>
+	public String getUserGroupComment()
+	{
+<span class="nc" id="L96">		return userGroupComment;</span>
+	}
+	public void setUserGroupComment(String userGroupComment)
+	{
+<span class="fc" id="L100">		this.userGroupComment = userGroupComment;</span>
+<span class="fc" id="L101">	}</span>
+
+	/**
+	 * @return Returns the emailDocId.
+	 */
+	public int getEmailDocId()
+	{
+<span class="fc" id="L108">		return emailDocId;</span>
+	}
+	/**
+	 * @param emailDocId The emailDocId to set.
+	 */
+	public void setEmailDocId(int emailDocId)
+	{
+<span class="fc" id="L115">		this.emailDocId = emailDocId;</span>
+<span class="fc" id="L116">	}</span>
+	/**
+	 * @return Returns the requireApprove.
+	 */
+	public boolean isRequireApprove()
+	{
+<span class="fc" id="L122">		return requireApprove;</span>
+	}
+	/**
+	 * @param requireApprove The requireApprove to set.
+	 */
+	public void setRequireApprove(boolean requireApprove)
+	{
+<span class="fc" id="L129">		this.requireApprove = requireApprove;</span>
+<span class="fc" id="L130">	}</span>
+	/**
+	 * @return Returns the allowUserEdit.
+	 */
+	public boolean isAllowUserEdit()
+	{
+<span class="fc" id="L136">		return allowUserEdit;</span>
+	}
+	/**
+	 * @param allowUserEdit The allowUserEdit to set.
+	 */
+	public void setAllowUserEdit(boolean allowUserEdit)
+	{
+<span class="fc" id="L143">		this.allowUserEdit = allowUserEdit;</span>
+<span class="fc" id="L144">	}</span>
+
+	public boolean isRequireEmailVerification()
+	{
+<span class="fc" id="L148">		return requireEmailVerification;</span>
+	}
+
+	public void setRequireEmailVerification(boolean requireEmailVerification)
+	{
+<span class="fc" id="L153">		this.requireEmailVerification = requireEmailVerification;</span>
+<span class="fc" id="L154">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

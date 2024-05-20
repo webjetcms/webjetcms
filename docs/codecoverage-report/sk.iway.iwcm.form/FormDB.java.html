@@ -1,0 +1,1354 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form</a> &gt; <span class="el_source">FormDB.java</span></div><h1>FormDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+
+/**
+ *  FormDB.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2007
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.8 $
+ *@created      Date: 30.10.2007 12:19:41
+ *@modified     $Date: 2010/01/20 10:13:22 $
+ */
+public class FormDB
+{
+	private static FormDB instance;
+<span class="fc" id="L43">	private List&lt;String[]&gt; regExpList = null;</span>
+
+	/**
+	 * Zakladna instancia objektu
+	 * @return
+	 */
+	public static FormDB getInstance()
+	{
+<span class="fc" id="L51">		return getInstance(false);</span>
+	}
+
+
+	/**
+	 * Zakladna instancia objektu
+	 * @param forceRefresh - true = refresh instancie
+	 * @return
+	 */
+	public static FormDB getInstance(boolean forceRefresh)
+	{
+<span class="fc bfc" id="L62" title="All 4 branches covered.">		if (instance == null || forceRefresh)</span>
+		{
+<span class="fc" id="L64">			synchronized (FormDB.class)</span>
+			{
+<span class="fc" id="L66">				instance = new FormDB();</span>
+<span class="fc" id="L67">			}</span>
+		}
+<span class="fc" id="L69">		return instance;</span>
+	}
+
+	/**
+	 * Private konstruktor
+	 */
+	private FormDB()
+<span class="fc" id="L76">	{</span>
+<span class="fc" id="L77">		Logger.debug(FormDB.class, &quot;FormDB.constructor&quot;);</span>
+<span class="fc" id="L78">		ClusterDB.addRefresh(FormDB.class);</span>
+<span class="fc" id="L79">	}</span>
+
+	public static List&lt;FormDetails&gt; getForms(UserDetails user,boolean alsoArchive)
+	{
+<span class="nc" id="L83">		List&lt;FormDetails&gt; forms = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L85">		Connection db_conn = null;</span>
+<span class="nc" id="L86">		PreparedStatement ps = null;</span>
+<span class="nc" id="L87">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L90">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L91">			String sql = &quot;SELECT max(id) as id, form_name, max(doc_id) as doc_id FROM forms&quot;;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if(!alsoArchive)</span>
+<span class="nc" id="L93">				sql+= &quot; where form_name not like 'Archiv-%' &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+			else
+<span class="nc" id="L95">				sql += &quot; where &quot;+CloudToolsForCore.getDomainIdSqlWhere(false);</span>
+<span class="nc" id="L96">			sql += &quot; GROUP BY form_name&quot;;</span>
+
+<span class="nc" id="L98">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L99">			rs = ps.executeQuery();</span>
+			FormDetails form;
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L103">				form = new FormDetails();</span>
+<span class="nc" id="L104">				form.setId(rs.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L105">				form.setFormName(rs.getString(&quot;form_name&quot;));</span>
+<span class="nc" id="L106">				form.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L107">				forms.add(form);</span>
+			}
+<span class="nc" id="L109">			rs.close();</span>
+<span class="nc" id="L110">			ps.close();</span>
+<span class="nc" id="L111">			db_conn.close();</span>
+<span class="nc" id="L112">			rs = null;</span>
+<span class="nc" id="L113">			ps = null;</span>
+<span class="nc" id="L114">			db_conn = null;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc" id="L117">                forms = filterFormsByUser(user, forms);</span>
+            }
+		}
+<span class="nc" id="L120">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L122">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L129">					rs.close();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L131">					ps.close();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L133">					db_conn.close();</span>
+			}
+<span class="nc" id="L135">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L137">			}</span>
+		}
+<span class="nc" id="L139">		return(forms);</span>
+	}
+
+
+	/**
+	 * vrati zoznam vsetkych formularov
+	 * @return
+	 */
+	public static List&lt;FormDetails&gt; getForms(UserDetails user)
+	{
+<span class="nc" id="L149">		return getForms(user, true);</span>
+	}
+
+	/**
+	 * Vrati polozku data z tabulky forms pre dany formular
+	 *
+	 * @param id identifikator formulara, ktoreho data chceme ziskat
+	 * @return	String data - polozka z tabulky forms pre dany formular
+	 */
+	public static String getData(int id)
+	{
+<span class="nc" id="L160">		String data = null;</span>
+
+<span class="nc" id="L162">		Connection db_conn = null;</span>
+<span class="nc" id="L163">		PreparedStatement ps = null;</span>
+<span class="nc" id="L164">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="nc" id="L168">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L169">			ps = db_conn.prepareStatement(&quot;SELECT data FROM forms WHERE id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L170">			ps.setInt(1, id);</span>
+
+<span class="nc" id="L172">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L175">				data = DB.getDbString(rs, &quot;data&quot;);</span>
+
+<span class="nc" id="L177">			rs.close();</span>
+<span class="nc" id="L178">			ps.close();</span>
+<span class="nc" id="L179">			db_conn.close();</span>
+
+<span class="nc" id="L181">			rs = null;</span>
+<span class="nc" id="L182">			ps = null;</span>
+<span class="nc" id="L183">			db_conn = null;</span>
+		}
+<span class="nc" id="L185">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L187">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L194">					rs.close();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L196">					ps.close();</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L198">					db_conn.close();</span>
+			}
+<span class="nc" id="L200">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L202">			}</span>
+		}
+
+<span class="nc" id="L205">		return(data);</span>
+	}
+
+	/* optimalizuje len mysql */
+	private static boolean optimiseTable(Connection db_conn) throws SQLException
+	{
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+		{
+<span class="nc" id="L213">			PreparedStatement ps = null;</span>
+<span class="nc" id="L214">			String sql = &quot;OPTIMIZE TABLE forms&quot;;</span>
+<span class="nc" id="L215">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L216">			boolean res = ps.execute();</span>
+<span class="nc" id="L217">			ps.close();</span>
+<span class="nc" id="L218">			return res;</span>
+		}
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+		{
+<span class="nc" id="L222">			PreparedStatement ps = null;</span>
+<span class="nc" id="L223">			String sql = &quot;REINDEX TABLE forms&quot;;</span>
+<span class="nc" id="L224">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L225">			boolean res = ps.execute();</span>
+<span class="nc" id="L226">			ps.close();</span>
+<span class="nc" id="L227">			return res;</span>
+		}
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+		{
+<span class="nc" id="L231">			return true;</span>
+		}
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+		{
+<span class="nc" id="L235">			return true;</span>
+		}
+		else
+		{
+<span class="nc" id="L239">			return true;</span>
+		}
+	}
+
+	private static int updateManageRecord(Connection db_conn, String formName) throws SQLException
+	{
+<span class="nc" id="L245">		PreparedStatement ps = null;</span>
+<span class="nc" id="L246">		String sql = &quot;UPDATE forms_archive f1, forms f2 SET f1.data = f2.data WHERE f1.form_name = f2.form_name AND f2.form_name = ? AND f2.create_date IS NULL AND f1.create_date IS NULL&quot;;</span>
+<span class="nc" id="L247">		ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L248">		ps.setString(1, formName);</span>
+<span class="nc" id="L249">		int res = ps.executeUpdate();</span>
+<span class="nc" id="L250">		ps.close();</span>
+<span class="nc" id="L251">		return res;</span>
+	}
+
+	private static boolean addManageRecord(Connection db_conn, String formName) throws SQLException
+	{
+<span class="nc" id="L256">		PreparedStatement ps = null;</span>
+<span class="nc" id="L257">		String sql = &quot;INSERT INTO forms_archive SELECT f.* FROM forms f WHERE f.form_name = ? AND create_date IS NULL&quot;;</span>
+<span class="nc" id="L258">		ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L259">		ps.setString(1, formName);</span>
+<span class="nc" id="L260">		boolean res = ps.execute();</span>
+<span class="nc" id="L261">		ps.close();</span>
+<span class="nc" id="L262">		return res;</span>
+	}
+
+	private static boolean tableContainsManageRecord(Connection db_conn, String formName) throws SQLException
+	{
+<span class="nc" id="L267">		PreparedStatement ps = null;</span>
+<span class="nc" id="L268">		ps = db_conn.prepareStatement(&quot;SELECT * FROM forms_archive WHERE form_name = ? AND create_date IS NULL&quot;);</span>
+<span class="nc" id="L269">		ps.setString(1, formName);</span>
+<span class="nc" id="L270">		ResultSet rs = ps.executeQuery();</span>
+<span class="nc" id="L271">		boolean res = rs.next();</span>
+<span class="nc" id="L272">		ps.close();</span>
+<span class="nc" id="L273">		return res;</span>
+	}
+
+	private static boolean insertRecord(Connection db_conn, int formId) throws SQLException
+	{
+<span class="nc" id="L278">		PreparedStatement ps = null;</span>
+<span class="nc" id="L279">		String sql = &quot;INSERT INTO forms_archive SELECT f.* FROM forms f WHERE id = ? AND create_date IS NOT NULL&quot;;</span>
+<span class="nc" id="L280">		ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L281">		ps.setInt(1, formId);</span>
+<span class="nc" id="L282">		boolean res = ps.execute();</span>
+<span class="nc" id="L283">		ps.close();</span>
+<span class="nc" id="L284">		return res;</span>
+	}
+
+	private static boolean removeRecord(Connection db_conn, int formId) throws SQLException
+	{
+<span class="nc" id="L289">		PreparedStatement ps = null;</span>
+<span class="nc" id="L290">		String sql = &quot;DELETE FROM forms WHERE id = ? AND create_date IS NOT NULL&quot;;</span>
+<span class="nc" id="L291">		ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L292">		ps.setInt(1, formId);</span>
+<span class="nc" id="L293">		boolean res = ps.execute();</span>
+<span class="nc" id="L294">		ps.close();</span>
+<span class="nc" id="L295">		return res;</span>
+	}
+
+	private static boolean manageRecord(Connection db_conn, String formName) throws SQLException
+	{
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if(FormDB.tableContainsManageRecord(db_conn, formName))</span>
+		{
+<span class="nc" id="L302">			FormDB.updateManageRecord(db_conn, formName);</span>
+		}
+		else
+		{
+<span class="nc" id="L306">			FormDB.addManageRecord(db_conn, formName);</span>
+		}
+<span class="nc" id="L308">		return true;</span>
+	}
+
+	private static boolean iterateRows(Connection db_conn, ResultSet rs) throws SQLException
+	{
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		while (rs.next()){</span>
+<span class="nc" id="L314">			int formId = rs.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L315">			FormDB.insertRecord(db_conn, formId);</span>
+<span class="nc" id="L316">			FormDB.removeRecord(db_conn, formId);</span>
+<span class="nc" id="L317">		}</span>
+<span class="nc" id="L318">		return true;</span>
+	}
+
+	/**
+	 * Prekopiruje cely zaznam s najnizsim Id z vybratych poloziek na koniec tabulky, aby sa na jeho miesto mohla vlozit hlavicka formulara s novym nazvom zvacsa Archiv-'oldName'
+	 *
+	 * @param 	smallestId		najnizsie Id z vybratych poloziek formulara, ktore chce pouzivatel archivovat
+	 * @return	true 				ak sa uspesne prekopiruje(najprv select, potom insert) prvy zaznam na koniec tabulky, inak false
+	 */
+
+
+	/**
+	 * Vrati nove Id prekopirovaneho prveho zaznamu z vybratych
+	 *
+	 * @param	name			nazov formulara, ktoreho chceme zistit jeho nove Id
+	 * @param	createdTime datum a cas vytvorenie formulara. Spolu s jeho nazvom by mali presne identifikovat nove Id
+	 *
+	 * @return 	Vrati nove formId formulara s danym nazvom a datum vytvorenia
+	 */
+	public static int getNewFormId(String name, Timestamp createdTime)
+	{
+<span class="nc" id="L339">		int newId = 0;</span>
+
+<span class="nc" id="L341">		Connection db_conn = null;</span>
+<span class="nc" id="L342">		PreparedStatement ps = null;</span>
+<span class="nc" id="L343">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="nc" id="L347">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L348">			ps = db_conn.prepareStatement(&quot;SELECT max(id) AS id FROM forms WHERE form_name = ? AND create_date = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+
+<span class="nc" id="L350">			ps.setString(1, name);</span>
+<span class="nc" id="L351">			ps.setTimestamp(2, createdTime);</span>
+
+<span class="nc" id="L353">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L355" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L356">				newId = rs.getInt(&quot;id&quot;);</span>
+
+<span class="nc" id="L358">			rs.close();</span>
+<span class="nc" id="L359">			ps.close();</span>
+<span class="nc" id="L360">			db_conn.close();</span>
+
+<span class="nc" id="L362">			rs = null;</span>
+<span class="nc" id="L363">			ps = null;</span>
+<span class="nc" id="L364">			db_conn = null;</span>
+		}
+<span class="nc" id="L366">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L368">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L375">					rs.close();</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L377">					ps.close();</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L379">					db_conn.close();</span>
+			}
+<span class="nc" id="L381">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L383">			}</span>
+		}
+<span class="nc" id="L385">		return newId;</span>
+	}
+
+	/**
+	 * Prepise z tabulky forms najnizsiu zvolenu polozku formulara, aby na jeho miesto s rovnakym Id mohol vytvorit hlavicku formulara.
+	 * Zvoleny formular je uz prekopirovany na nove Id podla sekvencie DB.
+	 *
+	 * @param 	smallestId		najnizsi identifikator zvolenych poloziek formulara, ktore je potrebne zarchivovat a prepisat na hlavicku formulara
+	 * @param	newName			novy nazov hlavicky archivovaneho formulara
+	 * @param	originalFormId	identifikator povodnej hlavicky formulara, ktory chceme zarchivovat. Data jeho hlavicky a data hlavicky novo-vznikajuceho formulara su rovnake.
+	 *
+	 * @return	ak sa operacia podari true, inak false
+	 */
+
+	/**
+	 * nastavi vsetkym polozkam s name oldName na name newName, ak zbehne vrati true, inak false
+	 *
+	 * @param oldName
+	 * @param newName
+	 *
+	 * @return
+	 */
+	public static boolean setFormName(String oldName, String newName)
+	{
+<span class="nc" id="L409">		return FormDB.setFormName(oldName, newName, &quot;&quot;, 0, true);</span>
+	}
+
+	/**
+	 * nastavi vsetkym polozkam s name oldName na name newName, ak zbehne vrati true, inak false
+	 * @param oldName
+	 * @param newName
+	 * @return
+	 */
+	public static boolean setFormName(String oldName, String newName, String idQuery, int smallestId, boolean allRecords)
+	{
+<span class="nc" id="L420">		boolean updateOk = false;</span>
+<span class="nc" id="L421">		int id = 0;</span>
+
+<span class="nc" id="L423">		Connection db_conn = null;</span>
+<span class="nc" id="L424">		PreparedStatement ps = null;</span>
+
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		if (idQuery == null)</span>
+<span class="nc" id="L427">			idQuery = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L429" title="All 4 branches missed.">		if (smallestId == 0 &amp;&amp; idQuery.indexOf(&quot; create_date IS NOT NULL&quot;) != -1) // ide o pripad archivacie vsetkych zaznamov a ponechanie povodnej hlavicky</span>
+<span class="nc" id="L430">			smallestId = FormDB.getFirstFormId(oldName);</span>
+
+		try
+		{
+<span class="nc" id="L434">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L435">			String sql = &quot;SELECT id FROM forms WHERE form_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true) + idQuery;</span>
+
+<span class="nc" id="L437">			id = searchOldNameForm(newName);</span>
+<span class="nc bnc" id="L438" title="All 4 branches missed.">			if (id &gt; 0 &amp;&amp; allRecords)</span>
+			{
+<span class="nc" id="L440">				sql = &quot;SELECT id FROM forms WHERE form_name = ? AND id &gt; ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+			}
+			/*else if (Tools.isNotEmpty(idQuery) &amp;&amp; smallestId != 0)
+			{
+				FormDB.copySmallestIdForm(smallestId);		//prekopiruje zaznam s prvym Id na koniec tabulky
+				FormDB.updateFirstIdForm(smallestId, newName, searchOldNameForm(oldName));	// prepise ho
+			}*/
+<span class="nc" id="L447">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L448">			int pIndex = 1;</span>
+<span class="nc" id="L449">			ps.setString(pIndex++, oldName.trim());</span>
+<span class="nc bnc" id="L450" title="All 4 branches missed.">			if	(id &gt; 0 &amp;&amp; allRecords)</span>
+			{
+<span class="nc" id="L452">				ps.setInt(pIndex++, id);</span>
+			}
+<span class="nc" id="L454">			FormDB.iterateRows(db_conn, ps.executeQuery());</span>
+<span class="nc" id="L455">			ps.close();</span>
+<span class="nc" id="L456">			FormDB.manageRecord(db_conn, oldName.trim());</span>
+<span class="nc" id="L457">			FormDB.optimiseTable(db_conn);</span>
+<span class="nc" id="L458">			db_conn.close();</span>
+<span class="nc" id="L459">			ps = null;</span>
+<span class="nc" id="L460">			db_conn = null;</span>
+<span class="nc" id="L461">			updateOk = true;</span>
+		}
+<span class="nc" id="L463">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L465">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L471" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L472">					ps.close();</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L474">					db_conn.close();</span>
+			}
+<span class="nc" id="L476">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L478">			}</span>
+		}
+		/*if (id &gt; 0)	// kontrola, ci nevznikli dve hlavicky formularu, ak ano, tu najnovsiu vymaze
+			FormDB.checkAndDeleteMultipleFormHeader(newName);
+		*/
+<span class="nc" id="L483">		return(updateOk);</span>
+	}
+
+	/**
+	 * nastavi vsetkym polozkam vytvorenym fordate todate inkluzivne
+	 *  s name oldName na name newName, ak zbehne vrati true, inak false
+	 * @param oldName
+	 * @param newName
+	 * @return
+	 */
+	public static boolean setFormName(String oldName, String newName, Date fromDate, Date toDate,int smallestId)
+	{
+<span class="nc" id="L495">		boolean updateOk = false;</span>
+
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		if(Tools.isAnyEmpty(oldName,newName))</span>
+<span class="nc" id="L498">			return updateOk;</span>
+
+<span class="nc" id="L500">		Connection db_conn = null;</span>
+<span class="nc" id="L501">		PreparedStatement ps = null;</span>
+
+		try
+		{
+<span class="nc" id="L505">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L506">			String sql = &quot;SELECT id FROM forms WHERE form_name = ? AND create_date &gt;= ? AND create_date &lt; ? and id != ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L507">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L508">			int pIndex = 1;</span>
+<span class="nc" id="L509">			ps.setString(pIndex++, oldName.trim());</span>
+<span class="nc" id="L510">			ps.setTimestamp(pIndex++, new Timestamp(fromDate.getTime()));</span>
+<span class="nc" id="L511">			ps.setTimestamp(pIndex++, new Timestamp(toDate.getTime()));</span>
+<span class="nc" id="L512">			ps.setInt(pIndex++, smallestId);</span>
+
+<span class="nc" id="L514">			FormDB.iterateRows(db_conn, ps.executeQuery());</span>
+<span class="nc" id="L515">			ps.close();</span>
+<span class="nc" id="L516">			FormDB.manageRecord(db_conn, oldName.trim());</span>
+<span class="nc" id="L517">			FormDB.optimiseTable(db_conn);</span>
+<span class="nc" id="L518">			db_conn.close();</span>
+<span class="nc" id="L519">			ps = null;</span>
+<span class="nc" id="L520">			db_conn = null;</span>
+			/*if (smallestId != 0)
+			{
+				FormDB.copySmallestIdForm(smallestId); // prekopiruje zaznam s prvym
+				FormDB.updateFirstIdForm(smallestId, newName, searchOldNameForm(oldName)); // prepise
+																													// ho
+			}*/
+			/*ak sme zarchivovali vsetko zo stareho formu tak vymazem staru hlavicku*/
+<span class="nc" id="L528">			int oldCount = new SimpleQuery().forInt(&quot;select count(*) from forms where form_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true), oldName);</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">			if(oldCount == 1)</span>
+<span class="nc" id="L530">				new SimpleQuery().execute(&quot;delete from forms where form_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true), oldName);</span>
+
+<span class="nc" id="L532">			updateOk = true;</span>
+		}
+<span class="nc" id="L534">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L536">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L542" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L543">					ps.close();</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L545">					db_conn.close();</span>
+			}
+<span class="nc" id="L547">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L549">			}</span>
+		}
+<span class="nc" id="L551">		return(updateOk);</span>
+	}
+
+	/**
+	 * Vrati id prveho zaznamu formu po jeho hlavicke
+	 *
+	 * @param	name	nazov formulara, ktoreho chceme zistit jeho najnizsie Id okrem hlavicky
+	 * @return 	Vrati najnizsie formId formulara s danym nazvom okrem jeho hlavicky
+	 */
+	public static int getFirstFormId(String name)
+	{
+<span class="nc" id="L562">		int id = 0;</span>
+
+<span class="nc" id="L564">		Connection db_conn = null;</span>
+<span class="nc" id="L565">		PreparedStatement ps = null;</span>
+<span class="nc" id="L566">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="nc" id="L570">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L571">			ps = db_conn.prepareStatement(&quot;SELECT min(id) as id FROM forms WHERE form_name = ? AND create_date IS NOT NULL &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L572">			ps.setString(1, name);</span>
+<span class="nc" id="L573">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L575" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L576">				id = rs.getInt(&quot;id&quot;);</span>
+
+<span class="nc" id="L578">			rs.close();</span>
+<span class="nc" id="L579">			ps.close();</span>
+<span class="nc" id="L580">			db_conn.close();</span>
+<span class="nc" id="L581">			rs = null;</span>
+<span class="nc" id="L582">			ps = null;</span>
+<span class="nc" id="L583">			db_conn = null;</span>
+		}
+<span class="nc" id="L585">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L587">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L593" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L594">					rs.close();</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L596">					ps.close();</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L598">					db_conn.close();</span>
+			}
+<span class="nc" id="L600">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L602">			}</span>
+		}
+<span class="nc" id="L604">		return id;</span>
+	}
+
+	/**
+	 * vrati id prveho zaznamu ak sa name == newName, inac vrati 0
+	 * @return
+	 */
+	public static int searchOldNameForm(String newName){
+<span class="nc" id="L612">		int id = 0;</span>
+
+<span class="nc" id="L614">		Connection db_conn = null;</span>
+<span class="nc" id="L615">		PreparedStatement ps = null;</span>
+<span class="nc" id="L616">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L619">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L620">			ps = db_conn.prepareStatement(&quot;SELECT min(id) as id FROM forms WHERE form_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L621">			ps.setString(1, newName);</span>
+<span class="nc" id="L622">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L623" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L625">				id = rs.getInt(&quot;id&quot;);</span>
+			}
+<span class="nc" id="L627">			rs.close();</span>
+<span class="nc" id="L628">			ps.close();</span>
+<span class="nc" id="L629">			db_conn.close();</span>
+<span class="nc" id="L630">			rs = null;</span>
+<span class="nc" id="L631">			ps = null;</span>
+<span class="nc" id="L632">			db_conn = null;</span>
+		}
+<span class="nc" id="L634">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L636">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L642" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L643">					rs.close();</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L645">					ps.close();</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L647">					db_conn.close();</span>
+			}
+<span class="nc" id="L649">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L651">			}</span>
+		}
+<span class="nc" id="L653">		return id;</span>
+	}
+
+	/**
+	 * Vyfiltruje formulare na zaklade prav pouzivatela na pristup k adresarom a strankam a docId formularu
+	 * @param user
+	 * @param allForms
+	 * @return
+	 */
+	public static List&lt;FormDetails&gt; filterFormsByUser(UserDetails user, List&lt;FormDetails&gt; allForms)
+	{
+<span class="nc" id="L664">		List&lt;FormDetails&gt; ret = new ArrayList&lt;&gt;(allForms.size());</span>
+
+<span class="nc" id="L666">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc" id="L668">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="nc" id="L669">		int[] userEditablePages = Tools.getTokensInt(user.getEditablePages(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L670" title="All 8 branches missed.">		if ((userEditableGroups == null || userEditableGroups.length&lt;1) &amp;&amp; (userEditablePages==null || userEditablePages.length&lt;1)) return allForms;</span>
+
+<span class="nc" id="L672">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc bnc" id="L673" title="All 2 branches missed.">		for (FormDetails form : allForms)</span>
+		{
+<span class="nc" id="L675">			boolean pridaj = false;</span>
+<span class="nc bnc" id="L676" title="All 4 branches missed.">			if (userEditableGroups!=null &amp;&amp; userEditableGroups.length&gt;0)</span>
+			{
+<span class="nc" id="L678">				DocDetails doc = docDB.getBasicDocDetails(form.getDocId(), false);</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">				if (doc != null)</span>
+				{
+<span class="nc bnc" id="L681" title="All 2 branches missed.">					for (int groupId : userEditableGroups)</span>
+					{
+<span class="nc bnc" id="L683" title="All 2 branches missed.">						if (doc.getGroupId()==groupId)</span>
+						{
+<span class="nc" id="L685">							pridaj = true;</span>
+<span class="nc" id="L686">							break;</span>
+						}
+					}
+				}
+			}
+<span class="nc bnc" id="L691" title="All 4 branches missed.">			if (userEditablePages!=null &amp;&amp; userEditablePages.length&gt;0)</span>
+			{
+<span class="nc bnc" id="L693" title="All 2 branches missed.">				for (int docId : userEditablePages)</span>
+				{
+<span class="nc bnc" id="L695" title="All 2 branches missed.">					if (form.getDocId()==docId)</span>
+					{
+<span class="nc" id="L697">						pridaj = true;</span>
+<span class="nc" id="L698">						break;</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L703" title="All 2 branches missed.">			if (pridaj) ret.add(form);</span>
+<span class="nc" id="L704">		}</span>
+
+<span class="nc" id="L706">		return ret;</span>
+	}
+
+	/**
+	 * Zisti, ci sa v tabulke forms nevyskytuju dve hlavicky formulara a ked ano, tak tu s vyssim Id vymaze. &lt;br /&gt;
+	 * Vznika vtedy, ak user zarchivuje nejake polozky z formulara a vznikne novy formular najcastejsie s nazvom Archiv-stareMeno. Potom
+	 * pri premenovani celeho novo-vzniknuteho formulara na povodne meno vzniknu dva hlavicky - povodna a nova, ktora sa vytvorila pri archivacii poloziek a
+	 * nasledne sa premenovala na povodny nazov.
+	 *
+	 * @param 	name	nazov formulara, ktoreho hlavicku chceme otestovat
+	 *
+	 * @return	true ak mal formular dve hlavicky a jedna z nich sa vymazala, false ak je vsetko v poriadku a formular mal iba jednu hlavicku
+	 */
+	public static boolean checkAndDeleteMultipleFormHeader(String name)
+	{
+<span class="nc" id="L721">		boolean retValue = false;</span>
+<span class="nc" id="L722">		List&lt;Integer&gt; formHeaderIdValues = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L724">		Connection db_conn = null;</span>
+<span class="nc" id="L725">		PreparedStatement ps = null;</span>
+<span class="nc" id="L726">		ResultSet rs = null;</span>
+
+		try
+		{
+<span class="nc" id="L730">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L731">			ps = db_conn.prepareStatement(&quot;SELECT id FROM forms WHERE form_name = ? AND create_date IS NULL &quot;+CloudToolsForCore.getDomainIdSqlWhere(true)+&quot; ORDER BY id&quot;);</span>
+<span class="nc" id="L732">			ps.setString(1, name);</span>
+
+<span class="nc" id="L734">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L736" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L738">				retValue = true;</span>
+<span class="nc" id="L739">				formHeaderIdValues.add(Integer.valueOf(rs.getInt(&quot;id&quot;)));</span>
+			}
+
+<span class="nc" id="L742">			rs.close();</span>
+<span class="nc" id="L743">			ps.close();</span>
+<span class="nc" id="L744">			db_conn.close();</span>
+
+<span class="nc" id="L746">			rs = null;</span>
+<span class="nc" id="L747">			ps = null;</span>
+<span class="nc" id="L748">			db_conn = null;</span>
+		}
+<span class="nc" id="L750">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L752">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L758" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L759">					rs.close();</span>
+<span class="nc bnc" id="L760" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L761">					ps.close();</span>
+<span class="nc bnc" id="L762" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L763">					db_conn.close();</span>
+			}
+<span class="nc" id="L765">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L767">			}</span>
+		}
+
+<span class="nc bnc" id="L770" title="All 2 branches missed.">		if (formHeaderIdValues.size() &gt; 1)</span>
+<span class="nc" id="L771">			deleteFormById(formHeaderIdValues.get(1));	// vymaze najnovsiu nadbytocnu hlavicku</span>
+
+<span class="nc" id="L773">		return(retValue);</span>
+	}
+
+
+	public static boolean isThereFileRestrictionFor(String formName)
+	{
+<span class="nc bnc" id="L779" title="All 2 branches missed.">		return new SimpleQuery().forInt(</span>
+<span class="nc" id="L780">			&quot;SELECT COUNT(*) FROM form_attributes WHERE form_name = ? AND param_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true), formName, &quot;maxSizeInKilobytes&quot;) &gt; 0;</span>
+	}
+
+	public static FormFileRestriction getFileRestrictionFor(String formName)
+	{
+<span class="nc" id="L785">		FormFileRestriction restriction = new FormFileRestriction();</span>
+<span class="nc" id="L786">		restriction.setFormName(formName);</span>
+<span class="nc" id="L787">		Connection db_conn = null;</span>
+<span class="nc" id="L788">		PreparedStatement ps = null;</span>
+<span class="nc" id="L789">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L792">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L793">			ps = db_conn.prepareStatement(&quot;SELECT * FROM form_attributes WHERE form_name = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L794">			ps.setString(1, formName);</span>
+<span class="nc" id="L795">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L796" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L798">				String paramName = rs.getString(&quot;param_name&quot;);</span>
+<span class="nc" id="L799">				String value = rs.getString(&quot;value&quot;);</span>
+<span class="nc bnc" id="L800" title="All 2 branches missed.">				if (&quot;allowedExtensions&quot;.equals(paramName))</span>
+<span class="nc" id="L801">					restriction.setAllowedExtensions(value);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">				if (&quot;maxSizeInKilobytes&quot;.equals(paramName))</span>
+<span class="nc" id="L803">					restriction.setMaxSizeInKilobytes(Integer.parseInt(value));</span>
+<span class="nc bnc" id="L804" title="All 2 branches missed.">				if (&quot;pictureHeight&quot;.equals(paramName))</span>
+<span class="nc" id="L805">					restriction.setPictureHeight(Integer.parseInt(value));</span>
+<span class="nc bnc" id="L806" title="All 2 branches missed.">				if (&quot;pictureWidth&quot;.equals(paramName))</span>
+<span class="nc" id="L807">					restriction.setPictureWidth(Integer.parseInt(value));</span>
+<span class="nc" id="L808">			}</span>
+<span class="nc" id="L809">			rs.close();</span>
+<span class="nc" id="L810">			ps.close();</span>
+<span class="nc" id="L811">			db_conn.close();</span>
+<span class="nc" id="L812">			rs = null;</span>
+<span class="nc" id="L813">			ps = null;</span>
+<span class="nc" id="L814">			db_conn = null;</span>
+		}
+<span class="nc" id="L816">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L818">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L824" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L825">					rs.close();</span>
+<span class="nc bnc" id="L826" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L827">					ps.close();</span>
+<span class="nc bnc" id="L828" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L829">					db_conn.close();</span>
+			}
+<span class="nc" id="L831">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L833">			}</span>
+		}
+
+<span class="nc" id="L836">		return restriction;</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static List&lt;String&gt; getDistinctFormNames()
+	{
+<span class="nc" id="L842">		return new SimpleQuery().forList(&quot;SELECT DISTINCT(form_name) FROM forms WHERE create_date IS NULL &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+	}
+
+	/**
+	 * Filtruje formy na archivne a nearchivne
+	 * form sa povazuje za archivny ak sa zacina na &quot;Archiv-&quot;
+	 * @param allForms formulare
+	 * @param addArchive true pre archivne
+	 * @return
+	 */
+	/*public static List&lt;FormDetails&gt; filterFormsByArchive(List&lt;FormDetails&gt; allForms, boolean addArchive)
+	{
+		List&lt;FormDetails&gt; ret = new ArrayList&lt;FormDetails&gt;(allForms.size());
+		for (FormDetails form : allForms)
+		{
+			if(addArchive){
+				if(form.getFormName().startsWith(&quot;Archiv-&quot;)){
+					ret.add(form);
+				}
+			}
+			else{
+				if(!form.getFormName().startsWith(&quot;Archiv-&quot;)){
+					ret.add(form);
+				}
+			}
+		}
+		return ret;
+	}*/
+
+	public List&lt;String[]&gt; getAllRegularExpression()
+	{
+<span class="fc" id="L873">		String[] regularExp = null;</span>
+<span class="fc" id="L874">		Connection db_conn = null;</span>
+<span class="fc" id="L875">		PreparedStatement ps = null;</span>
+<span class="fc" id="L876">		ResultSet rs = null;</span>
+<span class="fc bfc" id="L877" title="All 2 branches covered.">		if(regExpList != null)</span>
+		{
+<span class="fc" id="L879">			Logger.debug(FormDB.class, &quot;Zoznam nie je prazdny, vraciam zoznam.&quot;);</span>
+<span class="fc" id="L880">			return regExpList;</span>
+		}
+
+		try
+		{
+<span class="fc" id="L885">			Logger.debug(FormDB.class, &quot;Nacitavam z databazy.&quot;);</span>
+<span class="fc" id="L886">			List&lt;String[]&gt; newRegExpList = new ArrayList&lt;&gt;();  // pomocna premenna na prevenciu multithreadovych bugov</span>
+<span class="fc" id="L887">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L888">			ps = db_conn.prepareStatement(&quot;SELECT * FROM form_regular_exp&quot;);</span>
+<span class="fc" id="L889">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L890" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L892">				regularExp = new String[3];</span>
+<span class="fc" id="L893">				regularExp[0] = DB.getDbString(rs, &quot;title&quot;);</span>
+<span class="fc" id="L894">				regularExp[1] = DB.getDbString(rs, &quot;type&quot;);</span>
+<span class="fc" id="L895">				regularExp[2] = DB.getDbString(rs, &quot;reg_exp&quot;);</span>
+<span class="fc" id="L896">				newRegExpList.add(regularExp);</span>
+			}
+<span class="fc" id="L898">			regExpList = newRegExpList;</span>
+<span class="fc" id="L899">			rs.close();</span>
+<span class="fc" id="L900">			ps.close();</span>
+<span class="fc" id="L901">			db_conn.close();</span>
+<span class="fc" id="L902">			rs = null;</span>
+<span class="fc" id="L903">			ps = null;</span>
+<span class="fc" id="L904">			db_conn = null;</span>
+		}
+<span class="nc" id="L906">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L908">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L914" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L915">					rs.close();</span>
+<span class="pc bpc" id="L916" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L917">					ps.close();</span>
+<span class="pc bpc" id="L918" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L919">					db_conn.close();</span>
+			}
+<span class="nc" id="L921">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L923">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L924">			}</span>
+		}
+<span class="fc" id="L926">		return regExpList;</span>
+	}
+
+	public static String[] getRegExpByType(String type)
+	{
+<span class="fc" id="L931">		String[] regularExp = null;</span>
+
+<span class="fc" id="L933">		Connection db_conn = null;</span>
+<span class="fc" id="L934">		PreparedStatement ps = null;</span>
+<span class="fc" id="L935">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L938">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L939">			ps = db_conn.prepareStatement(&quot;SELECT * FROM form_regular_exp WHERE type = ?&quot;);</span>
+<span class="fc" id="L940">			ps.setString(1, type);</span>
+<span class="fc" id="L941">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L942" title="1 of 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="fc" id="L944">				regularExp = new String[3];</span>
+<span class="fc" id="L945">				regularExp[0] = DB.getDbString(rs, &quot;title&quot;);</span>
+<span class="fc" id="L946">				regularExp[1] = DB.getDbString(rs, &quot;type&quot;);</span>
+<span class="fc" id="L947">				regularExp[2] = DB.getDbString(rs, &quot;reg_exp&quot;);</span>
+			}
+<span class="fc" id="L949">			rs.close();</span>
+<span class="fc" id="L950">			ps.close();</span>
+<span class="fc" id="L951">			db_conn.close();</span>
+<span class="fc" id="L952">			rs = null;</span>
+<span class="fc" id="L953">			ps = null;</span>
+<span class="fc" id="L954">			db_conn = null;</span>
+		}
+<span class="nc" id="L956">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L958">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L964" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L965">					rs.close();</span>
+<span class="pc bpc" id="L966" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L967">					ps.close();</span>
+<span class="pc bpc" id="L968" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L969">					db_conn.close();</span>
+			}
+<span class="nc" id="L971">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L973">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L974">			}</span>
+		}
+<span class="fc" id="L976">		return regularExp;</span>
+	}
+
+	public static boolean saveRegularExpression(String title, String type, String regExp)
+	{
+<span class="nc" id="L981">		Connection db_conn = null;</span>
+<span class="nc" id="L982">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L985">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L986">			ps = db_conn.prepareStatement(&quot;INSERT INTO form_regular_exp (title, type, reg_exp) VALUES (?, ?, ?)&quot;);</span>
+<span class="nc" id="L987">			ps.setString(1, title);</span>
+<span class="nc" id="L988">			ps.setString(2, type);</span>
+<span class="nc" id="L989">			ps.setString(3, regExp);</span>
+<span class="nc" id="L990">			ps.execute();</span>
+<span class="nc" id="L991">			ps.close();</span>
+<span class="nc" id="L992">			db_conn.close();</span>
+<span class="nc" id="L993">			ps = null;</span>
+<span class="nc" id="L994">			db_conn = null;</span>
+		}
+<span class="nc" id="L996">		catch(SQLException sqlEx)</span>
+		{
+<span class="nc" id="L998">			sk.iway.iwcm.Logger.error(sqlEx);</span>
+<span class="nc" id="L999">			return false;</span>
+		}
+<span class="nc" id="L1001">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1003">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1004">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1010" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1011">					ps.close();</span>
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1013">					db_conn.close();</span>
+			}
+<span class="nc" id="L1015">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1017">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1018">			}</span>
+		}
+<span class="nc" id="L1020">		return true;</span>
+	}
+
+	public static boolean updateRegularExpression(String title, String type, String typeOld, String regExp)
+	{
+<span class="nc" id="L1025">		Connection db_conn = null;</span>
+<span class="nc" id="L1026">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1029">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1030">			ps = db_conn.prepareStatement(&quot;UPDATE form_regular_exp SET title=?, type=?, reg_exp=? WHERE type=?&quot;);</span>
+<span class="nc" id="L1031">			ps.setString(1, title);</span>
+<span class="nc" id="L1032">			ps.setString(2, type);</span>
+<span class="nc" id="L1033">			ps.setString(3, regExp);</span>
+<span class="nc" id="L1034">			ps.setString(4, typeOld);</span>
+<span class="nc" id="L1035">			ps.execute();</span>
+<span class="nc" id="L1036">			ps.close();</span>
+<span class="nc" id="L1037">			db_conn.close();</span>
+<span class="nc" id="L1038">			ps = null;</span>
+<span class="nc" id="L1039">			db_conn = null;</span>
+		}
+<span class="nc" id="L1041">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1043">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1044">			return false;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1051">					ps.close();</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1053">					db_conn.close();</span>
+			}
+<span class="nc" id="L1055">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1057">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1058">			}</span>
+		}
+<span class="nc" id="L1060">		return true;</span>
+	}
+
+	public static void deleteRegExp(String type)
+	{
+<span class="nc" id="L1065">		Connection db_conn = null;</span>
+<span class="nc" id="L1066">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1069">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1070">			ps = db_conn.prepareStatement(&quot;DELETE FROM form_regular_exp WHERE type = ?&quot;);</span>
+<span class="nc" id="L1071">			ps.setString(1, type);</span>
+<span class="nc" id="L1072">			ps.execute();</span>
+
+<span class="nc" id="L1074">			ps.close();</span>
+<span class="nc" id="L1075">			db_conn.close();</span>
+<span class="nc" id="L1076">			ps = null;</span>
+<span class="nc" id="L1077">			db_conn = null;</span>
+		}
+<span class="nc" id="L1079">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1081">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1087" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1088">					ps.close();</span>
+<span class="nc bnc" id="L1089" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1090">					db_conn.close();</span>
+			}
+<span class="nc" id="L1092">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1094">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1095">			}</span>
+		}
+<span class="nc" id="L1097">	}</span>
+
+	/**
+    * Vymaze formular z tabulky forms identifikovany jeho Id
+    *
+    * @param formId	identifikator formulara, ktory chceme vymazat
+    *
+    * @return true ak sa vymazanie podari, inak false
+    */
+	public static boolean deleteFormById(int formId)
+	{
+		try{
+<span class="nc" id="L1109">			new SimpleQuery().execute(&quot;DELETE FROM forms WHERE id = ? &quot;+ CloudToolsForCore.getDomainIdSqlWhere(true), formId);</span>
+<span class="nc" id="L1110">			return true;</span>
+		}
+<span class="nc" id="L1112">		catch (IllegalStateException e) {</span>
+<span class="nc" id="L1113">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1114">			return false;</span>
+		 }
+	}
+
+	public static Map&lt;String, Integer&gt; createColNames(String data)
+	{
+<span class="nc" id="L1120">		Map&lt;String, Integer&gt; colNames = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L1121">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		int i;
+<span class="nc" id="L1124">		int counter = 0;</span>
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L1126" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L1128">			text = st.nextToken();</span>
+			try
+			{
+<span class="nc" id="L1131">				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L1132" title="All 2 branches missed.">				if (i&gt;0)</span>
+				{
+<span class="nc bnc" id="L1134" title="All 2 branches missed.">					if (i&lt;text.length())</span>
+					{
+<span class="nc" id="L1136">						text = text.substring(i+1);</span>
+					}
+				}
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">				else if (i==0)</span>
+				{
+<span class="nc bnc" id="L1141" title="All 2 branches missed.">					if (text.length() == 1)</span>
+					{
+<span class="nc" id="L1143">						text = &quot;&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L1147">						text = text.substring(1);</span>
+					}
+				}
+			}
+<span class="nc" id="L1151">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L1154">			}</span>
+
+<span class="nc bnc" id="L1156" title="All 4 branches missed.">			if (text!=null &amp;&amp; text.length()&gt;0)</span>
+			{
+<span class="nc" id="L1158">				colNames.put(text, Integer.valueOf(counter));</span>
+<span class="nc" id="L1159">				counter++;</span>
+			}
+		}
+<span class="nc" id="L1162">		return (colNames);</span>
+	}
+
+	/**
+	 * Odstrani z nazvu formularu pomlcky a podtrhovnik aby vyzeral &quot;ludskejsie&quot;
+	 * @param value
+	 * @return
+	 */
+	public static String getValueNoDash(String name)
+	{
+		//aby sa dali robit hodnoty typu ++, +, 0, -, --
+<span class="nc bnc" id="L1173" title="All 2 branches missed.">		if (&quot;----&quot;.equals(name)) return name;</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">		if (&quot;---&quot;.equals(name)) return name;</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">		if (&quot;--&quot;.equals(name)) return name;</span>
+<span class="nc bnc" id="L1176" title="All 2 branches missed.">		if (&quot;-&quot;.equals(name)) return name;</span>
+
+		//http://intra.iway.sk/helpdesk/?bugID=8149
+<span class="nc" id="L1179">		name = name.replace('_', ' ');</span>
+		//toto je dlha pomlcka na kratku
+<span class="nc" id="L1181">		name = name.replace('–', '-');</span>
+
+<span class="nc" id="L1183">		name = name.replace('-', ' ');</span>
+<span class="nc" id="L1184">		name = Tools.replace(name, &quot;e mail&quot;, &quot;e-mail&quot;);</span>
+
+		//toto je matica rb
+<span class="nc" id="L1187">		name = Tools.replace(name, &quot; rb &quot;, &quot; - &quot;);</span>
+<span class="nc bnc" id="L1188" title="All 4 branches missed.">		if (name.endsWith(&quot; rb&quot;) &amp;&amp; name.length()&gt;3) name = name.substring(0, name.length()-3);</span>
+
+		//nahrada multiple checkbox
+<span class="nc bnc" id="L1191" title="All 4 branches missed.">		if (name.endsWith(&quot;_cbm&quot;) &amp;&amp; name.length()&gt;4) name = name.substring(0, name.length()-4);</span>
+
+<span class="nc bnc" id="L1193" title="All 4 branches missed.">		if (name.endsWith(&quot; cb&quot;) &amp;&amp; name.length()&gt;3) name = name.substring(0, name.length()-3);</span>
+
+<span class="nc" id="L1195">		return name;</span>
+	}
+
+	/**
+	 * Vrati formDetails so zadanym id
+	 * @param formId
+	 * @return
+	 */
+	public static FormDetails getForm(int formId)
+	{
+<span class="nc" id="L1205">		FormDetails formDetails = null;</span>
+
+<span class="nc" id="L1207">		Connection db_conn = null;</span>
+<span class="nc" id="L1208">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1209">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1212">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L1214">			String sql = &quot;SELECT u.*, f.id, f.form_name, f.data, f.files, f.create_date, f.html, f.note, f.last_export_date, f.doc_id FROM forms f LEFT JOIN  users u ON u.user_id=f.user_id WHERE f.id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;f&quot;);</span>
+<span class="nc" id="L1215">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1216">			ps.setInt(1, formId);</span>
+
+<span class="nc" id="L1218">			rs = ps.executeQuery();</span>
+
+			UserDetails usr;
+<span class="nc" id="L1221">			UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+			Timestamp timestamp;
+<span class="nc bnc" id="L1223" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1225">				formDetails = new FormDetails();</span>
+<span class="nc" id="L1226">				formDetails.setId(rs.getInt(&quot;id&quot;));</span>
+
+<span class="nc" id="L1228">				usr = new UserDetails();</span>
+<span class="nc" id="L1229">				usr.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L1230">				usr.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1231">				usr.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="nc" id="L1232">				usr.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+<span class="nc" id="L1233">				usr.setLogin(DB.getDbString(rs, &quot;login&quot;));</span>
+<span class="nc" id="L1234">				usr.setAdmin(rs.getBoolean(&quot;is_admin&quot;));</span>
+<span class="nc" id="L1235">				usr.setUserGroupsIds(DB.getDbString(rs, &quot;user_groups&quot;));</span>
+<span class="nc" id="L1236">				usr.setUserGroupsNames(userGroupsDB.convertIdsToNames(usr.getUserGroupsIds()));</span>
+<span class="nc" id="L1237">				usr.setAuthorized(rs.getBoolean(&quot;authorized&quot;));</span>
+<span class="nc" id="L1238">				usr.setCompany(DB.getDbString(rs, &quot;company&quot;));</span>
+<span class="nc" id="L1239">				usr.setAdress(DB.getDbString(rs, &quot;adress&quot;));</span>
+<span class="nc" id="L1240">				usr.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L1241">				usr.setPSC(DB.getDbString(rs, &quot;PSC&quot;));</span>
+<span class="nc" id="L1242">				usr.setCountry(DB.getDbString(rs, &quot;country&quot;));</span>
+<span class="nc" id="L1243">				usr.setEmail(DB.getDbString(rs, &quot;email&quot;));</span>
+<span class="nc" id="L1244">				usr.setPhone(DB.getDbString(rs, &quot;phone&quot;));</span>
+<span class="nc" id="L1245">				usr.setLastLogon(DB.getDbDateTime(rs, &quot;last_logon&quot;));</span>
+
+<span class="nc" id="L1247">				usr.setDateOfBirth(DB.getDbDate(rs, &quot;date_of_birth&quot;));</span>
+<span class="nc" id="L1248">				usr.setSexMale(rs.getBoolean(&quot;sex_male&quot;));</span>
+<span class="nc" id="L1249">				usr.setPhoto(DB.getDbString(rs, &quot;photo&quot;));</span>
+<span class="nc" id="L1250">				usr.setSignature(DB.getDbString(rs, &quot;signature&quot;));</span>
+
+<span class="nc" id="L1252">				formDetails.setUserDetails(usr);</span>
+<span class="nc" id="L1253">				formDetails.setNote(DB.getDbString(rs, &quot;note&quot;));</span>
+<span class="nc" id="L1254">				Timestamp lastExportDate = rs.getTimestamp(&quot;last_export_date&quot;);</span>
+<span class="nc bnc" id="L1255" title="All 2 branches missed.">				if (lastExportDate != null) formDetails.setLastExportDate(lastExportDate.getTime());</span>
+<span class="nc" id="L1256">				formDetails.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+
+<span class="nc" id="L1258">				formDetails.setFormName(DB.getDbString(rs, &quot;form_name&quot;));</span>
+<span class="nc" id="L1259">				formDetails.setData(DB.getDbString(rs, &quot;data&quot;));</span>
+<span class="nc" id="L1260">				formDetails.setFiles(DB.getDbString(rs, &quot;files&quot;));</span>
+<span class="nc" id="L1261">				timestamp = rs.getTimestamp(&quot;create_date&quot;);</span>
+<span class="nc bnc" id="L1262" title="All 2 branches missed.">				if (timestamp != null)</span>
+				{
+<span class="nc" id="L1264">					formDetails.setCreateDate(timestamp.getTime());</span>
+<span class="nc" id="L1265">					formDetails.setCreateDateString(Tools.formatDateTime(timestamp));</span>
+				}
+
+<span class="nc" id="L1268">			}</span>
+<span class="nc" id="L1269">			rs.close();</span>
+<span class="nc" id="L1270">			ps.close();</span>
+
+<span class="nc" id="L1272">			db_conn.close();</span>
+<span class="nc" id="L1273">			rs = null;</span>
+<span class="nc" id="L1274">			ps = null;</span>
+<span class="nc" id="L1275">			db_conn = null;</span>
+		}
+<span class="nc" id="L1277">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1279">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1285" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1286">					rs.close();</span>
+<span class="nc bnc" id="L1287" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1288">					ps.close();</span>
+<span class="nc bnc" id="L1289" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1290">					db_conn.close();</span>
+			}
+<span class="nc" id="L1292">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1294">			}</span>
+		}
+<span class="nc" id="L1296">		return formDetails;</span>
+	}
+
+	/**
+	 * Overi, ci uz user odoslal formular s pozadovanym nazvom. Vrati TRUE, ak user este neodoslal form.
+	 * @param userId
+	 * @param formName
+	 * @return
+	 */
+	public static boolean checkFormSendOnce(int userId, String formName)
+	{
+<span class="nc" id="L1307">		boolean ret = true;</span>
+<span class="nc" id="L1308">		Connection db_conn = null;</span>
+<span class="nc" id="L1309">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1310">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc bnc" id="L1313" title="All 4 branches missed.">			if (userId &gt; 0 &amp;&amp; Tools.isNotEmpty(formName))</span>
+			{
+<span class="nc" id="L1315">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1316">				ps = db_conn.prepareStatement(&quot;SELECT * FROM forms WHERE user_id=? AND form_name=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1317">				ps.setInt(1, userId);</span>
+<span class="nc" id="L1318">				ps.setString(2, formName.trim());</span>
+<span class="nc" id="L1319">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1320" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L1322">					ret = false;</span>
+				}
+<span class="nc" id="L1324">				rs.close();</span>
+<span class="nc" id="L1325">				ps.close();</span>
+<span class="nc" id="L1326">				db_conn.close();</span>
+<span class="nc" id="L1327">				rs = null;</span>
+<span class="nc" id="L1328">				ps = null;</span>
+<span class="nc" id="L1329">				db_conn = null;</span>
+			}
+		}
+<span class="nc" id="L1332">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1334">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1340" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1341">					rs.close();</span>
+<span class="nc bnc" id="L1342" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1343">					ps.close();</span>
+<span class="nc bnc" id="L1344" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1345">					db_conn.close();</span>
+			}
+<span class="nc" id="L1347">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1349">			}</span>
+		}
+<span class="nc" id="L1351">		return(ret);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

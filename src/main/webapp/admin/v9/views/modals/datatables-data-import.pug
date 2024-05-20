@@ -36,7 +36,7 @@ include ../pug/mixins
                                     </div>
                                 </div>
                                 <div class="col-sm-1 form-group-tooltip">
-                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{datatables.export.supportedFormatXlsx}"><i class="far fa-info-circle"></i></button>
+                                    <button type="button" class="btn btn-link" data-toggle="tooltip" data-th-title="\#{datatables.export.supportedFormatXlsx}"><i class="ti ti-info-circle"></i></button>
                                 </div>
                             </div>
                             <div class="form-group row" id="import-settings">
@@ -86,11 +86,13 @@ include ../pug/mixins
             </div>
 
             <div class="modal-footer">
+                <div class="DTE_Footer_Content"></div>
                 <div class="DTE_Form_Error"></div>
 
-                <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="far fa-question-circle"></i> [[\#{button.help}]]</button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
-                <button disabled type="button" id="submit-import" class="btn btn-primary"><i class="fal fa-check"></i> [[\#{components.import_web_pages.import}]]</button>
+                span.buttons-footer-left
+                    <button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="ti ti-help"></i> [[\#{button.help}]]</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="ti ti-x"></i> [[\#{button.cancel}]]</button>
+                <button disabled type="button" id="submit-import" class="btn btn-primary"><i class="ti ti-check"></i> [[\#{components.import_web_pages.import}]]</button>
 
             </div>
         </div>

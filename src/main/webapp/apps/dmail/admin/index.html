@@ -59,7 +59,7 @@
 
         let buttonCounter = 4;
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="far fa-eye"></i>',
+            text: '<i class="ti ti-eye"></i>',
             action: function (e, dt, node) {
                 let selectedRows = dt.rows({ selected: true }).data();
                 for (let i=0; i<selectedRows.length; i++) {
@@ -72,19 +72,19 @@
             },
             className: 'btn btn-outline-secondary',
             attr: {
-                'title': '[[#{history.showPage}]]',
+                'title': /*[[#{history.showPage}]]*/ '',
                 'data-toggle': 'tooltip'
             }
         });
 
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="fas fa-toggle-on"></i>',
+            text: '<i class="ti ti-toggle-right"></i>',
             action: function (e, dt, node) {
                 campaingsDataTable.executeAction("start", true, /*[[#{components.dmail.campaings.start.button}]]*/ '', /*[[#{components.dmail.campaings.start.areYousure}]]*/ '');
             },
             className: 'btn btn-success',
             attr: {
-                'title': '[[#{components.dmail.campaings.start.button}]]',
+                'title': /*[[#{components.dmail.campaings.start.button}]]*/ '',
                 'data-toggle': 'tooltip'
             },
             init: function ( dt, node, config ) {
@@ -93,13 +93,13 @@
         });
 
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="fas fa-toggle-off"></i>',
+            text: '<i class="ti ti-toggle-left"></i>',
             action: function (e, dt, node) {
                 campaingsDataTable.executeAction("stop", true, /*[[#{components.dmail.campaings.stop.button}]]*/ '', /*[[#{components.dmail.campaings.stop.areYousure}]]*/ '');
             },
             className: 'btn btn-danger',
             attr: {
-                'title': '[[#{components.dmail.campaings.stop.button}]]',
+                'title': /*[[#{components.dmail.campaings.stop.button}]]*/ '',
                 'data-toggle': 'tooltip'
             },
             init: function ( dt, node, config ) {
@@ -108,13 +108,13 @@
         });
 
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="fas fa-repeat"></i>',
+            text: '<i class="ti ti-repeat"></i>',
             action: function (e, dt, node) {
                 campaingsDataTable.executeAction("resend", true, /*[[#{components.dmail.campaings.resend.button}]]*/ '', /*[[#{components.dmail.campaings.resend.areYousure}]]*/ '');
             },
             className : "btn btn-primary buttons-divider",
             attr: {
-                'title': '[[#{components.dmail.campaings.resend.button}]]',
+                'title': /*[[#{components.dmail.campaings.resend.button}]]*/ '',
                 'data-toggle': 'tooltip'
             },
             init: function ( dt, node, config ) {
@@ -151,11 +151,11 @@
 
                 let buttonCounter = 4;
                 recipientTable.button().add(buttonCounter++, {
-                    text: '<i class="fas fa-repeat"></i>',
+                    text: '<i class="ti ti-repeat"></i>',
                     action: function (e, dt, node) {
                         recipientTable.executeAction("resend", true, /*[[#{components.dmail.resend}]]*/ '', /*[[#{components.dmail.campaings.resendOne.areYousure}]]*/ '');
                     },
-                    className : "btn btn-primary buttons-divider",
+                    className : "btn btn-primary buttons-divider buttons-resend",
                     attr: {
                         'title': '[[#{components.dmail.resend}]]',
                         'data-toggle': 'tooltip'
@@ -167,7 +167,7 @@
 
                 //add insert button
                 /*recipientTable.button().add(1, {
-                    text: '<i class="far fa-download"></i>',
+                    text: '<i class="ti ti-download"></i>',
                     action: function (e, dt, node) {
                         WJ.openIframeModal({
                             url: "/components/dmail/admin_email_iframe_v9.jsp",

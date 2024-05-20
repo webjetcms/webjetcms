@@ -19,7 +19,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
@@ -33,13 +32,10 @@ import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import oracle.jdbc.OracleConnection;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
 import org.apache.commons.dbcp.ConfigurableDataSource;
 import org.apache.commons.dbcp.WebJETAbandonedDataSource;
-import org.apache.commons.dbcp.WebJETc3p0dataSource;
 import org.apache.commons.dbcp.WebJetUcpDataSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -66,8 +62,6 @@ import static sk.iway.iwcm.Tools.*;
  */
 public class DBPool
 {
-	private static final int DEFAULT_NUMBER_OF_HELPER_THREADS = 3;
-	private static final int ONE_MINUTE = 60;
 	private static DBPool instance = null;
 	private static Hashtable<String, ConfigurableDataSource> dataSourcesTable = null; //NOSONAR
 	private static Map<String, EntityManagerFactory> entityManagerFactories;
@@ -121,8 +115,6 @@ public class DBPool
 		String password;
 		String url;
 		String provider;
-		int helperThreads = DEFAULT_NUMBER_OF_HELPER_THREADS;
-		int maxIdleTimeInSeconds = ONE_MINUTE;
 
 		int initialSize;
 		int minActive;
@@ -210,12 +202,6 @@ public class DBPool
 							username = XmlUtils.getFirstChildValue(n, "username");
 							password = XmlUtils.getFirstChildValue(n, "password");
 							provider = XmlUtils.getFirstChildValue(n, "provider");
-							String possiblyHelperThreadsNumber = XmlUtils.getFirstChildValue(n, "helperThreads");
-							if (Tools.isInteger(possiblyHelperThreadsNumber))
-								helperThreads = Integer.parseInt(possiblyHelperThreadsNumber);
-							String possiblyMaxIdleTime = XmlUtils.getFirstChildValue(n, "maxIdleTime");
-							if (Tools.isInteger(possiblyMaxIdleTime))
-								maxIdleTimeInSeconds = Integer.parseInt(possiblyMaxIdleTime);
 							initialSize = getIntValue(XmlUtils.getFirstChildValue(n, "initialConnections"), initialSize);
 							minActive = getIntValue(XmlUtils.getFirstChildValue(n, "minimumSize"), minActive);
 							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, "maximumSize"), maxActive);
@@ -265,26 +251,34 @@ public class DBPool
 							if ("com.mysql.jdbc.Driver".equals(driver)) driver = "org.mariadb.jdbc.Driver"; //menime driver pre mysql tak aby sa nemuseli prepisovat vsetky poolmany pri update
 							if ("COM.mysql.jdbc.Driver".equals(driver)) driver = "com.mysql.jdbc.Driver"; //ak by blo z nejakeho dovodu treba pouzit mysql driver
 
+							if ("org.mariadb.jdbc.Driver".equals(driver)) {
+								url = Tools.replace(url, "jdbc:mysql://", "jdbc:mariadb://");
+							}
+
 							if ("iwcm".equals(dbname))
-					      {
-					      	if (driver.indexOf("oracle")!=-1)
 					      	{
-					      		Constants.DB_TYPE = Constants.DB_ORACLE;
-					      		ConfDB.CONF_TABLE_NAME = "webjet_conf";
-					      		ConfDB.CONF_PREPARED_TABLE_NAME = "webjet_conf_prepared";
-					      		ConfDB.MODULES_TABLE_NAME = "webjet_modules";
-					      		ConfDB.ADMINLOG_TABLE_NAME = "webjet_adminlog";
-					      		ConfDB.DB_TABLE_NAME = "webjet_db";
-					      		ConfDB.PROPERTIES_TABLE_NAME = "webjet_properties";
-					      	}
-					      	else if (driver.indexOf("jtds")!=-1 || driver.indexOf("microsoft.sqlserver")!= -1)
-					      	{
-					      		Constants.DB_TYPE = Constants.DB_MSSQL;
-					      	}
-					      	else
-					      	{
-					      		Constants.DB_TYPE = Constants.DB_MYSQL;
-					      	}
+								if (driver.indexOf("oracle")!=-1)
+								{
+									Constants.DB_TYPE = Constants.DB_ORACLE;
+									ConfDB.CONF_TABLE_NAME = "webjet_conf";
+									ConfDB.CONF_PREPARED_TABLE_NAME = "webjet_conf_prepared";
+									ConfDB.MODULES_TABLE_NAME = "webjet_modules";
+									ConfDB.ADMINLOG_TABLE_NAME = "webjet_adminlog";
+									ConfDB.DB_TABLE_NAME = "webjet_db";
+									ConfDB.PROPERTIES_TABLE_NAME = "webjet_properties";
+								}
+								else if (driver.indexOf("jtds")!=-1 || driver.indexOf("microsoft.sqlserver")!= -1)
+								{
+									Constants.DB_TYPE = Constants.DB_MSSQL;
+								}
+								else if (driver.indexOf("postgresql")!=-1 || driver.indexOf("pgsql")!= -1)
+								{
+									Constants.DB_TYPE = Constants.DB_PGSQL;
+								}
+								else
+								{
+									Constants.DB_TYPE = Constants.DB_MYSQL;
+								}
 								//minimumSize = System.getProperty("webjetDbMinimumSize"); //toto sa nikde nepouziva
 							}
 
@@ -292,25 +286,7 @@ public class DBPool
 							password = decryptPassword(password);
 							if (isEmpty(provider)) provider = "dbcp";
 
-							if ("c3p0".equalsIgnoreCase(provider))
-							{
-								ds = new WebJETc3p0dataSource(new ComboPooledDataSource());
-								WebJETc3p0dataSource source = (WebJETc3p0dataSource)ds;
-								source.setInitialPoolSize(initialSize);
-								source.setMaxPoolSize(maxActive);
-								source.setMaxIdleTime(maxIdleTimeInSeconds);
-								Logger.println(DBPool.class, String.format("MaxIdleTime: %d", maxIdleTimeInSeconds));
-								Logger.println(DBPool.class, String.format("HelperThreadsCount: %d", helperThreads));
-//								Don't uncomment this line - causes spam by MSSQL Logger
-//								source.setLogWriter(new PrintWriter(System.out));
-								source.setLogWriter(null);
-								source.setNumHelperThreads(helperThreads);
-								Properties details = new Properties();
-								details.put("SetBigStringTryClob", "true");
-								source.setProperties(details);
-								source.getOriginalSource().setAutoCommitOnClose(true);
-							}
-							else if("ucp".equalsIgnoreCase(provider)) {
+							if("ucp".equalsIgnoreCase(provider)) {
 								ds = new WebJetUcpDataSource(PoolDataSourceFactory.getPoolDataSource(), dbname);
 								WebJetUcpDataSource source = (WebJetUcpDataSource)ds;
 
@@ -352,23 +328,23 @@ public class DBPool
 							{
 								ds = new WebJETAbandonedDataSource();
 								WebJETAbandonedDataSource source = (WebJETAbandonedDataSource)ds;
-						      source.setMaxActive(maxActive);
-						      Logger.println(this,"max idle="+source.getMaxIdle());
-						      source.setMaxIdle(3);
+								source.setMaxActive(maxActive);
+								Logger.println(this,"max idle="+source.getMaxIdle());
+								source.setMaxIdle(3);
 
-						      source.setRemoveAbandoned(true);
-						      source.setRemoveAbandonedTimeout(removeAbandonedTimeout);
-						      source.setLogAbandoned(true);
-						      Logger.println(this,"getRemoveAbandonedTimeout="+source.getRemoveAbandonedTimeout());
+								source.setRemoveAbandoned(true);
+								source.setRemoveAbandonedTimeout(removeAbandonedTimeout);
+								source.setLogAbandoned(true);
+								Logger.println(this,"getRemoveAbandonedTimeout="+source.getRemoveAbandonedTimeout());
 
-						      source.setDefaultAutoCommit(true);
-						      if (driver.contains("oracle"))
-						      	source.addConnectionProperty("SetBigStringTryClob", "true");
+								source.setDefaultAutoCommit(true);
+								if (driver.contains("oracle"))
+									source.addConnectionProperty("SetBigStringTryClob", "true");
 
-						      source.setAccessToUnderlyingConnectionAllowed(true);
-						      source.setPoolPreparedStatements(false);
+								source.setAccessToUnderlyingConnectionAllowed(true);
+								source.setPoolPreparedStatements(false);
 
-						      source.setMaxWait(1000L*maxWait);
+								source.setMaxWait(1000L*maxWait);
 							}
 
 							//okrem Oracle mozeme robit takyto validation query

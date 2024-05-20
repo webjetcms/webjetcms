@@ -7,19 +7,30 @@ Before(({ login }) => {
 });
 
 Scenario('rating screen', ({ I , DT, DTE, Document }) => {
-    I.amOnPage("/apps/rating/");
+    let confLng = I.getConfLng();
+    let postfix = "";
+    let postfix_lng = "";
+
+    if(confLng === "sk") {
+        I.amOnPage("/apps/rating/");
+    } else if(confLng === "en") {
+        I.amOnPage("/apps/rating/rating-en.html?language=en");
+        postfix = "-en";
+        postfix_lng = "?language=en";
+    }
+
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/rating/rating-form.png");
 
-    I.amOnPage("/apps/rating/rating-page.html");
+    I.amOnPage("/apps/rating/rating-page" + postfix + ".html" + postfix_lng);
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/rating/rating-page.png");
 
-    I.amOnPage("/apps/rating/rating-top-users.html");
+    I.amOnPage("/apps/rating/rating-top-users" + postfix + ".html" + postfix_lng);
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/rating/rating-top-users.png");
 
-    I.amOnPage("/apps/rating/rating-top-pages.html");
+    I.amOnPage("/apps/rating/rating-top-pages" + postfix + ".html" + postfix_lng);
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/rating/rating-top-pages.png");
 

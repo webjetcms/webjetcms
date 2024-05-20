@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDimension.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryDimension.java</span></div><h1>GalleryDimension.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+
+import java.util.Date;
+
+import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GALLERY)
+@Table(name = &quot;gallery_dimension&quot;)
+public class GalleryDimension {
+
+    @Id
+    @Column(name = &quot;dimension_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_gallery_dimension&quot;)
+    @DataTableColumn(inputType=DataTableColumnType.ID, title=&quot;editor.cell.id&quot;, renderFormat = &quot;dt-format-selector&quot;)
+    private Long id;
+
+
+    //Tab zakladne - START
+<span class="fc" id="L31">    @Column(name = &quot;gallery_name&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;components.gallery.name&quot;,
+        renderFormat = &quot;dt-format-text&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String name = &quot;&quot;;
+
+<span class="fc" id="L40">    @Column(name = &quot;gallery_perex&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = &quot;editor.tab.perex&quot;,
+        renderFormat = &quot;dt-format-textarea&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String perex = &quot;&quot;;
+
+<span class="fc" id="L49">    @Column(name = &quot;author&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;components.gallery.author&quot;,
+        renderFormat = &quot;dt-format-text&quot;,
+        tab = &quot;basic&quot;
+    )
+    private String author = &quot;&quot;;
+
+    @Column(name = &quot;create_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;components.gallery.createDate&quot;,
+        renderFormat = &quot;dt-format-date-time&quot;,
+        tab = &quot;basic&quot;
+    )
+    private Date date;
+    //Tab zakladne - END
+
+
+
+    //Tab rozmery - START
+    @Column(name = &quot;resize_mode&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;admin.gallery.resizeMode&quot;,
+        tab = &quot;sizes&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.shrinkToFit&quot;, value = &quot;S&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.cropToFit&quot;, value = &quot;C&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.accurateWidthHeight&quot;, value = &quot;A&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.accurateWidth&quot;, value = &quot;W&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.accurateHeight&quot;, value = &quot;H&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;admin.gallery.noMiniatures&quot;, value = &quot;N&quot;)
+                }
+            )
+        }
+    )
+    private String resizeMode;
+
+<span class="fc" id="L92">    @Column(name = &quot;image_width&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;gallery.image_width&quot;,
+        renderFormat = &quot;dt-format-number&quot;,
+        tab = &quot;sizes&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;gallery.preview_size&quot;)
+                }
+            )
+        }
+    )
+<span class="fc" id="L107">    private Integer imageWidth = 160;</span>
+
+<span class="fc" id="L109">    @Column(name = &quot;image_height&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;gallery.image_height&quot;,
+        renderFormat = &quot;dt-format-number&quot;,
+        tab = &quot;sizes&quot;
+    )
+<span class="fc" id="L116">    private Integer imageHeight = 120;</span>
+
+<span class="fc" id="L118">    @Column(name = &quot;normal_width&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT_NUMBER,
+        title = &quot;gallery.image_width&quot;,
+        renderFormat = &quot;dt-format-number&quot;,
+        tab = &quot;sizes&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;gallery.normal_size&quot;)
+                }
+            )
+        }
+    )
+<span class="fc" id="L133">    private Integer normalWidth = 750;</span>
+
+<span class="fc" id="L135">    @Column(name = &quot;normal_height&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT_NUMBER,
+        title = &quot;gallery.image_height&quot;,
+        renderFormat = &quot;dt-format-number&quot;,
+        tab = &quot;sizes&quot;
+    )
+<span class="fc" id="L142">    private Integer normalHeight = 560;</span>
+    //Tab rozmery - END
+
+
+
+
+    //Tab Vodotlac - START
+    @Column(name = &quot;watermark&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title = &quot;components.gallery.watermark&quot;,
+        tab = &quot;watermark&quot;
+    )
+    private String watermark;
+
+    @Column(name = &quot;watermark_placement&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.gallery.watermark_placement&quot;,
+        tab = &quot;watermark&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;components.custom_style.alignCenter&quot;, value = &quot;Center&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.South&quot;, value = &quot;South&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.SouthEast&quot;, value = &quot;SouthEast&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.East&quot;, value = &quot;East&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.NorthEast&quot;, value = &quot;NorthEast&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.North&quot;, value = &quot;North&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.NorthWest&quot;, value = &quot;NorthWest&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.West&quot;, value = &quot;West&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.watermark.SouthWest&quot;, value = &quot;SouthWest&quot;)
+                }
+            )
+        }
+    )
+    private String watermarkPlacement;
+
+<span class="fc" id="L180">    @Column(name = &quot;watermark_saturation&quot;)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.gallery.watermark_saturation&quot;,
+        tab = &quot;watermark&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;10%&quot;, value = &quot;10&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;20%&quot;, value = &quot;20&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;30%&quot;, value = &quot;30&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;40%&quot;, value = &quot;40&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;50%&quot;, value = &quot;50&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;60%&quot;, value = &quot;60&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;70%&quot;, value = &quot;70&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;80%&quot;, value = &quot;80&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;90%&quot;, value = &quot;90&quot;)
+                }
+            )
+        }
+    )
+<span class="fc" id="L201">    private Integer watermarkSaturation = 70;</span>
+    //Tab Vodotlac - END
+
+
+
+    //Other columns
+    @Column(name = &quot;image_path&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;sync.path&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+                }
+            )
+        }
+    )
+    private String path;
+
+<span class="fc" id="L222">    @Column(name = &quot;views&quot;)</span>
+    private int views = 0;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+
+<span class="fc" id="L228">    @Transient</span>
+    @DataTableColumnNested
+    private GalleryDimensionEditorFields editorFields = null;
+
+<span class="fc" id="L232">    public GalleryDimension() {}</span>
+
+    public Long getId() {
+<span class="fc" id="L235">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="fc" id="L239">        this.id = id;</span>
+<span class="fc" id="L240">    }</span>
+
+    public String getPath() {
+<span class="fc" id="L243">        return path;</span>
+    }
+
+    public void setPath(String path) {
+<span class="fc" id="L247">        this.path = path;</span>
+<span class="fc" id="L248">    }</span>
+
+    @JsonIgnore
+    public String getParentPath() {
+<span class="nc" id="L252">        return path.substring(0, path.lastIndexOf(&quot;/&quot;));</span>
+    }
+
+    @JsonIgnore
+    public String getNameFromPath() {
+<span class="fc" id="L257">        String[] tokens = Tools.getTokens(path, &quot;/&quot;);</span>
+<span class="fc" id="L258">        return tokens[tokens.length - 1];</span>
+    }
+
+    public String getName() {
+<span class="fc" id="L262">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="fc" id="L266">        this.name = name;</span>
+<span class="fc" id="L267">    }</span>
+
+    public String getPerex() {
+<span class="fc" id="L270">        return perex;</span>
+    }
+
+    public void setPerex(String perex) {
+<span class="fc" id="L274">        this.perex = perex;</span>
+<span class="fc" id="L275">    }</span>
+
+    public Date getDate() {
+<span class="fc" id="L278">        return date;</span>
+    }
+
+    public void setDate(Date date) {
+<span class="fc" id="L282">        this.date = date;</span>
+<span class="fc" id="L283">    }</span>
+
+    public int getViews() {
+<span class="fc" id="L286">        return views;</span>
+    }
+
+    public void setViews(int views) {
+<span class="fc" id="L290">        this.views = views;</span>
+<span class="fc" id="L291">    }</span>
+
+    public String getAuthor() {
+<span class="fc" id="L294">        return author;</span>
+    }
+
+    public void setAuthor(String author) {
+<span class="fc" id="L298">        this.author = author;</span>
+<span class="fc" id="L299">    }</span>
+
+    public String getResizeMode() {
+<span class="fc" id="L302">        return resizeMode;</span>
+    }
+
+    public void setResizeMode(String resizeMode) {
+<span class="fc" id="L306">        this.resizeMode = resizeMode;</span>
+<span class="fc" id="L307">    }</span>
+
+    public Integer getImageWidth() {
+<span class="fc" id="L310">        return imageWidth;</span>
+    }
+
+    public void setImageWidth(Integer imageWidth) {
+<span class="fc" id="L314">        this.imageWidth = imageWidth;</span>
+<span class="fc" id="L315">    }</span>
+
+    public Integer getImageHeight() {
+<span class="fc" id="L318">        return imageHeight;</span>
+    }
+
+    public void setImageHeight(Integer imageHeight) {
+<span class="fc" id="L322">        this.imageHeight = imageHeight;</span>
+<span class="fc" id="L323">    }</span>
+
+    public Integer getNormalWidth() {
+<span class="fc" id="L326">        return normalWidth;</span>
+    }
+
+    public void setNormalWidth(Integer normalWidth) {
+<span class="fc" id="L330">        this.normalWidth = normalWidth;</span>
+<span class="fc" id="L331">    }</span>
+
+    public Integer getNormalHeight() {
+<span class="fc" id="L334">        return normalHeight;</span>
+    }
+
+    public void setNormalHeight(Integer normalHeight) {
+<span class="fc" id="L338">        this.normalHeight = normalHeight;</span>
+<span class="fc" id="L339">    }</span>
+
+    public Integer getDomainId() {
+<span class="fc" id="L342">        return domainId;</span>
+    }
+
+    public void setDomainId(Integer domainId) {
+<span class="fc" id="L346">        this.domainId = domainId;</span>
+<span class="fc" id="L347">    }</span>
+
+    public Integer getWatermarkSaturation() {
+<span class="fc" id="L350">        return watermarkSaturation;</span>
+    }
+
+    public void setWatermarkSaturation(Integer watermarkSaturation) {
+<span class="fc" id="L354">        this.watermarkSaturation = watermarkSaturation;</span>
+<span class="fc" id="L355">    }</span>
+
+    public String getWatermark() {
+<span class="fc" id="L358">        return watermark;</span>
+    }
+
+    public void setWatermark(String watermark) {
+<span class="fc" id="L362">        this.watermark = watermark;</span>
+<span class="fc" id="L363">    }</span>
+
+    public String getWatermarkPlacement() {
+<span class="fc" id="L366">        return watermarkPlacement;</span>
+    }
+
+    public void setWatermarkPlacement(String watermarkPlacement) {
+<span class="fc" id="L370">        this.watermarkPlacement = watermarkPlacement;</span>
+<span class="fc" id="L371">    }</span>
+
+    public GalleryDimensionEditorFields getEditorFields() {
+<span class="fc" id="L374">        return editorFields;</span>
+    }
+
+    public void setEditorFields(GalleryDimensionEditorFields editorFields) {
+<span class="fc" id="L378">        this.editorFields = editorFields;</span>
+<span class="fc" id="L379">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PermissionGroupEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">PermissionGroupEditorFields.java</span></div><h1>PermissionGroupEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.MenuService;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.elfinder.DirTreeItem;
+
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PermissionGroupEditorFields extends BaseEditorFields {
+
+<span class="fc" id="L36">    public PermissionGroupEditorFields(){</span>
+        //empty constructor
+<span class="fc" id="L38">    }</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.editableGroups.label&quot;, tab = &quot;dirs&quot;, hidden = false, className = &quot;dt-tree-group-array-alldomains&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.group.rights&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addGroup&quot;) })
+    })
+    private List&lt;GroupDetails&gt; editableGroups;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.editablePages.label&quot;, tab = &quot;dirs&quot;, hidden = false, className = &quot;dt-tree-page-array-alldomains&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addPage&quot;) })
+    })
+    private List&lt;DocDetails&gt; editablePages;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.writableFolders.label&quot;, tab = &quot;dirs&quot;, hidden = false, className = &quot;dt-tree-dir-array&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.menu.writableFolders&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;useredit.addGroup&quot;)
+        })
+    })
+    private List&lt;DirTreeItem&gt; writableFolders;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSTREE, title = &quot;user.permgroups.permissions.title&quot;, tab = &quot;perms&quot;, hidden = true, editor = {
+        @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-jstree-name&quot;, value = &quot;jstreePerms&quot;) }) })
+    private String[] permissions;
+
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = &quot;user.permgroups.permissions.title&quot;, tab = &quot;perms&quot;, hiddenEditor = true)
+    private String permissionsText;
+
+    public void fromPermissionGroupBean(PermissionGroupBean permissionGroupOriginal, boolean loadSubQueries, HttpServletRequest request) {
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if(loadSubQueries) {</span>
+
+            //writable_folders - kazdy zaznam na novom riadku
+<span class="fc" id="L74">            String folders[] = Tools.getTokens(permissionGroupOriginal.getWritableFolders(), &quot;\n&quot;);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">            if (folders.length&gt;0){</span>
+<span class="nc" id="L76">                writableFolders = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                for (String folder : folders) {</span>
+<span class="nc" id="L78">                    folder = Tools.replace(folder, &quot;*&quot;, &quot;&quot;); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost</span>
+<span class="nc" id="L79">                    DirTreeItem item = new DirTreeItem(folder);</span>
+<span class="nc" id="L80">                    writableFolders.add(item);</span>
+                }
+            }
+
+
+            //Set editable groups Ids into List editableGroups
+<span class="fc" id="L86">            int editableGroupsIds[] = Tools.getTokensInt(permissionGroupOriginal.getEditableGroups(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if(editableGroupsIds.length &gt; 0) {</span>
+<span class="fc" id="L88">                editableGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L89">                GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                for(int editableGroupId : editableGroupsIds) {</span>
+<span class="fc" id="L92">                    GroupDetails tmp = groupsDB.getGroup(editableGroupId);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                    if (tmp != null) editableGroups.add(tmp);</span>
+                }
+            }
+
+            //Set editable pages Ids into List editablePages
+<span class="fc" id="L98">            int editablePagesIds[] =  Tools.getTokensInt(permissionGroupOriginal.getEditablePages(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if(editablePagesIds.length &gt; 0) {</span>
+<span class="nc" id="L100">                editablePages = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L101">                DocDB pagesDB = DocDB.getInstance();</span>
+<span class="nc" id="L102">                GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                for(int editablePageId : editablePagesIds) {</span>
+<span class="nc" id="L105">                    DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                    if (tmp != null) {</span>
+<span class="nc" id="L107">                        tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));</span>
+<span class="nc" id="L108">                        editablePages.add(tmp);</span>
+                    }
+                }
+            }
+
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">            if (permissionGroupOriginal.getId()!=null &amp;&amp; permissionGroupOriginal.getId().longValue()&gt;0) {</span>
+                //Set permissions
+<span class="fc" id="L115">                List&lt;String&gt; permsNames = permissionGroupOriginal.getPermissionNames();</span>
+
+<span class="fc" id="L117">                Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+<span class="fc" id="L118">                Modules modules = Modules.getInstance();</span>
+<span class="fc" id="L119">                List&lt;ModuleInfo&gt; allModuleItems = modules.getUserEditItems(prop);</span>
+
+<span class="fc" id="L121">                String enabledPermsNamesString = &quot;&quot;;</span>
+<span class="fc" id="L122">                StringBuilder enabledPermsTextSb = new StringBuilder();</span>
+
+<span class="fc bfc" id="L124" title="All 2 branches covered.">                for(ModuleInfo modulItem : allModuleItems) {</span>
+<span class="fc" id="L125">                    boolean disabled = true;</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">                    for(String key : permsNames) {</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">                        if(key.equals(modulItem.getItemKey())) {</span>
+<span class="fc" id="L129">                            disabled = false;</span>
+<span class="fc" id="L130">                            break;</span>
+                        }
+<span class="fc" id="L132">                    }</span>
+
+<span class="fc bfc" id="L134" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(modulItem.getItemKey())) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                        if (disabled) {</span>
+<span class="fc" id="L136">                            enabledPermsNamesString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(&quot;editorFullMenu&quot;);</span>
+
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                            if (enabledPermsTextSb.length()&gt;0) enabledPermsTextSb.append(&quot;, &quot;);</span>
+<span class="fc" id="L139">                            enabledPermsTextSb.append(prop.getText(&quot;user.editorFullMenu&quot;));</span>
+                        }
+                    }
+                    else {
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                        if(!disabled) {</span>
+<span class="fc" id="L144">                            enabledPermsNamesString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(modulItem.getItemKey());</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                            if (enabledPermsTextSb.length()&gt;0) enabledPermsTextSb.append(&quot;, &quot;);</span>
+<span class="fc" id="L146">                            enabledPermsTextSb.append(modulItem.getLeftMenuNameKey()); //ide sem sice nameKey, ale zoznam je ziskany s prop objektom a uz je lokalizovany</span>
+                        }
+                    }
+<span class="fc" id="L149">                }</span>
+<span class="fc" id="L150">                permissions = Tools.getTokens(enabledPermsNamesString, &quot;,&quot;);</span>
+<span class="fc" id="L151">                permissionsText = enabledPermsTextSb.toString();</span>
+            }
+        }
+<span class="fc" id="L154">    }</span>
+
+    public void toPermissionGroupBean(PermissionGroupBean permissionGroupOriginal) {
+
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if (permissionGroupOriginal.getEditorFields().getWritableFolders() != null) {</span>
+            //writableFolders
+<span class="fc" id="L160">            StringBuilder writableFoldersStr = new StringBuilder();</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">            for (DirTreeItem dir : permissionGroupOriginal.getEditorFields().getWritableFolders()) {</span>
+<span class="nc bnc" id="L162" title="All 4 branches missed.">                if (dir == null || Tools.isEmpty(dir.getVirtualPath())) continue;</span>
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (writableFoldersStr.length()&gt;0) writableFoldersStr.append(&quot;\n&quot;);</span>
+<span class="nc" id="L165">                writableFoldersStr.append(dir.getVirtualPath());</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                if (dir.getVirtualPath().endsWith(&quot;*&quot;)==false) {</span>
+                    //WJ kontroluje /images/* a /images/ ale GUI automaticky predpoklada len format /images/*
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                    if (dir.getVirtualPath().endsWith(&quot;/&quot;)==false) writableFoldersStr.append(&quot;/&quot;);</span>
+<span class="nc" id="L169">                    writableFoldersStr.append(&quot;*&quot;);</span>
+                }
+
+<span class="nc" id="L172">            }</span>
+<span class="fc" id="L173">            permissionGroupOriginal.setWritableFolders(writableFoldersStr.toString());</span>
+        }
+
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (permissionGroupOriginal.getEditorFields().getEditableGroups() != null) {</span>
+            //Get editable group ids and add them to string
+<span class="fc" id="L178">            List&lt;GroupDetails&gt; seletedEditableGroups = permissionGroupOriginal.getEditorFields().getEditableGroups();</span>
+<span class="fc" id="L179">            String editableGroupIdsString = &quot;&quot;;</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">            for(int i = 0; i &lt; seletedEditableGroups.size(); i++) {</span>
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                if(editableGroupIdsString.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L183">                    editableGroupIdsString = &quot;&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+                } else {
+<span class="nc" id="L185">                    editableGroupIdsString += &quot;,&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+                }
+            }
+            //Set new string of selected editabled groups
+<span class="fc" id="L189">            permissionGroupOriginal.setEditableGroups(editableGroupIdsString);</span>
+        }
+
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        if (permissionGroupOriginal.getEditorFields().getEditablePages() != null) {</span>
+            //Get editable page ids and add them to string
+<span class="fc" id="L194">            List&lt;DocDetails&gt; selectedEditablePages =  permissionGroupOriginal.getEditorFields().getEditablePages();</span>
+<span class="fc" id="L195">            String editablePageIdsString = &quot;&quot;;</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">            for(int i = 0; i &lt; selectedEditablePages.size(); i++) {</span>
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                if(editablePageIdsString.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L199">                    editablePageIdsString = &quot;&quot; + selectedEditablePages.get(i).getDocId();</span>
+                } else {
+<span class="nc" id="L201">                    editablePageIdsString += &quot;,&quot; + selectedEditablePages.get(i).getDocId();</span>
+                }
+            }
+            //Set new string of selected editabled pages
+<span class="fc" id="L205">            permissionGroupOriginal.setEditablePages(editablePageIdsString);</span>
+        }
+
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">        if (permissionGroupOriginal.getEditorFields().getPermissions() != null) {</span>
+            /*
+                Get new permissions for permGroup from jsTree (saved in editorFields.permissions) and compare them
+                with old permissions for permGroup (saved in permissionGroupOriginal.permissions  -- they are already saved in DB).
+            */
+<span class="fc" id="L213">            String[] newPermissionsWithPrefix = permissionGroupOriginal.getEditorFields().getPermissions();</span>
+<span class="fc" id="L214">            List&lt;String&gt; newPermissions = new ArrayList&lt;&gt;(); //without prefix</span>
+
+            //Fill newPermissions with new perm but remove prefix
+<span class="fc" id="L217">            boolean hasEditorFullMenu = false;</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">            for(String withPrefix : newPermissionsWithPrefix) {</span>
+<span class="nc" id="L219">                String permKey = MenuService.removePermsIdPrefix(withPrefix);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">                if (&quot;editorFullMenu&quot;.equals(permKey)) hasEditorFullMenu = true;</span>
+<span class="nc" id="L221">                newPermissions.add(permKey);</span>
+            }
+
+<span class="fc" id="L224">            List&lt;String&gt; oldPermissions = permissionGroupOriginal.getPermissionNames();</span>
+
+<span class="fc" id="L226">            boolean newPermNullOrEmpty = false;</span>
+<span class="fc" id="L227">            boolean oldPermNullOrEmpty = false;</span>
+
+<span class="pc bpc" id="L229" title="2 of 4 branches missed.">            if(newPermissions == null || newPermissions.size() == 0) newPermNullOrEmpty = true;</span>
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">            if(oldPermissions == null || oldPermissions.size() == 0) oldPermNullOrEmpty = true;</span>
+
+<span class="pc bpc" id="L232" title="1 of 4 branches missed.">            if(newPermNullOrEmpty &amp;&amp; oldPermNullOrEmpty) {</span>
+                //no action is needed
+<span class="pc bpc" id="L234" title="3 of 6 branches missed.">            } else if(newPermNullOrEmpty &amp;&amp; oldPermissions!=null &amp;&amp; !oldPermNullOrEmpty) {</span>
+                //there are no selected perm for this group (newPermissions), but some perm are already saved in DB (oldPermissions)
+                //so we need loop oldPermissions and for every perm call deletePermission
+
+<span class="fc bfc" id="L238" title="All 2 branches covered.">                for(String perm : oldPermissions) {</span>
+<span class="fc" id="L239">                    permissionGroupOriginal.deletePermission(perm);</span>
+<span class="fc" id="L240">                }</span>
+<span class="nc bnc" id="L241" title="All 4 branches missed.">            } else if(!newPermNullOrEmpty &amp;&amp; oldPermNullOrEmpty) {</span>
+                //there are selected perm for this group (newPermissions), and no other perm are saved in DB (oldPermissions)
+                //so we need loop newPermissions and for every perm call addPermission
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                for(String perm : newPermissions) {</span>
+<span class="nc" id="L246">                    permissionGroupOriginal.addPermission(perm);</span>
+<span class="nc" id="L247">                }</span>
+            } else {
+                //there are selected perm for this group (newPermissions), and also there are already saved perm in DB (oldPermissions)
+                //so we need loop both newPermissions/oldPermissions and find if they are same (if not, update perm in DB)
+
+                //loop old perms and find if perm is inside new perms (if not, delete this perm)
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                if (oldPermissions != null) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                    for(String oldPerm : oldPermissions) {</span>
+<span class="nc" id="L255">                        boolean toDelete = true;</span>
+
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                        for(String newPerm : newPermissions) {</span>
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                            if(oldPerm.equals(newPerm)) {</span>
+<span class="nc" id="L260">                                toDelete = false;</span>
+<span class="nc" id="L261">                                break;</span>
+                            }
+<span class="nc" id="L263">                        }</span>
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                        if(toDelete) {</span>
+<span class="nc" id="L266">                            Logger.debug(PermissionGroupEditorFields.class, &quot;deleting perm: &quot;+oldPerm);</span>
+<span class="nc" id="L267">                            permissionGroupOriginal.deletePermission(oldPerm);</span>
+                        } else {
+<span class="nc" id="L269">                            Logger.debug(PermissionGroupEditorFields.class, &quot;keeping perm: &quot;+oldPerm);</span>
+                        }
+<span class="nc" id="L271">                    }</span>
+                }
+
+                //loop new perms and find if perm is inside old perms (if not, add this perm)
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                for(String newPerm : newPermissions) {</span>
+<span class="nc" id="L276">                    boolean toAdd = true;</span>
+
+<span class="nc bnc" id="L278" title="All 2 branches missed.">                    if (oldPermissions != null) {</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                        for(String oldPerm : oldPermissions) {</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">                            if(newPerm.equals(oldPerm)) {</span>
+<span class="nc" id="L281">                                toAdd = false;</span>
+<span class="nc" id="L282">                                break;</span>
+                            }
+<span class="nc" id="L284">                        }</span>
+                    }
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">                    if(toAdd) {</span>
+<span class="nc" id="L288">                        Logger.debug(PermissionGroupEditorFields.class, &quot;adding perm: &quot;+newPerm);</span>
+<span class="nc" id="L289">                        permissionGroupOriginal.addPermission(newPerm);</span>
+                    }
+<span class="nc" id="L291">                }</span>
+            }
+
+            //otoc spravanie editorMiniEdit
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">            if (hasEditorFullMenu) {</span>
+<span class="nc" id="L296">                permissionGroupOriginal.deletePermission(&quot;editorMiniEdit&quot;);</span>
+            } else {
+<span class="fc" id="L298">                permissionGroupOriginal.addPermission(&quot;editorMiniEdit&quot;);</span>
+            }
+<span class="fc" id="L300">            permissionGroupOriginal.deletePermission(&quot;editorFullMenu&quot;);</span>
+
+        }
+<span class="fc" id="L303">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

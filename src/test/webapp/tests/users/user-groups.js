@@ -9,6 +9,7 @@ Scenario('user-groups-zakladne testy', async ({ I, DataTables }) => {
      await DataTables.baseTest({
           dataTable: 'userGroupsDataTable',
           perms: 'user.admin.userGroups',
+          skipSwitchDomain: true
      });
 });
 
@@ -29,7 +30,8 @@ Scenario('vybrany email docid', async ({ I, DataTables }) => {
                //zmaz stranku
                I.click("div.DTE_Field_Name_emailDoc button.btn-vue-jstree-item-remove");
                I.seeInField("div.DTE_Field_Name_emailDoc input", "");
-          }
+          },
+          skipSwitchDomain: true
      });
 });
 

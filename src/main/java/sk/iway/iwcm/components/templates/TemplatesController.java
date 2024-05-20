@@ -12,31 +12,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.LayoutService;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.template_groups.TemplateGroupsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetailEditorFields;
 import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
 
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/templates/temps-list")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuTemplates')")
-public class TemplatesController extends DatatableRestControllerV2<TemplateDetails, Long> {
+public class TemplatesController extends DatatableRestControllerAvailableGroups<TemplateDetails, Long> {
 
     private final TemplateDetailsService templateDetailsService;
     private final TemplateGroupsService templateGroupsService;
 
     @Autowired
     public TemplatesController(TemplateDetailsService templateDetailsService, TemplateGroupsService templateGroupsService) {
-        super(null);
+        super(null, "tempId", "availableGroups");
         this.templateDetailsService = templateDetailsService;
         this.templateGroupsService = templateGroupsService;
     }
@@ -71,7 +75,7 @@ public class TemplatesController extends DatatableRestControllerV2<TemplateDetai
         page.addOptions("editorFields.mergeToTempId", page.getContent(), "tempName", "tempId", false);
 
         page.addOptions("lng", ls.getLanguages(false, true), "label", "value", false);
-        page.addOptions("templatesGroupId", templateDetailsService.getTemplatesGroupBeans(), "name", "templatesGroupId", false);
+        page.addOptions("templatesGroupId", templateGroupsService.getTemplateGroups(getUser()), "name", "templatesGroupId", false);
         page.addOptions("headerDocId,footerDocId", headerFooterDocs, "title", "docId", false);
         page.addOptions("menuDocId,rightMenuDocId", menuDocs, "title", "docId", false);
         page.addOptions("objectADocId,objectBDocId,objectCDocId,objectDDocId", ws.addEmptyDoc(headerFooterMenuDocs, -1), "title", "docId", false);
@@ -150,6 +154,26 @@ public class TemplatesController extends DatatableRestControllerV2<TemplateDetai
     public boolean deleteItem(TemplateDetails entity, long id) {
         boolean deleted = templateDetailsService.deleteTemplateDetails(id);
         return deleted;
+    }
+
+    @Override
+    public void beforeSave(TemplateDetails entity) {
+        //in multiweb set at least root group as available group for template
+        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false && "cloud".equals(Constants.getInstallName())==false) {
+      	    if (Tools.isEmpty(entity.getAvailableGroups())) entity.setAvailableGroups(CloudToolsForCore.getRootGroupIds());
+        }
+    }
+
+    @Override
+    public TemplateDetails getOneItem(long id) {
+        TemplateDetails old = TemplatesDB.getInstance().getTemplate((int)id);
+
+        List<TemplateDetails> list = new ArrayList<>();
+        list.add(old);
+        list = templateDetailsService.filterByCurrentDomainAndUser(getUser(), list);
+        if (list.isEmpty()) return null;
+
+        return old;
     }
 
     @GetMapping("/autocomplete")

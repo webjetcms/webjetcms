@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScreenShotPropBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.grideditor.generator</a> &gt; <span class="el_source">ScreenShotPropBean.java</span></div><h1>ScreenShotPropBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.grideditor.generator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**Sluzi ako zoznam parametrov pre Phantom / ScreenShotGenerator
+ *
+ * povinny je iba jeden parameter a to screenshotUrl
+ *
+ */
+public class ScreenShotPropBean {
+    private String screenshotUrl;
+    private String saveImageToPath;
+    private int zoom;
+    private int screenShotDelayMilisecond;
+    private int imageWidth;
+    private int imageHeight;
+    private List&lt;String&gt; errors;
+    private List&lt;String&gt; phantomErrors;
+    private int resultNumber;
+    private String cookieHtmlData;
+    private boolean debug;
+    private boolean autoHeigth;
+
+    public ScreenShotPropBean(String screenshotUrl)
+<span class="nc" id="L26">    {</span>
+<span class="nc" id="L27">        this.screenshotUrl = screenshotUrl;</span>
+<span class="nc" id="L28">        zoom = 1;</span>
+<span class="nc" id="L29">        screenShotDelayMilisecond = 3000;</span>
+<span class="nc" id="L30">        imageWidth = 1920;</span>
+<span class="nc" id="L31">        imageHeight = 1080;</span>
+<span class="nc" id="L32">        resultNumber = - 10;</span>
+<span class="nc" id="L33">        errors = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L34">        phantomErrors = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L35">        debug = false;</span>
+<span class="nc" id="L36">    }</span>
+
+    public String getCookieHtmlData() {
+<span class="nc" id="L39">        return cookieHtmlData;</span>
+    }
+
+    public void setCookieHtmlData(String cookieHtmlData) {
+<span class="nc" id="L43">        this.cookieHtmlData = cookieHtmlData;</span>
+<span class="nc" id="L44">    }</span>
+
+    public int getScreenShotDelayMilisecond() {
+<span class="nc" id="L47">        return screenShotDelayMilisecond;</span>
+    }
+
+    public void setScreenShotDelayMilisecond(int screenShotDelayMilisecond) {
+<span class="nc" id="L51">        this.screenShotDelayMilisecond = screenShotDelayMilisecond;</span>
+<span class="nc" id="L52">    }</span>
+
+    public boolean isDebug() {
+<span class="nc" id="L55">        return debug;</span>
+    }
+
+    public void setDebug(boolean debug) {
+<span class="nc" id="L59">        this.debug = debug;</span>
+<span class="nc" id="L60">    }</span>
+
+    public int getResultNumber() {
+<span class="nc" id="L63">        return resultNumber;</span>
+    }
+
+    public void setResultNumber(int resultNumber) {
+<span class="nc" id="L67">        this.resultNumber = resultNumber;</span>
+<span class="nc" id="L68">    }</span>
+
+    public String getScreenshotUrl() {
+<span class="nc" id="L71">        return screenshotUrl;</span>
+    }
+
+    public void setScreenshotUrl(String screenshotUrl) {
+<span class="nc" id="L75">        this.screenshotUrl = screenshotUrl;</span>
+<span class="nc" id="L76">    }</span>
+
+    public String getSaveImageToPath() {
+<span class="nc" id="L79">        return saveImageToPath;</span>
+    }
+
+    public void setSaveImageToPath(String saveImageToPath) {
+<span class="nc" id="L83">        this.saveImageToPath = saveImageToPath;</span>
+<span class="nc" id="L84">    }</span>
+
+    public int getZoom() {
+<span class="nc" id="L87">        return zoom;</span>
+    }
+
+    public void setZoom(int zoom) {
+<span class="nc" id="L91">        this.zoom = zoom;</span>
+<span class="nc" id="L92">    }</span>
+
+    /** Cas v milisekundach po ktorom sa vykona screenshot stranky od okamihu prveho nacitania stranky. Je to cas potrebny napr. na
+     *  vykonanie javascriptov
+     *
+     * @return
+     */
+    public int getTimeDelayMilisecond() { //NOSONAR
+<span class="nc" id="L100">        return screenShotDelayMilisecond;</span>
+    }
+
+    /** Cas v milisekundach po ktorom sa vykona screenshot stranky od okamihu prveho nacitania stranky. Je to cas potrebny napr. na
+     *  vykonanie javascriptov
+     *
+     * @param screenShotDelayMilisecond
+     */
+    public void setTimeDelayMilisecond(int screenShotDelayMilisecond) { //NOSONAR
+<span class="nc" id="L109">        this.screenShotDelayMilisecond = screenShotDelayMilisecond;</span>
+<span class="nc" id="L110">    }</span>
+
+    /** Sirka generovaneho obrazku
+     *
+     * @return
+     */
+    public int getImageWidth() {
+<span class="nc" id="L117">        return imageWidth;</span>
+    }
+
+    /**Sirka generovaneho obrazku
+     *
+     * @param imageWidth
+     */
+    public void setImageWidth(int imageWidth) {
+<span class="nc" id="L125">        this.imageWidth = imageWidth;</span>
+<span class="nc" id="L126">    }</span>
+
+    /** Vyska generovaneho obrazku
+     *
+     * @return
+     */
+    public int getImageHeight() {
+<span class="nc" id="L133">        return imageHeight;</span>
+    }
+
+    /** Vyska generovaneho obrazku
+     *
+     * @param imageHeight
+     */
+    public void setImageHeight(int imageHeight) {
+<span class="nc" id="L141">        this.imageHeight = imageHeight;</span>
+<span class="nc" id="L142">    }</span>
+
+    public List&lt;String&gt; getErrors() {
+<span class="nc" id="L145">        return errors;</span>
+    }
+
+    public void setErrors(List&lt;String&gt; errors) {
+<span class="nc" id="L149">        this.errors = errors;</span>
+<span class="nc" id="L150">    }</span>
+
+    public List&lt;String&gt; getPhantomErrors() {
+<span class="nc" id="L153">        return phantomErrors;</span>
+    }
+
+    public void setPhantomErrors(List&lt;String&gt; phantomErrors) {
+<span class="nc" id="L157">        this.phantomErrors = phantomErrors;</span>
+<span class="nc" id="L158">    }</span>
+
+    public boolean isGenerated() {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        return resultNumber == 0;</span>
+    }
+
+    public boolean isAutoHeigth() {
+<span class="nc" id="L165">        return autoHeigth;</span>
+    }
+
+    public void setAutoHeigth(boolean autoHeigth) {
+<span class="nc" id="L169">        this.autoHeigth = autoHeigth;</span>
+<span class="nc" id="L170">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -62,8 +62,8 @@ function wj9CreateMirroringSubfolder(I, DTE, randomNumber) {
      I.say('Kontrolujem ci sa pridali nepublikovane priecinky i do en struktury');
      I.jstreeClick(auto_folder_en);
 
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
+     I.waitForElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en)), 10);
+     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en)));
 
 }
 
@@ -156,6 +156,7 @@ Scenario('reset table settings', ({I, DT}) => {
      I.relogin("admin");
      I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
      DT.resetTable();
+     I.jstreeReset();
 });
 
 Scenario('reset nastavenej domeny', ({ I }) => {
@@ -212,7 +213,7 @@ Scenario('presun druheho podpriecinka do prveho podpriecinka', ({ I, DT, DTE }) 
      // skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci sk struktury
      I.say('Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci sk struktury');
      I.jstreeClick(auto_folder_sk);
-     I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.fas.fa-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk));
+     I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(auto_subfolder2_sk));
      I.jstreeClick(auto_subfolder1_sk);
      within((locate('li.jstree-node.jstree-open.jstree-last').withDescendant('.jstree-anchor.jstree-clicked')), () => {
           I.waitForElement(locate('ul.jstree-children').withText(auto_subfolder2_sk));
@@ -221,7 +222,7 @@ Scenario('presun druheho podpriecinka do prveho podpriecinka', ({ I, DT, DTE }) 
      // Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci en struktury
      I.say('Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci en struktury');
      I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText(auto_folder_en).find('.jstree-icon.jstree-ocl'));
-     I.click(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk));
+     I.click(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk));
      within((locate('li.jstree-node.jstree-last.jstree-open').withDescendant('.jstree-anchor.jstree-clicked')), () => {
           I.waitForElement(locate('ul.jstree-children').withText(auto_subfolder2_sk));
      });

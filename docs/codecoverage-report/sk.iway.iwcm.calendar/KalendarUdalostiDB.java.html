@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KalendarUdalostiDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">KalendarUdalostiDB.java</span></div><h1>KalendarUdalostiDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+
+import org.apache.commons.lang.time.DateUtils;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpSession;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.*;
+
+<span class="nc" id="L17">public class KalendarUdalostiDB {</span>
+
+	public static final String D_DOCUMENT_FIELDS_NODATA = &quot;d.doc_id, d.data, d.date_created, d.publish_start, d.publish_end, d.group_id, d.password_protected, d.external_link, d.virtual_path, d.title, d.navbar, d.sort_priority, d.html_data, d.perex_place, d.perex_image, d.perex_group, d.event_date, d.forum_count, d.field_a, d.field_b, d.field_c, d.field_d&quot;;
+
+	public final static int SHOW_ALL = 0;
+	public final static int SHOW_NOW = 1;
+	public final static int SHOW_OLD = 2;
+	public final static int SHOW_NEXT = 3;
+
+	public static List&lt;DocDetails&gt; getEvents(String groupIds, boolean priorityViaGroupsIds, String perexGroupIds, int showType, String datumOd, String datumDo, int year, boolean desc, int limit, int cacheMinutes, HttpSession session) {
+<span class="nc" id="L27">		return getEvents(false, groupIds, priorityViaGroupsIds, perexGroupIds, showType, datumOd, datumDo, year, desc, limit, cacheMinutes, session);</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static List&lt;DocDetails&gt; getEvents(boolean includeSubdirectories, String groupIds, boolean priorityViaGroupsIds, String perexGroupIds, int showType, String datumOd, String datumDo, int year, boolean desc, int limit, int cacheMinutes, HttpSession session)
+	{
+<span class="nc" id="L33">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L34">		List&lt;DocDetails&gt; returnList = Collections.emptyList();</span>
+<span class="nc" id="L35">		String cacheName = &quot;kalendar_udalosti-&quot; + includeSubdirectories + &quot;-&quot;+groupIds+&quot;-&quot;+perexGroupIds+&quot;-&quot;+datumOd+&quot;-&quot;+datumDo+&quot;-&quot;+year+&quot;-&quot;+showType+&quot;-&quot;+desc+&quot;-&quot;+limit;</span>
+<span class="nc" id="L36">		Identity user = UsersDB.getCurrentUser(session);</span>
+
+
+<span class="nc bnc" id="L39" title="All 6 branches missed.">		boolean notAdmin = user!=null &amp;&amp; !user.isAdmin() || user == null;</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">		if(notAdmin &amp;&amp; c.getObject(cacheName)!=null)</span>
+		{
+<span class="nc" id="L42">			Object o = c.getObject(cacheName);</span>
+<span class="nc bnc" id="L43" title="All 4 branches missed.">			if (o!=null &amp;&amp; o instanceof List&lt;?&gt;)</span>
+			{
+<span class="nc" id="L45">				Logger.debug(KalendarUdalostiDB.class, &quot;citam z Cache List&lt;DocDetails&gt; pre groupIds: &quot;+groupIds);</span>
+<span class="nc" id="L46">				returnList = (List&lt;DocDetails&gt;)o;</span>
+			}
+<span class="nc" id="L48">		}</span>
+		else
+		{
+<span class="nc" id="L51">			Logger.debug(KalendarUdalostiDB.class, &quot;nemam nic v cache alebo je to admin&quot;);</span>
+<span class="nc" id="L52">			returnList = getEventsFromDB(includeSubdirectories, groupIds, priorityViaGroupsIds, perexGroupIds, showType, datumOd, datumDo, year, desc, limit);</span>
+<span class="nc" id="L53">			Logger.debug(KalendarUdalostiDB.class, &quot;pisem do Cache List&lt;DocDetails&gt; pre groupIds: &quot;+groupIds+&quot;, perexGroupId: &quot;+perexGroupIds+&quot;, datumOd: &quot;+datumOd+&quot;, datumDo: &quot;+datumDo+&quot;, year: &quot;+year+&quot;, showType: &quot;+showType);</span>
+<span class="nc" id="L54">			c.setObjectSeconds(cacheName, returnList, cacheMinutes*60,true);</span>
+		}
+
+		//filter podla prav
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if(user != null)</span>
+		{
+<span class="nc" id="L60">			List&lt;DocDetails&gt; filtered = new ArrayList&lt;DocDetails&gt;(returnList.size());</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			for(DocDetails doc : returnList)</span>
+			{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">				if(DocDB.canAccess(doc, user))</span>
+<span class="nc" id="L64">					filtered.add(doc);</span>
+<span class="nc" id="L65">			}</span>
+<span class="nc" id="L66">			returnList = filtered;</span>
+		}
+<span class="nc" id="L68">		return returnList;</span>
+	}
+
+	/**
+	 * @param groupIds - adresare z kadial sa maju brat udalosti
+	 * @param priorityViaGroupsIds - true ak bude priorita zobrazenych udalosti tak ako je poradie groupIds
+	 * @param perexGroupId - filter podla perex skupin
+	 * @param showType - SHOW_ALL = 0; SHOW_NOW = 1; SHOW_OLD = 2; SHOW_NEXT = 3;
+	 * @param month - podla roku
+	 * @param datumOd
+	 * @param datumDo
+	 * @param year
+	 * @param desc
+	 * @param limit
+	 * @return
+	 */
+	private static List&lt;DocDetails&gt; getEventsFromDB(boolean includeSubdirectories, String groupIds, boolean priorityViaGroupsIds, String perexGroupIds, int showType, String datumOd, String datumDo, int year, boolean desc, int limit)
+	{
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if(Tools.isEmpty(groupIds))</span>
+<span class="nc" id="L87">			return null;</span>
+
+<span class="nc" id="L89">		groupIds = groupIds.replace('+',',');</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if(Tools.isNotEmpty(perexGroupIds))</span>
+<span class="nc" id="L92">			perexGroupIds = perexGroupIds.replace('+',',');</span>
+
+<span class="nc" id="L94">		List&lt;DocDetails&gt; docList = new ArrayList&lt;DocDetails&gt;();</span>
+<span class="nc" id="L95">		Connection db_conn = null;</span>
+<span class="nc" id="L96">		PreparedStatement ps = null;</span>
+<span class="nc" id="L97">		ResultSet rs = null;</span>
+		try
+		{
+
+<span class="nc" id="L101">			String[] perexGroupIdsArray = null;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if(Tools.isNotEmpty(perexGroupIds)) perexGroupIdsArray = Tools.getTokens(perexGroupIds, &quot;,&quot;);</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">			boolean perexGroupUseJoin = Constants.getBoolean(&quot;perexGroupUseJoin&quot;) &amp;&amp; perexGroupIdsArray != null;</span>
+<span class="nc" id="L104">			String groupNamesIn = &quot;&quot;;</span>
+<span class="nc" id="L105">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L107">			StringBuffer sql = new StringBuffer(&quot;SELECT &quot;+D_DOCUMENT_FIELDS_NODATA+&quot; FROM documents d WHERE d.group_id IN (&quot;+groupIds+&quot;) AND d.available = 1 AND d.show_in_menu = 1&quot;);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if(perexGroupIdsArray != null)</span>
+			{
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				if(perexGroupUseJoin)</span>
+				{
+					String gn;
+<span class="nc bnc" id="L113" title="All 2 branches missed.">					for (int j=0; j&lt;perexGroupIdsArray.length; j++)</span>
+					{
+<span class="nc" id="L115">						gn = perexGroupIdsArray[j];</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">						if(Tools.getIntValue(gn,0) &gt; 0) groupNamesIn += gn+(j != perexGroupIdsArray.length-1 ? &quot;,&quot; : &quot;&quot;);</span>
+					}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">					if(Tools.isNotEmpty(groupNamesIn)) sql.append(&quot; AND p.perex_group_id IN (?)&quot;);</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					for(int i=0; i&lt;perexGroupIdsArray.length; i++)</span>
+					{
+<span class="nc bnc" id="L124" title="All 2 branches missed.">						if(i == 0)</span>
+<span class="nc" id="L125">							sql.append(&quot; AND (perex_group LIKE ? OR perex_group LIKE ? OR perex_group LIKE ?&quot;);</span>
+						else
+<span class="nc" id="L127">							sql.append(&quot; OR perex_group LIKE ? OR perex_group LIKE ? OR perex_group LIKE ?&quot;);</span>
+					}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">					if(perexGroupIdsArray.length &gt; 0)</span>
+<span class="nc" id="L130">						sql.append(&quot;)&quot;);</span>
+				}
+			}
+
+<span class="nc bnc" id="L134" title="All 4 branches missed.">			if(year &gt; 0 &amp;&amp; showType == SHOW_ALL)</span>
+<span class="nc" id="L135">				sql.append(&quot; AND ((publish_start IS null OR publish_end &gt;= ?) AND (publish_end IS null OR publish_start &lt;= ?))&quot;);</span>
+<span class="nc bnc" id="L136" title="All 4 branches missed.">			if(Tools.isNotEmpty(datumOd) || Tools.isNotEmpty(datumDo))</span>
+			{
+<span class="nc bnc" id="L138" title="All 4 branches missed.">				if(Tools.isNotEmpty(datumOd) &amp;&amp; Tools.isEmpty(datumDo))</span>
+<span class="nc" id="L139">					sql.append(&quot; AND (publish_start IS null OR publish_end &gt;= ?)&quot;);</span>
+<span class="nc bnc" id="L140" title="All 4 branches missed.">				else if(Tools.isEmpty(datumOd) &amp;&amp; Tools.isNotEmpty(datumDo))</span>
+<span class="nc" id="L141">					sql.append(&quot; AND (publish_end IS null OR publish_start &lt;= ?)&quot;);</span>
+				else
+<span class="nc" id="L143">					sql.append(&quot; AND ((publish_start IS null OR publish_end &gt;= ?) AND (publish_end IS null OR publish_start &lt;= ?))&quot;);</span>
+			}
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (showType == SHOW_NOW)</span>
+<span class="nc" id="L146">				sql.append(&quot; AND ((publish_start IS null OR publish_start &lt;= ?) AND (publish_end IS null OR publish_end &gt;= ?))&quot;);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			else if (showType == SHOW_OLD)</span>
+<span class="nc" id="L148">				sql.append(&quot; AND (publish_end IS NOT null AND publish_end &lt; ?)&quot;);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			else if (showType == SHOW_NEXT)</span>
+<span class="nc" id="L150">				sql.append(&quot; AND (publish_end IS NOT null AND publish_end &gt; ?)&quot;);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			sql.append(&quot; ORDER BY d.publish_start &quot;).append(desc ? &quot;DESC&quot; : &quot;ASC&quot;);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if(limit &gt; 0)</span>
+<span class="nc" id="L153">				sql.append(&quot; LIMIT &quot;).append(limit);</span>
+
+			//System.out.println(&quot;&gt;&gt; getDocListFromDB SQL: &quot;+sql.toString());
+<span class="nc" id="L156">			Logger.debug(KalendarUdalostiDB.class, &quot;getDocListFromDB SQL: &quot;+sql.toString());</span>
+
+<span class="nc" id="L158">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L159">			int ind = 1;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			if(perexGroupIdsArray != null)</span>
+			{
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if(perexGroupUseJoin) ps.setString(ind++, groupNamesIn);</span>
+				else
+				{
+<span class="nc bnc" id="L165" title="All 2 branches missed.">					for(String pg : perexGroupIdsArray)</span>
+					{
+<span class="nc" id="L167">						ps.setString(ind++, &quot;%,&quot;+pg+&quot;,%&quot;);</span>
+<span class="nc" id="L168">						ps.setString(ind++, &quot;%,&quot;+pg);</span>
+<span class="nc" id="L169">						ps.setString(ind++, pg+&quot;,%&quot;);</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L173" title="All 4 branches missed.">			if(year &gt; 0 &amp;&amp; showType == SHOW_ALL)</span>
+			{
+<span class="nc" id="L175">				Calendar firstDay = Calendar.getInstance();</span>
+<span class="nc" id="L176">				firstDay.set(Calendar.DATE, 1);</span>
+<span class="nc" id="L177">				firstDay.set(Calendar.MONTH, 0);</span>
+<span class="nc" id="L178">				firstDay.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L179">				firstDay.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L180">				firstDay.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L181">				firstDay.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L182">				firstDay.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L183">				Calendar lastDay = Calendar.getInstance();</span>
+<span class="nc" id="L184">				lastDay.set(Calendar.DATE, 31);</span>
+<span class="nc" id="L185">				lastDay.set(Calendar.MONTH, 11);</span>
+<span class="nc" id="L186">				lastDay.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L187">				lastDay.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L188">				lastDay.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L189">				lastDay.set(Calendar.SECOND, 59);</span>
+<span class="nc" id="L190">				lastDay.set(Calendar.MILLISECOND, 999);</span>
+<span class="nc" id="L191">				ps.setTimestamp(ind++, new Timestamp(firstDay.getTimeInMillis()));</span>
+<span class="nc" id="L192">				ps.setTimestamp(ind++, new Timestamp(lastDay.getTimeInMillis()));</span>
+			}
+<span class="nc bnc" id="L194" title="All 4 branches missed.">			if(Tools.isNotEmpty(datumOd) || Tools.isNotEmpty(datumDo))</span>
+			{
+<span class="nc" id="L196">				Calendar fromDate = Calendar.getInstance();</span>
+<span class="nc" id="L197">				fromDate.setTimeInMillis(DB.getTimestamp(datumOd, &quot;0:00:00&quot;));</span>
+<span class="nc" id="L198">				Calendar toDate = Calendar.getInstance();</span>
+<span class="nc" id="L199">				toDate.setTimeInMillis(DB.getTimestamp(datumDo, &quot;23:59:59&quot;));</span>
+
+<span class="nc bnc" id="L201" title="All 4 branches missed.">				if(Tools.isNotEmpty(datumOd) &amp;&amp; Tools.isEmpty(datumDo))</span>
+<span class="nc" id="L202">					ps.setTimestamp(ind++, new Timestamp(fromDate.getTimeInMillis()));</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">				else if(Tools.isEmpty(datumOd) &amp;&amp; Tools.isNotEmpty(datumDo))</span>
+<span class="nc" id="L204">					ps.setTimestamp(ind++, new Timestamp(toDate.getTimeInMillis()));</span>
+				else
+				{
+<span class="nc" id="L207">					ps.setTimestamp(ind++, new Timestamp(fromDate.getTimeInMillis()));</span>
+<span class="nc" id="L208">					ps.setTimestamp(ind++, new Timestamp(toDate.getTimeInMillis()));</span>
+				}
+			}
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (showType == SHOW_NOW)</span>
+			{
+<span class="nc" id="L213">				Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">				if(year &gt; 0)</span>
+<span class="nc" id="L215">					today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L216">				today.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L217">				today.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L218">				today.set(Calendar.SECOND, 59);</span>
+<span class="nc" id="L219">				today.set(Calendar.MILLISECOND, 999);</span>
+<span class="nc" id="L220">				ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L221">				today.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L222">				today.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L223">				today.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L224">				today.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L225">				ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L226">			}</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			else if (showType == SHOW_OLD)</span>
+			{
+<span class="nc" id="L229">				Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if(year &gt; 0)</span>
+<span class="nc" id="L231">					today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L232">				today.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L233">				today.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L234">				today.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L235">				today.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L236">				ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L237">			}</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			else if (showType == SHOW_NEXT)</span>
+			{
+<span class="nc" id="L240">				Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">				if(year &gt; 0)</span>
+<span class="nc" id="L242">					today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L243">				today.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L244">				today.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L245">				today.set(Calendar.SECOND, 59);</span>
+<span class="nc" id="L246">				today.set(Calendar.MILLISECOND, 999);</span>
+<span class="nc" id="L247">				ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+			}
+<span class="nc" id="L249">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L252">				DocDetails doc = new DocDetails();</span>
+
+<span class="nc" id="L254">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L255">				doc.setData(rs.getString(&quot;data&quot;));</span>
+<span class="nc" id="L256">				doc.setDateCreated(DB.getDbTimestamp(rs, &quot;date_created&quot;));</span>
+<span class="nc" id="L257">				doc.setPublishStart(DB.getDbTimestamp(rs, &quot;publish_start&quot;));</span>
+<span class="nc" id="L258">				doc.setPublishEnd(DB.getDbTimestamp(rs, &quot;publish_end&quot;));</span>
+<span class="nc" id="L259">				doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="nc" id="L260">				doc.setPasswordProtected(DB.getDbString(rs, &quot;password_protected&quot;));</span>
+<span class="nc" id="L261">				doc.setExternalLink(DB.getDbString(rs, &quot;external_link&quot;));</span>
+<span class="nc" id="L262">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="nc" id="L263">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L264">				doc.setNavbar(DB.getDbString(rs, &quot;navbar&quot;));</span>
+<span class="nc" id="L265">				doc.setSortPriority(rs.getInt(&quot;sort_priority&quot;));</span>
+<span class="nc" id="L266">				doc.setHtmlData(DB.getDbString(rs, &quot;html_data&quot;));</span>
+<span class="nc" id="L267">				doc.setPerexPlace(DB.getDbString(rs, &quot;perex_place&quot;));</span>
+<span class="nc" id="L268">				doc.setPerexImage(DB.getDbString(rs, &quot;perex_image&quot;));</span>
+<span class="nc" id="L269">				doc.setPerexGroupString(DB.getDbString(rs, &quot;perex_group&quot;));</span>
+<span class="nc" id="L270">				doc.setEventDate(DB.getDbTimestamp(rs, &quot;event_date&quot;));</span>
+<span class="nc" id="L271">				doc.setForumCount(rs.getInt(&quot;forum_count&quot;));</span>
+<span class="nc" id="L272">				doc.setFieldA(DB.getDbString(rs, &quot;field_a&quot;));</span>
+<span class="nc" id="L273">				doc.setFieldB(DB.getDbString(rs, &quot;field_b&quot;));</span>
+<span class="nc" id="L274">				doc.setFieldC(DB.getDbString(rs, &quot;field_c&quot;));</span>
+<span class="nc" id="L275">				doc.setFieldD(DB.getDbString(rs, &quot;field_d&quot;));</span>
+
+<span class="nc" id="L277">				docList.add(doc);</span>
+<span class="nc" id="L278">			}</span>
+<span class="nc" id="L279">			rs.close();</span>
+<span class="nc" id="L280">			ps.close();</span>
+<span class="nc" id="L281">			db_conn.close();</span>
+<span class="nc" id="L282">			rs = null;</span>
+<span class="nc" id="L283">			ps = null;</span>
+<span class="nc" id="L284">			db_conn = null;</span>
+		}
+<span class="nc" id="L286">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L288">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L294" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L295">					rs.close();</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L297">					ps.close();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L299">					db_conn.close();</span>
+			}
+<span class="nc" id="L301">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L303">			}</span>
+		}
+
+<span class="nc" id="L306">		List&lt;String&gt; groupIdsTokens = new ArrayList&lt;&gt;(Tools.getStringListValue(Tools.getTokens(groupIds,&quot;,&quot;)));</span>
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		if (includeSubdirectories) {</span>
+<span class="nc" id="L309">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L310">			Set&lt;String&gt; subgroupIds = getSubgroupIds(groupsDB, groupIdsTokens);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			if (!subgroupIds.isEmpty()) {</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">				for (String subgroupId : subgroupIds) {</span>
+<span class="nc" id="L313">					groupIdsTokens.add(subgroupId);</span>
+<span class="nc" id="L314">				}</span>
+			}
+		}
+
+		//usporiadam podla groupIds
+<span class="nc bnc" id="L319" title="All 6 branches missed.">		if(priorityViaGroupsIds &amp;&amp; docList != null &amp;&amp; docList.size() &gt; 0)</span>
+		{
+<span class="nc" id="L321">			List&lt;DocDetails&gt; newResult = new ArrayList&lt;DocDetails&gt;();</span>
+
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			for(String token : groupIdsTokens)</span>
+			{
+<span class="nc" id="L325">				int groupId = Tools.getIntValue(token, 0);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">				for(DocDetails doc : docList)</span>
+				{
+<span class="nc bnc" id="L328" title="All 2 branches missed.">					if(doc.getGroupId() == groupId)</span>
+<span class="nc" id="L329">						newResult.add(doc);</span>
+<span class="nc" id="L330">				}</span>
+<span class="nc" id="L331">			}</span>
+
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if(newResult.size() &gt; 0)</span>
+			{
+<span class="nc" id="L335">				docList = null;</span>
+<span class="nc" id="L336">				docList = new ArrayList&lt;DocDetails&gt;(newResult);</span>
+			}
+		}
+
+<span class="nc" id="L340">		return docList;</span>
+	}
+
+	private static Set&lt;String&gt; getSubgroupIds(GroupsDB groupsDB, List&lt;String&gt; groupIdsTokens) {
+<span class="nc" id="L344">		Set&lt;String&gt; result = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		for (String groupId : groupIdsTokens) {</span>
+<span class="nc" id="L347">			int id = Tools.getIntValue(groupId, 0);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (id == 0) {</span>
+<span class="nc" id="L349">				break;</span>
+			}
+<span class="nc" id="L351">			String subgroupsIds = groupsDB.getSubgroupsIds(id);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">			if (subgroupsIds.equals(&quot;-1&quot;)) {</span>
+<span class="nc" id="L353">				break;</span>
+			}
+
+<span class="nc" id="L356">			List&lt;String&gt; subgroupIds = new ArrayList&lt;&gt;(Tools.getStringListValue(Tools.getTokens(subgroupsIds, &quot;,&quot;)));</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (subgroupIds.contains(&quot;&quot; + id)) {</span>
+<span class="nc" id="L358">				subgroupIds.remove(subgroupIds.indexOf(&quot;&quot; + id));</span>
+			}
+<span class="nc" id="L360">			result.addAll(subgroupIds);</span>
+<span class="nc" id="L361">		}</span>
+
+<span class="nc" id="L363">		return result;</span>
+	}
+
+	/**
+	 * vrati akcie pre zadany den z ArrayListu
+	 * @param events
+	 * @param datum
+	 * @return
+	 */
+	public static List&lt;DocDetails&gt; getEventsForDay(List&lt;DocDetails&gt; events, long datum)
+	{
+<span class="nc" id="L374">		List&lt;DocDetails&gt; result = new ArrayList&lt;DocDetails&gt;();</span>
+<span class="nc" id="L375">		datum = DB.getTimestamp(Tools.formatDate(datum));</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		for (DocDetails event : events)</span>
+		{
+<span class="nc" id="L378">			long calFrom = -1;</span>
+<span class="nc" id="L379">			long calTo = -1;</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if(Tools.isNotEmpty(event.getPublishStartString()))</span>
+<span class="nc" id="L381">				calFrom =  DB.getTimestamp(event.getPublishStartString());</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">			if(Tools.isNotEmpty(event.getPublishEndString()))</span>
+<span class="nc" id="L383">				calTo =  DB.getTimestamp(event.getPublishEndString());</span>
+
+<span class="nc bnc" id="L385" title="All 4 branches missed.">			if(calFrom != -1 &amp;&amp; calTo == -1)</span>
+			{
+<span class="nc bnc" id="L387" title="All 2 branches missed.">				if(DateUtils.isSameDay(new Date(calFrom), new Date(datum)))</span>
+				//if(calFrom == datum)
+<span class="nc" id="L389">					result.add(event);</span>
+			}
+<span class="nc bnc" id="L391" title="All 4 branches missed.">			else if(calFrom != -1 &amp;&amp; calTo != -1)</span>
+			{
+<span class="nc bnc" id="L393" title="All 4 branches missed.">				if(calFrom &lt;= datum &amp;&amp; datum &lt;= calTo)</span>
+<span class="nc" id="L394">					result.add(event);</span>
+			}
+<span class="nc" id="L396">		}</span>
+
+<span class="nc" id="L398">		return result;</span>
+	}
+
+	/**
+	 * vrati nasledujucich x akcii pre zadany den, maximalne vsak do konca mesiaca
+	 * neberie do uvahy udalosti zacinajuce v danom dni
+	 * @param events eventy
+	 * @param datum od kedy
+	 * @param count pocet udalosti
+	 * @param till datum dokedy sa ma maximalne hladat
+	 * @return
+	 */
+	public static List&lt;DocDetails&gt; getNextEvents(List&lt;DocDetails&gt; events, long datum, int count, long till)
+	{
+<span class="nc bnc" id="L412" title="All 2 branches missed.">		if(count &lt; 1) throw new IllegalArgumentException(&quot;count must be positive number&quot;);</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">		if(events == null) throw new IllegalArgumentException(&quot;Events can't be null&quot;);</span>
+<span class="nc" id="L414">		List&lt;DocDetails&gt; result = new ArrayList&lt;DocDetails&gt;(count);</span>
+<span class="nc" id="L415">		datum = DB.getTimestamp(Tools.formatDate(datum));</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		for (DocDetails event : events)</span>
+		{
+<span class="nc" id="L418">			long calFrom = -1;</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if(Tools.isNotEmpty(event.getPublishStartString()))</span>
+<span class="nc" id="L420">				calFrom =  DB.getTimestamp(event.getPublishStartString());</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			if(calFrom != -1)</span>
+			{
+<span class="nc bnc" id="L423" title="All 4 branches missed.">				if(calFrom &gt; datum &amp;&amp; calFrom &lt; till)</span>
+<span class="nc" id="L424">					result.add(event);</span>
+			}
+<span class="nc bnc" id="L426" title="All 2 branches missed.">			if(result.size() == count) break;</span>
+<span class="nc" id="L427">		}</span>
+
+<span class="nc" id="L429">		return result;</span>
+	}
+
+	private static CalendarDetails fillCalendarDetails(ResultSet rs)
+	{
+<span class="nc" id="L434">		CalendarDetails cal = null;</span>
+		try
+		{
+<span class="nc" id="L437">			cal = new CalendarDetails();</span>
+<span class="nc" id="L438">			cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="nc" id="L439">			cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L440">			cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+
+			try
+			{
+				//ak je tam len cislo, je to docId
+<span class="nc bnc" id="L445" title="All 4 branches missed.">				if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 6)</span>
+				{
+<span class="nc" id="L447">					int docId = Integer.parseInt(cal.getDescription().trim());</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">					if (docId &gt; 0)</span>
+					{
+<span class="nc" id="L450">						DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L451">						DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">						if (doc != null)</span>
+						{
+<span class="nc" id="L454">							cal.setDescription(doc.getData());</span>
+						}
+					}
+				}
+			}
+<span class="nc" id="L459">			catch (Exception ex)</span>
+			{
+				//sk.iway.iwcm.Logger.error(ex);
+<span class="nc" id="L462">			}</span>
+
+<span class="nc" id="L464">			cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="nc" id="L465">			cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="nc" id="L466">			cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="nc" id="L467">			cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="nc" id="L468">			cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="nc" id="L469">			cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="nc" id="L470">			cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="nc" id="L471">			cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="nc" id="L472">			cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="nc" id="L473">			cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="nc" id="L474">			cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="nc" id="L475">			cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="nc" id="L476">			cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="nc" id="L477">			cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="nc" id="L478">			cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="nc" id="L479">			cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="nc" id="L480">			cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="nc" id="L481">			cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="nc" id="L482">			cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="nc" id="L483">			cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="nc" id="L484">			cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="nc" id="L485">			cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+		}
+<span class="nc" id="L487">		catch (Exception e)</span>
+		{
+<span class="nc" id="L489">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L490">		}</span>
+
+<span class="nc" id="L492">		return cal;</span>
+	}
+
+	/**
+	 * vrati udalosti na zaklade fakulty s prioritou rektorskych udalosti
+	 * @param fakulta - _vsetky, _rektorat, faculta_prava, faculta_ekonomie_podnikania, faculta_masmedii, faculta_informatiky
+	 * @param typUdalostiId
+	 * @param now - prebiehajuce
+	 * @param past - minule
+	 * @param future - buduce
+	 * @param year - podla roku
+	 * @param offset
+	 * @param count
+	 * @param datumOd
+	 * @param datumDo
+	 * @return
+	 */
+	public static List&lt;CalendarDetails&gt; getUdalosti(String fakulta, int typUdalostiId,  boolean now, boolean past, boolean future, int year, int offset, int count, String datumOd, String datumDo)
+	{
+<span class="nc" id="L511">		List&lt;CalendarDetails&gt; result = null;</span>
+
+<span class="nc" id="L513">		Connection db_conn = null;</span>
+<span class="nc" id="L514">		PreparedStatement ps = null;</span>
+<span class="nc" id="L515">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L518">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L519">			StringBuffer sb = new StringBuffer(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id&quot;);</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">			if(Tools.isNotEmpty(fakulta))</span>
+			{
+				//ak zobrazujem akcie fakulty, tak musim hladat aj rektorske udalosti
+<span class="nc bnc" id="L523" title="All 4 branches missed.">				if(!&quot;_vsetky&quot;.equals(fakulta) || !&quot;_rektorat&quot;.equals(fakulta))</span>
+<span class="nc" id="L524">					sb.append(&quot; AND (info_5 = ? OR info_5 = ?)&quot;);</span>
+				else
+<span class="nc" id="L526">					sb.append(&quot; AND info_5 = ?&quot;);</span>
+			}
+<span class="nc bnc" id="L528" title="All 2 branches missed.">			if(typUdalostiId &gt; 0)</span>
+<span class="nc" id="L529">				sb.append(&quot; AND c.type_id = ?&quot;);</span>
+<span class="nc bnc" id="L530" title="All 4 branches missed.">			if(Tools.isNotEmpty(datumOd) &amp;&amp; Tools.isNotEmpty(datumDo))</span>
+			{
+<span class="nc" id="L532">				sb.append(&quot; AND date_from &gt;= ? AND date_from &lt;= ?&quot;);</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L536" title="All 8 branches missed.">				if(year &gt; 0 &amp;&amp; !now &amp;&amp; !past &amp;&amp; !future)</span>
+<span class="nc" id="L537">					sb.append(&quot; AND date_from &gt;= ? AND date_to &lt;= ?&quot;);</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">				if(now)</span>
+<span class="nc" id="L539">					sb.append(&quot; AND date_from &lt;= ? AND  ? &lt;= date_to&quot;);</span>
+<span class="nc bnc" id="L540" title="All 2 branches missed.">				else if(past)</span>
+<span class="nc" id="L541">					sb.append(&quot; AND date_to &lt; ?&quot;);</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">				else if(future)</span>
+<span class="nc" id="L543">					sb.append(&quot; AND ? &lt; date_to&quot;);</span>
+			}
+<span class="nc" id="L545">			sb.append(&quot; ORDER BY info_5 DESC, date_from ASC&quot;);</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">			if(count &gt; 0)</span>
+<span class="nc" id="L547">				sb.append(&quot; LIMIT &quot;+offset+&quot;, &quot;+count);</span>
+<span class="nc" id="L548">			System.out.println(&quot;&gt;&gt; getUdalosti SQL: &quot;+sb.toString());</span>
+<span class="nc" id="L549">			Logger.debug(KalendarUdalostiDB.class, &quot;getUdalosti SQL: &quot;+sb.toString());</span>
+<span class="nc" id="L550">			ps = db_conn.prepareStatement(sb.toString());</span>
+<span class="nc" id="L551">			int ind = 1;</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">			if(Tools.isNotEmpty(fakulta))</span>
+			{
+<span class="nc bnc" id="L554" title="All 4 branches missed.">				if(!&quot;_vsetky&quot;.equals(fakulta) || !&quot;_rektorat&quot;.equals(fakulta))</span>
+<span class="nc" id="L555">					ps.setString(ind++, &quot;_rektorat&quot;);</span>
+<span class="nc" id="L556">				ps.setString(ind++, fakulta);</span>
+			}
+<span class="nc bnc" id="L558" title="All 2 branches missed.">			if(typUdalostiId &gt; 0)</span>
+<span class="nc" id="L559">				ps.setInt(ind++, typUdalostiId);</span>
+<span class="nc bnc" id="L560" title="All 4 branches missed.">			if(Tools.isNotEmpty(datumOd) &amp;&amp; Tools.isNotEmpty(datumDo))</span>
+			{
+<span class="nc" id="L562">				ps.setTimestamp(ind++, new Timestamp(DB.getTimestamp(datumOd, &quot;0:00:00&quot;)));</span>
+<span class="nc" id="L563">				ps.setTimestamp(ind++, new Timestamp(DB.getTimestamp(datumDo, &quot;0:00:00&quot;)));</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L567" title="All 8 branches missed.">				if(year &gt; 0 &amp;&amp; !now &amp;&amp; !past &amp;&amp; !future)</span>
+				{
+<span class="nc" id="L569">					Calendar firstDay = Calendar.getInstance();</span>
+<span class="nc" id="L570">					firstDay.set(Calendar.DATE, 1);</span>
+<span class="nc" id="L571">					firstDay.set(Calendar.MONTH, 0);</span>
+<span class="nc" id="L572">					firstDay.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L573">					firstDay.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L574">					firstDay.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L575">					firstDay.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L576">					firstDay.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L577">					Calendar lastDay = Calendar.getInstance();</span>
+<span class="nc" id="L578">					lastDay.set(Calendar.DATE, 31);</span>
+<span class="nc" id="L579">					lastDay.set(Calendar.MONTH, 11);</span>
+<span class="nc" id="L580">					lastDay.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L581">					lastDay.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L582">					lastDay.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L583">					lastDay.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L584">					lastDay.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L585">					ps.setTimestamp(ind++, new Timestamp(firstDay.getTimeInMillis()));</span>
+<span class="nc" id="L586">					ps.setTimestamp(ind++, new Timestamp(lastDay.getTimeInMillis()));</span>
+				}
+<span class="nc bnc" id="L588" title="All 2 branches missed.">				if(now)</span>
+				{
+<span class="nc" id="L590">					Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">					if(year &gt; 0)</span>
+<span class="nc" id="L592">						today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L593">					today.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L594">					today.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L595">					today.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L596">					today.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L597">					ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L598">					ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L599">				}</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">				else if(past)</span>
+				{
+<span class="nc" id="L602">					Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L603" title="All 2 branches missed.">					if(year &gt; 0)</span>
+<span class="nc" id="L604">						today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L605">					today.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L606">					today.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L607">					today.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L608">					today.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L609">					ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+<span class="nc" id="L610">				}</span>
+<span class="nc bnc" id="L611" title="All 2 branches missed.">				else if(future)</span>
+				{
+<span class="nc" id="L613">					Calendar today = Calendar.getInstance();</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">					if(year &gt; 0)</span>
+<span class="nc" id="L615">						today.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L616">					today.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L617">					today.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L618">					today.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L619">					today.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L620">					ps.setTimestamp(ind++, new Timestamp(today.getTimeInMillis()));</span>
+				}
+			}
+<span class="nc" id="L623">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L624" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc bnc" id="L626" title="All 2 branches missed.">				if(result == null)</span>
+<span class="nc" id="L627">					result = new ArrayList&lt;CalendarDetails&gt;();</span>
+
+<span class="nc" id="L629">				result.add(fillCalendarDetails(rs));</span>
+			}
+<span class="nc" id="L631">			rs.close();</span>
+<span class="nc" id="L632">			ps.close();</span>
+<span class="nc" id="L633">			db_conn.close();</span>
+<span class="nc" id="L634">			rs = null;</span>
+<span class="nc" id="L635">			ps = null;</span>
+<span class="nc" id="L636">			db_conn = null;</span>
+		}
+<span class="nc" id="L638">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L640">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L646" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L647">					rs.close();</span>
+<span class="nc bnc" id="L648" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L649">					ps.close();</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L651">					db_conn.close();</span>
+			}
+<span class="nc" id="L653">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L655">			}</span>
+		}
+
+<span class="nc" id="L658">		return result;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

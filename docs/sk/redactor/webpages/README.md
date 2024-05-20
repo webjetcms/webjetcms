@@ -76,7 +76,7 @@ V stromovej štruktúre priečinkov a stránok sa môžu zobraziť nasledovné t
 - <i class="fas fa-folder-times" role="presentation"></i> nemáte práva na editáciu/zmazanie priečinku, v tomto priečinku nebudete vidieť ani žiaden zoznam web stránok (aj keď priečinok v skutočnosti web stránky obsahuje). Používa sa v prípade, keď máte povolené práva len na niektorý z podpriečinkov.
 - <i class="fas fa-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
 - <span style="color: #FF4B58">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením
-- <i class="fas fa-star"></i> **tučné písmo** = hlavná stránka adresára
+- <i class="fas fa-star"></i>, **tučné písmo** = hlavná stránka adresára
 - <i class="fas fa-external-link-alt"></i> šípka von = stránka je presmerovaná
 - <i class="fas fa-eye-slash"></i> preškrtnuté oko = stránka sa nedá vyhľadať
 - <i class="fas fa-restroom"></i> B variant stránky pre aplikáciu [AB testovanie](../apps/abtesting/README.md)

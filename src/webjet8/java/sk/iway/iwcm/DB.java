@@ -1114,4 +1114,46 @@ public class DB
 		boolean nValue = rs.getBoolean(colName);
 		return rs.wasNull() ? null : nValue;
 	}
+
+	/**
+	 * Returns 1/0 or true/false dependind on DB type
+	 * @param b
+	 * @return
+	 */
+	public static String getBooleanSql(boolean b) {
+		if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+			return b ? "true" : "false";
+		}
+		return b ? "1" : "0";
+	}
+
+	/**
+	 * Add lower/unaccent(column) for case insensitive search in Oracle/PostgreSQL
+	 * @param column
+	 * @return
+	 */
+	public static String fixAiCiCol(String column) {
+		if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+			return "lower(" + column + ")";
+		}
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+			return "lower(unaccent(" + column + "))";
+		}
+		return column;
+	}
+
+	/**
+	 * Fix value for case insensitive search in Oracle/PostgreSQL
+	 * @param value
+	 * @return
+	 */
+	public static String fixAiCiValue(String value) {
+		if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+			return value.toLowerCase();
+		}
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+			return DB.internationalToEnglish(value).toLowerCase();
+		}
+		return value;
+	}
 }

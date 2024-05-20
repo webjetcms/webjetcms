@@ -1,6 +1,6 @@
 # Inštalácia
 
-WebJET 2023 vyžaduje ```Java 17``` a ```Tomcat 9```.
+WebJET 2024 vyžaduje ```Java 17``` a ```Tomcat 9```.
 
 Základný projekt vo formáte gradle nájdete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -8,13 +8,15 @@ V gradle projektoch stačí zadať verziu v build.gradle:
 
 ```gradle
 ext {
-    webjetVersion = "2023.0-SNAPSHOT";
+    webjetVersion = "2024.0";
 }
 ```
 
 Pričom aktuálne existujú nasledovné verzie WebJET 2021:
 
 - ```2024.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2024.0 skompilovaná s Java verzie 17.
+- ```2024.0.17``` - stabilizovaná verzia 2024.0.17 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- ```2024.0.9``` - stabilizovaná verzia 2024.0.9 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2024.0``` - stabilizovaná verzia 2024.0 (technicky zhodná s 2023.52-java17), nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
 - ```2023.52-java17``` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
 - ```2023.52``` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny
@@ -35,6 +37,46 @@ Pričom aktuálne existujú nasledovné verzie WebJET 2021:
 - ```2021.52``` - stabilizovaná verzia 2021.52, nepribúdajú do nej denné zmeny
 - ```2021.40``` - stabilizovaná verzia 2021.40, nepribúdajú do nej denné zmeny
 - ```2021.13``` - stabilizovaná verzia 2021.13, nepribúdajú do nej denné zmeny
+
+## Zmeny pri prechode na 2024.0-SNAPSHOT
+
+Podobne ako pre Maven Central verziu je potrebné pridať do `dependencies` bloku časť `implementation("sk.iway:webjet:${webjetVersion}:libs")`:
+
+```gradle
+dependencies {
+    implementation("sk.iway:webjet:${webjetVersion}")
+    implementation("sk.iway:webjet:${webjetVersion}:admin")
+    implementation("sk.iway:webjet:${webjetVersion}:components")
+    implementation("sk.iway:webjet:${webjetVersion}:libs")
+}
+```
+
+Zmazané boli nasledovné knižnice, ktoré nie sú používané v štandardnej inštalácii, ak ich váš projekt potrebuje, pridajte ich do vášho `build.gradle` súboru:
+
+```gradle
+dependencies {
+    implementation("com.amazonaws:aws-java-sdk-core:1.12.+")
+    implementation("com.amazonaws:aws-java-sdk-ses:1.12.+")
+    implementation("bsf:bsf:2.4.0")
+    implementation("commons-validator:commons-validator:1.3.1")
+    implementation("taglibs:datetime:1.0.1")
+    implementation("net.htmlparser.jericho:jericho-html:3.1")
+    implementation("joda-time:joda-time:2.10.13")
+    implementation("io.bit3:jsass:5.1.1")
+    implementation("org.jsoup:jsoup:1.15.3")
+    implementation("org.mcavallo:opencloud:0.3")
+    implementation("org.springframework:spring-messaging:${springVersion}")
+    implementation("net.sf.uadetector:uadetector-core:0.9.22")
+    implementation("net.sf.uadetector:uadetector-resources:2014.10")
+    implementation("cryptix:cryptix:3.2.0")
+    implementation("org.springframework:spring-messaging:${springVersion}")
+    implementation("com.google.protobuf:protobuf-java:3.21.7")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+    implementation("org.apache.taglibs:taglibs-standard-spec:1.2.5")
+    implementation("org.apache.taglibs:taglibs-standard-impl:1.2.5")
+    implementation('com.mchange:c3p0:0.9.5.5')
+}
+```
 
 ## Zmeny pri prechode na GitHub/Maven Central verziu
 
@@ -70,7 +112,7 @@ dependencies {
 
 ## Zmeny pri prechode na Java 17
 
-Pri prechode na Java verzie 17 je potrebné vo vašom projekte vykonať niekoľko zmien. Projekt [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) má pripravenú `branch` ```release/webjet-2023-18-java17``` s ukážkovou úpravou. V [tomto commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535) je vidno kompletný zoznam zmien.
+Pri prechode na Java verzie 17 je potrebné vo vašom projekte vykonať niekoľko zmien. Projekt [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) má pripravenú `branch`, ```release/webjet-2023-18-java17``` s ukážkovou úpravou. V [tomto commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535) je vidno kompletný zoznam zmien.
 
 Zjednodušený postup je nasledovný:
 

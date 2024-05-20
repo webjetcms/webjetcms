@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GooglePositionRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.rest</a> &gt; <span class="el_source">GooglePositionRestController.java</span></div><h1>GooglePositionRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.rest;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.seo.jpa.GooglePositionEntity;
+import sk.iway.iwcm.components.seo.jpa.GooglePositionRepository;
+import sk.iway.iwcm.components.seo.jpa.ManagementKeywordsEntity;
+import sk.iway.iwcm.components.seo.jpa.ManagementKeywordsRepository;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/seo/google-position&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_seo')&quot;)
+@Datatable
+public class GooglePositionRestController extends DatatableRestControllerV2&lt;GooglePositionEntity, Long&gt; {
+
+    private final GooglePositionRepository googlePositionRepository;
+    private final ManagementKeywordsRepository managementKeywordsRepository;
+
+    @Autowired
+    public GooglePositionRestController(GooglePositionRepository googlePositionRepository, ManagementKeywordsRepository managementKeywordsRepository) {
+<span class="fc" id="L41">        super(googlePositionRepository);</span>
+<span class="fc" id="L42">        this.googlePositionRepository = googlePositionRepository;</span>
+<span class="fc" id="L43">        this.managementKeywordsRepository = managementKeywordsRepository;</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public void beforeSave(GooglePositionEntity entity) {
+<span class="nc" id="L48">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L49">    }</span>
+
+    @Override
+    public Page&lt;GooglePositionEntity&gt; getAllItems(Pageable pageable) {
+<span class="nc" id="L53">        int keywordId = Tools.getIntValue(getRequest().getParameter(&quot;keywordId&quot;), -1);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if(keywordId == -1) return new DatatablePageImpl&lt;&gt;( new ArrayList&lt;&gt;() );</span>
+
+<span class="nc" id="L56">        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter(&quot;searchDayDate&quot;));</span>
+<span class="nc" id="L57">        Page&lt;GooglePositionEntity&gt; items = googlePositionRepository.findAllByKeywordIdAndDayDateBetween(keywordId, dateRangeArr[0], dateRangeArr[1], pageable);</span>
+<span class="nc" id="L58">        return new DatatablePageImpl&lt;&gt;( items );</span>
+    }
+
+    @Override
+    public Page&lt;GooglePositionEntity&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, GooglePositionEntity search) {
+<span class="fc" id="L63">        int keywordId = Tools.getIntValue(getRequest().getParameter(&quot;keywordId&quot;), -1);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if(keywordId == -1) return new DatatablePageImpl&lt;&gt;( new ArrayList&lt;&gt;() );</span>
+
+<span class="fc" id="L66">        Date[] dateRangeArr = StatService.processDateRangeString(getRequest().getParameter(&quot;searchDayDate&quot;));</span>
+<span class="fc" id="L67">        Page&lt;GooglePositionEntity&gt; items = googlePositionRepository.findAllByKeywordIdAndDayDateBetween(keywordId, dateRangeArr[0], dateRangeArr[1], pageable);</span>
+<span class="fc" id="L68">        return new DatatablePageImpl&lt;&gt;( items );</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/lineChartData&quot;, params={&quot;keywordId&quot;, &quot;dayDate&quot;})
+    @ResponseBody
+    public Map&lt;String, List&lt;GooglePositionEntity&gt;&gt; getLineChartData(
+                            @RequestParam(&quot;keywordId&quot;) Integer keywordId,
+                            @RequestParam(&quot;dayDate&quot;) String stringRange) {
+<span class="fc" id="L77">        keywordId = Tools.getIntValue(keywordId, -1);</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if(keywordId == -1) return new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L80">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L81">        Map&lt;String, List&lt;GooglePositionEntity&gt;&gt; dataMap = new HashMap&lt;&gt;();</span>
+
+        //Series name is combination of name + domain
+<span class="fc" id="L84">        String seriesName = &quot;&quot;;</span>
+<span class="fc" id="L85">        ManagementKeywordsEntity seoKeyword = managementKeywordsRepository.getById(Long.valueOf(keywordId));</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (seoKeyword != null) {</span>
+<span class="fc" id="L87">            seriesName += seoKeyword.getName();</span>
+<span class="fc" id="L88">            seriesName += &quot; ( &quot; + seoKeyword.getDomain() + &quot; )&quot;;</span>
+        }
+
+<span class="fc" id="L91">        dataMap.put(seriesName, googlePositionRepository.findAllByKeywordIdAndDayDateBetween(keywordId, dateRangeArr[0], dateRangeArr[1], PageRequest.of(0, 100)).getContent() );</span>
+<span class="fc" id="L92">        return dataMap;</span>
+    }
+
+    @RequestMapping(value=&quot;/keywordTitle&quot;, params={&quot;keywordId&quot;}, produces = &quot;text/plain;charset=UTF-8&quot;)
+    public String getKeywordTitle(@RequestParam(&quot;keywordId&quot;) Integer keywordId) {
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if(keywordId &lt; 0) return &quot;&quot;;</span>
+<span class="fc" id="L98">        return (new SimpleQuery()).forString(&quot;SELECT name FROM seo_keywords WHERE seo_keyword_id=?&quot;, keywordId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

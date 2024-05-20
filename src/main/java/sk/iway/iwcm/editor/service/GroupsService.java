@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -129,8 +131,8 @@ public class GroupsService extends NotifyService {
 		}
 
 		//Updatw doc's available status
-		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available=1, sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableTrue, ",") + ")");
-		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available=0, sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableFalse, ",") + ")");
+		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(true)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableTrue, ",") + ")");
+		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(false)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableFalse, ",") + ")");
 
 		//aktualizuj FT stplce
 		DocDB.updateFileNameField(group.getGroupId());
@@ -180,4 +182,51 @@ public class GroupsService extends NotifyService {
 
         return system;
     }
+
+
+	/**
+	 * Check if title is syncable between group and webpage
+	 * @param docId
+	 * @param groupId
+	 * @return
+	 */
+	public static boolean canSyncTitle(Integer docId, Integer groupId) {
+
+		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+
+		if(docId == null || docId.intValue() < 1) return true;
+
+		//Is DOC, main DOC for SEVERAL groups ?
+		int defaultDocCount = (new SimpleQuery()).forInt("SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?", docId);
+		if(defaultDocCount > 1) return false;
+
+		//
+		GroupDetails group = GroupsDB.getInstance().getGroup(groupId.intValue());
+		if(group.getDefaultDocId() != docId) return false;
+
+		return true;
+	}
+
+	/**
+	 * Check if title is syncable between group and webpages
+	 * Used before save of groupDetails
+	 * @param toSaveGroup
+	 * @return
+	 */
+	public static boolean canSyncTitle(GroupDetails toSaveGroup) {
+
+		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+
+		if(toSaveGroup == null) return false;
+
+		//Is DOC, main DOC for SEVERAL groups ?
+		int defaultDocCount = (new SimpleQuery()).forInt("SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?", toSaveGroup.getDefaultDocId());
+		if(defaultDocCount > 1) return false;
+
+		//Is DOC in another group that current changed group ?
+		DocDetails docDetails = DocDB.getInstance().getDoc(toSaveGroup.getDefaultDocId());
+		if(docDetails.getGroupId() != toSaveGroup.getGroupId()) return false;
+
+		return true;
+	}
 }

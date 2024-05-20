@@ -98,7 +98,7 @@ public class AdresarDB
 			}
 			if(Tools.isNotEmpty(userGroupsSQL))
 				userGroupsSQL.append( ')');
-			StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE authorized = 1 AND ").append(userGroupsSQL);
+			StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE authorized = "+DB.getBooleanSql(true)+" AND ").append(userGroupsSQL);
 
 			if (Tools.isNotEmpty(searchString) ) {
 				sql.append(" AND (");

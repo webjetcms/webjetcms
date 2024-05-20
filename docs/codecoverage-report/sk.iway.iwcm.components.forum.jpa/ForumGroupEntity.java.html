@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ForumGroupEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forum.jpa</a> &gt; <span class="el_source">ForumGroupEntity.java</span></div><h1>ForumGroupEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forum.jpa;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.StringTokenizer;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserDetails;
+
+/**
+ * ForumGroupEntity aka ForumEntity. We let the old historic name ForumGroupEntity, so after remade to Spring 
+ * it is clear what this entity is for (or what is replacing).
+ */
+
+@Entity
+@Table(name = &quot;forum&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORUM_SAVE)
+<span class="fc" id="L41">public class ForumGroupEntity implements Serializable {</span>
+    
+    @Id
+    @Column(name = &quot;id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_forum&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, tab=&quot;advanced&quot;, hidden = true)
+    private Long id;
+
+    //Is active or not
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.status&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true,
+        editor = @DataTableColumnEditor(
+            attr = { 
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.forum.admin.basicInfo}]]&quot;),
+                @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) 
+            }
+        )
+    )
+    private String forumStatus;
+
+    //Is message board or no
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.admin.forumType&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true,
+        editor = @DataTableColumnEditor(
+            attr = @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+        )
+    )
+    private String forumType;
+
+    @Column(name = &quot;advertisement_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title=&quot;components.forum.admin.advertisementType&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private Boolean advertisementType;
+
+    @Column(name = &quot;message_confirmation&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title=&quot;components.forum.confirmation&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private Boolean messageConfirmation;
+
+    @Column(name = &quot;approve_email&quot;)
+    @Size(max = 255)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.approve_email&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private String approveEmail;
+
+    @Column(name = &quot;notif_email&quot;)
+    @Size(max = 255)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.send_notif&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private String notifEmail;
+
+    //Permissions
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX, 
+        title = &quot;components.forum.user_groups_for_addmessage&quot;, 
+        tab = &quot;advanced&quot;,
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.permissions&quot;),
+                @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) 
+            }) 
+        }
+    )
+    private Integer[] addMessagePerms;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX, 
+        title = &quot;components.forum.adminGroups&quot;, 
+        tab = &quot;advanced&quot;,
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(attr = @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) ) 
+        }
+    )
+    private Integer[] adminPerms;
+
+    @Column(name = &quot;active&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.forum.active&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true,
+        editor = @DataTableColumnEditor(
+            attr = { 
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.forum.admin.availability}]]&quot;)
+            }
+        )
+    )
+    private Boolean active;
+    
+    @Column(name = &quot;date_from&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.forum.date_from&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private Date dateFrom;
+
+    @Column(name = &quot;date_to&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.forum.date_to&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    private Date dateTo;
+
+    @Column(name = &quot;hours_after_last_message&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.forum.hours_after&quot;,
+        tab=&quot;advanced&quot;,
+        hidden = true
+    )
+    @Min(value = 0)
+    private Integer hoursAfterLastMessage;
+        
+    //Dont show them, just need their values during saving
+    @Column(name = &quot;doc_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN
+    )
+    private Integer docId;
+
+    @Column(name = &quot;message_board&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN
+    )
+    private Boolean messageBoard;
+
+    @Column(name = &quot;admin_groups&quot;)
+    @Size(max = 32)
+    private String adminGroups;
+
+    @Column(name = &quot;addmessage_groups&quot;)
+    @Size(max = 128)
+    private String addmessageGroups;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+
+    /**
+	 * Otestuje ci moze pouzivatel pridat prispevok do fora
+	 * @param user
+	 * @return
+	 */
+	public boolean canPostMessage(UserDetails user) {
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">		if (Tools.isEmpty(getAddmessageGroups())) return true;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (user == null) return(false);</span>
+		
+<span class="nc" id="L223">		String ids = getAddmessageGroups();</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids)) </span>
+		{
+<span class="nc" id="L226">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			while(st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L229">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
+<span class="nc" id="L232">			}</span>
+		}
+<span class="nc" id="L234">		return false;</span>
+	}
+
+    /**
+	 * Vrati true, ak zadany pouzivatel patri medzi administratorov fora
+	 * @param user
+	 * @return
+	 */
+	public boolean isAdmin(UserDetails user) {
+
+<span class="fc bfc" id="L244" title="All 2 branches covered.">		if (user == null) return(false);</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (user.isAdmin()) return true;</span>
+		
+<span class="nc" id="L247">        String ids = getAdminGroups();</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids))  {</span>
+<span class="nc" id="L249">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			while(st.hasMoreTokens()) {</span>
+<span class="nc" id="L251">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
+<span class="nc" id="L254">			}</span>
+		}
+<span class="nc" id="L256">		return false;</span>
+	}
+
+    public boolean isActive() {
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		if(getActive() == null) return false;</span>
+<span class="fc" id="L261">        return getActive();</span>
+	}
+
+    public boolean isMessageConfirmation() {
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if(getMessageConfirmation() == null) return false;</span>
+<span class="nc" id="L266">		return getMessageConfirmation();</span>
+	}
+
+    public boolean isMessageBoard() {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if(getMessageBoard() == null) return false;</span>
+<span class="nc" id="L271">		return getMessageBoard();</span>
+	}
+
+    public boolean isAdvertisementType() {
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">        if(getAdvertisementType() == null) return false;</span>
+<span class="fc" id="L276">		return getAdvertisementType();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

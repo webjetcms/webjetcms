@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WJResponseStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">WJResponseStream.java</span></div><h1>WJResponseStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Logger;
+
+/**
+ * WJResponseStream.java
+ * 
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2005
+ * @author $Author: jeeff $
+ * @version $Revision: 1.2 $
+ * @created Date: 14.4.2005 15:24:53
+ * @modified $Date: 2005/10/25 06:48:05 $
+ */
+public class WJResponseStream extends ServletOutputStream
+{
+<span class="nc" id="L26">	protected ByteArrayOutputStream baos = null;</span>
+<span class="nc" id="L27">	protected GZIPOutputStream gzipstream = null;</span>
+<span class="nc" id="L28">	protected boolean closed = false;</span>
+<span class="nc" id="L29">	protected HttpServletResponse response = null;</span>
+<span class="nc" id="L30">	protected ServletOutputStream output = null;</span>
+
+	public WJResponseStream(HttpServletResponse response) throws IOException
+	{
+<span class="nc" id="L34">		super();</span>
+<span class="nc" id="L35">		Logger.println(this,&quot;--&gt;WJResponseStream&quot;);</span>
+<span class="nc" id="L36">		closed = false;</span>
+<span class="nc" id="L37">		this.response = response;</span>
+<span class="nc" id="L38">		this.output = response.getOutputStream();</span>
+<span class="nc" id="L39">		baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L40">		gzipstream = new GZIPOutputStream(baos);</span>
+<span class="nc" id="L41">	}</span>
+	@Override
+	public void close() throws IOException
+	{
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (closed)</span>
+		{
+<span class="nc" id="L47">			throw new IOException(&quot;This output stream has already been closed&quot;);</span>
+		}
+<span class="nc" id="L49">		gzipstream.finish();</span>
+<span class="nc" id="L50">		byte[] bytes = baos.toByteArray();</span>
+		//response.addHeader(&quot;Content-Length&quot;, Integer.toString(bytes.length));
+		//response.addHeader(&quot;Content-Encoding&quot;, &quot;gzip&quot;);
+<span class="nc" id="L53">		output.write(bytes);</span>
+<span class="nc" id="L54">		output.flush();</span>
+<span class="nc" id="L55">		output.close();</span>
+<span class="nc" id="L56">		closed = true;</span>
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public void flush() throws IOException
+	{
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (closed)</span>
+		{
+<span class="nc" id="L64">			throw new IOException(&quot;Cannot flush a closed output stream&quot;);</span>
+		}
+<span class="nc" id="L66">		gzipstream.flush();</span>
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public void write(int b) throws IOException
+	{
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (closed)</span>
+		{
+<span class="nc" id="L74">			throw new IOException(&quot;Cannot write to a closed output stream&quot;);</span>
+		}
+<span class="nc" id="L76">		gzipstream.write((byte) b);</span>
+<span class="nc" id="L77">	}</span>
+
+	@Override
+	public void write(byte b[]) throws IOException
+	{
+<span class="nc" id="L82">		write(b, 0, b.length);</span>
+<span class="nc" id="L83">	}</span>
+
+	@Override
+	public void write(byte b[], int off, int len) throws IOException
+	{
+<span class="nc" id="L88">		Logger.println(this,&quot;writing...&quot;);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (closed)</span>
+		{
+<span class="nc" id="L91">			throw new IOException(&quot;Cannot write to a closed output stream&quot;);</span>
+		}
+<span class="nc" id="L93">		gzipstream.write(b, off, len);</span>
+<span class="nc" id="L94">	}</span>
+
+	public boolean closed()
+	{
+<span class="nc" id="L98">		return (this.closed);</span>
+	}
+
+	public void reset()
+	{
+		//noop
+<span class="nc" id="L104">	}</span>
+	@Override
+	public boolean isReady()
+	{
+		// TODO Auto-generated method stub
+<span class="nc" id="L109">		return false;</span>
+	}
+	@Override
+	public void setWriteListener(WriteListener arg0)
+	{
+		// TODO Auto-generated method stub
+		
+<span class="nc" id="L116">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -13,6 +13,7 @@ import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -115,7 +116,7 @@ public class PermissionGroupDB extends JpaDB<PermissionGroupBean>
 
 	public static int getUserCount(PermissionGroupBean permGroup)
 	{
-		return query.forInt("SELECT COUNT(upg.user_id) FROM users_in_perm_groups upg JOIN users u ON (upg.user_id = u.user_id) WHERE u.is_admin=1 AND perm_group_id = ?", permGroup.getId());
+		return query.forInt("SELECT COUNT(upg.user_id) FROM users_in_perm_groups upg JOIN users u ON (upg.user_id = u.user_id) WHERE u.is_admin="+DB.getBooleanSql(true)+" AND perm_group_id = ?", permGroup.getId());
 	}
 
 	public static List<Number> getUserIds(PermissionGroupBean permGroup)

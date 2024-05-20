@@ -62,7 +62,7 @@
 
         var buttonCounter = 4;
         forumDataTable.button().add(buttonCounter++, {
-            text: '<i class="far fa-eye"></i>',
+            text: '<i class="ti ti-eye"></i>',
             action: function (e, dt, node) {
                 let selectedRows = dt.rows({ selected: true }).data();
                 for (let i=0; i<selectedRows.length; i++) {
@@ -86,7 +86,7 @@
         });
 
         forumDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-trash-can-undo" style="color: #fabd00;"></i>',
+            text: '<i class="ti ti-trash-off" style="color: #fabd00;"></i>',
             action: function (e, dt, node) {
                 forumDataTable.executeAction("recoverForum", false);
             },
@@ -101,7 +101,7 @@
         });
 
         forumDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-circle-check"></i>',
+            text: '<i class="ti ti-circle-check"></i>',
             action: function (e, dt, node) {
                 forumDataTable.executeAction("approveForum");
             },
@@ -116,7 +116,7 @@
         });
 
         forumDataTable.button().add(buttonCounter++, {
-            text: '<i class="fa-solid fa-circle-xmark"></i>',
+            text: '<i class="ti ti-circle-x"></i>',
             action: function (e, dt, node) {
                 forumDataTable.executeAction("rejectForum");
             },

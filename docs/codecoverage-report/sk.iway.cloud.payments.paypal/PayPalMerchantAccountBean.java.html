@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PayPalMerchantAccountBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.cloud.payments.paypal</a> &gt; <span class="el_source">PayPalMerchantAccountBean.java</span></div><h1>PayPalMerchantAccountBean.java</h1><pre class="source lang-java linenums">package sk.iway.cloud.payments.paypal;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+
+import sk.iway.iwcm.database.ActiveRecord;
+
+/**
+ *  PayPalMerchantAccountBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2014
+ *@author       $Author: jeeff mhalas $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 25.9.2014 10:16:05
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;paypal_merchant_account&quot;)
+<span class="nc" id="L27">public class PayPalMerchantAccountBean extends ActiveRecord implements Serializable</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 3340829533291181147L;
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_paypal_merchant_account&quot;)
+	@TableGenerator(name=&quot;WJGen_paypal_merchant_account&quot;,pkColumnName=&quot;paypal_merchant_account&quot;)	
+	@Column
+	private int id;
+	@Column
+	private String user;
+	@Column
+	private String pwd;
+	@Column
+	private String signature;
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+	
+	@Override
+	public int getId()
+	{
+<span class="nc" id="L50">		return id;</span>
+	}
+
+	@Override
+	public void setId(int id)
+	{
+<span class="nc" id="L56">		this.id = id;</span>
+<span class="nc" id="L57">	}</span>
+
+	public String getUser()
+	{
+<span class="nc" id="L61">		return user;</span>
+	}
+
+	public void setUser(String user)
+	{
+<span class="nc" id="L66">		this.user = user;</span>
+<span class="nc" id="L67">	}</span>
+
+	public String getPwd()
+	{
+<span class="nc" id="L71">		return pwd;</span>
+	}
+
+	public void setPwd(String pwd)
+	{
+<span class="nc" id="L76">		this.pwd = pwd;</span>
+<span class="nc" id="L77">	}</span>
+
+	public String getSignature()
+	{
+<span class="nc" id="L81">		return signature;</span>
+	}
+
+	public void setSignature(String signature)
+	{
+<span class="nc" id="L86">		this.signature = signature;</span>
+<span class="nc" id="L87">	}</span>
+
+	public int getDomainId()
+	{
+<span class="nc" id="L91">		return domainId;</span>
+	}
+
+	public void setDomainId(int domainId)
+	{
+<span class="nc" id="L96">		this.domainId = domainId;</span>
+<span class="nc" id="L97">	}</span>
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L102">		return &quot;PayPalMerchantAccountBean [id=&quot; + id + &quot;, user=&quot; + user + &quot;, pwd=&quot; + pwd + &quot;, signature=&quot; + signature</span>
+					+ &quot;, domainId=&quot; + domainId + &quot;]&quot;;
+	}
+
+	@Override
+	public int hashCode()
+	{
+<span class="nc" id="L109">		final int prime = 31;</span>
+<span class="nc" id="L110">		int result = 1;</span>
+<span class="nc" id="L111">		result = prime * result + domainId;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		result = prime * result + ((pwd == null) ? 0 : pwd.hashCode());</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		result = prime * result + ((signature == null) ? 0 : signature.hashCode());</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		result = prime * result + ((user == null) ? 0 : user.hashCode());</span>
+<span class="nc" id="L115">		return result;</span>
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (this == obj)</span>
+<span class="nc" id="L122">			return true;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (obj == null)</span>
+<span class="nc" id="L124">			return false;</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (getClass() != obj.getClass())</span>
+<span class="nc" id="L126">			return false;</span>
+<span class="nc" id="L127">		PayPalMerchantAccountBean other = (PayPalMerchantAccountBean) obj;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (domainId != other.domainId)</span>
+<span class="nc" id="L129">			return false;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (pwd == null)</span>
+		{
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (other.pwd != null)</span>
+<span class="nc" id="L133">				return false;</span>
+		}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		else if (!pwd.equals(other.pwd))</span>
+<span class="nc" id="L136">			return false;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (signature == null)</span>
+		{
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (other.signature != null)</span>
+<span class="nc" id="L140">				return false;</span>
+		}
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		else if (!signature.equals(other.signature))</span>
+<span class="nc" id="L143">			return false;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (user == null)</span>
+		{
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (other.user != null)</span>
+<span class="nc" id="L147">				return false;</span>
+		}
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		else if (!user.equals(other.user))</span>
+<span class="nc" id="L150">			return false;</span>
+<span class="nc" id="L151">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

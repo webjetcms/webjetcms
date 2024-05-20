@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ModelType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather.met.no.generated</a> &gt; <span class="el_source">ModelType.java</span></div><h1>ModelType.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather.met.no.generated;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
+
+
+/**
+ * &lt;p&gt;Java class for modelType complex type.
+ * 
+ * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+ * 
+ * &lt;pre&gt;
+ * &amp;lt;complexType name=&quot;modelType&quot;&gt;
+ *   &amp;lt;complexContent&gt;
+ *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *       &amp;lt;attribute name=&quot;name&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;termin&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;runended&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;nextrun&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;from&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *       &amp;lt;attribute name=&quot;to&quot; type=&quot;{http://www.w3.org/2001/XMLSchema}string&quot; /&gt;
+ *     &amp;lt;/restriction&gt;
+ *   &amp;lt;/complexContent&gt;
+ * &amp;lt;/complexType&gt;
+ * &lt;/pre&gt;
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = &quot;modelType&quot;)
+<span class="nc" id="L33">public class ModelType {</span>
+
+    @XmlAttribute(name = &quot;name&quot;)
+    protected String name;
+    @XmlAttribute(name = &quot;termin&quot;)
+    protected String termin;
+    @XmlAttribute(name = &quot;runended&quot;)
+    protected String runended;
+    @XmlAttribute(name = &quot;nextrun&quot;)
+    protected String nextrun;
+    @XmlAttribute(name = &quot;from&quot;)
+    protected String from;
+    @XmlAttribute(name = &quot;to&quot;)
+    protected String to;
+
+    /**
+     * Gets the value of the name property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getName() {
+<span class="nc" id="L57">        return name;</span>
+    }
+
+    /**
+     * Sets the value of the name property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setName(String value) {
+<span class="nc" id="L69">        this.name = value;</span>
+<span class="nc" id="L70">    }</span>
+
+    /**
+     * Gets the value of the termin property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTermin() {
+<span class="nc" id="L81">        return termin;</span>
+    }
+
+    /**
+     * Sets the value of the termin property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTermin(String value) {
+<span class="nc" id="L93">        this.termin = value;</span>
+<span class="nc" id="L94">    }</span>
+
+    /**
+     * Gets the value of the runended property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getRunended() {
+<span class="nc" id="L105">        return runended;</span>
+    }
+
+    /**
+     * Sets the value of the runended property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setRunended(String value) {
+<span class="nc" id="L117">        this.runended = value;</span>
+<span class="nc" id="L118">    }</span>
+
+    /**
+     * Gets the value of the nextrun property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getNextrun() {
+<span class="nc" id="L129">        return nextrun;</span>
+    }
+
+    /**
+     * Sets the value of the nextrun property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setNextrun(String value) {
+<span class="nc" id="L141">        this.nextrun = value;</span>
+<span class="nc" id="L142">    }</span>
+
+    /**
+     * Gets the value of the from property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getFrom() {
+<span class="nc" id="L153">        return from;</span>
+    }
+
+    /**
+     * Sets the value of the from property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setFrom(String value) {
+<span class="nc" id="L165">        this.from = value;</span>
+<span class="nc" id="L166">    }</span>
+
+    /**
+     * Gets the value of the to property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTo() {
+<span class="nc" id="L177">        return to;</span>
+    }
+
+    /**
+     * Sets the value of the to property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTo(String value) {
+<span class="nc" id="L189">        this.to = value;</span>
+<span class="nc" id="L190">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

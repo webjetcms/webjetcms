@@ -6,7 +6,9 @@ Ak idete vytvoriť novú web stránku, najprv sa musíte nastaviť do správneho
 
 ## Karta obsah
 
-V karte obsah sa zobrazuje editor textu stránky. Dostupné sú viaceré typy editorov podľa nastavenia skupiny šablón, alebo šablóny (pole Typ editora stránok). Aktuálne sú podporované nasledovné typy editorov:
+V karte „Obsah“ je možné upravovať obsahovú časť samotnej web stránky. Editácia stránok ponúka štandardné funkcie úpravy obsahu dokumentov podobné funkciám bežne používaných v aplikáciách MS Word a Excel. Väčšina príkazov je prístupná pomocou formátovacích tlačidiel z nástrojovej lišty editora. Kontextové funkcie sú prístupné po kliknutí pravým tlačítkom myši nad príslušným objektom stránky, napr. obrázkom, tabuľkou, označeným blokom textu a pod.
+
+Dostupné sú viaceré typy editorov podľa nastavenia skupiny šablón, alebo šablóny (pole Typ editora stránok). Aktuálne sú podporované nasledovné typy editorov:
 
 - Štandardný - editor typu `WYSIWYG`, teda vizuálny editor v ktorom to čo vidíte na obrazovke sa aj uloží. Práca je podobná práci v MS Word, kedy viete jednoducho označiť text, nastaviť tučné písmo, vkladať obrázky atď.
 - HTML editor - pri otvorení sa zobrazí HTML kód stránky. Je určený pre špeciálne stránky, ktorých kód by bol pokazený pri editore typu `WYSIWYG`, napr. stránky pre hromadný email, ktoré obsahujú celý HTML kód vrátane hlavičky a pätičky. Kód je v takomto prípade typicky dodaný z externej agentúry a je len vložený do stránky bez potreby jeho zmien.
@@ -16,7 +18,7 @@ V karte obsah sa zobrazuje editor textu stránky. Dostupné sú viaceré typy ed
 
 Najdôležitejším parametrom každej web stránky je jej titulok (nadpis). Titulok sa zadáva do textového poľa v karte Základné. Pokiaľ vytvárate novú web stránku v prázdnom priečinku, tak si systém automaticky preberie titulok z názvu tohto priečinka. V opačnom prípade je tam pri vytvorení novej web stránky text "Nová web stránka", ktorý samozrejme musíte zmeniť na zmysluplný názov definujúci obsah web stránky. Titulok sa zadáva normálne s diakritikou aj medzerami ako obyčajný text.
 
-V karte „Obsah“ je možné upravovať obsahovú časť samotnej web stránky. Editácia stránok ponúka štandardné funkcie úpravy obsahu dokumentov podobné funkciám bežne používaných v aplikáciách MS Word a Excel. Väčšina príkazov je prístupná pomocou formátovacích tlačidiel z nástrojovej lišty editora. Kontextové funkcie sú prístupné po kliknutí pravým tlačítkom myši nad príslušným objektom stránky, napr. obrázkom, tabuľkou, označeným blokom textu a pod.
+Hlavná stránka priečinka má štandardne synchronizovaný [názov web stránky s názvom priečinku](group.md#synchronizácia-názvu-priečinka-a-web-stránky).
 
 ![](editor/tab-basic.png)
 

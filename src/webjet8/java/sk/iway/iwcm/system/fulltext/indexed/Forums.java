@@ -20,6 +20,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.util.Version;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -48,7 +49,7 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
  */
 public class Forums extends Indexed
 {
-	private static final String JOIN_CLAUSE = " join documents d on (d.doc_id = df.doc_id) where df.confirmed=1 AND df.deleted=0 ";
+	private static final String JOIN_CLAUSE = " join documents d on (d.doc_id = df.doc_id) where df.confirmed="+DB.getBooleanSql(true)+" AND df.deleted="+DB.getBooleanSql(false)+" ";
 
 	@Override
 	public void close()

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsertScriptRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.insertScript.rest</a> &gt; <span class="el_source">InsertScriptRestController.java</span></div><h1>InsertScriptRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.insertScript.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.insertScript.InsertScriptBean;
+import sk.iway.iwcm.components.insertScript.InsertScriptDB;
+import sk.iway.iwcm.components.insertScript.InsertScriptGroupBean;
+import sk.iway.iwcm.components.insertScript.InsertScriptRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/components/insert-script&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_insert_script')&quot;)
+public class InsertScriptRestController extends DatatableRestControllerV2&lt;InsertScriptBean, Long&gt; {
+    @Autowired
+    public InsertScriptRestController(InsertScriptRepository insertScriptRepository) {
+<span class="fc" id="L35">        super(insertScriptRepository);</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public Page&lt;InsertScriptBean&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L40">        List&lt;InsertScriptBean&gt; listedBeans = InsertScriptDB.getInstance().getAll();</span>
+<span class="fc" id="L41">        DatatablePageImpl&lt;InsertScriptBean&gt; data = new DatatablePageImpl&lt;&gt;(listedBeans);</span>
+
+<span class="fc" id="L43">        Prop prop = getProp();</span>
+<span class="fc" id="L44">        data.addOptions(&quot;cookieClass&quot;, getCookieClassifications(prop), &quot;label&quot;, &quot;value&quot;, false);</span>
+
+<span class="fc" id="L46">        return data;</span>
+    }
+
+    @Override
+    public void beforeSave(InsertScriptBean entity) {
+        //nastav datum ulozenia
+<span class="fc" id="L52">        entity.setSaveDate(new Date());</span>
+
+        //nastav korektne domainId
+<span class="fc" id="L55">        int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L56">        entity.setDomainId(domainId);</span>
+        //nastav aj na inner objekty
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (entity.getGroupIds()!=null) {</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            for (InsertScriptGroupBean isg : entity.getGroupIds()) {</span>
+<span class="fc" id="L60">                isg.setDomainId(domainId);</span>
+<span class="fc" id="L61">            }</span>
+        }
+<span class="fc" id="L63">    }</span>
+
+    public static List&lt;LabelValueDetails&gt; getCookieClassifications(Prop prop) {
+<span class="fc" id="L66">        List&lt;LabelValueDetails&gt; options = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L67">        options.add(new LabelValueDetails(prop.getText(&quot;components.insert_script.insert_always&quot;), &quot;ALWAYS&quot;));</span>
+        //prebehni klasifikacie z konstant a pridaj
+<span class="fc" id="L69">        String[] classifications = Tools.getTokens(Constants.getString(&quot;gdprCookieClassifications&quot;), &quot;,&quot;);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (String cls : classifications) {</span>
+<span class="fc" id="L71">            String labelKey = &quot;components.cookies.cookie_manager.classification.&quot;+cls;</span>
+<span class="fc" id="L72">            String label = prop.getText(labelKey);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (label.equals(labelKey)) label = cls;</span>
+
+<span class="fc" id="L75">            options.add(new LabelValueDetails(label, cls));</span>
+        }
+<span class="fc" id="L77">        return options;</span>
+    }
+
+    /**
+     * Vrati zoznam uz existujucich skupin
+     * @param term
+     * @return
+    */
+    @GetMapping(&quot;/positions&quot;)
+    public List&lt;String&gt; getPositionAutocomplete(@RequestParam String term) {
+
+<span class="fc" id="L88">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
+
+        //Get all where group name is like %term%, and distict because its autocomplete list and we dont want duplicity
+<span class="fc" id="L91">        List&lt;InsertScriptBean&gt; groupNamesList =  ((InsertScriptRepository)getRepo()).findDistinctAllByPositionLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+
+        //Loop gained entities and add group name to autcomplete list &quot;ac&quot;
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        for(InsertScriptBean entity : groupNamesList)</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (ac.contains(entity.getPosition()) == false) ac.add(entity.getPosition());</span>
+
+<span class="fc" id="L97">        return ac;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.spirit.model</a> &gt; <span class="el_source">MediaGroupBean.java</span></div><h1>MediaGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.spirit.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name=&quot;media_groups&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MEDIA_GROUP)
+public class MediaGroupBean extends ActiveRecordRepository implements Serializable {
+
+	private static final long serialVersionUID = -1L;
+
+<span class="fc" id="L31">	public MediaGroupBean() {}</span>
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_MediaGroup&quot;)
+	@TableGenerator(name=&quot;WJGen_MediaGroup&quot;,pkColumnValue=&quot;MediaGroup&quot;)
+	@Column(name = &quot;media_group_id&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = &quot;dt-format-selector&quot;, title = &quot;editor.cell.id&quot;)
+	private Long id;
+
+	@NotBlank
+	@Column(name = &quot;media_group_name&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = &quot;dt-format-text&quot;, title = &quot;editor.perex_group_name&quot;, editor = {
+        @DataTableColumnEditor(type = &quot;text&quot;) })
+	private String mediaGroupName;
+
+	@Column(name = &quot;available_groups&quot;)
+	private String availableGroups;
+
+<span class="fc" id="L49">	@Transient</span>
+	@DataTableColumnNested
+	private MediaGroupEditorFields editorFields = null;
+
+	@Lob
+	@Column(name = &quot;related_pages&quot;)
+	String relatedPages;
+
+	public int getMediaGroupId() {
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">		if (id==null) return 0;</span>
+<span class="fc" id="L59">		return id.intValue();</span>
+	}
+
+	public void setMediaGroupId(int mediaGroupId) {
+<span class="fc" id="L63">		this.id = Long.valueOf(mediaGroupId);</span>
+<span class="fc" id="L64">	}</span>
+
+	public String getMediaGroupName() {
+<span class="fc" id="L67">		return mediaGroupName;</span>
+	}
+
+	public void setMediaGroupName(String mediaGroupName) {
+<span class="fc" id="L71">		this.mediaGroupName = mediaGroupName;</span>
+<span class="fc" id="L72">	}</span>
+
+
+	public String getAvailableGroups() {
+<span class="fc" id="L76">		return availableGroups;</span>
+	}
+
+	public void setAvailableGroups(String availableGroups) {
+<span class="fc" id="L80">		this.availableGroups = availableGroups;</span>
+<span class="fc" id="L81">	}</span>
+
+	public String getRelatedPages() {
+<span class="fc" id="L84">		return relatedPages;</span>
+	}
+
+	public void setRelatedPages(String relatedPages) {
+<span class="fc" id="L88">		this.relatedPages = relatedPages;</span>
+<span class="fc" id="L89">	}</span>
+
+	public MediaGroupEditorFields getEditorFields() {
+<span class="fc bfc" id="L92" title="All 2 branches covered.">		if(editorFields == null) {</span>
+			//call fromMediaGroupBean to inicialize MediaGroupEditorFields.availableGroups
+<span class="fc" id="L94">			editorFields = new MediaGroupEditorFields();</span>
+<span class="fc" id="L95">			editorFields.fromMediaGroupBean(this);</span>
+		}
+<span class="fc" id="L97">		return editorFields;</span>
+	}
+
+	public void setEditorFields(MediaGroupEditorFields editorFields) {
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		if(editorFields != null) {</span>
+			//call toMediaGroupBean to return String of group id's, separeted by &quot;,&quot; and set this AvailableGroups
+<span class="fc" id="L103">			String newGroupIds = editorFields.toMediaGroupBean(this);</span>
+<span class="fc" id="L104">			this.setAvailableGroups(newGroupIds);</span>
+		}
+<span class="fc" id="L106">		this.editorFields = editorFields;</span>
+<span class="fc" id="L107">	}</span>
+
+	@Override
+	public void setId(Long id) {
+<span class="fc" id="L111">		this.id = id;</span>
+<span class="fc" id="L112">	}</span>
+
+	@Override
+	public Long getId() {
+<span class="fc" id="L116">		return id;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

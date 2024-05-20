@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorSearchBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorSearchBean.java</span></div><h1>FileArchivatorSearchBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
+
+import org.apache.poi.util.NotImplemented;
+
+import java.util.Collection;
+import java.util.Date;
+
+public class FileArchivatorSearchBean {
+
+    private int fileArchiveId;
+    private int userId;//id usera
+    private String filePath;//cesta k suboru
+    private String fileName;//meno suboru
+    private String virtualFileName;//meno suboru ktore zobrazujeme
+    private Boolean showFile;//zobrazujeme subor na frontende ?
+    //private Date dateInsert;//kedy bol subor vlozeny / pridany do archivatoru
+    private Date dateInsertFrom;
+    private Date dateInsertTo;
+    private Date validFrom;//datum platnosti suboru od
+    private Date validTo;//datum platnosti suboru do
+    private Collection&lt;String&gt; domain;//domena pod ktorou budeme (mozeme, nemusime) zobrazovat. Domena ku ktorej subor patri
+    private int referenceId;// odkaz na id hlavneho suboru -&gt; nn_file_archive_id. Ak je toto hlavny subor tak referenceId = -1
+    private int orderId;// index poradia pri zobrazovani
+    private Collection&lt;String&gt; productCode;// kod produktu suboru
+    private Collection&lt;String&gt; product;// produkt ku ktoremu patri subor
+    private Collection&lt;String&gt; category;//kategoria do ktorej subor patri
+    private String md5;
+    private String referenceToMain;//odkaz na hlavny subor - ma vyplneny iba Vzor//field_b
+    private int priority;//priorita
+    private String fieldA;
+    private String fieldB;
+    private int fieldC;
+    private long fieldD;//volne pole ak bude treba mozem pouzit neskorej
+    private String fieldE;//volne pole ak bude treba mozem pouzit neskorej
+    private String note;//volne pole ak bude treba mozem pouzit neskorej
+    private int globalId;// globalne id pre cele &quot;vlakno&quot; suborov, primarne urcene pre zobrazovanie podla globalneho id
+    private Date dateUploadLater;//datum a cas kedy sa ma subor nahrat
+    private int uploaded;// -1 - uspesne nahrany, 0 - caka na nahranie
+    private String emails;//zoznam emailov oddelenych ciarkov, na ktore sa posle notifikacia po uspesnom oneskorenom nahrati
+    private long fileSize;
+    private int domainId;
+    private int extendedDataId;
+
+    private Collection&lt;String&gt; excludeCategory;
+
+    private String dirPath;
+    private boolean includeSubdirs;
+    private boolean asc;
+    private boolean useCache;
+    private boolean onlyMain;
+
+
+<span class="fc" id="L53">    public FileArchivatorSearchBean() {</span>
+<span class="fc" id="L54">        globalId = -1;</span>
+
+<span class="fc" id="L56">        showFile = true;</span>
+<span class="fc" id="L57">        includeSubdirs = false;</span>
+<span class="fc" id="L58">        asc = true;</span>
+<span class="fc" id="L59">        useCache = true;</span>
+<span class="fc" id="L60">        onlyMain = true;</span>
+
+<span class="fc" id="L62">        filePath = null;</span>
+<span class="fc" id="L63">        fileName = null;</span>
+<span class="fc" id="L64">        virtualFileName = null;</span>
+
+<span class="fc" id="L66">        dateInsertFrom = null;</span>
+<span class="fc" id="L67">        dateInsertTo = null;</span>
+<span class="fc" id="L68">        validFrom = null;</span>
+<span class="fc" id="L69">        validTo = null;</span>
+
+<span class="fc" id="L71">        domain = null;</span>
+<span class="fc" id="L72">        productCode = null;</span>
+<span class="fc" id="L73">        product = null;</span>
+<span class="fc" id="L74">        category = null;</span>
+<span class="fc" id="L75">        md5 = null;</span>
+<span class="fc" id="L76">        referenceToMain = null;</span>
+<span class="fc" id="L77">        fieldA = null;</span>
+<span class="fc" id="L78">        fieldB = null;</span>
+<span class="fc" id="L79">        fieldC = -1;</span>
+<span class="fc" id="L80">        fieldE = null;</span>
+<span class="fc" id="L81">        note = null;</span>
+<span class="fc" id="L82">        dateUploadLater = null;</span>
+<span class="fc" id="L83">        emails = null;</span>
+<span class="fc" id="L84">        dirPath = null;</span>
+
+<span class="fc" id="L86">        excludeCategory = null;</span>
+<span class="fc" id="L87">    }</span>
+
+    public int getFileArchiveId() {
+<span class="nc" id="L90">        return fileArchiveId;</span>
+    }
+
+    public void setFileArchiveId(int fileArchiveId) {
+<span class="nc" id="L94">        this.fileArchiveId = fileArchiveId;</span>
+<span class="nc" id="L95">    }</span>
+
+    public Collection&lt;String&gt; getExcludeCategory() {
+<span class="fc" id="L98">        return excludeCategory;</span>
+    }
+
+    public void setExcludeCategory(Collection&lt;String&gt; excludeCategory) {
+<span class="fc" id="L102">        this.excludeCategory = excludeCategory;</span>
+<span class="fc" id="L103">    }</span>
+
+    @NotImplemented
+    public int getUserId() {
+<span class="nc" id="L107">        return userId;</span>
+    }
+
+    @NotImplemented
+    public void setUserId(int userId) {
+<span class="nc" id="L112">        this.userId = userId;</span>
+<span class="nc" id="L113">    }</span>
+
+    public String getFilePath() {
+<span class="nc" id="L116">        return filePath;</span>
+    }
+
+    public void setFilePath(String filePath) {
+<span class="nc" id="L120">        this.filePath = filePath;</span>
+<span class="nc" id="L121">    }</span>
+
+    public String getFileName() {
+<span class="fc" id="L124">        return fileName;</span>
+    }
+
+    public void setFileName(String fileName) {
+<span class="nc" id="L128">        this.fileName = fileName;</span>
+<span class="nc" id="L129">    }</span>
+
+    public String getVirtualFileName() {
+<span class="fc" id="L132">        return virtualFileName;</span>
+    }
+
+    public void setVirtualFileName(String virtualFileName) {
+<span class="nc" id="L136">        this.virtualFileName = virtualFileName;</span>
+<span class="nc" id="L137">    }</span>
+
+    public Date getDateInsertFrom() {
+<span class="fc" id="L140">        return dateInsertFrom;</span>
+    }
+
+    public void setDateInsertFrom(Date dateInsertFrom) {
+<span class="nc" id="L144">        this.dateInsertFrom = dateInsertFrom;</span>
+<span class="nc" id="L145">    }</span>
+
+    public Date getDateInsertTo() {
+<span class="fc" id="L148">        return dateInsertTo;</span>
+    }
+
+    public void setDateInsertTo(Date dateInsertTo) {
+<span class="nc" id="L152">        this.dateInsertTo = dateInsertTo;</span>
+<span class="nc" id="L153">    }</span>
+
+    public Date getValidFrom() {
+<span class="nc" id="L156">        return validFrom;</span>
+    }
+
+    public void setValidFrom(Date validFrom) {
+<span class="nc" id="L160">        this.validFrom = validFrom;</span>
+<span class="nc" id="L161">    }</span>
+
+    public Date getValidTo() {
+<span class="nc" id="L164">        return validTo;</span>
+    }
+
+    public void setValidTo(Date validTo) {
+<span class="nc" id="L168">        this.validTo = validTo;</span>
+<span class="nc" id="L169">    }</span>
+
+    public Collection&lt;String&gt; getDomain() {
+<span class="fc" id="L172">        return domain;</span>
+    }
+
+    public void setDomain(Collection&lt;String&gt; domain) {
+<span class="nc" id="L176">        this.domain = domain;</span>
+<span class="nc" id="L177">    }</span>
+
+    public int getReferenceId() {
+<span class="nc" id="L180">        return referenceId;</span>
+    }
+
+    public void setReferenceId(int referenceId) {
+<span class="nc" id="L184">        this.referenceId = referenceId;</span>
+<span class="nc" id="L185">    }</span>
+
+    public int getOrderId() {
+<span class="nc" id="L188">        return orderId;</span>
+    }
+
+    public void setOrderId(int orderId) {
+<span class="nc" id="L192">        this.orderId = orderId;</span>
+<span class="nc" id="L193">    }</span>
+
+    public Collection&lt;String&gt; getProductCode() {
+<span class="fc" id="L196">        return productCode;</span>
+    }
+
+    public void setProductCode(Collection&lt;String&gt; productCode) {
+<span class="nc" id="L200">        this.productCode = productCode;</span>
+<span class="nc" id="L201">    }</span>
+
+    public Collection&lt;String&gt; getProduct() {
+<span class="fc" id="L204">        return product;</span>
+    }
+
+    public void setProduct(Collection&lt;String&gt; product) {
+<span class="nc" id="L208">        this.product = product;</span>
+<span class="nc" id="L209">    }</span>
+
+    public Collection&lt;String&gt; getCategory() {
+<span class="fc" id="L212">        return category;</span>
+    }
+
+    public void setCategory(Collection&lt;String&gt; category) {
+<span class="nc" id="L216">        this.category = category;</span>
+<span class="nc" id="L217">    }</span>
+
+    @NotImplemented
+    public String getMd5() {
+<span class="nc" id="L221">        return md5;</span>
+    }
+
+    @NotImplemented
+    public void setMd5(String md5) {
+<span class="nc" id="L226">        this.md5 = md5;</span>
+<span class="nc" id="L227">    }</span>
+
+    @NotImplemented
+    public String getReferenceToMain() {
+<span class="nc" id="L231">        return referenceToMain;</span>
+    }
+
+    @NotImplemented
+    public void setReferenceToMain(String referenceToMain) {
+<span class="nc" id="L236">        this.referenceToMain = referenceToMain;</span>
+<span class="nc" id="L237">    }</span>
+
+    public int getPriority() {
+<span class="nc" id="L240">        return priority;</span>
+    }
+
+    public void setPriority(int priority) {
+<span class="nc" id="L244">        this.priority = priority;</span>
+<span class="nc" id="L245">    }</span>
+
+    public String getFieldA() {
+<span class="fc" id="L248">        return fieldA;</span>
+    }
+
+    public void setFieldA(String fieldA) {
+<span class="nc" id="L252">        this.fieldA = fieldA;</span>
+<span class="nc" id="L253">    }</span>
+
+    public String getFieldB() {
+<span class="fc" id="L256">        return fieldB;</span>
+    }
+
+    public void setFieldB(String fieldB) {
+<span class="nc" id="L260">        this.fieldB = fieldB;</span>
+<span class="nc" id="L261">    }</span>
+
+    @NotImplemented
+    public int getFieldC() {
+<span class="fc" id="L265">        return fieldC;</span>
+    }
+
+    @NotImplemented
+    public void setFieldC(int fieldC) {
+<span class="nc" id="L270">        this.fieldC = fieldC;</span>
+<span class="nc" id="L271">    }</span>
+
+    @NotImplemented
+    public long getFieldD() {
+<span class="nc" id="L275">        return fieldD;</span>
+    }
+
+    @NotImplemented
+    public void setFieldD(long fieldD) {
+<span class="nc" id="L280">        this.fieldD = fieldD;</span>
+<span class="nc" id="L281">    }</span>
+
+    @NotImplemented
+    public String getFieldE() {
+<span class="nc" id="L285">        return fieldE;</span>
+    }
+
+    @NotImplemented
+    public void setFieldE(String fieldE) {
+<span class="nc" id="L290">        this.fieldE = fieldE;</span>
+<span class="nc" id="L291">    }</span>
+
+    public String getNote() {
+<span class="fc" id="L294">        return note;</span>
+    }
+
+    public void setNote(String note) {
+<span class="nc" id="L298">        this.note = note;</span>
+<span class="nc" id="L299">    }</span>
+
+    public int getGlobalId() {
+<span class="fc" id="L302">        return globalId;</span>
+    }
+
+    public void setGlobalId(int globalId) {
+<span class="nc" id="L306">        this.globalId = globalId;</span>
+<span class="nc" id="L307">    }</span>
+
+    public Date getDateUploadLater() {
+<span class="nc" id="L310">        return dateUploadLater;</span>
+    }
+
+    public void setDateUploadLater(Date dateUploadLater) {
+<span class="nc" id="L314">        this.dateUploadLater = dateUploadLater;</span>
+<span class="nc" id="L315">    }</span>
+
+    public int getUploaded() {
+<span class="nc" id="L318">        return uploaded;</span>
+    }
+
+    public void setUploaded(int uploaded) {
+<span class="nc" id="L322">        this.uploaded = uploaded;</span>
+<span class="nc" id="L323">    }</span>
+
+    public String getEmails() {
+<span class="nc" id="L326">        return emails;</span>
+    }
+
+    public void setEmails(String emails) {
+<span class="nc" id="L330">        this.emails = emails;</span>
+<span class="nc" id="L331">    }</span>
+
+    public long getFileSize() {
+<span class="nc" id="L334">        return fileSize;</span>
+    }
+
+    public void setFileSize(long fileSize) {
+<span class="nc" id="L338">        this.fileSize = fileSize;</span>
+<span class="nc" id="L339">    }</span>
+
+    public int getDomainId() {
+<span class="nc" id="L342">        return domainId;</span>
+    }
+
+    public void setDomainId(int domainId) {
+<span class="nc" id="L346">        this.domainId = domainId;</span>
+<span class="nc" id="L347">    }</span>
+
+    @NotImplemented
+    public int getExtendedDataId() {
+<span class="nc" id="L351">        return extendedDataId;</span>
+    }
+
+    @NotImplemented
+    public void setExtendedDataId(int extendedDataId) {
+<span class="nc" id="L356">        this.extendedDataId = extendedDataId;</span>
+<span class="nc" id="L357">    }</span>
+
+    public String getDirPath() {
+<span class="fc" id="L360">        return dirPath;</span>
+    }
+
+    public void setDirPath(String dirPath) {
+<span class="nc" id="L364">        this.dirPath = dirPath;</span>
+<span class="nc" id="L365">    }</span>
+
+    public boolean isIncludeSubdirs() {
+<span class="fc" id="L368">        return includeSubdirs;</span>
+    }
+
+    public void setIncludeSubdirs(boolean includeSubdirs) {
+<span class="fc" id="L372">        this.includeSubdirs = includeSubdirs;</span>
+<span class="fc" id="L373">    }</span>
+
+    public boolean isAsc() {
+<span class="fc" id="L376">        return asc;</span>
+    }
+
+    public void setAsc(boolean asc) {
+<span class="nc" id="L380">        this.asc = asc;</span>
+<span class="nc" id="L381">    }</span>
+
+    public Boolean getShowFile() {
+<span class="fc" id="L384">        return showFile;</span>
+    }
+
+    public void setShowFile(Boolean showFile) {
+<span class="fc" id="L388">        this.showFile = showFile;</span>
+<span class="fc" id="L389">    }</span>
+
+    public boolean isUseCache() {
+<span class="fc" id="L392">        return useCache;</span>
+    }
+
+    public void setUseCache(boolean useCache) {
+<span class="nc" id="L396">        this.useCache = useCache;</span>
+<span class="nc" id="L397">    }</span>
+
+    public boolean isOnlyMain() {
+<span class="fc" id="L400">        return onlyMain;</span>
+    }
+
+    public void setOnlyMain(boolean onlyMain) {
+<span class="fc" id="L404">        this.onlyMain = onlyMain;</span>
+<span class="fc" id="L405">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

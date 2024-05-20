@@ -90,7 +90,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
 
     //screenshotWebAndApp(I, Document, 77770, "/components/app-vyhladavanie", ".ly-content .container", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1, tabLink2, 800, 600);
-    //screenshotWebAndApp(I, Document, 77771, "/components/map", "#map1", tabLink1, tabLink2, 1000, 1200);
+    //screenshotWebAndApp(I, Document, 59889, "/components/map", "#map1", tabLink1, tabLink2, 1000, 1200);
     //screenshotWebAndApp(I, Document, 24217, "/components/sitemap", ".sitemaptest", tabLinkNone, null, 640, 480);
 
     //screenshotWebAndApp(I, Document, 25209, "/components/menu", "header", tabLinkNone, null);

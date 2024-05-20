@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PageParams.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">PageParams.java</span></div><h1>PageParams.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ *  Pracovanie s pageParams (v dynamicky includnutych objektoch)
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Nedela, 2003, september 28
+ *@modified     $Date: 2003/12/19 10:02:33 $
+ */
+public class PageParams implements Serializable
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 6079376479113116704L;
+	private Map&lt;String, String&gt; params;
+	private List&lt;String&gt; paramNames;
+	private String pageParams; //NOSONAR
+
+	/**
+	 * Returns deep copy of params map
+	 * @return
+	 */
+	public Map&lt;String, String&gt; getParams()
+	{
+<span class="fc" id="L39">		return Tools.deepCopy(params);</span>
+	}
+
+	public List&lt;String&gt; getParamNames()
+	{
+<span class="fc" id="L44">		return paramNames;</span>
+	}
+
+	/**
+	 *  Constructor for the PageParams object
+	 */
+	public PageParams()
+<span class="nc" id="L51">	{</span>
+<span class="nc" id="L52">		setPageParams(&quot;&quot;);</span>
+<span class="nc" id="L53">	}</span>
+
+	public PageParams(HttpServletRequest request)
+<span class="fc" id="L56">	{</span>
+<span class="fc" id="L57">		String requestValue = (String)request.getAttribute(&quot;includePageParams&quot;);</span>
+
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (Tools.isEmpty(requestValue))</span>
+		{
+<span class="fc" id="L61">			persistFromSession(request);</span>
+		}
+		else
+		{
+<span class="fc" id="L65">			setPageParams(requestValue);</span>
+
+<span class="fc" id="L67">			int docId = Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">			if (docId &gt; 0) params.put(&quot;originalDocId&quot;, Integer.toString(docId));</span>
+		}
+<span class="fc" id="L70">	}</span>
+
+	public PageParams(String paramsString)
+<span class="fc" id="L73">	{</span>
+<span class="fc" id="L74">		setPageParams(paramsString);</span>
+<span class="fc" id="L75">	}</span>
+
+	/**
+	 * Vrati hidden pole pre formular s identifikatorom objektu v session
+	 * @return
+	 */
+	public String persistToSession(HttpServletRequest request)
+	{
+<span class="fc" id="L83">		String key = PkeyGenerator.getUniqueKey();</span>
+
+<span class="fc" id="L85">		Object[] sessionData = new Object[2];</span>
+<span class="fc" id="L86">		sessionData[0] = pageParams;</span>
+<span class="fc" id="L87">		sessionData[1] = Integer.valueOf(Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1));</span>
+
+<span class="fc" id="L89">		request.getSession().setAttribute(&quot;pageParams.&quot;+key, sessionData);</span>
+
+<span class="fc" id="L91">		String hiddenField = &quot;&lt;input type='hidden' name='__ppState' value='&quot;+key+&quot;'/&gt;&quot;;</span>
+<span class="fc" id="L92">		return hiddenField;</span>
+	}
+
+	private void persistFromSession(HttpServletRequest request)
+	{
+		//skusme podla hidden pola
+<span class="fc" id="L98">		String ppState = request.getParameter(&quot;__ppState&quot;);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">		if (Tools.isNotEmpty(ppState))</span>
+		{
+<span class="fc" id="L101">			Object[] sessionData = (Object[])request.getSession().getAttribute(&quot;pageParams.&quot;+ppState);</span>
+<span class="pc bpc" id="L102" title="2 of 4 branches missed.">			if (sessionData!=null &amp;&amp; sessionData.length==2)</span>
+			{
+<span class="fc" id="L104">				String sessionValue = (String)sessionData[0];</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(sessionValue)) setPageParams(sessionValue);</span>
+
+<span class="fc" id="L107">				int docId = ((Integer)sessionData[1]).intValue();</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">				if (docId &gt; 0) params.put(&quot;originalDocId&quot;,Integer.toString(docId));</span>
+
+<span class="fc" id="L110">				return;</span>
+			}
+		}
+		//aby sa vsetko inicializovalo
+<span class="fc" id="L114">		setPageParams(null);</span>
+<span class="fc" id="L115">	}</span>
+
+	/**
+	 * Sparsovanie retazca, vytvorenie HashTabulky hodnot
+	 *
+	 */
+	/*private void parseOld()
+	{
+		params = new Hashtable();
+		if (pageParams==null) return;
+		pageParams = pageParams.trim();
+		StringTokenizer st = new StringTokenizer(pageParams, &quot;,&quot;);
+		String param, name, value;
+		int index;
+		while (st.hasMoreTokens())
+		{
+			try
+			{
+				param = st.nextToken().trim();
+				index = param.indexOf('=');
+				if (index &gt; 0)
+				{
+					name = param.substring(0, index);
+					if (param.length()&gt;(index+1))
+					{
+						value = param.substring(index+1);
+					}
+					else
+					{
+						value=&quot;&quot;;
+					}
+
+					//Logger.println(this,&quot;name=&quot;+name+&quot; value=&quot;+value);
+					params.put(name, value);
+				}
+			}
+			catch (Exception ex)
+			{
+				sk.iway.iwcm.Logger.error(ex);
+			}
+		}
+	}*/
+
+
+	@SuppressWarnings(&quot;java:S1659&quot;)
+	private void parse()
+	{
+<span class="fc" id="L162">		params = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L163">		paramNames = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">		if (pageParams==null) return;</span>
+
+<span class="fc" id="L166">		String paramStr = pageParams.trim();</span>
+		String param, name, value, temp;
+		int index, ind, ind2, i;
+<span class="fc" id="L169">		boolean iterate = true;</span>
+<span class="fc" id="L170">		int quoteCounter = 0;</span>
+
+		//Logger.println(this,&quot;*** START: PageParams parser ***&quot;);
+<span class="fc" id="L173">		temp = paramStr;</span>
+
+		//spocitam uvodzovky v parametroch; ak nemam parny pocet, vyhodim chybu
+<span class="fc" id="L176">		int failsafe = 0;</span>
+		try
+		{
+<span class="fc bfc" id="L179" title="All 2 branches covered.">			while(temp.indexOf('\&quot;') != -1)</span>
+			{
+<span class="fc" id="L181">				quoteCounter++;</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">				if(temp.length() &gt; (temp.indexOf('\&quot;')+1))</span>
+<span class="fc" id="L183">					temp = temp.substring(temp.indexOf('\&quot;')+1);</span>
+				else
+<span class="fc" id="L185">					temp = &quot;&quot;;</span>
+			}
+
+			//ak mam parny pocet uvodzoviek
+<span class="pc bpc" id="L189" title="2 of 6 branches missed.">			if((quoteCounter &gt; 0 &amp;&amp; (quoteCounter%2 == 0)) || quoteCounter == 0)</span>
+			{
+				//Logger.println(this,&quot;quoteCounter: &quot;+quoteCounter);
+
+<span class="pc bpc" id="L193" title="2 of 4 branches missed.">				while(iterate &amp;&amp; failsafe++ &lt; 100)</span>
+				{
+<span class="fc" id="L195">					ind = paramStr.indexOf('\&quot;');</span>
+<span class="pc bpc" id="L196" title="1 of 4 branches missed.">					if(ind != -1 &amp;&amp; paramStr.length() &gt; ind)</span>
+					{
+<span class="fc" id="L198">						temp = paramStr.substring(0, ind);</span>
+						//Logger.println(this,&quot;*****\ntest = &quot;+pageParams+ &quot;\ntemp = &quot;+temp);
+
+						//sparsujem to podla ,
+<span class="fc" id="L202">						StringTokenizer st = new StringTokenizer(temp, &quot;,&quot;);</span>
+<span class="fc" id="L203">						int size = st.countTokens();</span>
+<span class="fc" id="L204">						value = &quot;&quot;;</span>
+<span class="fc" id="L205">					 	i = 1;</span>
+
+<span class="fc bfc" id="L207" title="All 2 branches covered.">						while (st.hasMoreTokens())</span>
+						{
+<span class="fc" id="L209">							param = reparseEmailAddress(st.nextToken().trim());</span>
+							//Logger.println(this,&quot;token = &quot;+param);
+
+							//pred '=' je nazov parametra a za '=' je hodnota
+<span class="fc" id="L213">							index = param.indexOf('=');</span>
+<span class="fc" id="L214">							ind2 = -1;</span>
+
+<span class="fc bfc" id="L216" title="All 2 branches covered.">							if (index &gt; 0)</span>
+							{
+<span class="fc" id="L218">								name = param.substring(0, index);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">								if (param.length()&gt;(index+1))</span>
+								{
+<span class="fc" id="L221">									value = param.substring(index+1);</span>
+								}
+<span class="fc bfc" id="L223" title="All 2 branches covered.">								else if(i == size) //ak som na poslednom tokene, najdem dalsiu &quot; a cele to pridam ako hodnotu parametra</span>
+								{
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">									if(paramStr.length() &gt; (ind+1))</span>
+									{
+<span class="fc" id="L227">										ind2 = paramStr.indexOf(&quot;\&quot;&quot;, ind+1);</span>
+										//ind2 = paramStr.substring(ind+1).indexOf(&quot;\&quot;&quot;);
+										//Logger.println(this,&quot;test.substring(ind+1): &quot;+test.substring(ind+1));
+									}
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">									if(ind2 &gt; -1)</span>
+									{
+<span class="fc" id="L233">										value = paramStr.substring(ind+1, ind2);</span>
+										//sparsovanu cast retazca odrezem
+<span class="fc" id="L235">										paramStr = paramStr.substring(ind2+1);</span>
+										//Logger.println(this,&quot;test.substring(ind+ind2+2): &quot;+test);
+									}
+									else
+									{
+<span class="nc" id="L240">										Logger.println(this,&quot;PARSE ERROR - Pageparams: wrong number of quotes! pageParams=&quot;+pageParams);</span>
+<span class="nc" id="L241">										break;</span>
+									}
+									//Logger.println(this,&quot;ind: &quot;+ind+ &quot;   ind2: &quot;+ind2+ &quot;  length: &quot;+test.length()+ &quot;  test: &quot;+test);
+
+								}
+								else
+								{
+<span class="fc" id="L248">									value = &quot;&quot;;</span>
+								}
+
+								//Logger.println(this,&quot;name = &quot;+name+&quot;   value = &quot;+value);
+								//parameter hodim do tabulky
+<span class="fc" id="L253">								params.put(name, value);</span>
+<span class="fc" id="L254">								paramNames.add(name);</span>
+							}
+<span class="fc" id="L256">							i++;</span>
+						}
+						//ak nemam tokeny, posuniem sa v retazci na najblizsie &quot; - osetrenie pripadu &quot;&quot;
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">						if(size &lt; 1)</span>
+<span class="nc" id="L260">							paramStr = paramStr.substring(ind+1);</span>
+						//Logger.println(this,&quot;test: &quot;+test);
+<span class="fc" id="L262">					}</span>
+					else
+					{
+						//sparsujem to podla ,
+<span class="fc" id="L266">						StringTokenizer st = new StringTokenizer(paramStr, &quot;,&quot;);</span>
+						//size = st.countTokens();
+<span class="fc" id="L268">						value = &quot;&quot;;</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">						while (st.hasMoreTokens())</span>
+						{
+<span class="fc" id="L271">							param = st.nextToken().trim();</span>
+							//Logger.println(this,&quot;token = &quot;+param);
+<span class="fc" id="L273">							index = param.indexOf('=');</span>
+
+<span class="fc bfc" id="L275" title="All 2 branches covered.">							if (index &gt; 0)</span>
+							{
+<span class="fc" id="L277">								name = param.substring(0, index);</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">								if (param.length()&gt;(index+1))</span>
+								{
+<span class="fc" id="L280">									value = param.substring(index+1);</span>
+								}
+								else
+								{
+<span class="fc" id="L284">									value = &quot;&quot;;</span>
+								}
+
+								//Logger.println(this,&quot;name = &quot;+name+&quot;   value = &quot;+value);
+<span class="fc" id="L288">								params.put(name, value);</span>
+<span class="fc" id="L289">								paramNames.add(name);</span>
+							}
+						}
+<span class="fc" id="L292">						iterate = false;</span>
+<span class="fc" id="L293">						break;</span>
+					}
+				}
+			}
+			else
+			{
+<span class="nc" id="L299">				Logger.println(this,&quot;PARSE ERROR - Pageparams: odd count of quotes! &quot;+quoteCounter+&quot; pageParams=&quot;+pageParams);</span>
+			}
+
+			//Logger.println(this,&quot;*** END: PageParams parser ***&quot;);
+		}
+<span class="nc" id="L304">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L306">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L307">		}</span>
+
+<span class="fc" id="L309">	}</span>
+
+	/**
+	 * Ziskanie hodnoty ako String
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
+	public String getValue(String name, String defaultValue)
+	{
+<span class="fc" id="L319">		String value = params.get(name);</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">		if (Tools.isEmpty(value))</span>
+		{
+<span class="fc" id="L322">			return(defaultValue);</span>
+		}
+<span class="fc" id="L324">        value = Tools.replace(value,&quot;&amp;amp;nbsp;&quot;, &quot;&amp;nbsp;&quot;);</span>
+<span class="fc" id="L325">        value = Tools.replace(value,&quot;&amp;amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="fc" id="L326">		value = Tools.replace(value,&quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="fc" id="L327">		value = Tools.replace(value,&quot;&amp;#39;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L328">		return(value);</span>
+	}
+
+	/**
+	 * Preparsuje hodnotu parametra aby neobsahoval &lt;a href=&quot;mailto:...&quot;&gt;email&lt;/a&gt; ale len email
+	 * @param value
+	 * @return
+	 */
+	private static String reparseEmailAddress(String value)
+	{
+		try
+		{
+<span class="fc" id="L340">			String valueLC = value.toLowerCase();</span>
+<span class="pc bpc" id="L341" title="3 of 4 branches missed.">			if (valueLC.indexOf(&quot;mailto:&quot;)!=-1 &amp;&amp; valueLC.indexOf(&quot;href&quot;)!=-1)</span>
+			{
+<span class="nc" id="L343">				int start = valueLC.indexOf('&gt;');</span>
+<span class="nc" id="L344">				int end = valueLC.indexOf(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				if (end &gt; start)</span>
+				{
+<span class="nc" id="L347">					value = value.substring(start+1, end);</span>
+				}
+			}
+		}
+<span class="nc" id="L351">		catch (Exception e)</span>
+		{
+<span class="nc" id="L353">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L354">		}</span>
+<span class="fc" id="L355">		return(value);</span>
+	}
+
+	/**
+	 * Ziskanie hodnoty ako cislo
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
+	public int getIntValue(String name, int defaultValue)
+	{
+<span class="fc" id="L366">		String value = params.get(name);</span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">		if (value==null)</span>
+		{
+<span class="fc" id="L369">			return(defaultValue);</span>
+		}
+		try
+		{
+<span class="fc" id="L373">			return(Integer.parseInt(value));</span>
+		}
+<span class="fc" id="L375">		catch (Exception ex)</span>
+		{
+
+		}
+<span class="fc" id="L379">		return(defaultValue);</span>
+	}
+
+	/**
+	 * Ziskanie hodnoty ako boolean
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
+	public boolean getBooleanValue(String name, boolean defaultValue)
+	{
+<span class="fc" id="L390">		String value = params.get(name);</span>
+<span class="fc bfc" id="L391" title="All 2 branches covered.">		if (value==null)</span>
+		{
+<span class="fc" id="L393">			return(defaultValue);</span>
+		}
+<span class="pc bpc" id="L395" title="1 of 4 branches missed.">		return value.equalsIgnoreCase(&quot;yes&quot;) || value.equalsIgnoreCase(&quot;true&quot;);</span>
+	}
+
+	/**
+	 * Ziskanie celeho retazca
+	 * @return
+	 */
+	public String getPageParams()
+	{
+<span class="nc" id="L404">		return pageParams;</span>
+	}
+	/**
+	 * Nastavenie retazca a jeho parsovanie
+	 * @param pageParams
+	 */
+	public void setPageParams(String pageParams)
+	{
+<span class="fc bfc" id="L412" title="All 6 branches covered.">		if (pageParams != null &amp;&amp; pageParams.length()&gt;6 &amp;&amp; pageParams.endsWith(&quot;)!&quot;)) pageParams = pageParams.substring(0, pageParams.length()-2);</span>
+
+<span class="fc" id="L414">		pageParams = Tools.replace(pageParams, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="fc" id="L415">		pageParams = Tools.replace(pageParams, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+		//aby sme v parametri mohli mat uvodzovky staci ich nahradit za \&quot;, tytmto to vratime nazad na entitu a bude to fungovat
+<span class="fc" id="L417">        pageParams = Tools.replace(pageParams, &quot;\\\&quot;&quot;, &quot;&amp;quot;&quot;);</span>
+
+<span class="fc" id="L419">        pageParams = Tools.replace(pageParams, &quot;&amp;lt;&quot;,&quot;&lt;&quot;);</span>
+<span class="fc" id="L420">        pageParams = Tools.replace(pageParams, &quot;&amp;gt;&quot;,&quot;&gt;&quot;);</span>
+
+<span class="fc" id="L422">		this.pageParams = pageParams;</span>
+<span class="fc" id="L423">		parse();</span>
+<span class="fc" id="L424">	}</span>
+
+	/**
+	 * Test, ci je dany parameter nastaveny (ma nejaku hodnotu)
+	 * @param name
+	 * @return
+	 */
+	public boolean hasParameter(String name)
+	{
+<span class="fc" id="L433">		String value = params.get(name);</span>
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">		if (value!=null)</span>
+		{
+<span class="fc" id="L436">			return(true);</span>
+		}
+<span class="nc" id="L438">		return(false);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

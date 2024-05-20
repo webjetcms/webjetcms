@@ -23,7 +23,7 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" per
 	String[] values = null;
 	Map<String, String> valueTable = new Hashtable();
 	List<String> valueList = null;
-	Prop prop = Prop.getInstance(request);
+	Prop prop = Prop.getInstance(Constants.getString("defaultLanguage")); //Def language or nothing will be found
 	value = prop.getText(field.toLowerCase());
 
 	if (value.equals(field)) {

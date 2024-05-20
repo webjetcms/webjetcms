@@ -34,7 +34,7 @@ function wj9CreateMirroringWebpage(I, DT, DTE, randomNumber) {
      DTE.waitForEditor();
      //I.click("#pills-dt-datatableInit-content-tab");
      //I.waitForVisible('#cke_1_toolbox');
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));
      I.fillField('#DTE_Field_title', auto_webpage1_sk);
      DTE.save();
@@ -45,7 +45,7 @@ function wj9CreateMirroringWebpage(I, DT, DTE, randomNumber) {
      DTE.waitForEditor();
      //I.click("#pills-dt-datatableInit-content-tab");
      //I.waitForVisible('#cke_1_toolbox');
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));
      I.fillField('#DTE_Field_title', auto_webpage2_sk);
      DTE.save();
@@ -89,8 +89,8 @@ function wj9CreateMirroringSubfolder(I, DTE, randomNumber) {
      I.say('Kontrolujem ci sa pridali nepublikovane priecinky i do en struktury');
      I.jstreeClick(auto_folder_en);
 
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
+     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
+     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
 }
 
 function wj9DeleteSubpage(I, DT, DTE, randomNumber) {
@@ -169,7 +169,7 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      I.waitForElement(locate('tbody>tr.even.is-default-page.selected').withText(auto_webpage1_sk));
      I.click(edit_webpage_button);
      I.waitForVisible('#datatableInit_modal');
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Nadradený priečinok'));
      I.click(locate('#editorAppDTE_Field_editorFields-groupDetails').find('button.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
      I.waitForVisible('#jsTree');
@@ -195,7 +195,7 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      //I.click(locate('.jstree-node').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ) );
      //I.click(locate('li.jstree-node a.jstree-anchor').withText(auto_subfolder1_sk));
      //I.click( locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk) );
-     I.click( locate('a').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder').withText(auto_subfolder1_sk) );
+     I.click( locate('a').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder').withText(auto_subfolder1_sk) );
 
      DT.waitForLoader();
      within({ css: 'table#datatableInit>tbody' }, () => {
@@ -215,7 +215,7 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
 
      //I.click(locate('.jstree-node').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ) );
      //I.jstreeClick(auto_subfolder1_sk);
-     I.click( locate('a').withDescendant('.jstree-icon.jstree-themeicon.far.fa-folder').withText(auto_subfolder1_sk) );
+     I.click( locate('a').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder').withText(auto_subfolder1_sk) );
 
      DT.waitForLoader();
      within({ css: 'table#datatableInit>tbody' }, () => {
@@ -276,9 +276,9 @@ Scenario('Zrkadlenie webstranok wj9', async ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/settings/configuration/');
      I.fillField('.form-control.form-control-sm.filter-input.dt-filter-name', 'structureMirroringConfig');
      I.wait(1);
-     I.click('.filtrujem.btn.btn-sm.btn-outline-secondary.dt-filtrujem-name')
+     I.clickCss('.filtrujem.btn.btn-sm.btn-outline-secondary.dt-filtrujem-name')
      I.waitForElement(locate('#configurationDatatable').withText('structureMirroringConfig'));
-     I.click(locate('#configurationDatatable').withDescendant('.datatable-column-width').withText('structureMirroringConfig').find('.far.fa-pencil'));
+     I.click(locate('#configurationDatatable').withDescendant('.datatable-column-width').withText('structureMirroringConfig').find('.ti.ti-pencil'));
      DTE.waitForEditor("configurationDatatable");
      I.waitForValue('#DTE_Field_description', 'Nastavenie zrkadlenia jazykovych verzii stranok.', 10);
      I.wait(1);

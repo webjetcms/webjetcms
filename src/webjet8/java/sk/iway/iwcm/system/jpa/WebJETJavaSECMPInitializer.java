@@ -306,12 +306,15 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 				catch (SQLException e){sk.iway.iwcm.Logger.error(e);}
 
 	      	String jpaTargetDatabase = TargetDatabase.Auto;
-	      	if(driverClassName.contains("com.mysql.jdbc.Driver") || driverClassName.contains("mariadb"))
+	      	if(driverClassName.contains("com.mysql.jdbc.Driver") || driverClassName.contains("mariadb")) {
 	      		jpaTargetDatabase = TargetDatabase.MySQL;
-	      	else if(driverClassName.contains("oracle.jdbc.OracleDriver"))
+            } else if(driverClassName.contains("oracle.jdbc.OracleDriver")) {
 	      		jpaTargetDatabase = TargetDatabase.Oracle;
-	      	else if(driverClassName.contains("net.sourceforge.jtds.jdbc.Driver"))
+            } else if(driverClassName.contains("net.sourceforge.jtds.jdbc.Driver")) {
 	      		jpaTargetDatabase = TargetDatabase.SQLServer;
+            } else if(driverClassName.contains("org.postgresql.Driver")) {
+                jpaTargetDatabase = TargetDatabase.PostgreSQL;
+            }
 
 	      	Logger.debug(WebJETJavaSECMPInitializer.class, "JPA: Setting TargetDatabase to " + jpaTargetDatabase + " driverClassName="+driverClassName);
 

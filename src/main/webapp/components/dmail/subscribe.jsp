@@ -102,7 +102,7 @@
 				}
 			}
 
-			System.out.println(emailBody);
+			//System.out.println(emailBody);
 
 			emailBody = SendMail.createAbsolutePath(emailBody, request);
 			//vsetko je OK, zapiseme to do DB
@@ -219,27 +219,6 @@
 
 	<form id="subscribeForm" action="<%=PathFilter.getOrigPathDocId(request) %>" style="padding:0px" method="post">
 		<fieldset>
-			<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
-			<% if (ugd.isAllowUserEdit()) { %>
-			<p>
-				<label>
-					<input type="checkbox" name="user_group_id" value="<bean:write name="ugd" property="userGroupId"/>"<%
-					if (userGroups.indexOf(","+ugd.getUserGroupId()+",")!=-1 || userGroups.length()<2) out.print(" checked='checked'");
-					%> />&nbsp;
-				</label>
-				<strong><bean:write name="ugd" property="userGroupName"/></strong>
-			</p>
-				<logic:notEmpty name="ugd" property="userGroupComment">
-				<p>
-					<label>&nbsp;</label>
-					<bean:write name="ugd" property="userGroupComment"/>
-				</p>
-				</logic:notEmpty>
-			<% } %>
-			</logic:iterate>
-		</fieldset>
-
-		<fieldset>
 			<p>
 				<label for="meno">
 					<strong><iwcm:text key="dmail.subscribe.firstName"/>:</strong>
@@ -260,6 +239,29 @@
 				</label>
 				<input type="text" name="email" value="<%=ResponseUtils.filter(email)%>" id="mail" />
 			</p>
+		</fieldset>
+
+		<fieldset>
+			<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
+			<% if (ugd.isAllowUserEdit()) { %>
+			<p>
+				<label for="user_group_id_<bean:write name="ugd" property="userGroupId"/>">
+					<strong><bean:write name="ugd" property="userGroupName"/></strong>
+					<logic:notEmpty name="ugd" property="userGroupComment">
+						<br/>
+						<bean:write name="ugd" property="userGroupComment"/>
+					</logic:notEmpty>
+				</label>
+				<input type="checkbox" name="user_group_id" id="user_group_id_<bean:write name="ugd" property="userGroupId"/>" value="<bean:write name="ugd" property="userGroupId"/>"<%
+					if (userGroups.indexOf(","+ugd.getUserGroupId()+",")!=-1 || userGroups.length()<2) out.print(" checked='checked'");
+					%> />&nbsp;
+			</p>
+
+			<% } %>
+			</logic:iterate>
+		</fieldset>
+
+		<fieldset>
 
 			<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("dmail")) { %>
 			<p class="captcha">

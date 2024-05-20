@@ -188,6 +188,9 @@ public class NewsActionBean extends WebJETActionBean
 
 	private String author;
 
+	@PageParamOnly
+	private boolean removeDefaultDocs = false;
+
 	@DefaultHandler
 	public Resolution news()
 	{
@@ -459,6 +462,8 @@ public class NewsActionBean extends WebJETActionBean
 			};
 		}
 
+		List<Integer> defaultDocs = new ArrayList<>();
+
 		if (groupIds != null)
 		{
 			groupIdsExpanded = new LinkedList<>();
@@ -472,10 +477,16 @@ public class NewsActionBean extends WebJETActionBean
 					for (GroupDetails g : groupList)
 					{
 						groupIdsExpanded.add(g.getGroupId());
+						defaultDocs.add(g.getDefaultDocId());
 					}
 				}
 			}
 			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, groupIdsExpanded));
+		}
+
+		if (removeDefaultDocs && defaultDocs.size() > 0)
+		{
+			newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, defaultDocs));
 		}
 	}
 
@@ -1830,5 +1841,13 @@ public class NewsActionBean extends WebJETActionBean
 
 	public void setAuthor(String author) {
 		this.author = author;
+	}
+
+	public boolean isRemoveDefaultDocs() {
+		return removeDefaultDocs;
+	}
+
+	public void setRemoveDefaultDocs(boolean removeDefaultDocs) {
+		this.removeDefaultDocs = removeDefaultDocs;
 	}
 }

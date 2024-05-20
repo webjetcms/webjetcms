@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThreadBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">ThreadBean.java</span></div><h1>ThreadBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import sk.iway.iwcm.Logger;
+
+/**
+ * Tento bean drzi udaje potrebne pre thread local, cize udaje ktore sa menia s kazdym requestom
+ */
+@Getter
+@Setter
+@ToString
+<span class="fc" id="L18">public class ThreadBean {</span>
+
+    //ak je true nastavi sa do vystupu forceReload: true
+<span class="fc" id="L21">    private boolean forceReload = false;</span>
+
+	//urcuje, ci sa jedna o volanie exportu dat
+<span class="fc" id="L24">	private boolean exporting = false;</span>
+
+    //urcuje, ze sa jedna o import
+<span class="fc" id="L27">	private boolean importing = false;</span>
+
+    //list upozorneni
+<span class="fc" id="L30">    private List&lt;NotifyBean&gt; notify = null;</span>
+
+    //cislo riadku pri importe z Excelu
+<span class="fc" id="L33">    private Integer lastImportedRow = null;</span>
+
+    //set of columns in excel import (filled in export-import.js during xlsx parsing)
+<span class="fc" id="L36">    private Set&lt;String&gt; importedColumns = null;</span>
+
+    //column name which is used to update the row with import
+    private String updateByColumn;
+
+    //mode of import (append, update, onlyNew)
+    private String importMode;
+
+    public void clear() {
+<span class="fc" id="L45">        Logger.debug(ThreadBean.class, &quot;clearing data, thread=&quot;+Thread.currentThread().getId());</span>
+<span class="fc" id="L46">        forceReload = false;</span>
+<span class="fc" id="L47">        exporting = false;</span>
+<span class="fc" id="L48">        importing = false;</span>
+<span class="fc" id="L49">        notify = null;</span>
+<span class="fc" id="L50">        lastImportedRow = null;</span>
+<span class="fc" id="L51">        importedColumns = null;</span>
+<span class="fc" id="L52">        updateByColumn = null;</span>
+<span class="fc" id="L53">        importMode = null;</span>
+<span class="fc" id="L54">    }</span>
+
+    public void addNotify(NotifyBean notify) {
+
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if(this.notify == null) this.notify = new ArrayList&lt;&gt;();</span>
+
+        //over, ci tam uz nemame rovnaky notify, aby sme nespamovali usera
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (NotifyBean current : this.notify) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (current.getTitle().equals(notify.getTitle()) &amp;&amp;</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">                current.getText().equals(notify.getText()) &amp;&amp;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                current.getType().equals(notify.getType())</span>
+                ) {
+<span class="nc" id="L66">                return;</span>
+            }
+<span class="fc" id="L68">        }</span>
+
+<span class="fc" id="L70">        this.notify.add(notify);</span>
+<span class="fc" id="L71">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

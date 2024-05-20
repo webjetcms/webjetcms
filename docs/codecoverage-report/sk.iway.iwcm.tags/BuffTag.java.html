@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BuffTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">BuffTag.java</span></div><h1>BuffTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import javax.servlet.jsp.JspTagException;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
+/**
+ *  BuffTag.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 14.4.2005 21:19:01
+ *@modified     $Date: 2010/01/20 11:15:08 $
+ */
+<span class="fc" id="L18">public class BuffTag extends BodyTagSupport</span>
+{
+	private static final long serialVersionUID = -644225644526769652L;
+
+<span class="fc" id="L22">	public String hideOut = &quot;false&quot;;</span>
+
+<span class="fc" id="L24">	public String attName = &quot;buffTagOutput&quot;;</span>
+
+<span class="fc" id="L26">	public boolean storeInRequest = false;</span>
+
+	public static final String IS_BUFF_TAG = &quot;sk.iway.iwcm.tags.BuffTag.IS&quot;;
+
+	@Override
+	public int doStartTag() throws JspTagException
+	{
+		//Logger.println(this,&quot;++++++++++++++++++++++++++++++++++++++++++++++++++ DO START TAG&quot;);
+<span class="fc" id="L34">		pageContext.getRequest().setAttribute(IS_BUFF_TAG, &quot;true&quot;);</span>
+<span class="fc" id="L35">		return(EVAL_BODY_BUFFERED);</span>
+	}
+
+	@Override
+	public int doAfterBody() throws JspTagException
+	{
+<span class="fc" id="L41">		BodyContent bc = getBodyContent();</span>
+<span class="fc" id="L42">		String body = bc.getString();</span>
+
+		//Logger.println(this,&quot;BC: buff size=&quot; + bc.getBufferSize()+&quot; &quot;+pageContext.getResponse().isCommitted());
+		//Logger.println(this,&quot;||| MAM BODY, size=&quot;+body.length());
+
+		try
+		{
+			//resp.sendRedirect(&quot;http://magma.jeeff.sk&quot;);
+
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">			if (&quot;true&quot;.equals(hideOut))</span>
+			{
+<span class="nc" id="L53">				bc.clearBody();</span>
+<span class="nc" id="L54">				pageContext.getRequest().removeAttribute(IS_BUFF_TAG);</span>
+			}
+			else
+			{
+<span class="fc" id="L58">				getPreviousOut().print(body);</span>
+			}
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">			if (storeInRequest)</span>
+<span class="nc" id="L61">				pageContext.getRequest().setAttribute(attName, body);</span>
+			else
+<span class="fc" id="L63">				pageContext.setAttribute(attName, body);</span>
+		}
+<span class="nc" id="L65">		catch (Exception e)</span>
+		{
+<span class="nc" id="L67">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L68">		}</span>
+
+<span class="fc" id="L70">		return EVAL_PAGE;</span>
+	}
+
+	public String getHideOut()
+	{
+<span class="nc" id="L75">		return hideOut;</span>
+	}
+
+	public void setHideOut(String hideOut)
+	{
+<span class="nc" id="L80">		this.hideOut = hideOut;</span>
+<span class="nc" id="L81">	}</span>
+
+	public String getAttName()
+	{
+<span class="nc" id="L85">		return attName;</span>
+	}
+
+	public void setAttName(String attName)
+	{
+<span class="nc" id="L90">		this.attName = attName;</span>
+<span class="nc" id="L91">	}</span>
+
+	public boolean isStoreInRequest()
+	{
+<span class="nc" id="L95">		return storeInRequest;</span>
+	}
+
+	public void setStoreInRequest(boolean storeInRequest)
+	{
+<span class="nc" id="L100">		this.storeInRequest = storeInRequest;</span>
+<span class="nc" id="L101">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

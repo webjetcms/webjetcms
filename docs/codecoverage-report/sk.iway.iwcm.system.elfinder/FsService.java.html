@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FsService.java</span></div><h1>FsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.codec.binary.Base64;
+
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsItemFilter;
+import cn.bluejoe.elfinder.service.FsSecurityChecker;
+import cn.bluejoe.elfinder.service.FsServiceConfig;
+import cn.bluejoe.elfinder.service.FsVolume;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UsersDB;
+
+public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONAR
+{
+	public static final int TYPE_ALL = 1;
+	public static final int TYPE_IMAGES = 2;
+	public static final int TYPE_LINK = 3;
+	//file browser
+	public static final int TYPE_FILES = 4;
+	public static final int TYPE_PAGES = 5;
+
+<span class="pc" id="L42">	FsSecurityChecker _securityChecker = new FsSecurityCheckerChain(); //NOSONAR</span>
+<span class="pc" id="L43">	FsServiceConfig _serviceConfig = new IwcmFsServiceConfig(); //NOSONAR</span>
+
+	public static Identity getCurrentUser()
+	{
+<span class="fc" id="L47">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">		if (rb != null &amp;&amp; rb.getRequest()!=null)</span>
+		{
+<span class="fc" id="L50">			return UsersDB.getCurrentUser(rb.getRequest());</span>
+		}
+<span class="nc" id="L52">		return null;</span>
+	}
+
+	@Override
+	public FsServiceConfig getServiceConfig()
+	{
+<span class="fc" id="L58">		return _serviceConfig;</span>
+	}
+
+	public void setServiceConfig(FsServiceConfig serviceConfig)
+	{
+<span class="nc" id="L63">		_serviceConfig = serviceConfig;</span>
+<span class="nc" id="L64">	}</span>
+
+<span class="pc" id="L66">	Map&lt;FsVolume, String&gt; _volumeIds = new HashMap&lt;FsVolume, String&gt;(); //NOSONAR</span>
+
+	FsVolume[] _volumes; //NOSONAR
+
+<span class="fc" id="L70">	static String[][] escapes = { { &quot;+&quot;, &quot;_P&quot; }, { &quot;-&quot;, &quot;_M&quot; }, { &quot;/&quot;, &quot;_S&quot; }, { &quot;.&quot;, &quot;_D&quot; }, { &quot;=&quot;, &quot;_E&quot; } };</span>
+
+	public FsService()
+<span class="nc" id="L73">	{</span>
+<span class="nc" id="L74">		initialize(TYPE_ALL);</span>
+<span class="nc" id="L75">	}</span>
+
+	public FsService(int type)
+<span class="fc" id="L78">	{</span>
+<span class="fc" id="L79">		initialize(type);</span>
+<span class="fc" id="L80">	}</span>
+
+	/**
+	 * Pre Volumes ktore poznaju virtualPath vrati priamo virtualPath inak vrati path
+	 * @param fsi
+	 * @return
+	 * @throws IOException
+	 */
+	public static String getVirtualPath(FsItemEx fsi) throws IOException
+	{
+<span class="fc" id="L90">		String virtualPath = fsi.getPath();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">		if (fsi.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+		{
+<span class="fc" id="L93">			virtualPath = ((IwcmDocGroupFsVolume)fsi.getVolume()).getVirtualPath(fsi);</span>
+		}
+<span class="fc bfc" id="L95" title="All 2 branches covered.">		if (fsi.getVolumeId().equals(IwcmFsVolume.VOLUME_ID_ACTUAL_PAGE))</span>
+		{
+<span class="fc" id="L97">			virtualPath = ((IwcmFsVolume)fsi.getVolume()).getVirtualPath(fsi);</span>
+		}
+
+<span class="fc" id="L100">		return virtualPath;</span>
+	}
+
+	public static int getSortPriority(FsItemEx fsi) throws IOException
+	{
+<span class="fc bfc" id="L105" title="All 2 branches covered.">		if (fsi.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+		{
+<span class="fc" id="L107">			return ((IwcmDocGroupFsVolume)fsi.getVolume()).getSortPriority(fsi);</span>
+		}
+
+		/*
+		if (fsi.getVolumeId().equals(IwcmFsVolume.VOLUME_ID_ACTUAL_PAGE))
+		{
+			return ((IwcmActualPageFsVolume)fsi.getVolume()).getSortPriority(fsi);
+		}
+		*/
+
+<span class="fc" id="L117">		return -1;</span>
+	}
+
+	/**
+	 * Inicializacia volumes podla typu zobrazenia (obrazky, vsetko...)
+	 * @param type
+	 */
+	private void initialize(int type)
+	{
+<span class="fc" id="L126">		Logger.debug(FsService.class, &quot;IwcmFsService initialize, type=&quot;+type);</span>
+
+<span class="fc" id="L128">		int counter = 0;</span>
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">		if (type == TYPE_IMAGES)</span>
+		{
+<span class="fc" id="L132">			_volumes = new FsVolume[2];</span>
+
+<span class="fc" id="L134">			counter = addActualPageVolume(counter);</span>
+<span class="fc" id="L135">			counter = addLibraryVolume(counter);</span>
+		}
+<span class="fc bfc" id="L137" title="All 2 branches covered.">		else if (type == TYPE_LINK)</span>
+		{
+<span class="fc" id="L139">			boolean elfinderEnableFileArchive = Constants.getBoolean(&quot;elfinderFileArchiveEnabled&quot;);</span>
+<span class="fc" id="L140">			int size = 3;</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">			if (elfinderEnableFileArchive) size = 4;</span>
+
+<span class="fc" id="L143">			_volumes = new FsVolume[size];</span>
+
+<span class="fc" id="L145">			counter = addActualPageVolume(counter);</span>
+<span class="fc" id="L146">			counter = addLibraryVolume(counter);</span>
+<span class="fc" id="L147">			counter = addDocGroupVolume(counter);</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">			if (elfinderEnableFileArchive)</span>
+			{
+<span class="fc" id="L150">				counter = addArchivVolume(counter);</span>
+			}
+<span class="fc" id="L152">		}</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		else if (type == TYPE_FILES)</span>
+		{
+<span class="fc" id="L155">			_volumes = new FsVolume[3];</span>
+
+<span class="fc" id="L157">			counter = addLibraryVolume(counter);</span>
+<span class="fc" id="L158">			counter = addFsVolume(counter);</span>
+<span class="fc" id="L159">			counter = addDocGroupVolume(counter);</span>
+		}
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		else if (type == TYPE_PAGES)</span>
+		{
+<span class="nc" id="L163">			_volumes = new FsVolume[1];</span>
+
+<span class="nc" id="L165">			counter = addDocGroupVolume(counter);</span>
+		}
+		else
+		{
+<span class="nc" id="L169">			_volumes = new FsVolume[4];</span>
+
+<span class="nc" id="L171">			counter = addLibraryVolume(counter);</span>
+<span class="nc" id="L172">			counter = addFsVolume(counter);</span>
+<span class="nc" id="L173">			counter = addDocGroupVolume(counter);</span>
+<span class="nc" id="L174">			counter = addActualPageVolume(counter);</span>
+		}
+
+		//moze tam byt null, prepocitaj
+<span class="fc" id="L178">		int notNullSize = 0;</span>
+<span class="fc" id="L179">		FsVolume[] allItems = new FsVolume[_volumes.length];</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">		for (int i=0; i&lt;_volumes.length; i++)</span>
+		{
+<span class="fc" id="L182">			allItems[i] = _volumes[i];</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">			if (allItems[i]!=null) notNullSize++;</span>
+		}
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">		if (notNullSize != _volumes.length)</span>
+		{
+			//musime shrinknut
+<span class="fc" id="L189">			_volumes = new FsVolume[notNullSize];</span>
+<span class="fc" id="L190">			int notNullCounter = 0;</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">			for (int i=0; i&lt;allItems.length; i++)</span>
+			{
+<span class="fc bfc" id="L193" title="All 2 branches covered.">				if (allItems[i]!=null)</span>
+				{
+<span class="fc" id="L195">					_volumes[notNullCounter++] = allItems[i];</span>
+				}
+			}
+		}
+<span class="fc" id="L199">	}</span>
+
+	private int addLibraryVolume(int counter)
+	{
+<span class="fc" id="L203">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L204">		String domainAliasAppend = &quot;&quot;;</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">		if (rb != null)</span>
+		{
+<span class="fc" id="L207">			String domain = rb.getDomain();</span>
+<span class="fc" id="L208">			String domainAlias = MultiDomainFilter.getDomainAlias(domain);</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(domainAlias))</span>
+			{
+<span class="nc" id="L211">				domainAliasAppend = &quot; (&quot;+domainAlias+&quot;)&quot;;</span>
+			}
+		}
+
+<span class="fc" id="L215">		_volumes[counter] = new IwcmLibraryFsVolume(Prop.getTxt(&quot;elfinder.library&quot;)+domainAliasAppend, &quot;/&quot;);</span>
+<span class="fc" id="L216">		_volumeIds.put(_volumes[counter], &quot;iwcm_1&quot;);</span>
+<span class="fc" id="L217">		counter++;</span>
+<span class="fc" id="L218">		return counter;</span>
+	}
+
+	private int addFsVolume(int counter)
+	{
+<span class="fc" id="L223">		_volumes[counter] = new IwcmFsVolume(Prop.getTxt(&quot;elfinder.allFiles&quot;), &quot;/&quot;);</span>
+<span class="fc" id="L224">		_volumeIds.put(_volumes[counter], &quot;iwcm_2&quot;);</span>
+<span class="fc" id="L225">		counter++;</span>
+<span class="fc" id="L226">		return counter;</span>
+	}
+
+	private int addActualPageVolume(int counter)
+	{
+<span class="fc" id="L231">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L232">		int docId = Tools.getIntValue(rb.getRequest().getParameter(&quot;docId&quot;), 1);</span>
+<span class="fc" id="L233">		int groupId = Tools.getIntValue(rb.getRequest().getParameter(&quot;groupId&quot;), -1);</span>
+<span class="fc" id="L234">		String title = rb.getRequest().getParameter(&quot;title&quot;);</span>
+
+<span class="fc bfc" id="L236" title="All 2 branches covered.">		if (groupId &gt; 0)</span>
+		{
+<span class="fc" id="L238">			StringBuilder rootDirs = new StringBuilder();</span>
+
+<span class="fc" id="L240">			String[] prefixes = {&quot;/images&quot;, &quot;/files&quot;, &quot;/images/gallery&quot;};</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			for (String prefix : prefixes)</span>
+			{
+<span class="fc" id="L243">				String dir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, prefix);</span>
+				//Logger.debug(FsService.class, &quot;uploadSubdir: docId=&quot;+docId+&quot;, groupId=&quot;+groupId+&quot;, dir=&quot;+dir);
+<span class="fc" id="L245">				IwcmFile dirFile = new IwcmFile(Tools.getRealPath(dir));</span>
+
+<span class="fc bfc" id="L247" title="All 4 branches covered.">				if (dirFile.exists()==false &amp;&amp; prefix.equals(&quot;/images/gallery&quot;))</span>
+				{
+					//galeriu vynechavame, zobrazi sa ako folder len ked existuje
+<span class="fc" id="L250">					continue;</span>
+				}
+
+<span class="fc bfc" id="L253" title="All 2 branches covered.">				if (dirFile.exists()==false)</span>
+				{
+<span class="fc" id="L255">					boolean ret = dirFile.mkdirs();</span>
+<span class="fc" id="L256">					Logger.debug(FsService.class, &quot;CREATING DIR: &quot;+dirFile.getAbsolutePath()+&quot; ret=&quot;+ret);</span>
+				}
+
+<span class="fc bfc" id="L259" title="All 2 branches covered.">				if (rootDirs.length()&gt;0) rootDirs.append(&quot;,&quot;);</span>
+<span class="fc" id="L260">				rootDirs.append(dir);</span>
+			}
+
+<span class="fc" id="L263">			_volumes[counter] = new IwcmActualPageFsVolume(Prop.getTxt(&quot;elfinder.actualPage&quot;), &quot;/&quot;, rootDirs.toString());</span>
+<span class="fc" id="L264">			_volumeIds.put(_volumes[counter], IwcmFsVolume.VOLUME_ID_ACTUAL_PAGE);</span>
+<span class="fc" id="L265">			counter++;</span>
+		}
+<span class="fc" id="L267">		return counter;</span>
+	}
+
+	private int addDocGroupVolume(int counter)
+	{
+<span class="fc" id="L272">		Identity user = getCurrentUser();</span>
+<span class="pc bpc" id="L273" title="2 of 4 branches missed.">		if (user == null || user.isDisabledItem(&quot;menuWebpages&quot;)) return counter;</span>
+
+<span class="fc" id="L275">		_volumes[counter] = new IwcmDocGroupFsVolume(Prop.getTxt(&quot;menu.web_sites&quot;));</span>
+<span class="fc" id="L276">		_volumeIds.put(_volumes[counter], IwcmDocGroupFsVolume.VOLUME_ID);</span>
+<span class="fc" id="L277">		counter++;</span>
+<span class="fc" id="L278">		return counter;</span>
+	}
+
+	private int addArchivVolume(int counter)
+    {
+<span class="fc" id="L283">        _volumes[counter] = new IwcmArchivFsVolume(Prop.getTxt(&quot;components.file_archiv.name&quot;));</span>
+<span class="fc" id="L284">        _volumeIds.put(_volumes[counter], IwcmArchivFsVolume.VOLUME_ID);</span>
+<span class="fc" id="L285">        counter++;</span>
+<span class="fc" id="L286">        return counter;</span>
+    }
+
+	@Override
+	public FsItem fromHash(String hash)
+	{
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">		if (hash != null)</span>
+		{
+<span class="fc bfc" id="L294" title="All 2 branches covered.">			for (FsVolume v : _volumes)</span>
+			{
+<span class="fc" id="L296">				String prefix = getVolumeId(v) + &quot;_&quot;;</span>
+
+<span class="fc bfc" id="L298" title="All 2 branches covered.">				if (hash.equals(prefix))</span>
+				{
+<span class="fc" id="L300">					return v.getRoot();</span>
+				}
+
+<span class="fc bfc" id="L303" title="All 2 branches covered.">				if (hash.startsWith(prefix))</span>
+				{
+<span class="fc" id="L305">					String localHash = hash.substring(prefix.length());</span>
+
+<span class="fc bfc" id="L307" title="All 2 branches covered.">					for (String[] pair : escapes)</span>
+					{
+<span class="fc" id="L309">						localHash = localHash.replace(pair[1], pair[0]);</span>
+					}
+
+					//JEEFF String relativePath = new String(Base64.decodeBase64(localHash));
+<span class="fc" id="L313">					String relativePath = new String(Base64.decodeBase64(localHash.getBytes()));</span>
+
+					//bad hackers CVE-2022-26960
+<span class="fc bfc" id="L316" title="All 4 branches covered.">					if (hash.startsWith(&quot;iwcm_doc_group_volume&quot;)==false &amp;&amp; FileBrowserTools.hasForbiddenSymbol(relativePath)) return null;</span>
+
+<span class="fc" id="L318">					return v.fromPath(relativePath);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L323">		return null;</span>
+	}
+
+	@Override
+	public String getHash(FsItem item) throws IOException
+	{
+<span class="fc" id="L329">		String relativePath = item.getVolume().getPath(item);</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">		if (&quot;/group:0&quot;.equals(relativePath)) relativePath = &quot;&quot;;</span>
+<span class="fc" id="L331">		String base = new String(Base64.encodeBase64(relativePath.getBytes()));</span>
+
+<span class="fc bfc" id="L333" title="All 2 branches covered.">		for (String[] pair : escapes)</span>
+		{
+<span class="fc" id="L335">			base = base.replace(pair[0], pair[1]);</span>
+		}
+
+<span class="fc" id="L338">		return getVolumeId(item.getVolume()) + &quot;_&quot; + base;</span>
+	}
+
+	/**
+	 * Vrati hash pre zadanu cestu (pouzivane v JS kode pre znovaotvorenie cesty)
+	 * @param relativePath
+	 * @return
+	 */
+	public static String getHash(String relativePath)
+	{
+<span class="fc" id="L348">		String base = new String(Base64.encodeBase64(relativePath.getBytes()));</span>
+
+<span class="fc bfc" id="L350" title="All 2 branches covered.">		for (String[] pair : escapes)</span>
+		{
+<span class="fc" id="L352">			base = base.replace(pair[0], pair[1]);</span>
+		}
+
+<span class="fc" id="L355">		String volumeId = &quot;iwcm_1&quot;;</span>
+
+<span class="fc" id="L357">		return volumeId + &quot;_&quot; + base;</span>
+	}
+
+	@Override
+	public FsSecurityChecker getSecurityChecker()
+	{
+<span class="fc" id="L363">		return _securityChecker;</span>
+	}
+
+	@Override
+	public String getVolumeId(FsVolume volume)
+	{
+<span class="fc" id="L369">		return _volumeIds.get(volume);</span>
+	}
+
+	@Override
+	public FsVolume[] getVolumes()
+	{
+<span class="fc" id="L375">		return _volumes;</span>
+	}
+
+	public void setSecurityChecker(FsSecurityChecker securityChecker)
+	{
+<span class="nc" id="L380">		_securityChecker = securityChecker;</span>
+<span class="nc" id="L381">	}</span>
+
+	public void setVolumes(FsVolume[] volumes)
+	{
+<span class="nc" id="L385">		_volumes = volumes;</span>
+<span class="nc" id="L386">		char vid = 'A';</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		for (FsVolume volume : volumes)</span>
+		{
+<span class="nc" id="L389">			_volumeIds.put(volume, &quot;&quot; + vid);</span>
+<span class="nc" id="L390">			vid++;</span>
+		}
+<span class="nc" id="L392">	}</span>
+
+	@Override
+    public FsItemEx[] find(FsItemFilter filter, FsItemEx target, boolean recursive)
+    {
+<span class="fc" id="L397">        List&lt;FsItemEx&gt; listFsItemsEx = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L398" title="2 of 4 branches missed.">        if(getVolumes() != null &amp;&amp; getVolumes().length &gt;0)</span>
+        {
+<span class="fc bfc" id="L400" title="All 2 branches covered.">            for(FsVolume volume:getVolumes())</span>
+            {
+<span class="fc bfc" id="L402" title="All 2 branches covered.">				if (target.getVolume().equals(volume) == false) continue;</span>
+
+<span class="fc bfc" id="L404" title="All 2 branches covered.">				if (volume instanceof IwcmFsVolume) {</span>
+					try {
+<span class="fc" id="L406">						FsItem root = ((IwcmFsVolume)volume).fromPath(target.getPath());</span>
+<span class="fc" id="L407">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
+<span class="nc" id="L408">					} catch (Exception ex) {</span>
+<span class="nc" id="L409">						Logger.error(ex);</span>
+<span class="pc" id="L410">					}</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">				} else if (volume instanceof IwcmDocGroupFsVolume) {</span>
+					try {
+<span class="fc" id="L413">						FsItem root = ((IwcmDocGroupFsVolume)volume).fromPath(target.getPath());</span>
+<span class="fc" id="L414">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
+<span class="nc" id="L415">					} catch (Exception ex) {</span>
+<span class="nc" id="L416">						Logger.error(ex);</span>
+<span class="pc" id="L417">					}</span>
+				} else {
+<span class="nc bnc" id="L419" title="All 2 branches missed.">					for(FsItem item: volume.listChildren(volume.getRoot()))</span>
+					{
+<span class="nc bnc" id="L421" title="All 2 branches missed.">						if(item instanceof IwcmArchivItem)</span>
+						{
+<span class="nc" id="L423">							listFsFiles(item,volume,listFsItemsEx,filter,this);</span>
+						}
+					}
+				}
+            }
+        }
+        //Logger.debug(this,&quot;listFsItemsEx.size() &quot;+listFsItemsEx.size());
+<span class="fc" id="L430">        FsItemEx[] cwd = new FsItemEx[listFsItemsEx.size()];</span>
+<span class="fc" id="L431">        cwd = listFsItemsEx.toArray(cwd);</span>
+<span class="fc" id="L432">        return cwd;</span>
+    }
+
+    private static List&lt;FsItemEx&gt; listFsFiles(FsItem item,FsVolume volume, List&lt;FsItemEx&gt; listFsItemsEx,FsItemFilter filter, FsService fsService)
+    {
+<span class="nc bnc" id="L437" title="All 2 branches missed.">        for (FsItem file : volume.listChildren(item))</span>
+        {
+<span class="nc bnc" id="L439" title="All 4 branches missed.">            if (!volume.isFolder(file) &amp;&amp; filter.accepts(new FsItemEx(file, fsService)))</span>
+            {
+<span class="nc" id="L441">                FsItemEx fsx = null;</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if (file instanceof IwcmArchivItem) {</span>
+<span class="nc" id="L443">					fsx = new FsItemEx((IwcmArchivItem)file, fsService); //NOSONAR</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				} else if (file instanceof IwcmFsItem) {</span>
+<span class="nc" id="L445">					fsx = new FsItemEx((IwcmFsItem)file, fsService); //NOSONAR</span>
+				}
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                if (fsx != null) listFsItemsEx.add(fsx);</span>
+            }
+        }
+
+<span class="nc" id="L451">        return listFsItemsEx;</span>
+    }
+
+	/**
+	 * find files recursively in specific folder
+	 *
+	 * @param filter
+	 *            The filter to apply to select files.
+	 * @param root
+	 *            The location in the hierarchy to search from.
+	 * @return A collection of files that match the filter and have the root as
+	 *         a parent.
+	 */
+	private Collection&lt;FsItemEx&gt; findRecursively(FsItemFilter filter, FsItem root, boolean recursive, Set&lt;String&gt; duplicityCheck)
+	{
+<span class="fc" id="L466">		List&lt;FsItemEx&gt; results = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="fc" id="L467">		FsVolume vol = root.getVolume();</span>
+<span class="fc" id="L468">		FsItem[] childrens = vol.listChildren(root);</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">		for (int i=0; i&lt;childrens.length; i++) {</span>
+<span class="fc" id="L470">			FsItem child = childrens[i];</span>
+<span class="fc" id="L471">			FsItemEx item = new FsItemEx(child, this);</span>
+			try {
+<span class="fc bfc" id="L473" title="All 2 branches covered.">				if (vol.isFolder(child)) {</span>
+<span class="pc bpc" id="L474" title="1 of 4 branches missed.">					if (recursive &amp;&amp; duplicityCheck.contains(item.getPath())==false) {</span>
+<span class="fc" id="L475">						Collection&lt;FsItemEx&gt; sublist = findRecursively(filter, child, recursive, duplicityCheck);</span>
+<span class="fc bfc" id="L476" title="All 2 branches covered.">						if (sublist.isEmpty()==false) {</span>
+<span class="fc" id="L477">							results.addAll(sublist);</span>
+<span class="fc" id="L478">							duplicityCheck.add(item.getPath());</span>
+						}
+<span class="fc" id="L480">					}</span>
+				} else {
+<span class="fc bfc" id="L482" title="All 2 branches covered.">					if (filter.accepts(item)) {</span>
+<span class="fc" id="L483">						results.add(item);</span>
+					}
+				}
+<span class="nc" id="L486">			} catch (Exception ex) {</span>
+<span class="nc" id="L487">				Logger.error(ex);</span>
+<span class="fc" id="L488">			}</span>
+		}
+
+<span class="fc" id="L491">		return results;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

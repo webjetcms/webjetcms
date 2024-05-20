@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormsEntityBasic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forms</a> &gt; <span class="el_source">FormsEntityBasic.java</span></div><h1>FormsEntityBasic.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forms;
+
+import java.util.Date;
+import java.util.Map;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import org.eclipse.persistence.annotations.Convert;
+import org.eclipse.persistence.annotations.Converter;
+import org.eclipse.persistence.annotations.Converters;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserDetailsConverter;
+
+@MappedSuperclass
+@Converters(value = {
+    @Converter(name = &quot;UserDetailsConverter&quot;, converterClass = UserDetailsConverter.class)
+})
+@Setter
+@Getter
+<span class="fc" id="L32">public class FormsEntityBasic {</span>
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_forms&quot;)
+    private Long id;
+
+    @Column(name = &quot;form_name&quot;)
+    private String formName;
+
+    private String data;
+
+    private String files;
+
+    @Column(name = &quot;create_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createDate;
+
+    private String html;
+
+    @Column(name = &quot;user_id&quot;)
+    @Convert(&quot;UserDetailsConverter&quot;)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
+    private UserDetails userDetails;
+
+    private String note;
+
+    @Column(name = &quot;doc_id&quot;)
+    private int docId;
+
+    @Column(name = &quot;last_export_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastExportDate;
+
+    @Column(name = &quot;domain_id&quot;)
+    private int domainId;
+
+    @Column(name = &quot;double_optin_confirmation_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date doubleOptinConfigurationDate;
+
+    @Column(name = &quot;double_optin_hash&quot;)
+    private String double_optin_hash;
+
+    @Transient
+    private Map&lt;String, String&gt; columnNamesAndValues;
+
+    @Transient
+    private int count;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

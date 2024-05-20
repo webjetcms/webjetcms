@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExecutionEntry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.jpa</a> &gt; <span class="el_source">ExecutionEntry.java</span></div><h1>ExecutionEntry.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.jpa;
+
+import java.io.Serializable;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Getter
+@Setter
+public class ExecutionEntry implements Comparable&lt;ExecutionEntry&gt;, Serializable
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = &quot;&quot;)
+	String whatWasExecuted;
+
+<span class="fc" id="L22">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_executions&quot;)</span>
+<span class="fc" id="L23">	private Long numberOfHits = Long.valueOf(0);</span>
+
+<span class="fc" id="L25">	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_cache_hits&quot;)</span>
+<span class="fc" id="L26">	private Long numberOfCacheHits = Long.valueOf(0);</span>
+
+<span class="fc" id="L28">	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_execution_time&quot;)</span>
+<span class="fc" id="L29">	private Long averageExecutionTime = Long.valueOf(0);</span>
+
+<span class="fc" id="L31">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_slowest_one&quot;)</span>
+<span class="fc" id="L32">	private Long maximumExecutionTime = Long.valueOf(0);</span>
+
+<span class="fc" id="L34">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_fastest_one&quot;)</span>
+<span class="fc" id="L35">	private Long minimumExecutionTime = Long.MAX_VALUE;</span>
+
+<span class="fc" id="L37">	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.component_total_time&quot;)</span>
+<span class="fc" id="L38">	private Long totalTimeOfExecutions = Long.valueOf(0);</span>
+
+<span class="fc" id="L40">	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.average_memory_consumed&quot;)</span>
+<span class="fc" id="L41">	private Long totalMemoryConsumed = Long.valueOf(0);</span>
+
+<span class="fc" id="L43">	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.monitoring.consumption_peek&quot;)</span>
+<span class="fc" id="L44">	private Long memoryConsumptionPeek = Long.valueOf(0);</span>
+
+<span class="fc" id="L46">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;&quot;)</span>
+<span class="fc" id="L47">	private Long totalTimeOfCacheExecutions = Long.valueOf(0);</span>
+
+<span class="fc" id="L49">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;&quot;)</span>
+<span class="fc" id="L50">	private Long validMemoryMeasurements = Long.valueOf(0);</span>
+
+<span class="fc" id="L52">	public ExecutionEntry(){}</span>
+
+<span class="fc" id="L54">	public ExecutionEntry(String name) {</span>
+<span class="fc" id="L55">		this.whatWasExecuted = name;</span>
+<span class="fc" id="L56">	}</span>
+
+	//----------------------------GETTERS AND SETTERS-----------------------------
+
+	public String getName()
+	{
+<span class="fc" id="L62">		return this.whatWasExecuted;</span>
+	}
+
+	public long getNumberOfExecutions()
+	{
+<span class="fc" id="L67">		return this.numberOfHits;</span>
+	}
+
+	public long getTotalTimeSpentOnServingThisComponent()
+	{
+<span class="fc" id="L72">		return totalTimeOfCacheExecutions + totalTimeOfExecutions;</span>
+	}
+
+	public long getAverageExecutionTime()
+	{
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (this.numberOfHits == 0)</span>
+<span class="nc" id="L78">			return 0;</span>
+<span class="fc" id="L79">		return this.totalTimeOfExecutions / this.numberOfHits;</span>
+	}
+
+	public long getAverageCacheExecutionTime()
+	{
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">		if (this.numberOfCacheHits == 0)</span>
+<span class="fc" id="L85">			return 0;</span>
+<span class="nc" id="L86">		return this.totalTimeOfCacheExecutions / this.numberOfCacheHits;</span>
+	}
+
+
+	public long getAverageMemoryConsumption()
+	{
+<span class="fc bfc" id="L92" title="All 2 branches covered.">		if (validMemoryMeasurements == 0)</span>
+<span class="fc" id="L93">			return 0;</span>
+<span class="fc" id="L94">		return totalMemoryConsumed / validMemoryMeasurements;</span>
+	}
+
+
+	@Override
+	public int compareTo(ExecutionEntry anotherEntry)
+	{
+<span class="fc" id="L101">		return -Long.valueOf(getAverageExecutionTime()).</span>
+<span class="fc" id="L102">			compareTo(Long.valueOf(anotherEntry.getAverageExecutionTime()));</span>
+	}
+
+	@Override
+	public boolean equals(Object o)
+   {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">   	if (!(o instanceof ExecutionEntry)) return false;</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">   	return ((ExecutionEntry)o).getName().equals(this.getName()) &amp;&amp; compareTo((ExecutionEntry)o)==0;</span>
+   }
+
+	@Override
+	public int hashCode(){
+<span class="nc" id="L114">		return getName().hashCode() + Long.valueOf(getAverageExecutionTime()).hashCode();</span>
+	}
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L120">		return whatWasExecuted + &quot; took &quot; + getAverageExecutionTime() + &quot; ms on average&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

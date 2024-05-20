@@ -493,7 +493,7 @@ public class AtrDB
          StringBuilder sql = new StringBuilder("SELECT d.*, dad.*, da.value_string, da.value_int, da.value_bool ").append(
                       "FROM documents d, doc_atr_def dad ").append(
                       "LEFT JOIN doc_atr da ON da.atr_id = dad.atr_id ").append(
-                      "WHERE d.doc_id=da.doc_id AND d.available=1 ");
+                      "WHERE d.doc_id=da.doc_id AND d.available="+DB.getBooleanSql(true)+" ");
          if (group!=null)
          {
          	if (group.indexOf('%')!=-1)

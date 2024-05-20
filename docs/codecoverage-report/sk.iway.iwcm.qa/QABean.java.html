@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QABean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.qa</a> &gt; <span class="el_source">QABean.java</span></div><h1>QABean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.qa;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  Description of the Class
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Piatok, 2003, január 17
+ *@modified     $Date: 2004/02/25 22:09:55 $
+ */
+<span class="fc" id="L21">public class QABean extends ActionForm</span>
+{
+	private static final long serialVersionUID = -1805144846544468397L;
+
+	private int qaId;
+	private String categoryName;
+	private String questionDate;
+<span class="fc" id="L28">	private long questionDateLong = 0;</span>
+	private String answerDate;
+<span class="fc" id="L30">	private long answerDateLong = 0;</span>
+	private String question;
+	private String answer;
+	private String fromName;
+	private String fromEmail;
+	private String toName;
+	private String toEmail;
+<span class="fc" id="L37">	private boolean publishOnWeb = false;</span>
+<span class="fc" id="L38">	private boolean recode = true;</span>
+<span class="fc" id="L39">	private String hash = &quot;&quot;;</span>
+	private String answerWeb;
+<span class="fc" id="L41">	private String groupName = &quot;&quot;;</span>
+<span class="fc" id="L42">	private boolean allowPublishOnWeb = false;</span>
+<span class="fc" id="L43">	private int sortPriority = 0;</span>
+
+	private String fromPhone;
+	private String fromCompany;
+	private String fieldA;
+	private String fieldB;
+	private String fieldC;
+	private String fieldD;
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  input  Description of the Parameter
+	 *@return        Description of the Return Value
+	 */
+	private String recode(String input)
+	{
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">		if (input == null)</span>
+		{
+<span class="nc" id="L62">			return (&quot;&quot;);</span>
+		}
+		//Logger.println(this,&quot;Recoding: &quot;+input);
+<span class="fc" id="L65">		return (input.trim());</span>
+	}
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  mapping  Description of the Parameter
+	 *@param  request  Description of the Parameter
+	 */
+	@Override
+	public void reset(ActionMapping mapping, HttpServletRequest request)
+	{
+<span class="nc" id="L77">		publishOnWeb = false;</span>
+<span class="nc" id="L78">		allowPublishOnWeb = false;</span>
+<span class="nc" id="L79">	}</span>
+
+	/**
+	 *  Gets the qaId attribute of the QABean object
+	 *
+	 *@return    The qaId value
+	 */
+	public int getQaId()
+	{
+<span class="fc" id="L88">		return qaId;</span>
+	}
+
+	/**
+	 *  Sets the qaId attribute of the QABean object
+	 *
+	 *@param  qaId  The new qaId value
+	 */
+	public void setQaId(int qaId)
+	{
+<span class="fc" id="L98">		this.qaId = qaId;</span>
+<span class="fc" id="L99">	}</span>
+
+	/**
+	 *  Sets the rootId attribute of the QABean object
+	 *
+	 *@param  categoryName  The new categoryName value
+	 */
+
+	/**
+	 *  Gets the rootId attribute of the QABean object
+	 *
+	 *@param  categoryName  The new categoryName value
+	 */
+
+	/**
+	 *  Sets the categoryName attribute of the QABean object
+	 *
+	 *@param  categoryName  The new categoryName value
+	 */
+	public void setCategoryName(String categoryName)
+	{
+<span class="fc" id="L120">		this.categoryName = recode(categoryName);</span>
+<span class="fc" id="L121">	}</span>
+
+	/**
+	 *  Gets the categoryName attribute of the QABean object
+	 *
+	 *@return    The categoryName value
+	 */
+	public String getCategoryName()
+	{
+<span class="fc" id="L130">		return categoryName;</span>
+	}
+
+	/**
+	 *  Sets the questionDate attribute of the QABean object
+	 *
+	 *@param  questionDate  The new questionDate value
+	 */
+	public void setQuestionDate(String questionDate)
+	{
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (questionDate != null)</span>
+		{
+			//v DB nie je zadany cas, odstran
+<span class="nc" id="L143">			questionDate = sk.iway.iwcm.Tools.replace(questionDate, &quot; 0:00:00&quot;, &quot;&quot;);</span>
+		}
+<span class="nc" id="L145">		this.questionDate = questionDate;</span>
+<span class="nc" id="L146">	}</span>
+
+	/**
+	 *  Gets the questionDate attribute of the QABean object
+	 *
+	 *@return    The questionDate value
+	 */
+	public String getQuestionDate()
+	{
+<span class="nc" id="L155">		return questionDate;</span>
+	}
+
+	/**
+	 *  Sets the answerDate attribute of the QABean object
+	 *
+	 *@param  answerDate  The new answerDate value
+	 */
+	public void setAnswerDate(String answerDate)
+	{
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (answerDate != null)</span>
+		{
+			//v DB nie je zadany cas, odstran
+<span class="nc" id="L168">			answerDate = sk.iway.iwcm.Tools.replace(answerDate, &quot; 0:00:00&quot;, &quot;&quot;);</span>
+		}
+<span class="nc" id="L170">		this.answerDate = answerDate;</span>
+<span class="nc" id="L171">	}</span>
+
+	/**
+	 *  Gets the answerDate attribute of the QABean object
+	 *
+	 *@return    The answerDate value
+	 */
+	public String getAnswerDate()
+	{
+<span class="nc" id="L180">		return answerDate;</span>
+	}
+
+	/**
+	 *  Sets the question attribute of the QABean object
+	 *
+	 *@param  question  The new question value
+	 */
+	public void setQuestion(String question)
+	{
+<span class="fc" id="L190">		this.question = recode(question);</span>
+<span class="fc" id="L191">	}</span>
+
+	/**
+	 *  Gets the question attribute of the QABean object
+	 *
+	 *@return    The question value
+	 */
+	public String getQuestion()
+	{
+<span class="fc" id="L200">		return question;</span>
+	}
+
+	/**
+	 *  Sets the answer attribute of the QABean object
+	 *
+	 *@param  answer  The new answer value
+	 */
+	public void setAnswer(String answer)
+	{
+<span class="fc" id="L210">		this.answer = recode(answer);</span>
+<span class="fc" id="L211">	}</span>
+
+	/**
+	 *  Gets the answer attribute of the QABean object
+	 *
+	 *@return    The answer value
+	 */
+	public String getAnswer()
+	{
+<span class="fc" id="L220">		return answer;</span>
+	}
+
+	/**
+	 *  Sets the fromName attribute of the QABean object
+	 *
+	 *@param  fromName  The new fromName value
+	 */
+	public void setFromName(String fromName)
+	{
+<span class="fc" id="L230">		this.fromName = recode(fromName);</span>
+<span class="fc" id="L231">	}</span>
+
+	/**
+	 *  Gets the fromName attribute of the QABean object
+	 *
+	 *@return    The fromName value
+	 */
+	public String getFromName()
+	{
+<span class="fc" id="L240">		return fromName;</span>
+	}
+
+	/**
+	 *  Sets the fromEmail attribute of the QABean object
+	 *
+	 *@param  fromEmail  The new fromEmail value
+	 */
+	public void setFromEmail(String fromEmail)
+	{
+<span class="fc" id="L250">		this.fromEmail = recode(fromEmail);</span>
+<span class="fc" id="L251">	}</span>
+
+	/**
+	 *  Gets the fromEmail attribute of the QABean object
+	 *
+	 *@return    The fromEmail value
+	 */
+	public String getFromEmail()
+	{
+<span class="fc" id="L260">		return fromEmail;</span>
+	}
+
+	/**
+	 *  Sets the toName attribute of the QABean object
+	 *
+	 *@param  toName  The new toName value
+	 */
+	public void setToName(String toName)
+	{
+<span class="fc" id="L270">		this.toName = recode(toName);</span>
+<span class="fc" id="L271">	}</span>
+
+	/**
+	 *  Gets the toName attribute of the QABean object
+	 *
+	 *@return    The toName value
+	 */
+	public String getToName()
+	{
+<span class="fc" id="L280">		return toName;</span>
+	}
+
+	/**
+	 *  Sets the toEmail attribute of the QABean object
+	 *
+	 *@param  toEmail  The new toEmail value
+	 */
+	public void setToEmail(String toEmail)
+	{
+<span class="fc" id="L290">		this.toEmail = recode(toEmail);</span>
+<span class="fc" id="L291">	}</span>
+
+	/**
+	 *  Gets the toEmail attribute of the QABean object
+	 *
+	 *@return    The toEmail value
+	 */
+	public String getToEmail()
+	{
+<span class="fc" id="L300">		return toEmail;</span>
+	}
+
+	/**
+	 *  Sets the publishOnWeb attribute of the QABean object
+	 *
+	 *@param  publishOnWeb  The new publishOnWeb value
+	 */
+	public void setPublishOnWeb(boolean publishOnWeb)
+	{
+<span class="fc" id="L310">		this.publishOnWeb = publishOnWeb;</span>
+<span class="fc" id="L311">	}</span>
+
+	/**
+	 *  Gets the publishOnWeb attribute of the QABean object
+	 *
+	 *@return    The publishOnWeb value
+	 */
+	public boolean isPublishOnWeb()
+	{
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">		if (allowPublishOnWeb == false)</span>
+		{
+<span class="nc" id="L322">			publishOnWeb = false;</span>
+		}
+<span class="fc" id="L324">		return publishOnWeb;</span>
+	}
+
+	/**
+	 *  Sets the recode attribute of the QABean object
+	 *
+	 *@param  recode  The new recode value
+	 */
+	public void setRecode(boolean recode)
+	{
+<span class="fc" id="L334">		this.recode = recode;</span>
+<span class="fc" id="L335">	}</span>
+
+	/**
+	 *  Gets the recode attribute of the QABean object
+	 *
+	 *@return    The recode value
+	 */
+	public boolean isRecode()
+	{
+<span class="nc" id="L344">		return recode;</span>
+	}
+
+	/**
+	 *  Sets the hash attribute of the QABean object
+	 *
+	 *@param  hash  The new hash value
+	 */
+	public void setHash(String hash)
+	{
+<span class="fc" id="L354">		this.hash = hash;</span>
+<span class="fc" id="L355">	}</span>
+
+	/**
+	 *  Gets the hash attribute of the QABean object
+	 *
+	 *@return    The hash value
+	 */
+	public String getHash()
+	{
+<span class="fc" id="L364">		return hash;</span>
+	}
+
+	/**
+	 *  Sets the answerWeb attribute of the QABean object
+	 *
+	 *@param  answerWeb  The new answerWeb value
+	 */
+	public void setAnswerWeb(String answerWeb)
+	{
+<span class="fc" id="L374">		this.answerWeb = recode(answerWeb);</span>
+<span class="fc" id="L375">	}</span>
+
+	/**
+	 *  Gets the answerWeb attribute of the QABean object
+	 *
+	 *@return    The answerWeb value
+	 */
+	public String getAnswerWeb()
+	{
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">		if (Tools.isEmpty(answerWeb))</span>
+		{
+<span class="nc" id="L386">			return (answer);</span>
+		}
+<span class="fc" id="L388">		return answerWeb;</span>
+	}
+
+	/**
+	 *  Sets the groupName attribute of the QABean object
+	 *
+	 *@param  groupName  The new groupName value
+	 */
+	public void setGroupName(String groupName)
+	{
+<span class="fc" id="L398">		this.groupName = groupName;</span>
+<span class="fc" id="L399">	}</span>
+
+	/**
+	 *  Gets the groupName attribute of the QABean object
+	 *
+	 *@return    The groupName value
+	 */
+	public String getGroupName()
+	{
+<span class="fc" id="L408">		return groupName;</span>
+	}
+	public boolean isAllowPublishOnWeb()
+	{
+<span class="fc" id="L412">		return allowPublishOnWeb;</span>
+	}
+	public void setAllowPublishOnWeb(boolean allowPublishOnWeb)
+	{
+<span class="fc" id="L416">		this.allowPublishOnWeb = allowPublishOnWeb;</span>
+<span class="fc" id="L417">	}</span>
+
+	public long getAnswerDateLong()
+	{
+<span class="nc" id="L421">		return answerDateLong;</span>
+	}
+	public String getAnswerDateDate()
+	{
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		if (answerDateLong==0) return(&quot;&quot;);</span>
+<span class="nc" id="L426">		return(Tools.formatDate(answerDateLong));</span>
+	}
+	public String getAnswerDateTime()
+	{
+<span class="nc bnc" id="L430" title="All 2 branches missed.">		if (answerDateLong==0) return(&quot;&quot;);</span>
+<span class="nc" id="L431">		return(Tools.formatTime(answerDateLong));</span>
+	}
+
+	public void setAnswerDateLong(long answerDateLong)
+	{
+<span class="fc" id="L436">		this.answerDateLong = answerDateLong;</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">		if (answerDateLong!=0)</span>
+		{
+<span class="fc" id="L439">			answerDate = Tools.formatDateTime(answerDateLong);</span>
+		}
+<span class="fc" id="L441">	}</span>
+
+	public long getQuestionDateLong()
+	{
+<span class="nc" id="L445">		return questionDateLong;</span>
+	}
+
+	public void setQuestionDateLong(long questionDateLong)
+	{
+<span class="fc" id="L450">		this.questionDateLong = questionDateLong;</span>
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">		if (questionDateLong!=0)</span>
+		{
+<span class="fc" id="L453">			questionDate = Tools.formatDateTime(questionDateLong);</span>
+		}
+<span class="fc" id="L455">	}</span>
+	public String getQuestionDateDate()
+	{
+<span class="nc bnc" id="L458" title="All 2 branches missed.">		if (questionDateLong==0) return(&quot;&quot;);</span>
+<span class="nc" id="L459">		return(Tools.formatDate(questionDateLong));</span>
+	}
+	public String getQuestionDateTime()
+	{
+<span class="nc bnc" id="L463" title="All 2 branches missed.">		if (questionDateLong==0) return(&quot;&quot;);</span>
+<span class="nc" id="L464">		return(Tools.formatTime(questionDateLong));</span>
+	}
+
+	public void setSortPriority(int sortPriority)
+	{
+<span class="fc" id="L469">		this.sortPriority = sortPriority;</span>
+<span class="fc" id="L470">	}</span>
+
+	public int getSortPriority()
+	{
+<span class="fc" id="L474">		return sortPriority;</span>
+	}
+
+	public String getFromPhone()
+	{
+<span class="fc" id="L479">		return fromPhone;</span>
+	}
+
+	public void setFromPhone(String fromPhone)
+	{
+<span class="fc" id="L484">		this.fromPhone = fromPhone;</span>
+<span class="fc" id="L485">	}</span>
+
+	public String getFromCompany()
+	{
+<span class="fc" id="L489">		return fromCompany;</span>
+	}
+
+	public void setFromCompany(String fromCompany)
+	{
+<span class="fc" id="L494">		this.fromCompany = fromCompany;</span>
+<span class="fc" id="L495">	}</span>
+
+	public String getFieldA()
+	{
+<span class="fc" id="L499">		return fieldA;</span>
+	}
+
+	public void setFieldA(String fieldA)
+	{
+<span class="fc" id="L504">		this.fieldA = fieldA;</span>
+<span class="fc" id="L505">	}</span>
+
+	public String getFieldB()
+	{
+<span class="fc" id="L509">		return fieldB;</span>
+	}
+
+	public void setFieldB(String fieldB)
+	{
+<span class="fc" id="L514">		this.fieldB = fieldB;</span>
+<span class="fc" id="L515">	}</span>
+
+	public String getFieldC()
+	{
+<span class="fc" id="L519">		return fieldC;</span>
+	}
+
+	public void setFieldC(String fieldC)
+	{
+<span class="fc" id="L524">		this.fieldC = fieldC;</span>
+<span class="fc" id="L525">	}</span>
+
+	public String getFieldD()
+	{
+<span class="fc" id="L529">		return fieldD;</span>
+	}
+
+	public void setFieldD(String fieldD)
+	{
+<span class="fc" id="L534">		this.fieldD = fieldD;</span>
+<span class="fc" id="L535">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StavyObjednavok.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">StavyObjednavok.java</span></div><h1>StavyObjednavok.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  StavyObjednavok.java
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 20.11.2009 16:26:45
+ *@modified     $Date: 2010/01/18 08:49:51 $
+ */
+public class StavyObjednavok
+{
+<span class="nc" id="L23">	private static final Map&lt;Integer, String&gt; stavy = new HashMap&lt;&gt;();</span>
+
+	public static final int NOVA = 1;
+	public static final int ZAPLATENA = 2;
+	public static final int ZRUSENA = 3;
+	public static final int OVEROVANA = 4;
+	public static final int REALIZOVANA = 5;
+	public static final int REZERVOVANA_DO = 6;
+	public static final int NIE_JE_VOLNA = 7;
+	public static final int ZAPLATENA_ZALOHA = 8;
+
+	static
+	{
+<span class="nc" id="L36">		stavy.put(NOVA, &quot;Nová&quot;);</span>
+<span class="nc" id="L37">		stavy.put(ZAPLATENA, &quot;Zaplatená&quot;);</span>
+<span class="nc" id="L38">		stavy.put(ZRUSENA, &quot;Zrušená&quot;);</span>
+<span class="nc" id="L39">		stavy.put(OVEROVANA, &quot;Overovaná&quot;);</span>
+<span class="nc" id="L40">		stavy.put(REALIZOVANA, &quot;Realizovaná&quot;);</span>
+<span class="nc" id="L41">		stavy.put(REZERVOVANA_DO, &quot;Rezervovaná&quot;);</span>
+<span class="nc" id="L42">		stavy.put(NIE_JE_VOLNA, &quot;Nie je voľná&quot;);</span>
+<span class="nc" id="L43">		stavy.put(ZAPLATENA_ZALOHA, &quot;Zaplatená záloha&quot;);</span>
+<span class="nc" id="L44">	}</span>
+
+	private StavyObjednavok() {
+
+	}
+
+	public static String toString(BasketInvoiceBean invoice)
+	{
+<span class="nc bnc" id="L52" title="All 9 branches missed.">		switch (invoice.getStatusId())</span>
+		{
+<span class="nc" id="L54">			case NOVA : 			return &quot;Nová&quot;;</span>
+<span class="nc" id="L55">			case ZAPLATENA : 		return &quot;Zaplatená&quot;;</span>
+<span class="nc" id="L56">			case ZRUSENA : 			return &quot;Zrušená&quot;;</span>
+<span class="nc" id="L57">			case OVEROVANA : 		return &quot;Overuje sa dostupnosť&quot;;</span>
+<span class="nc" id="L58">			case REALIZOVANA:		return &quot;Zrealizovaná&quot;;</span>
+<span class="nc" id="L59">			case REZERVOVANA_DO:	return &quot;Rezervácia potvrdená do &quot;+invoice.getFieldD();</span>
+<span class="nc" id="L60">			case NIE_JE_VOLNA : 	return &quot;Vybraný termín nie je voľný&quot;;</span>
+<span class="nc" id="L61">			case ZAPLATENA_ZALOHA :	return &quot;Zaplatená záloha&quot;;</span>
+<span class="nc" id="L62">			default : return &quot;&quot;;</span>
+		}
+	}
+
+	public static String nazovPre(int idStavu)
+	{
+<span class="nc" id="L68">		return stavy.get(idStavu);</span>
+	}
+
+	public static List&lt;Integer&gt; mozneStavy()
+	{
+<span class="nc" id="L73">		List&lt;Integer&gt; mozneStavy = new ArrayList&lt;Integer&gt;(stavy.keySet());</span>
+		/*Collections.sort(mozneStavy, new Comparator&lt;Integer&gt;(){
+			@Override
+			public int compare(Integer o1, Integer o2)
+			{
+				return Tools.slovakCollator.compare(nazovPre(o1), nazovPre(o2));
+			}
+		});*/
+<span class="nc" id="L81">		mozneStavy.sort((o1, o2) -&gt; Tools.slovakCollator.compare(nazovPre(o1), nazovPre(o2)));</span>
+<span class="nc" id="L82">		return mozneStavy;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationBean.java</span></div><h1>ReservationBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.util.Date;
+
+/**
+ * ReservationBean.java - zaznam z tabulky reservation pre uchovanie rezervacie
+ *	@Title        webjet4
+ *	@Company      Interway s.r.o. (www.interway.sk)
+ *	@Copyright    Interway s.r.o. (c) 2001-2008
+ *	@author       $Author: kmarton $
+ *	@version      $Revision: 1.4 $
+ *	@created      Date: 20.12.2008 14:55:51
+ *	@modified     $Date: 2009/04/06 12:54:09 $
+ */
+
+<span class="nc" id="L16">public class ReservationBean </span>
+{
+	private int reservationId;
+	private int reservationObjectId;
+<span class="nc" id="L20">	private Date dateFrom = null;</span>
+	private String startTime;
+<span class="nc" id="L22">	private Date dateTo = null;</span>
+	private String finishTime;
+	private String name;
+	private String surname;
+	private String email;
+	private String purpose;
+	
+	private boolean accepted;
+	private String hashValue;
+	
+	private String phoneNumber;
+	
+	public String getStartTime()
+	{
+<span class="nc" id="L36">		return startTime;</span>
+	}
+	public void setStartTime(String startTime)
+	{
+<span class="nc" id="L40">		this.startTime = startTime;</span>
+<span class="nc" id="L41">	}</span>
+	public String getFinishTime()
+	{
+<span class="nc" id="L44">		return finishTime;</span>
+	}
+	public void setFinishTime(String finishTime)
+	{
+<span class="nc" id="L48">		this.finishTime = finishTime;</span>
+<span class="nc" id="L49">	}</span>
+	
+	
+	public String getHashValue() {
+<span class="nc" id="L53">		return hashValue;</span>
+	}
+	public void setHashValue(String hashValue) {
+<span class="nc" id="L56">		this.hashValue = hashValue;</span>
+<span class="nc" id="L57">	}</span>
+	
+	public boolean isAccepted()
+	{
+<span class="nc" id="L61">		return accepted;</span>
+	}
+	public void setAccepted(boolean accepted)
+	{
+<span class="nc" id="L65">		this.accepted = accepted;</span>
+<span class="nc" id="L66">	}</span>
+	public String getReservationObjectName() 
+	{
+<span class="nc" id="L69">		return (ReservationManager.getReservationObjectName(reservationObjectId));</span>
+	}
+	
+	public int getReservationId() {
+<span class="nc" id="L73">		return reservationId;</span>
+	}
+	public void setReservationId(int reservationId) {
+<span class="nc" id="L76">		this.reservationId = reservationId;</span>
+<span class="nc" id="L77">	}</span>
+	public int getReservationObjectId() {
+<span class="nc" id="L79">		return reservationObjectId;</span>
+	}
+	public void setReservationObjectId(int reservationObjectId) {
+<span class="nc" id="L82">		this.reservationObjectId = reservationObjectId;</span>
+<span class="nc" id="L83">	}</span>
+	
+	
+	public Date getDateFrom()
+	{
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		return dateFrom == null ? null : (Date) dateFrom.clone();</span>
+	}
+	public void setDateFrom(Date dateFrom)
+	{
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		this.dateFrom = dateFrom == null ? null : (Date) dateFrom.clone();</span>
+<span class="nc" id="L93">	}</span>
+	public Date getDateTo()
+	{
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		return dateTo == null ? null : (Date) dateTo.clone();</span>
+	}
+	public void setDateTo(Date dateTo)
+	{
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		this.dateTo = dateTo == null ? null : (Date) dateTo.clone();</span>
+<span class="nc" id="L101">	}</span>
+	public String getName() {
+<span class="nc" id="L103">		return name;</span>
+	}
+	public void setName(String name) {
+<span class="nc" id="L106">		this.name = name;</span>
+<span class="nc" id="L107">	}</span>
+	public String getSurname() {
+<span class="nc" id="L109">		return surname;</span>
+	}
+	public void setSurname(String surname) {
+<span class="nc" id="L112">		this.surname = surname;</span>
+<span class="nc" id="L113">	}</span>
+	public String getEmail() {
+<span class="nc" id="L115">		return email;</span>
+	}
+	public void setEmail(String email) {
+<span class="nc" id="L118">		this.email = email;</span>
+<span class="nc" id="L119">	}</span>
+	public String getPurpose() {
+<span class="nc" id="L121">		return purpose;</span>
+	}
+	public void setPurpose(String purpose) {
+<span class="nc" id="L124">		this.purpose = purpose;</span>
+<span class="nc" id="L125">	}</span>
+	public String getPhoneNumber() {
+<span class="nc" id="L127">		return phoneNumber;</span>
+	}
+	public void setPhoneNumber(String phoneNumber) {
+<span class="nc" id="L130">		this.phoneNumber = phoneNumber;</span>
+<span class="nc" id="L131">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

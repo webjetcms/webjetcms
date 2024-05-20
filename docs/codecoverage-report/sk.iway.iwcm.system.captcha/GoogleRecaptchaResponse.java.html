@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleRecaptchaResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.captcha</a> &gt; <span class="el_source">GoogleRecaptchaResponse.java</span></div><h1>GoogleRecaptchaResponse.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.captcha;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+<span class="nc" id="L7">public class GoogleRecaptchaResponse {</span>
+    // &quot;success&quot;: true|false,
+    private boolean success;
+
+    // &quot;challenge_ts&quot;: timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+    @JsonProperty(value = &quot;challenge_ts&quot;)
+    private String challengeDate;
+
+    // &quot;hostname&quot;: string,         // the hostname of the site where the reCAPTCHA was solved
+    private String hostname;
+
+    // &quot;score&quot;: number             // the score for this request (0.0 - 1.0)
+    private double score;
+
+    // &quot;action&quot;: string            // the action name for this request (important to verify)
+    private String action;
+
+    // &quot;error-codes&quot;: [...] // optional
+    @JsonProperty(value = &quot;error-codes&quot;)
+    private List&lt;String&gt; errorCodes;
+
+    public boolean isSuccess() {
+<span class="nc" id="L29">        return success;</span>
+    }
+
+    public void setSuccess(boolean success) {
+<span class="nc" id="L33">        this.success = success;</span>
+<span class="nc" id="L34">    }</span>
+
+    public String getChallengeDate() {
+<span class="nc" id="L37">        return challengeDate;</span>
+    }
+
+    public void setChallengeDate(String challengeDate) {
+<span class="nc" id="L41">        this.challengeDate = challengeDate;</span>
+<span class="nc" id="L42">    }</span>
+
+    public String getHostname() {
+<span class="nc" id="L45">        return hostname;</span>
+    }
+
+    public void setHostname(String hostname) {
+<span class="nc" id="L49">        this.hostname = hostname;</span>
+<span class="nc" id="L50">    }</span>
+
+
+    public double getScore() {
+<span class="nc" id="L54">        return score;</span>
+    }
+
+    public void setScore(double score) {
+<span class="nc" id="L58">        this.score = score;</span>
+<span class="nc" id="L59">    }</span>
+
+    public String getAction() {
+<span class="nc" id="L62">        return action;</span>
+    }
+
+    public void setAction(String action) {
+<span class="nc" id="L66">        this.action = action;</span>
+<span class="nc" id="L67">    }</span>
+
+    public List&lt;String&gt; getErrorCodes() {
+<span class="nc" id="L70">        return errorCodes;</span>
+    }
+
+    public void setErrorCodes(List&lt;String&gt; errorCodes) {
+<span class="nc" id="L74">        this.errorCodes = errorCodes;</span>
+<span class="nc" id="L75">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

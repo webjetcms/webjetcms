@@ -43,7 +43,12 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
 
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    
+    if("sk" === I.getConfLng()) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+    } else if("en" === I.getConfLng()) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+    }
 
     I.wait(1);
 

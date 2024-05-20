@@ -98,7 +98,7 @@ public class GdprDataDeleting {
         }
         else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
         {
-            sq.execute("DELETE FROM forms where create_date <  date '"+date+"'");
+            sq.execute("DELETE FROM forms where create_date < '"+date+"'");
         }
     }
 
@@ -111,7 +111,7 @@ public class GdprDataDeleting {
         }
         else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
         {
-            return sq.forInt("SELECT count(*) FROM forms where create_date < date '"+date+"'");
+            return sq.forInt("SELECT count(*) FROM forms where create_date < '"+date+"'");
         }
         //return sq.forInt("SELECT count(*) FROM forms where create_date < ?", getCalendarBeforeDate(Constants.getInt("gdprDeleteFormDataAfterDays")).getTime());
     }
@@ -153,7 +153,7 @@ public class GdprDataDeleting {
         }
         else
         {
-            return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < "+date+"");
+            return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < '"+date+"'");
         }
 
 

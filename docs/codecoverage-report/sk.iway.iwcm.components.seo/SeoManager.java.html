@@ -1,0 +1,1447 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeoManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo</a> &gt; <span class="el_source">SeoManager.java</span></div><h1>SeoManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.seo.rest.SeoService;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * SeoManager.java - trieda sluziaca na pracu v komponente SEO, rozne zvacsa staticke metody vyuzivajuce sa v komponente SEO
+ *	@Title        webjet4
+ *	@Company      Interway s.r.o. (www.interway.sk)
+ *	@Copyright    Interway s.r.o. (c) 2001-2008
+ *	@author       $Author: jeeff $
+ *	@version      $Revision: 1.11 $
+ *	@created      Date: 13.03.2009 14:55:51
+ *	@modified     $Date: 2010/02/17 11:36:48 $
+ */
+
+<span class="nc" id="L38">public class SeoManager</span>
+{
+	/**
+	 * Toto sa vola z crontabu raz za den, kontroluje pozicie klucovych slov na
+	 * google.com pre stranku Constants.getString(&quot;webSiteGooglePosition&quot;)
+	 *
+	 * @param args
+	 */
+	public static void main(String[] args)
+	{
+<span class="nc" id="L48">		Logger.debug(SeoManager.class,&quot;SeoService.saveKeywordsPositions() - started&quot;);</span>
+<span class="nc" id="L49">		SeoService.saveKeywordsPositions();</span>
+<span class="nc" id="L50">		Logger.debug(SeoManager.class,&quot;SeoService.saveKeywordsPositions() - finished&quot;);</span>
+<span class="nc" id="L51">	}</span>
+
+	/**
+	 * Funkcia prida zaznam noveho vyhladavacieho stroja do tabulky seo_bots, ak taky neexistuje &lt;br /&gt;
+	 * Ak taky uz existuje, len zvysi pocet navstev o jeden a zmeni datum poslednej navstevy na aktualny cas
+	 *
+	 * @param browserName nazov browsera, ktory si prehliada stranky webJETu identifikovany ako vyhladavaci stroj
+	 * @return true ak sa insert (update) podaril, inak false
+	 */
+	public static boolean addSearchEngineVisit(String browserName)
+	{
+<span class="nc" id="L62">		Connection db_conn = null;</span>
+<span class="nc" id="L63">		PreparedStatement ps = null;</span>
+
+<span class="nc" id="L65">		int updated = 0;</span>
+<span class="nc" id="L66">		Calendar cal = Calendar.getInstance();</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (Tools.isNotEmpty(browserName)) {</span>
+			try
+			{
+<span class="nc" id="L71">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L72">				String sql=&quot;UPDATE seo_bots SET visit_count = visit_count + 1, last_visit = ? WHERE name = ?&quot;;</span>
+<span class="nc" id="L73">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L74">				ps.setTimestamp(1, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L75">				ps.setString(2, browserName);</span>
+<span class="nc" id="L76">				updated = ps.executeUpdate();</span>
+<span class="nc" id="L77">				ps.close();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				if (updated &lt; 1)</span>
+				{
+<span class="nc" id="L80">					sql = &quot;INSERT INTO seo_bots (name,last_visit, visit_count) VALUES (?, ?, 1)&quot;;</span>
+<span class="nc" id="L81">					ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L82">					ps.setString(1, browserName);</span>
+<span class="nc" id="L83">					ps.setTimestamp(2, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L84">					ps.execute();</span>
+<span class="nc" id="L85">					ps.close();</span>
+				}
+<span class="nc" id="L87">				db_conn.close();</span>
+
+<span class="nc" id="L89">				ps = null;</span>
+<span class="nc" id="L90">				db_conn = null;</span>
+			}
+<span class="nc" id="L92">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L94">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L101">						ps.close();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L103">						db_conn.close();</span>
+				}
+<span class="nc" id="L105">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L107">				}</span>
+			}
+		}
+<span class="nc" id="L110">		return true;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati identifikator vyhladavacieho stroja z tabulky seo_bots na zaklade jeho mena
+	 *
+	 * @param browserName meno vyhladavacieho bota, z ktoreho chceme urcit jeho identifikator
+	 * @return identifikator daneho vyhladavacieho stroja, ak taky stroj neexistuje, vrati 0
+	 */
+	public static int getSearchEngineId(String browserName)
+	{
+<span class="nc" id="L121">		Connection db_conn = null;</span>
+<span class="nc" id="L122">		PreparedStatement ps = null;</span>
+<span class="nc" id="L123">		ResultSet rs = null;</span>
+
+<span class="nc" id="L125">		int seoEnginesId = 0;</span>
+
+		try
+		{
+<span class="nc" id="L129">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L130">			ps = db_conn.prepareStatement(&quot;SELECT seo_bots_id FROM seo_bots WHERE name = ?&quot;);</span>
+<span class="nc" id="L131">			ps.setString(1, browserName);</span>
+<span class="nc" id="L132">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L135">				seoEnginesId = rs.getInt(&quot;seo_bots_id&quot;);</span>
+
+<span class="nc" id="L137">			rs.close();</span>
+<span class="nc" id="L138">			ps.close();</span>
+<span class="nc" id="L139">			db_conn.close();</span>
+<span class="nc" id="L140">			rs = null;</span>
+<span class="nc" id="L141">			ps = null;</span>
+<span class="nc" id="L142">			db_conn = null;</span>
+		}
+<span class="nc" id="L144">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L146">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L153">					rs.close();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L155">					ps.close();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L157">					db_conn.close();</span>
+			}
+<span class="nc" id="L159">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L161">			}</span>
+		}
+
+<span class="nc" id="L164">		return seoEnginesId;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati identifikator klucoveho slova z tabulky seo_keywords na zaklade jeho mena
+	 *
+	 * @param seoKeywordName nazov klucoveho slova, z ktoreho chceme urcit jeho identifikator
+	 * @return identifikator daneho klucoveho slova, ak take slovo neexistuje, vrati 0
+	 */
+	public static int getSeoKeywordId(String seoKeywordName)
+	{
+<span class="nc" id="L175">		Connection db_conn = null;</span>
+<span class="nc" id="L176">		PreparedStatement ps = null;</span>
+<span class="nc" id="L177">		ResultSet rs = null;</span>
+
+<span class="nc" id="L179">		int seoKeywordId = 0;</span>
+
+		try
+		{
+<span class="nc" id="L183">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L184">			ps = db_conn.prepareStatement(&quot;SELECT seo_keyword_id FROM seo_keywords WHERE name = ?&quot;);</span>
+<span class="nc" id="L185">			ps.setString(1, seoKeywordName);</span>
+<span class="nc" id="L186">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L189">				seoKeywordId = rs.getInt(&quot;seo_keyword_id&quot;);</span>
+
+<span class="nc" id="L191">			rs.close();</span>
+<span class="nc" id="L192">			ps.close();</span>
+<span class="nc" id="L193">			db_conn.close();</span>
+<span class="nc" id="L194">			rs = null;</span>
+<span class="nc" id="L195">			ps = null;</span>
+<span class="nc" id="L196">			db_conn = null;</span>
+		}
+<span class="nc" id="L198">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L200">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L206" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L207">					rs.close();</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L209">					ps.close();</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L211">					db_conn.close();</span>
+			}
+<span class="nc" id="L213">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L215">			}</span>
+		}
+
+<span class="nc" id="L218">		return seoKeywordId;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati aktualnu (najnovsie zaznamenanu) poziciu daneho klucoveho slova vo vyhladavani pre jeho domenu na vyhladavaci, ktory bol urceny pri vytvarani
+	 *
+	 * @param 	seoKeywordId identifikator klucoveho slova, ktoreho aktualnu poziciu chceme zistit
+	 * @return 	aktualna (najnovsie zaznamenana) pozicia daneho klucoveho slova vo vyhladavani pre jeho domenu na vyhladavaci, ktory bol urceny pri vytvarani
+	 */
+	public static Column getActualPosition(int seoKeywordId)
+	{
+<span class="nc" id="L229">		Connection db_conn = null;</span>
+<span class="nc" id="L230">		PreparedStatement ps = null;</span>
+<span class="nc" id="L231">		ResultSet rs = null;</span>
+
+<span class="nc" id="L233">		Column actualPosition = new Column();</span>
+
+		try
+		{
+<span class="nc" id="L237">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L239">			String sql = &quot;SELECT position, search_datetime FROM seo_google_position WHERE keyword_id = ? ORDER BY search_datetime DESC&quot;;</span>
+
+<span class="nc" id="L241">			ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L242">			ps.setInt(1, seoKeywordId);</span>
+<span class="nc" id="L243">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L247">				actualPosition.setIntColumn1(rs.getInt(&quot;position&quot;));</span>
+<span class="nc" id="L248">				actualPosition.setDateColumn1(rs.getTimestamp(&quot;search_datetime&quot;));</span>
+			}
+
+<span class="nc" id="L251">			rs.close();</span>
+<span class="nc" id="L252">			ps.close();</span>
+<span class="nc" id="L253">			db_conn.close();</span>
+<span class="nc" id="L254">			rs = null;</span>
+<span class="nc" id="L255">			ps = null;</span>
+<span class="nc" id="L256">			db_conn = null;</span>
+		}
+<span class="nc" id="L258">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L260">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L266" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L267">					rs.close();</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L269">					ps.close();</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L271">					db_conn.close();</span>
+			}
+<span class="nc" id="L273">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L275">			}</span>
+		}
+
+<span class="nc" id="L278">		return actualPosition;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati nazov klucoveho slova z tabulky seo_keywords na zaklade jeho identifikatora
+	 *
+	 * @param seoKeywordId id klucoveho slova, z ktoreho chceme urcit jeho nazov
+	 * @return meno daneho klucoveho slova, ak take slovo neexistuje, vrati null
+	 */
+	public static String getSeoKeywordName(int seoKeywordId)
+	{
+<span class="nc" id="L289">		Connection db_conn = null;</span>
+<span class="nc" id="L290">		PreparedStatement ps = null;</span>
+<span class="nc" id="L291">		ResultSet rs = null;</span>
+
+<span class="nc" id="L293">		String seoKeywordName = null;</span>
+
+		try
+		{
+<span class="nc" id="L297">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L298">			ps = db_conn.prepareStatement(&quot;SELECT name FROM seo_keywords WHERE seo_keyword_id = ?&quot;);</span>
+<span class="nc" id="L299">			ps.setInt(1, seoKeywordId);</span>
+<span class="nc" id="L300">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L302" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L303">				seoKeywordName = rs.getString(&quot;name&quot;);</span>
+
+<span class="nc" id="L305">			rs.close();</span>
+<span class="nc" id="L306">			ps.close();</span>
+<span class="nc" id="L307">			db_conn.close();</span>
+<span class="nc" id="L308">			rs = null;</span>
+<span class="nc" id="L309">			ps = null;</span>
+<span class="nc" id="L310">			db_conn = null;</span>
+		}
+<span class="nc" id="L312">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L314">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L320" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L321">					rs.close();</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L323">					ps.close();</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L325">					db_conn.close();</span>
+			}
+<span class="nc" id="L327">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L329">			}</span>
+		}
+
+<span class="nc" id="L332">		return seoKeywordName;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati naplneny bean klucoveho slova z tabulky seo_keywords na zaklade jeho identifikatora
+	 *
+	 * @param seoKeywordId id klucoveho slova, z ktoreho chceme urcit jeho vlastnosti
+	 * @return klucove slovo, ak take slovo neexistuje, vrati null
+	 */
+	public static SeoKeyword getSeoKeyword(int seoKeywordId)
+	{
+<span class="nc" id="L343">		Connection db_conn = null;</span>
+<span class="nc" id="L344">		PreparedStatement ps = null;</span>
+<span class="nc" id="L345">		ResultSet rs = null;</span>
+
+<span class="nc" id="L347">		SeoKeyword seoKeyword = new SeoKeyword();</span>
+
+		try
+		{
+<span class="nc" id="L351">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L352">			ps = db_conn.prepareStatement(&quot;SELECT * FROM seo_keywords WHERE seo_keyword_id = ?&quot;);</span>
+
+<span class="nc" id="L354">			int psCounter = 1;</span>
+
+<span class="nc" id="L356">			ps.setInt(psCounter, seoKeywordId);</span>
+<span class="nc" id="L357">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L361">				seoKeyword.setName(rs.getString(&quot;name&quot;));</span>
+<span class="nc" id="L362">				seoKeyword.setDomain(rs.getString(&quot;domain&quot;));</span>
+<span class="nc" id="L363">				seoKeyword.setAuthor(UsersDB.getUser(rs.getInt(&quot;author&quot;)));</span>
+<span class="nc" id="L364">				seoKeyword.setSeoKeywordId(rs.getInt(&quot;seo_keyword_id&quot;));</span>
+<span class="nc" id="L365">				seoKeyword.setCreatedTime(rs.getTimestamp(&quot;created_time&quot;));</span>
+<span class="nc" id="L366">				seoKeyword.setSearchBot(rs.getString(&quot;search_bot&quot;));</span>
+			}
+
+<span class="nc" id="L369">			rs.close();</span>
+<span class="nc" id="L370">			ps.close();</span>
+<span class="nc" id="L371">			db_conn.close();</span>
+<span class="nc" id="L372">			rs = null;</span>
+<span class="nc" id="L373">			ps = null;</span>
+<span class="nc" id="L374">			db_conn = null;</span>
+		}
+<span class="nc" id="L376">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L378">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L385">					rs.close();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L387">					ps.close();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L389">					db_conn.close();</span>
+			}
+<span class="nc" id="L391">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L393">			}</span>
+		}
+
+<span class="nc" id="L396">		return seoKeyword;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati nazov vyhladavacieho stroja na zaklade jeho identifikatora z tabulky seo_bots
+	 *
+	 * @param 	browserId identifikator vyhladavacieho stroja, ktoreho meno sa chceme dozvediet
+	 * @return 	nazov daneho vyhladavacieho stroja, ak neexistuje, vrati null
+	 */
+	public static String getSearchEngineName(int browserId)
+	{
+<span class="nc" id="L407">		Connection db_conn = null;</span>
+<span class="nc" id="L408">		PreparedStatement ps = null;</span>
+<span class="nc" id="L409">		ResultSet rs = null;</span>
+
+<span class="nc" id="L411">		String seoEnginesName = null;</span>
+
+		try
+		{
+<span class="nc" id="L415">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L416">			ps = db_conn.prepareStatement(&quot;SELECT name FROM seo_bots WHERE seo_bots_id = ?&quot;);</span>
+<span class="nc" id="L417">			ps.setInt(1, browserId);</span>
+<span class="nc" id="L418">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L420" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L421">				seoEnginesName = rs.getString(&quot;name&quot;);</span>
+
+<span class="nc" id="L423">			rs.close();</span>
+<span class="nc" id="L424">			ps.close();</span>
+<span class="nc" id="L425">			db_conn.close();</span>
+<span class="nc" id="L426">			rs = null;</span>
+<span class="nc" id="L427">			ps = null;</span>
+<span class="nc" id="L428">			db_conn = null;</span>
+		}
+<span class="nc" id="L430">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L432">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L438" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L439">					rs.close();</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L441">					ps.close();</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L443">					db_conn.close();</span>
+			}
+<span class="nc" id="L445">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L447">			}</span>
+		}
+
+<span class="nc" id="L450">		return seoEnginesName;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky klucove slova pouzivane pri SEO z tabulky seo_keywords pre daneho autora bez ohladu na domenu
+	 *
+	 * @param 	author 	identifikator pouzivatela, podla ktoreho sa filtruju klucove slova
+	 * @return 	zoznam klucovych slov, ak je identifikator autora -1, vrati vsetky zaznamy klucovych slov
+	 */
+	public static List&lt;SeoKeyword&gt; getSeoKeywords(int author)
+	{
+<span class="nc" id="L461">		return (SeoManager.getSeoKeywords(author, &quot;&quot;, &quot;&quot;));</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky klucove slova pouzivane pri SEO z tabulky seo_keywords bez ohladu na vyhladavaci stroj
+	 *
+	 * @param 	author 	identifikator pouzivatela, podla ktoreho sa filtruju klucove slova
+	 * @param	domain	domena, podla ktorej sa maju vyfiltrovat klucove slova
+	 *
+	 * @return 	zoznam klucovych slov, ak je identifikator autora -1, vrati vsetky zaznamy klucovych slov
+	 */
+	public static List&lt;SeoKeyword&gt; getSeoKeywords(int author, String domain)
+	{
+<span class="nc" id="L474">		return (SeoManager.getSeoKeywords(author, domain, &quot;&quot;));</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky klucove slova pouzivane pri SEO z tabulky seo_keywords
+	 *
+	 * @param 	author 		identifikator pouzivatela, podla ktoreho sa filtruju klucove slova
+	 * @param	domain		domena, podla ktorej sa maju vyfiltrovat klucove slova
+	 * @param	searchBot	vyhladavac, podla ktoreho sa vyfiltruju klucove slova
+	 *
+	 *
+	 * @return 	zoznam klucovych slov, ak je identifikator autora -1, vrati vsetky zaznamy klucovych slov
+	 */
+	public static List&lt;SeoKeyword&gt; getSeoKeywords(int author, String domain, String searchBot)
+	{
+<span class="nc" id="L489">		Connection db_conn = null;</span>
+<span class="nc" id="L490">		PreparedStatement ps = null;</span>
+<span class="nc" id="L491">		ResultSet rs = null;</span>
+
+<span class="nc bnc" id="L493" title="All 2 branches missed.">		if (domain == null)</span>
+<span class="nc" id="L494">			domain = &quot;&quot;;</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">		if (searchBot == null)</span>
+<span class="nc" id="L496">			searchBot = &quot;&quot;;</span>
+
+<span class="nc" id="L498">		List&lt;SeoKeyword&gt; seoKeywords = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L499">		String sql = &quot;SELECT * FROM seo_keywords WHERE seo_keyword_id &gt; 0&quot;;</span>
+
+<span class="nc bnc" id="L501" title="All 4 branches missed.">		if (author &gt; 0 &amp;&amp; Tools.isNotEmpty(domain))</span>
+<span class="nc" id="L502">			sql +=&quot; AND author=? AND domain=?&quot;;</span>
+<span class="nc bnc" id="L503" title="All 4 branches missed.">		else if (author &gt; 0 &amp;&amp; Tools.isEmpty(domain))</span>
+<span class="nc" id="L504">			sql +=&quot; AND author=?&quot;;</span>
+<span class="nc bnc" id="L505" title="All 4 branches missed.">		else if (author &lt; 0 &amp;&amp; Tools.isNotEmpty(domain))</span>
+<span class="nc" id="L506">			sql +=&quot; AND domain=?&quot;;</span>
+
+<span class="nc bnc" id="L508" title="All 2 branches missed.">		if(Tools.isNotEmpty(searchBot))</span>
+<span class="nc" id="L509">			sql += &quot; AND search_bot=?&quot;;</span>
+
+<span class="nc" id="L511">		sql += &quot; ORDER BY created_time DESC&quot;;</span>
+		try
+		{
+<span class="nc" id="L514">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L515">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L516">			int psCounter = 1;</span>
+<span class="nc bnc" id="L517" title="All 4 branches missed.">			if (author &gt; 0 &amp;&amp; Tools.isNotEmpty(domain))</span>
+			{
+<span class="nc" id="L519">				ps.setInt(psCounter++, author);</span>
+<span class="nc" id="L520">				ps.setString(psCounter++, domain);</span>
+			}
+<span class="nc bnc" id="L522" title="All 4 branches missed.">			else if (author &gt; 0 &amp;&amp; Tools.isEmpty(domain))</span>
+<span class="nc" id="L523">				ps.setInt(psCounter++, author);</span>
+<span class="nc bnc" id="L524" title="All 4 branches missed.">			else if (author &lt; 0 &amp;&amp; Tools.isNotEmpty(domain))</span>
+<span class="nc" id="L525">				ps.setString(psCounter++, domain);</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">			if(Tools.isNotEmpty(searchBot))</span>
+<span class="nc" id="L527">				ps.setString(psCounter++, searchBot);</span>
+
+<span class="nc" id="L529">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L531" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L533">				SeoKeyword seoKeyword = new SeoKeyword();</span>
+<span class="nc" id="L534">				seoKeyword.setSeoKeywordId(rs.getInt(&quot;seo_keyword_id&quot;));</span>
+<span class="nc" id="L535">				seoKeyword.setName(rs.getString(&quot;name&quot;));</span>
+<span class="nc" id="L536">				seoKeyword.setDomain(rs.getString(&quot;domain&quot;));</span>
+<span class="nc" id="L537">				seoKeyword.setCreatedTime(rs.getTimestamp(&quot;created_time&quot;));</span>
+<span class="nc" id="L538">				seoKeyword.setAuthor(UsersDB.getUser(rs.getInt(&quot;author&quot;)));</span>
+<span class="nc" id="L539">				seoKeyword.setSearchBot(rs.getString(&quot;search_bot&quot;));</span>
+
+<span class="nc" id="L541">				seoKeywords.add(seoKeyword);</span>
+<span class="nc" id="L542">			}</span>
+
+<span class="nc" id="L544">			rs.close();</span>
+<span class="nc" id="L545">			ps.close();</span>
+<span class="nc" id="L546">			db_conn.close();</span>
+<span class="nc" id="L547">			rs = null;</span>
+<span class="nc" id="L548">			ps = null;</span>
+<span class="nc" id="L549">			db_conn = null;</span>
+		}
+<span class="nc" id="L551">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L553">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L559" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L560">					rs.close();</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L562">					ps.close();</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L564">					db_conn.close();</span>
+			}
+<span class="nc" id="L566">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L568">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L569">			}</span>
+		}
+
+<span class="nc" id="L572">		return (seoKeywords);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky ROZNE klucove slova podla mena pouzivane pri SEO z tabulky seo_keywords
+	 *
+	 * @return 	zoznam ROZNYCH klucovych slov podla mena
+	 */
+	public static List&lt;String&gt; getDistinctSeoKeywords()
+	{
+<span class="nc" id="L582">		Connection db_conn = null;</span>
+<span class="nc" id="L583">		PreparedStatement ps = null;</span>
+<span class="nc" id="L584">		ResultSet rs = null;</span>
+
+<span class="nc" id="L586">		List&lt;String&gt; seoKeywords = new ArrayList&lt;&gt;();</span>
+		String sql;
+
+<span class="nc" id="L589">		sql =&quot;SELECT DISTINCT name FROM seo_keywords ORDER BY name ASC&quot;;</span>
+
+		try
+		{
+<span class="nc" id="L593">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L594">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L596">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L598" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L599">				seoKeywords.add(rs.getString(&quot;name&quot;));</span>
+
+<span class="nc" id="L601">			rs.close();</span>
+<span class="nc" id="L602">			ps.close();</span>
+<span class="nc" id="L603">			db_conn.close();</span>
+<span class="nc" id="L604">			rs = null;</span>
+<span class="nc" id="L605">			ps = null;</span>
+<span class="nc" id="L606">			db_conn = null;</span>
+		}
+<span class="nc" id="L608">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L610">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L616" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L617">					rs.close();</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L619">					ps.close();</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L621">					db_conn.close();</span>
+			}
+<span class="nc" id="L623">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L625">			}</span>
+		}
+
+<span class="nc" id="L628">		return (seoKeywords);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky klucove slova, ktore maju rovnake meno, ale lisia sa v domene a su pouzivane pri SEO z tabulky seo_keywords
+	 *
+	 * @param	name	nazov klucoveho slova, podla ktoreho hladame klucove slova, ktore sa rovnako volaju, ale maju prednastavenu inu domenu
+	 *
+	 * @return 	zoznam klucovych slov(bean SeoKeyword), ktore maju rovnake meno ako je vstupny parameter name, ale lisia sa v domene
+	 */
+	public static List&lt;SeoKeyword&gt; getSameSeoKeywords(String name)
+	{
+<span class="nc" id="L640">		Connection db_conn = null;</span>
+<span class="nc" id="L641">		PreparedStatement ps = null;</span>
+<span class="nc" id="L642">		ResultSet rs = null;</span>
+
+<span class="nc" id="L644">		List&lt;SeoKeyword&gt; seoKeywords = new ArrayList&lt;&gt;();</span>
+		String sql;
+
+<span class="nc" id="L647">		sql =&quot;SELECT * FROM seo_keywords WHERE name = ?&quot;;</span>
+
+		try
+		{
+<span class="nc" id="L651">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L652">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L654">			int psCounter = 1;</span>
+<span class="nc" id="L655">			ps.setString(psCounter++, name);</span>
+
+<span class="nc" id="L657">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L659" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L661">				SeoKeyword seoKeyword = new SeoKeyword();</span>
+
+<span class="nc" id="L663">				seoKeyword.setSeoKeywordId(rs.getInt(&quot;seo_keyword_id&quot;));</span>
+<span class="nc" id="L664">				seoKeyword.setName(rs.getString(&quot;name&quot;));</span>
+<span class="nc" id="L665">				seoKeyword.setDomain(rs.getString(&quot;domain&quot;));</span>
+<span class="nc" id="L666">				seoKeyword.setCreatedTime(rs.getTimestamp(&quot;created_time&quot;));</span>
+<span class="nc" id="L667">				seoKeyword.setAuthor(UsersDB.getUser(rs.getInt(&quot;author&quot;)));</span>
+
+<span class="nc" id="L669">				seoKeywords.add(seoKeyword);</span>
+<span class="nc" id="L670">			}</span>
+
+<span class="nc" id="L672">			rs.close();</span>
+<span class="nc" id="L673">			ps.close();</span>
+<span class="nc" id="L674">			db_conn.close();</span>
+<span class="nc" id="L675">			rs = null;</span>
+<span class="nc" id="L676">			ps = null;</span>
+<span class="nc" id="L677">			db_conn = null;</span>
+		}
+<span class="nc" id="L679">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L681">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L687" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L688">					rs.close();</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L690">					ps.close();</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L692">					db_conn.close();</span>
+			}
+<span class="nc" id="L694">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L696">			}</span>
+		}
+
+<span class="nc" id="L699">		return (seoKeywords);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati mnozinu udajov, ktore su potrebne na vytvorenie stlpcoveho grafu zobrazujuceho pocet
+	 * vyhladavani klucovych slov (meno a pocet vyhladavani)
+	 *
+	 * @param from				dateTime, od ktoreho sa zapocitavaju vyhladavania
+	 * @param to				dateTime, do ktoreho sa zapocitavaju vyhladavania
+	 * @param typeDate		typ grafu, ak je 0 vyhladava vo vsetkych vyhladavaniach, ak 1 tak sa obmedzuje danym casom
+	 * @param viewsTitle		legenda ku grafu
+	 * @param size				pocet klucovych slov
+	 * @param addToQuery		retazec, ktory sa ma pridat ku sql query na zaklade filtrovania servera, z ktoreho sa uskutocnilo
+	 * 							vyhladavanie - moze byt pridane filtrovanie podla servera a aj podla docId
+	 *
+	 * @return 					mnozinu udajov, ktore su potrebne na vytvorenie stlpcoveho grafu zobrazujuceho pocet vyhladavani
+	 * 							klucovych slov (meno a pocet vyhladavani)
+	 */
+	public static List&lt;Column&gt; getFilterSeoKeywords(java.util.Date from, java.util.Date to, String serverName, int searchDocId, String groupIdsQuery)
+	{
+<span class="nc" id="L719">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L720">		List&lt;String&gt; seoKeywords = SeoManager.getDistinctSeoKeywords();</span>
+
+<span class="nc" id="L722">		Connection db_conn = null;</span>
+<span class="nc" id="L723">		ResultSet rs = null;</span>
+<span class="nc" id="L724">		PreparedStatement ps = null;</span>
+
+<span class="nc bnc" id="L726" title="All 4 branches missed.">		if (from != null &amp;&amp; to != null)</span>
+		{
+<span class="nc" id="L728">			String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L729" title="All 2 branches missed.">			for (int s=0; s&lt;suffixes.length; s++)</span>
+			{
+<span class="nc bnc" id="L731" title="All 2 branches missed.">				for (String seoKeyword : seoKeywords)</span>
+				{
+<span class="nc" id="L733">					db_conn = DBPool.getConnection();</span>
+					try
+					{
+<span class="nc" id="L736">						String sql = &quot;SELECT query, COUNT(query) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 AND query = ?&quot;;</span>
+
+						//if (from != null &amp;&amp; to != null)
+<span class="nc" id="L739">						   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+
+<span class="nc bnc" id="L741" title="All 2 branches missed.">						if (Tools.isNotEmpty(serverName))</span>
+<span class="nc" id="L742">							sql += &quot; AND server = ? &quot;;</span>
+
+<span class="nc bnc" id="L744" title="All 2 branches missed.">						if (searchDocId &gt; 0)</span>
+<span class="nc" id="L745">							sql += &quot; AND doc_id = ? &quot;;</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">						if (groupIdsQuery != null)</span>
+<span class="nc" id="L747">							sql += groupIdsQuery;</span>
+
+<span class="nc" id="L749">						sql += &quot; GROUP BY query&quot;;</span>
+<span class="nc" id="L750">						sql += &quot; ORDER BY total DESC&quot;;</span>
+						//System.out.println(&quot;\n&quot;+seoKeyword+&quot;\n&quot; + sql + &quot;\n\n&quot;);
+<span class="nc" id="L752">						ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L753">						int psCounter = 1;</span>
+
+<span class="nc" id="L755">						ps.setString(psCounter++, seoKeyword);</span>
+
+//						if (from != null &amp;&amp; to != null)
+//						{
+<span class="nc" id="L759">							ps.setTimestamp(psCounter++, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L760">							ps.setTimestamp(psCounter++, new Timestamp(to.getTime()));</span>
+//						}
+<span class="nc bnc" id="L762" title="All 2 branches missed.">						if (Tools.isNotEmpty(serverName))</span>
+<span class="nc" id="L763">							ps.setString(psCounter++, serverName);</span>
+
+<span class="nc bnc" id="L765" title="All 2 branches missed.">						if (searchDocId &gt; 0)</span>
+<span class="nc" id="L766">							ps.setInt(psCounter++, searchDocId);</span>
+
+<span class="nc" id="L768">						rs = ps.executeQuery();</span>
+
+<span class="nc" id="L770">						boolean isAdded = false;</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">						while(rs.next())</span>
+						{
+<span class="nc" id="L773">							String key = seoKeyword.toLowerCase();</span>
+<span class="nc" id="L774">							Number currentValue = map.get(key);</span>
+
+<span class="nc bnc" id="L776" title="All 2 branches missed.">							if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
+<span class="nc" id="L777">							else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
+
+<span class="nc" id="L779">							isAdded = true;</span>
+<span class="nc" id="L780">						}</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">						if(!isAdded)</span>
+						{
+<span class="nc" id="L783">							String key = seoKeyword.toLowerCase();</span>
+<span class="nc" id="L784">							Number currentValue = map.get(key);</span>
+
+<span class="nc bnc" id="L786" title="All 2 branches missed.">							if (currentValue == null) map.put(key, 0);</span>
+						}
+
+<span class="nc" id="L789">						rs.close();</span>
+<span class="nc" id="L790">						ps.close();</span>
+<span class="nc" id="L791">						db_conn.close();</span>
+
+<span class="nc" id="L793">						rs = null;</span>
+<span class="nc" id="L794">						ps = null;</span>
+<span class="nc" id="L795">						db_conn = null;</span>
+
+					}
+<span class="nc" id="L798">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L800">						sk.iway.iwcm.Logger.error(ex);</span>
+					}
+					finally
+					{
+						try
+						{
+<span class="nc bnc" id="L806" title="All 2 branches missed.">							if (rs != null)</span>
+<span class="nc" id="L807">								rs.close();</span>
+<span class="nc bnc" id="L808" title="All 2 branches missed.">							if (ps != null)</span>
+<span class="nc" id="L809">								ps.close();</span>
+<span class="nc bnc" id="L810" title="All 2 branches missed.">							if (db_conn != null)</span>
+<span class="nc" id="L811">								db_conn.close();</span>
+						}
+<span class="nc" id="L813">						catch (Exception ex2)</span>
+						{
+<span class="nc" id="L815">							sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L816">						}</span>
+					}
+
+<span class="nc" id="L819">				}</span>
+			}
+		}
+
+<span class="nc" id="L823">		List&lt;Column&gt; filterSeoKeywords = new ArrayList&lt;&gt;();</span>
+
+		try
+		{
+			//je mozne, ze tam mame viac ako max zaznamov, upracme a povazujme to za &quot;ostatne&quot;
+<span class="nc" id="L828">			map = StatDB.sortByValue(map);</span>
+
+<span class="nc" id="L830">			Set&lt;Map.Entry&lt;String, Number&gt;&gt; set = map.entrySet();</span>
+<span class="nc bnc" id="L831" title="All 2 branches missed.">			for (Map.Entry&lt;String, Number&gt; me : set){</span>
+<span class="nc" id="L832">				String key = me.getKey();</span>
+<span class="nc" id="L833">				Number value = me.getValue();</span>
+
+<span class="nc" id="L835">				Logger.debug(StatDB.class, &quot;getFilterSeoKeywords: key=&quot;+key+&quot; value=&quot;+value);</span>
+
+<span class="nc" id="L837">				Column col = new Column();</span>
+<span class="nc" id="L838">				col.setColumn1(key);</span>
+<span class="nc" id="L839">				col.setIntColumn1(value.intValue());</span>
+
+<span class="nc" id="L841">				filterSeoKeywords.add(col);</span>
+<span class="nc" id="L842">			}</span>
+		}
+<span class="nc" id="L844">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L846">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L847">		}</span>
+
+
+
+<span class="nc" id="L851">		return (filterSeoKeywords);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati List, v ktorom budu ulozene dvojice: nazov klucoveho slova a pocet vyskytov na stranke resp. skupiny stranok
+	 *
+	 * @param searchDodId	Identifikator stranky, na ktorej zisti vyskyt klucovych slov
+	 * @param groupIdsQuery	Retazec, ktory sa pridava na koniec query, zisti vyskyt klucovych slov v skupine stranok
+
+	 * @return 					Vrati List, v ktorom budu ulozene dvojice: nazov klucoveho slova a pocet vyskytov na stranke resp. skupiny stranok
+	 */
+	public static List&lt;Column&gt; getNumberSeoKeywordsOnPage(int searchDocId, String groupIdsQuery)
+	{
+<span class="nc" id="L864">		List&lt;Column&gt; filterSeoKeywords = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L865">		List&lt;String&gt; seoKeywords = SeoManager.getDistinctSeoKeywords();</span>
+
+<span class="nc bnc" id="L867" title="All 4 branches missed.">		if(seoKeywords.isEmpty() || groupIdsQuery == null)</span>
+<span class="nc" id="L868">			return filterSeoKeywords;</span>
+
+<span class="nc" id="L870">		int counter = 0;</span>
+<span class="nc" id="L871">		int tempCount = 0;</span>
+
+<span class="nc" id="L873">		Connection db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L874">		ResultSet rs = null;</span>
+<span class="nc" id="L875">		PreparedStatement ps = null;</span>
+
+		try
+		{
+<span class="nc bnc" id="L879" title="All 2 branches missed.">			for (String seoKeyword : seoKeywords)</span>
+			{
+<span class="nc" id="L881">				String sql = &quot;SELECT data_asc, title FROM documents WHERE (data_asc LIKE ? OR title LIKE ?) &quot;;</span>
+
+<span class="nc bnc" id="L883" title="All 2 branches missed.">				if (searchDocId &gt; 0)</span>
+<span class="nc" id="L884">					sql += &quot; AND doc_id = ? &quot;;</span>
+<span class="nc bnc" id="L885" title="All 4 branches missed.">				else if (Tools.isNotEmpty(groupIdsQuery) &amp;&amp; groupIdsQuery != null)</span>
+<span class="nc" id="L886">					sql += (&quot; &quot; + groupIdsQuery);</span>
+
+<span class="nc" id="L888">				ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+
+<span class="nc" id="L890">				int psCounter = 1;</span>
+<span class="nc" id="L891">				ps.setString(psCounter++, &quot;%&quot;+DB.internationalToEnglish(seoKeyword.toLowerCase())+&quot;%&quot;);</span>
+<span class="nc" id="L892">				ps.setString(psCounter++, &quot;%&quot;+seoKeyword+&quot;%&quot;);</span>
+
+<span class="nc bnc" id="L894" title="All 2 branches missed.">				if (searchDocId &gt; 0)</span>
+<span class="nc" id="L895">					ps.setInt(psCounter++, searchDocId);</span>
+
+<span class="nc" id="L897">				rs = ps.executeQuery();</span>
+
+				//data.clear();
+<span class="nc" id="L900">				tempCount = 0;</span>
+<span class="nc" id="L901">				counter = 0;</span>
+<span class="nc" id="L902">				int counter2 = 0;</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L905">					counter += Tools.getNumberSubstring((DB.internationalToEnglish(rs.getString(&quot;title&quot;)) + &quot; &quot; + DB.getDbString(rs, &quot;data_asc&quot;)), DB.internationalToEnglish(seoKeyword.toLowerCase()));</span>
+<span class="nc" id="L906">					counter2 += getNumberSubstringNoBoundary((DB.internationalToEnglish(rs.getString(&quot;title&quot;)) + &quot; &quot; + DB.getDbString(rs, &quot;data_asc&quot;)), DB.internationalToEnglish(seoKeyword.toLowerCase()));</span>
+<span class="nc" id="L907">					tempCount++;</span>
+				}
+
+<span class="nc" id="L910">				Column col = new Column();</span>
+<span class="nc" id="L911">				col.setColumn1(seoKeyword.toLowerCase());</span>
+<span class="nc" id="L912">				col.setIntColumn2(tempCount);</span>
+<span class="nc" id="L913">				col.setIntColumn1(counter);</span>
+<span class="nc" id="L914">				col.setIntColumn3(counter2);</span>
+
+<span class="nc" id="L916">				filterSeoKeywords.add(col);</span>
+<span class="nc" id="L917">			}</span>
+
+<span class="nc bnc" id="L919" title="All 2 branches missed.">			if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L920" title="All 2 branches missed.">			if (ps != null) ps.close();</span>
+<span class="nc" id="L921">			db_conn.close();</span>
+
+<span class="nc" id="L923">			rs = null;</span>
+<span class="nc" id="L924">			ps = null;</span>
+<span class="nc" id="L925">			db_conn = null;</span>
+		}
+<span class="nc" id="L927">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L929">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L935" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L936">					rs.close();</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L938">					ps.close();</span>
+<span class="nc bnc" id="L939" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L940">					db_conn.close();</span>
+			}
+<span class="nc" id="L942">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L944">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L945">			}</span>
+		}
+
+<span class="nc" id="L948">		return (filterSeoKeywords);</span>
+	}
+
+	public static int getNumberSubstringNoBoundary(String src, String subString)
+	{
+<span class="nc bnc" id="L953" title="All 2 branches missed.">		if (src == null)</span>
+<span class="nc" id="L954">			return (-1);</span>
+
+<span class="nc bnc" id="L956" title="All 6 branches missed.">		if (src.indexOf(subString) == -1 || src.isEmpty() || subString.isEmpty())</span>
+<span class="nc" id="L957">			return (0);</span>
+
+<span class="nc" id="L959">	   int counter = 0;</span>
+<span class="nc" id="L960">	   Pattern p = Pattern.compile(subString);</span>
+<span class="nc" id="L961">	   Matcher m = p.matcher(src); // v com sa to ma matchovat</span>
+
+<span class="nc bnc" id="L963" title="All 2 branches missed.">	   while(m.find())</span>
+<span class="nc" id="L964">	   	counter++;</span>
+
+<span class="nc" id="L966">		return (counter);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetkych roznych pouzivatelov, ktori pridali klucove slovo kvoli moznosti filtracie
+	 *
+	 * @return zoznam unikatnych pouzivatelov, ktori pridali klucove slovo
+	 */
+	public static List&lt;Column&gt; getUniqueAuthors()
+	{
+<span class="nc" id="L976">		Connection db_conn = null;</span>
+<span class="nc" id="L977">		PreparedStatement ps = null;</span>
+<span class="nc" id="L978">		ResultSet rs = null;</span>
+
+<span class="nc" id="L980">		List&lt;Column&gt; seoUsers = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L981">		String sql =&quot;SELECT DISTINCT author FROM seo_keywords&quot;;</span>
+		int tempAuthor;
+
+		try
+		{
+<span class="nc" id="L986">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L987">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L988">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L990" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L992">				Column seoUser = new Column();</span>
+<span class="nc" id="L993">				tempAuthor = rs.getInt(&quot;author&quot;);</span>
+<span class="nc" id="L994">				seoUser.setIntColumn1(tempAuthor);</span>
+<span class="nc" id="L995">				seoUser.setColumn1(UsersDB.getUser(tempAuthor).getFullName());</span>
+
+<span class="nc" id="L997">				seoUsers.add(seoUser);</span>
+<span class="nc" id="L998">			}</span>
+
+<span class="nc" id="L1000">			rs.close();</span>
+<span class="nc" id="L1001">			ps.close();</span>
+<span class="nc" id="L1002">			db_conn.close();</span>
+<span class="nc" id="L1003">			rs = null;</span>
+<span class="nc" id="L1004">			ps = null;</span>
+<span class="nc" id="L1005">			db_conn = null;</span>
+		}
+<span class="nc" id="L1007">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1009">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1016">					rs.close();</span>
+<span class="nc bnc" id="L1017" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1018">					ps.close();</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1020">					db_conn.close();</span>
+			}
+<span class="nc" id="L1022">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1024">			}</span>
+		}
+
+<span class="nc" id="L1027">		return (seoUsers);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky rozne domeny, pre ktore sa pridali klucove slova kvoli moznosti filtracie
+	 *
+	 * @return zoznam unikatnych domen, pre ktore sa pridali klucove slova
+	 */
+	public static List&lt;String&gt; getUniqueDomains()
+	{
+<span class="nc" id="L1037">		Connection db_conn = null;</span>
+<span class="nc" id="L1038">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1039">		ResultSet rs = null;</span>
+
+<span class="nc" id="L1041">		List&lt;String&gt; seoDomains = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1042">		String sql =&quot;SELECT DISTINCT domain FROM seo_keywords&quot;;</span>
+
+		try
+		{
+<span class="nc" id="L1046">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1047">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1048">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L1051">				seoDomains.add(rs.getString(&quot;domain&quot;));</span>
+
+<span class="nc" id="L1053">			rs.close();</span>
+<span class="nc" id="L1054">			ps.close();</span>
+<span class="nc" id="L1055">			db_conn.close();</span>
+<span class="nc" id="L1056">			rs = null;</span>
+<span class="nc" id="L1057">			ps = null;</span>
+<span class="nc" id="L1058">			db_conn = null;</span>
+		}
+<span class="nc" id="L1060">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1062">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1068" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1069">					rs.close();</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1071">					ps.close();</span>
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1073">					db_conn.close();</span>
+			}
+<span class="nc" id="L1075">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1077">			}</span>
+		}
+
+<span class="nc" id="L1080">		return (seoDomains);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati vsetky rozne vyhladavace, pre ktore sa pridali klucove slova kvoli moznosti filtracie
+	 *
+	 * @return zoznam unikatnych vyhladavacov, pre ktore sa pridali klucove slova
+	 */
+	public static List&lt;String&gt; getUniqueSearchBots()
+	{
+<span class="nc" id="L1090">		Connection db_conn = null;</span>
+<span class="nc" id="L1091">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1092">		ResultSet rs = null;</span>
+
+<span class="nc" id="L1094">		List&lt;String&gt; seoSearchBots = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1095">		String sql =&quot;SELECT DISTINCT search_bot FROM seo_keywords&quot;;</span>
+
+		try
+		{
+<span class="nc" id="L1099">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1100">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1101">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L1103" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L1104">				seoSearchBots.add(DB.getDbString(rs, &quot;search_bot&quot;));</span>
+
+<span class="nc" id="L1106">			rs.close();</span>
+<span class="nc" id="L1107">			ps.close();</span>
+<span class="nc" id="L1108">			db_conn.close();</span>
+<span class="nc" id="L1109">			rs = null;</span>
+<span class="nc" id="L1110">			ps = null;</span>
+<span class="nc" id="L1111">			db_conn = null;</span>
+		}
+<span class="nc" id="L1113">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1115">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1122">					rs.close();</span>
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1124">					ps.close();</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1126">					db_conn.close();</span>
+			}
+<span class="nc" id="L1128">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1130">			}</span>
+		}
+
+<span class="nc" id="L1133">		return (seoSearchBots);</span>
+	}
+
+	/**
+ 	 * Vymaze klucove slovo z tabulky seo_keywords
+ 	 *
+ 	 * @param seoKeywordId - identifikacne cislo klucoveho slova, ktore chceme vymazat
+ 	 * @return true ak vymazanie z databazy prebehlo v poriadku, inak false
+ 	 */
+	public static boolean deleteSeoKeyword(int seoKeywordId)
+	{
+<span class="nc" id="L1144">		boolean returnValue = false; //neuspech</span>
+
+<span class="nc" id="L1146">		Connection db_conn = null;</span>
+<span class="nc" id="L1147">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1150">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1151">			ps = db_conn.prepareStatement(&quot;DELETE FROM seo_keywords WHERE seo_keyword_id = ?&quot;);</span>
+
+<span class="nc" id="L1153">			int psCounter = 1;</span>
+<span class="nc" id="L1154">			ps.setInt(psCounter++, seoKeywordId);</span>
+
+<span class="nc" id="L1156">			int delRows = ps.executeUpdate();</span>
+
+<span class="nc bnc" id="L1158" title="All 2 branches missed.">			if (delRows &gt; 0)</span>
+<span class="nc" id="L1159">				returnValue = true;</span>
+
+<span class="nc" id="L1161">			ps.close();</span>
+<span class="nc" id="L1162">			db_conn.close();</span>
+<span class="nc" id="L1163">			ps = null;</span>
+<span class="nc" id="L1164">			db_conn = null;</span>
+		}
+<span class="nc" id="L1166">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L1168">			returnValue = false; // nepodarilo sa vymazat</span>
+<span class="nc" id="L1169">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1176">					ps.close();</span>
+<span class="nc bnc" id="L1177" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1178">					db_conn.close();</span>
+			}
+<span class="nc" id="L1180">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1182">			}</span>
+		}
+<span class="nc" id="L1184">		return returnValue;</span>
+	}
+
+	/**
+	 * Ulozi nove klucove slovo do databazy
+	 *
+	 * @param  	seoKeyword		bean s vlastnostami klucoveho slova
+	 * @param	loggedUserId 	pouzivatel, ktory slovo vytvoril a ulozil
+	 * @return	true, ak sa zapis zaznamu do tabulky prebehne v poriadku, inak false
+	 */
+	public static boolean saveSeoKeyword(SeoKeyword seoKeyword, int loggedUserId)
+	{
+<span class="nc" id="L1196">		boolean saveOK = false;</span>
+
+<span class="nc bnc" id="L1198" title="All 2 branches missed.">		if (seoKeyword == null)</span>
+<span class="nc" id="L1199">			return saveOK;</span>
+
+<span class="nc" id="L1201">		Connection db_conn = null;</span>
+<span class="nc" id="L1202">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1205">			String sql = &quot;INSERT INTO seo_keywords (name, domain, created_time, author, search_bot) VALUES (?, ?, ?, ?, ?)&quot;;</span>
+
+<span class="nc" id="L1207">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1208">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L1210">			int psCounter = 1;</span>
+<span class="nc" id="L1211">			ps.setString(psCounter++, seoKeyword.getName());</span>
+<span class="nc" id="L1212">			ps.setString(psCounter++, seoKeyword.getDomain());</span>
+<span class="nc" id="L1213">			ps.setTimestamp(psCounter++, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L1214">			ps.setInt(psCounter++, loggedUserId);</span>
+<span class="nc" id="L1215">			ps.setString(psCounter++, seoKeyword.getSearchBot());</span>
+
+<span class="nc" id="L1217">			int insRows = ps.executeUpdate();</span>
+
+<span class="nc bnc" id="L1219" title="All 2 branches missed.">			if (insRows &gt; 0)</span>
+<span class="nc" id="L1220">				saveOK = true;</span>
+
+<span class="nc" id="L1222">			ps.close();</span>
+<span class="nc" id="L1223">			db_conn.close();</span>
+<span class="nc" id="L1224">			ps = null;</span>
+<span class="nc" id="L1225">			db_conn = null;</span>
+
+		}
+<span class="nc" id="L1228">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1230">			saveOK = false;</span>
+<span class="nc" id="L1231">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1237" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1238">					ps.close();</span>
+<span class="nc bnc" id="L1239" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1240">					db_conn.close();</span>
+			}
+<span class="nc" id="L1242">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1244">			}</span>
+		}
+
+<span class="nc" id="L1247">		return saveOK;</span>
+	}
+
+	/**
+	 * Updejtne informacie o klucovom slove
+	 *
+	 * @param  	seoKeyword		bean s vlastnostami klucoveho slova
+	 * @param	loggedUserId 	pouzivatel, ktory slovo vytvoril a ulozil
+	 * @param	seoKeywordId	id klucoveho slova, ktore chceme aktualizovat
+	 *
+	 * @return	true, ak sa zapis zaznamu do tabulky prebehne v poriadku, inak false
+	 */
+	public static boolean saveSeoKeyword(SeoKeyword seoKeyword, int loggedUserId, int seoKeywordId)
+	{
+<span class="nc" id="L1261">		boolean saveOK = false;</span>
+
+<span class="nc bnc" id="L1263" title="All 2 branches missed.">		if (seoKeyword == null)</span>
+<span class="nc" id="L1264">			return saveOK;</span>
+
+<span class="nc" id="L1266">		Connection db_conn = null;</span>
+<span class="nc" id="L1267">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1270">			String sql = &quot;UPDATE seo_keywords SET name = ?, domain = ?, created_time = ?, author = ?, search_bot = ? WHERE seo_keyword_id = ?&quot;;</span>
+
+<span class="nc" id="L1272">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1273">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L1275">			int psCounter = 1;</span>
+<span class="nc" id="L1276">			ps.setString(psCounter++, seoKeyword.getName());</span>
+<span class="nc" id="L1277">			ps.setString(psCounter++, seoKeyword.getDomain());</span>
+<span class="nc" id="L1278">			ps.setTimestamp(psCounter++, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L1279">			ps.setInt(psCounter++, loggedUserId);</span>
+<span class="nc" id="L1280">			ps.setString(psCounter++, seoKeyword.getSearchBot());</span>
+<span class="nc" id="L1281">			ps.setInt(psCounter++, seoKeywordId);</span>
+
+<span class="nc" id="L1283">			int insRows = ps.executeUpdate();</span>
+
+<span class="nc bnc" id="L1285" title="All 2 branches missed.">			if (insRows &gt; 0)</span>
+<span class="nc" id="L1286">				saveOK = true;</span>
+
+<span class="nc" id="L1288">			ps.close();</span>
+<span class="nc" id="L1289">			db_conn.close();</span>
+<span class="nc" id="L1290">			ps = null;</span>
+<span class="nc" id="L1291">			db_conn = null;</span>
+
+		}
+<span class="nc" id="L1294">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1296">			saveOK = false;</span>
+<span class="nc" id="L1297">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1303" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1304">					ps.close();</span>
+<span class="nc bnc" id="L1305" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1306">					db_conn.close();</span>
+			}
+<span class="nc" id="L1308">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1310">			}</span>
+		}
+
+<span class="nc" id="L1313">		return saveOK;</span>
+	}
+
+	/**
+	 * Skontroluje, ci dane klucove slovo sa uz nenachadza v databaze
+	 *
+	 * @param 	seoKeyword bean s vlastnostami klucoveho slova (nazov, domena a vyhladavac)
+	 * @return	true, ak sa klucove slovo v tabulke nenachadza, inak false
+	 */
+	public static boolean isKeywordNonExist(SeoKeyword seoKeyword)
+	{
+<span class="nc" id="L1324">		boolean returnValue = true;</span>
+
+<span class="nc" id="L1326">		Connection db_conn = null;</span>
+<span class="nc" id="L1327">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1328">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1331">			String sql = &quot;SELECT * FROM seo_keywords WHERE name = ? AND domain = ? AND search_bot = ?&quot;;</span>
+
+<span class="nc" id="L1333">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1334">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L1336">			ps.setString(1, seoKeyword.getName());</span>
+<span class="nc" id="L1337">			ps.setString(2, seoKeyword.getDomain());</span>
+<span class="nc" id="L1338">			ps.setString(3, seoKeyword.getSearchBot());</span>
+
+<span class="nc" id="L1340">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1341" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L1342">				returnValue = false;</span>
+
+<span class="nc" id="L1344">			rs.close();</span>
+<span class="nc" id="L1345">			ps.close();</span>
+<span class="nc" id="L1346">			db_conn.close();</span>
+<span class="nc" id="L1347">			rs = null;</span>
+<span class="nc" id="L1348">			ps = null;</span>
+<span class="nc" id="L1349">			db_conn = null;</span>
+
+		}
+<span class="nc" id="L1352">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1354">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1360" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1361">					rs.close();</span>
+<span class="nc bnc" id="L1362" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1363">					ps.close();</span>
+<span class="nc bnc" id="L1364" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1365">					db_conn.close();</span>
+			}
+<span class="nc" id="L1367">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1369">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1370">			}</span>
+		}
+
+<span class="nc" id="L1373">		return returnValue;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati zoznam nazvov klucovych slov v tvare ('keyword1', 'keyword2', ... , 'keywordN') kvoli
+	 * doplneniu do sql query ku klauzule IN vo funkcii StatDB.getKeywordsBarData()
+	 *
+	 * @return zoznam nazvov klucovych slov zapisanych za sebou v Stringu oddelenych ciarkami
+	 */
+	public static String getKeywordsInQuery()
+	{
+<span class="nc" id="L1384">		StringBuilder returnString = new StringBuilder(&quot;(&quot;);</span>
+
+<span class="nc" id="L1386">		List&lt;String&gt; seoKeywords = SeoManager.getDistinctSeoKeywords();</span>
+<span class="nc bnc" id="L1387" title="All 2 branches missed.">		if (seoKeywords.size() == 0)</span>
+<span class="nc" id="L1388">			return (&quot;('')&quot;);</span>
+<span class="nc bnc" id="L1389" title="All 2 branches missed.">		for (String seoKeyword : seoKeywords)</span>
+		{
+<span class="nc" id="L1391">			returnString.append('\'').append(seoKeyword).append(&quot;', &quot;);</span>
+<span class="nc" id="L1392">		}</span>
+<span class="nc" id="L1393">		return (returnString.substring(0, (returnString.length() - 2)) + &quot;)&quot;); // odstrani poslednu ciarku a zakonci zatvorku</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati zoznam nazvov klucovych slov v poli String[] - vyuzitie v triede StatDB a vo funkcii
+	 * getKeywordsBarData na vykreslenie grafu
+	 *
+	 * @return zoznam nazvov klucovych slov zapisanych v poli String[]
+	 */
+	public static String[] getKeywordsNameInArray()
+	{
+<span class="nc" id="L1404">		List&lt;SeoKeyword&gt; seoKeywords = SeoManager.getSeoKeywords(-1);</span>
+<span class="nc" id="L1405">		String[] returnArray = new String[seoKeywords.size()];</span>
+
+<span class="nc bnc" id="L1407" title="All 2 branches missed.">		for (int i = 0; i &lt; returnArray.length; i++)</span>
+<span class="nc" id="L1408">			returnArray[i] = seoKeywords.get(i).getName();</span>
+
+<span class="nc" id="L1410">		return (returnArray);</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati zoznam nazvov klucovych slov oddelenych bodkociarkou - vyuzitie v triede
+	 * EditorForm pri nastavovani defaultnych klucovych slov pre kazdy dokument
+	 * @return
+	 */
+	public static String getKeywordNames()
+	{
+<span class="nc" id="L1420">		StringBuilder text = new StringBuilder();</span>
+
+<span class="nc bnc" id="L1422" title="All 2 branches missed.">		for (String keyword : getKeywordsNameInArray())</span>
+<span class="nc" id="L1423">			text.append(keyword).append(';');</span>
+
+<span class="nc" id="L1425">		return text.toString();</span>
+	}
+
+	/**
+	 * Funkcia, ktora precisti zadanu domenu pre dane klucove slovo o substring &quot;www&quot; a &quot;http://&quot; pripadne ich kombinaciu
+	 * kvoli jedinecnosti klucovych slov, ktore sa identifikuju prave dvojicou nazov domena
+	 *
+	 * @param 	seoKeyword bean klucoveho slova
+	 * @return	bean {@link SeoKeyword} s upravenou domenou
+	 */
+	public static SeoKeyword cleanupDomain(SeoKeyword seoKeyword)
+	{
+<span class="nc" id="L1437">		String domain = seoKeyword.getDomain();</span>
+<span class="nc" id="L1438">		domain = Tools.replace(domain, &quot;http://&quot;, &quot;&quot;);</span>
+<span class="nc" id="L1439">		domain = Tools.replace(domain, &quot;www.&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L1441">		seoKeyword.setDomain(domain);</span>
+
+<span class="nc" id="L1443">		return (seoKeyword);</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

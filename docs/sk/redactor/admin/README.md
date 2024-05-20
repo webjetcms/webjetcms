@@ -14,7 +14,6 @@ obsahuje nasledovné možnosti:
 
 - Výber domény s ktorou pracujete (pri viac doménovej inštalácii).
 - Odkaz na otvorenie pomocníka.
-- ![](icon-switch8.png ":no-zoom") Ikonu na prepnutie do starej verzie 8. Kliknutím na túto ikonu sa celá administrácia prepne do starej verzie 8. Pre prechod nazad do nového dizajnu zadajte do prehliadača adresu ```/admin/v9/```.
 - Meno aktuálne prihláseného používateľa, kliknutím na meno zobrazíte nasledovné možnosti:
   - Profil - upraviť vlastný profil (meno, email... - po zmene profilu je potrebné sa odhlásiť a znova prihlásiť).
   - Dvojstupňové overovanie - možnosť aktivovať dvoj stupňové overovanie pomocou aplikácie ```Google Authenticate``` pri prihlasovaní do administrácie. Zvyšuje sa tak bezpečnosť vášho konta, pretože okrem hesla je pre prihlásenie potrebné zadať aj kód z vášho mobilného zariadenia. Odporúčame nastaviť na všetky kontá, cez ktoré je možné spravovať používateľské účty a práva. Ak používate overovanie voči `ActiveDirectory/SSO` serveru môžete menu položku vypnúť nastavením konf. premennej `2factorAuthEnabled` na hodnotu `false`.

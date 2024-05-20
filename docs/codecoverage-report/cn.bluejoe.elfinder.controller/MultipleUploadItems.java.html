@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultipleUploadItems.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller</a> &gt; <span class="el_source">MultipleUploadItems.java</span></div><h1>MultipleUploadItems.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.io.IOUtils;
+
+/**
+ * this class stores upload files in the request attributes for later usage
+ * 
+ * @author bluejoe
+ *
+ */
+<span class="nc" id="L25">public class MultipleUploadItems</span>
+{
+<span class="nc" id="L27">	List&lt;FileItemStream&gt; _items = new ArrayList&lt;FileItemStream&gt;();</span>
+
+	public List&lt;FileItemStream&gt; items()
+	{
+<span class="nc" id="L31">		return _items;</span>
+	}
+
+	/**
+	 * find items with given form field name
+	 * 
+	 * @param itemName
+	 * @return
+	 */
+	public List&lt;FileItemStream&gt; items(String fieldName)
+	{
+<span class="nc" id="L42">		List&lt;FileItemStream&gt; filteredItems = new ArrayList&lt;FileItemStream&gt;();</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		for (FileItemStream fis : _items)</span>
+		{
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			if (fis.getFieldName().equals(fieldName))</span>
+<span class="nc" id="L46">				filteredItems.add(fis);</span>
+<span class="nc" id="L47">		}</span>
+
+<span class="nc" id="L49">		return filteredItems;</span>
+	}
+
+	public void addItem(FileItemStream fis)
+	{
+<span class="nc" id="L54">		_items.add(fis);</span>
+<span class="nc" id="L55">	}</span>
+
+	public void addItemProxy(final FileItemStream item) throws IOException
+	{
+<span class="nc" id="L59">		InputStream stream = item.openStream();</span>
+<span class="nc" id="L60">		ByteArrayOutputStream os = new ByteArrayOutputStream();</span>
+<span class="nc" id="L61">		IOUtils.copy(stream, os);</span>
+<span class="nc" id="L62">		final byte[] bs = os.toByteArray();</span>
+<span class="nc" id="L63">		stream.close();</span>
+
+<span class="nc" id="L65">		addItem((FileItemStream) Proxy.newProxyInstance(this.getClass()</span>
+<span class="nc" id="L66">				.getClassLoader(), new Class[] { FileItemStream.class },</span>
+				new InvocationHandler()
+<span class="nc" id="L68">				{</span>
+					@Override
+					public Object invoke(Object proxy, Method method,
+							Object[] args) throws Throwable
+					{
+<span class="nc bnc" id="L73" title="All 2 branches missed.">						if (&quot;openStream&quot;.equals(method.getName()))</span>
+						{
+<span class="nc" id="L75">							return new ByteArrayInputStream(bs);</span>
+						}
+
+<span class="nc" id="L78">						return method.invoke(item, args);</span>
+					}
+				}));
+<span class="nc" id="L81">	}</span>
+
+	public void writeInto(HttpServletRequest request)
+			throws FileUploadException, IOException
+	{
+		// store items for compatablity
+<span class="nc" id="L87">		request.setAttribute(FileItemStream.class.getName(), _items);</span>
+<span class="nc" id="L88">		request.setAttribute(MultipleUploadItems.class.getName(), this);</span>
+<span class="nc" id="L89">	}</span>
+
+	public static MultipleUploadItems loadFrom(HttpServletRequest request)
+	{
+<span class="nc" id="L93">		return (MultipleUploadItems) request</span>
+<span class="nc" id="L94">				.getAttribute(MultipleUploadItems.class.getName());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

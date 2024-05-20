@@ -11,7 +11,7 @@ gradlew npmbuild
 
 date
 echo ">>>>>>>>>>> Executing JUnit test"
-gradlew test
+gradlew cleanTest test
 
 date
 echo ">>>>>>>>>>> Starting app server"
@@ -41,6 +41,6 @@ echo ">>>>>>>>>>> Killing task appBeforeIntegrationTest"
 ps uax | grep gradle
 
 echo ">>>>>>>>>>> Updating docs structure with report"
-rm -rf ./docs/developer/testing/codecoverage-report
-mkdir ./docs/developer/testing/codecoverage-report
-rsync -av --exclude '*.java.html' ./build/jacoco/report/ ./docs/developer/testing/codecoverage-report
+rm -rf ./docs/codecoverage-report
+mkdir ./docs/codecoverage-report
+rsync -av ./build/jacoco/report/ ./docs/codecoverage-report

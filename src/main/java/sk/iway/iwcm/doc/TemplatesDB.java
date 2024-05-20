@@ -483,7 +483,7 @@ public class TemplatesDB extends DB
 			db_conn = DBPool.getConnection();
 
 			String sql = "SELECT doc_id FROM documents WHERE temp_id=?";
-			if (Constants.DB_TYPE==Constants.DB_MYSQL) sql += " LIMIT 0, 1";
+			if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) sql += " LIMIT 1";
 			else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql = "SELECT TOP 1 doc_id FROM documents WHERE temp_id=?";
 			else if (Constants.DB_TYPE==Constants.DB_ORACLE) sql += " AND rownum<2";
 
@@ -675,7 +675,7 @@ public class TemplatesDB extends DB
 
 		GroupsDB groupsDB = GroupsDB.getInstance();
 
-		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), ","), true);
+		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(true), ","), true);
 		if ((userEditableGroups == null || userEditableGroups.length<1)) return allTemps;
 
 		for (TemplateDetails temp : allTemps)

@@ -9,7 +9,7 @@
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="menuFbrowser|menuWebpages"/><%
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/><%
 String titleKey = "Files";
 
 String form = Tools.getStringValue(Tools.getRequestParameter(request, "form"), "");
@@ -711,7 +711,7 @@ String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "sel
 			<div class="row template">
 				<div class="form-group col-sm-12">
 					<label for="file" class="control-label block"><iwcm:text key="editor.media.link"/></label>
-					<input class="form-control" name="file" id="file" value="<%=ResponseUtils.filter(actualFile)%>" />
+					<input class="form-control elfinder-url-input" name="file" id="file" value="<%=ResponseUtils.filter(actualFile)%>" />
 				</div>
 			</div>
 		</div>

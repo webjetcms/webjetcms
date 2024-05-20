@@ -62,7 +62,7 @@ public class ReservationObjectRestController extends DatatableRestControllerV2<R
             entity = new ReservationObjectEntity();
             processFromEntity(entity, ProcessItemAction.CREATE);
         } else {
-            entity = reservationObjectRepository.getById(id);
+            entity = reservationObjectRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
             processFromEntity(entity, ProcessItemAction.EDIT);
         }
 

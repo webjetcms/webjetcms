@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionsAnswersBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr.model</a> &gt; <span class="el_source">QuestionsAnswersBean.java</span></div><h1>QuestionsAnswersBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.components.gdpr.GdprModule;
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.i18n.Prop;
+
+@Entity
+@Table(name = &quot;questions_answers&quot;)
+<span class="fc" id="L21">public class QuestionsAnswersBean extends ActiveRecord implements GdprModel {</span>
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_questions_answers&quot;)
+    @Column(name = &quot;qa_id&quot;)
+    private int id;
+
+    @Column(name = &quot;group_name&quot;)
+    private String groupName;
+    private String question;
+    private String answer;
+    private String hash;
+    @Column(name = &quot;domain_id&quot;)
+    private int domainId;
+    @Transient
+    Prop prop;
+
+    @Override
+    public int getId() {
+<span class="nc" id="L39">        return id;</span>
+    }
+
+    @Override
+    public String getLink() {
+<span class="nc" id="L44">        return &quot;/components/qa/admin_answer.jsp?id=&quot; + id + &quot;&amp;hash=&quot; + hash;</span>
+    }
+
+    @Override
+    public String getText(List&lt;GdprRegExpBean&gt; regexps) {
+<span class="nc" id="L49">        List&lt;String&gt; texts = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L50">        texts.add(groupName);</span>
+<span class="nc" id="L51">        texts.add(question);</span>
+<span class="nc" id="L52">        texts.add(answer);</span>
+<span class="nc" id="L53">        return GdprModule.getText(regexps, texts);</span>
+    }
+
+    @Override
+    public void setId(int id) {
+<span class="nc" id="L58">        this.id = id;</span>
+<span class="nc" id="L59">    }</span>
+
+    public String getQuestion() {
+<span class="nc" id="L62">        return question;</span>
+    }
+
+    public void setQuestion(String question) {
+<span class="nc" id="L66">        this.question = question;</span>
+<span class="nc" id="L67">    }</span>
+
+    public String getAnswer() {
+<span class="nc" id="L70">        return answer;</span>
+    }
+
+    public void setAnswer(String answer) {
+<span class="nc" id="L74">        this.answer = answer;</span>
+<span class="nc" id="L75">    }</span>
+
+    public String getHash() {
+<span class="nc" id="L78">        return hash;</span>
+    }
+
+    public void setHash(String hash) {
+<span class="nc" id="L82">        this.hash = hash;</span>
+<span class="nc" id="L83">    }</span>
+
+    public String getGroupName() {
+<span class="nc" id="L86">        return groupName;</span>
+    }
+
+    public void setGroupName(String groupName) {
+<span class="nc" id="L90">        this.groupName = groupName;</span>
+<span class="nc" id="L91">    }</span>
+
+    public int getDomainId() {
+<span class="nc" id="L94">        return domainId;</span>
+    }
+
+    public void setDomainId(int domainId) {
+<span class="nc" id="L98">        this.domainId = domainId;</span>
+<span class="nc" id="L99">    }</span>
+
+    public String getLinkDelete(HttpServletRequest request)
+    {
+<span class="nc" id="L103">        return &quot;deleteOK('&quot;+getProp(request).getText(&quot;components.qa.delete_confirm&quot;)+&quot;',this,'/qa.add.do?action=delete&amp;qaId=&quot;+id+&quot;')&quot;;</span>
+    }
+
+    public String getLinkView(HttpServletRequest request)
+    {
+<span class="nc" id="L108">        return getLink();</span>
+    }
+    public String getName()
+    {
+<span class="nc" id="L112">        return question;</span>
+    }
+
+    public Prop getProp() {
+<span class="nc" id="L116">        return prop;</span>
+    }
+
+    public Prop getProp(HttpServletRequest request) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if(prop == null)</span>
+<span class="nc" id="L121">            prop = Prop.getInstance(request);</span>
+
+<span class="nc" id="L123">        return prop;</span>
+    }
+
+    public void setProp(Prop prop) {
+<span class="nc" id="L127">        this.prop = prop;</span>
+<span class="nc" id="L128">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

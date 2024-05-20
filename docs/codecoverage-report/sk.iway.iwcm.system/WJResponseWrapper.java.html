@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WJResponseWrapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">WJResponseWrapper.java</span></div><h1>WJResponseWrapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.zip.GZIPOutputStream;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.context.ContextFilter;
+
+/**
+ * WJResponseWrapper.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2005
+ * @author $Author: jeeff $
+ * @version $Revision: 1.3 $
+ * @created Date: 14.4.2005 15:24:08
+ * @modified $Date: 2007/01/08 14:41:25 $
+ */
+public class WJResponseWrapper extends HttpServletResponseWrapper
+{
+	PrintWriter writer;
+	public StringWriter strWriter;
+<span class="fc" id="L39">	public String redirectURL = null;</span>
+	HttpServletResponse origResponse;
+	HttpServletRequest origRequest;
+<span class="fc" id="L42">	private ByteArrayOutputStream baos = null;</span>
+
+	public void writeResponseToOriginalOutput(HttpServletRequest req) throws IOException
+	{
+<span class="nc" id="L46">		String htmlCode = strWriter.getBuffer().toString();</span>
+<span class="nc" id="L47">		writeResponseToOriginalOutput(req, htmlCode);</span>
+<span class="nc" id="L48">	}</span>
+
+	/**
+	 * Zapise HTML kod na povodny vystup s testom na moznost gzip kompresie
+	 * @param req
+	 * @param htmlCode
+	 * @throws IOException
+	 */
+	public void writeResponseToOriginalOutput(HttpServletRequest req, String htmlCode) throws IOException
+	{
+<span class="nc bnc" id="L58" title="All 4 branches missed.">		if (ContextFilter.isRunning(req)==false &amp;&amp; Constants.getBoolean(&quot;packagerGzipEnable&quot;))</span>
+		{
+<span class="nc" id="L60">			String ae = req.getHeader(&quot;accept-encoding&quot;);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">	      if (ae != null &amp;&amp; ae.indexOf(&quot;gzip&quot;) != -1)</span>
+	      {
+<span class="nc" id="L63">	      	ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L64">	      	GZIPOutputStream gzipstream = new GZIPOutputStream(baos);</span>
+
+<span class="nc" id="L66">	      	byte[] originalBytes = htmlCode.getBytes(SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L67">	      	gzipstream.write(originalBytes);</span>
+<span class="nc" id="L68">	      	gzipstream.finish();</span>
+
+<span class="nc" id="L70">	      	byte[] bytes = baos.toByteArray();</span>
+
+<span class="nc" id="L72">	      	origResponse.addHeader(&quot;Content-Length&quot;, Integer.toString(bytes.length));</span>
+<span class="nc" id="L73">	      	origResponse.addHeader(&quot;Content-Encoding&quot;, &quot;gzip&quot;);</span>
+<span class="nc" id="L74">	      	origResponse.getOutputStream().write(bytes);</span>
+<span class="nc" id="L75">	      	origResponse.getOutputStream().flush();</span>
+<span class="nc" id="L76">	      	origResponse.getOutputStream().close();</span>
+
+<span class="nc" id="L78">	      	Logger.debug(WJResponseWrapper.class, &quot;Gzipping output, path=&quot;+PathFilter.getOrigPath(req)+&quot;?&quot;+(String)req.getAttribute(&quot;path_filter_query_string&quot;)+&quot; original=&quot;+originalBytes.length+&quot; compressed=&quot;+bytes.length+&quot; ratio=&quot;+((double)originalBytes.length / (double)bytes.length));</span>
+
+<span class="nc" id="L80">	         return;</span>
+	      }
+		}
+
+		//zapis vystup
+<span class="nc" id="L85">      origResponse.getWriter().write(htmlCode);</span>
+<span class="nc" id="L86">	}</span>
+
+	@Override
+	public void sendRedirect(String url) throws IOException
+	{
+<span class="nc" id="L91">		Logger.println(this,&quot;--&gt; send redirect: &quot;+url);</span>
+<span class="nc" id="L92">		redirectURL = url;</span>
+		//super.sendRedirect(url);
+<span class="nc" id="L94">	}</span>
+	@Override
+	public void addCookie(Cookie c)
+	{
+<span class="nc" id="L98">		Logger.debug(this,&quot;add cookie: &quot; + c.getName());</span>
+<span class="nc" id="L99">		Tools.addCookie(c, origResponse, origRequest);</span>
+<span class="nc" id="L100">	}</span>
+
+// ----------------------------------------------------------- Constructors
+
+
+   /**
+    * Construct a new response wrapper according to the specified parameters.
+    *
+    * @param response The servlet response we are wrapping
+    */
+   public WJResponseWrapper(HttpServletResponse response, HttpServletRequest req)
+   {
+<span class="fc" id="L112">       super(response);</span>
+<span class="fc" id="L113">       origResponse = response;</span>
+       //baos = new ByteArrayOutputStream();
+<span class="fc" id="L115">       strWriter = new StringWriter();</span>
+<span class="fc" id="L116">       writer = new PrintWriter(strWriter);</span>
+<span class="fc" id="L117">       origRequest = req;</span>
+<span class="fc" id="L118">   }</span>
+
+
+   // ----------------------------------------------------- Instance Variables
+
+
+
+
+   // --------------------------------------------------------- Public Methods
+
+
+   /**
+    * Swallow any attempt to flush the response buffer.
+    */
+   @Override
+   public void flushBuffer() throws IOException {
+
+<span class="nc" id="L135">   	Logger.println(this,&quot;--&gt; FLUSH BUFFER&quot;);</span>
+       ; // No action is required
+
+<span class="nc" id="L138">   }</span>
+
+
+   /**
+    * Return a PrintWriter that can be used to accumulate the response data
+    * for the included resource.
+    *
+    * @exception IOException if an I/O error occurs
+    */
+   @Override
+   public PrintWriter getWriter() throws IOException {
+
+<span class="fc" id="L150">       return (writer); // FIXME - getWriter()</span>
+
+   }
+   @Override
+	public void setBufferSize(int bufferSize)
+	{
+		try
+		{
+<span class="nc" id="L158">			super.setBufferSize(bufferSize);</span>
+		}
+<span class="nc" id="L160">		catch (Exception e)</span>
+		{
+
+<span class="nc" id="L163">		}</span>
+<span class="nc" id="L164">	}</span>
+	public String getRedirectURL()
+	{
+<span class="nc" id="L167">		return redirectURL;</span>
+	}
+
+
+	/**
+	 * Pre vykonavanie dlhych cyklov - zapis prazdneho znaku na orig response aby sa udrzalo spojenie
+	 * @throws IOException
+	 */
+	public void flushOrigResponse() throws IOException
+	{
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;packagerGzipEnable&quot;)==false)</span>
+		{
+<span class="nc" id="L179">			origResponse.getWriter().print(&quot; &quot;);</span>
+<span class="nc" id="L180">			origResponse.getWriter().flush();</span>
+		}
+<span class="nc" id="L182">	}</span>
+
+	@Override
+	public ServletOutputStream getOutputStream() throws IOException
+	{
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (baos==null) baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L188">		ServletOutputStream sos = new ServletOutputStream() {</span>
+
+			@Override
+			public void write(int b) throws IOException
+			{
+<span class="nc" id="L193">				baos.write(b);</span>
+
+<span class="nc" id="L195">			}</span>
+
+			@Override
+			public boolean isReady()
+			{
+				// TODO Auto-generated method stub
+<span class="nc" id="L201">				return false;</span>
+			}
+
+			@Override
+			public void setWriteListener(WriteListener arg0)
+			{
+				// TODO Auto-generated method stub
+
+<span class="nc" id="L209">			}</span>
+
+
+		};
+<span class="nc" id="L213">		return sos;</span>
+	}
+	public String getOutputOfStreamAsString()
+	{
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (baos!=null)</span>
+		{
+			try
+			{
+<span class="nc" id="L221">				return baos.toString(origRequest.getCharacterEncoding());</span>
+			}
+<span class="nc" id="L223">			catch (UnsupportedEncodingException e)</span>
+			{
+<span class="nc" id="L225">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L226">			}</span>
+		}
+<span class="nc bnc" id="L228" title="All 4 branches missed.">		else if (strWriter!=null&amp;&amp;strWriter.getBuffer().length()&gt;0) return strWriter.getBuffer().toString();</span>
+<span class="nc" id="L229">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

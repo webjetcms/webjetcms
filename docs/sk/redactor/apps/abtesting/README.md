@@ -78,15 +78,4 @@ V aplikácii AB testovanie je možné nastaviť pomer medzi A a B verziou, techn
 
 V aplikácii AB testovanie sa v tabuľke zobrazuje zoznam stránok ktoré majú B verziu s možnosťou zobrazenia grafu porovnania verzií. Ak nemáte pomer AB verzie 50:50 WebJET automaticky vykoná aj pomerový prepočet návštev jednotlivých verzií, aby sa dali čísla porovnať.
 
-![](abtest2.png)
-
-## Možné konfiguračné premenné
-
-- ```ABTesting``` (predvolene ```false```) - po nastavení na ```true``` sa aktivuje AB testovanie web stránok
-- ```ABTestingRatio``` (predvolene ```50:50```) - pomer pri generovaní stránok medzi verziou A a B
-- ```ABTestingName``` (predvolene ```abtestvariant```) - názov, ktorý sa pridáva do URL adresy B verzie stránky na jej odlíšenie - používa sa aj na dohľadanie B verzie stránky
-- ```ABTestingCookieName``` (predvolene ```wjabtesting```) - meno ```cookie``` použitej pre zapamätanie si verzie testu pri ```split``` testoch - ak sa pri zobrazení rozhodne pre B variantu, zapamätá sa v ```cookie``` s týmto názvom a podľa toho sa ďalej budú poskytovať B verzie stránok
-- ```ABTestingCookieDays``` (predvolene ```30```) - počet dní zapamätania si zvolenej verzie pri AB testovaní - čas exspirácie cookie
-
-
-
+![](stat-percent.png)

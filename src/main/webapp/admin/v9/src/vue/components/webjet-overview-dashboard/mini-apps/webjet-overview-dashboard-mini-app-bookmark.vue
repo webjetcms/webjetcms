@@ -1,16 +1,12 @@
 <template>
     <div :class="'overview-logged bookmark'">
         <div class="overview-logged__head">
-            <div
-                @click="showModal()"
-                class="overview-logged__head__icon"
-                v-tooltip:top="this.$WJ.translate('button.add')"
-            >
-                <i class="fas fa-bookmark"></i>
+            <div class="overview-logged__head__icon">
+                <i class="ti ti-bookmarks fs-4"></i>
             </div>
             <span> {{ this.$WJ.translate('admin.welcome.bookmarks.title.js') }}</span>
             <div class="overview-logged__head__more">
-                <i class="far fa-ellipsis-v" style="display: none"></i>
+                <i @click="showModal()" v-tooltip:top="this.$WJ.translate('button.add')" class="ti ti-plus"></i>
             </div>
         </div>
 
@@ -24,7 +20,7 @@
                         class="float-end btn btn-sm buttons-selected buttons-remove buttons-divider"
                         v-tooltip:left="$WJ.translate('button.delete')"
                     >
-                        <span><i class="far fa-trash-alt"></i></span>
+                      <span><i class="ti ti-trash fs-6"></i></span>
                     </button>
                 </li>
             </ul>
@@ -113,15 +109,6 @@ export default {
     &.bookmark {
         .overview-logged__head__icon {
             background: lighten(#ffa500, 20%);
-            &:hover {
-                cursor: pointer;
-                background: #ffa500;
-                color: #fff;
-                transition: all 0.3s ease;
-            }
-            &:hover > i:before {
-                content: '\f067';
-            }
         }
     }
     &.bookmark {

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasicLdapLogon.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.ntlm</a> &gt; <span class="el_source">BasicLdapLogon.java</span></div><h1>BasicLdapLogon.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.ntlm;
+
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+
+import sk.iway.Password;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  BasicLdapLogon.java
+ *
+ *  Zakladne prihlasenie usera cez LDAP (bez pouzitia NTLM)
+ *
+ * Title        webjet8
+ * Company      InterWay a. s. (www.interway.sk)
+ * Copyright    InterWay a. s. (c) 2001-2017
+ * @author      Author: jeeff
+ * created      17. 7. 2017 16:09:29
+ */
+public class BasicLdapLogon
+{
+<span class="nc" id="L36">	public BasicLdapLogon() {</span>
+		//konstruktor aby sa dala trieda vytvorit v LogonTools
+<span class="nc" id="L38">	}</span>
+
+	public static ActionMessages logon(String username, String password, HttpServletRequest request)
+	{
+<span class="nc" id="L42">		ActionMessages errors = new ActionMessages();</span>
+
+		//aby sa mohol prihlasit aj s velkymi pismenami, ak nahodou to tak je v AD
+<span class="nc" id="L45">		username = username.toLowerCase();</span>
+
+<span class="nc" id="L47">		UserDetails user = UsersDB.getUser(username);</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (user == null)</span>
+		{
+			//este neexistuje, treba vytvorit
+<span class="nc" id="L52">			user = createNewUser(username);</span>
+		}
+
+<span class="nc" id="L55">		BasicNtlmLogon.doLdapQuery(user, Constants.getString(&quot;ldapProviderUrl&quot;), username, password);</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (user.getLogin()==null)</span>
+		{
+			//ma zle heslo, napis chybu
+<span class="nc" id="L60">			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(&quot;error.logon.wrong.pass&quot;));</span>
+			//nepiseme o aku chybu ide
+<span class="nc" id="L62">			request.setAttribute(&quot;error.logon.wrong.pass&quot;, &quot;true&quot;);</span>
+		}
+		else
+		{
+<span class="nc" id="L66">			user.setAuthorized(true);</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;basicNtlmLogonAttrs&quot;))) UsersDB.saveUser(user);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (user.getUserId()&gt;0)</span>
+			{
+<span class="nc" id="L72">				Identity loggedUser = new Identity(user);</span>
+
+<span class="nc bnc" id="L74" title="All 4 branches missed.">				if (Constants.getBoolean(&quot;enableAdminInWebLogon&quot;) &amp;&amp; user.isAdmin())</span>
+				{
+					//kvoli blogom - nacitanie prav
+
+					//nacitaj pristupove prava - pouziva sa napr. v module blog - nie je admin (isAdmin bude false, viz nizsie), mame ale jeho prava
+<span class="nc" id="L79">					LogonTools.setUserPerms(loggedUser);</span>
+
+<span class="nc" id="L81">					UsersDB.setDisabledItems(loggedUser);</span>
+<span class="nc" id="L82">					loggedUser.setAdmin(true);</span>
+<span class="nc" id="L83">					loggedUser.setValid(true);</span>
+				}
+				else
+				{
+					//aby mu nefungovalo pristup do adminu (bezpecnost)
+<span class="nc" id="L88">					loggedUser.setAdmin(false);</span>
+				}
+
+<span class="nc" id="L91">				LogonTools.setUserToSession(request.getSession(), loggedUser);</span>
+<span class="nc" id="L92">			}</span>
+			else
+			{
+				//ma zle heslo, napis chybu
+<span class="nc" id="L96">				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(&quot;error.logon.wrong.pass&quot;));</span>
+				//nepiseme o aku chybu ide
+<span class="nc" id="L98">				request.setAttribute(&quot;error.logon.wrong.pass&quot;, &quot;true&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L102">		return errors;</span>
+	}
+
+	/**
+	 * Nastavujem cez adminLogonMethod=sk.iway.iwcm.system.ntlm.BasicLdapLogon.logonAdmin
+	 */
+	public static String logonAdmin(String username, String password, Identity user, Map&lt;String, String&gt; errors, HttpServletRequest request, sk.iway.iwcm.i18n.Prop prop)
+	{
+<span class="nc bnc" id="L110" title="All 4 branches missed.">		if (username == null || password == null)</span>
+		{
+<span class="nc" id="L112">			return (&quot;&quot;);</span>
+		}
+
+		//aby sa mohol prihlasit aj s velkymi pismenami, ak nahodou to tak je v AD
+<span class="nc" id="L116">		username = username.toLowerCase();</span>
+<span class="nc" id="L117">		String forward = &quot;logon_ok_admin&quot;;</span>
+
+<span class="nc" id="L119">		Logger.debug(BasicLdapLogon.class, &quot; username = &quot;+username);</span>
+
+<span class="nc" id="L121">		UserDetails actualUser = UsersDB.getUser(username);</span>
+<span class="nc" id="L122">		int newAdminTemplatePermsUserId = 0;</span>
+		//zistim, ci je povolene vytvorit automaticky noveho pouzivatela cez konf. premennu ldapNewAdminTemplatePermsUserLogin a ci dany pouzivatel vo WJ existuje
+<span class="nc" id="L124">		String ldapNewAdminTemplatePermsUserLogin = Constants.getString(&quot;ldapNewAdminTemplatePermsUserLogin&quot;);</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">		if(Tools.isNotEmpty(ldapNewAdminTemplatePermsUserLogin) &amp;&amp; UsersDB.getUser(ldapNewAdminTemplatePermsUserLogin) != null)</span>
+<span class="nc" id="L126">			newAdminTemplatePermsUserId=UsersDB.getUser(ldapNewAdminTemplatePermsUserLogin).getUserId();</span>
+
+		//nemam pouzivatela, mozem ale mat povolene automaticke vytvorenie admin pouzivatela
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (actualUser == null)</span>
+		{
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if(newAdminTemplatePermsUserId &gt; 0)</span>
+			{
+				//este neexistuje, treba vytvorit
+<span class="nc" id="L134">				actualUser = createNewUser(username);</span>
+			}
+			else //rovno vraciam chybovu hlasku
+			{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">				if(Tools.isNotEmpty(ldapNewAdminTemplatePermsUserLogin))</span>
+<span class="nc" id="L139">					Logger.warn(BasicLdapLogon.class, &quot;Pouzivatel &quot;+ldapNewAdminTemplatePermsUserLogin+&quot; neexistuje vo WJ&quot;);</span>
+				else
+<span class="nc" id="L141">					Logger.warn(BasicLdapLogon.class, &quot;Pouzivatel &quot;+username+&quot; vo WJ neexistuje a nie je povolene vytvorenie noveho admin pouzivatela!&quot;);</span>
+
+<span class="nc" id="L143">				errors.put(&quot;ERROR_KEY&quot;, prop.getText(&quot;logon.err.wrongPass&quot;));</span>
+<span class="nc" id="L144">				request.setAttribute(&quot;error.logon.wrong.pass&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L145">				return forward;</span>
+			}
+		}
+
+		//poznacim si povodny stav ci pouzivatel bol admin
+<span class="nc" id="L150">		boolean oldUserIsAdmin = actualUser.isAdmin();</span>
+
+<span class="nc" id="L152">		BasicNtlmLogon.doLdapQuery(actualUser, Constants.getString(&quot;ldapProviderUrl&quot;), username, password);</span>
+
+		//asi zle heslo, alebo nejaka ina nutna podmienka v BasicNtlmLogon.doLdapQuery nebola splnena
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (actualUser.getLogin()==null)</span>
+		{
+<span class="nc" id="L157">			Logger.error(BasicLdapLogon.class, &quot;after BasicNtlmLogon.doLdapQuery: LoginName je null, asi zle heslo&quot;);</span>
+<span class="nc" id="L158">			errors.put(&quot;ERROR_KEY&quot;, prop.getText(&quot;logon.err.wrongPass&quot;));</span>
+<span class="nc" id="L159">			request.setAttribute(&quot;error.logon.wrong.pass&quot;, &quot;true&quot;);</span>
+		}
+		else
+		{
+			//autorizujem pouzivatela
+<span class="nc" id="L164">			actualUser.setAuthorized(true);</span>
+			//ak mam zadefinovane atributy v basicNtlmLogonAttrs pre synchronizaciu dat o pouzivatelovi v AD, ulozim ho (setli sa uz v BasicNtlmLogon.doLdapQuery)
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;basicNtlmLogonAttrs&quot;))) UsersDB.saveUser(actualUser);</span>
+
+			try
+			{
+<span class="nc" id="L170">				PropertyUtils.copyProperties(user, actualUser);</span>
+			}
+<span class="nc" id="L172">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L174">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L175">			}</span>
+
+			//ocakavam, ze som uz ulozil pouzivatela, inak pravdepodobne je basicNtlmLogonAttrs prazdne,
+			//  co nemoze byt, musi tam byt minimalne memberOf pre synchronizaciu user skupin alebo skupin prav
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if(user.getUserId() &gt; 0)</span>
+			{
+				//ak som vytvoril pouzivatela, alebo prechadzam z bezneho pouzivatel na administratora a je povolene automaticke vytvorenie noveho pouzivatela,
+				//  nastavim prava na moduly na zaklade uzivatela ldapNewAdminTemplatePermsUserLogin
+<span class="nc bnc" id="L183" title="All 6 branches missed.">				if(oldUserIsAdmin == false &amp;&amp; user.isAdmin() &amp;&amp; newAdminTemplatePermsUserId &gt; 0)</span>
+<span class="nc" id="L184">					copyUserDisabledItems(newAdminTemplatePermsUserId, user.getUserId());</span>
+
+				//nacitaj pristupove prava
+<span class="nc" id="L187">				LogonTools.setUserPerms(user);</span>
+<span class="nc" id="L188">				UsersDB.setDisabledItems(user);</span>
+			}
+			else
+			{
+<span class="nc" id="L192">				Logger.error(BasicLdapLogon.class, &quot;Nemam userID, nieco sa cestou pokazilo, skontroluj nastavene hodnoty v basicNtlmLogonAttrs&quot;);</span>
+<span class="nc" id="L193">				errors.put(&quot;ERROR_KEY&quot;, prop.getText(&quot;logon.err.wrongPass&quot;));</span>
+<span class="nc" id="L194">				request.setAttribute(&quot;error.logon.wrong.pass&quot;, &quot;true&quot;);</span>
+			}
+		}
+
+<span class="nc" id="L198">		return forward;</span>
+	}
+
+	/**
+	 * vytvorim noveho pouzivatela
+	 * @param username loginName
+	 * @return UserDetails
+	 */
+	public static UserDetails createNewUser(String username)
+	{
+<span class="nc" id="L208">		UserDetails actualUser = new UserDetails();</span>
+<span class="nc" id="L209">		actualUser.setUserId(-1);</span>
+<span class="nc" id="L210">		actualUser.setLogin(username);</span>
+<span class="nc" id="L211">		actualUser.setPasswordPlain(Password.generatePassword(10));</span>
+<span class="nc" id="L212">		actualUser.setEditablePages(&quot;&quot;);</span>
+<span class="nc" id="L213">		actualUser.setEditableGroups(&quot;&quot;);</span>
+<span class="nc" id="L214">		actualUser.setWritableFolders(&quot;&quot;);</span>
+<span class="nc" id="L215">		return actualUser;</span>
+	}
+
+	/**
+	 * skopiruje zakazane moduly  medzi pouzivatelmi
+	 * @param originalUserId odkial kopirujem
+	 * @param newUserId kam kopirujem
+	 */
+	private static void copyUserDisabledItems(int originalUserId, int newUserId)
+	{
+<span class="nc" id="L225">		Connection db_conn = null;</span>
+<span class="nc" id="L226">		PreparedStatement ps = null;</span>
+<span class="nc" id="L227">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L230">			Map&lt;String, String&gt; permsTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L232">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L233">			ps = db_conn.prepareStatement(&quot;SELECT item_name FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L234">			ps.setInt(1, originalUserId);</span>
+<span class="nc" id="L235">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L238">				permsTable.put(DB.getDbString(rs, &quot;item_name&quot;), &quot;1&quot;);</span>
+			}
+<span class="nc" id="L240">			rs.close();</span>
+<span class="nc" id="L241">			ps.close();</span>
+
+<span class="nc" id="L243">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L244">			ps.setInt(1, newUserId);</span>
+<span class="nc" id="L245">			ps.execute();</span>
+<span class="nc" id="L246">			ps.close();</span>
+
+<span class="nc" id="L248">			ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L249">			ps.setInt(1, newUserId);</span>
+
+<span class="nc" id="L251">			Iterator&lt;String&gt; keys = permsTable.keySet().iterator();</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			while (keys.hasNext())</span>
+			{
+<span class="nc" id="L254">				String itemName = keys.next();</span>
+
+<span class="nc" id="L256">				ps.setString(2, itemName);</span>
+<span class="nc" id="L257">				ps.execute();</span>
+
+<span class="nc" id="L259">				Logger.debug(BasicLdapLogon.class, &quot;copyUserDisabledItems to userId=&quot;+newUserId+&quot; itemName=&quot;+itemName);</span>
+<span class="nc" id="L260">			}</span>
+
+<span class="nc" id="L262">			ps.close();</span>
+
+<span class="nc" id="L264">			db_conn.close();</span>
+<span class="nc" id="L265">			rs = null;</span>
+<span class="nc" id="L266">			ps = null;</span>
+<span class="nc" id="L267">			db_conn = null;</span>
+		}
+<span class="nc" id="L269">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L271">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L277" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L278">					rs.close();</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L280">					ps.close();</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L282">					db_conn.close();</span>
+			}
+<span class="nc" id="L284">			catch (Exception ignored)</span>
+			{
+<span class="nc" id="L286">			}</span>
+		}
+<span class="nc" id="L288">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.stripes</a> &gt; <span class="el_source">WebJETActionBean.java</span></div><h1>WebJETActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.stripes;
+
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.After;
+import net.sourceforge.stripes.action.Before;
+import net.sourceforge.stripes.controller.LifecycleStage;
+import net.sourceforge.stripes.controller.StripesRequestWrapper;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  WebJETActionBean.java - supertrieda pre standardne Stripes Action Beany
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 3.3.2008 17:20:16
+ *@modified     $Date: 2008/12/11 08:49:57 $
+ */
+<span class="fc" id="L38">public class WebJETActionBean implements ActionBean</span>
+{
+	
+	public static final String RESOLUTION_CLOSE = &quot;/components/reloadParentClose.jsp&quot;;
+	public static final String RESOLUTION_CONTINUE = &quot;/components/maybeError.jsp&quot;;
+	public static final String RESOLUTION_NOT_LOGGED = &quot;/components/maybeError.jsp&quot;;
+	public static final String RESOLUTION_CSRF = &quot;/components/csrfError.jsp&quot;;
+
+	protected ActionBeanContext context;
+	
+	/**
+	 * Vrati true, ak je prihlaseny administrator
+	 * @return
+	 */
+	public boolean isAdminLogged()
+	{
+<span class="fc" id="L54">		Identity user = (Identity) getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L55" title="2 of 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin()) return true;</span>
+<span class="nc" id="L56">		getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;error.userNotLogged&quot;));</span>
+<span class="nc" id="L57">		return false;</span>
+	}
+	
+	/**
+	 * Vrati true, ak je prihlaseny administrator a ma povoleny dany modul
+	 * @param module
+	 * @return
+	 */
+	public boolean isAdminLoggedWithPerms(String module)
+	{
+<span class="nc" id="L67">		Identity user = (Identity) getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L68" title="All 6 branches missed.">		if (user != null &amp;&amp; user.isAdmin() &amp;&amp; user.isEnabledItem(module)) return true;</span>
+<span class="nc" id="L69">		getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;error.userNotLogged&quot;));</span>
+<span class="nc" id="L70">		return false;</span>
+	}
+	
+	/**
+	 * Vrati true ak je prihlaseny akykolvek user (navstevnik stranky)
+	 * @return
+	 */
+	public boolean isAnyUserLogged()
+	{
+<span class="nc" id="L79">		Identity user = (Identity) getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (user != null) return true;</span>
+<span class="nc" id="L81">		getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;error.userNotLogged&quot;));</span>
+<span class="nc" id="L82">		return false;</span>
+	}
+	
+	public void setErrorText(String text)
+	{
+<span class="nc" id="L87">		getRequest().setAttribute(&quot;errorText&quot;, text);</span>
+<span class="nc" id="L88">	}</span>
+	
+	public HttpServletRequest getRequest()
+	{
+<span class="fc" id="L92">		return context.getRequest();</span>
+	}
+	
+	public HttpSession getSession()
+	{
+<span class="fc" id="L97">		return context.getRequest().getSession();</span>
+	}
+	
+	public Identity getCurrentUser()
+	{
+<span class="fc" id="L102">		return UsersDB.getCurrentUser(context);</span>
+	}
+	@Override
+	public ActionBeanContext getContext()
+	{
+<span class="fc" id="L107">		return context;</span>
+	}
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+<span class="fc" id="L112">		this.context = context;</span>
+<span class="fc" id="L113">	}</span>
+	
+	
+<span class="fc" id="L116">	private static Map&lt;Class&lt;? extends ActionBean&gt;, List&lt;String&gt;&gt; includeParamsOnly = new HashMap&lt;Class&lt;? extends ActionBean&gt;, List&lt;String&gt;&gt;();</span>
+
+	/**
+	 * vykona sa pri kazdom requeste pred BindingAndValidation stage a v pripade ze je actionBean anotovana InjectPageParams,
+	 * zabezpeci zabalenie povodneho requestu do specialneho-vyčuraného requestu, ktory podsunie pageparams ako parametre requestu
+	 * zaroven zabezpeci ze nieje mozne poslat ako parameter actionbeane taky ktory ma rovnaky nazov ako atribut actionbeany, anotovany
+	 * // 
+	 */
+	@Before(stages={LifecycleStage.BindingAndValidation})
+	public void prepareIncludeRequestWrapper()
+	{
+		//,sk.iway.iwcm.stripes.include.IncludePageParamsInterceptor
+<span class="fc" id="L128">		HttpServletRequest request = context.getRequest();</span>
+		// ak mam nejake pageParams
+<span class="fc bfc" id="L130" title="All 4 branches covered.">		if (request.getAttribute(&quot;includePageParams&quot;)!= null || Tools.isNotEmpty(request.getParameter(&quot;__ppState&quot;)))</span>
+		{
+			//ziskam si mapu params
+<span class="fc" id="L133">			PageParams pp = new PageParams(request);</span>
+<span class="fc" id="L134">			Map&lt;String, String&gt; includeParams = pp.getParams();</span>
+			
+			// najdem StripesRequestWrapper (ten moze byt niekde v request wrapperoch)
+<span class="fc" id="L137">			StripesRequestWrapper stripesWrapper = StripesRequestWrapper.findStripesWrapper(request);</span>
+			//nemal by byt null, kedze ide o stripes RQ, ale istota je gulomet a zaroven actionBeana je anotovana @InjectPageParams
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">			if (stripesWrapper!=null &amp;&amp; getClass().isAnnotationPresent(BindPageParams.class))</span>
+			{
+<span class="fc" id="L141">				HttpServletRequest originalRequest = (HttpServletRequest) stripesWrapper.getRequest();</span>
+				
+<span class="fc" id="L143">				Class&lt;? extends ActionBean&gt; actionBeanClass = getClass();</span>
+				
+				// ziskam si zoznam poli anotovanych PageParamOnly, bud uz ziskane z mapy, alebo prebehnem actionbean classu
+<span class="fc" id="L146">				List&lt;String&gt; paramNames = null;</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">				if (includeParamsOnly.containsKey(actionBeanClass))</span>
+				{
+<span class="fc" id="L149">					paramNames = includeParamsOnly.get(actionBeanClass);</span>
+				}
+				else
+				{
+<span class="fc" id="L153">					paramNames = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L154">					Class&lt;?&gt; clazz = getClass();</span>
+					do
+					{
+<span class="fc bfc" id="L157" title="All 2 branches covered.">						for (Field field : clazz.getDeclaredFields())</span>
+						{
+<span class="fc bfc" id="L159" title="All 2 branches covered.">							if (field.isAnnotationPresent(PageParamOnly.class))</span>
+							{
+<span class="fc" id="L161">								paramNames.add(field.getName());</span>
+							}
+						}
+<span class="fc" id="L164">						clazz = clazz.getSuperclass();</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">					} while (clazz != null);</span>
+<span class="fc" id="L166">					includeParamsOnly.put(actionBeanClass, paramNames);</span>
+				}
+				// vytvorim si novy rq wrapper (na tento ucel pripraveny)
+<span class="fc" id="L169">				IncludePageParamsRequestWrapper includePPRequestWrapper = new IncludePageParamsRequestWrapper(originalRequest, includeParams, paramNames);</span>
+				// a ten pridam az do striper rq wrappera, aby binding zohladnoval pageParams
+<span class="fc" id="L171">				stripesWrapper.setRequest(includePPRequestWrapper);</span>
+			}
+		}
+<span class="fc" id="L174">	}</span>
+	
+	/**
+	 * odstrani IncludePageParamsRequestWrapper z stripesrequestu aby v dalsom vykonavani uz nezavadzal
+	 */
+	@After(stages={LifecycleStage.BindingAndValidation})
+	public void removeIncludeRequestWrapper()
+	{
+<span class="fc" id="L182">		HttpServletRequest request = context.getRequest();</span>
+<span class="fc" id="L183">		StripesRequestWrapper stripesWrapper = StripesRequestWrapper.findStripesWrapper(request);</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		if (stripesWrapper!=null)</span>
+		{
+<span class="fc" id="L186">			ServletRequest maybeIncludeRQW = stripesWrapper.getRequest();</span>
+			// zistim ci je to instancia includeReqWrappera, ak ano odstranim ju
+<span class="fc bfc" id="L188" title="All 2 branches covered.">			if (maybeIncludeRQW instanceof IncludePageParamsRequestWrapper)</span>
+			{
+<span class="fc" id="L190">				IncludePageParamsRequestWrapper includeRQW = (IncludePageParamsRequestWrapper)maybeIncludeRQW;</span>
+<span class="fc" id="L191">				ServletRequest originalRequest = includeRQW.getRequest();</span>
+<span class="fc" id="L192">				stripesWrapper.setRequest(originalRequest);</span>
+			}
+		}
+<span class="fc" id="L195">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

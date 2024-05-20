@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailExcelImport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailExcelImport.java</span></div><h1>EmailExcelImport.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *  EmailExcelImport.java - import pouzivatelov pre priame odoslanie mailu
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 11.2.2008 14:25:24
+ *@modified     $Date: 2009/08/31 11:56:27 $
+ */
+public class EmailExcelImport extends ExcelImportJXL
+{
+	List&lt;UserDetails&gt; users;
+	Map&lt;String, Integer&gt; emailsTable;
+	Map&lt;String, Integer&gt; odhlaseneEmailsTable;
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public EmailExcelImport(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="nc" id="L41">		super(in, request, out);</span>
+
+<span class="nc" id="L43">		users = (List&lt;UserDetails&gt;)request.getSession().getAttribute(&quot;dmailUsers&quot;);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (users == null) users = new ArrayList&lt;UserDetails&gt;();</span>
+
+<span class="nc" id="L46">		emailsTable = new Hashtable&lt;String, Integer&gt;();</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		for (UserDetails user : users)</span>
+		{
+<span class="nc" id="L49">			emailsTable.put(user.getEmail().toLowerCase(), 1);</span>
+<span class="nc" id="L50">		}</span>
+
+<span class="nc" id="L52">		odhlaseneEmailsTable = EmailDB.getHashtableFromUnsubscribedEmails();</span>
+<span class="nc" id="L53">	}</span>
+
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (row.length&lt;1)</span>
+		{
+<span class="nc" id="L60">			return;</span>
+		}
+
+<span class="nc" id="L63">		String email = getValue(row, &quot;email&quot;);</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">		if (Tools.isNotEmpty(email) &amp;&amp; email.indexOf('@')&gt;1)</span>
+		{
+<span class="nc" id="L66">			email = email.toLowerCase();</span>
+
+<span class="nc" id="L68">			Integer rowValue = emailsTable.get(email.toLowerCase());</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (rowValue!=null)</span>
+			{
+				//ochrana pred duplicitnými email adresami
+<span class="nc" id="L72">				printlnError(prop.getText(&quot;components.dmail.xlsImport.emailAllreadyExists&quot;, email));</span>
+<span class="nc" id="L73">				return;</span>
+			}
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (odhlaseneEmailsTable.get(email)!=null)</span>
+			{
+				//ochrana pred odhlasenymi email adresami
+<span class="nc" id="L79">				printlnError(prop.getText(&quot;components.dmail.xlsImport.emailIsUnsubscribed&quot;, email));</span>
+<span class="nc" id="L80">				return;</span>
+			}
+
+<span class="nc" id="L83">			String firstName = getValue(row, &quot;firstName&quot;);</span>
+<span class="nc" id="L84">			String lastName = getValue(row, &quot;lastName&quot;);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (firstName==null) firstName = &quot;&quot;;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (lastName==null) lastName = &quot;&quot;;</span>
+
+<span class="nc" id="L88">			UserDetails usr = UsersDB.getUserByEmail(email);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (usr == null)</span>
+			{
+<span class="nc" id="L91">				usr = new UserDetails();</span>
+			}
+			//prepiseme data podla excelu aby sme mohli mat custom meno a priezvisko (ine ako mame v databaze)
+<span class="nc" id="L94">			usr.setFirstName(firstName);</span>
+<span class="nc" id="L95">			usr.setLastName(lastName);</span>
+<span class="nc" id="L96">			usr.setEmail(email);</span>
+
+<span class="nc" id="L98">			users.add(usr);</span>
+<span class="nc" id="L99">			emailsTable.put(email.toLowerCase(), rowCounter);</span>
+
+<span class="nc" id="L101">			println(prop.getText(&quot;components.dmail.xlsImport.importingEmail&quot;)+&quot; &quot; + usr.getEmail());</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if (rowCounter%50==0)</span>
+			{
+<span class="nc" id="L104">				scrollWindow(1000);</span>
+			}
+		}
+<span class="nc" id="L107">	}</span>
+	@Override
+	protected void afterImportJob(Prop prop)
+	{
+<span class="nc" id="L111">		println(&quot;&lt;br/&gt;&lt;br/&gt;&quot;+prop.getText(&quot;file.import_done&quot;)+&quot;. &lt;a href='/components/dmail/admin_email_usersframe.jsp'&gt;&quot;+prop.getText(&quot;sk.iway.iwcm.dmail.emailExcelImport.zobrazit_zoznam_prijemcov&quot;)+&quot;&lt;/a&gt;.&quot;);</span>
+<span class="nc" id="L112">		scrollWindow(1000);</span>
+<span class="nc" id="L113">		request.getSession().setAttribute(&quot;dmailUsers&quot;, users);</span>
+<span class="nc" id="L114">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

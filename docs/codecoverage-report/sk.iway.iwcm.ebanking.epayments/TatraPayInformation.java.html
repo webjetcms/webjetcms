@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TatraPayInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">TatraPayInformation.java</span></div><h1>TatraPayInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  TatraPayInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.5 $
+ *@created      Date: 26.8.2009 14:12:11
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+class TatraPayInformation extends PaymentInformation
+{
+
+	TatraPayInformation()
+<span class="nc" id="L37">	{</span>
+<span class="nc" id="L38">		this.merchantId = Constants.getString(&quot;basketPaymentTatraPayMid&quot;);</span>
+<span class="nc" id="L39">		this.key = getDecrypredKey(Constants.getString(&quot;basketPaymentTatraPayKey&quot;));</span>
+<span class="nc" id="L40">		this.constantSymbol = Integer.valueOf(Constants.getInt(&quot;basketPaymentTatraPayConstantSymbol&quot;));</span>
+<span class="nc" id="L41">	}</span>
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L45">		String confUrl = Constants.getString(&quot;basketPaymentTatraPayUrl&quot;);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L47">			return confUrl;</span>
+		else
+<span class="nc" id="L49">			return &quot;https://moja.tatrabanka.sk/cgi-bin/e-commerce/start/e-commerce.jsp&quot;;</span>
+		//return &quot;http://epaymentsimulator.monogram.sk/TB_TatraPay.aspx&quot;;
+	}
+	@Override
+	public String getReturnEmail()
+	{
+<span class="nc" id="L55">		return Constants.getString(&quot;basketPaymentTatraPayNotificationEmail&quot;);</span>
+	}
+
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L61">		return true;</span>
+	}
+
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (request.getAttribute(&quot;RURL&quot;) == null)</span>
+<span class="nc" id="L68">			throw new IllegalStateException(&quot;HttpServletRequest needs to have 'RURL'(return URL) attribute&quot;);</span>
+
+		//Timestamp musí byť vo formáte DDMMYYYYHHMISS (DD-deň, MM-mesiac, YYYY-rok, HH-hodina, MI-minúta, SS-sekunda). TIMESTAMP musí byť v intrvale +/- 1 hodina voči UTC (GMT)
+<span class="nc" id="L71">		String timestamp = new SimpleDateFormat(&quot;ddMMYYYYHHmmss&quot;).format(new Date());</span>
+<span class="nc" id="L72">		StringBuilder form = new StringBuilder().</span>
+<span class="nc" id="L73">				append(&quot;&lt;FORM action='&quot;+getUrlString()+&quot;' METHOD='POST' name='payForm'&gt;&quot;).</span>
+<span class="nc" id="L74">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;MID\&quot; value='&quot;+getMerchantId()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L75">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;AMT\&quot; value='&quot;+payment.getAmountString()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L76">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CURR\&quot; value=\&quot;978\&quot; /&gt;&quot;).//978 = ISO EURO</span>
+<span class="nc" id="L77">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;VS\&quot; value='&quot;+payment.getVariableSymbol()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L78">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CS\&quot; value='&quot;+payment.getConstantSymbol()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L79">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;RURL\&quot; value='&quot;+request.getAttribute(&quot;RURL&quot;)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L80">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;TIMESTAMP\&quot; value='&quot;+timestamp+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L81">				append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;HMAC\&quot; value='&quot;+generateHMAC(getStringToSign(payment, timestamp, request))+&quot;' /&gt;&quot;);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (Tools.isNotEmpty(payment.getSpecificSymbol()))</span>
+<span class="nc" id="L83">			form.append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;SS\&quot; value='&quot;+payment.getSpecificSymbol()+&quot;' /&gt;&quot;);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (Tools.isNotEmpty(getReturnEmail()))</span>
+<span class="nc" id="L85">			form.append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;REM\&quot; value='&quot;+getReturnEmail()+&quot;' /&gt;&quot;);</span>
+		//form.append(&quot;&lt;input type=\&quot;submit\&quot; value=\&quot;Vykonať platbu\&quot;&gt;&quot;);
+<span class="nc" id="L87">		form.append(&quot;&lt;/FORM&gt;&quot;);</span>
+<span class="nc" id="L88">		return form.toString();</span>
+	}
+
+	private String getStringToSign(Payment payment, String timestamp, HttpServletRequest request)
+	{
+		//stringToSign = MID + AMT + CURR + VS + SS + CS + RURL + REM + TIMESTAMP;
+
+<span class="nc" id="L95">		String mid = getMerchantId();</span>
+<span class="nc" id="L96">		String amt = payment.getAmountString();</span>
+<span class="nc" id="L97">		String curr = &quot;978&quot;;</span>
+<span class="nc" id="L98">		String vs = payment.getVariableSymbol();</span>
+<span class="nc" id="L99">		String ss = &quot;&quot;;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if(Tools.isNotEmpty(payment.getSpecificSymbol()))</span>
+<span class="nc" id="L101">			ss = payment.getSpecificSymbol();</span>
+<span class="nc" id="L102">		String cs = payment.getConstantSymbol();</span>
+<span class="nc" id="L103">		String rurl = request.getAttribute(&quot;RURL&quot;).toString();</span>
+<span class="nc" id="L104">		String rem = &quot;&quot;;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if(Tools.isNotEmpty(getReturnEmail()))</span>
+<span class="nc" id="L106">			rem = getReturnEmail();</span>
+
+		//System.out.println(&quot;Key tatra plain: &quot; + paymentInfo.getKey());
+		//System.out.println(&quot;Key tatra hex: &quot; + bytesToHex(paymentInfo.getKey().getBytes()));
+
+<span class="nc" id="L111">		StringBuilder stringToSign = new StringBuilder().</span>
+<span class="nc" id="L112">				append(mid).</span>
+<span class="nc" id="L113">				append(amt).</span>
+<span class="nc" id="L114">				append(curr).</span>
+<span class="nc" id="L115">				append(vs).</span>
+<span class="nc" id="L116">				append(ss).</span>
+<span class="nc" id="L117">				append(cs).</span>
+<span class="nc" id="L118">				append(rurl).</span>
+<span class="nc" id="L119">				append(rem).</span>
+<span class="nc" id="L120">				append(timestamp);</span>
+
+<span class="nc" id="L122">		return stringToSign.toString();</span>
+	}
+
+	private String generateHMAC(String stringToSign)
+	{
+<span class="nc" id="L127">		String signature = null;</span>
+		try
+		{
+<span class="nc" id="L130">			byte[] keyBytes = getKey().getBytes(); // konverzia do binárneho formátu</span>
+<span class="nc" id="L131">			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, &quot;HmacSHA256&quot;);</span>
+<span class="nc" id="L132">			Mac mac = Mac.getInstance(&quot;HmacSHA256&quot;);</span>
+<span class="nc" id="L133">			mac.init(keySpec);</span>
+<span class="nc" id="L134">			byte[] stringToSignBytes = stringToSign.getBytes();</span>
+<span class="nc" id="L135">			byte[] hmacBin = mac.doFinal(stringToSignBytes);</span>
+<span class="nc" id="L136">			signature = bytesToHex(hmacBin); // konverzia do hexadecimálneho reťazca</span>
+		}
+<span class="nc" id="L138">		catch(NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L139">		catch(InvalidKeyException e){sk.iway.iwcm.Logger.error(e);}</span>
+
+<span class="nc" id="L141">		return signature;</span>
+	}
+
+	String bytesToHex(byte[] bytes) {
+<span class="nc" id="L145">		char[] hexArray = &quot;0123456789ABCDEF&quot;.toCharArray();</span>
+<span class="nc" id="L146">		char[] hexChars = new char[bytes.length * 2];</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		for ( int j = 0; j &lt; bytes.length; j++ ) {</span>
+<span class="nc" id="L148">			int v = bytes[j] &amp; 0xFF;</span>
+<span class="nc" id="L149">			hexChars[j * 2] = hexArray[v &gt;&gt;&gt; 4];</span>
+<span class="nc" id="L150">			hexChars[j * 2 + 1] = hexArray[v &amp; 0x0F];</span>
+		}
+<span class="nc" id="L152">		return new String(hexChars);</span>
+	}
+
+	@Override
+	public boolean validateBankResponce(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if(&quot;FAIL&quot;.equals(request.getParameter(&quot;RES&quot;)))</span>
+<span class="nc" id="L159">			return false;</span>
+
+<span class="nc" id="L161">		String stringToVerify = getStringToVerify(request);</span>
+
+<span class="nc" id="L163">		String generatedHMAC = generateHMAC(stringToVerify);</span>
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		if(generatedHMAC==null || !generatedHMAC.equals(request.getParameter(&quot;HMAC&quot;)))</span>
+<span class="nc" id="L165">			return false;</span>
+
+<span class="nc" id="L167">		return validateECDSA(request, stringToVerify);</span>
+	}
+
+	private String getStringToVerify(HttpServletRequest request)
+	{
+<span class="nc" id="L172">		String amt = request.getParameter(&quot;AMT&quot;);</span>
+<span class="nc" id="L173">		String curr = request.getParameter(&quot;CURR&quot;);</span>
+<span class="nc" id="L174">		String vs = request.getParameter(&quot;VS&quot;);</span>
+<span class="nc" id="L175">		String ss = request.getParameter(&quot;SS&quot;);</span>
+<span class="nc" id="L176">		String cs = request.getParameter(&quot;CS&quot;);</span>
+<span class="nc" id="L177">		String res = request.getParameter(&quot;RES&quot;);</span>
+<span class="nc" id="L178">		String tid = request.getParameter(&quot;TID&quot;);</span>
+<span class="nc" id="L179">		String timestamp = request.getParameter(&quot;TIMESTAMP&quot;);</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if(amt==null) amt=&quot;&quot;;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if(curr==null) curr=&quot;&quot;;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if(vs==null) vs=&quot;&quot;;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if(ss==null) ss=&quot;&quot;;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		if(cs==null) cs=&quot;&quot;;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if(res==null) res=&quot;&quot;;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if(tid==null) tid=&quot;&quot;;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		if(timestamp==null) timestamp=&quot;&quot;;</span>
+
+<span class="nc" id="L190">		StringBuilder stringToSign = new StringBuilder().</span>
+<span class="nc" id="L191">				append(amt).</span>
+<span class="nc" id="L192">				append(curr).</span>
+<span class="nc" id="L193">				append(vs).</span>
+<span class="nc" id="L194">				append(ss).</span>
+<span class="nc" id="L195">				append(cs).</span>
+<span class="nc" id="L196">				append(res).</span>
+<span class="nc" id="L197">				append(tid).</span>
+<span class="nc" id="L198">				append(timestamp);</span>
+
+<span class="nc" id="L200">		return stringToSign.toString();</span>
+	}
+
+	private boolean validateECDSA(HttpServletRequest request, String stringToVerify)
+	{
+		try
+		{
+<span class="nc" id="L207">			String expandedStringToVerify = stringToVerify + request.getParameter(&quot;HMAC&quot;);</span>
+<span class="nc" id="L208">			String ECDSA = request.getParameter(&quot;ECDSA&quot;);</span>
+<span class="nc" id="L209">			String publicKey = getECDSA(request.getParameter(&quot;ECSDA_KEY&quot;));</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if(Tools.isEmpty(publicKey))</span>
+<span class="nc" id="L211">				return false;</span>
+
+
+<span class="nc" id="L214">			X509EncodedKeySpec spec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(publicKey));</span>
+<span class="nc" id="L215">			KeyFactory keyFactory = KeyFactory.getInstance(&quot;EC&quot;);</span>
+<span class="nc" id="L216">			PublicKey pKey = keyFactory.generatePublic(spec);</span>
+
+<span class="nc" id="L218">			Signature ecdsaSign = Signature.getInstance(&quot;SHA256withECDSA&quot;);</span>
+<span class="nc" id="L219">			ecdsaSign.initVerify(pKey);</span>
+<span class="nc" id="L220">			ecdsaSign.update(expandedStringToVerify.getBytes(&quot;UTF-8&quot;));</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (ecdsaSign.verify(new BigInteger(ECDSA, 16).toByteArray())) {</span>
+<span class="nc" id="L223">				return true;</span>
+			}
+		}
+<span class="nc" id="L226">		catch(Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+
+<span class="nc" id="L228">		return false;</span>
+	}
+
+	private String getECDSA(String keyId)
+	{
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if(Tools.isEmpty(keyId))</span>
+<span class="nc" id="L234">			return null;</span>
+
+<span class="nc" id="L236">		String keysString = Tools.downloadUrl(&quot;https://moja.tatrabanka.sk/e-commerce/ecdsa_keys.txt&quot;);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if(Tools.isNotEmpty(keysString))</span>
+		{
+<span class="nc" id="L239">			String[] keys = keysString.split(&quot;KEY_ID: &quot;);</span>
+<span class="nc" id="L240">			String result = &quot;&quot;;</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			for(String key : keys)</span>
+			{
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				if(Tools.isNotEmpty(key))</span>
+				{
+<span class="nc" id="L245">					String[] lines = key.split(&quot;\\r?\\n&quot;);</span>
+<span class="nc bnc" id="L246" title="All 4 branches missed.">					if(lines!=null &amp;&amp; keyId.equals(lines[0]))</span>
+					{
+<span class="nc" id="L248">						int begin = 0;</span>
+<span class="nc" id="L249">						int end = 0;</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">						for(int i=0; i&lt;lines.length; i++)</span>
+						{
+<span class="nc bnc" id="L252" title="All 2 branches missed.">							if(&quot;-----BEGIN PUBLIC KEY-----&quot;.equals(lines[i]))</span>
+<span class="nc" id="L253">								begin = i+1;</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">							if(&quot;-----END PUBLIC KEY-----&quot;.equals(lines[i]))</span>
+<span class="nc" id="L255">								end = i;</span>
+						}
+<span class="nc bnc" id="L257" title="All 2 branches missed.">						for(int i=begin; i&lt;end; i++)</span>
+<span class="nc" id="L258">							result += lines[i];</span>
+<span class="nc" id="L259">						return result;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L264">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

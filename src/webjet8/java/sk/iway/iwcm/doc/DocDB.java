@@ -11,6 +11,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.forum.rest.ForumGroupService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.*;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
@@ -1002,11 +1003,11 @@ public class DocDB extends DB
 			{
 				if (doc_id == -1)
 				{
-					//oracle: sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, d.* FROM documents d, users u WHERE (d.author_id(+)=u.user_id  AND cacheable=1)";
-					sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+DocDB.getDocumentFields()+" FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE cacheable=1";
+					//oracle: sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, d.* FROM documents d, users u WHERE (d.author_id(+)=u.user_id  AND cacheable="+DB.getBooleanSql(true)+")";
+					sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+DocDB.getDocumentFields()+" FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE cacheable="+DB.getBooleanSql(true);
 					if (Constants.DB_TYPE == Constants.DB_ORACLE)
 					{
-						sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+DocDB.getDocumentFields()+" FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND cacheable=1";
+						sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+DocDB.getDocumentFields()+" FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND cacheable="+DB.getBooleanSql(true);
 					}
 					cachedDocs = new Hashtable<>();
 				}
@@ -1043,7 +1044,7 @@ public class DocDB extends DB
 			if (Constants.getBoolean("docAuthorLazyLoad") && history_id >= 0)
 				sql = "SELECT * FROM documents_history h WHERE history_id = ?";
 			if (Constants.getBoolean("docAuthorLazyLoad") && history_id < 0 && doc_id == -1)
-				sql = "SELECT "+DocDB.getDocumentFields()+" FROM documents d WHERE cacheable=1";
+				sql = "SELECT "+DocDB.getDocumentFields()+" FROM documents d WHERE cacheable="+DB.getBooleanSql(true);
 
 			db_conn = DBPool.getConnectionReadUncommited();
 			ps = db_conn.prepareStatement(sql);
@@ -1304,8 +1305,8 @@ public class DocDB extends DB
 
 			String onlyAvailableAppend = "";
 			if (onlyAvailable) {
-				onlyAvailableAppend = "available=1 AND";
-				if (Constants.DB_TYPE == Constants.DB_ORACLE) onlyAvailableAppend = "AND available=1 AND";
+				onlyAvailableAppend = "available="+DB.getBooleanSql(true)+" AND";
+				if (Constants.DB_TYPE == Constants.DB_ORACLE) onlyAvailableAppend = "AND available="+DB.getBooleanSql(true)+" AND";
 			}
 
 			if (Constants.DB_TYPE == Constants.DB_MSSQL)
@@ -1329,6 +1330,7 @@ public class DocDB extends DB
 				{
 					int rows = end - start;
 					limit = " LIMIT " + start + ", " + rows;
+					if (Constants.DB_TYPE==Constants.DB_PGSQL) limit = " OFFSET " + start + " LIMIT " + rows;
 					start = 0;
 					end = rows + 1;
 					//?? je treba +1 ??
@@ -1471,12 +1473,12 @@ public class DocDB extends DB
                 {
                     top = "TOP " + end;
                 }
-                sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available=1 AND root_group_l1=" + domainId + " ORDER BY " + order.toString();
+                sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available="+DB.getBooleanSql(true)+" AND root_group_l1=" + domainId + " ORDER BY " + order.toString();
             }
             else if (Constants.DB_TYPE == Constants.DB_ORACLE)
             {
                 //POZOR: ORA tu chyba limit!
-                sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND available=1 AND root_group_l1=" + domainId + " ORDER BY " + order.toString();
+                sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND available="+DB.getBooleanSql(true)+" AND root_group_l1=" + domainId + " ORDER BY " + order.toString();
             }
             else
             {
@@ -1485,11 +1487,12 @@ public class DocDB extends DB
                 {
                     int rows = end - start;
                     limit = " LIMIT " + start + ", " + rows;
+					if (Constants.DB_TYPE==Constants.DB_PGSQL) limit = " OFFSET " + start + " LIMIT " + rows;
                     start = 0;
                     end = rows + 1;
                     //?? je treba +1 ??
                 }
-                sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available=1 AND root_group_l1=" + domainId + " ORDER BY " + order + limit;
+                sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available="+DB.getBooleanSql(true)+" AND root_group_l1=" + domainId + " ORDER BY " + order + limit;
             }
             ps = db_conn.prepareStatement(sql);
             rs = ps.executeQuery();
@@ -1560,7 +1563,7 @@ public class DocDB extends DB
 			DocDetails doc;
 
 
-			sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+getDocumentFieldsNodata()+" FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available=1 AND password_protected LIKE '%" + userGroupId + "%' ORDER BY date_created DESC";
+			sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+getDocumentFieldsNodata()+" FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE available="+DB.getBooleanSql(true)+" AND password_protected LIKE '%" + userGroupId + "%' ORDER BY date_created DESC";
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
 
@@ -2402,7 +2405,7 @@ public class DocDB extends DB
 				if (Constants.getBoolean("docAuthorLazyLoad"))
 					sql = new StringBuilder("SELECT " ).append( top ).append(' ').append(docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
-				if (onlyAvailable) sql.append(" available=1 ");
+				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
 
 				if (groupIds!=null && groupIds.length()>0)
@@ -2418,7 +2421,7 @@ public class DocDB extends DB
 				if (Constants.getBoolean("docAuthorLazyLoad"))
 					sql = new StringBuilder("SELECT ").append(docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
-				if (onlyAvailable) sql.append(" available=1 ");
+				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
 
 				if (groupIds!=null && groupIds.length()>0)
@@ -2435,13 +2438,14 @@ public class DocDB extends DB
 				{
 					int rows = endIndex - startIndex;
 					limit = " LIMIT " + startIndex + ", " + rows;
+					if (Constants.DB_TYPE == Constants.DB_PGSQL) limit = " OFFSET " + startIndex + " LIMIT " + rows;
 					startIndex = 0;
 				}
 				sql = new StringBuilder("SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 				if (Constants.getBoolean("docAuthorLazyLoad"))
 					sql = new StringBuilder("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
-				if (onlyAvailable) sql.append(" available=1 ");
+				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
 
 				if (groupIds!=null && groupIds.length()>0)
@@ -2596,12 +2600,12 @@ public class DocDB extends DB
 			if (groupIds != null) groupIds = getOnlyNumbersIn(groupIds,true);
 
 			StringBuilder sql = new StringBuilder("");
-			if(Constants.DB_TYPE == Constants.DB_MYSQL) sql.append("SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) as total FROM documents d");
+			if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql.append("SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) as total FROM documents d");
 			else sql.append("SELECT count(d.doc_id) as total FROM documents d");
 
 			sql.append((perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
-			if (onlyAvailable) sql.append(" available=1 ");
+			if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 			else sql.append(" d.doc_id>0 ");
 
 			if (groupIds!=null && groupIds.length()>0)
@@ -2711,7 +2715,7 @@ public class DocDB extends DB
 			//read user permissions for every org struct
 
 			String sql;
-			sql = "SELECT count(doc_id) as total FROM documents d WHERE available=1 AND group_id=" + group_id;
+			sql = "SELECT count(doc_id) as total FROM documents d WHERE available="+DB.getBooleanSql(true)+" AND group_id=" + group_id;
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
 
@@ -3642,7 +3646,7 @@ public class DocDB extends DB
 		int limit = Constants.getInt("searchTextAllLimit");
 		String limit1 = "";
 		String limit2 = "";
-		if (Constants.DB_TYPE==Constants.DB_MYSQL) limit2 = " LIMIT 0, "+limit;
+		if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) limit2 = " LIMIT "+limit;
 		if (Constants.DB_TYPE==Constants.DB_MSSQL) limit1 = " TOP "+limit;
 
 		StringBuilder sql = new StringBuilder("SELECT").append(limit1).append(' ').append(getDocumentFields()).append(", d.data_asc FROM documents d WHERE ");
@@ -3661,6 +3665,10 @@ public class DocDB extends DB
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
 			{
 				sql.append("CONTAINS(data_asc, ?)>1");
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				sql.append("to_tsvector(data_asc) @@ to_tsquery(?)");
 			}
 			else
 			{
@@ -3702,6 +3710,14 @@ public class DocDB extends DB
 					String containsPhraze = String.join(" AND ", words);
 
 					Logger.debug(getClass(), "contains phraze: " + containsPhraze);
+					ps.setString(1, DB.internationalToEnglish(containsPhraze.toLowerCase()));
+				}
+				else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+					String containsPhraze = text;
+					String[] words = text.split(" ");
+					if (words.length>1) containsPhraze = String.join(" & ", words);
+
+					Logger.debug(getClass(), "contains phraze pgsql: " + containsPhraze);
 					ps.setString(1, DB.internationalToEnglish(containsPhraze.toLowerCase()));
 				}
 				else
@@ -3780,7 +3796,7 @@ public class DocDB extends DB
 		int limit = Constants.getInt("searchTextAllLimit");
 		String limit1 = "";
 		String limit2 = "";
-		if (Constants.DB_TYPE==Constants.DB_MYSQL) limit2 = " LIMIT 0, "+limit;
+		if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) limit2 = " LIMIT "+limit;
 		if (Constants.DB_TYPE==Constants.DB_MSSQL) limit1 = " TOP "+limit;
 
 		StringBuilder sql = new StringBuilder("SELECT").append(limit1).append(' ').append(getDocumentFieldsNodata()).append(" FROM documents d WHERE virtual_path LIKE ?");
@@ -5642,7 +5658,7 @@ public class DocDB extends DB
 			}
 
 			//premenovanie Groupy ak je stranka defaultna pre Grupu.
-			if(Constants.getBoolean("syncGroupAndWebpageTitle"))
+			if(GroupsService.canSyncTitle(docDetails.getDocId(), docDetails.getGroupId()))
 			{
 				changeGroupTitle(docDetails.getGroupId(), docDetails.getDocId(), docDetails.getTitle());
 			}

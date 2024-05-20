@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocAtrEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.attributes.jpa</a> &gt; <span class="el_source">DocAtrEntity.java</span></div><h1>DocAtrEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.attributes.jpa;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+
+@Entity
+@Table(name = &quot;doc_atr&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DOC_ATTRIBUTES)
+<span class="fc" id="L26">public class DocAtrEntity {</span>
+
+    @Id
+    @Column(name = &quot;id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_doc_atr&quot;)
+    private Long id;
+
+    @Column(name = &quot;doc_id&quot;)
+    private Integer docId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference(value=&quot;atrDef&quot;)
+    @JoinColumn(name = &quot;atr_id&quot;)
+    private DocAtrDefEntity atrDef;
+
+    @Column(name = &quot;value_string&quot;)
+    private String valueString;
+
+    @Column(name = &quot;value_int&quot;)
+    private Double valueNumber;
+
+    @Column(name = &quot;value_bool&quot;)
+    private Boolean valueBoolean;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

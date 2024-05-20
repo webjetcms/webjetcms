@@ -21,6 +21,7 @@ import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.utils.Pair;
 
@@ -48,7 +49,7 @@ public class Sender extends TimerTask
 	/**
 	 *  Description of the Field
 	 */
-	public static int MAX_RETRY_COUNT = 5;
+	public static int MAX_RETRY_COUNT = 5; //NOSONAR
 
 	/**
 	 *  Description of the Field
@@ -302,7 +303,7 @@ public class Sender extends TimerTask
 			//nacitaj si zoznam z DB
 			String sql = "";
 			if(Constants.DB_TYPE == Constants.DB_MSSQL) sql = ("SELECT TOP 50 * FROM emails WHERE email_id>? AND sent_date IS NULL AND (send_at IS null OR send_at <= ?) AND disabled=? ORDER BY email_id ASC");
-			else if(Constants.DB_TYPE == Constants.DB_MYSQL) sql = ("SELECT * FROM emails WHERE email_id>? AND sent_date IS NULL AND (send_at IS null OR send_at <= ?) AND disabled=? ORDER BY email_id ASC LIMIT 0,50");
+			else if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql = ("SELECT * FROM emails WHERE email_id>? AND sent_date IS NULL AND (send_at IS null OR send_at <= ?) AND disabled=? ORDER BY email_id ASC LIMIT 50");
 			else if(Constants.DB_TYPE == Constants.DB_ORACLE) sql = ("SELECT * FROM emails WHERE ROWNUM <= 50 AND email_id>? AND sent_date IS NULL AND (send_at IS null OR send_at <= ?) AND disabled=? ORDER BY email_id ASC");
 			ps = db_conn.prepareStatement(sql);
 			ps.setInt(1, getFromEmailId());
@@ -442,7 +443,7 @@ public class Sender extends TimerTask
 							StringBuilder sb = new StringBuilder();
 							BufferedInputStream is = new BufferedInputStream(conn.getInputStream());
 							InputStreamReader in = new InputStreamReader(is, encoding);
-							char buffer[] = new char[8000];
+							char[] buffer = new char[8000];
 							int n = 0;
 							while (true)
 							{
@@ -550,10 +551,29 @@ public class Sender extends TimerTask
 								body = addOpenTrackingImg(body, emailId);
 							}
 
-							//success = SendMail.send(senderName, senderEmail, recipientEmail, subject, body, attachments);
-							Pair<Boolean, Exception> result = SendMail.sendCapturingException(
-								senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, body, baseHref, attachments, false, true
-							);
+							String dmailListUnsubscribeBaseHref = Constants.getString("dmailListUnsubscribeBaseHref", baseHref);
+							//it must be httpS otherwise it will be ignored by Apple Mail and maybe other clients too
+							StringBuilder unsubscribedUrl = new StringBuilder("<").append(Tools.replace(dmailListUnsubscribeBaseHref, "http://", "https://"));
+							String hash = getClickHash(emailId);
+							unsubscribedUrl.append("/rest/dmail/unsubscribe?"+Constants.getString("dmailStatParam")+"="+hash);
+							unsubscribedUrl.append(">");
+
+							Pair<Boolean, Exception> result = new MailHelper()
+								.setFromName(senderName)
+								.setFromEmail(senderEmail)
+								.addRecipient(recipientEmail)
+								.setReplyTo(replyTo)
+								.setCcEmail(ccEmail)
+								.setBccEmail(bccEmail)
+								.setSubject(subject)
+								.setMessage(body)
+								.setBaseHref(baseHref)
+								.setAttachments(attachments)
+								.setSendLaterWhenException(false)
+								.setWriteToAuditLog(true)
+								.addHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+								.addHeader("List-Unsubscribe", unsubscribedUrl.toString())
+								.sendCapturingException();
 
 							//odregistrujem data context, ktory bol vytvoreny kvoli fejkovaniu domen
 							if(fakingDomain) SetCharacterEncodingFilter.unRegisterDataContext();
@@ -646,7 +666,7 @@ public class Sender extends TimerTask
 			try
 			{
 				Logger.println(Sender.class, "- nepodarilo sa odoslat email, zaspavam na 3x"+sleepTime);
-				if (sleepTime > 0) Thread.sleep(sleepTime*3);
+				if (sleepTime > 0) Thread.sleep(sleepTime*3L);
 			}
 			catch (Exception e)
 			{
@@ -679,7 +699,7 @@ public class Sender extends TimerTask
 		Logger.debug(getClass(), "Adding open tracking image");
 		if (emailId < 1) return(body);
 		String value = Integer.toString(emailId);
-		int endOfBody = body.indexOf("</body>")==-1?body.indexOf("</ body>"):body.indexOf("</body>");
+		int endOfBody = body.indexOf("</body>");
 		if(endOfBody != -1)
 		{
 			String trackGif = Constants.getString("dmailTrackopenGif");
@@ -742,8 +762,10 @@ public class Sender extends TimerTask
 
 		int failsafe = 500;
 		int counter = 0;
-		int start, end;
-		String oldLink, newLink;
+		int start;
+		int end;
+		String oldLink;
+		String newLink;
 		start = body.indexOf("href=\"");
 		while (counter < failsafe && start!=-1)
 		{
@@ -751,7 +773,7 @@ public class Sender extends TimerTask
 			if (end > start)
 			{
 				oldLink = body.substring(start+6, end);
-				if ( ( oldLink.trim().startsWith("http")==false || Constants.getBoolean("replaceExternalLinks"))  && oldLink.trim().startsWith("javascript")==false && oldLink.trim().startsWith("mailto")==false  && !oldLink.contains(baseHref))
+				if ( ( oldLink.trim().startsWith("http")==false || Constants.getBoolean("replaceExternalLinks"))  && oldLink.trim().startsWith("javascript")==false && oldLink.trim().startsWith("mailto")==false  && !oldLink.contains(baseHref) && !oldLink.contains("/combine.jsp"))
 				{
 					newLink = baseHref;
 					if (oldLink.trim().startsWith("http"))

@@ -217,6 +217,15 @@ public class FormDB
 			ps.close();
 			return res;
 		}
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+		{
+			PreparedStatement ps = null;
+			String sql = "REINDEX TABLE forms";
+			ps = db_conn.prepareStatement(sql);
+			boolean res = ps.execute();
+			ps.close();
+			return res;
+		}
 		else if (Constants.DB_TYPE == Constants.DB_MSSQL)
 		{
 			return true;

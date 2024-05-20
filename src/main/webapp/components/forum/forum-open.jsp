@@ -153,7 +153,7 @@ if(!isAjaxCall)
 <div class="row">
 	<div class="col-xs-12 col-sm-12 col-md-12">
 		<% if (canPostNewTopic) { %>
-			<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=0&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>',600,'<iwcm:text key="forum.new"/>');" class="btn btn-success"><iwcm:text key="forum.new"/></a>
+			<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=0&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>&language=<%=lng%>',600,'<iwcm:text key="forum.new"/>');" class="btn btn-success"><iwcm:text key="forum.new"/></a>
 		<% } %>
 	</div>
 </div>
@@ -162,14 +162,14 @@ if(!isAjaxCall)
 <div class="media">
   <div class="media-left">
   	<%
-        String userImg = Tools.isNotEmpty(field.getAuthorPhoto("")) ? "/thumb" + field.getAuthorPhoto("") + "?w=64&h=64&ip=4" : "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+PCEtLQpTb3VyY2UgVVJMOiBob2xkZXIuanMvNjR4NjQKQ3JlYXRlZCB3aXRoIEhvbGRlci5qcyAyLjYuMC4KTGVhcm4gbW9yZSBhdCBodHRwOi8vaG9sZGVyanMuY29tCihjKSAyMDEyLTIwMTUgSXZhbiBNYWxvcGluc2t5IC0gaHR0cDovL2ltc2t5LmNvCi0tPjxkZWZzPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+PCFbQ0RBVEFbI2hvbGRlcl8xNTYwODE1NDJhNCB0ZXh0IHsgZmlsbDojQUFBQUFBO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1mYW1pbHk6QXJpYWwsIEhlbHZldGljYSwgT3BlbiBTYW5zLCBzYW5zLXNlcmlmLCBtb25vc3BhY2U7Zm9udC1zaXplOjEwcHQgfSBdXT48L3N0eWxlPjwvZGVmcz48ZyBpZD0iaG9sZGVyXzE1NjA4MTU0MmE0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIGZpbGw9IiNFRUVFRUUiLz48Zz48dGV4dCB4PSIxMi41IiB5PSIzNi44Ij42NHg2NDwvdGV4dD48L2c+PC9nPjwvc3ZnPg==";
+        String userImg = Tools.isNotEmpty(field.getAuthorPhoto("")) ? "/thumb" + field.getAuthorPhoto("") + "?w=64&h=64&ip=4" : "/components/forum/images/user.png";
 
         if (field.getLevel() != 0) { %>
         <a href="#" style="width: 64px; height: 64px; display: block;">&nbsp;</a>
     <% }else{
     %>
     <a href="#">
-      <img class="media-object" style="width: 64px; height: 64px;" src="<%=userImg %>">
+      <img class="media-object" style="width: 64px; height: 64px;" src="<%=userImg %>" alt=""/>
     </a>
     <% } %>
   </div>
@@ -180,7 +180,7 @@ if(!isAjaxCall)
                 	<div class="media">
                       <div class="media-left">
                         <a href="#">
-                          <img class="media-object" style="width: 64px; height: 64px;" src="<%=userImg %>">
+                          <img class="media-object" style="width: 64px; height: 64px;" src="<%=userImg %>" alt="">
                         </a>
                       </div>
                       <div class="media-body">
@@ -205,7 +205,7 @@ if(!isAjaxCall)
 									<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
 								<%}%>
 							</h4>
-						
+
 							<iwcm:text key="forum.author"/>:
 							<logic:notEmpty name="field" property="authorEmail">
 								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>

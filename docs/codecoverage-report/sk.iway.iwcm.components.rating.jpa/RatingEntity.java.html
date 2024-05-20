@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RatingEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.rating.jpa</a> &gt; <span class="el_source">RatingEntity.java</span></div><h1>RatingEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.rating.jpa;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+
+@Entity
+@Table(name = &quot;rating&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
+<span class="fc" id="L27">public class RatingEntity {</span>
+
+    @Id
+    @Column(name = &quot;rating_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_rating&quot;)
+    private Long id;
+
+    @Column(name = &quot;doc_id&quot;)
+    private Integer docId;
+
+    @Column(name = &quot;user_id&quot;)
+    private Integer userId;
+
+    @Column(name = &quot;rating_value&quot;)
+    private Integer ratingValue;
+
+    @Column(name = &quot;insert_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date insertDate;
+
+    @Transient
+    private int totalSum;
+
+    @Transient
+	private double ratingValueDouble;
+
+    @Transient
+	private int totalUsers;
+
+    @Transient
+	private int ratingStat;
+
+    @Transient
+	private String docTitle;
+
+    public String getInsertDate() {
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if(insertDate == null) return &quot;&quot;;</span>
+<span class="fc" id="L64">        return Tools.formatDate(insertDate);</span>
+    }
+
+    public String getInsertTime() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if(insertDate == null) return &quot;&quot;;</span>
+<span class="nc" id="L69">        return Tools.formatTime(insertDate);</span>
+    }
+
+    public long getInsertDateLong() {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if(insertDate != null) return insertDate.getTime();</span>
+<span class="nc" id="L74">        return 0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

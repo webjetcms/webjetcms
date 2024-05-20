@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArchiveCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">ArchiveCommandExecutor.java</span></div><h1>ArchiveCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
+import sk.iway.iwcm.system.zip.ZipEntry;
+import sk.iway.iwcm.system.zip.ZipOutputStream;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  ArchiveCommandExecutor.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2015
+ *@author       $Author: jeeff suchy $
+ *@version      $Revision: 1.3 $
+ *@created      Date: Sep 22, 2015 12:32:03 PM
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L40">public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+	public static List&lt;String&gt; getAllowedTypes()
+	{
+<span class="fc" id="L44">		return Arrays.asList(</span>
+					&quot;application/zip&quot;
+					);
+	}
+
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="nc" id="L53">		executeZip(fsService, request, servletContext, json);</span>
+<span class="nc" id="L54">	}</span>
+
+	/**
+	 * Vykona zozipovanie zadanych suborov a vrati odkaz na dany ZIP, aby sa dalo pouzit aj pre ZildlCommandExecutor
+	 * @param fsService
+	 * @param request
+	 * @param servletContext
+	 * @param json
+	 * @return
+	 * @throws Exception
+	 */
+	public FsItemEx executeZip(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json) throws Exception {
+<span class="nc" id="L66">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+<span class="nc" id="L67">		String name = request.getParameter(&quot;name&quot;);</span>
+<span class="nc" id="L68">		FsItemEx zipFilePath = null;</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (Tools.isEmpty(name)) name = &quot;archive-&quot;+Tools.getNow();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (name.endsWith(&quot;.zip&quot;)) name = name.substring(0, name.lastIndexOf(&quot;.zip&quot;));</span>
+
+		//String type = request.getParameter(&quot;type&quot;);
+<span class="nc" id="L74">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if(targets.length &gt; 0)</span>
+		{
+<span class="nc" id="L78">			FsItemEx firstItem = super.findItem(fsService, targets[0]);</span>
+
+<span class="nc" id="L80">			Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L81">			Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">			if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), firstItem.getParent().getPath()))</span>
+			{
+				// zipovanie jedneho adresaru
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				if(targets.length == 1)</span>
+				{
+<span class="nc" id="L87">					FsItemEx fsi = firstItem;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">					if(fsi.isFolder())</span>
+					{
+<span class="nc" id="L90">						zipDirectory(fsi.getPath(), fsi.getParent().getPath() + &quot;/&quot; + name + &quot;.zip&quot;, false);</span>
+<span class="nc" id="L91">						zipFilePath = new FsItemEx(fsi.getParent(), name + &quot;.zip&quot;);</span>
+<span class="nc" id="L92">						added.add(zipFilePath);</span>
+					}
+<span class="nc" id="L94">				}</span>
+				// zipovanie viacerych suborov/adresarov
+				else
+				{
+<span class="nc" id="L98">					FsItemEx newTempDirName = createNewTempDir(fsService, firstItem.getParent());</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">					for(String filePathHash : targets)</span>
+					{
+<span class="nc" id="L101">						FsItemEx fsi = super.findItem(fsService, filePathHash);</span>
+<span class="nc" id="L102">						copyFileToDir(fsService, fsi, newTempDirName);</span>
+					}
+<span class="nc" id="L104">					zipDirectory(newTempDirName.getPath(), firstItem.getParent().getPath() + &quot;/&quot; + name + &quot;.zip&quot;, true);</span>
+<span class="nc" id="L105">					removeTempDir(newTempDirName);</span>
+<span class="nc" id="L106">					zipFilePath = new FsItemEx(firstItem.getParent(), name + &quot;.zip&quot;);</span>
+<span class="nc" id="L107">					added.add(zipFilePath);</span>
+<span class="nc" id="L108">				}</span>
+			}
+			else
+			{
+<span class="nc" id="L112">				json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.archive.error&quot;, firstItem.getParent().getPath()));</span>
+
+			}
+
+		}
+
+		// pridany novy zip
+<span class="nc" id="L119">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+
+<span class="nc" id="L121">		return zipFilePath;</span>
+	}
+
+	public FsItemEx newZipFileForResponse(FsItemEx file) throws IOException
+	{
+<span class="nc" id="L126">		FsItemEx newFile = new FsItemEx(file.getParent(), file.getName() + &quot;.zip&quot;);</span>
+<span class="nc" id="L127">		newFile.createFile();</span>
+
+<span class="nc" id="L129">		return newFile;</span>
+	}
+
+	protected FsItemEx createNewTempDir(FsService fsService, FsItemEx rootDir) throws IOException
+	{
+<span class="nc" id="L134">		String name = rootDir.getName() + &quot;-tempfolder-&quot; + String.valueOf(new Date().getTime());</span>
+<span class="nc" id="L135">		FsItemEx dir = new FsItemEx(rootDir, name);</span>
+<span class="nc" id="L136">		dir.createFolder();</span>
+<span class="nc" id="L137">		return dir;</span>
+	}
+
+	protected void copyFileToDir(FsService fsService, FsItemEx file, FsItemEx dir) throws IOException
+	{
+<span class="nc" id="L142">		FsItemEx ftgt = file;</span>
+
+		//FsItemEx fsrc = ftgt.getParent();
+<span class="nc" id="L145">		FsItemEx fdst = dir;</span>
+
+
+<span class="nc" id="L148">		String name = ftgt.getName();</span>
+<span class="nc" id="L149">		FsItemEx newFile = new FsItemEx(fdst, name);</span>
+
+		//JEEFF: upravene pre podporu nasho DocGroup
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+		{
+<span class="nc" id="L154">			((IwcmDocGroupFsVolume)ftgt.getVolume()).createAndCopy(ftgt, fdst, false);</span>
+		}
+		else
+		{
+<span class="nc" id="L158">			super.createAndCopy(ftgt, newFile);</span>
+		}
+<span class="nc" id="L160">	}</span>
+
+	protected void removeTempDir(FsItemEx dir) throws IOException
+	{
+<span class="nc" id="L164">		dir.delete();</span>
+<span class="nc" id="L165">	}</span>
+
+	protected void getFilesFromDirToZip(String rootDir, String rootDirPrefix, ZipOutputStream zipOut, boolean saveFullPath) throws IOException
+	{
+	   IwcmFile file;
+<span class="nc bnc" id="L170" title="All 2 branches missed.">	   if (rootDir.indexOf(&quot;:&quot;)==-1)</span>
+	   {
+<span class="nc" id="L172">	      file = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(rootDir));</span>
+	   }
+	   else
+	   {
+<span class="nc" id="L176">	      file = new IwcmFile(rootDir);</span>
+	   }
+		int i;
+<span class="nc" id="L179">		byte[] buf = new byte[64000];</span>
+		IwcmInputStream in;
+		int len;
+
+<span class="nc" id="L183">		System.out.println(&quot;Testing file: &quot; + file.getAbsolutePath()+&quot; isDir=&quot; + file.isDirectory());</span>
+
+<span class="nc" id="L185">		String rootDir2 = rootDir.replace('/', File.separatorChar);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">	   if (file.isDirectory())</span>
+	   {
+<span class="nc" id="L188">	   	IwcmFile[] files = file.listFiles();</span>
+<span class="nc" id="L189">	   	int size = files.length;</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			for (i=0; i&lt;size; i++)</span>
+			{
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				if (files[i].isDirectory())</span>
+				{
+<span class="nc" id="L194">					System.out.println(&quot;Adding DIRECTORY: &quot; + file.getName() + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L195">					String newRootDir = rootDir + &quot;/&quot; + files[i].getName();</span>
+<span class="nc" id="L196">				   getFilesFromDirToZip(newRootDir, rootDirPrefix, zipOut, saveFullPath);</span>
+<span class="nc" id="L197">				}</span>
+				else
+				{
+					try
+					{
+<span class="nc" id="L202">						System.out.println(&quot;Adding file: &quot; + files[i].getName() + &quot;&lt;br&gt;&quot;);</span>
+
+<span class="nc" id="L204">					   in = new IwcmInputStream(files[i].getAbsolutePath());</span>
+						//Add ZIP entry to output stream.
+						ZipEntry entry;
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">						if (saveFullPath)</span>
+						{
+<span class="nc" id="L210">							String entryPath = rootDir2 + java.io.File.separatorChar + files[i].getName();</span>
+<span class="nc" id="L211">							entryPath = entryPath.replace(rootDirPrefix, &quot;&quot;);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">							if (entryPath.indexOf(File.separatorChar) == 0)</span>
+							{
+<span class="nc" id="L214">								entryPath = entryPath.substring(1);</span>
+							}
+<span class="nc" id="L216">							entry = new ZipEntry(entryPath);</span>
+<span class="nc" id="L217">						}</span>
+						else
+						{
+<span class="nc" id="L220">							String entryPath = rootDir2.substring(</span>
+<span class="nc" id="L221">											rootDir2.lastIndexOf(File.separator) + 1,</span>
+<span class="nc" id="L222">											rootDir2.length()</span>
+										) +
+										java.io.File.separatorChar +
+<span class="nc" id="L225">										files[i].getName();</span>
+<span class="nc" id="L226">							entry = new ZipEntry(entryPath);</span>
+						}
+
+<span class="nc" id="L229">						entry.setTime(files[i].lastModified());</span>
+<span class="nc" id="L230">						entry.setSize(files[i].length());</span>
+<span class="nc" id="L231">						zipOut.putNextEntry(entry);</span>
+
+		            // Transfer bytes from the file to the ZIP file
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		            while ((len = in.read(buf)) &gt; 0)</span>
+		            {
+<span class="nc" id="L236">		            	zipOut.write(buf, 0, len);</span>
+		            }
+					}
+<span class="nc" id="L239">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L241">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L242">					}</span>
+				}
+			}
+<span class="nc" id="L245">	   }</span>
+	   else
+	   {
+<span class="nc" id="L248">		   in = new IwcmInputStream(file.getAbsolutePath());</span>
+			//Add ZIP entry to output stream.
+<span class="nc" id="L250">			String entryPath = rootDir2 + java.io.File.separatorChar + file.getName();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (entryPath.indexOf(File.separatorChar)==0)</span>
+			{
+<span class="nc" id="L253">				entryPath = entryPath.substring(1);</span>
+			}
+
+<span class="nc" id="L256">			ZipEntry entry = new ZipEntry(entryPath);</span>
+<span class="nc" id="L257">			entry.setTime(file.lastModified());</span>
+<span class="nc" id="L258">			zipOut.putNextEntry(entry);</span>
+
+	      // Transfer bytes from the file to the ZIP file
+<span class="nc bnc" id="L261" title="All 2 branches missed.">	      while ((len = in.read(buf)) &gt; 0)</span>
+	      {
+<span class="nc" id="L263">	      	zipOut.write(buf, 0, len);</span>
+	      }
+	   }
+<span class="nc" id="L266">	}</span>
+
+	protected void zipDirectory(String dirName, String fileName, boolean onlyContentInDir) throws IOException
+	{
+<span class="nc bnc" id="L270" title="All 4 branches missed.">		if (dirName != null &amp;&amp; fileName != null)</span>
+		{
+<span class="nc" id="L272">			String dir = dirName;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (dir.endsWith(&quot;/&quot;))</span>
+			{
+<span class="nc" id="L275">				dir =  dir.substring(0, dir.length()-1);</span>
+			}
+<span class="nc" id="L277">			String[] path = dir.split(&quot;/&quot;);</span>
+
+<span class="nc bnc" id="L279" title="All 2 branches missed.">			if (onlyContentInDir) path = Arrays.copyOf(path, path.length);</span>
+<span class="nc" id="L280">			else path = Arrays.copyOf(path, path.length-1);</span>
+
+<span class="nc" id="L282">			String pathString = Tools.join(path, &quot;/&quot;).replace('/', File.separatorChar);</span>
+<span class="nc" id="L283">			ZipOutputStream zout = new ZipOutputStream(</span>
+						new IwcmOutputStream(
+<span class="nc" id="L285">									sk.iway.iwcm.Tools.getRealPath(fileName)</span>
+									)
+						);
+<span class="nc" id="L288">		   getFilesFromDirToZip(dir, pathString, zout, true);</span>
+<span class="nc" id="L289">		   zout.close();</span>
+		}
+<span class="nc" id="L291">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

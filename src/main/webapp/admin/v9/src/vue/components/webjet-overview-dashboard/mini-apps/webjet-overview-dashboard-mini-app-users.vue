@@ -1,8 +1,8 @@
 <template>
-  <div :class="'overview-logged users'">
+  <div :class="'overview-logged users noperms-welcomeShowLoggedAdmins'">
     <div class="overview-logged__head">
       <div class="overview-logged__head__icon">
-        <i class="fas fa-user"></i>
+        <i class="ti ti-users fs-4"></i>
       </div>
          <span>
             {{$loggedAdmins}}
@@ -19,7 +19,7 @@
             :key="index"
         >
           <a :href="user.link" :title="user.fullName">
-            <img :src="user.photo">
+            <img :src="user.photo" alt="">
             <span class="name" v-text="user.fullName"></span>
           </a>
         </li>

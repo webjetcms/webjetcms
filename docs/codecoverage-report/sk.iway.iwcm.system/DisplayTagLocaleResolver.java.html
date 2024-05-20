@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DisplayTagLocaleResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">DisplayTagLocaleResolver.java</span></div><h1>DisplayTagLocaleResolver.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.Tag;
+
+import org.apache.struts.util.ResponseUtils;
+import org.displaytag.localization.I18nResourceProvider;
+import org.displaytag.localization.LocaleResolver;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  DislpayTagLocaleResolver.java - resolver pre ResourceBundle
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.9 $
+ *@created      Date: 10.4.2005 18:11:45
+ *@modified     $Date: 2009/05/04 09:26:17 $
+ */
+<span class="fc" id="L29">public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleResolver</span>
+{
+	/**
+    * prefix/suffix for missing entries.
+    */
+   public static final String UNDEFINED_KEY = &quot;???&quot;; //$NON-NLS-1$
+
+   /**
+    * @see LocaleResolver#resolveLocale(HttpServletRequest)
+    */
+   @Override
+   public Locale resolveLocale(HttpServletRequest request)
+   {
+<span class="nc" id="L42">       Locale userLocale = request.getLocale();</span>
+       
+<span class="nc" id="L44">       String lng = getLng(null, request);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">       if (Tools.isNotEmpty(lng))</span>
+       {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">      	 if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
+<span class="nc" id="L48">      	 userLocale = new Locale(lng);</span>
+       }
+       
+<span class="nc" id="L51">       Logger.debug(this,&quot;resolveLocale, lng=&quot;+lng+&quot; locale=&quot;+userLocale);</span>
+
+<span class="nc" id="L53">       return userLocale;</span>
+   }
+
+   /**
+    * @see I18nResourceProvider#getResource(String, String, Tag, PageContext)
+    */
+   @Override
+   public String getResource(String resourceKey, String defaultValue, Tag tag, PageContext pageContext)
+   {   		
+      // if titleKey isn't defined either, use property
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">      String key = (resourceKey != null) ? resourceKey : defaultValue;</span>
+      
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">      if (key.indexOf(&quot;basic.msg.empty_list&quot;)!=-1)</span>
+      {
+<span class="nc" id="L67">      	System.out.println(&quot;------------------ MAM TO -----------------&quot;);</span>
+      }      
+       
+<span class="fc" id="L70">      HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+		
+<span class="fc" id="L72">      String lng = getLng(pageContext, request);</span>
+      
+<span class="fc" id="L74">		boolean needRefresh = false;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		if (request.getSession().getAttribute(&quot;userlngr&quot;) != null)</span>
+		{
+			//ak to mame v session, tak chceme pri kazdom zobrazeni stranky
+			// spravit refresh
+<span class="nc" id="L79">			needRefresh = true;</span>
+		}
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">		if (request.getParameter(&quot;userlngr&quot;) != null)</span>
+		{
+<span class="nc" id="L83">			needRefresh = true;</span>
+		}
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (pageContext.getAttribute(&quot;userlngr&quot;) != null)</span>
+		{
+			//pri zobrazeni tejto stranky sme uz jazyk refreshli, nema zmysel to
+			// robit znova
+<span class="nc" id="L89">			needRefresh = false;</span>
+		}
+		//Logger.debug(this,&quot;userlngr=&quot;+request.getParameter(&quot;userlngr&quot;));
+<span class="fc" id="L92">		Prop prop = null;</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (needRefresh)</span>
+		{
+<span class="nc" id="L95">			pageContext.setAttribute(&quot;userlngr&quot;, &quot;refreshed&quot;);</span>
+<span class="nc" id="L96">			prop = Prop.getInstance(Constants.getServletContext(), lng, true);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (&quot;session&quot;.equals(request.getParameter(&quot;userlngr&quot;)))</span>
+			{
+				//uloz si to do session, teraz sa bude refreshovat pri kazdom
+				// zobrazeni stranky
+<span class="nc" id="L101">				request.getSession().setAttribute(&quot;userlngr&quot;, &quot;session&quot;);</span>
+			}
+		}
+		else
+		{
+<span class="fc" id="L106">			prop = Prop.getInstance(Constants.getServletContext(), lng, false);</span>
+		}
+		
+<span class="fc" id="L109">		Logger.debug(this,&quot;resolver (&quot;+lng+&quot;): &quot;+key);</span>
+		
+<span class="fc" id="L111">		String text = prop.getText(key);</span>
+		//text = prop.getText(key);
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (text != null)</span>
+		{
+<span class="fc" id="L115">			return(text);</span>
+		}
+       
+<span class="nc" id="L118">       return key;</span>
+   }
+
+   private String getLng(PageContext pageContext, HttpServletRequest request)
+   {
+<span class="fc" id="L123">   	String lng = &quot;&quot;;</span>
+<span class="pc bpc" id="L124" title="2 of 4 branches missed.">		if (pageContext != null &amp;&amp; pageContext.getAttribute(&quot;lng&quot;) != null)</span>
+		{
+<span class="nc" id="L126">			lng = (String) pageContext.getAttribute(&quot;lng&quot;);</span>
+		}
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">		else if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
+		{
+<span class="nc" id="L130">			lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+		}
+		else
+		{
+<span class="fc" id="L134">			lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">			if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">			if (lng == null)</span>
+			{
+<span class="fc" id="L138">				lng = (String) request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+			}
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">			if (lng == null)</span>
+			{
+<span class="nc" id="L142">				lng = sk.iway.iwcm.Constants.getString(&quot;defaultLanguage&quot;);</span>
+			}			
+		}
+		
+<span class="fc" id="L146">		return lng;</span>
+   }
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

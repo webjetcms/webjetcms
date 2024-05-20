@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketInvoiceBean.java</span></div><h1>BasketInvoiceBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+
+/**
+ *  BasketInvoiceBean.java - objednavka
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.10 $
+ *@created      Date: 9.11.2005 15:07:39
+ *@modified     $Date: 2010/01/20 11:14:06 $
+ */
+@Entity
+@Table(name=&quot;basket_invoice&quot;)
+<span class="fc" id="L36">public class BasketInvoiceBean implements Serializable</span>
+{
+	private static final long serialVersionUID = -2743373083798323795L;
+
+<span class="fc" id="L40">	public static final Integer INVOICE_STATUS_NEW = Integer.valueOf(1);</span>
+<span class="fc" id="L41">	public static final Integer INVOICE_STATUS_PAID = Integer.valueOf(2);</span>
+<span class="fc" id="L42">	public static final Integer INVOICE_STATUS_CANCELLED = Integer.valueOf(3);</span>
+<span class="fc" id="L43">	public static final Integer INVOICE_STATUS_DEPOSIT_PAID = Integer.valueOf(8);</span>
+<span class="fc" id="L44">	public static final Integer INVOICE_STATUS_PARTIALLY_PAID = Integer.valueOf(4);</span>
+<span class="fc" id="L45">	public static final Integer INVOICE_STATUS_ISSUED = Integer.valueOf(5);</span>
+
+
+	@Id
+	@Column(name=&quot;basket_invoice_id&quot;)
+	@GeneratedValue(generator=&quot;WJGen_basket_invoice&quot;)
+   @TableGenerator(name=&quot;WJGen_basket_invoice&quot;, pkColumnValue=&quot;basket_invoice&quot;)
+	private int basketInvoiceId;
+
+	@Column(name=&quot;browser_id&quot;)
+	private Long browserId;
+
+	@Column(name=&quot;logged_user_id&quot;)
+	private int loggedUserId;
+
+	@Column(name=&quot;create_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date createDate;
+
+	@Column(name=&quot;status_id&quot;)
+	private Integer statusId;
+
+	@Column(name=&quot;delivery_company&quot;)
+	private String deliveryCompany;
+	@Column(name=&quot;delivery_name&quot;)
+	private String deliveryName;
+	@Column(name=&quot;delivery_surname&quot;)
+	private String deliverySurName;
+	@Column(name=&quot;delivery_street&quot;)
+	private String deliveryStreet;
+	@Column(name=&quot;delivery_city&quot;)
+	private String deliveryCity;
+	@Column(name=&quot;delivery_zip&quot;)
+	private String deliveryZip;
+	@Column(name=&quot;delivery_country&quot;)
+	private String deliveryCountry;
+
+	@Column(name=&quot;internal_invoice_id&quot;)
+	private String internalInvoiceId;
+	@Column(name=&quot;user_note&quot;)
+	private String userNote;
+	@Column(name=&quot;user_lng&quot;)
+	private String userLng;
+
+	@Column(name=&quot;payment_method&quot;)
+	private String paymentMethod;
+	@Column(name=&quot;delivery_method&quot;)
+	private String deliveryMethod;
+
+	@Column(name=&quot;contact_title&quot;)
+	private String contactTitle;
+	@Column(name=&quot;contact_first_name&quot;)
+	private String contactFirstName;
+	@Column(name=&quot;contact_last_name&quot;)
+	private String contactLastName;
+	@Column(name=&quot;contact_email&quot;)
+	private String contactEmail;
+	@Column(name=&quot;contact_phone&quot;)
+	private String contactPhone;
+	@Column(name=&quot;contact_company&quot;)
+	private String contactCompany;
+	@Column(name=&quot;contact_street&quot;)
+	private String contactStreet;
+	@Column(name=&quot;contact_city&quot;)
+	private String contactCity;
+	@Column(name=&quot;contact_zip&quot;)
+	private String contactZip;
+	@Column(name=&quot;contact_country&quot;)
+	private String contactCountry;
+	@Column(name=&quot;contact_ico&quot;)
+	private String contactIco;
+	@Column(name=&quot;contact_icdph&quot;)
+	private String contactIcdph;
+	@Column(name=&quot;contact_dic&quot;)
+	private String contactDic;
+
+	@Column(name=&quot;field_a&quot;)
+	private String fieldA;
+	@Column(name=&quot;field_b&quot;)
+	private String fieldB;
+	@Column(name=&quot;field_c&quot;)
+	private String fieldC;
+	@Column(name=&quot;field_d&quot;)
+	private String fieldD;
+	@Column(name=&quot;field_e&quot;)
+	private String fieldE;
+	@Column(name=&quot;field_f&quot;)
+	private String fieldF;
+
+	@Column(name=&quot;html_code&quot;)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String htmlCode;
+	@Column(name=&quot;currency&quot;)
+	private String currency;
+
+
+	@javax.persistence.OneToMany(cascade=CascadeType.ALL, targetEntity=BasketItemBean.class, mappedBy=&quot;basketInvoice&quot;)
+	private List&lt;BasketItemBean&gt; basketItems;// = new ArrayList&lt;BasketItemBean&gt;();
+
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+
+
+	/**
+	 * Vrati celkovy pocet poloziek (vratane QTY)
+	 * @return
+	 */
+	public int getTotalItems()
+	{
+<span class="nc" id="L154">		return(InvoiceDB.getTotalItems(getBasketItems()));</span>
+	}
+
+	/**
+	 * Vrati celkovu cenu poloziek vratane DPH
+	 * @return
+	 */
+	public double getTotalPriceVat()
+	{
+<span class="nc" id="L163">		return(InvoiceDB.getTotalPriceVat(getBasketItems()));</span>
+	}
+
+	public double getTotalPriceVatIn(String currency)
+	{
+
+		try
+		{
+<span class="nc" id="L171">			String constantName = &quot;kurz_&quot; + currency + &quot;_&quot; + getCurrency();</span>
+<span class="nc" id="L172">			double rate = 1.0;</span>
+			// nasli sme bezny kurz
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName)))</span>
+			{
+<span class="nc" id="L176">				rate = Double.valueOf(Constants.getString(constantName));</span>
+<span class="nc" id="L177">				return rate * getTotalPriceVat();</span>
+			}
+			// nevyslo, skusime opacnu konverziu
+<span class="nc" id="L180">			constantName = &quot;kurz_&quot; + getCurrency() + &quot;_&quot; + currency;</span>
+			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
+			// 1/kurz
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName)))</span>
+			{
+<span class="nc" id="L185">				rate = Double.valueOf(Constants.getString(constantName));</span>
+<span class="nc" id="L186">				return (1.0 / rate) * getTotalPriceVat();</span>
+			}
+		}
+<span class="nc" id="L189">		catch (NumberFormatException e)</span>
+		{
+<span class="nc" id="L191">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L192">			throw new IllegalStateException(&quot;Malformed constant format for currencies &quot;+getCurrency()+&quot; and &quot;+currency);</span>
+<span class="nc" id="L193">		}</span>
+<span class="nc" id="L194">		return getTotalPriceVat();</span>
+	}
+
+	/**
+	 * Vypocita autorizacny token k objednavke. Ako autorizacny token
+	 * sa vezme retazec &quot;INV&quot;+id objednavky+Constants.getInstallName()
+	 *
+	 * Ak by sa tento prefix/sufix nepouzil, utocnik by ziskal pristup k {@link Password}.encrypt(ID_OBJEDNAVKY),
+	 * co by potencialne mohol vyuzit pri inych autorizacnych testoch.
+	 * @throws Exception ak sa nepodari enkrypcia
+	 */
+	public String getAuthorizationToken()
+	{
+<span class="nc" id="L207">		return getAuthorizationToken(getBasketInvoiceId());</span>
+	}
+
+	public static String getAuthorizationToken(int invoiceId)
+	{
+<span class="nc" id="L212">		String rawKey = new StringBuilder().append(&quot;INV&quot;).append(invoiceId).append(Constants.getInstallName()).toString();</span>
+		try
+		{
+<span class="nc" id="L215">			return new Password().encrypt(rawKey);</span>
+		}
+<span class="nc" id="L217">		catch (Exception e)</span>
+		{
+<span class="nc" id="L219">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L220">			return &quot;&quot;;</span>
+		}
+	}
+
+
+	/**
+	 * ------- getters &amp; setters
+	 *
+	 *
+	 */
+
+	public List&lt;BasketItemBean&gt; getBasketItems()
+	{
+<span class="nc" id="L233">		return basketItems;</span>
+	}
+	public void setBasketItems(List&lt;BasketItemBean&gt; basketItems)
+	{
+<span class="nc" id="L237">		this.basketItems = basketItems;</span>
+<span class="nc" id="L238">	}</span>
+	public void setBasketInvoiceId(int basketInvoiceId)
+	{
+<span class="nc" id="L241">		this.basketInvoiceId = basketInvoiceId;</span>
+<span class="nc" id="L242">	}</span>
+
+
+
+	public int getBasketInvoiceId()
+	{
+<span class="nc" id="L248">		return basketInvoiceId;</span>
+	}
+
+	public Long getBrowserId()
+	{
+<span class="nc" id="L253">		return browserId;</span>
+	}
+
+	public void setBrowserId(Long browserId)
+	{
+<span class="nc" id="L258">		this.browserId = browserId;</span>
+<span class="nc" id="L259">	}</span>
+
+	public int getLoggedUserId()
+	{
+<span class="nc" id="L263">		return loggedUserId;</span>
+	}
+
+	public void setLoggedUserId(int loggedUserId)
+	{
+<span class="nc" id="L268">		this.loggedUserId = loggedUserId;</span>
+<span class="nc" id="L269">	}</span>
+
+	public Date getCreateDate()
+	{
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		return createDate == null ? null : (Date) createDate.clone();</span>
+	}
+
+	public void setCreateDate(Date createDate)
+	{
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		this.createDate = createDate == null ? null : (Date) createDate.clone();</span>
+<span class="nc" id="L279">	}</span>
+
+	public Integer getStatusId()
+	{
+<span class="nc" id="L283">		return statusId;</span>
+	}
+
+	public void setStatusId(Integer statusId)
+	{
+<span class="nc" id="L288">		this.statusId = statusId;</span>
+<span class="nc" id="L289">	}</span>
+
+	public String getDeliveryCompany()
+	{
+<span class="nc" id="L293">		return deliveryCompany;</span>
+	}
+
+	public void setDeliveryCompany(String deliveryCompany)
+	{
+<span class="nc" id="L298">		this.deliveryCompany = deliveryCompany;</span>
+<span class="nc" id="L299">	}</span>
+
+	public String getDeliveryName()
+	{
+<span class="nc" id="L303">		return deliveryName;</span>
+	}
+
+	public void setDeliveryName(String deliveryName)
+	{
+<span class="nc" id="L308">		this.deliveryName = deliveryName;</span>
+<span class="nc" id="L309">	}</span>
+
+	public String getDeliverySurName() {
+<span class="nc" id="L312">		return deliverySurName;</span>
+	}
+
+	public void setDeliverySurName(String deliverySurName) {
+<span class="nc" id="L316">		this.deliverySurName = deliverySurName;</span>
+<span class="nc" id="L317">	}</span>
+
+	public String getDeliveryStreet()
+	{
+<span class="nc" id="L321">		return deliveryStreet;</span>
+	}
+
+	public void setDeliveryStreet(String deliveryStreet)
+	{
+<span class="nc" id="L326">		this.deliveryStreet = deliveryStreet;</span>
+<span class="nc" id="L327">	}</span>
+
+	public String getDeliveryCity()
+	{
+<span class="nc" id="L331">		return deliveryCity;</span>
+	}
+
+	public void setDeliveryCity(String deliveryCity)
+	{
+<span class="nc" id="L336">		this.deliveryCity = deliveryCity;</span>
+<span class="nc" id="L337">	}</span>
+
+	public String getDeliveryZip()
+	{
+<span class="nc" id="L341">		return deliveryZip;</span>
+	}
+
+	public void setDeliveryZip(String deliveryZip)
+	{
+<span class="nc" id="L346">		this.deliveryZip = deliveryZip;</span>
+<span class="nc" id="L347">	}</span>
+
+	public String getDeliveryCountry()
+	{
+<span class="nc" id="L351">		return deliveryCountry;</span>
+	}
+
+	public void setDeliveryCountry(String deliveryCountry)
+	{
+<span class="nc" id="L356">		this.deliveryCountry = deliveryCountry;</span>
+<span class="nc" id="L357">	}</span>
+
+	public String getInternalInvoiceId()
+	{
+<span class="nc" id="L361">		return internalInvoiceId;</span>
+	}
+
+	public void setInternalInvoiceId(String internalInvoiceId)
+	{
+<span class="nc" id="L366">		this.internalInvoiceId = internalInvoiceId;</span>
+<span class="nc" id="L367">	}</span>
+
+	public String getUserNote()
+	{
+<span class="nc" id="L371">		return userNote;</span>
+	}
+
+	public void setUserNote(String userNote)
+	{
+<span class="nc" id="L376">		this.userNote = userNote;</span>
+<span class="nc" id="L377">	}</span>
+
+	public String getUserLng()
+	{
+<span class="nc" id="L381">		return userLng;</span>
+	}
+
+	public void setUserLng(String userLng)
+	{
+<span class="nc" id="L386">		this.userLng = userLng;</span>
+<span class="nc" id="L387">	}</span>
+
+	public String getPaymentMethod()
+	{
+<span class="nc" id="L391">		return paymentMethod;</span>
+	}
+
+	public void setPaymentMethod(String paymentMethod)
+	{
+<span class="nc" id="L396">		this.paymentMethod = paymentMethod;</span>
+<span class="nc" id="L397">	}</span>
+
+	public String getDeliveryMethod()
+	{
+<span class="nc" id="L401">		return deliveryMethod;</span>
+	}
+
+	public void setDeliveryMethod(String deliveryMethod)
+	{
+<span class="nc" id="L406">		this.deliveryMethod = deliveryMethod;</span>
+<span class="nc" id="L407">	}</span>
+
+	public String getContactTitle()
+	{
+<span class="nc" id="L411">		return contactTitle;</span>
+	}
+
+	public void setContactTitle(String contactTitle)
+	{
+<span class="nc" id="L416">		this.contactTitle = contactTitle;</span>
+<span class="nc" id="L417">	}</span>
+
+	public String getContactFirstName()
+	{
+<span class="nc" id="L421">		return contactFirstName;</span>
+	}
+
+	public void setContactFirstName(String contactFirstName)
+	{
+<span class="nc" id="L426">		this.contactFirstName = contactFirstName;</span>
+<span class="nc" id="L427">	}</span>
+
+	public String getContactLastName()
+	{
+<span class="nc" id="L431">		return contactLastName;</span>
+	}
+
+	public void setContactLastName(String contactLastName)
+	{
+<span class="nc" id="L436">		this.contactLastName = contactLastName;</span>
+<span class="nc" id="L437">	}</span>
+
+	public String getContactEmail()
+	{
+<span class="nc" id="L441">		return contactEmail;</span>
+	}
+
+	public void setContactEmail(String contactEmail)
+	{
+<span class="nc" id="L446">		this.contactEmail = contactEmail;</span>
+<span class="nc" id="L447">	}</span>
+
+	public String getContactPhone()
+	{
+<span class="nc" id="L451">		return contactPhone;</span>
+	}
+
+	public void setContactPhone(String contactPhone)
+	{
+<span class="nc" id="L456">		this.contactPhone = contactPhone;</span>
+<span class="nc" id="L457">	}</span>
+
+	public String getContactCompany()
+	{
+<span class="nc" id="L461">		return contactCompany;</span>
+	}
+
+	public void setContactCompany(String contactCompany)
+	{
+<span class="nc" id="L466">		this.contactCompany = contactCompany;</span>
+<span class="nc" id="L467">	}</span>
+
+	public String getContactStreet()
+	{
+<span class="nc" id="L471">		return contactStreet;</span>
+	}
+
+	public void setContactStreet(String contactStreet)
+	{
+<span class="nc" id="L476">		this.contactStreet = contactStreet;</span>
+<span class="nc" id="L477">	}</span>
+
+	public String getContactCity()
+	{
+<span class="nc" id="L481">		return contactCity;</span>
+	}
+
+	public void setContactCity(String contactCity)
+	{
+<span class="nc" id="L486">		this.contactCity = contactCity;</span>
+<span class="nc" id="L487">	}</span>
+
+	public String getContactZip()
+	{
+<span class="nc" id="L491">		return contactZip;</span>
+	}
+
+	public void setContactZip(String contactZip)
+	{
+<span class="nc" id="L496">		this.contactZip = contactZip;</span>
+<span class="nc" id="L497">	}</span>
+
+	public String getContactCountry()
+	{
+<span class="nc" id="L501">		return contactCountry;</span>
+	}
+
+	public void setContactCountry(String contactCountry)
+	{
+<span class="nc" id="L506">		this.contactCountry = contactCountry;</span>
+<span class="nc" id="L507">	}</span>
+
+	public String getContactIco()
+	{
+<span class="nc" id="L511">		return contactIco;</span>
+	}
+
+	public void setContactIco(String contactIco)
+	{
+<span class="nc" id="L516">		this.contactIco = contactIco;</span>
+<span class="nc" id="L517">	}</span>
+
+	public String getContactIcdph()
+	{
+<span class="nc" id="L521">		return contactIcdph;</span>
+	}
+
+	public void setContactIcdph(String contactIcdph)
+	{
+<span class="nc" id="L526">		this.contactIcdph = contactIcdph;</span>
+<span class="nc" id="L527">	}</span>
+
+	public String getContactDic()
+	{
+<span class="nc" id="L531">		return contactDic;</span>
+	}
+
+	public void setContactDic(String contactDic)
+	{
+<span class="nc" id="L536">		this.contactDic = contactDic;</span>
+<span class="nc" id="L537">	}</span>
+
+	public String getFieldA()
+	{
+<span class="nc" id="L541">		return fieldA;</span>
+	}
+
+	public void setFieldA(String fieldA)
+	{
+<span class="nc" id="L546">		this.fieldA = fieldA;</span>
+<span class="nc" id="L547">	}</span>
+
+	public String getFieldB()
+	{
+<span class="nc" id="L551">		return fieldB;</span>
+	}
+
+	public void setFieldB(String fieldB)
+	{
+<span class="nc" id="L556">		this.fieldB = fieldB;</span>
+<span class="nc" id="L557">	}</span>
+
+	public String getFieldC()
+	{
+<span class="nc" id="L561">		return fieldC;</span>
+	}
+
+	public void setFieldC(String fieldC)
+	{
+<span class="nc" id="L566">		this.fieldC = fieldC;</span>
+<span class="nc" id="L567">	}</span>
+
+	public String getFieldD()
+	{
+<span class="nc" id="L571">		return fieldD;</span>
+	}
+
+	public void setFieldD(String fieldD)
+	{
+<span class="nc" id="L576">		this.fieldD = fieldD;</span>
+<span class="nc" id="L577">	}</span>
+
+	public String getFieldE()
+	{
+<span class="nc" id="L581">		return fieldE;</span>
+	}
+
+	public void setFieldE(String fieldE)
+	{
+<span class="nc" id="L586">		this.fieldE = fieldE;</span>
+<span class="nc" id="L587">	}</span>
+
+	public String getFieldF()
+	{
+<span class="nc" id="L591">		return fieldF;</span>
+	}
+
+	public void setFieldF(String fieldF)
+	{
+<span class="nc" id="L596">		this.fieldF = fieldF;</span>
+<span class="nc" id="L597">	}</span>
+
+	public String getHtmlCode()
+	{
+<span class="nc" id="L601">		return htmlCode;</span>
+	}
+
+	public void setHtmlCode(String htmlCode)
+	{
+<span class="nc" id="L606">		this.htmlCode = htmlCode;</span>
+<span class="nc" id="L607">	}</span>
+
+	public String getCurrency()
+	{
+<span class="nc" id="L611">		return currency;</span>
+	}
+
+	public void setCurrency(String currency)
+	{
+<span class="nc" id="L616">		this.currency = currency;</span>
+<span class="nc" id="L617">	}</span>
+
+	/**
+	 * Vrati aktualnu domainId
+	 * @return
+	 */
+	public int getDomainId() {
+<span class="nc" id="L624">		return domainId;</span>
+		//return CloudToolsForCore.getDomainId();
+	}
+
+	/**
+	 * Force nastavi objektu domainId aktualnej domeny
+	 *
+	 */
+	public void setDomainId(int domainId) {
+		//this.domainId = domainId;
+<span class="nc" id="L634">		this.domainId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L635">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

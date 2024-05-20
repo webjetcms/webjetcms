@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.todo</a> &gt; <span class="el_source">ToDoController.java</span></div><h1>ToDoController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.todo;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ * ToDoController.java
+ *
+ * Class ToDoController is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * @author      $Author: mhruby $
+ * @version     $Revision: 1.0 $
+ * created      16.8.2018 12:12
+ * modified     16.8.2018 12:12
+ */
+
+@RestController
+@RequestMapping(&quot;/rest/private/todo/&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.isLogged()&quot;)
+<span class="fc" id="L36">public class ToDoController {</span>
+
+    @GetMapping(path = &quot;list&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;List&lt;ToDoBean&gt;&gt; list(HttpServletRequest request) {
+<span class="nc" id="L40">        return ResponseEntity.ok(new ToDoDB().getToDo(Tools.getUserId(request)));</span>
+    }
+
+    @GetMapping(path = &quot;resolve/{id}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public  ResponseEntity&lt;List&lt;ToDoBean&gt;&gt; resolve(@PathVariable String id, HttpServletRequest request) {
+<span class="nc" id="L45">        ToDoDB toDoDB = new ToDoDB();</span>
+        try {
+<span class="nc" id="L47">            ToDoBean toDoBean = toDoDB.findFirstByToDoId(Tools.getIntValue(id,-1));</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">            if (toDoBean != null &amp;&amp; Tools.getUserId(request) == toDoBean.getUserId()) {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                toDoBean.setIsResolved(!toDoBean.getResolved());</span>
+<span class="nc" id="L50">                toDoBean.setModifDate(new Date());</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">                if (ToDoDB.saveToDo(toDoBean))</span>
+<span class="nc" id="L52">                    return ResponseEntity.ok(null);</span>
+<span class="nc" id="L53">                return ResponseEntity.status(500).body(null);</span>
+            }
+<span class="nc" id="L55">        } catch (Exception e) {</span>
+<span class="nc" id="L56">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L57">            return ResponseEntity.status(500).body(null);</span>
+<span class="nc" id="L58">        }</span>
+<span class="nc" id="L59">        return ResponseEntity.status(404).body(null);</span>
+    }
+
+    @GetMapping(path = &quot;delete/{id}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public  ResponseEntity&lt;List&lt;ToDoBean&gt;&gt; delete(@PathVariable String id, HttpServletRequest request) {
+<span class="nc" id="L64">        ToDoDB toDoDB = new ToDoDB();</span>
+        try {
+<span class="nc" id="L66">            ToDoBean toDoBean = toDoDB.findFirstByToDoId(Tools.getIntValue(id,-1));</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">            if (toDoBean != null &amp;&amp; Tools.getUserId(request) == toDoBean.getUserId()) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                if (toDoDB.remove(toDoBean))</span>
+<span class="nc" id="L69">                    return ResponseEntity.ok(null);</span>
+<span class="nc" id="L70">                return ResponseEntity.status(500).body(null);</span>
+            }
+<span class="nc" id="L72">        } catch (Exception e) {</span>
+<span class="nc" id="L73">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L74">            return ResponseEntity.status(500).body(null);</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">        return ResponseEntity.status(404).body(null);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailToolsForCore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">EmailToolsForCore.java</span></div><h1>EmailToolsForCore.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.stat.StatDB;
+
+<span class="nc" id="L20">public class EmailToolsForCore {</span>
+    /**
+     * sem sa uklada hash o aktualnom userovi, kontroluje to ShowDocAction
+     * (ak sa v url nachadza id pouzivatela pre jeho prihlasenie)
+     */
+<span class="nc" id="L25">    public static String ACTUAL_USER_HASH = null;</span>
+
+    public static boolean deleteUnsubscribedEmail(String email)
+    {
+        try
+        {
+<span class="nc" id="L31">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE email = ?&quot;, email);</span>
+<span class="nc" id="L32">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, email=&quot;+email, -1, -1);</span>
+<span class="nc" id="L33">            return true;</span>
+        }
+<span class="nc" id="L35">        catch (Exception e)</span>
+        {
+<span class="nc" id="L37">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L38">            return false;</span>
+        }
+    }
+
+    public static boolean addUnsubscribedEmail(String email)
+    {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (!deleteUnsubscribedEmail(email))//najprv skusi email vymazat, ak uz existuje</span>
+<span class="nc" id="L45">            return false;</span>
+
+        try
+        {
+<span class="nc" id="L49">            new SimpleQuery().execute(&quot;INSERT INTO emails_unsubscribed (email, create_date) VALUES (?,?)&quot;, email, new Date());</span>
+<span class="nc" id="L50">            return true;</span>
+        }
+<span class="nc" id="L52">        catch (Exception e)</span>
+        {
+<span class="nc" id="L54">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L55">            return false;</span>
+        }
+    }
+
+    public static boolean deleteUnsubscribedEmail(int id)
+    {
+        try
+        {
+<span class="nc" id="L63">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ?&quot;, id);</span>
+<span class="nc" id="L64">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, id=&quot;+id, id, -1);</span>
+<span class="nc" id="L65">            return true;</span>
+        }
+<span class="nc" id="L67">        catch (Exception e)</span>
+        {
+<span class="nc" id="L69">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L70">            return false;</span>
+        }
+    }
+
+    public static void addStatOpen(int emailId)
+    {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if(emailId &lt; 0){</span>
+<span class="nc" id="L77">            Logger.debug(EmailToolsForCore.class, &quot;email id lesser than 0, can't add stat open!&quot;);</span>
+<span class="nc" id="L78">            return;</span>
+        }
+
+<span class="nc" id="L81">        Date seenDate = new SimpleQuery().forDate(&quot;SELECT seen_date FROM emails WHERE email_id = ?&quot;, emailId);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if(seenDate == null){</span>
+<span class="nc" id="L83">            Logger.debug(EmailToolsForCore.class, &quot;Adding seend email stat&quot;);</span>
+<span class="nc" id="L84">            new SimpleQuery().execute(&quot;UPDATE emails SET seen_date = ? where email_id = ?&quot;, new Timestamp(System.currentTimeMillis()),emailId);</span>
+        }
+
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Zaznamena statistiku kliknutia z emailu
+     * @param emailId
+     */
+    public static void addStatClick(int emailId, String url, String params, HttpServletRequest request, HttpServletResponse response)
+    {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (Tools.isNotEmpty(params))</span>
+        {
+            try
+            {
+                //webjetDmsp= je vzdy na konci parametrov
+<span class="nc" id="L100">                int i = params.indexOf(Constants.getString(&quot;dmailStatParam&quot;));</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                if (i &gt; 0)</span>
+                {
+<span class="nc" id="L103">                    url = url + &quot;?&quot; + params.substring(0, i);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                    if (url.endsWith(&quot;&amp;&quot;))</span>
+<span class="nc" id="L105">                        url = url.substring(0, url.length()-1);</span>
+                }
+            }
+<span class="nc" id="L108">            catch (RuntimeException e)</span>
+            {
+<span class="nc" id="L110">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L111">            }</span>
+        }
+
+<span class="nc" id="L114">        Connection db_conn = null;</span>
+<span class="nc" id="L115">        PreparedStatement ps = null;</span>
+        try
+        {
+<span class="nc" id="L118">            db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L119">            ps = db_conn.prepareStatement(&quot;INSERT INTO emails_stat_click (email_id, link, click_date, session_id, browser_id) VALUES (?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L120">            ps.setInt(1, emailId);</span>
+<span class="nc" id="L121">            ps.setString(2, DB.prepareString(url, 255));</span>
+<span class="nc" id="L122">            ps.setTimestamp(3, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L123">            ps.setLong(4, StatDB.getSessionId(request));</span>
+<span class="nc" id="L124">            ps.setLong(5, StatDB.getBrowserId(request, response));</span>
+
+<span class="nc" id="L126">            ps.execute();</span>
+
+<span class="nc" id="L128">            ps.close();</span>
+<span class="nc" id="L129">            db_conn.close();</span>
+
+<span class="nc" id="L131">            ps = null;</span>
+<span class="nc" id="L132">            db_conn = null;</span>
+        }
+<span class="nc" id="L134">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L136">            sk.iway.iwcm.Logger.error(ex);</span>
+        }
+        finally
+        {
+            try
+            {
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                if (ps != null)</span>
+<span class="nc" id="L143">                    ps.close();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (db_conn != null)</span>
+<span class="nc" id="L145">                    db_conn.close();</span>
+            }
+<span class="nc" id="L147">            catch (Exception ex2)</span>
+            {
+<span class="nc" id="L149">                sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L150">            }</span>
+        }
+<span class="nc" id="L152">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

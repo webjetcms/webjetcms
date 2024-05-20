@@ -10,25 +10,14 @@
           v-bind:overviewchangedpages="overviewchangedpages"
           v-bind:overviewadminlog="overviewadminlog"
         ></webjet-overview-dashboard-websites>
+        <webjet-server-monitoring :iscomplex="false"></webjet-server-monitoring>
       </div>
       <div class="col-lg-3 pl-0-lg">
         <webjet-overview-dashboard-mini-apps
           v-bind:overviewtodo="overviewtodo"
           v-bind:overviewadmins="overviewadmins"
         ></webjet-overview-dashboard-mini-apps>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-5">
-        <webjet-overview-dashboard-apps></webjet-overview-dashboard-apps>
-      </div>
-      <div class="col-lg-7 pl-0-lg">
         <webjet-overview-dashboard-news></webjet-overview-dashboard-news>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-12">
-        <webjet-server-monitoring :iscomplex="false"></webjet-server-monitoring>
       </div>
     </div>
   </div>

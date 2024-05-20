@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupSchedulerDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">GroupSchedulerDto.java</span></div><h1>GroupSchedulerDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+
+import java.util.Date;
+
+import javax.persistence.*;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@Entity
+@Table(name=&quot;groups_scheduler&quot;)
+@Getter
+@Setter
+<span class="fc" id="L20">public class GroupSchedulerDto {</span>
+
+    @Id
+    @Column(name = &quot;schedule_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        renderFormat = &quot;dt-format-selector&quot;,
+        title = &quot;editor.cell.id&quot;)
+    private Long id;
+
+    @Column(name = &quot;group_name&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = &quot;[[#{editor.directory_name}]]&quot;)
+    private String groupName;
+
+    @Column(name = &quot;save_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;editor.group_schedule.save_date&quot;)
+    private Date saveDate;
+
+    @Column(name = &quot;when_to_publish&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;editor.group_schedule.when_to_publish&quot;)
+    private Date whenToPublish;
+
+    @Column(name = &quot;user_id&quot;)
+    private Integer userId;
+
+    @Column(name = &quot;group_id&quot;)
+    private Integer groupId;
+
+    @Column(name = &quot;internal&quot;)
+    private boolean internal;
+
+    @Column(name = &quot;parent_group_id&quot;)
+    private Integer parentGroupId;
+
+    @Column(name = &quot;navbar&quot;)
+    private String navbar;
+
+    @Column(name = &quot;default_doc_id&quot;)
+    private Integer defaultDocId;
+
+    @Column(name = &quot;temp_id&quot;)
+    private Integer tempId;
+
+    @Column(name = &quot;sort_priority&quot;)
+    private Integer sortPriority;
+
+    @Column(name = &quot;password_protected&quot;)
+    private String passwordProtected;
+
+    @Column(name = &quot;url_dir_name&quot;)
+    private String urlDirName;
+
+    @Column(name = &quot;sync_id&quot;)
+    private Integer syncId;
+
+    @Column(name = &quot;sync_status&quot;)
+    private Integer syncStatus;
+
+    @Column(name = &quot;html_head&quot;)
+    private String htmlHead;
+
+    @Column(name = &quot;logon_page_doc_id&quot;)
+    private Integer logonPageDocId;
+
+    @Column(name = &quot;domain_name&quot;)
+    private String domainName;
+
+    @Column(name = &quot;new_page_docid_template&quot;)
+    private Integer newPageDocidTemplate;
+
+    @Column(name = &quot;install_name&quot;)
+    private String installName;
+
+    @Column(name = &quot;field_a&quot;)
+    private String fieldA;
+
+    @Column(name = &quot;field_b&quot;)
+    private String fieldB;
+
+    @Column(name = &quot;field_c&quot;)
+    private String fieldC;
+
+    @Column(name = &quot;field_d&quot;)
+    private String fieldD;
+
+    @Column(name = &quot;link_group_id&quot;)
+    private Integer linkGroupId;
+
+    @Column(name = &quot;lng&quot;)
+    private String lng;
+
+    @Column(name = &quot;hidden_in_admin&quot;)
+    private Integer hiddenInAdmin;
+
+    @Column(name = &quot;force_group_template&quot;)
+    private boolean forceGroupTemplate;
+
+    // ** Pridane atributy - ticket 54205  ** //
+
+    //Not logged
+    @Column(name = &quot;menu_type&quot;)
+    private Integer menuType;
+
+    @Column(name = &quot;show_in_navbar&quot;)
+    private Integer showInNavbar;
+
+    @Column(name = &quot;show_in_sitemap&quot;)
+    private Integer showInSitemap;
+
+    //Logged
+    @Column(name = &quot;logged_menu_type&quot;)
+    private Integer loggedMenuType;
+
+    @Column(name = &quot;logged_show_in_navbar&quot;)
+    private Integer loggedShowInNavbar;
+
+    @Column(name = &quot;logged_show_in_sitemap&quot;)
+    private Integer loggedShowInSitemap;
+
+    public boolean getInternal() {
+<span class="fc" id="L146">        return internal;</span>
+    }
+
+    public boolean getForceGroupTemplate() {
+<span class="fc" id="L150">        return forceGroupTemplate;</span>
+    }
+
+    @Transient
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, tab=&quot;main&quot;, renderFormat = &quot;dt-format-text&quot;, title=&quot;components.audit_log.user_full_name&quot;, orderable = false, editor = {
+			@DataTableColumnEditor(type = &quot;text&quot;, attr = {
+					@DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }) })
+	private String userFullName;
+
+	public String getUserFullName() {
+<span class="pc bpc" id="L160" title="2 of 6 branches missed.">		if (userFullName == null &amp;&amp; userId != null &amp;&amp; userId.intValue()&gt;0) {</span>
+<span class="fc" id="L161">			UserDetails user = UsersDB.getUserCached(userId.intValue());</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">			if (user!=null)	userFullName = user.getFullName();</span>
+<span class="nc" id="L163">			else userFullName = &quot;&quot;;</span>
+		}
+<span class="fc" id="L165">		return userFullName;</span>
+	}
+
+	public void setUserFullName(String userFullName) {
+<span class="nc" id="L169">		this.userFullName = userFullName;</span>
+<span class="nc" id="L170">	}</span>
+
+    @Column(name = &quot;date_published&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;groupedit.publish.realPublishDate&quot;)
+    private Date datePublished;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

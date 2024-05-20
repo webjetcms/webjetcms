@@ -85,7 +85,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
 
   // kontrola podpriecinok folder_one
   I.say('kontrolujem podpriecinok folder_one');
-  I.click(auto_folder_one);
+  I.jstreeClick(auto_folder_one);
   DT.waitForLoader();
   I.click(edit_button);
   DTE.waitForEditor("groups-datatable");
@@ -112,7 +112,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
 
   // kontrola podpriecinok folder2
   I.say('kontrolujem podpriecinok folder_two');
-  I.click(auto_folder_two);
+  I.jstreeClick(auto_folder_two);
   DT.waitForLoader();
   I.click(edit_button);
   DTE.waitForEditor("groups-datatable");

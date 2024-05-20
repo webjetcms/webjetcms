@@ -108,10 +108,10 @@ public class HistoryDB extends DB
 
 				String selectStart = "SELECT d.history_id, d.save_date, d.approved_by, d.disapproved_by, d.actual, d.approve_date, d.publicable, d.awaiting_approve, d.publish_after_start, "+fields+", u.title as u_title, u.first_name, u.last_name ";
 
-				String sql = selectStart + " FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN ("+historyIds.toString()+") AND d.publicable=1 ORDER BY history_id DESC ";
-				if (Constants.DB_TYPE == Constants.DB_ORACLE)
+				String sql = selectStart + " FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN ("+historyIds.toString()+") AND d.publicable="+DB.getBooleanSql(true)+" ORDER BY history_id DESC ";
+				if (Constants.DB_TYPE == Constants.DB_ORACLE) //PGSQL OK
 				{
-					sql = "SELECT d.*, u.title as u_title, u.first_name, u.last_name FROM documents_history d,  users u WHERE d.author_id=u.user_id(+) AND history_id IN ("+historyIds.toString()+") AND d.publicable=1 ORDER BY history_id DESC ";
+					sql = "SELECT d.*, u.title as u_title, u.first_name, u.last_name FROM documents_history d,  users u WHERE d.author_id=u.user_id(+) AND history_id IN ("+historyIds.toString()+") AND d.publicable="+DB.getBooleanSql(true)+" ORDER BY history_id DESC ";
 				}
 			   ps = db_conn.prepareStatement(sql);
 			   rs = ps.executeQuery();
@@ -234,7 +234,7 @@ public class HistoryDB extends DB
 				ps.close();
 
 				//tu sa nacitava zoznam este nepublikovanych alebo kompletny zoznam historie
-				ps = db_conn.prepareStatement(selectStart + " FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN ("+historyIds.toString()+") AND d.publicable=0 ORDER BY history_id DESC ");
+				ps = db_conn.prepareStatement(selectStart + " FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN ("+historyIds.toString()+") AND d.publicable="+DB.getBooleanSql(false)+" ORDER BY history_id DESC ");
 				rs = ps.executeQuery();
 				while (rs.next())
 				{

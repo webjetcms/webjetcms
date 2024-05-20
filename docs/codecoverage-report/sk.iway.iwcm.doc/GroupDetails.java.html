@@ -1,0 +1,1190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupDetails.java</span></div><h1>GroupDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.beanutils.BeanUtils;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.tags.JSEscapeTag;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.validation.constraints.NotBlank;
+
+import java.util.List;
+import java.util.StringTokenizer;
+
+/**
+ *  drzi zaznam z tabulky Groups
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.9 $
+ *@created      $Date: 2004/03/15 21:34:42 $
+ *@modified     $Date: 2004/03/15 21:34:42 $
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class GroupDetails implements Cloneable, DocGroupInterface
+{
+	@DataTableColumn(
+			inputType = DataTableColumnType.ID,
+			title= &quot;[[#{components.editor.rest.id}]]&quot;,
+			data = &quot;groupId&quot;,
+			name = &quot;id&quot;
+	)
+	private int groupId;
+
+	@DataTableColumn(
+			inputType = DataTableColumnType.OPEN_EDITOR,
+			title = &quot;[[#{editor.directory_name}]]&quot;,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							tab = &quot;basic&quot;,
+							attr = {
+									@DataTableColumnEditorAttr(key = &quot;data-dt-validation&quot;, value = &quot;true&quot;),
+									@DataTableColumnEditorAttr(key = &quot;data-dt-escape-slash&quot;, value = &quot;true&quot;)
+							}
+					)
+			}
+	)
+	@NotBlank
+	private String groupName;
+
+
+<span class="fc" id="L63">	@DataTableColumn(</span>
+			inputType = DataTableColumnType.TEXT,
+			title = &quot;[[#{webpages.editor.titleForMenu}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							tab = &quot;basic&quot;,
+							attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-validation&quot;, value = &quot;true&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-escape-slash&quot;, value = &quot;true&quot;)
+					})
+			}
+	)
+	@NotBlank
+	private String navbarName = &quot;&quot;;
+
+	@DataTableColumn(
+			renderFormat = &quot;dt-format-text&quot;,
+			title = &quot;[[#{components.groupEdit.url_info}]]&quot;,
+			className = &quot;DTE_Field_Has_Checkbox&quot;,
+			visible = true,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							tab = &quot;basic&quot;
+					)
+			}
+	)
+	private String urlDirName;
+
+<span class="fc" id="L95">	@DataTableColumn(</span>
+		renderFormat = &quot;dt-format-text&quot;,
+		title = &quot;[[#{groupedit.domain}]]&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		visible = false,
+		perms = &quot;multiDomain&quot;,
+		editor = {
+			@DataTableColumnEditor(
+					type = &quot;text&quot;,
+					tab = &quot;basic&quot;
+			)
+		}
+	)
+	private String domainName = null;
+
+<span class="fc" id="L110">	private int defaultDocId = 0;</span>
+
+<span class="fc" id="L112">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-select&quot;,
+			title = &quot;[[#{groupedit.folder_public_availability}]]&quot;,
+			className = &quot;DTE_Field_Has_Checkbox&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;select&quot;,
+							tab = &quot;basic&quot;,
+							attr = {
+								@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+							}
+					)
+			}
+	)
+	private boolean internal = false;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.NUMBER,
+		title = &quot;[[#{editor.sort_order}]]&quot;,
+		tab = &quot;menu&quot;,
+		visible = true,
+		editor = {
+			@DataTableColumnEditor(
+				message = &quot;[[#{groupedit.displayOrderHint}]]&quot;
+			)
+		}
+	)
+	private int sortPriority;
+
+	@DataTableColumn(
+			renderFormat = &quot;dt-format-select&quot;,
+			title = &quot;[[#{groupedit.template}]]&quot;,
+			className = &quot;DTE_Field_Has_Checkbox&quot;,
+			visible = true,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;select&quot;,
+							tab = &quot;template&quot;
+					)
+			}
+	)
+	private int tempId;
+
+<span class="fc" id="L156">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-checkbox&quot;,
+			title = &quot;[[#{}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;checkbox&quot;,
+							tab = &quot;template&quot;,
+							message = &quot;[[#{groupedit.force_the_use_of_group_template.tooltip}]]&quot;,
+							attr = {
+									@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+							},
+							options = {
+									@DataTableColumnEditorAttr(key = &quot;groupedit.force_the_use_of_group_template&quot;, value = &quot;true&quot;)
+							}
+					)
+			}
+	)
+	private boolean forceTheUseOfGroupTemplate = false;
+
+<span class="fc" id="L176">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-select&quot;,
+			title = &quot;[[#{groupedit.language}]]&quot;,
+			className = &quot;DTE_Field_Has_Checkbox&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;select&quot;,
+							tab = &quot;template&quot;
+					)
+			}
+	)
+	private String lng = &quot;&quot;;
+
+<span class="fc" id="L190">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-select&quot;,
+			title = &quot;[[#{groupedit.new_page_template}]]&quot;,
+			className = &quot;DTE_Field_Has_Checkbox&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;select&quot;,
+							tab = &quot;template&quot;
+					)
+			}
+	)
+	private int newPageDocIdTemplate = 0;
+
+<span class="fc" id="L204">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-textarea&quot;,
+			title = &quot;[[#{groupedit.htmlHead}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+						type = &quot;textarea&quot;,
+						tab = &quot;template&quot;,
+						attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;)
+						}
+					)
+			}
+	)
+	private String htmlHead = &quot;&quot;;
+
+<span class="fc" id="L220">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text&quot;,
+			title = &quot;[[#{groupedit.field_a}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							label = &quot;[[#{groupedit.field_a}]]&quot;,
+							tab = &quot;fields&quot;
+					)
+			}
+	)
+	private String fieldA = &quot;&quot;;
+
+<span class="fc" id="L234">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text&quot;,
+			title = &quot;[[#{groupedit.field_b}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							label = &quot;[[#{groupedit.field_b}]]&quot;,
+							tab = &quot;fields&quot;
+					)
+			}
+	)
+	private String fieldB = &quot;&quot;;
+
+<span class="fc" id="L248">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text&quot;,
+			title = &quot;[[#{groupedit.field_c}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							label = &quot;[[#{groupedit.field_c}]]&quot;,
+							tab = &quot;fields&quot;
+					)
+			}
+	)
+	private String fieldC = &quot;&quot;;
+
+<span class="fc" id="L262">	@DataTableColumn(</span>
+			renderFormat = &quot;dt-format-text&quot;,
+			title = &quot;[[#{groupedit.field_d}]]&quot;,
+			visible = false,
+			editor = {
+					@DataTableColumnEditor(
+							type = &quot;text&quot;,
+							label = &quot;[[#{groupedit.field_d}]]&quot;,
+							tab = &quot;fields&quot;
+					)
+			}
+	)
+	private String fieldD = &quot;&quot;;
+
+<span class="fc" id="L276">	@DataTableColumn(</span>
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;editor.menu_type_menu&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		sortAfter = &quot;editorFields.forcePriorityRecalculation&quot;,
+		hidden = true,
+		editor = {
+				@DataTableColumnEditor(
+						attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.menu_type_notlogged&quot;)
+						}
+				)
+		}
+	)
+	private int menuType = 1;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;editor.menu_type_navbar&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		hidden = true
+	)
+	private Integer showInNavbar;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;editor.menu_type_site_map&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		hidden = true
+	)
+	private Integer showInSitemap;
+
+<span class="fc" id="L312">	@DataTableColumn(</span>
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;editor.menu_type_menu&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		hidden = true,
+		editor = {
+				@DataTableColumnEditor(
+						attr = {
+							@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.menu_type_logged&quot;),
+						}
+				)
+		}
+	)
+	private int loggedMenuType = -1;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;[[#{editor.menu_type_navbar}]]&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		hidden = true
+	)
+	private Integer loggedShowInNavbar;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.SELECT,
+		tab = &quot;menu&quot;,
+		title = &quot;[[#{editor.menu_type_site_map}]]&quot;,
+		className = &quot;DTE_Field_Has_Checkbox&quot;,
+		hidden = true
+	)
+	private Integer loggedShowInSitemap;
+
+	private String passwordProtected;
+
+<span class="fc" id="L348">	private int parentGroupId = 0;</span>
+<span class="fc" id="L349">	private String navbar = &quot;&quot;;</span>
+	@DataTableColumn(
+		inputType = DataTableColumnType.TEXT,
+		title = &quot;sync.path&quot;,
+		hiddenEditor = true,
+		visible = false
+	)
+	private String fullPath;
+	public static final int MENU_TYPE_HIDDEN = 0;
+	public static final int MENU_TYPE_NORMAL = 1;
+	public static final int MENU_TYPE_ONLYDEFAULT = 2;
+	public static final int MENU_TYPE_NOSUB = 3;
+	private int syncId;
+	private int syncStatus;
+	private int logonPageDocId;
+<span class="fc" id="L364">	private String installName = null;</span>
+
+	private int linkGroupId;
+
+<span class="fc" id="L368">	private boolean hiddenInAdmin = false;</span>
+
+<span class="fc" id="L370">	@DataTableColumnNested</span>
+	private GroupEditorField editorFields = null;
+
+	public GroupDetails()
+<span class="fc" id="L374">	{</span>
+		//empty constructor
+<span class="fc" id="L376">	}</span>
+
+	/**
+	 * Konstruktor z cesty, napr. /Jet portal 4/Úvodná stránka
+	 * Pouziva sa pri importe a inych operaciach kde dostaneme cestu k adresaru
+	 * @param path
+	 */
+	public GroupDetails(String path)
+	{
+<span class="fc" id="L385">		this(GroupsDB.getInstance().getCreateGroup(path));</span>
+<span class="fc" id="L386">	}</span>
+
+	/**
+	 * skopiruje do seba skupinu copyFrom
+	 * @param copyFrom
+	 */
+	public GroupDetails(GroupDetails copyFrom)
+<span class="fc" id="L393">	{</span>
+		try
+		{
+<span class="fc bfc" id="L396" title="All 2 branches covered.">			if (copyFrom != null) BeanUtils.copyProperties(this, copyFrom);</span>
+		}
+<span class="nc" id="L398">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L400">			Logger.error(GroupDetails.class, ex);</span>
+<span class="fc" id="L401">		}</span>
+<span class="fc" id="L402">	}</span>
+
+	public boolean isAvailableForUser(Identity user)
+	{
+<span class="fc bfc" id="L406" title="All 2 branches covered.">		if (Tools.isEmpty(getPasswordProtected()))</span>
+		{
+<span class="fc" id="L408">			return(true);</span>
+		}
+<span class="fc bfc" id="L410" title="All 2 branches covered.">		if (user == null) return(false);</span>
+
+<span class="fc" id="L412">		StringTokenizer st = new StringTokenizer(getPasswordProtected(), &quot;,&quot;);</span>
+		int id;
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="fc" id="L416">			id = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L417" title="1 of 4 branches missed.">			if (id &gt; 0 &amp;&amp; user.isInUserGroup(id))</span>
+			{
+<span class="fc" id="L419">				return(true);</span>
+			}
+		}
+
+<span class="nc" id="L423">		return(false);</span>
+	}
+
+	public boolean isAvailableForUserGroup(int userGroupId)
+	{
+<span class="nc bnc" id="L428" title="All 2 branches missed.">		if (Tools.isEmpty(getPasswordProtected()))</span>
+		{
+<span class="nc" id="L430">			return(true);</span>
+		}
+<span class="nc" id="L432">		StringTokenizer st = new StringTokenizer(getPasswordProtected(), &quot;,&quot;);</span>
+		int id;
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L436">			id = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">			if (id == userGroupId)</span>
+			{
+<span class="nc" id="L439">				return(true);</span>
+			}
+		}
+
+<span class="nc" id="L443">		return(false);</span>
+	}
+
+	/**
+	 *  Gets the groupId attribute of the GroupDetails object
+	 *
+	 *@return    The groupId value
+	 */
+	public int getGroupId()
+	{
+<span class="fc" id="L453">		return groupId;</span>
+	}
+
+	/**
+	 *  Sets the groupId attribute of the GroupDetails object
+	 *
+	 *@param  newGroupId  The new groupId value
+	 */
+	public void setGroupId(int newGroupId)
+	{
+<span class="fc" id="L463">		groupId = newGroupId;</span>
+<span class="fc" id="L464">	}</span>
+
+	/**
+	 * Nastavenie ID podla long hodnoty, potrebne pre DT/duplikovanie
+	 * @param id
+	 */
+	public void setGroupId(Long id)
+	{
+<span class="nc bnc" id="L472" title="All 2 branches missed.">		if (id == null) groupId = -1;</span>
+<span class="nc" id="L473">		else groupId = (int)id.longValue();</span>
+<span class="nc" id="L474">	}</span>
+
+	/**
+	 *  Sets the groupName attribute of the GroupDetails object
+	 *
+	 *@param  newGroupName  The new groupName value
+	 */
+	public void setGroupName(String newGroupName)
+	{
+<span class="fc" id="L483">		groupName = GroupsDB.sanitizeGroupName(newGroupName, false);</span>
+<span class="fc" id="L484">	}</span>
+
+	/**
+	 *  Gets the groupName attribute of the GroupDetails object
+	 *
+	 *@return    The groupName value
+	 */
+	public String getGroupName()
+	{
+<span class="fc bfc" id="L493" title="All 2 branches covered.">		if (groupName==null) groupName = &quot;&quot;;</span>
+<span class="fc" id="L494">		return groupName;</span>
+	}
+
+	/**
+	 *  Gets the groupNameShort attribute of the GroupDetails object
+	 *
+	 *@return    The groupNameShort value
+	 */
+	public String getGroupNameShort()
+	{
+<span class="fc" id="L504">		String ret = getGroupNameJS();</span>
+<span class="pc bpc" id="L505" title="1 of 4 branches missed.">		if (parentGroupId!=0 &amp;&amp; groupName.length() &gt; 200)</span>
+		{
+			//skracujeme len podadresare, nie parent!
+<span class="nc" id="L508">			ret = ret.substring(0, 200) + &quot;...&quot;;</span>
+		}
+
+<span class="pc bpc" id="L511" title="1 of 4 branches missed.">		if (defaultDocId&gt;0 || navbar.indexOf(&quot;&lt;a&quot;)!=-1)</span>
+		{
+<span class="fc" id="L513">			return(ret);</span>
+		}
+<span class="fc" id="L515">		return(&quot;!&quot;+ret);</span>
+	}
+
+	public String getGroupNameShortNoJS()
+	{
+<span class="fc" id="L520">		String ret = getGroupName();</span>
+<span class="pc bpc" id="L521" title="1 of 4 branches missed.">		if (parentGroupId!=0 &amp;&amp; groupName.length() &gt; 200)</span>
+		{
+			//skracujeme len podadresare, nie parent!
+<span class="nc" id="L524">			ret = ret.substring(0, 19) + &quot;...&quot;;</span>
+		}
+
+<span class="pc bpc" id="L527" title="1 of 4 branches missed.">		if (defaultDocId&gt;0 || navbar.indexOf(&quot;&lt;a&quot;)!=-1)</span>
+		{
+<span class="fc" id="L529">			return(ret);</span>
+		}
+<span class="fc" id="L531">		return(&quot;!&quot;+ret);</span>
+	}
+
+	public String getGroupNameJS()
+	{
+<span class="fc" id="L536">		return(JSEscapeTag.jsEscape(groupName));</span>
+	}
+
+
+
+	/**
+	 *  Vrati string s ID aj Menom grupy, prvych 15 znakov je ID, potom je meno
+	 *
+	 *@return    The groupIdName value
+	 */
+	public String getGroupIdName()
+	{
+<span class="fc" id="L548">		String ret = groupId + &quot;                                                                               &quot;;</span>
+<span class="fc" id="L549">		ret = ret.substring(0, 15) + fullPath;</span>
+<span class="pc bpc" id="L550" title="1 of 2 branches missed.">		if (ret.indexOf('\'')!=-1)</span>
+		{
+<span class="nc" id="L552">			ret = Tools.replace(ret, &quot;'&quot;, &quot; &quot;);</span>
+		}
+<span class="pc bpc" id="L554" title="1 of 2 branches missed.">		if (ret.indexOf('\&quot;')!=-1)</span>
+		{
+<span class="nc" id="L556">			ret = Tools.replace(ret, &quot;\&quot;&quot;, &quot; &quot;);</span>
+		}
+<span class="fc" id="L558">		return (ret);</span>
+	}
+
+	/**
+	 *  Sets the internal attribute of the GroupDetails object
+	 *
+	 *@param  newInternal  The new internal value
+	 */
+	public void setInternal(boolean newInternal)
+	{
+<span class="fc" id="L568">		internal = newInternal;</span>
+<span class="fc" id="L569">	}</span>
+
+	/**
+	 *  Gets the internal attribute of the GroupDetails object
+	 *
+	 *@return    The internal value
+	 */
+	public boolean isInternal()
+	{
+<span class="fc" id="L578">		return internal;</span>
+	}
+
+	/**
+	 *  Sets the parentGroupId attribute of the GroupDetails object
+	 *
+	 *@param  newParentGroupId  The new parentGroupId value
+	 */
+	public void setParentGroupId(int newParentGroupId)
+	{
+<span class="fc" id="L588">		parentGroupId = newParentGroupId;</span>
+<span class="fc" id="L589">	}</span>
+
+	/**
+	 *  Gets the parentGroupId attribute of the GroupDetails object
+	 *
+	 *@return    The parentGroupId value
+	 */
+	public int getParentGroupId()
+	{
+<span class="fc" id="L598">		return parentGroupId;</span>
+	}
+
+	/**
+	 *  Sets the navbar attribute of the GroupDetails object
+	 *
+	 *@param  navbar  The new navbar value
+	 */
+	public void setNavbar(String navbar)
+	{
+<span class="fc" id="L608">		this.navbarName = navbar;</span>
+<span class="fc" id="L609">		this.navbar = navbar;</span>
+<span class="fc" id="L610">	}</span>
+
+	/**
+	 *  Gets the navbar attribute of the GroupDetails object
+	 *
+	 *@return    The navbar value
+	 */
+	public String getNavbar()
+	{
+<span class="pc bpc" id="L619" title="1 of 4 branches missed.">		if (navbar == null || navbar.length()&lt;1)</span>
+		{
+<span class="fc" id="L621">			navbar = getGroupName();</span>
+		}
+
+<span class="pc bpc" id="L624" title="2 of 8 branches missed.">		if (defaultDocId &gt; 0 &amp;&amp; navbar.length() &gt; 1 &amp;&amp; (navbar.indexOf(&quot;&lt;a&quot;) &lt; 0 || navbar.toLowerCase().indexOf(&quot;&lt;aparam&quot;) &gt;= 0))</span>
+		{
+<span class="fc" id="L626">			DocDB docDB = DocDB.getInstance();</span>
+			//odstrani &lt;aparam&gt;
+<span class="fc" id="L628">			String text = navbar.replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;,&quot;&quot;);</span>
+<span class="fc" id="L629">			return(&quot;&lt;a href='&quot;+docDB.getDocLink(defaultDocId)+&quot;'&gt;&quot; + text + &quot;&lt;/a&gt;&quot;);</span>
+		}
+		else
+		{
+<span class="fc" id="L633">			return(navbar);</span>
+		}
+	}
+
+	/**
+	 *  Gets the navbarName attribute of the GroupDetails object
+	 *
+	 *@return    The navbarName value
+	 */
+	public String getNavbarName()
+	{
+<span class="fc bfc" id="L644" title="All 2 branches covered.">		if (Tools.isNotEmpty(navbarName))</span>
+		{
+			//Logger.println(this,&quot;navbarname=&quot;+navbarName);
+<span class="fc" id="L647">			return (navbarName);</span>
+		}
+		//Logger.println(this,&quot;groupName=&quot;+groupName);
+<span class="fc" id="L650">		return groupName;</span>
+	}
+
+	public void setNavbarName(String navbarName)
+	{
+<span class="fc" id="L655">		this.navbarName = navbarName;</span>
+<span class="fc" id="L656">	}</span>
+
+	/**
+	 * Vrati navbarName bez APARAM atributu (al je zadane)
+	 * @return
+	 */
+	public String getNavbarNameNoAparam()
+	{
+<span class="fc" id="L664">		String name = getNavbarName();</span>
+<span class="fc" id="L665">		return name.replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;,&quot;&quot;);</span>
+	}
+
+	/**
+	 *  Sets the defaultDocId attribute of the GroupDetails object
+	 *
+	 *@param  newDefaultDocId  The new defaultDocId value
+	 */
+	public void setDefaultDocId(int newDefaultDocId)
+	{
+<span class="fc" id="L675">		defaultDocId = newDefaultDocId;</span>
+		//set navbar
+<span class="pc bpc" id="L677" title="1 of 8 branches missed.">		if (defaultDocId &gt; 0 &amp;&amp; navbar != null &amp;&amp; navbar.length() &gt; 1 &amp;&amp; navbar.indexOf(&quot;&lt;a&quot;) &lt; 0)</span>
+		{
+<span class="fc" id="L679">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L680">			navbar = &quot;&lt;a href='&quot; + docDB.getDocLink(defaultDocId) + &quot;'&gt;&quot; + navbar + &quot;&lt;/a&gt;&quot;;</span>
+		}
+<span class="fc" id="L682">	}</span>
+
+	/**
+	 * Toto potrebujem na skonstruovanie DocDB (aby sa mi nevolala rekurzivne getInstance())
+	 * @param defaultDocId
+	 */
+	public void setDefaultDocIdNoNavbar(int defaultDocId)
+	{
+<span class="fc" id="L690">		this.defaultDocId = defaultDocId;</span>
+<span class="fc" id="L691">	}</span>
+
+	/**
+	 *  Gets the defaultDocId attribute of the GroupDetails object
+	 *
+	 *@return    The defaultDocId value
+	 */
+	public int getDefaultDocId()
+	{
+<span class="fc" id="L700">		return defaultDocId;</span>
+	}
+
+	/**
+	 * Vrati objekt hlavna stranka adresara
+	 * @return
+	 */
+	@JsonIgnore
+	public DocDetails getDefaultDoc() {
+<span class="fc" id="L709">		return DocDB.getInstance().getDoc(defaultDocId);</span>
+	}
+
+	/**
+	 * Vrati virtualnu cestu defaultnej stranky adresara
+	 * @return
+	 */
+	public String getVirtualPath()
+	{
+<span class="fc" id="L718">		return DocDB.getInstance().getDocLink(defaultDocId);</span>
+	}
+
+	/**
+	 *  Sets the tempId attribute of the GroupDetails object
+	 *
+	 *@param  newTempId  The new tempId value
+	 */
+	public void setTempId(int newTempId)
+	{
+<span class="fc" id="L728">		tempId = newTempId;</span>
+<span class="fc" id="L729">	}</span>
+
+	/**
+	 *  Gets the tempId attribute of the GroupDetails object
+	 *
+	 *@return    The tempId value
+	 */
+	public int getTempId()
+	{
+<span class="fc" id="L738">		return tempId;</span>
+	}
+
+	/**
+	 *  Cela cesta ku grupe, napr. /iwcm/produkty/hlasove
+	 *
+	 *@param  fullPath  The new fullPath value
+	 */
+	public void setFullPath(String fullPath)
+	{
+<span class="fc" id="L748">		this.fullPath = fullPath;</span>
+<span class="fc" id="L749">	}</span>
+
+	/**
+	 *  Gets the fullPath attribute of the GroupDetails object
+	 *
+	 *@return    The fullPath value
+	 */
+	public String getFullPath()
+	{
+<span class="fc" id="L758">		return fullPath;</span>
+	}
+
+	public String getParentFullPath()
+	{
+<span class="fc bfc" id="L763" title="All 2 branches covered.">		if (fullPath == null) {</span>
+<span class="fc" id="L764">			return null;</span>
+		}
+
+<span class="fc" id="L767">		int i = fullPath.lastIndexOf('/');</span>
+<span class="fc bfc" id="L768" title="All 2 branches covered.">		if (i &gt; 0)</span>
+		{
+<span class="fc" id="L770">			return(fullPath.substring(0, i));</span>
+		}
+<span class="pc bpc" id="L772" title="1 of 4 branches missed.">		if (i == 0 &amp;&amp; fullPath.length()&gt;1) return(&quot;/&quot;);</span>
+<span class="fc" id="L773">		return(null);</span>
+	}
+
+	/**
+	 *  Sets the sortPriority attribute of the GroupDetails object
+	 *
+	 *@param  sortPriority  The new sortPriority value
+	 */
+	public void setSortPriority(int sortPriority)
+	{
+<span class="fc" id="L783">		this.sortPriority = sortPriority;</span>
+<span class="fc" id="L784">	}</span>
+
+	/**
+	 *  Gets the sortPriority attribute of the GroupDetails object
+	 *
+	 *@return    The sortPriority value
+	 */
+	public int getSortPriority()
+	{
+<span class="fc" id="L793">		return sortPriority;</span>
+	}
+
+	/**
+	 *  Sets the passwordProtected attribute of the GroupDetails object
+	 *
+	 *@param  passwordProtected  The new passwordProtected value
+	 */
+	public void setPasswordProtected(String passwordProtected)
+	{
+<span class="pc bpc" id="L803" title="1 of 4 branches missed.">		if (Tools.isEmpty(passwordProtected) || &quot;,&quot;.equals(passwordProtected))</span>
+		{
+<span class="fc" id="L805">			this.passwordProtected = null;</span>
+		}
+<span class="fc" id="L807">		else this.passwordProtected = passwordProtected;</span>
+<span class="fc" id="L808">	}</span>
+
+	/**
+	 * Prida adresar do zadanej skupiny pouzivatelov (s overenim, ci tam uz nie je)
+	 * @param userGroupId
+	 */
+	public void addToUserGroup(int userGroupId)
+	{
+<span class="nc" id="L816">		String ret = getPasswordProtected();</span>
+<span class="nc bnc" id="L817" title="All 2 branches missed.">		if(!isAvailableForUserGroup(userGroupId)) {</span>
+<span class="nc" id="L818">			ret += &quot;,&quot;+userGroupId;</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">		} else if (Tools.isEmpty(ret)) {</span>
+			// bugfix v pripade ak adresar nema ziadne pouzivatelske skupiny predchadzajuci if bude vzdy false
+<span class="nc" id="L821">			ret = ret + &quot;,&quot; + userGroupId;</span>
+		}
+<span class="nc bnc" id="L823" title="All 2 branches missed.">		if(ret.startsWith(&quot;,&quot;)) ret = ret.substring(1);</span>
+<span class="nc" id="L824">		setPasswordProtected(ret);</span>
+<span class="nc" id="L825">	}</span>
+
+	/**
+	 *  Gets the passwordProtected attribute of the GroupDetails object
+	 *
+	 *@return    The passwordProtected value
+	 */
+	public String getPasswordProtected()
+	{
+<span class="fc" id="L834">		return passwordProtected;</span>
+	}
+
+	public String getUrlDirName()
+	{
+<span class="fc bfc" id="L839" title="All 4 branches covered.">		if (urlDirName == null || urlDirName.length()&lt;1)</span>
+		{
+<span class="fc" id="L841">			urlDirName = getNavbarNameNoAparam();</span>
+<span class="fc" id="L842">			urlDirName = DB.internationalToEnglish(urlDirName).toLowerCase();</span>
+<span class="fc" id="L843">			urlDirName = DocTools.removeCharsDir(urlDirName, true).toLowerCase();</span>
+
+<span class="pc bpc" id="L845" title="1 of 2 branches missed.">			if (&quot;slovensky&quot;.equals(urlDirName)) {</span>
+<span class="nc" id="L846">				urlDirName = &quot;sk&quot;;</span>
+<span class="nc" id="L847">				sortPriority = 10;</span>
+			}
+<span class="pc bpc" id="L849" title="1 of 2 branches missed.">			else if (&quot;cesky&quot;.equals(urlDirName)) {</span>
+<span class="nc" id="L850">				urlDirName = &quot;cz&quot;;</span>
+<span class="nc" id="L851">				sortPriority = 20;</span>
+			}
+<span class="pc bpc" id="L853" title="1 of 2 branches missed.">			else if (&quot;english&quot;.equals(urlDirName)) {</span>
+<span class="nc" id="L854">				urlDirName = &quot;en&quot;;</span>
+<span class="nc" id="L855">				sortPriority = 30;</span>
+			}
+<span class="pc bpc" id="L857" title="1 of 2 branches missed.">			else if (&quot;deutsch&quot;.equals(urlDirName)) {</span>
+<span class="nc" id="L858">				urlDirName = &quot;de&quot;;</span>
+<span class="nc" id="L859">				sortPriority = 40;</span>
+			}
+		}
+<span class="fc" id="L862">		return urlDirName;</span>
+	}
+	public void setUrlDirName(String urlDirName)
+	{
+<span class="fc" id="L866">		this.urlDirName = urlDirName;</span>
+<span class="fc" id="L867">	}</span>
+
+	/**
+	 * @return Returns the syncId.
+	 */
+	public int getSyncId()
+	{
+<span class="fc" id="L874">		return syncId;</span>
+	}
+	/**
+	 * @param syncId The syncId to set.
+	 */
+	public void setSyncId(int syncId)
+	{
+<span class="fc" id="L881">		this.syncId = syncId;</span>
+<span class="fc" id="L882">	}</span>
+	/**
+	 * @return Returns the syncStatus.
+	 */
+	public int getSyncStatus()
+	{
+<span class="fc" id="L888">		return syncStatus;</span>
+	}
+	/**
+	 * @param syncStatus The syncStatus to set.
+	 */
+	public void setSyncStatus(int syncStatus)
+	{
+<span class="fc" id="L895">		this.syncStatus = syncStatus;</span>
+<span class="fc" id="L896">	}</span>
+	/**
+	 * @return Returns the htmlHead.
+	 */
+	public String getHtmlHead()
+	{
+<span class="fc" id="L902">		return htmlHead;</span>
+	}
+	/**
+	 * @param htmlHead The htmlHead to set.
+	 */
+	public void setHtmlHead(String htmlHead)
+	{
+<span class="fc" id="L909">		this.htmlHead = htmlHead;</span>
+<span class="fc" id="L910">	}</span>
+	/**
+	 * @return Returns the logonPageDocId.
+	 */
+	public int getLogonPageDocId()
+	{
+<span class="fc" id="L916">		return logonPageDocId;</span>
+	}
+	/**
+	 * @param logonPageDocId The logonPageDocId to set.
+	 */
+	public void setLogonPageDocId(int logonPageDocId)
+	{
+<span class="fc" id="L923">		this.logonPageDocId = logonPageDocId;</span>
+<span class="fc" id="L924">	}</span>
+
+	public String getDomainName()
+	{
+<span class="fc" id="L928">		return domainName;</span>
+	}
+
+	public void setDomainName(String domainName)
+	{
+		//domainName should be always lowercase
+<span class="fc bfc" id="L934" title="All 2 branches covered.">		if (domainName != null) domainName = domainName.toLowerCase();</span>
+<span class="fc" id="L935">		this.domainName = domainName;</span>
+<span class="fc" id="L936">	}</span>
+
+	public String getFieldA()
+	{
+<span class="fc" id="L940">		return fieldA;</span>
+	}
+
+	public void setFieldA(String fieldA)
+	{
+<span class="fc" id="L945">		this.fieldA = fieldA;</span>
+<span class="fc" id="L946">	}</span>
+
+	public String getFieldB()
+	{
+<span class="fc" id="L950">		return fieldB;</span>
+	}
+
+	public void setFieldB(String fieldB)
+	{
+<span class="fc" id="L955">		this.fieldB = fieldB;</span>
+<span class="fc" id="L956">	}</span>
+
+	public String getFieldC()
+	{
+<span class="fc" id="L960">		return fieldC;</span>
+	}
+
+	public void setFieldC(String fieldC)
+	{
+<span class="fc" id="L965">		this.fieldC = fieldC;</span>
+<span class="fc" id="L966">	}</span>
+
+	public String getFieldD()
+	{
+<span class="fc" id="L970">		return fieldD;</span>
+	}
+
+	public void setFieldD(String fieldD)
+	{
+<span class="fc" id="L975">		this.fieldD = fieldD;</span>
+<span class="fc" id="L976">	}</span>
+
+	public String getInstallName()
+	{
+<span class="fc" id="L980">		return installName;</span>
+	}
+
+	public void setInstallName(String installName)
+	{
+<span class="fc" id="L985">		this.installName = installName;</span>
+<span class="fc" id="L986">	}</span>
+
+	public int getNewPageDocIdTemplate()
+	{
+<span class="fc" id="L990">		return newPageDocIdTemplate;</span>
+	}
+
+	public void setNewPageDocIdTemplate(int newPageDocIdTemplate)
+	{
+<span class="fc" id="L995">		this.newPageDocIdTemplate = newPageDocIdTemplate;</span>
+<span class="fc" id="L996">	}</span>
+
+	public int getLinkGroupId()
+	{
+<span class="fc" id="L1000">		return linkGroupId;</span>
+	}
+
+	public void setLinkGroupId(int linkGroupId)
+	{
+<span class="fc" id="L1005">		this.linkGroupId = linkGroupId;</span>
+<span class="fc" id="L1006">	}</span>
+
+	public String getLng()
+	{
+<span class="fc" id="L1010">		return lng;</span>
+	}
+
+	public void setLng(String lng)
+	{
+<span class="fc" id="L1015">		this.lng = lng;</span>
+<span class="fc" id="L1016">	}</span>
+
+	public boolean isHiddenInAdmin()
+	{
+<span class="fc" id="L1020">		return hiddenInAdmin;</span>
+	}
+
+	public void setHiddenInAdmin(boolean hiddenInAdmin)
+	{
+<span class="fc" id="L1025">		this.hiddenInAdmin = hiddenInAdmin;</span>
+<span class="fc" id="L1026">	}</span>
+
+	@JsonIgnore
+	public List&lt;DocDetails&gt; getDocuments()
+	{
+<span class="fc" id="L1031">		return DocDB.getInstance().getDocByGroup(groupId);</span>
+	}
+
+	public static GroupDetails getById(int id)
+	{
+<span class="fc" id="L1036">		return GroupsDB.getInstance().getGroup(id);</span>
+	}
+
+
+	@Override
+	public Object clone() throws CloneNotSupportedException
+	{
+<span class="fc" id="L1043">		return super.clone();</span>
+	}
+
+	@Override
+	public String toString()
+	{
+<span class="fc" id="L1049">		return fullPath+&quot;, ID =&gt; &quot;+getGroupId();</span>
+	}
+
+	public boolean isForceTheUseOfGroupTemplate() {
+<span class="fc" id="L1053">		return forceTheUseOfGroupTemplate;</span>
+	}
+
+	public void setForceTheUseOfGroupTemplate(boolean forceTheUseOfGroupTemplate) {
+<span class="fc" id="L1057">		this.forceTheUseOfGroupTemplate = forceTheUseOfGroupTemplate;</span>
+<span class="fc" id="L1058">	}</span>
+
+	public GroupEditorField getEditorFields() {
+<span class="fc" id="L1061">		return editorFields;</span>
+	}
+
+	public void setEditorFields(GroupEditorField editorFields) {
+<span class="fc" id="L1065">		this.editorFields = editorFields;</span>
+<span class="fc" id="L1066">	}</span>
+
+	// ** Pridane atributy do DB ** // ticket 54205
+
+	//Not logged user
+	public int getMenuType() {
+<span class="fc" id="L1072">		return menuType;</span>
+	}
+
+	public void setMenuType(int menuType) {
+<span class="fc" id="L1076">		this.menuType = menuType;</span>
+<span class="fc" id="L1077">	}</span>
+
+	public Integer getShowInNavbar() {
+<span class="fc" id="L1080">		return showInNavbar;</span>
+	}
+
+	public void setShowInNavbar(Integer showInNavbar) {
+<span class="fc" id="L1084">		this.showInNavbar = showInNavbar;</span>
+<span class="fc" id="L1085">	}</span>
+
+	public Integer getShowInSitemap() {
+<span class="fc" id="L1088">		return showInSitemap;</span>
+	}
+
+	public void setShowInSitemap(Integer showInSitemap) {
+<span class="fc" id="L1092">		this.showInSitemap = showInSitemap;</span>
+<span class="fc" id="L1093">	}</span>
+
+	//Logged user
+	public int getLoggedMenuType() {
+<span class="fc" id="L1097">		return loggedMenuType;</span>
+	}
+
+	public void setLoggedMenuType(int loggedMenuType) {
+<span class="fc" id="L1101">		this.loggedMenuType = loggedMenuType;</span>
+<span class="fc" id="L1102">	}</span>
+
+	public Integer getLoggedShowInNavbar() {
+<span class="fc" id="L1105">		return loggedShowInNavbar;</span>
+	}
+
+	public void setLoggedShowInNavbar(Integer loggedShowInNavbar) {
+<span class="fc" id="L1109">		this.loggedShowInNavbar = loggedShowInNavbar;</span>
+<span class="fc" id="L1110">	}</span>
+
+	public Integer getLoggedShowInSitemap() {
+<span class="fc" id="L1113">		return loggedShowInSitemap;</span>
+	}
+
+	public void setLoggedShowInSitemap(Integer loggedShowInSitemap) {
+<span class="fc" id="L1117">		this.loggedShowInSitemap = loggedShowInSitemap;</span>
+<span class="fc" id="L1118">	}</span>
+
+	/**
+	 * Vrati sposob zobrazenia (GroupDetails.MENU_TYPE_XXX) v navigacnom menu (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param session
+	 * @return
+	 */
+	public int getMenuType(HttpSession session) {
+
+<span class="pc bpc" id="L1127" title="1 of 4 branches missed.">		if (session != null &amp;&amp; session.getAttribute(&quot;menuDisabledGroup&quot;+getGroupId())!=null) return GroupDetails.MENU_TYPE_HIDDEN;</span>
+
+<span class="pc bpc" id="L1129" title="1 of 4 branches missed.">		if (loggedMenuType &lt; 0 || session == null) return(menuType);</span>
+<span class="fc" id="L1130">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc bfc" id="L1131" title="All 2 branches covered.">		if (user == null) return(menuType);</span>
+
+		//skontroluj, ci je user v niektorej z tychto skupin
+<span class="pc bpc" id="L1134" title="1 of 2 branches missed.">		if (isAvailableForUser(user))</span>
+		{
+			//Logger.debug(GroupDetails.class, this.getGroupIdName()+&quot; logged:&quot;+loggedMenuType);
+<span class="fc" id="L1137">			return(loggedMenuType);</span>
+		}
+
+		//Logger.debug(GroupDetails.class, this.getGroupIdName()+&quot; final return:&quot;+menuType);
+<span class="nc" id="L1141">		return(menuType);</span>
+	}
+
+	/**
+	 * Vrati sposob zobrazenia (GroupDetails.MENU_TYPE_XXX) navigacnej listy (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param session
+	 * @return
+	 */
+	public int getShowInNavbar(HttpSession session) {
+
+<span class="fc" id="L1151">		Identity user = UsersDB.getCurrentUser(session);</span>
+		//Not logged
+<span class="fc bfc" id="L1153" title="All 4 branches covered.">		if(user == null || loggedShowInNavbar == null) {</span>
+			//0 - same as menu
+<span class="pc bpc" id="L1155" title="1 of 2 branches missed.">			if(showInNavbar == null) return getMenuType(session);</span>
+<span class="nc" id="L1156">			return showInNavbar.intValue();</span>
+		}
+
+<span class="fc" id="L1159">		return loggedShowInNavbar.intValue();</span>
+	}
+
+	/**
+	 * Vrati sposob zobrazenia (GroupDetails.MENU_TYPE_XXX) v mape stranok (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param request
+	 * @return
+	 */
+	public int getShowInSitemap(HttpServletRequest request) {
+<span class="pc bpc" id="L1168" title="1 of 2 branches missed.">		if (request != null) return getShowInSitemap(request.getSession());</span>
+<span class="nc" id="L1169">		return getShowInSitemap((HttpSession)null);</span>
+	}
+
+	/**
+	 * Vrati sposob zobrazenia (GroupDetails.MENU_TYPE_XXX) v mape stranok (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
+	 * @param session
+	 * @return
+	 */
+	public int getShowInSitemap(HttpSession session) {
+
+<span class="fc" id="L1179">		Identity user = UsersDB.getCurrentUser(session);</span>
+		//Not logged
+<span class="pc bpc" id="L1181" title="1 of 4 branches missed.">		if(user == null || loggedShowInSitemap == null) {</span>
+			//0 - same as menu
+<span class="pc bpc" id="L1183" title="1 of 2 branches missed.">			if(showInSitemap == null) return getMenuType(session);</span>
+<span class="nc" id="L1184">			return showInSitemap.intValue();</span>
+		}
+
+<span class="fc" id="L1187">		return loggedShowInSitemap.intValue();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

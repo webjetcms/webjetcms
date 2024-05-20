@@ -16,7 +16,7 @@ Scenario("filtrovanie zoznamu", async ({ I, DT }) => {
   I.fillField({css: "#dateDependentEntriesTable_extfilter input.dt-filter-from-from"}, "15.06.2020");
   I.fillField({css: "#dateDependentEntriesTable_extfilter input.dt-filter-to-from"}, "21.06.2020");
   I.seeElement("div.toast-message");
-  I.click("button.toast-close-button");
+  I.toastrClose();
   I.click({css: "#dateDependentEntriesTable_extfilter button.filtrujem"});
   DT.waitForLoader();
   I.dontSeeElement("div.toast-message");

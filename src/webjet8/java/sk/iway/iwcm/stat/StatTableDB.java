@@ -12,10 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -295,10 +298,15 @@ public class StatTableDB {
 		String sql = "SELECT DISTINCT u.user_id, u.title as u_title, u.first_name, u.last_name, u.company, u.city, u.last_logon, u.is_admin, " +
 		 				 "sum(s.views) as views, sum(s.view_minutes) as view_minutes, count(s.views) as views_count " +
 		 				 "FROM stat_userlogon s,  users u " +
-		 				 "WHERE s.user_id = u.user_id AND s.logon_time >= ? AND s.logon_time <= ? " +
-		 				 "GROUP BY u.user_id, u.is_admin, u.title, u.first_name, u.last_name, u.company, u.city, u.last_logon ";
+		 				 "WHERE s.user_id = u.user_id AND s.logon_time >= ? AND s.logon_time <= ? ";
 
-				 sql+= "ORDER BY u.is_admin DESC, view_minutes DESC";
+		if (InitServlet.isTypeCloud())
+		{
+			sql += CloudToolsForCore.getDomainIdSqlWhere(true, "u");
+		}
+
+		sql += "GROUP BY u.user_id, u.is_admin, u.title, u.first_name, u.last_name, u.company, u.city, u.last_logon ";
+		sql+= "ORDER BY u.is_admin DESC, view_minutes DESC";
 
 		try
 		{
@@ -466,6 +474,11 @@ public class StatTableDB {
 
 			if(Tools.isNotEmpty(url))
 				sql += " AND url LIKE ? ";
+
+			if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
+			{
+				sql += " AND (domain_id=0 OR domain_id="+CloudToolsForCore.getDomainId()+") ";
+			}
 
 			sql += " GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC";
 
@@ -1072,7 +1085,7 @@ public class StatTableDB {
 			{
 				db_conn = DBPool.getConnection();
 
-				String sql = "SELECT * FROM stat_searchengine"+suffixes[s]+" s WHERE s.query = ?";
+				String sql = "SELECT * FROM stat_searchengine"+suffixes[s]+" s WHERE "+DB.fixAiCiCol("s.query")+" = ?";
 
 
 				sql += " AND search_date >= ? AND search_date <= ? ";
@@ -1081,7 +1094,7 @@ public class StatTableDB {
 				sql += "ORDER BY search_date ASC";
 
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, query);
+				ps.setString(1, DB.fixAiCiValue(query));
 
 				ps.setTimestamp(2, new Timestamp(from.getTime()));
 				ps.setTimestamp(3, new Timestamp(to.getTime()));

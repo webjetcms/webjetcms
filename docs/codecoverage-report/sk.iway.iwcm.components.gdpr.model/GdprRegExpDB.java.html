@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GdprRegExpDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr.model</a> &gt; <span class="el_source">GdprRegExpDB.java</span></div><h1>GdprRegExpDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr.model;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Query;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+/**
+ *  GdprRegExpDB.java
+ *
+ *	DAO class for manipulating with GdprRegExpBean
+ *
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 09.05.2018 09:25:32
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class GdprRegExpDB extends JpaDB&lt;GdprRegExpBean&gt;
+{
+<span class="nc" id="L29">    private static GdprRegExpDB INSTANCE=null;</span>
+
+    public static GdprRegExpDB getInstance()
+    {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if(INSTANCE == null)</span>
+<span class="nc" id="L34">            INSTANCE = new GdprRegExpDB();</span>
+<span class="nc" id="L35">        return INSTANCE;</span>
+    }
+
+	public GdprRegExpDB()
+	{
+<span class="nc" id="L40">		super(GdprRegExpBean.class);</span>
+<span class="nc" id="L41">	}</span>
+
+		
+	public List&lt;GdprRegExpBean&gt; findByRegexpName(String regexpName)
+	{
+<span class="nc" id="L46">		return JpaTools.findByMatchingProperty(GdprRegExpBean.class, &quot;regexpName&quot;, regexpName);</span>
+	}
+	
+	public GdprRegExpBean findFirstByRegexpName(String regexpName)
+	{
+<span class="nc" id="L51">		return JpaTools.findFirstByMatchingProperty(GdprRegExpBean.class, &quot;regexpName&quot;, regexpName);</span>
+	}	
+	public List&lt;GdprRegExpBean&gt; findByRegexpValue(String regexpValue)
+	{
+<span class="nc" id="L55">		return JpaTools.findByMatchingProperty(GdprRegExpBean.class, &quot;regexpValue&quot;, regexpValue);</span>
+	}
+	
+	public GdprRegExpBean findFirstByRegexpValue(String regexpValue)
+	{
+<span class="nc" id="L60">		return JpaTools.findFirstByMatchingProperty(GdprRegExpBean.class, &quot;regexpValue&quot;, regexpValue);</span>
+	}	
+	public List&lt;GdprRegExpBean&gt; findByUserId(int userId)
+	{
+<span class="nc" id="L64">		return JpaTools.findByMatchingProperty(GdprRegExpBean.class, &quot;userId&quot;, userId);</span>
+	}
+	
+	public GdprRegExpBean findFirstByUserId(int userId)
+	{
+<span class="nc" id="L69">		return JpaTools.findFirstByMatchingProperty(GdprRegExpBean.class, &quot;userId&quot;, userId);</span>
+	}	
+	public List&lt;GdprRegExpBean&gt; findByDateInsert(Date dateInsert)
+	{
+<span class="nc" id="L73">		return JpaTools.findByMatchingProperty(GdprRegExpBean.class, &quot;dateInsert&quot;, dateInsert);</span>
+	}
+	
+	public GdprRegExpBean findFirstByDateInsert(Date dateInsert)
+	{
+<span class="nc" id="L78">		return JpaTools.findFirstByMatchingProperty(GdprRegExpBean.class, &quot;dateInsert&quot;, dateInsert);</span>
+	}
+
+    public static List&lt;String&gt; getAllRegexpString()
+    {
+<span class="nc" id="L83">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L84">        em.getTransaction().begin();</span>
+<span class="nc" id="L85">        Query query = null;</span>
+
+<span class="nc" id="L87">        query = em.createQuery(&quot;SELECT g.regexpValue FROM GdprRegExpBean g &quot;, Long.class);</span>
+
+<span class="nc" id="L89">        return JpaDB.getResultList(query);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

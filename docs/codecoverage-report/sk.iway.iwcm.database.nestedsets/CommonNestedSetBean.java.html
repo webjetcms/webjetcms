@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonNestedSetBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.database.nestedsets</a> &gt; <span class="el_source">CommonNestedSetBean.java</span></div><h1>CommonNestedSetBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.database.nestedsets;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.LockModeType;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+import javax.persistence.TypedQuery;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.database.DataSource;
+import sk.iway.iwcm.database.nestedsets.annotations.LeftColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.LevelColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.RightColumn;
+import sk.iway.iwcm.database.nestedsets.annotations.RootColumn;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+@MappedSuperclass
+<span class="fc" id="L30">abstract public class CommonNestedSetBean&lt;T extends NodeInfo&gt; extends ActiveRecord implements NodeInfo</span>
+{
+<span class="fc" id="L32">	public static List&lt;String&gt; TO_STRING_IGNORED_PROPERTIES = Arrays.asList(&quot;parent&quot;, &quot;ancestors&quot;, &quot;children&quot;, &quot;descendants&quot;);</span>
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private int id;
+
+	@Column(updatable=false)
+	@LeftColumn
+	private int lft;
+
+	@RightColumn
+	@Column(updatable=false)
+	private int rgt;
+
+	@LevelColumn
+	@Column(updatable=false, name=&quot;lvl&quot;)
+	private int level;
+
+	@RootColumn
+	private int rootId;
+
+<span class="fc" id="L52">	@Transient</span>
+	protected T parent = null;
+
+<span class="fc" id="L55">	@Transient</span>
+	protected boolean createRoot = false;
+
+
+	@Override
+	public int getId()
+	{
+<span class="nc" id="L62">		return id;</span>
+	}
+
+	@Override
+	public void setId(int id)
+	{
+<span class="nc" id="L68">		this.id = id;</span>
+<span class="nc" id="L69">	}</span>
+
+	@Override
+	@JsonIgnore
+	public int getLeftValue()
+	{
+
+<span class="nc" id="L76">		return lft;</span>
+	}
+
+	@Override
+	@JsonIgnore
+	public int getRightValue()
+	{
+<span class="nc" id="L83">		return rgt;</span>
+	}
+
+	@Override
+//	@JsonIgnore
+	public int getLevel()
+	{
+<span class="nc" id="L90">		return level;</span>
+	}
+
+	@Override
+	@JsonIgnore
+	public int getRootValue()
+	{
+<span class="nc" id="L97">		return rootId;</span>
+	}
+
+	@Override
+	public void setLeftValue(int value)
+	{
+<span class="nc" id="L103">		lft = value;</span>
+<span class="nc" id="L104">	}</span>
+
+	@Override
+	public void setRightValue(int value)
+	{
+<span class="nc" id="L109">		rgt = value;</span>
+<span class="nc" id="L110">	}</span>
+
+	@Override
+	public void setLevel(int level)
+	{
+<span class="nc" id="L115">		this.level = level;</span>
+<span class="nc" id="L116">	}</span>
+
+	@Override
+	public void setRootValue(int value)
+	{
+<span class="nc" id="L121">		rootId = value;</span>
+<span class="nc" id="L122">	}</span>
+
+
+	@Override
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public boolean save()
+	{
+<span class="nc" id="L129">		String dbName = &quot;iwcm&quot;;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (this.getClass().isAnnotationPresent(DataSource.class)) {</span>
+
+<span class="nc" id="L132">			Annotation annotation = this.getClass().getAnnotation(DataSource.class);</span>
+<span class="nc" id="L133">			DataSource dataSource = (DataSource) annotation;</span>
+<span class="nc" id="L134">			dbName = dataSource.name();</span>
+		}
+<span class="nc" id="L136">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (this.id&gt;0)</span>
+		{
+
+<span class="nc" id="L140">			boolean commitAfterSuccess = false;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (!em.getTransaction().isActive())</span>
+			{
+<span class="nc" id="L143">				commitAfterSuccess = true;</span>
+<span class="nc" id="L144">				em.getTransaction().begin();</span>
+			}
+			try
+			{
+<span class="nc" id="L148">				em.merge(this);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				if (commitAfterSuccess)</span>
+				{
+<span class="nc" id="L151">					em.getTransaction().commit();</span>
+				}
+<span class="nc" id="L153">				return true;</span>
+			}
+<span class="nc" id="L155">			catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+
+<span class="nc" id="L157">		}</span>
+		else
+		{
+<span class="nc bnc" id="L160" title="All 4 branches missed.">			if (parent==null &amp;&amp; !createRoot) throw new IllegalStateException(&quot;'parent' must be specified!&quot;);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (parent!=null)</span>
+			{
+<span class="nc" id="L163">				JpaNode&lt;T&gt; parentJpaNode = new JpaNode&lt;T&gt;(parent, new JpaNestedSetManager(em));</span>
+				try
+				{
+<span class="nc" id="L166">					boolean commitAfterSuccess = false;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					if (!em.getTransaction().isActive())</span>
+					{
+<span class="nc" id="L169">						commitAfterSuccess = true;</span>
+<span class="nc" id="L170">						em.getTransaction().begin();</span>
+					}
+<span class="nc" id="L172">					parentJpaNode.addChild((T)this);</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					if (commitAfterSuccess)</span>
+					{
+<span class="nc" id="L175">						em.getTransaction().commit();</span>
+					}
+<span class="nc" id="L177">					parentJpaNode = null;</span>
+<span class="nc" id="L178">					return true;</span>
+				}
+<span class="nc" id="L180">				catch (Exception e) { sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L181">				parent = null;</span>
+<span class="nc" id="L182">			}</span>
+			else
+			{
+<span class="nc" id="L185">				JpaNestedSetManager nsm = new JpaNestedSetManager(em);</span>
+<span class="nc" id="L186">				boolean commitAfterSuccess = false;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (!em.getTransaction().isActive())</span>
+				{
+<span class="nc" id="L189">					commitAfterSuccess = true;</span>
+<span class="nc" id="L190">					em.getTransaction().begin();</span>
+				}
+<span class="nc" id="L192">				nsm.createRoot(this);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (commitAfterSuccess)</span>
+				{
+<span class="nc" id="L195">					em.getTransaction().commit();</span>
+				}
+<span class="nc" id="L197">				return true;</span>
+			}
+
+		}
+<span class="nc" id="L201">		return false;</span>
+	}
+
+	@Override
+	public boolean delete()
+	{
+<span class="nc" id="L207">		String dbName = &quot;iwcm&quot;;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (this.getClass().isAnnotationPresent(DataSource.class)) {</span>
+
+<span class="nc" id="L210">			Annotation annotation = this.getClass().getAnnotation(DataSource.class);</span>
+<span class="nc" id="L211">			DataSource dataSource = (DataSource) annotation;</span>
+<span class="nc" id="L212">			dbName = dataSource.name();</span>
+		}
+<span class="nc" id="L214">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="nc" id="L215">		JpaNestedSetManager nsm = new JpaNestedSetManager(em);</span>
+<span class="nc" id="L216">		updateNestedSetProperties();</span>
+		@SuppressWarnings({ &quot;unchecked&quot; })
+<span class="nc" id="L218">		JpaNode&lt;T&gt; node = new JpaNode&lt;T&gt;((T)this, nsm);</span>
+		// MBO: povolime vymazanie celej vetvy - uzdela aj s podstromom
+		// if (node.hasChildren()) throw new IllegalStateException(&quot;Node cannot be deleted, because has children!&quot;);
+		try
+		{
+<span class="nc" id="L223">			boolean commitAfterSuccess = false;</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			if (!em.getTransaction().isActive())</span>
+			{
+<span class="nc" id="L226">				commitAfterSuccess = true;</span>
+<span class="nc" id="L227">				em.getTransaction().begin();</span>
+			}
+<span class="nc" id="L229">			node.delete();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if (commitAfterSuccess)</span>
+			{
+<span class="nc" id="L232">				em.getTransaction().commit();</span>
+			}
+<span class="nc" id="L234">			return true;</span>
+		}
+<span class="nc" id="L236">		catch (Exception e)</span>
+		{
+<span class="nc" id="L238">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L240">		return false;</span>
+	}
+
+	public void setParent(T parent)
+	{
+<span class="nc" id="L245">		this.parent = parent;</span>
+<span class="nc" id="L246">	}</span>
+
+	public void createRoot()
+	{
+<span class="nc" id="L250">		this.createRoot = true;</span>
+<span class="nc" id="L251">	}</span>
+
+
+
+	private T unwrapped(Node&lt;T&gt; node)
+	{
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (node!=null)	return node.unwrap();</span>
+<span class="nc" id="L258">		return null;</span>
+	}
+
+	private List&lt;T&gt; unwrappedList(List&lt;Node&lt;T&gt;&gt; nodeList)
+	{
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (nodeList!=null)</span>
+		{
+<span class="nc" id="L265">			List&lt;T&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			for (Node&lt;T&gt; node : nodeList)</span>
+			{
+<span class="nc" id="L268">				result.add(node.unwrap());</span>
+<span class="nc" id="L269">			}</span>
+<span class="nc" id="L270">			return result;</span>
+		}
+<span class="nc" id="L272">		return null;</span>
+	}
+
+	private JpaEntityManager getEm()
+	{
+<span class="nc" id="L277">		String dbName = &quot;iwcm&quot;;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		if (this.getClass().isAnnotationPresent(DataSource.class)) {</span>
+
+<span class="nc" id="L280">			Annotation annotation = this.getClass().getAnnotation(DataSource.class);</span>
+<span class="nc" id="L281">			DataSource dataSource = (DataSource) annotation;</span>
+<span class="nc" id="L282">			dbName = dataSource.name();</span>
+		}
+<span class="nc" id="L284">		return JpaTools.getEclipseLinkEntityManager(dbName);</span>
+	}
+	private JpaNestedSetManager getNsm()
+	{
+<span class="nc" id="L288">		return new JpaNestedSetManager(getEm());</span>
+	}
+
+	/**
+	 * update kritickych hodnot na cerstve z DB
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private void updateNestedSetProperties()
+	{
+<span class="nc" id="L297">		updateNestedSetProperties((T)this);</span>
+
+<span class="nc" id="L299">	}</span>
+	private void updateNestedSetProperties(T bean)
+	{
+<span class="nc" id="L302">		StringBuilder jpql = new StringBuilder();</span>
+<span class="nc" id="L303">		jpql.append(&quot;SELECT NEW sk.iway.iwcm.database.nestedsets.CommonNestedSetBean.SimpleNestedSetItem(t.lft, t.rgt, t.level) FROM &quot;).append(this.getClass().getSimpleName()).append(&quot; t WHERE t.id=?1&quot;);</span>
+<span class="nc" id="L304">		TypedQuery&lt;SimpleNestedSetItem&gt; typedQuery = getEm().createQuery(jpql.toString() , SimpleNestedSetItem.class);</span>
+<span class="nc" id="L305">		typedQuery.setParameter(1, bean.getId());</span>
+<span class="nc" id="L306">		SimpleNestedSetItem item=typedQuery.getSingleResult();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (item==null) throw new IllegalStateException(&quot;Entity not exist.&quot;);</span>
+<span class="nc" id="L308">		bean.setLeftValue(item.left);</span>
+<span class="nc" id="L309">		bean.setRightValue(item.right);</span>
+<span class="nc" id="L310">		bean.setLevel(item.level);</span>
+<span class="nc" id="L311">		item=null;</span>
+
+<span class="nc" id="L313">	}</span>
+
+	@JsonIgnore
+	public T getParent()
+	{
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L319">		Node&lt;T&gt; node = new JpaNode(this, getNsm());</span>
+<span class="nc" id="L320">		return unwrapped(node.getParent());</span>
+	}
+
+	@JsonIgnore
+	public List&lt;T&gt; getAncestors()
+	{
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L327">		Node&lt;T&gt; node = new JpaNode(this, getNsm());</span>
+<span class="nc" id="L328">		return unwrappedList(node.getAncestors());</span>
+	}
+
+	@JsonIgnore
+	public List&lt;T&gt; getChildren()
+	{
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L335">		Node&lt;T&gt; node = new JpaNode(this, getNsm());</span>
+<span class="nc" id="L336">		return unwrappedList(node.getChildren());</span>
+	}
+
+	@JsonIgnore
+	public List&lt;T&gt; getDescendants()
+	{
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L343">		Node&lt;T&gt; node = new JpaNode(this, getNsm());</span>
+<span class="nc" id="L344">		return unwrappedList(node.getDescendants());</span>
+	}
+
+	public T addChild(T child)
+	{
+<span class="nc" id="L349">		updateNestedSetProperties();</span>
+<span class="nc" id="L350">		JpaNestedSetManager nsm = getNsm();</span>
+<span class="nc" id="L351">		nsm.getEntityManager().getTransaction().begin();</span>
+		try
+		{
+			@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L355">			Node&lt;T&gt; node = new JpaNode(this, nsm);</span>
+<span class="nc" id="L356">			return unwrapped(node.addChild(child));</span>
+		}
+		finally
+		{
+<span class="nc" id="L360">			nsm.getEntityManager().getTransaction().commit();</span>
+<span class="nc" id="L361">			updateNestedSetProperties();</span>
+		}
+
+	}
+
+
+	public boolean isAncestorOf(T maybeDescentan)
+	{
+<span class="nc" id="L369">		updateNestedSetProperties();</span>
+<span class="nc" id="L370">		updateNestedSetProperties(maybeDescentan);</span>
+<span class="nc" id="L371">		JpaNestedSetManager nsm = getNsm();</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L373">		Node&lt;T&gt; node = new JpaNode(this, nsm);</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L375">		Node&lt;T&gt; maybeDescentanNode = new JpaNode(maybeDescentan, nsm);</span>
+<span class="nc" id="L376">		return maybeDescentanNode.isDescendantOf(node);</span>
+	}
+
+	public boolean isDescentantOf(T maybeAncestor)
+	{
+<span class="nc" id="L381">		updateNestedSetProperties();</span>
+<span class="nc" id="L382">		updateNestedSetProperties(maybeAncestor);</span>
+<span class="nc" id="L383">		JpaNestedSetManager nsm = getNsm();</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L385">		Node&lt;T&gt; node = new JpaNode(this, nsm);</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L387">		Node&lt;T&gt; maybeAncestorNode = new JpaNode(maybeAncestor, nsm);</span>
+<span class="nc" id="L388">		return node.isDescendantOf(maybeAncestorNode);</span>
+	}
+
+	public void moveToNewParent(T parent)
+	{
+<span class="nc" id="L393">		updateNestedSetProperties();</span>
+<span class="nc" id="L394">		updateNestedSetProperties(parent);</span>
+<span class="nc" id="L395">		JpaNestedSetManager nsm = getNsm();</span>
+<span class="nc" id="L396">		nsm.getEntityManager().getTransaction().begin();</span>
+		//@Experimental
+<span class="nc" id="L398">		nsm.getEntityManager().lock(parent, LockModeType.PESSIMISTIC_READ);</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L400">		Node&lt;T&gt; node = new JpaNode(this, nsm);</span>
+		@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+<span class="nc" id="L402">		Node&lt;T&gt; parentNode = new JpaNode(parent, nsm);</span>
+
+<span class="nc" id="L404">		node.moveAsLastChildOf(parentNode);</span>
+<span class="nc" id="L405">		nsm.getEntityManager().getTransaction().commit();</span>
+<span class="nc" id="L406">		updateNestedSetProperties();</span>
+<span class="nc" id="L407">		updateNestedSetProperties(parent);</span>
+<span class="nc" id="L408">	}</span>
+
+	public static class SimpleNestedSetItem
+	{
+		protected int left;
+		protected int right;
+		protected int level;
+
+		public SimpleNestedSetItem(int left, int right, int level)
+		{
+<span class="nc" id="L418">			super();</span>
+<span class="nc" id="L419">			this.left = left;</span>
+<span class="nc" id="L420">			this.right = right;</span>
+<span class="nc" id="L421">			this.level = level;</span>
+<span class="nc" id="L422">		}</span>
+
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JarPackaging.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">JarPackaging.java</span></div><h1>JarPackaging.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+/**
+ * JarPackaging.java - trieda pre podporu JarPackagingu (ukladania JSP a statickych suborov do JAR archivov)
+ * ticket #34006
+ * https://stackoverflow.com/questions/5013917/can-i-serve-jsps-from-inside-a-jar-in-lib-or-is-there-a-workaround
+ * https://alexismp.wordpress.com/2010/04/28/web-inflib-jarmeta-infresources/
+ * https://www.javacodegeeks.com/2013/08/servlet-3-0-overview.html
+ *
+ * @author $Author: jeeff $
+ */
+public class JarPackaging
+{
+<span class="fc" id="L36">   private static String JAR_LOCATION_ADMIN = null; //NOSONAR</span>
+<span class="fc" id="L37">   private static String JAR_LOCATION_COMPONENTS = null; //NOSONAR</span>
+<span class="fc" id="L38">   private static String JAR_LOCATION_CORE = null; //NOSONAR</span>
+
+<span class="nc" id="L40">   protected JarPackaging() {</span>
+      //utility class
+<span class="nc" id="L42">   }</span>
+
+   public static void initialize()
+   {
+<span class="fc" id="L46">      JAR_LOCATION_COMPONENTS = initializeJarLocation(&quot;/META-INF/resources/components/_common/combine.jsp&quot;);</span>
+
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">      if (Tools.isNotEmpty(JAR_LOCATION_COMPONENTS))</span>
+      {
+<span class="nc" id="L50">         JAR_LOCATION_ADMIN = initializeJarLocation(&quot;/META-INF/resources/admin/v9/dist/views/dashboard/overview.html&quot;);</span>
+<span class="nc" id="L51">         JAR_LOCATION_CORE = initializeJarLocation(&quot;/sk/iway/iwcm/common/AdminTools.class&quot;);</span>
+
+<span class="nc" id="L53">         Logger.println(JarPackaging.class, &quot;enableJspJarPackaging=true&quot;);</span>
+<span class="nc" id="L54">         Constants.setBoolean(&quot;enableJspJarPackaging&quot;, true);</span>
+<span class="nc" id="L55">         return;</span>
+      }
+
+<span class="fc" id="L58">      Logger.println(JarPackaging.class, &quot;enableJspJarPackaging=false&quot;);</span>
+<span class="fc" id="L59">   }</span>
+
+   /**
+    * Vrati cestu k JAR suboru obsahujucemu danu cestu
+    */
+   private static String initializeJarLocation(String path)
+   {
+<span class="fc" id="L66">      URL u = JarPackaging.class.getResource(path);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">      if (u != null)</span>
+      {
+         //je to nieco ako jar:file:/Users/jeeff/.gradle/caches/modules-2/files-2.1/sk.iway/webjet9admin/8.6-SNAPSHOT/e8615553500ae75b655eb175276b945fe82799bd/webjet9admin-8.6-SNAPSHOT.jar!/META-INF/resources/WEB-INF/build.properties
+<span class="nc" id="L70">         String fileLocation = u.getPath();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">         if (u.getPath().contains(&quot;.jar&quot;)==false) return null;</span>
+
+<span class="nc" id="L73">         int i = fileLocation.indexOf(&quot;:&quot;);</span>
+<span class="nc" id="L74">         int j = fileLocation.indexOf(&quot;.jar!&quot;);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">         if (j &gt; i) fileLocation = fileLocation.substring(i+1, j+4);</span>
+
+         //na windowse to vrati cestu ako /c:/nieco co nie je platne, musi to byt c:/nieco
+<span class="nc bnc" id="L78" title="All 2 branches missed.">         if (fileLocation.charAt(2) == ':')</span>
+         {
+<span class="nc" id="L80">            Logger.println(JarPackaging.class, &quot;Detected :, probably windows, fixing path=&quot;+path);</span>
+<span class="nc" id="L81">            fileLocation = fileLocation.substring(1);</span>
+         }
+
+<span class="nc" id="L84">         Logger.println(JarPackaging.class, &quot;Found jarpackaging JAR: path=&quot;+path+&quot; fileLocation=&quot;+fileLocation);</span>
+
+<span class="nc" id="L86">         return fileLocation;</span>
+      }
+<span class="fc" id="L88">      return null;</span>
+   }
+
+   private static String addBaseFolder(String virtualPath)
+   {
+<span class="nc" id="L93">      return &quot;/META-INF/resources&quot;+virtualPath;</span>
+   }
+
+   private static String getJarFileLocation(String virtualPath)
+   {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">      if (virtualPath.startsWith(&quot;/WEB-INF/classes/&quot;)) return JAR_LOCATION_CORE;</span>
+
+      //toto je vynimka, mame to v components kedze je to potrebne aj pre public nod
+<span class="nc bnc" id="L101" title="All 4 branches missed.">      if (virtualPath.equals(&quot;/WEB-INF/mime.types&quot;) || virtualPath.equals(&quot;/WEB-INF/build.properties&quot;)) return JAR_LOCATION_COMPONENTS;</span>
+
+<span class="nc bnc" id="L103" title="All 4 branches missed.">      if (virtualPath.startsWith(&quot;/admin&quot;) || virtualPath.startsWith(&quot;/WEB-INF/&quot;)) return JAR_LOCATION_ADMIN;</span>
+
+<span class="nc" id="L105">      return JAR_LOCATION_COMPONENTS;</span>
+   }
+
+   public static boolean isJarPackaging(String virtualPath)
+   {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">      if (Constants.getBoolean(&quot;enableJspJarPackaging&quot;)==false) return false;</span>
+
+<span class="fc" id="L112">      Logger.debug(JarPackaging.class, &quot;isJarPackaging(&quot;+virtualPath+&quot;)&quot;);</span>
+
+<span class="pc bpc" id="L114" title="2 of 4 branches missed.">      if (virtualPath.equals(&quot;/components/&quot;+Constants.getInstallName()) || virtualPath.startsWith(&quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot;)) return false;</span>
+
+      //TODO: doplnit nejake dalsie vynimky podla konf. premennej
+
+      //kvoli performance je to takto natvrdo
+<span class="pc bpc" id="L119" title="2 of 6 branches missed.">      if (virtualPath.startsWith(&quot;/admin&quot;) || virtualPath.startsWith(&quot;/components&quot;) || virtualPath.startsWith(&quot;/apps&quot;) ||</span>
+<span class="pc bpc" id="L120" title="3 of 6 branches missed.">          virtualPath.equals(&quot;/WEB-INF/build.properties&quot;) || virtualPath.equals(&quot;/WEB-INF/sql/autoupdate.xml&quot;) || virtualPath.equals(&quot;/WEB-INF/sql/autoupdate-webjet9.xml&quot;) ||</span>
+<span class="pc bpc" id="L121" title="4 of 6 branches missed.">          virtualPath.startsWith(&quot;/WEB-INF/sql/blank_web&quot;) || virtualPath.startsWith(&quot;/WEB-INF/classes/text&quot;) || virtualPath.startsWith(&quot;/WEB-INF/fonts/&quot;) ||</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">          virtualPath.equals(&quot;/WEB-INF/mime.types&quot;) || virtualPath.equals(&quot;/WEB-INF/struts-config.xml&quot;))</span>
+      {
+         //tu nekontrolujeme ci existuje, automaticky je to JarPackaging, az nasledne sa k tomu pridaju fyzicke subory v listFiles
+<span class="pc bpc" id="L125" title="2 of 4 branches missed.">         if (&quot;/components&quot;.equals(virtualPath) || &quot;/apps&quot;.equals(virtualPath))</span>
+         {
+<span class="nc" id="L127">            return true;</span>
+         }
+
+         //overme ci existuje realny subor, ak ano, tak to nie je jarpackaging
+         //musime pouzit File, lebo IwcmFile by bolo nazad zacyklenie!!!
+         //TODO: nejaka cache, asi idealne na cele isJarPackaging
+<span class="fc" id="L133">         File f = new File(Tools.getRealPath(virtualPath));</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">         if (f.exists()) return false;</span>
+
+         //subor neexistuje, takze je to v jarku
+<span class="fc" id="L137">         return true;</span>
+      }
+
+<span class="nc" id="L140">      return false;</span>
+   }
+
+   public static IwcmFile[] listFiles(String virtualPath)
+   {
+      //Logger.debug(JarPackaging.class, &quot;listFiles(&quot;+virtualPath+&quot;)&quot;);
+
+<span class="nc" id="L147">      FileSystem fs = null;</span>
+<span class="nc" id="L148">      DirectoryStream&lt;Path&gt; directoryStream = null;</span>
+      try
+      {
+<span class="nc" id="L151">         List&lt;IwcmFile&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L152">         String realPath = Tools.getRealPath(virtualPath);</span>
+
+         // Run with JAR file
+<span class="nc" id="L155">         Path jarFile = Paths.get(getJarFileLocation(virtualPath));</span>
+
+<span class="nc" id="L157">         Logger.debug(JarPackaging.class, &quot;listFiles(&quot;+virtualPath+&quot;), jarFile=&quot;+jarFile);</span>
+
+<span class="nc" id="L159">         Set&lt;String&gt; existingFileNames = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L160">         ClassLoader loader = null;</span>
+<span class="nc" id="L161">         fs = FileSystems.newFileSystem(jarFile, loader);</span>
+         try {
+<span class="nc" id="L163">            directoryStream = Files.newDirectoryStream(fs.getPath(addBaseFolder(virtualPath)));</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            for(Path p: directoryStream)</span>
+            {
+<span class="nc" id="L166">               Logger.debug(JarPackaging.class,&quot;FileName=&quot;+p.getFileName()+&quot; root=&quot;+p.getRoot());</span>
+
+<span class="nc" id="L168">               IwcmFile f = new IwcmFile(realPath, p.getFileName().toString());</span>
+<span class="nc" id="L169">               files.add(f);</span>
+<span class="nc" id="L170">               existingFileNames.add(Tools.replace(p.getFileName().toString(), &quot;/&quot;, &quot;&quot;));</span>
+<span class="nc" id="L171">            }</span>
+<span class="nc" id="L172">         } catch (NotDirectoryException nde) {</span>
+            //adresar v JAR neexistuje, nevadi, skusime este realny suborovy system
+<span class="nc" id="L174">         }</span>
+
+         //ak je nieco v JarPackagingu pridaj pripadne skutocne adresare na disku, jedna sa hlavne o /components kde su komponenty aj v JARku aj custom na disku
+<span class="nc" id="L177">         File physicalDir = new File(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">         if (physicalDir.exists())</span>
+         {
+<span class="nc" id="L180">            File[] physicalFiles = physicalDir.listFiles();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            if (physicalFiles != null)</span>
+            {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">               for (File file : physicalFiles)</span>
+               {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                  if (existingFileNames.contains(file.getName())) continue;</span>
+<span class="nc" id="L186">                  IwcmFile f = new IwcmFile(file);</span>
+<span class="nc" id="L187">                  files.add(f);</span>
+<span class="nc" id="L188">                  existingFileNames.add(file.getName());</span>
+               }
+            }
+         }
+
+<span class="nc" id="L193">         return files.toArray(new IwcmFile[0]);</span>
+      }
+<span class="nc" id="L195">      catch (IOException ex)</span>
+      {
+<span class="nc" id="L197">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+      {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">         if (directoryStream != null) try { directoryStream.close(); } catch (IOException ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">         if (fs != null) try { fs.close(); } catch (IOException ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+      }
+
+<span class="nc" id="L205">      return new IwcmFile[0];</span>
+   }
+
+   public static boolean isDirectory(String virtualPath)
+   {
+      //TODO: overit nejako, ci je to subor alebo adresar
+<span class="nc" id="L211">      URL u = JarPackaging.class.getResource(&quot;/META-INF/resources&quot;+virtualPath);</span>
+      //Logger.debug(JarPackaging.class, &quot;isDirectory(&quot;+virtualPath+&quot;), url=&quot;+u);
+<span class="nc bnc" id="L213" title="All 4 branches missed.">      if (u != null &amp;&amp; virtualPath.contains(&quot;.&quot;)==false) return true;</span>
+
+<span class="nc bnc" id="L215" title="All 2 branches missed.">      if (u == null) {</span>
+         //over, ci to nie je skutocny adresar na disku
+<span class="nc" id="L217">         File f = new File(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L218" title="All 4 branches missed.">         if (f.exists() &amp;&amp; f.isDirectory()) return true;</span>
+      }
+
+<span class="nc" id="L221">      return false;</span>
+   }
+
+   public static boolean isFile(String virtualPath)
+   {
+      //TODO: overit nejako, ci je to subor alebo adresar
+<span class="nc" id="L227">      URL u = JarPackaging.class.getResource(&quot;/META-INF/resources&quot;+virtualPath);</span>
+<span class="nc" id="L228">      Logger.debug(JarPackaging.class, &quot;isFile(&quot;+virtualPath+&quot;), url=&quot;+u);</span>
+<span class="nc bnc" id="L229" title="All 4 branches missed.">      if (u != null &amp;&amp; virtualPath.contains(&quot;.&quot;)) return true;</span>
+
+<span class="nc" id="L231">      return false;</span>
+   }
+
+   public static boolean exists(String virtualPath)
+   {
+<span class="fc" id="L236">      URL u = JarPackaging.class.getResource(&quot;/META-INF/resources&quot;+virtualPath);</span>
+<span class="fc" id="L237">      Logger.debug(JarPackaging.class, &quot;exists(&quot;+virtualPath+&quot;), url=&quot;+u);</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">      if (u != null) return true;</span>
+
+<span class="fc" id="L240">      return false;</span>
+   }
+
+   public static InputStream getInputStream(String virtualPath)
+   {
+<span class="nc" id="L245">      return JarPackaging.class.getResourceAsStream(addBaseFolder(virtualPath));</span>
+   }
+
+   public static long getSize(String virtualPath)
+   {
+<span class="nc" id="L250">      long size = 0;</span>
+<span class="nc" id="L251">      JarFile jarFile = null;</span>
+      try
+      {
+<span class="nc" id="L254">         jarFile = new JarFile(getJarFileLocation(virtualPath));</span>
+         //po skumani sa vola jarFile.getEntry bez uvodneho lomitka
+<span class="nc" id="L256">         size = jarFile.getEntry(addBaseFolder(virtualPath).substring(1)).getSize();</span>
+      }
+<span class="nc" id="L258">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L260">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally {
+<span class="nc bnc" id="L263" title="All 2 branches missed.">         if (jarFile != null) try { jarFile.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+      }
+<span class="nc" id="L265">      return size;</span>
+   }
+
+   public static long getLastMofified(String virtualPath)
+   {
+<span class="nc" id="L270">      long lastmodified = 0;</span>
+<span class="nc" id="L271">      JarFile jarFile = null;</span>
+      try
+      {
+<span class="nc" id="L274">         jarFile = new JarFile(getJarFileLocation(virtualPath));</span>
+         //po skumani sa vola jarFile.getEntry bez uvodneho lomitka
+<span class="nc" id="L276">         ZipEntry entry = jarFile.getEntry(addBaseFolder(virtualPath).substring(1));</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">         if (entry != null) lastmodified = entry.getTime();</span>
+      }
+<span class="nc" id="L279">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L281">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally {
+<span class="nc bnc" id="L284" title="All 2 branches missed.">         if (jarFile != null) try { jarFile.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+      }
+<span class="nc" id="L286">      return lastmodified;</span>
+   }
+
+   public static List&lt;String&gt; getJarLocations()
+   {
+<span class="fc" id="L291">      List&lt;String&gt; locations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L292">      locations.add(JAR_LOCATION_ADMIN);</span>
+<span class="fc" id="L293">      locations.add(JAR_LOCATION_COMPONENTS);</span>
+<span class="fc" id="L294">      locations.add(JAR_LOCATION_CORE);</span>
+
+<span class="fc" id="L296">      return locations;</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

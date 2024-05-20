@@ -26,7 +26,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class IwcmActualPageFsVolume extends IwcmFsVolume
 {
-	private String libraryFolders[];
+	private String[] libraryFolders;
 
 	public IwcmActualPageFsVolume(String name, String rootUrl, String libraryFolders)
 	{
@@ -89,7 +89,7 @@ public class IwcmActualPageFsVolume extends IwcmFsVolume
 	@Override
 	public FsItem[] listChildren(FsItem fsi)
 	{
-		List<FsItem> list = new ArrayList<FsItem>();
+		List<FsItem> list = new ArrayList<>();
 
 		IwcmFile fsiFile = asFile(fsi);
 

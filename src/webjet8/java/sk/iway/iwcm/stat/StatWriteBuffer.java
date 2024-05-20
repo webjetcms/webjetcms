@@ -201,8 +201,10 @@ public class StatWriteBuffer
 		}
 		catch (Exception ex)
 		{
-			StatNewDB.createStatTablesFromError(ex.getMessage(), null, oldMapping.get(sql));
-			sk.iway.iwcm.Logger.error(ex);
+			boolean created = StatNewDB.createStatTablesFromError(ex.getMessage(), null, oldMapping.get(sql));
+			if (created==false) {
+				sk.iway.iwcm.Logger.error(ex);
+			}
 			return false;
 		}
 		finally{

@@ -145,11 +145,11 @@ public class LogonTools {
 
                 if (request.getParameter("emailLogon") != null && "true".equalsIgnoreCase(request.getParameter("emailLogon")))
                 {
-                    sql = "SELECT * FROM  users WHERE email=?";
+                    sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?";
                 }
                 else
                 {
-                    sql = "SELECT * FROM  users WHERE login=?";
+                    sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("login")+"=?";
                 }
 
                 sql += UsersDB.getDomainIdSqlWhere(true);
@@ -157,7 +157,7 @@ public class LogonTools {
                 PreparedStatement ps = db_conn.prepareStatement(sql);
                 try
                 {
-                    ps.setString(1, username.toLowerCase());
+                    ps.setString(1, DB.fixAiCiValue(username));
                     ResultSet db_result = ps.executeQuery();
                     try
                     {
@@ -382,14 +382,18 @@ public class LogonTools {
                             path = Tools.replace(path, domainAlias+domainAlias, domainAlias);
                         }
 
-                        sb.append(" ").append(path);
-                        if(sb.toString().endsWith("/"))
+                        if (user.isFolderWritable(path)) continue;
+
+                        if (sb.isEmpty()==false) sb.append("\n");
+                        sb.append(path);
+                        if(path.endsWith("/"))
                             sb.append("*");
                         else
                             sb.append("/*");
                     }
                 }
                 Logger.debug(LogonTools.class, "Adding WritableFolders: "+Tools.replace(sb.toString(), user.getWritableFolders(), ""));
+                if (sb.isEmpty()==false) sb.append("\n");
                 user.setWritableFolders(sb.toString()+permWritableFolders);
             }
 

@@ -1,0 +1,1177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtrDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">AtrDB.java</span></div><h1>AtrDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.stat.Column;
+
+/**
+ *  Objekt na pracu s atributmi stranky
+ *
+ *@Title        WebJET 4.0
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.6 $
+ *@created      Streda, 2003, október 15
+ *@modified     $Date: 2003/12/01 08:27:43 $
+ */
+public class AtrDB
+{
+   public static final int TYPE_STRING = 0;
+   public static final int TYPE_INT = 1;
+   public static final int TYPE_BOOL = 2;
+   public static final int TYPE_DOUBLE = 3;
+
+<span class="nc" id="L48">   protected AtrDB() {</span>
+      //utility class
+<span class="nc" id="L50">   }</span>
+
+   /**
+    * vrati zoznam vsetkych atributov (aj nevyplnenych) pre dane docId
+    * @param docId
+    * @param request
+    * @return
+    */
+    @SuppressWarnings(&quot;unchecked&quot;)
+   public static List&lt;AtrBean&gt; getAtributes(int docId, String group, HttpServletRequest request)
+   {
+   	//skus vydolovat z requestu (aby sme nemali zbytocne dotazy)
+<span class="fc" id="L62">   	String key = &quot;attributes_&quot;+docId+&quot;_&quot;+group;</span>
+   	List&lt;AtrBean&gt; ret;
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">   	if (request != null)</span>
+   	{
+<span class="fc" id="L66">	   	ret = (List&lt;AtrBean&gt;)request.getAttribute(key);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">	   	if (ret != null) return(ret);</span>
+   	}
+
+<span class="fc" id="L70">      ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L71">      Connection db_conn = null;</span>
+<span class="fc" id="L72">		PreparedStatement ps = null;</span>
+<span class="fc" id="L73">		ResultSet rs = null;</span>
+      try
+      {
+<span class="fc" id="L76">         db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L77">         StringBuilder sql =  new StringBuilder(&quot;SELECT dad.*, da.doc_id, da.value_string, da.value_int, da.value_bool FROM doc_atr_def dad &quot;).append(</span>
+<span class="fc" id="L78">                      &quot;LEFT JOIN doc_atr da ON dad.atr_id = da.atr_id &quot;).append(</span>
+                      &quot;AND da.doc_id=? WHERE dad.atr_id&gt;0 &quot;);
+
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">         if (group!=null)</span>
+         {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">         	if (group.indexOf('%')!=-1)</span>
+         	{
+<span class="nc" id="L86">         		sql.append(&quot;AND dad.atr_group LIKE ?  &quot;);</span>
+         	}
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">         	else if (group.indexOf(',')!=-1)</span>
+         	{
+<span class="nc" id="L90">         		group = DB.removeSlashes(group);</span>
+<span class="nc" id="L91">         		StringTokenizer st = new StringTokenizer(group, &quot;,&quot;);</span>
+<span class="nc" id="L92">         		sql.append(&quot;AND dad.atr_group IN ('&quot;).append(st.nextToken()).append('\'');</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">         		while (st.hasMoreTokens())</span>
+         		{
+<span class="nc" id="L95">         			sql.append(&quot;, '&quot;).append(st.nextToken()).append('\'');</span>
+         		}
+<span class="nc" id="L97">         		sql.append(&quot;) &quot;);</span>
+<span class="nc" id="L98">         		group = null;</span>
+<span class="nc" id="L99">         	}</span>
+         	else
+         	{
+<span class="fc" id="L102">         		sql.append(&quot;AND dad.atr_group=?  &quot;);</span>
+         	}
+         }
+
+<span class="fc" id="L106">         sql.append(&quot;ORDER BY dad.order_priority &quot;);</span>
+<span class="fc" id="L107">         ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L108">         ps.setInt(1, docId);</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">         if (group != null) ps.setString(2, group);</span>
+<span class="fc" id="L110">         rs = ps.executeQuery();</span>
+         AtrBean atr;
+<span class="fc bfc" id="L112" title="All 2 branches covered.">         while (rs.next())</span>
+         {
+<span class="fc" id="L114">            atr = new AtrBean();</span>
+<span class="fc" id="L115">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="fc" id="L116">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="fc" id="L117">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="fc" id="L118">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="fc" id="L119">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="fc" id="L120">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="fc" id="L121">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="fc" id="L122">            atr.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L123">            atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="fc" id="L124">            atr.setValueNumber(rs.getDouble(&quot;value_int&quot;));</span>
+<span class="fc" id="L125">            atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="fc" id="L126">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="fc" id="L127">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+<span class="fc" id="L128">            ret.add(atr);</span>
+         }
+<span class="fc" id="L130">         rs.close();</span>
+<span class="fc" id="L131">         ps.close();</span>
+<span class="fc" id="L132">         db_conn.close();</span>
+<span class="fc" id="L133">         rs = null;</span>
+<span class="fc" id="L134">			ps = null;</span>
+<span class="fc" id="L135">			db_conn = null;</span>
+      }
+<span class="nc" id="L137">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L139">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L146">					rs.close();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L148">					ps.close();</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L150">					db_conn.close();</span>
+			}
+<span class="nc" id="L152">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L154">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L155">			}</span>
+		}
+
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">      if (request != null)</span>
+      {
+<span class="fc" id="L160">      	request.setAttribute(key, ret);</span>
+      }
+
+<span class="fc" id="L163">      return(ret);</span>
+   }
+
+   /**
+    * Vrati definicie atributov v zadanej skupine
+    * @param request
+    * @param groupName
+    * @return
+    */
+   public static List&lt;AtrBean&gt; getAttributes(HttpServletRequest request, String groupName)
+   {
+<span class="nc" id="L174">   	List&lt;AtrBean&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L176">   	Connection db_conn = null;</span>
+<span class="nc" id="L177">		PreparedStatement ps = null;</span>
+<span class="nc" id="L178">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L181">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L182">			ps = db_conn.prepareStatement(&quot;SELECT * FROM doc_atr_def WHERE atr_group=? ORDER BY order_priority&quot;);</span>
+<span class="nc" id="L183">   		ps.setString(1, groupName);</span>
+<span class="nc" id="L184">   		rs = ps.executeQuery();</span>
+         AtrBean atr;
+<span class="nc bnc" id="L186" title="All 2 branches missed.">         while (rs.next())</span>
+         {
+<span class="nc" id="L188">            atr = new AtrBean();</span>
+<span class="nc" id="L189">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L190">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L191">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L192">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L193">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L194">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L195">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L196">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L197">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+<span class="nc" id="L198">            ret.add(atr);</span>
+         }
+<span class="nc" id="L200">         rs.close();</span>
+<span class="nc" id="L201">         ps.close();</span>
+<span class="nc" id="L202">         db_conn.close();</span>
+<span class="nc" id="L203">			rs = null;</span>
+<span class="nc" id="L204">			ps = null;</span>
+<span class="nc" id="L205">			db_conn = null;</span>
+		}
+<span class="nc" id="L207">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L209">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L215" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L216">					rs.close();</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L218">					ps.close();</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L220">					db_conn.close();</span>
+			}
+<span class="nc" id="L222">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L224">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L225">			}</span>
+		}
+
+<span class="nc" id="L228">   	return(ret);</span>
+   }
+
+   /**
+    * Vrati List skupin, ktory ako hodnoty obsahuje dalsie Listy s
+    * atributmi v danej skupine
+    * @param docId
+    * @param request
+    * @return
+    */
+   public static List&lt;List&lt;AtrBean&gt;&gt; getAtributes(int docId, HttpServletRequest request)
+   {
+<span class="fc" id="L240">      List&lt;List&lt;AtrBean&gt;&gt; ret = new ArrayList&lt;&gt;();</span>
+      List&lt;AtrBean&gt; atrs;
+<span class="fc bfc" id="L242" title="All 2 branches covered.">      for (LabelValueDetails lvd : getAtrGroups(request))</span>
+      {
+         //Logger.println(this,&quot;lvd-&gt;&quot;+lvd.getLabel());
+         //ok mame grupu
+<span class="fc" id="L246">         atrs = getAtributes(docId, lvd.getLabel(), request);</span>
+<span class="fc" id="L247">         ret.add(atrs);</span>
+<span class="fc" id="L248">      }</span>
+
+<span class="fc" id="L250">      return(ret);</span>
+   }
+
+   /**
+    * vrati atribut atrId
+    * @param atrId
+    * @param request
+    * @return
+    */
+   public static AtrBean getAtrDef(int atrId, HttpServletRequest request)
+   {
+<span class="nc" id="L261">      AtrBean atr = null;</span>
+<span class="nc" id="L262">      Connection db_conn = null;</span>
+<span class="nc" id="L263">		PreparedStatement ps = null;</span>
+<span class="nc" id="L264">		ResultSet rs = null;</span>
+      try
+      {
+<span class="nc" id="L267">         db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L268">         String sql = &quot;SELECT * FROM doc_atr_def WHERE atr_id=?&quot;;</span>
+<span class="nc" id="L269">         ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L270">         ps.setInt(1, atrId);</span>
+<span class="nc" id="L271">         rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">         if (rs.next())</span>
+         {
+<span class="nc" id="L274">            atr = new AtrBean();</span>
+<span class="nc" id="L275">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L276">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L277">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L278">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L279">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L280">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L281">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L282">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L283">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+         }
+<span class="nc" id="L285">         rs.close();</span>
+<span class="nc" id="L286">         ps.close();</span>
+<span class="nc" id="L287">         db_conn.close();</span>
+<span class="nc" id="L288">         rs = null;</span>
+<span class="nc" id="L289">			ps = null;</span>
+<span class="nc" id="L290">			db_conn = null;</span>
+      }
+<span class="nc" id="L292">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L294">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="nc bnc" id="L300" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L301">					rs.close();</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L303">					ps.close();</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L305">					db_conn.close();</span>
+			}
+<span class="nc" id="L307">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L309">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L310">			}</span>
+		}
+<span class="nc" id="L312">      return(atr);</span>
+   }
+
+   /**
+    * Ziska definiciu atributu podla mena a skupiny
+    * @param atrName
+    * @param atrGroup	- ak je null, hladam vo vsetkych skupinach
+    * @param request
+    * @return
+    */
+   public static AtrBean getAtrDef(String atrName, String atrGroup, HttpServletRequest request)
+   {
+<span class="nc" id="L324">      AtrBean atr = null;</span>
+<span class="nc" id="L325">      Connection db_conn = null;</span>
+<span class="nc" id="L326">		PreparedStatement ps = null;</span>
+<span class="nc" id="L327">		ResultSet rs = null;</span>
+      try
+      {
+<span class="nc" id="L330">         db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L331">         String sql = &quot;SELECT * FROM doc_atr_def WHERE atr_name=?&quot;;</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">         if(Tools.isNotEmpty(atrGroup))</span>
+         {
+<span class="nc" id="L334">         	sql += &quot; AND atr_group=?&quot;;</span>
+         }
+<span class="nc" id="L336">         ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L337">         ps.setString(1, atrName);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">         if(Tools.isNotEmpty(atrGroup))</span>
+         {
+<span class="nc" id="L340">         	ps.setString(2, atrGroup);</span>
+         }
+<span class="nc" id="L342">         rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">         if (rs.next())</span>
+         {
+<span class="nc" id="L345">            atr = new AtrBean();</span>
+<span class="nc" id="L346">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L347">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L348">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L349">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L350">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L351">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L352">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L353">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L354">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+         }
+<span class="nc" id="L356">         rs.close();</span>
+<span class="nc" id="L357">         ps.close();</span>
+<span class="nc" id="L358">         db_conn.close();</span>
+<span class="nc" id="L359">         rs = null;</span>
+<span class="nc" id="L360">			ps = null;</span>
+<span class="nc" id="L361">			db_conn = null;</span>
+      }
+<span class="nc" id="L363">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L365">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="nc bnc" id="L371" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L372">					rs.close();</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L374">					ps.close();</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L376">					db_conn.close();</span>
+			}
+<span class="nc" id="L378">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L380">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L381">			}</span>
+		}
+
+<span class="nc" id="L384">      return(atr);</span>
+   }
+
+   /**
+    * vrati zoznam skupin atributov
+    * @param request
+    * @return
+    */
+   public static List&lt;LabelValueDetails&gt; getAtrGroups(HttpServletRequest request)
+   {
+<span class="fc" id="L394">      List&lt;LabelValueDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+      LabelValueDetails lvd;
+<span class="fc" id="L396">      Connection db_conn = null;</span>
+<span class="fc" id="L397">		PreparedStatement ps = null;</span>
+<span class="fc" id="L398">		ResultSet rs = null;</span>
+      try
+      {
+<span class="fc" id="L401">         db_conn = DBPool.getConnection(request);</span>
+<span class="fc" id="L402">         String sql = &quot;SELECT distinct atr_group FROM doc_atr_def ORDER BY atr_group&quot;;</span>
+<span class="fc" id="L403">         ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L404">         rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">         while (rs.next())</span>
+         {
+<span class="fc" id="L407">            lvd = new LabelValueDetails();</span>
+<span class="fc" id="L408">            lvd.setLabel(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="fc" id="L409">            lvd.setValue(lvd.getLabel());</span>
+<span class="fc" id="L410">            groups.add(lvd);</span>
+         }
+<span class="fc" id="L412">         rs.close();</span>
+<span class="fc" id="L413">         ps.close();</span>
+<span class="fc" id="L414">         db_conn.close();</span>
+<span class="fc" id="L415">         rs = null;</span>
+<span class="fc" id="L416">			ps = null;</span>
+<span class="fc" id="L417">			db_conn = null;</span>
+      }
+<span class="nc" id="L419">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L421">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="pc bpc" id="L427" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L428">					rs.close();</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L430">					ps.close();</span>
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L432">					db_conn.close();</span>
+			}
+<span class="nc" id="L434">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L436">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L437">			}</span>
+		}
+
+<span class="fc" id="L440">      return(groups);</span>
+   }
+
+   /**
+    * vrati zoznam stranok v danom adresari a danej skupine atributov, pricom kazdy bean ma array list so zoznamom
+    * atributov
+    * @param dirId - id adresara vo webjete
+    * @param includeSub - ak true, vratane podadresarov
+    * @param group - meno skupiny atributov
+    * @param request
+    * @return
+    */
+   public static List&lt;AtrDocBean&gt; getAtributesTable(int dirId, boolean includeSub, String group, HttpServletRequest request)
+   {
+<span class="fc" id="L454">      List&lt;AtrDocBean&gt; rows = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L456" title="2 of 4 branches missed.">      if (group!=null &amp;&amp; Tools.isEmpty(group)) group = null;</span>
+
+<span class="fc" id="L458">      Connection db_conn = null;</span>
+<span class="fc" id="L459">		PreparedStatement ps = null;</span>
+<span class="fc" id="L460">		ResultSet rs = null;</span>
+      try
+      {
+<span class="fc" id="L463">         String dirs = null;</span>
+
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">         if (dirId&gt;0)</span>
+         {
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">            if (includeSub)</span>
+            {
+               //najdi podadresare toho adresara
+<span class="fc" id="L470">               GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">               for (GroupDetails groupDetails : groupsDB.getGroupsTree(dirId, true, false))</span>
+               {
+<span class="pc bpc" id="L473" title="1 of 2 branches missed.">                  if (groupDetails != null)</span>
+                  {
+<span class="fc bfc" id="L475" title="All 2 branches covered.">                     if (dirs == null)</span>
+                     {
+<span class="fc" id="L477">                        dirs = Integer.toString(groupDetails.getGroupId());</span>
+                     }
+                     else
+                     {
+<span class="fc" id="L481">                        dirs += &quot;,&quot; + groupDetails.getGroupId();</span>
+                     }
+                  }
+<span class="fc" id="L484">               }</span>
+<span class="fc" id="L485">            }</span>
+            else
+            {
+<span class="nc" id="L488">               dirs = Integer.toString(dirId);</span>
+            }
+         }
+
+<span class="fc" id="L492">         db_conn = DBPool.getConnection(request);</span>
+<span class="fc" id="L493">         StringBuilder sql = new StringBuilder(&quot;SELECT d.*, dad.*, da.value_string, da.value_int, da.value_bool &quot;).append(</span>
+<span class="fc" id="L494">                      &quot;FROM documents d, doc_atr_def dad &quot;).append(</span>
+<span class="fc" id="L495">                      &quot;LEFT JOIN doc_atr da ON da.atr_id = dad.atr_id &quot;).append(</span>
+<span class="fc" id="L496">                      &quot;WHERE d.doc_id=da.doc_id AND d.available=&quot;+DB.getBooleanSql(true)+&quot; &quot;);</span>
+<span class="pc bpc" id="L497" title="1 of 2 branches missed.">         if (group!=null)</span>
+         {
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">         	if (group.indexOf('%')!=-1)</span>
+         	{
+<span class="nc" id="L501">         		sql.append(&quot;AND dad.atr_group LIKE ? &quot;);</span>
+         	}
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">         	else if (group.indexOf(',')!=-1)</span>
+         	{
+<span class="nc" id="L505">         		group = DB.removeSlashes(group);</span>
+<span class="nc" id="L506">         		StringTokenizer st = new StringTokenizer(group, &quot;,&quot;);</span>
+<span class="nc" id="L507">         		sql.append(&quot;AND dad.atr_group IN ('&quot;).append(st.nextToken()).append('\'');</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">         		while (st.hasMoreTokens())</span>
+         		{
+<span class="nc" id="L510">         			sql.append(&quot;, '&quot;).append(st.nextToken()).append('\'');</span>
+         		}
+<span class="nc" id="L512">         		sql.append(&quot;) &quot;);</span>
+<span class="nc" id="L513">         		group = null;</span>
+<span class="nc" id="L514">         	}</span>
+         	else
+         	{
+<span class="fc" id="L517">         		sql.append(&quot;AND dad.atr_group=? &quot;);</span>
+         	}
+         }
+
+<span class="pc bpc" id="L521" title="1 of 2 branches missed.">         if (dirs!=null)</span>
+         {
+<span class="fc" id="L523">            sql.append(&quot;AND d.group_id IN (&quot;).append(dirs).append(&quot;) &quot;);</span>
+         }
+
+<span class="fc" id="L526">         String sqlWhere = (String)request.getAttribute(&quot;getAtributesTableSqlWhere&quot;);</span>
+<span class="fc bfc" id="L527" title="All 2 branches covered.">         if (Tools.isNotEmpty(sqlWhere)) {</span>
+<span class="fc" id="L528">            sql.append(sqlWhere).append(&quot; &quot;);</span>
+<span class="fc" id="L529">            request.removeAttribute(&quot;getAtributesTableSqlWhere&quot;);</span>
+         }
+
+<span class="fc" id="L532">         sql.append(&quot;ORDER BY d.doc_id, d.sort_priority, d.title, dad.order_priority &quot;);</span>
+
+<span class="fc" id="L534">         Logger.debug(AtrDB.class, &quot;sql:&quot;+sql);</span>
+
+<span class="fc" id="L536">         ps = db_conn.prepareStatement(sql.toString());</span>
+         //ps.setInt(1, docId);
+<span class="pc bpc" id="L538" title="1 of 2 branches missed.">         if (group!=null)</span>
+         {
+<span class="fc" id="L540">            ps.setString(1, group);</span>
+         }
+<span class="fc" id="L542">         rs = ps.executeQuery();</span>
+<span class="fc" id="L543">         AtrBean atr = null;</span>
+<span class="fc" id="L544">         int lastDocId = -1;</span>
+<span class="fc" id="L545">         AtrDocBean atrDocBean = null;</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">         while (rs.next())</span>
+         {
+<span class="fc" id="L548">            int docId = rs.getInt(&quot;doc_id&quot;);</span>
+
+<span class="fc" id="L550">            atr = new AtrBean();</span>
+<span class="fc" id="L551">            atr.setDocId(docId);</span>
+<span class="fc" id="L552">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="fc" id="L553">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="fc" id="L554">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="fc" id="L555">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="fc" id="L556">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="fc" id="L557">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="fc" id="L558">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="fc" id="L559">            atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="fc" id="L560">            atr.setValueNumber(rs.getDouble(&quot;value_int&quot;));</span>
+<span class="fc" id="L561">            atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="fc" id="L562">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="fc" id="L563">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+
+<span class="fc bfc" id="L565" title="All 2 branches covered.">            if (lastDocId == -1)</span>
+            {
+               //zaciatocna inicializacia
+<span class="fc" id="L568">               lastDocId = atr.getDocId();</span>
+
+<span class="fc" id="L570">               atrDocBean = new AtrDocBean();</span>
+<span class="fc" id="L571">               DocDB.getDocDetails(rs, atrDocBean, false, true);</span>
+            }
+
+<span class="fc bfc" id="L574" title="All 2 branches covered.">            if (lastDocId == atr.getDocId())</span>
+            {
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">               if (atrDocBean!=null) atrDocBean.addAtr(atr);</span>
+            }
+            else
+            {
+<span class="fc" id="L580">               rows.add(atrDocBean);</span>
+
+<span class="fc" id="L582">               atrDocBean = new AtrDocBean();</span>
+<span class="fc" id="L583">               DocDB.getDocDetails(rs, atrDocBean, false, true);</span>
+
+<span class="fc" id="L585">               atrDocBean.addAtr(atr);</span>
+
+<span class="fc" id="L587">               lastDocId = atr.getDocId();</span>
+            }
+<span class="fc" id="L589">         }</span>
+
+<span class="pc bpc" id="L591" title="1 of 2 branches missed.">         if (atrDocBean != null)</span>
+         {
+<span class="fc" id="L593">            rows.add(atrDocBean);</span>
+         }
+
+<span class="fc" id="L596">         rs.close();</span>
+<span class="fc" id="L597">         ps.close();</span>
+<span class="fc" id="L598">         db_conn.close();</span>
+<span class="fc" id="L599">         rs = null;</span>
+<span class="fc" id="L600">			ps = null;</span>
+<span class="fc" id="L601">			db_conn = null;</span>
+      }
+<span class="nc" id="L603">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L605">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L612">					rs.close();</span>
+<span class="pc bpc" id="L613" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L614">					ps.close();</span>
+<span class="pc bpc" id="L615" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L616">					db_conn.close();</span>
+			}
+<span class="nc" id="L618">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L620">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L621">			}</span>
+		}
+
+<span class="fc" id="L624">      return(rows);</span>
+   }
+
+   /**
+    * Vyhladavanie v strankach podla atributov
+    * @param dirId
+    * @param includeSub
+    * @param group
+    * @param request
+    * @return
+    */
+   public static List&lt;AtrDocBean&gt; search(int dirId, boolean includeSub, String group, HttpServletRequest request)
+   {
+   	//Logger.println(this,&quot;-&gt; VYHLADAVAM grupa=&quot;+group);
+<span class="fc" id="L638">      List&lt;AtrDocBean&gt; retTable = new ArrayList&lt;&gt;();</span>
+
+      //odfiltruj vysledky
+      Enumeration&lt;String&gt; params;
+      String param;
+      String paramValues[];
+      boolean mustRemove;
+<span class="fc" id="L645">      List&lt;AtrDocBean&gt; list = getAtributesTable(dirId, includeSub, group, request);</span>
+<span class="fc" id="L646">      list = removeMultigroup(request, list);</span>
+
+<span class="fc bfc" id="L648" title="All 2 branches covered.">      for (AtrDocBean row : list)</span>
+      {
+<span class="fc" id="L650">         Logger.debug(AtrDB.class, &quot;TESTING: &quot;+row.getTitle());</span>
+<span class="fc" id="L651">         params = request.getParameterNames();</span>
+<span class="fc" id="L652">         mustRemove = false;</span>
+         //Logger.println(this,&quot;testing doc:&quot; + row.getDocId()+&quot; &quot;+row.getTitle());
+<span class="fc bfc" id="L654" title="All 4 branches covered.">         while (params.hasMoreElements() &amp;&amp; mustRemove==false)</span>
+         {
+<span class="fc" id="L656">            param = params.nextElement();</span>
+<span class="fc bfc" id="L657" title="All 2 branches covered.">            if (param.startsWith(&quot;atrs_&quot;))</span>
+            {
+               //ok mame parameter pre vyhladavanie
+<span class="fc" id="L660">               paramValues = request.getParameterValues(param);</span>
+<span class="pc bpc" id="L661" title="2 of 4 branches missed.">               if (paramValues!=null &amp;&amp; paramValues.length&gt;0)</span>
+               {
+                  //rozparsuj to
+<span class="fc bfc" id="L664" title="All 2 branches covered.">                  if (row.mustRemove(param, paramValues))</span>
+                  {
+                     //Logger.println(this,&quot;REMOVING: &quot;);
+<span class="fc" id="L667">                  	Logger.debug(AtrDB.class, &quot;removing&quot;);</span>
+<span class="fc" id="L668">                     mustRemove = true;</span>
+                  }
+               }
+            }
+         }
+<span class="fc bfc" id="L673" title="All 2 branches covered.">         if (mustRemove==false)</span>
+         {
+<span class="fc" id="L675">         	Logger.debug(AtrDB.class, &quot;adding: &quot;+row.getTitle());</span>
+<span class="fc" id="L676">            retTable.add(row);</span>
+         }
+<span class="fc" id="L678">      }</span>
+
+<span class="fc" id="L680">      return(retTable);</span>
+   }
+
+    public static List&lt;AtrDocBean&gt; removeMultigroup(HttpServletRequest request, List&lt;AtrDocBean&gt; list) {
+
+<span class="fc" id="L685">        Map&lt;Integer, List&lt;Integer&gt;&gt; multigroupMappingsIds = readMultigroupMappings(request);</span>
+<span class="fc" id="L686">        Set&lt;Integer&gt; addedGroupIds = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L688">        List&lt;AtrDocBean&gt; result = list.stream().filter(a -&gt; {</span>
+<span class="fc" id="L689">            int masterId = getMasterId(multigroupMappingsIds, a.getDocId());</span>
+<span class="pc bpc" id="L690" title="3 of 4 branches missed.">            if (masterId &gt; 0 &amp;&amp; addedGroupIds.contains(masterId)) {</span>
+<span class="nc" id="L691">                return false;</span>
+            }
+
+<span class="pc bpc" id="L694" title="1 of 2 branches missed.">            if (masterId &gt; 0) {</span>
+<span class="nc" id="L695">                addedGroupIds.add(masterId);</span>
+            }
+
+<span class="fc" id="L698">            return true;</span>
+<span class="fc" id="L699">        }).collect(Collectors.toList());</span>
+
+
+<span class="fc" id="L702">        return result;</span>
+    }
+
+   /**
+    * vrati zoznam vsetkych atributov
+    * @param request
+    * @return
+    */
+   public static List&lt;AtrBean&gt; getAllAttributes(HttpServletRequest request)
+   {
+<span class="nc" id="L712">   	List&lt;AtrBean&gt; ret = new ArrayList&lt;&gt;();</span>
+   	try {
+<span class="nc" id="L714">   		Connection db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L715">   		PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT * FROM doc_atr_def ORDER BY atr_group ASC, atr_name ASC&quot;);</span>
+<span class="nc" id="L716">   		ResultSet rs = ps.executeQuery();</span>
+         AtrBean atr;
+<span class="nc bnc" id="L718" title="All 2 branches missed.">         while (rs.next())</span>
+         {
+<span class="nc" id="L720">            atr = new AtrBean();</span>
+<span class="nc" id="L721">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L722">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">            if(atr.getAtrName().equals(&quot;&quot;)) atr.setAtrName(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L724">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L725">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc bnc" id="L726" title="All 2 branches missed.">            if(atr.getAtrDescription().equals(&quot;&quot;)) atr.setAtrDescription(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L727">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">            if(atr.getAtrDefaultValue().equals(&quot;&quot;)) atr.setAtrDefaultValue(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L729">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L730">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L731">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">            if(atr.getTrueValue().equals(&quot;&quot;)) atr.setTrueValue(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L733">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">            if(atr.getFalseValue().equals(&quot;&quot;)) atr.setFalseValue(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L735">            ret.add(atr);</span>
+         }
+<span class="nc" id="L737">         rs.close();</span>
+<span class="nc" id="L738">         ps.close();</span>
+<span class="nc" id="L739">         db_conn.close();</span>
+<span class="nc" id="L740">   	} catch(Exception ex) {sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">   	if (request != null) request.setAttribute(&quot;AtrBean&quot;, ret);</span>
+<span class="nc" id="L742">   	return(ret);</span>
+   }
+
+   /**
+    * Vrati zoznam vsetkych atributov v zozname objektov typu AtrBean
+    *
+    * @return
+    */
+   public static List&lt;AtrBean&gt; getAllAttributes()
+   {
+<span class="nc" id="L752">   	return(AtrDB.getAttributes(null, -1, null));</span>
+   }
+
+   /**
+    * Vrati zoznam vsetkych atributov, ktore vyhovuju vstupnym filtracnym podmienkam
+    *
+    * @param filterFulltext	cast textu, ktora sa vyhladava v nazve a opise atributu
+    * @param filterTyp			typ atributu
+    * @param filterSkupina		skupina atributu
+    * @return
+    */
+   public static List&lt;AtrBean&gt; getAttributes(String filterFulltext, int filterTyp, String filterSkupina)
+   {
+<span class="nc" id="L765">   	List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L767">   	StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L768">		sql.append(&quot;SELECT * FROM doc_atr_def WHERE atr_id &gt; 0 &quot;);</span>
+
+<span class="nc bnc" id="L770" title="All 2 branches missed.">   	if (filterTyp &gt; -1)</span>
+   	{
+<span class="nc" id="L772">   		sql.append(&quot; AND atr_type = ?&quot;);</span>
+<span class="nc" id="L773">   		params.add(filterTyp);</span>
+   	}
+
+<span class="nc bnc" id="L776" title="All 2 branches missed.">   	if (Tools.isNotEmpty(filterFulltext))</span>
+   	{
+<span class="nc" id="L778">   		sql.append(&quot; AND (atr_name LIKE ? OR atr_description LIKE ?) &quot;);</span>
+<span class="nc" id="L779">   		params.add(&quot;%&quot; + filterFulltext + &quot;%&quot;);</span>
+<span class="nc" id="L780">   		params.add(&quot;%&quot; + filterFulltext + &quot;%&quot;);</span>
+   	}
+
+<span class="nc bnc" id="L783" title="All 2 branches missed.">   	if (Tools.isNotEmpty(filterSkupina))</span>
+   	{
+<span class="nc" id="L785">   		sql.append(&quot; AND atr_group = ?&quot;);</span>
+<span class="nc" id="L786">   		params.add(filterSkupina);</span>
+   	}
+
+<span class="nc" id="L789">   	sql.append(&quot; ORDER BY atr_group ASC, atr_name ASC&quot;);</span>
+
+<span class="nc" id="L791">      List&lt;AtrBean&gt; atrs = new ComplexQuery().setSql(sql.toString()).setParams(params.toArray()).list(new Mapper&lt;AtrBean&gt;()</span>
+<span class="nc" id="L792">      {</span>
+      	@Override
+         public AtrBean map(ResultSet rs) throws SQLException
+         {
+<span class="nc" id="L796">         	AtrBean atr = new AtrBean();</span>
+
+<span class="nc" id="L798">         	atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L799">            atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc bnc" id="L800" title="All 2 branches missed.">            if(atr.getAtrName().equals(&quot;&quot;))</span>
+<span class="nc" id="L801">            	atr.setAtrName(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L802">            atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L803">            atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc bnc" id="L804" title="All 2 branches missed.">            if(atr.getAtrDescription().equals(&quot;&quot;))</span>
+<span class="nc" id="L805">            	atr.setAtrDescription(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L806">            atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc bnc" id="L807" title="All 2 branches missed.">            if(atr.getAtrDefaultValue().equals(&quot;&quot;))</span>
+<span class="nc" id="L808">            	atr.setAtrDefaultValue(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L809">            atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L810">            atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L811">            atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc bnc" id="L812" title="All 2 branches missed.">            if(atr.getTrueValue().equals(&quot;&quot;))</span>
+<span class="nc" id="L813">            	atr.setTrueValue(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L814">            atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">            if(atr.getFalseValue().equals(&quot;&quot;))</span>
+<span class="nc" id="L816">            	atr.setFalseValue(&quot;&amp;nbsp;&quot;);</span>
+
+<span class="nc" id="L818">         	return atr;</span>
+         }
+      });
+
+<span class="nc" id="L822">		return atrs;</span>
+	}
+
+   /**
+    * vrati zoznam vsetkych atributov
+    * @param request
+    * @return
+    */
+   public static void updateAttribute(AtrBean attribute, HttpServletRequest request) {
+<span class="nc" id="L831">   	Connection db_conn = null;</span>
+<span class="nc" id="L832">		PreparedStatement ps = null;</span>
+   	try {
+<span class="nc" id="L834">   		db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L835">   		ps = db_conn.prepareStatement(&quot;UPDATE doc_atr_def SET &quot;);</span>
+<span class="nc" id="L836">   		String [] atrStlpceString= {&quot;atr_name&quot;, &quot;atr_description&quot;,&quot;atr_default_value&quot;,</span>
+   					&quot;atr_group&quot;, &quot;true_value&quot;, &quot;false_value&quot;};
+<span class="nc" id="L838">   		String [] atrHodnotyString= {attribute.getAtrName(),attribute.getAtrDescription(),</span>
+<span class="nc" id="L839">   					attribute.getAtrDefaultValue(), attribute.getAtrGroup(),</span>
+<span class="nc" id="L840">   					attribute.getTrueValue(), attribute.getFalseValue()};</span>
+<span class="nc" id="L841">   		String [] atrStlpceInt= {&quot;order_priority&quot;, &quot;atr_type&quot;};</span>
+<span class="nc" id="L842">   		int [] atrHodnotyInt= {attribute.getOrderPriority(), attribute.getAtrType()};</span>
+
+
+<span class="nc bnc" id="L845" title="All 2 branches missed.">   		for(int i=0; i&lt;atrStlpceString.length;i++) {</span>
+<span class="nc" id="L846">   			ps=db_conn.prepareStatement(&quot;UPDATE doc_atr_def SET &quot;+atrStlpceString[i]+&quot; = ? WHERE atr_id = ?&quot;);</span>
+<span class="nc" id="L847">   			ps.setString(1,atrHodnotyString[i]);</span>
+<span class="nc" id="L848">   			ps.setInt(2, attribute.getAtrId());</span>
+<span class="nc" id="L849">   			ps.executeUpdate();</span>
+
+   		}
+<span class="nc bnc" id="L852" title="All 2 branches missed.">   		for(int i=0; i&lt;atrStlpceInt.length;i++) {</span>
+<span class="nc" id="L853">   			ps=db_conn.prepareStatement(&quot;UPDATE doc_atr_def SET &quot;+atrStlpceInt[i]+&quot; = ? WHERE atr_id = ?&quot;);</span>
+<span class="nc" id="L854">   			ps.setInt(1,atrHodnotyInt[i]);</span>
+<span class="nc" id="L855">   			ps.setInt(2, attribute.getAtrId());</span>
+<span class="nc" id="L856">   			ps.executeUpdate();</span>
+
+   		}
+
+<span class="nc" id="L860">         ps.close();</span>
+<span class="nc" id="L861">         db_conn.close();</span>
+<span class="nc" id="L862">			ps = null;</span>
+<span class="nc" id="L863">			db_conn = null;</span>
+   	}
+<span class="nc" id="L865">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L867">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L873" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L874">					ps.close();</span>
+<span class="nc bnc" id="L875" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L876">					db_conn.close();</span>
+			}
+<span class="nc" id="L878">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L880">			}</span>
+		}
+
+<span class="nc" id="L883">   }</span>
+   /**
+    * zmaze atribut
+    * @param request
+    * @return
+    */
+   public static void deleteAttribute(int id, HttpServletRequest request) {
+<span class="nc" id="L890">   	Connection db_conn = null;</span>
+<span class="nc" id="L891">		PreparedStatement ps = null;</span>
+   	try {
+<span class="nc" id="L893">   		db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L894">   		ps = db_conn.prepareStatement(&quot;DELETE FROM doc_atr_def WHERE atr_id = ? &quot;);</span>
+<span class="nc" id="L895">   		ps.setInt(1, id);</span>
+<span class="nc" id="L896">   		ps.executeUpdate();</span>
+<span class="nc" id="L897">         ps.close();</span>
+<span class="nc" id="L898">         db_conn.close();</span>
+<span class="nc" id="L899">			ps = null;</span>
+<span class="nc" id="L900">			db_conn = null;</span>
+   	}
+<span class="nc" id="L902">   	catch (Exception ex)</span>
+		{
+<span class="nc" id="L904">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L910" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L911">					ps.close();</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L913">					db_conn.close();</span>
+			}
+<span class="nc" id="L915">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L917">			}</span>
+		}
+
+<span class="nc" id="L920">   }</span>
+   /**
+    * prida atribut
+    * @param request
+    * @return
+    */
+   public static void insertAttribute(AtrBean attribute, HttpServletRequest request) {
+<span class="nc" id="L927">   	Connection db_conn = null;</span>
+<span class="nc" id="L928">		PreparedStatement ps = null;</span>
+   	try {
+<span class="nc" id="L930">   		db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L931">   		ps = db_conn.prepareStatement(</span>
+   					&quot;INSERT INTO doc_atr_def (atr_name, order_priority, atr_description,atr_default_value,&quot; +
+   					&quot;atr_type, atr_group, true_value, false_value) VALUES(?,?,?,?,?,?,?,?)&quot;);
+
+<span class="nc bnc" id="L935" title="All 2 branches missed.">   		if(attribute.getAtrName()==null) ps.setNull(1, Types.VARCHAR);</span>
+<span class="nc" id="L936">   		else ps.setString(1, attribute.getAtrName());</span>
+
+<span class="nc" id="L938">   		ps.setInt(2, attribute.getOrderPriority());</span>
+
+<span class="nc bnc" id="L940" title="All 2 branches missed.">   		if(attribute.getAtrDescription()==null) ps.setNull(3, Types.VARCHAR);</span>
+<span class="nc" id="L941">   		else ps.setString(3, attribute.getAtrDescription());</span>
+
+<span class="nc bnc" id="L943" title="All 2 branches missed.">   		if(attribute.getAtrDefaultValue()==null) ps.setNull(4, Types.VARCHAR);</span>
+<span class="nc" id="L944">   		else ps.setString(4, attribute.getAtrDefaultValue());</span>
+
+<span class="nc" id="L946">   		ps.setInt(5, attribute.getAtrType());</span>
+<span class="nc" id="L947">   		ps.setString(6, attribute.getAtrGroup());</span>
+
+<span class="nc bnc" id="L949" title="All 2 branches missed.">   		if(attribute.getTrueValue()==null) ps.setNull(7, Types.VARCHAR);</span>
+<span class="nc" id="L950">   		else ps.setString(7, attribute.getTrueValue());</span>
+
+<span class="nc bnc" id="L952" title="All 2 branches missed.">   		if(attribute.getFalseValue()==null) ps.setNull(8, Types.VARCHAR);</span>
+<span class="nc" id="L953">   		else ps.setString(8, attribute.getFalseValue());</span>
+
+<span class="nc" id="L955">   		ps.executeUpdate();</span>
+<span class="nc" id="L956">         ps.close();</span>
+<span class="nc" id="L957">         db_conn.close();</span>
+<span class="nc" id="L958">			ps = null;</span>
+<span class="nc" id="L959">			db_conn = null;</span>
+   	}
+<span class="nc" id="L961">   	catch (Exception ex)</span>
+		{
+<span class="nc" id="L963">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L969" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L970">					ps.close();</span>
+<span class="nc bnc" id="L971" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L972">					db_conn.close();</span>
+			}
+<span class="nc" id="L974">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L976">			}</span>
+		}
+
+<span class="nc" id="L979">   }</span>
+
+   public static Map&lt;String, AtrBean&gt; getAttributeMap(int docid,String attributeGroup,HttpServletRequest request)
+   {
+<span class="nc" id="L983">   	Map&lt;String,AtrBean&gt; attributeMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L984">   	List&lt;?&gt; attributes = getAtributes(docid, attributeGroup, request);</span>
+
+<span class="nc bnc" id="L986" title="All 2 branches missed.">   	for (Object object : attributes)</span>
+   	{
+<span class="nc" id="L988">			AtrBean attribute = (AtrBean)object;</span>
+<span class="nc bnc" id="L989" title="All 2 branches missed.">			if (attribute.getAtrGroup().equals(attributeGroup))</span>
+<span class="nc" id="L990">				attributeMap.put( attribute.getAtrName() , attribute);</span>
+<span class="nc" id="L991">		}</span>
+<span class="nc" id="L992">   	return attributeMap;</span>
+   }
+
+   /**
+    * Vrati zoznam vsetkych typov atributov, ktore sa nachadzaju v tabulke doc_atr_def ako objekty Column, kde &lt;br /&gt;
+    * 	getIntColumn1() je ciselna reprezentacia typu (STRING = 0, INT = 1, BOOL = 2, DOUBLE = 3) a &lt;br /&gt;
+    * 	getColumn1() vrati nazov typu atributu (&quot;STRING&quot;, &quot;INT&quot;, &quot;BOOL&quot;, &quot;DOUBLE&quot;)
+    *
+    * @return
+    */
+   public static List&lt;Column&gt; getDistinctTypes()
+	{
+<span class="nc" id="L1004">		List&lt;Column&gt; retList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1005">		String[] types = {&quot;STRING&quot;, &quot;INT&quot;, &quot;BOOL&quot;, &quot;DOUBLE&quot;};</span>
+
+   	try
+   	{
+         @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L1010">   		List&lt;Number&gt; tempList = new SimpleQuery().forList(&quot;SELECT DISTINCT atr_type FROM doc_atr_def&quot;);</span>
+
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">   		for (Number type : tempList)</span>
+			{
+<span class="nc" id="L1014">				Column retType = new Column();</span>
+<span class="nc" id="L1015">				retType.setIntColumn1(type.intValue());</span>
+<span class="nc" id="L1016">				retType.setColumn1(types[type.intValue()]);</span>
+
+<span class="nc" id="L1018">				retList.add(retType);</span>
+<span class="nc" id="L1019">			}</span>
+   	}
+<span class="nc" id="L1021">   	catch (Exception e)</span>
+   	{
+<span class="nc" id="L1023">   		sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1024">   	}</span>
+
+<span class="nc" id="L1026">   	return retList;</span>
+	}
+
+   /**
+    * Vrati hodnotu atributu podla id stranky a id atributu
+    * @param docId id stranky
+    * @param atrId id atributu
+    * @param request
+    * @return AtrBean
+    */
+   public static AtrBean getAtribute(int docId, int atrId, HttpServletRequest request)
+   {
+<span class="nc" id="L1038">      AtrBean atr = null;</span>
+<span class="nc" id="L1039">      Connection db_conn = null;</span>
+<span class="nc" id="L1040">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1041">		ResultSet rs = null;</span>
+      try
+      {
+<span class="nc" id="L1044">         db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L1045">         String sql = &quot;SELECT * FROM doc_atr WHERE doc_id=? and atr_id=?&quot;;</span>
+<span class="nc" id="L1046">         ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1047">         ps.setInt(1, docId);</span>
+<span class="nc" id="L1048">         ps.setInt(2, atrId);</span>
+<span class="nc" id="L1049">         rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">         if (rs.next())</span>
+         {
+<span class="nc" id="L1052">            atr = new AtrBean();</span>
+<span class="nc" id="L1053">            atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L1054">            atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L1055">            atr.setValueInt(rs.getInt(&quot;value_int&quot;));</span>
+<span class="nc" id="L1056">            atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+         }
+<span class="nc" id="L1058">         rs.close();</span>
+<span class="nc" id="L1059">         ps.close();</span>
+<span class="nc" id="L1060">         db_conn.close();</span>
+<span class="nc" id="L1061">         rs = null;</span>
+<span class="nc" id="L1062">			ps = null;</span>
+<span class="nc" id="L1063">			db_conn = null;</span>
+      }
+<span class="nc" id="L1065">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L1067">         sk.iway.iwcm.Logger.error(ex);</span>
+      }
+      finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1074">					rs.close();</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1076">					ps.close();</span>
+<span class="nc bnc" id="L1077" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1078">					db_conn.close();</span>
+			}
+<span class="nc" id="L1080">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1082">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1083">			}</span>
+		}
+<span class="nc" id="L1085">      return(atr);</span>
+   }
+
+<span class="nc" id="L1088">   public static class MultigroupMapping {</span>
+       private int docId;
+       private int masterId;
+
+       public int getDocId() {
+<span class="nc" id="L1093">           return docId;</span>
+       }
+
+       public void setDocId(int docId) {
+<span class="nc" id="L1097">           this.docId = docId;</span>
+<span class="nc" id="L1098">       }</span>
+
+       public int getMasterId() {
+<span class="nc" id="L1101">           return masterId;</span>
+       }
+
+       public void setMasterId(int masterId) {
+<span class="nc" id="L1105">           this.masterId = masterId;</span>
+<span class="nc" id="L1106">       }</span>
+   }
+
+   private static Map&lt;Integer, List&lt;Integer&gt;&gt; readMultigroupMappings(HttpServletRequest request) {
+<span class="fc" id="L1110">       Map&lt;Integer, List&lt;Integer&gt;&gt; results = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1111">       Connection db_conn = null;</span>
+<span class="fc" id="L1112">       PreparedStatement ps = null;</span>
+<span class="fc" id="L1113">       ResultSet rs = null;</span>
+       try
+       {
+<span class="fc" id="L1116">           db_conn = DBPool.getConnection(request);</span>
+<span class="fc" id="L1117">           String sql = &quot;SELECT * FROM multigroup_mapping&quot;;</span>
+<span class="fc" id="L1118">           ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1119">           rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1120" title="1 of 2 branches missed.">           if (rs.next())</span>
+           {
+<span class="fc" id="L1122">               int masterId = rs.getInt(&quot;master_id&quot;);</span>
+<span class="fc" id="L1123">               int docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="pc bpc" id="L1124" title="1 of 2 branches missed.">               List&lt;Integer&gt; ids = results.containsKey(masterId) ? results.get(masterId) : new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1125">               ids.add(docId);</span>
+
+<span class="fc" id="L1127">               results.put(masterId, ids);</span>
+           }
+
+<span class="fc" id="L1130">           rs.close();</span>
+<span class="fc" id="L1131">           ps.close();</span>
+<span class="fc" id="L1132">           db_conn.close();</span>
+<span class="fc" id="L1133">           rs = null;</span>
+<span class="fc" id="L1134">           ps = null;</span>
+<span class="fc" id="L1135">           db_conn = null;</span>
+       }
+<span class="nc" id="L1137">       catch (Exception ex)</span>
+       {
+<span class="nc" id="L1139">           sk.iway.iwcm.Logger.error(ex);</span>
+       }
+       finally
+       {
+           try
+           {
+<span class="pc bpc" id="L1145" title="1 of 2 branches missed.">               if (rs != null)</span>
+<span class="nc" id="L1146">                   rs.close();</span>
+<span class="pc bpc" id="L1147" title="1 of 2 branches missed.">               if (ps != null)</span>
+<span class="nc" id="L1148">                   ps.close();</span>
+<span class="pc bpc" id="L1149" title="1 of 2 branches missed.">               if (db_conn != null)</span>
+<span class="nc" id="L1150">                   db_conn.close();</span>
+           }
+<span class="nc" id="L1152">           catch (Exception ex2)</span>
+           {
+<span class="nc" id="L1154">               sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L1155">           }</span>
+       }
+<span class="fc" id="L1157">       return (results);</span>
+   }
+
+    private static int getMasterId(Map&lt;Integer, List&lt;Integer&gt;&gt; map, int docId) {
+<span class="pc bpc" id="L1161" title="1 of 2 branches missed.">        if (map.containsKey(docId)) {</span>
+<span class="nc" id="L1162">            return docId;</span>
+        }
+
+<span class="fc bfc" id="L1165" title="All 2 branches covered.">        for (Map.Entry&lt;Integer, List&lt;Integer&gt;&gt; entry : map.entrySet()) {</span>
+<span class="fc" id="L1166">            int key = entry.getKey();</span>
+<span class="fc" id="L1167">            List&lt;Integer&gt; value = entry.getValue();</span>
+
+<span class="pc bpc" id="L1169" title="2 of 4 branches missed.">            if (value.stream().anyMatch(id -&gt; id == docId)) {</span>
+<span class="nc" id="L1170">                return key;</span>
+            }
+<span class="fc" id="L1172">        }</span>
+
+<span class="fc" id="L1174">        return 0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

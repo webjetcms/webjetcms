@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationDataRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.rest</a> &gt; <span class="el_source">EnumerationDataRestController.java</span></div><h1>EnumerationDataRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.rest;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataEditorFields;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/enumeration/enumeration-data&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_enumerations')&quot;)
+@Datatable
+public class EnumerationDataRestController extends DatatableRestControllerV2&lt;EnumerationDataBean, Long&gt; {
+
+    private final EnumerationDataRepository enumerationDataRepository;
+    private final EnumerationTypeRepository enumerationTypeRepository;
+
+    @Autowired
+    public EnumerationDataRestController(EnumerationDataRepository enumerationDataRepository, EnumerationTypeRepository enumerationTypeRepository) {
+<span class="fc" id="L44">        super(enumerationDataRepository);</span>
+<span class="fc" id="L45">        this.enumerationDataRepository = enumerationDataRepository;</span>
+<span class="fc" id="L46">        this.enumerationTypeRepository = enumerationTypeRepository;</span>
+<span class="fc" id="L47">    }</span>
+
+    private EnumerationTypeBean getActualSelectedType() {
+        EnumerationTypeBean actualSelectedType;
+<span class="fc" id="L51">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(&quot;enumerationTypeId&quot;), -1);</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) {</span>
+<span class="nc" id="L53">            actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(false);</span>
+        } else {
+<span class="fc" id="L55">            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);</span>
+        }
+<span class="fc" id="L57">        return actualSelectedType;</span>
+    }
+
+    @Override
+    public Page&lt;EnumerationDataBean&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L63">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+        DatatablePageImpl&lt;EnumerationDataBean&gt; page;
+
+<span class="fc" id="L66">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(&quot;enumerationTypeId&quot;), -1);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) {</span>
+            //In FE, first  enumTypes is selected by default, soo get this default enumTypes and return its values
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (actualSelectedType!=null) page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));</span>
+<span class="nc" id="L70">            else page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+        } else {
+<span class="fc" id="L72">            page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));</span>
+<span class="fc" id="L73">            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);</span>
+        }
+
+<span class="fc" id="L76">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+
+        //Enumeration type's - select options
+<span class="fc" id="L79">        List&lt;EnumerationTypeBean&gt; enumerationTypes = enumerationTypeRepository.findAll();</span>
+
+        //Mark deleted one
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        for(EnumerationTypeBean enumType : enumerationTypes) {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if(enumType.isHidden()) {</span>
+<span class="fc" id="L84">                enumType.setTypeName(getProp().getText(&quot;enum_type.deleted_type_mark.js&quot;) + enumType.getTypeName());</span>
+            }
+<span class="fc" id="L86">        }</span>
+
+<span class="fc" id="L88">        page.addDefaultOption(&quot;editorFields.childEnumTypeId&quot;, &quot;&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L89">        page.addOptions(&quot;editorFields.childEnumTypeId&quot;, enumerationTypes, &quot;typeName&quot;, &quot;enumerationTypeId&quot;, false);</span>
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (actualSelectedType != null) {</span>
+            //Enumeration data's by enumeration type - select options
+<span class="fc" id="L93">            List&lt;EnumerationDataBean&gt; enumerationDatasByType = enumerationDataRepository.findAllByTypeId(actualSelectedType.getEnumerationTypeId());</span>
+
+            //Mark deleted one
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            for(EnumerationDataBean enumData : enumerationDatasByType) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                if(enumData.isHidden()) {</span>
+<span class="fc" id="L98">                    enumData.setString1(getProp().getText(&quot;enum_type.deleted_type_mark.js&quot;) + enumData.getString1());</span>
+                }
+<span class="fc" id="L100">            }</span>
+
+<span class="fc" id="L102">            page.addDefaultOption(&quot;editorFields.parentEnumDataId&quot;, &quot;-&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L103">            page.addOptions(&quot;editorFields.parentEnumDataId&quot;, enumerationDatasByType, &quot;string1&quot;, &quot;enumerationDataId&quot;, false);</span>
+        }
+
+<span class="fc" id="L106">        return page;</span>
+    }
+
+    @Override
+    public EnumerationDataBean getOneItem(long id) {
+        EnumerationDataBean entity;
+
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if(id == -1) entity = new EnumerationDataBean();</span>
+<span class="fc" id="L114">        else entity = enumerationDataRepository.getNonHiddenByEnumId(Integer.valueOf(id+&quot;&quot;), false);</span>
+
+<span class="fc" id="L116">        processFromEntity(entity, ProcessItemAction.GETONE);</span>
+
+<span class="fc" id="L118">        return entity;</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;EnumerationDataBean&gt; root, CriteriaBuilder builder) {
+        //Only hidden = false records (non soft deleted)
+<span class="fc" id="L124">        predicates.add(builder.isFalse(root.get(&quot;hidden&quot;)));</span>
+
+<span class="fc" id="L126">        int typeId = Tools.getIntValue(params.get(&quot;enumerationTypeId&quot;), -1);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if(typeId &gt; 0) {</span>
+<span class="fc" id="L128">            predicates.add(builder.equal(root.get(&quot;typeId&quot;), Integer.valueOf(typeId)));</span>
+        }
+
+        //vyhladaj podla searchUserFullName
+<span class="fc" id="L132">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L133">    }</span>
+
+    @Override
+    public void beforeSave(EnumerationDataBean entity) {
+<span class="fc" id="L137">        processToEntity(entity, ProcessItemAction.EDIT);</span>
+<span class="fc" id="L138">    }</span>
+
+    @Override
+    public EnumerationDataBean processFromEntity(EnumerationDataBean entity, ProcessItemAction action) {
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (entity == null) entity = new EnumerationDataBean();</span>
+<span class="fc" id="L143">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+
+        //If EnnumerationType is not set, we cant set editor fields
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
+
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) {</span>
+<span class="fc" id="L149">            EnumerationDataEditorFields edef = new EnumerationDataEditorFields();</span>
+<span class="fc" id="L150">            edef.fromEnumerationData(entity, actualSelectedType);</span>
+        }
+<span class="fc" id="L152">        return entity;</span>
+    }
+
+    @Override
+    public EnumerationDataBean processToEntity(EnumerationDataBean entity, ProcessItemAction action) {
+<span class="fc" id="L157">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+        //If EnnumerationType is not set, we cant check duplicity so we cant transfer data from editor fields to bean
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
+
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="fc" id="L162">            EnumerationDataEditorFields edef = entity.getEditorFields();</span>
+
+            //If for some reason editorFields is null, return entity
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">            if(edef == null) return entity;</span>
+
+<span class="fc" id="L167">            edef.toEnumerationData(entity, actualSelectedType, enumerationTypeRepository, enumerationDataRepository, getProp());</span>
+        }
+<span class="fc" id="L169">        return entity;</span>
+    }
+
+    //Inset and Edit must be here !!
+    //There is no bonus logic but it fix bug with wrong PK type (dont ask me why)
+    @Override
+    public EnumerationDataBean insertItem(EnumerationDataBean entity) {
+<span class="fc" id="L176">        enumerationDataRepository.save(entity);</span>
+<span class="fc" id="L177">        return entity;</span>
+    }
+
+    @Override
+    public EnumerationDataBean editItem(EnumerationDataBean entity, long id) {
+<span class="fc" id="L182">        enumerationDataRepository.save(entity);</span>
+<span class="fc" id="L183">        return entity;</span>
+    }
+
+    @RequestMapping(value=&quot;/enum-types&quot;)
+    public Map&lt;Integer, String&gt; getEnumerationTypes() {
+<span class="fc" id="L188">        HashMap&lt;Integer, String&gt; enumTypesMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L189">        List&lt;EnumerationTypeBean&gt; enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById(false);</span>
+
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        for(EnumerationTypeBean enumType : enumTypeList)</span>
+<span class="fc" id="L192">            enumTypesMap.put(enumType.getEnumerationTypeId(), enumType.getTypeName());</span>
+
+<span class="fc" id="L194">        return enumTypesMap;</span>
+    }
+
+    @RequestMapping( value=&quot;/enum-type&quot;, params={&quot;enumerationTypeId&quot;})
+    public EnumerationTypeBean getEnumerationType(@RequestParam(&quot;enumerationTypeId&quot;) Integer enumTypeId) {
+<span class="fc" id="L199">        return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId, false);</span>
+    }
+
+    @Override
+    public boolean deleteItem(EnumerationDataBean entity, long id) {
+<span class="fc" id="L204">        enumerationDataRepository.deleteEnumDataById(entity.getEnumerationDataId(), true);</span>
+<span class="fc" id="L205">        Adminlog.add(Adminlog.TYPE_UPDATEDB, &quot;DELETE/HIDE:\nid: &quot;+id+&quot;\nstring1: &quot;+entity.getString1(), (int)id, -1);</span>
+<span class="fc" id="L206">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="fc" id="L207">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

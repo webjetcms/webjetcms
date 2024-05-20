@@ -160,7 +160,14 @@ export function renderTd(row, td, rowData) {
 
             //console.log("Is link, td=", td, " row=", row);
 
-            return  '<div class="datatable-column-width"><a href="' + template + '">'+ renderPrefix(row) + WJ.htmlToText(td) + renderSuffix(row) + '</a></div>';
+            let linkText = WJ.escapeHtml(td);
+            linkText = linkText.replaceAll("&quot;", "\"");
+            linkText = linkText.replaceAll("&#x3D;", "=");
+            //console.log("linkText=", linkText);
+
+            if ("quill" === row.settings.aoColumns[row.col].editor?.type) linkText = WJ.htmlToText(td);
+
+            return  '<div class="datatable-column-width"><a href="' + template + '">'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
         } else {
             var text = WJ.htmlToText(td);
             try {

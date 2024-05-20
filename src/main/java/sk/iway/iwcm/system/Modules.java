@@ -18,7 +18,6 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -121,7 +120,7 @@ public class Modules
 		modVersions.put("cmp_counter", "PEIM;671"); //WebJET Counter - 990 Sk
 		modVersions.put("cmp_crontab", "ECDIM;a01"); //WebJET Crontab - 4900
 		modVersions.put("cmp_crypto", "PECDIM;2c9"); //WebJET Crypto - 499 eur
-		modVersions.put("cmp_data_deleting", "BPECDI;775"); //WebJET Data Deleting
+		modVersions.put("cmp_data_deleting", "BPECDIM;775"); //WebJET Data Deleting
 		modVersions.put("cmp_date", "BPECDIMO;775"); //WebJET Date - 900
 		modVersions.put("cmp_db_browser", "EI;f1e"); //WebJET DB Browser - 6900
 		modVersions.put("cmp_dictionary", "EI;c4a"); //WebJET Dictionary - 1900
@@ -211,17 +210,12 @@ public class Modules
 		modVersions.put("multiDomain", "EM;f17"); //WebJET Multi Domain - 30%ceny webjetu
 
 		//standardne moduly
-		modVersions.put("menu.users", "PECDIO;c01"); //standardny modul Pouzivatelia
+		modVersions.put("menu.users", "PECDIOM;c01"); //standardny modul Pouzivatelia
 		modVersions.put("menu.fbrowser", "BPECDIM;c02"); //standardny modul Subory
-		modVersions.put("menu.templates", "BPECDIO;c03"); //standardny modul Sablony
+		modVersions.put("menu.templates", "BPECDIOM;c03"); //standardny modul Sablony
 
 
 		//WebJET Active Directory Access - 24.900
-
-		//TODO: WebJET Confirmation - 999 Sk
-		//TODO: WebJET XML Converter - 14990
-		//TODO: WebJET Database Import
-		//TODO: WebJET Extended Search (PDF, DOC)
 
 		try
 		{
@@ -566,7 +560,7 @@ public class Modules
 		sub = new ModuleInfo();
 		sub.setNameKey("components.user.perms.editMediaGroups");
 		sub.setPath("javascript:void()");
-		sub.setWjVersions("BPECI");
+		sub.setWjVersions("BPECIM");
 		sub.setUserItem(true);
 		sub.setItemKey("editor_edit_media_group");
 		sub.setDefaultDisabled(false);
@@ -670,7 +664,7 @@ public class Modules
 		//sub.addSubmenu("users.importFromFile", "javascript:openPopupDialogFromLeftMenu('/admin/listusers.do?import=true');");
 		//loadModule(sub);
 
-		if (InitServlet.isTypeCloud()==false)
+		if ("cloud".equals(Constants.getInstallName())==false)
 		{
 			sub = new ModuleInfo().setMenuOrder(10);
 			sub.setNameKey("users.edit_admins");
@@ -719,8 +713,6 @@ public class Modules
 
 			setAvailable(sub);
 			loadModule(sub);
-
-
 
 			sub = new ModuleInfo().setMenuOrder(60);
 			sub.setNameKey("users.welcomeShowLoggedAdmins");
@@ -806,7 +798,7 @@ public class Modules
 		setAvailable(sub);
 		sub.addSubmenu("groupslist.search.title", "/admin/v9/dist/views/settings/translation-keys.html");
 		//sub.addSubmenu("admin.conf_editor.pridat_zaznam", "javascript:openPopupDialogFromLeftMenu('/admin/prop_edit.jsp?key=&lng="+Constants.getString("defaultLanguage")+"&value=');");
-		sub.addSubmenu("admin.conf_editor.export-import", "/admin/prop_export-import.jsp");
+		//sub.addSubmenu("admin.conf_editor.export-import", "/admin/prop_export-import.jsp");
 		sub.addSubmenu("admin.conf_editor.missing", "/admin/prop_missing.jsp");
 		loadModule(sub);
 
@@ -1346,7 +1338,7 @@ public class Modules
 
 		for (ModuleInfo subMi : mi.getSubmenus())
 		{
-			if (Tools.isEmpty(subMi.getLeftMenuLink()) || "javascript:".equals(subMi.getLeftMenuLink()) || "javascript:void();".equals(subMi.getLeftMenuLink())) continue;
+			if (Tools.isEmpty(subMi.getLeftMenuLink()) || "javascript:".equals(subMi.getLeftMenuLink()) || "javascript:void();".equals(subMi.getLeftMenuLink()) || "javascript:void()".equals(subMi.getLeftMenuLink())) continue;
 
 			//pridam ak to nema itemKey, alebo ak ma pravo na dany itemKey
 			String subItemKey = subMi.getItemKey();

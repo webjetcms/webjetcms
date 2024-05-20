@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forms</a> &gt; <span class="el_source">FormsService.java</span></div><h1>FormsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forms;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.form.FormMailAction;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.criteria.Predicate;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+public class FormsService&lt;R extends FormsRepositoryInterface&lt;E&gt;, E extends FormsEntityBasic&gt; {
+
+    private final R formsRepository;
+
+<span class="fc" id="L52">    public FormsService(R formsRepository) {</span>
+<span class="fc" id="L53">        this.formsRepository = formsRepository;</span>
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Vrati zoznam vsetkych formularov, vyfiltruje len take, na ktore ma pouzivatel prava
+     * @param user
+     * @return
+     */
+    public List&lt;E&gt; getFormsList(UserDetails user) {
+<span class="fc" id="L62">        Integer domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L63">        List&lt;E&gt; formsEntities = formsRepository.findAllByCreateDateIsNullAndDomainId(domainId);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (E entity : formsEntities) {</span>
+<span class="fc" id="L65">            entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);</span>
+<span class="fc" id="L66">            E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">            if (lastOne != null) {</span>
+<span class="fc" id="L68">                entity.setCreateDate(lastOne.getCreateDate());</span>
+<span class="fc" id="L69">                entity.setDocId(lastOne.getDocId());</span>
+            }
+<span class="fc" id="L71">        }</span>
+
+<span class="fc" id="L73">        formsEntities = filterDistinct(formsEntities);</span>
+
+<span class="fc" id="L75">        return filterFormsByUser(user, formsEntities);</span>
+    }
+
+    /**
+     * Zrusi zo zoznamu duplicitne nazvy, tie su tam len ked je zle formular v DB vyplneny (typicky programovo)
+     * @param allForms
+     * @return
+     */
+    private List&lt;E&gt; filterDistinct(List&lt;E&gt; allForms) {
+<span class="fc" id="L84">        List&lt;E&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L85">        Set&lt;String&gt; distinct = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (E f : allForms) {</span>
+<span class="fc" id="L87">            String key = f.getFormName();</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if (distinct.contains(key)==false) {</span>
+<span class="fc" id="L89">                ret.add(f);</span>
+<span class="fc" id="L90">                distinct.add(key);</span>
+            }
+<span class="fc" id="L92">        }</span>
+
+<span class="fc" id="L94">        return ret;</span>
+    }
+
+    /**
+	 * Vyfiltruje formulare na zaklade prav pouzivatela na pristup k adresarom a strankam a docId formularu
+	 * @param user
+	 * @param allForms
+	 * @return
+	 */
+	private List&lt;E&gt; filterFormsByUser(UserDetails user, List&lt;E&gt; allForms) {
+<span class="fc" id="L104">		List&lt;E&gt; ret = new ArrayList&lt;&gt;(allForms.size());</span>
+
+<span class="fc" id="L106">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L108">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="fc" id="L109">		int[] userEditablePages = Tools.getTokensInt(user.getEditablePages(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L110" title="3 of 8 branches missed.">		if ((userEditableGroups == null || userEditableGroups.length&lt;1) &amp;&amp; (userEditablePages==null || userEditablePages.length&lt;1)) return allForms;</span>
+
+<span class="fc" id="L112">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">		for (E form : allForms)</span>
+		{
+<span class="fc" id="L115">			boolean pridaj = isFormAccessible(form, userEditableGroups, userEditablePages, docDB);</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">			if (pridaj) ret.add(form);</span>
+<span class="fc" id="L117">		}</span>
+
+<span class="fc" id="L119">		return ret;</span>
+	}
+
+    /**
+     * Overi, ci pouzivatel ma pravo na dany formular
+     * @param formName
+     * @param user
+     * @return
+     */
+    public boolean isFormAccessible(String formName, UserDetails user) {
+<span class="fc" id="L129">        Integer domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L130">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L132">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="fc" id="L133">		int[] userEditablePages = Tools.getTokensInt(user.getEditablePages(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L134" title="3 of 8 branches missed.">		if ((userEditableGroups == null || userEditableGroups.length&lt;1) &amp;&amp; (userEditablePages==null || userEditablePages.length&lt;1)) return true;</span>
+
+<span class="fc" id="L136">		DocDB docDB = DocDB.getInstance();</span>
+
+<span class="fc" id="L138">        E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);</span>
+
+<span class="fc" id="L140">        return isFormAccessible(lastOne, userEditableGroups, userEditablePages, docDB);</span>
+    }
+
+    /**
+     * Overi, ci konkretny formular je dostupny pre pouzivatela
+     * @param form
+     * @param user
+     * @param userEditableGroups
+     * @param userEditablePages
+     * @param docDB
+     * @return
+     */
+    private boolean isFormAccessible(E form, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
+<span class="pc bpc" id="L153" title="2 of 4 branches missed.">        if (userEditableGroups!=null &amp;&amp; userEditableGroups.length&gt;0)</span>
+        {
+<span class="fc" id="L155">            DocDetails doc = docDB.getBasicDocDetails(form.getDocId(), false);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (doc != null)</span>
+            {
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                for (int groupId : userEditableGroups)</span>
+                {
+<span class="fc bfc" id="L160" title="All 2 branches covered.">                    if (doc.getGroupId()==groupId)</span>
+                    {
+<span class="fc" id="L162">                        return true;</span>
+                    }
+                }
+            }
+        }
+<span class="pc bpc" id="L167" title="2 of 4 branches missed.">        if (userEditablePages!=null &amp;&amp; userEditablePages.length&gt;0)</span>
+        {
+<span class="fc bfc" id="L169" title="All 2 branches covered.">            for (int docId : userEditablePages)</span>
+            {
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                if (form.getDocId()==docId)</span>
+                {
+<span class="nc" id="L173">                    return true;</span>
+                }
+            }
+        }
+<span class="fc" id="L177">        return false;</span>
+    }
+
+    /**
+     * Vrati zoznam stlpcov formulara
+     * @param formName
+     * @return
+     */
+    public FormColumns getColumnNames(String formName, UserDetails user) {
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if (isFormAccessible(formName, user)==false) return null;</span>
+
+<span class="fc" id="L189">        E entity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L190">        String[] formsColumns = entity.getData().split(&quot;~&quot;);</span>
+<span class="fc" id="L191">        List&lt;LabelValue&gt; columns = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        for (String column : formsColumns) {</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (!column.contains(&quot;|&quot;)) {</span>
+<span class="fc" id="L194">                column += &quot;|&quot;;</span>
+            }
+
+<span class="fc" id="L197">            String[] columnNames = column.split(&quot;\\|&quot;, -1);</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (Tools.isEmpty(columnNames[1])) {</span>
+<span class="fc" id="L199">                columnNames[1] = Tools.replace(columnNames[0], &quot;-&quot;, &quot; &quot;);</span>
+<span class="fc" id="L200">                columnNames[1] = Tools.replace(columnNames[1], &quot;_&quot;, &quot; &quot;);</span>
+<span class="fc" id="L201">                columnNames[1] = Tools.replace(columnNames[1], &quot;e mail&quot;, &quot;e-mail&quot;);</span>
+            }
+<span class="fc" id="L203">            columns.add(new LabelValue(columnNames[1], columnNames[0]));</span>
+        }
+<span class="fc" id="L205">        FormColumns formColumns = new FormColumns();</span>
+<span class="fc" id="L206">        formColumns.setColumns(columns);</span>
+<span class="fc" id="L207">        formColumns.setCount(formsRepository.countAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L208">        return formColumns;</span>
+    }
+
+    /**
+     * Vrati zaznamy v databaze pre dany formular (zaznamy formularu)
+     * @param formName
+     * @param pageable
+     * @return
+     */
+    Page&lt;E&gt; getFormsData(String formName, UserDetails user, Pageable pageable) {
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        if (isFormAccessible(formName, user)==false) return null;</span>
+
+<span class="nc" id="L221">        Page&lt;E&gt; formsEntities = formsRepository.findAllByFormNameAndDomainIdAndCreateDateNotNull(formName, CloudToolsForCore.getDomainId(), pageable);</span>
+<span class="nc" id="L222">        parseDataColumnInFormsEntities(formsEntities);</span>
+<span class="nc" id="L223">        return formsEntities;</span>
+    }
+
+    /**
+     * Vyhlada (serverov) v udajoch formularu (jednotlive zaznamy formularu)
+     * @param searchList
+     * @param dateRange
+     * @param formName
+     * @param pageable
+     * @return
+     */
+    public Page&lt;E&gt; findInDataByColumns(String formName, UserDetails user, Map&lt;String, String&gt; params, Pageable pageable) {
+
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">        if (isFormAccessible(formName, user)==false) return null;</span>
+
+<span class="fc" id="L238">        Integer domainId = CloudToolsForCore.getDomainId();</span>
+
+<span class="fc" id="L240">        Specification&lt;E&gt; spec = null;</span>
+<span class="fc" id="L241">        spec = getSearchConditions(formName, domainId, params);</span>
+
+        Page&lt;E&gt; filteredForms;
+<span class="pc bpc" id="L244" title="2 of 4 branches missed.">        if (spec != null &amp;&amp; formsRepository instanceof JpaSpecificationExecutor) filteredForms = formsRepository.findAll(spec, pageable);</span>
+<span class="nc" id="L245">        else filteredForms = formsRepository.findAllByFormNameAndDomainIdAndCreateDateNotNull(formName, domainId, pageable);</span>
+
+<span class="fc" id="L247">        parseDataColumnInFormsEntities(filteredForms);</span>
+
+<span class="fc" id="L249">        return filteredForms;</span>
+    }
+
+    protected Specification&lt;E&gt; getSearchConditions(String formName, Integer domainId, Map&lt;String, String&gt; params) {
+<span class="fc" id="L253">		return (Specification&lt;E&gt;) (root, query, builder) -&gt; {</span>
+<span class="fc" id="L254">			final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L256">            predicates.add(builder.equal(root.get(&quot;formName&quot;), formName));</span>
+<span class="fc" id="L257">            predicates.add(builder.equal(root.get(&quot;domainId&quot;), domainId));</span>
+<span class="fc" id="L258">            predicates.add(builder.isNotNull(root.get(&quot;createDate&quot;)));</span>
+
+<span class="fc bfc" id="L260" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; paramsEntry : params.entrySet()) {</span>
+<span class="fc" id="L261">                String key = paramsEntry.getKey();</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">                if (&quot;fromLastExport&quot;.equals(key)) {</span>
+<span class="nc" id="L263">                    String value = paramsEntry.getValue();</span>
+<span class="nc bnc" id="L264" title="All 4 branches missed.">                    if (Tools.isNotEmpty(value) &amp;&amp; &quot;false&quot;.equals(value)==false) {</span>
+<span class="nc" id="L265">                        predicates.add(builder.isNull(root.get(value)));</span>
+                    }
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">                } else if (&quot;id&quot;.equals(key)) {</span>
+<span class="nc" id="L268">                        String value = DatatableRestControllerV2.getCleanValue(paramsEntry.getValue());</span>
+<span class="nc" id="L269">                        int[] ids = Tools.getTokensInt(value, &quot;,&quot;);</span>
+<span class="nc" id="L270">                        List&lt;Integer&gt; idsList = Arrays.stream(ids).boxed().collect(Collectors.toList());</span>
+
+                        //ak nic neoznacil, nic mu neexportneme
+<span class="nc bnc" id="L273" title="All 2 branches missed.">                        if (idsList.isEmpty()) idsList.add(Integer.valueOf(-1));</span>
+
+<span class="nc" id="L275">                        predicates.add(root.get(&quot;id&quot;).in(idsList));</span>
+<span class="pc bfc" id="L276" title="All 2 branches covered.">                } else if (checkSearchParam(key)) {</span>
+<span class="fc" id="L277">                    key = DatatableRestControllerV2.getCleanKey(paramsEntry.getKey());</span>
+<span class="pc bpc" id="L278" title="1 of 4 branches missed.">                    if (&quot;createDate&quot;.equals(key) || &quot;lastExportDate&quot;.equals(key)) {</span>
+<span class="fc" id="L279">                        String dateRange = paramsEntry.getValue();</span>
+<span class="fc" id="L280">                        Pair&lt;Date, Date&gt; datePair = parseDate(dateRange);</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">                        if (datePair != null) {</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">                            if (datePair.first != null) predicates.add(builder.greaterThanOrEqualTo(root.get(key), datePair.first));</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">                            if (datePair.second != null) predicates.add(builder.lessThanOrEqualTo(root.get(key), datePair.second));</span>
+                        }
+
+<span class="pc bpc" id="L286" title="1 of 4 branches missed.">                    } else if (&quot;note&quot;.equals(key) || &quot;files&quot;.equals(key)) {</span>
+<span class="fc" id="L287">                        String value = paramsEntry.getValue();</span>
+<span class="pc bpc" id="L288" title="3 of 4 branches missed.">                        if (value.startsWith(&quot;^&quot;) &amp;&amp; value.endsWith(&quot;$&quot;)) predicates.add(builder.equal(root.get(key), value.substring(1, value.length()-1)));</span>
+                        else {
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">                            if (value.startsWith(&quot;^&quot;)) value = value.substring(1)+&quot;%&quot;;</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">                            else if (value.endsWith(&quot;$&quot;)) value = &quot;%&quot;+value.substring(0, value.length()-1);</span>
+<span class="fc" id="L292">                            else value = &quot;%&quot;+value+&quot;%&quot;;</span>
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">                            if (Constants.DB_TYPE==Constants.DB_ORACLE) {</span>
+<span class="nc" id="L294">                                predicates.add(builder.like(builder.lower(root.get(key)), value.toLowerCase()));</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">                            } else if (Constants.DB_TYPE==Constants.DB_PGSQL) {</span>
+<span class="nc" id="L296">                                predicates.add(builder.like(builder.lower(builder.function(&quot;unaccent&quot;, String.class, root.get(key))), DB.internationalToEnglish(value).toLowerCase()));</span>
+                            } else {
+<span class="fc" id="L298">                                predicates.add(builder.like(root.get(key), value));</span>
+                            }
+                        }
+<span class="fc" id="L301">                    } else {</span>
+<span class="fc" id="L302">                        String value = DatatableRestControllerV2.getCleanValue(paramsEntry.getValue());</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">                        if (key.startsWith(&quot;col_&quot;)) key = key.substring(4);</span>
+<span class="fc" id="L304">                        String searchParam = &quot;%&quot; + key + &quot;~&quot; + value + &quot;%&quot;;</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">                        if (Constants.DB_TYPE==Constants.DB_ORACLE) {</span>
+<span class="nc" id="L306">                            predicates.add(builder.like(builder.lower(root.get(&quot;data&quot;)), searchParam.toLowerCase()));</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">                        } else if (Constants.DB_TYPE==Constants.DB_PGSQL) {</span>
+<span class="nc" id="L308">                            predicates.add(builder.like(builder.lower(builder.function(&quot;unaccent&quot;, String.class, root.get(&quot;data&quot;))), DB.internationalToEnglish(searchParam).toLowerCase()));</span>
+                        } else {
+<span class="fc" id="L310">                            predicates.add(builder.like(root.get(&quot;data&quot;), searchParam));</span>
+                        }
+                    }
+                }
+<span class="fc" id="L314">            }</span>
+
+<span class="fc" id="L316">            return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
+        };
+    }
+
+    /**
+     * Skonvertuje retazec daterange:tsfrom-tsto na par Date objektov
+     * @param dateRange - par Date objektov, pre nezadany datum obsahuje null
+     * @return
+     */
+    protected Pair&lt;Date, Date&gt; parseDate(String dateRange) {
+<span class="fc" id="L326">        Pair&lt;Date, Date&gt; dateRangePair = null;</span>
+<span class="fc" id="L327">        String[] dates = null;</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(dateRange)) {</span>
+<span class="fc" id="L329">            dates = Tools.getTokens(dateRange.substring(dateRange.indexOf(&quot;:&quot;) + 1), &quot;-&quot;);</span>
+
+<span class="fc bfc" id="L331" title="All 2 branches covered.">            if (dates.length == 1) {</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">                if (dateRange.contains(&quot;-&quot;)) {</span>
+<span class="fc" id="L333">                    dateRangePair = new Pair&lt;&gt;(null, new Date(Tools.getLongValue(dates[0], new Date().getTime())));</span>
+                } else {
+<span class="fc" id="L335">                    dateRangePair = new Pair&lt;&gt;(new Date(Tools.getLongValue(dates[0], 0)), null);</span>
+                }
+            } else {
+<span class="fc" id="L338">                dateRangePair = new Pair&lt;&gt;(new Date(Tools.getLongValue(dates[0], 0)), new Date(Tools.getLongValue(dates[1], new Date().getTime())));</span>
+            }
+
+        }
+<span class="fc" id="L342">        return dateRangePair;</span>
+    }
+
+    private void parseDataColumnInFormsEntities(Page&lt;E&gt; formsEntities) {
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        for (E entity : formsEntities) {</span>
+<span class="fc" id="L347">            String[] columns = (entity.getData().split(&quot;\\|&quot;, -1));</span>
+<span class="fc" id="L348">            Map&lt;String, String&gt; columnNamesAndValues = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L350" title="All 2 branches covered.">            for (String c : columns) {</span>
+<span class="fc" id="L351">                String[] nameAndValueArray = c.split(&quot;~&quot;);</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">                if (nameAndValueArray.length == 1) {</span>
+<span class="fc" id="L353">                    columnNamesAndValues.put(nameAndValueArray[0], &quot;&quot;);</span>
+                } else {
+<span class="fc" id="L355">                    columnNamesAndValues.put(nameAndValueArray[0], CryptoFactory.decrypt(nameAndValueArray[1]));</span>
+                }
+            }
+
+<span class="fc" id="L359">            entity.setColumnNamesAndValues(columnNamesAndValues);</span>
+<span class="fc" id="L360">            entity.setHtml(&quot;&quot;);</span>
+<span class="fc" id="L361">        }</span>
+<span class="fc" id="L362">    }</span>
+
+    boolean checkSearchParam(String param) {
+<span class="fc" id="L365">        return param.startsWith(&quot;search&quot;);</span>
+    }
+
+    /**
+     * Ziska zaznam z repozitara podla ID
+     * @param id
+     * @return
+     */
+    public E getById(long id) {
+<span class="fc" id="L374">        return formsRepository.getById(id);</span>
+    }
+
+    /**
+     * Aktualizuje poznamku formulara
+     * @param note
+     * @param id
+     */
+    public void updateNote(String note, long id) {
+<span class="nc" id="L383">        E form = getById(id);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        if (form != null) {</span>
+<span class="nc" id="L385">            form.setNote(note);</span>
+<span class="nc" id="L386">            formsRepository.save(form);</span>
+        }
+<span class="nc" id="L388">    }</span>
+
+    /**
+     * Nastavi datum posledneho exportu pre zadane formulare
+     * @param forms
+     */
+    public void setExportDate(List&lt;E&gt; forms) {
+<span class="nc" id="L395">        int counter = 0;</span>
+<span class="nc" id="L396">        List&lt;Long&gt; ids = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L397">        Date now = new Date(Tools.getNow());</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">        for (E form : forms) {</span>
+<span class="nc" id="L399">            ids.add(form.getId());</span>
+<span class="nc" id="L400">            form.setLastExportDate(now);</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">            if (counter++ % 100 == 0) {</span>
+
+<span class="nc" id="L403">                formsRepository.updateLastExportDate(now, ids);</span>
+<span class="nc" id="L404">                ids = new ArrayList&lt;&gt;();</span>
+            }
+<span class="nc" id="L406">        }</span>
+
+<span class="nc bnc" id="L408" title="All 2 branches missed.">        if (ids.isEmpty()==false) {</span>
+<span class="nc" id="L409">            formsRepository.updateLastExportDate(now, ids);</span>
+        }
+<span class="nc" id="L411">    }</span>
+
+    /**
+     * Zmaze zaznam z databazy
+     * + ak je to posledny zaznam vo formulari, zmaze aj definiciu formularu
+     * + ak maze riadiaci zaznam (createDate je null) tak zmaze vsetky zaznamy
+     * @param entity
+     * @param id
+     * @return
+     */
+    public boolean deleteItem(E entity, long id) {
+        try {
+<span class="fc" id="L423">            String formName = entity.getFormName();</span>
+<span class="fc" id="L424">            E entityDb = getById(id);</span>
+
+<span class="fc" id="L426">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="pc bpc" id="L427" title="1 of 2 branches missed.">            if (domainId != entityDb.getDomainId()) return false;</span>
+
+<span class="fc" id="L429">            int count = formsRepository.countAllByFormNameAndDomainId(formName, domainId);</span>
+
+<span class="pc bpc" id="L431" title="1 of 4 branches missed.">            if (entityDb.getCreateDate()==null || count &lt;= 2) {</span>
+                //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
+<span class="fc" id="L433">                formsRepository.deleteByFormNameAndDomainId(formName, domainId);</span>
+            } else {
+<span class="fc" id="L435">                formsRepository.deleteById(id);</span>
+            }
+
+<span class="fc" id="L438">            return true;</span>
+<span class="nc" id="L439">        } catch (Exception e) {</span>
+<span class="nc" id="L440">            Logger.error(getClass(), e);</span>
+        }
+<span class="nc" id="L442">        return false;</span>
+    }
+
+    public String downloadAttachment(String name, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        //Something wrong
+<span class="pc bpc" id="L447" title="2 of 4 branches missed.">        if(request == null || response == null) return null;</span>
+
+        //Redirect to /admin/logon.jsp
+<span class="fc" id="L450">        HttpSession session = request.getSession();</span>
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">        if (session == null) return SpringUrlMapping.redirectToLogon();</span>
+
+        //Test actual user or redirect
+<span class="fc" id="L454">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L455" title="2 of 4 branches missed.">        if (user == null || !user.isAdmin()) return SpringUrlMapping.redirectToLogon();</span>
+
+<span class="pc bpc" id="L457" title="1 of 2 branches missed.">        if (user.isEnabledItem(&quot;cmp_form&quot;)==false) return SpringUrlMapping.redirectToLogon();</span>
+
+        //ak je zle poslana linka typu /WEB-INF/formfiles/23882_pdf.pdf;23882_pdf.pdf oprav
+<span class="pc bpc" id="L460" title="1 of 2 branches missed.">        if (name.contains(&quot;;&quot;)) name = name.substring(name.lastIndexOf(&quot;;&quot;)+1);</span>
+
+        //ochrana voci hackerom ;-)
+<span class="pc bpc" id="L463" title="2 of 4 branches missed.">        if (name.indexOf('/') &gt;= 0 || name.indexOf('\\') &gt;= 0) return null;</span>
+
+        //get form name and check perms
+<span class="fc" id="L466">        String formname = null;</span>
+        //get ID of row
+<span class="fc" id="L468">        int i = name.indexOf(&quot;_&quot;);</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">        if (i &gt; 0) {</span>
+<span class="fc" id="L470">            int id = Tools.getIntValue(name.substring(0, i), 0);</span>
+<span class="pc bpc" id="L471" title="1 of 2 branches missed.">            if (id &gt; 0) {</span>
+<span class="fc" id="L472">                formname = (new SimpleQuery()).forString(&quot;SELECT form_name FROM forms WHERE id=?&quot;, Integer.valueOf(id));</span>
+            }
+        }
+
+        //if we have formname check access, otherwise for safety reason (e.g. forms_archive different ID) allow access
+<span class="pc bpc" id="L477" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(formname) &amp;&amp; isFormAccessible(formname, user)==false) return SpringUrlMapping.redirectToLogon();</span>
+
+        //fix na lomitko v Tomcate
+<span class="fc" id="L480">        String filePath = Tools.getRealPath(FormMailAction.FORM_FILE_DIR);</span>
+<span class="pc bpc" id="L481" title="1 of 2 branches missed.">        if (filePath.endsWith(Character.toString(File.separatorChar))) filePath = filePath + name;</span>
+<span class="nc" id="L482">        else filePath = filePath + File.separatorChar + name;</span>
+
+<span class="pc bpc" id="L484" title="2 of 4 branches missed.">        if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) {</span>
+           //kedze sme zmenili umiestnenie suborov na externy adresar, ak subor bol vytvoreny pred zmenou tak je v centralnom adresari
+<span class="fc" id="L486">           IwcmFile f = new IwcmFile(filePath);</span>
+<span class="pc bpc" id="L487" title="1 of 2 branches missed.">           if (f.exists() == false) {</span>
+<span class="nc" id="L488">              String globalPath = Constants.getServletContext().getRealPath(FormMailAction.FORM_FILE_DIR);</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">              if (globalPath.endsWith(Character.toString(File.separatorChar))) globalPath = globalPath + name;</span>
+<span class="nc" id="L490">              else globalPath = globalPath + File.separatorChar + globalPath;</span>
+
+<span class="nc" id="L492">              f = new IwcmFile(globalPath);</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">              if (f.exists()) filePath = globalPath;</span>
+           }
+        }
+
+<span class="fc" id="L497">        ServletOutputStream out = response.getOutputStream();</span>
+        //citaj subor a posielaj na vystup
+<span class="fc" id="L499">        byte buff[] = new byte[8000];</span>
+<span class="fc" id="L500">        IwcmInputStream fis = new IwcmInputStream(filePath);</span>
+        int len;
+
+<span class="fc" id="L503">        String mimeType = &quot;application/octet-stream&quot;;</span>
+        try {
+<span class="fc" id="L505">	    	mimeType = Constants.getServletContext().getMimeType(filePath.toLowerCase());</span>
+<span class="nc" id="L506">        } catch (Exception ex) {</span>
+<span class="nc" id="L507">	    	sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L508">        }</span>
+
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">	    if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+
+<span class="fc" id="L512">        response.setContentType(mimeType);</span>
+<span class="fc" id="L513">        name = name.substring(name.indexOf('_') + 1);</span>
+<span class="fc" id="L514">        response.setHeader(&quot;Content-Disposition&quot;, Tools.sanitizeHttpHeaderParam(&quot;attachment; filename=\&quot;&quot; + name + &quot;\&quot;&quot;));</span>
+
+<span class="fc bfc" id="L516" title="All 2 branches covered.">        while ((len = fis.read(buff)) != -1) out.write(buff, 0, len);</span>
+
+<span class="fc" id="L518">        fis.close();</span>
+<span class="fc" id="L519">        out.flush();</span>
+<span class="fc" id="L520">        out.close();</span>
+<span class="fc" id="L521">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

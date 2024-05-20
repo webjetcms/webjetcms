@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetSecurityService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.services</a> &gt; <span class="el_source">WebjetSecurityService.java</span></div><h1>WebjetSecurityService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.services;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.StringTokenizer;
+
+/**
+ *
+ *  V pripade, ze nejaka metoda ma byt dostupna len pre prihlaseneho pouzivatela, admina, prip. nejaku pouzivatelsku skupinu mozeme pouzit anotacie:
+ *  @PreAuthorize(&quot;@WebjetSecurityService.isLogged()&quot;) - prihalseny pouzivatel
+ *  @PreAuthorize(&quot;@WebjetSecurityService.isAdmin()&quot;) - admin
+ *  @PreAuthorize(&quot;@WebjetSecurityService.isInUserGroup('nazov-skupiny')&quot;) - patri do skupiny
+ *  @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('editDir|addSubdir')&quot;) - ma pravo na modul editDir ALEBO addSubdir
+ *  @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('editDir&amp;addSubdir')&quot;) - musi mat pravo na modul editDir SUCASNE na addSubdir
+ *
+ * @author mpijak
+ */
+@Service(&quot;WebjetSecurityService&quot;) //NOSONAR
+public class WebjetSecurityService {
+    private final HttpSession session;
+    private final HttpServletRequest request;
+
+<span class="fc" id="L40">    public WebjetSecurityService(HttpSession session, HttpServletRequest request) {</span>
+<span class="fc" id="L41">        this.session = session;</span>
+<span class="fc" id="L42">        this.request = request;</span>
+<span class="fc" id="L43">    }</span>
+
+    private Authentication getAuthentication() {
+<span class="fc" id="L46">        return SecurityContextHolder.getContext().getAuthentication();</span>
+    }
+
+    protected boolean hasAuthority(String authority) {
+<span class="fc" id="L50">        Authentication auth = getAuthentication();</span>
+<span class="pc bpc" id="L51" title="1 of 4 branches missed.">        return auth != null &amp;&amp; auth.getAuthorities().stream().anyMatch(g-&gt; g.getAuthority().equalsIgnoreCase(authority));</span>
+    }
+
+    private UserDetails getUser() {
+<span class="nc" id="L55">        return UsersDB.getCurrentUser(session);</span>
+    }
+
+    public boolean isAdmin() {
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (hasAuthority(&quot;ROLE_Group_admin&quot;)) {</span>
+<span class="fc" id="L60">            return true;</span>
+        }
+
+<span class="nc" id="L63">        UserDetails currentUser = getUser();</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">        return currentUser != null &amp;&amp; currentUser.isAdmin();</span>
+    }
+
+    public boolean isLogged() {
+<span class="nc" id="L68">        Authentication auth = getAuthentication();</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        if (auth != null &amp;&amp; !auth.getClass().isAssignableFrom(AnonymousAuthenticationToken.class)) {</span>
+<span class="nc" id="L70">            return true;</span>
+        }
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        return getUser() != null;</span>
+    }
+
+    /**
+     * Check user permissions. Perms can be separated by '|' or '&amp;'.
+     * If separated by '|' user must have at least one of this permissions.
+     * If separated by '&amp;' user must have all of this permissions.
+     * @param permission
+     * @return
+     */
+    public boolean hasPermission(String permission) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (!isAdmin()) {</span>
+<span class="nc" id="L85">            return false;</span>
+        }
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (permission.startsWith(&quot;Constants:&quot;)) {</span>
+            //get permission from constants
+<span class="fc" id="L90">            permission = Constants.getString(permission.substring(10));</span>
+        }
+
+        //Cant contain both separators at same time
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        if(permission.contains(&quot;|&quot;) &amp;&amp; permission.contains(&quot;&amp;&quot;)) {</span>
+<span class="nc" id="L95">            return false;</span>
+        }
+
+        //OR user must have at least one of this permissions
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if(permission.contains(&quot;|&quot;)) {</span>
+<span class="fc" id="L100">            StringTokenizer st = new StringTokenizer(permission, &quot;|&quot;);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            while (st.hasMoreTokens()) {</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                if (hasAuthority(&quot;ROLE_Permission_&quot; + normalizeUserGroupName(st.nextToken().trim()))) return true;</span>
+            }
+
+<span class="fc" id="L105">            return false;</span>
+        }
+
+        //AND user must have all of this permissions
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if(permission.contains(&quot;&amp;&quot;)) {</span>
+<span class="fc" id="L110">            StringTokenizer st = new StringTokenizer(permission, &quot;&amp;&quot;);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            while (st.hasMoreTokens()) {</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                if (hasAuthority(&quot;ROLE_Permission_&quot; + normalizeUserGroupName(st.nextToken().trim())) == false) return false;</span>
+            }
+
+<span class="fc" id="L115">            return true;</span>
+        }
+
+        //Just need this one permission
+<span class="fc" id="L119">        return hasAuthority(&quot;ROLE_Permission_&quot; + normalizeUserGroupName(permission.trim()));</span>
+    }
+
+    public boolean isInUserGroup(String group) {
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (hasAuthority(&quot;ROLE_Group_&quot; + normalizeUserGroupName(group))) {</span>
+<span class="nc" id="L125">            return true;</span>
+        }
+
+<span class="nc" id="L128">        UserDetails currentUser = getUser();</span>
+
+        //Authentication auth = getAuthentication();
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (currentUser == null) {</span>
+<span class="nc" id="L133">            return false;</span>
+        }
+
+<span class="nc" id="L136">        String groupName = WebjetSecurityService.normalizeUserGroupName(group);</span>
+<span class="nc" id="L137">        String userGroupNames = currentUser.getUserGroupsNames();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (Tools.isNotEmpty(userGroupNames)) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            for (String userGroupName : userGroupNames.split(&quot;,&quot;)) {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                if (groupName.equalsIgnoreCase(WebjetSecurityService.normalizeUserGroupName(userGroupName))) {</span>
+<span class="nc" id="L141">                    return true;</span>
+                }
+            }
+        }
+<span class="nc" id="L145">        return false;</span>
+    }
+
+    public static String normalizeUserGroupName(String userGropName) {
+<span class="fc" id="L149">        String userGropNameLocal = DB.internationalToEnglish(userGropName);</span>
+
+<span class="fc" id="L151">        userGropNameLocal = userGropNameLocal.replaceAll(&quot;\\s+&quot;, &quot;-&quot;);</span>
+
+<span class="fc" id="L153">        return userGropNameLocal.toLowerCase();</span>
+    }
+
+    public boolean checkAccessAllowedOnController(Object controller) {
+        //najskor over prava na celu triedu, lebo toto na DT metodach overwrite anotaciu celej triedy
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (controller.getClass().isAnnotationPresent(PreAuthorize.class)) {</span>
+<span class="fc" id="L159">            String value = controller.getClass().getAnnotation(org.springframework.security.access.prepost.PreAuthorize.class).value();</span>
+            //value je nieco ako: @WebjetSecurityService.hasPermission('editor_edit_media_group')
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (value.startsWith(&quot;@WebjetSecurityService.isAdmin&quot;)) {</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                if (isAdmin()==false) return false;</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">            } else if (value.startsWith(&quot;@WebjetSecurityService.isLogged&quot;)) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (isLogged()==false) return false;</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">            } else if (value.startsWith(&quot;@WebjetSecurityService.&quot;)) {</span>
+<span class="fc" id="L166">                int dot = value.indexOf(&quot;.&quot;);</span>
+<span class="fc" id="L167">                int bracketStart = value.indexOf(&quot;(&quot;);</span>
+<span class="fc" id="L168">                int bracketEnd = value.indexOf(&quot;)&quot;);</span>
+
+<span class="pc bpc" id="L170" title="2 of 4 branches missed.">                if (bracketEnd &gt; bracketStart &amp;&amp; bracketStart &gt; dot) {</span>
+<span class="fc" id="L171">                    String methodName = value.substring(dot+1, bracketStart);</span>
+<span class="fc" id="L172">                    String perms = value.substring(bracketStart+1, bracketEnd).trim();</span>
+                    //odstran apostrofy/uvodzovky
+<span class="fc" id="L174">                    perms = Tools.replace(perms, &quot;'&quot;, &quot;&quot;);</span>
+<span class="fc" id="L175">                    perms = Tools.replace(perms, &quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L176">                    perms = perms.trim();</span>
+
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">                    if (&quot;hasPermission&quot;.equals(methodName)) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                        if (hasPermission(perms)==false) return false;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                    } else if (&quot;isInUserGroup&quot;.equals(methodName)) {</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">                        if (isInUserGroup(perms)==false) return false;</span>
+                    } else {
+                        //neznama metoda, pre istotu vratme false
+<span class="nc" id="L184">                        return false;</span>
+                    }
+<span class="fc" id="L186">                }</span>
+                else {
+                    //nieco je zle zapisane v anotacii
+<span class="nc" id="L189">                    return false;</span>
+                }
+            }
+        }
+
+        try {
+            //custom metoda
+<span class="fc" id="L196">            Method[] methods = controller.getClass().getMethods();</span>
+<span class="fc" id="L197">            Optional&lt;Method&gt; first = Arrays.stream(methods).filter(m-&gt;m.getName().equals(&quot;checkAccessAllowed&quot;)).findFirst();</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (first.isPresent()) {</span>
+<span class="fc" id="L199">                Method method = first.get();</span>
+<span class="fc" id="L200">                boolean ret = (boolean) method.invoke(controller, request);</span>
+<span class="fc" id="L201">                Logger.debug(WebjetSecurityService.class, &quot;calling checkAccessAllowed, ret=&quot;+ret);</span>
+<span class="fc" id="L202">                return ret;</span>
+            }
+<span class="nc" id="L204">        } catch (IllegalAccessException | InvocationTargetException e) {</span>
+            //sk.iway.iwcm.Logger.error(e);
+<span class="nc" id="L206">        }</span>
+
+        //zavolaj defaultnu v DTv2
+        //if (DatatableRestControllerV2.class.isAssignableFrom(controller.getClass())) {
+        //    return ((DatatableRestControllerV2)controller).checkAccessAllowed(request);
+        //}
+
+<span class="nc" id="L213">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

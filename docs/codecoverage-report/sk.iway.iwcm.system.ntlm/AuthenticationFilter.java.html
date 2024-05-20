@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.ntlm</a> &gt; <span class="el_source">AuthenticationFilter.java</span></div><h1>AuthenticationFilter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.ntlm;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
+
+/**
+ *
+ */
+<span class="nc" id="L18">public class AuthenticationFilter implements Filter {</span>
+
+	private static FilterConfig config;
+
+ 	@Override
+    public void init( FilterConfig filterConfig ) throws ServletException {
+<span class="nc" id="L24">		AuthenticationFilter.config = filterConfig;</span>
+<span class="nc" id="L25">    }</span>
+
+    @Override
+    public void destroy() {
+<span class="nc" id="L29">    }</span>
+
+    /**
+     * This method simply calls &lt;tt&gt;negotiate( req, resp, false )&lt;/tt&gt;
+     * and then &lt;tt&gt;chain.doFilter&lt;/tt&gt;. You can override and call
+     * negotiate manually to achive a variety of different behavior.
+     */
+    @Override
+   	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+ 	{
+<span class="nc" id="L39">   	 	Logger.debug(AuthenticationFilter.class, &quot;doFilter&quot;);</span>
+
+<span class="nc" id="L41">        HttpServletRequest req = (HttpServletRequest)request;</span>
+<span class="nc" id="L42">        HttpServletResponse resp = (HttpServletResponse)response;</span>
+
+<span class="nc" id="L44">        Enumeration&lt;String&gt; e = req.getHeaderNames();</span>
+        String name, value;
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        while (e.hasMoreElements())</span>
+        {
+<span class="nc" id="L48">           name = (String)e.nextElement();</span>
+<span class="nc" id="L49">           value = req.getHeader(name);</span>
+
+<span class="nc" id="L51">           Logger.debug(AuthenticationFilter.class, &quot;header &quot; + name + &quot;=&quot; + value);</span>
+        }
+
+<span class="nc" id="L54">        Principal user = negotiateIIS(req, resp, false);</span>
+
+<span class="nc" id="L56">        chain.doFilter( new NtlmHttpServletRequest( req, user ), response );</span>
+<span class="nc" id="L57">    }</span>
+
+	/**
+	 * Negotiate user from request.getUserPrincipal(), check for correct domainName from NTLMiisTrustedDomains
+	 * @param req
+	 * @param resp
+	 * @param skipAuthentication
+	 * @return
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+   	public static Principal negotiateIIS(HttpServletRequest req, HttpServletResponse resp, boolean skipAuthentication)
+				throws IOException, ServletException
+	{
+<span class="nc" id="L71">		Logger.debug(AuthenticationFilter.class, &quot;negotiate IIS&quot;);</span>
+		// IIS autorizacia aktivovana
+<span class="nc" id="L73">		Principal iisPrincipal = Tools.getUserPrincipal(req);</span>
+<span class="nc" id="L74">		Logger.debug(AuthenticationFilter.class, &quot;IIS Principal: &quot; + iisPrincipal);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (iisPrincipal != null)</span>
+		{
+<span class="nc" id="L77">			String userDomain[] = iisPrincipal.getName().split(&quot;\\\\&quot;);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (userDomain.length == 2)</span>
+			{
+<span class="nc" id="L80">				Logger.debug(AuthenticationFilter.class, &quot;domain: &quot; + userDomain[0] + &quot; login:&quot; + userDomain[1]);</span>
+<span class="nc" id="L81">				boolean domainOK = false;</span>
+<span class="nc" id="L82">				String logonDomains = Constants.getString(&quot;NTLMiisTrustedDomains&quot;);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				if (Tools.isNotEmpty(logonDomains))</span>
+				{
+<span class="nc" id="L85">					StringTokenizer st = new StringTokenizer(logonDomains, &quot;,;&quot;);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
+					{
+<span class="nc" id="L88">						String domain = st.nextToken();</span>
+<span class="nc" id="L89">						Logger.debug(AuthenticationFilter.class, &quot;Testing domain: &quot;+domain+&quot; vs &quot;+userDomain[0]);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">						if (domain.equalsIgnoreCase(userDomain[0]))</span>
+						{
+<span class="nc" id="L92">							domainOK = true;</span>
+<span class="nc" id="L93">							break;</span>
+						}
+<span class="nc" id="L95">					}</span>
+<span class="nc" id="L96">				}</span>
+				else
+				{
+<span class="nc" id="L99">					domainOK = true;</span>
+				}
+<span class="nc bnc" id="L101" title="All 2 branches missed.">				if (domainOK)</span>
+				{
+<span class="nc" id="L103">					NtlmPrincipal principal = new NtlmPrincipal(userDomain[0], userDomain[1]);</span>
+<span class="nc" id="L104">					return principal;</span>
+				}
+				else
+				{
+<span class="nc" id="L108">					Logger.debug(AuthenticationFilter.class, &quot;Nespravna domena: &quot;+userDomain[0]);</span>
+				}
+<span class="nc" id="L110">			}</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			else if (&quot;*&quot;.equals(Constants.getString(&quot;NTLMiisTrustedDomains&quot;)))</span>
+			{
+<span class="nc" id="L113">				NtlmPrincipal principal = new NtlmPrincipal(&quot;&quot;, userDomain[0]);</span>
+<span class="nc" id="L114">				return principal;</span>
+			}
+<span class="nc" id="L116">		}</span>
+		else
+		{
+<span class="nc" id="L119">			Logger.debug(AuthenticationFilter.class, &quot;nemam principal, user nie je prihlaseny!&quot;);</span>
+		}
+<span class="nc" id="L121">		return null;</span>
+	}
+
+    /**
+ 	 * @return Returns the ldapPassword.
+ 	 */
+ 	public static String getLdapPassword()
+ 	{
+<span class="nc" id="L129"> 		return Constants.getString(&quot;ldapPassword&quot;, getInitParameter(&quot;jcifs.ldap.password&quot;));</span>
+ 	}
+ 	/**
+ 	 * @return Returns the ldapProvider.
+ 	 */
+ 	public static String getLdapProvider()
+ 	{
+<span class="nc" id="L136">		return Constants.getString(&quot;ldapProviderUrl&quot;, getInitParameter(&quot;jcifs.ldap.provider&quot;));</span>
+ 	}
+ 	/**
+ 	 * @return Returns the ldapUsername.
+ 	 */
+ 	public static String getLdapUsername()
+ 	{
+<span class="nc" id="L143">		return Constants.getString(&quot;ldapUsername&quot;, getInitParameter(&quot;jcifs.ldap.username&quot;));</span>
+ 	}
+ 	/**
+ 	 * @return Returns the forbiddenURL.
+ 	 */
+ 	public static String getForbiddenURL()
+ 	{
+<span class="pc bpc" id="L150" title="1 of 2 branches missed."> 		return Constants.getString(&quot;NTLMForbiddenURL&quot;, weTrustIIS() ? &quot;/500.jsp&quot; : null);</span>
+ 	}
+
+	/**
+	 * ak je vo web.xml zadany config parameter iis.trustIIS, beriem primarne
+	 * inak beriem co je zadane vo WJ konf. premennej authenticationTrustIIS
+	 * @return
+	 */
+	public static boolean weTrustIIS()
+	{
+<span class="fc" id="L160">		 boolean trustIIS = Constants.getBoolean(&quot;authenticationTrustIIS&quot;);</span>
+<span class="fc" id="L161">		 String configTrustIIS = getInitParameter(&quot;iis.trustIIS&quot;);</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		 if(Tools.isNotEmpty(configTrustIIS)) trustIIS = &quot;true&quot;.equalsIgnoreCase(configTrustIIS);</span>
+
+		 //Logger.debug(AuthenticationFilter.class, &quot;weTrustIIS()=&quot;+trustIIS+&quot;, konf (authenticationTrustIIS)=&quot;+Constants.getString(&quot;authenticationTrustIIS&quot;)+&quot;, initParam (iis.trustIIS)=&quot;+Config.getProperty(&quot;iis.trustIIS&quot;));
+<span class="fc" id="L165">		 return trustIIS;</span>
+	}
+
+	public static String getDomainController()
+	{
+<span class="fc" id="L170">		String result = Constants.getString(&quot;NTLMDomainController&quot;, getInitParameter( &quot;jcifs.http.domainController&quot;));</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">		if(Tools.isEmpty(result))</span>
+<span class="fc" id="L172">			result = getInitParameter(&quot;jcifs.smb.client.domain&quot;);</span>
+
+<span class="fc" id="L174">		return result;</span>
+	}
+
+	private static String getInitParameter(String name) {
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">		if (config != null) return config.getInitParameter(name);</span>
+<span class="fc" id="L179">		return &quot;&quot;;</span>
+	}
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

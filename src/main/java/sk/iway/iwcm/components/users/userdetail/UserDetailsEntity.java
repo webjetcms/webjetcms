@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -38,6 +40,18 @@ public class UserDetailsEntity extends UserDetailsBasic {
 
     public UserDetailsEntity(){
         //
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.getDomainId()==null) {
+            if (UserDetailsService.isUsersSplitByDomain()) {
+                //in multiweb we must set current domainId
+                this.setDomainId(CloudToolsForCore.getDomainId());
+            } else {
+                this.setDomainId(1);
+            }
+        }
     }
 
     /*PERSONAL INFO - Access*/
@@ -241,7 +255,8 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @JsonIgnore
     private String passwordSalt;
 
-//    private int domainId;
+    @Column(name = "domain_id")
+    private Integer domainId;
 
     //@Column(name = "mobile_device")
     //private String mobileDevice;

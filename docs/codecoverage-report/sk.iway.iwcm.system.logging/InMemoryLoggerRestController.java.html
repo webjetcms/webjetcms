@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryLoggerRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.logging</a> &gt; <span class="el_source">InMemoryLoggerRestController.java</span></div><h1>InMemoryLoggerRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.logging;
+
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.*;
+
+/**
+ * REST controller pre zobrazenie poslednych log sprav z pamate
+ */
+@RestController
+@Datatable
+@RequestMapping(value = &quot;/admin/rest/in-memory-logging&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_in-memory-logging')&quot;)
+<span class="fc" id="L29">public class InMemoryLoggerRestController extends DatatableRestControllerV2&lt;InMemoryLoggingEvent, Long&gt; {</span>
+
+    @Override
+    public Page&lt;InMemoryLoggingEvent&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L33">        Queue&lt;InMemoryLoggingEvent&gt; queue = null;</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (ClusterDB.isServerRunningInClusterMode()) {</span>
+<span class="fc" id="L35">            String node = getRequest().getParameter(&quot;node&quot;);</span>
+<span class="pc bpc" id="L36" title="3 of 4 branches missed.">            if (Tools.isNotEmpty(node) &amp;&amp; !node.equals(getCurrentNode().getValue())) {</span>
+<span class="nc" id="L37">                queue = getLoggingFromNode(node);</span>
+            }
+        }
+
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (queue == null) {</span>
+<span class="fc" id="L42">            queue = InMemoryLoggingDB.getInstance().getQueue();</span>
+        }
+
+<span class="fc" id="L45">        DatatablePageImpl&lt;InMemoryLoggingEvent&gt; pages = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;(queue));</span>
+<span class="fc" id="L46">        pages.addOptions(&quot;level&quot;, getTypes(), &quot;label&quot;, &quot;value&quot;, false);</span>
+
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (ClusterDB.isServerRunningInClusterMode()) {</span>
+<span class="fc" id="L49">            LabelValueDetails currentNode = getCurrentNode();</span>
+<span class="fc" id="L50">            pages.addOption(&quot;currentNode&quot;, currentNode.getLabel(), currentNode.getValue(), false);</span>
+<span class="fc" id="L51">            List&lt;LabelValueDetails&gt; nodes = getNodes();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            if (!nodes.isEmpty()) {</span>
+<span class="fc" id="L53">                pages.addOptions(&quot;nodes&quot;, nodes, &quot;label&quot;, &quot;value&quot;, false);</span>
+            }
+        }
+
+<span class="fc" id="L57">        return pages;</span>
+    }
+
+    private CircularFifoQueue&lt;InMemoryLoggingEvent&gt; getLoggingFromNode(String node) {
+<span class="nc" id="L61">        ClusterDB.addRefreshClusterMonitoring(node, InMemoryLoggingDB.class);</span>
+<span class="nc" id="L62">        InMemoryLoggingDB inMemoryLoggingDB = InMemoryLoggingDB.getInstance();</span>
+<span class="nc" id="L63">        CircularFifoQueue&lt;InMemoryLoggingEvent&gt; result = null;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        for (int i = 0; i &lt; 30; i++) {</span>
+<span class="nc" id="L65">            result = inMemoryLoggingDB.readLogging(node);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (result == null) {</span>
+                try {
+<span class="nc" id="L69">                    TimeUnit.MILLISECONDS.sleep(1000);</span>
+<span class="nc" id="L70">                } catch (InterruptedException ignored) {</span>
+                    //neriesime nic
+<span class="nc" id="L72">                }</span>
+            }
+        }
+
+<span class="nc" id="L76">        return result;</span>
+    }
+
+    private LabelValueDetails getCurrentNode() {
+<span class="fc" id="L80">        LabelValueDetails labelValueDetails = new LabelValueDetails();</span>
+<span class="fc" id="L81">        labelValueDetails.setLabel(Constants.getString(&quot;clusterMyNodeName&quot;));</span>
+<span class="fc" id="L82">        labelValueDetails.setValue(Constants.getString(&quot;clusterMyNodeName&quot;));</span>
+<span class="fc" id="L83">        return labelValueDetails;</span>
+    }
+
+    private List&lt;LabelValueDetails&gt; getNodes() {
+<span class="fc" id="L87">        List&lt;LabelValueDetails&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (String nodeName : ClusterDB.getClusterNodeNamesExpandedAuto()) {</span>
+<span class="fc" id="L90">            LabelValueDetails labelValueDetail = new LabelValueDetails();</span>
+<span class="fc" id="L91">            labelValueDetail.setLabel(nodeName);</span>
+<span class="fc" id="L92">            labelValueDetail.setValue(nodeName);</span>
+<span class="fc" id="L93">            result.add(labelValueDetail);</span>
+<span class="fc" id="L94">        }</span>
+
+<span class="fc" id="L96">        return result;</span>
+    }
+
+    private List&lt;LabelValueDetails&gt; getTypes() {
+<span class="fc" id="L100">        List&lt;LabelValueDetails&gt; types = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L101">        String[] levels = {&quot;DEBUG&quot;, &quot;ERROR&quot;, &quot;INFO&quot;, &quot;TRACE&quot;, &quot;WARN&quot;};</span>
+
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (String level : levels) {</span>
+<span class="fc" id="L104">            LabelValueDetails lvd = new LabelValueDetails();</span>
+<span class="fc" id="L105">            lvd.setValue(level);</span>
+<span class="fc" id="L106">            lvd.setLabel(level);</span>
+<span class="fc" id="L107">            types.add(lvd);</span>
+        }
+
+<span class="fc" id="L110">        return types;</span>
+    }
+
+    @Override
+    public InMemoryLoggingEvent editItem(InMemoryLoggingEvent entity, long logId) {
+<span class="nc" id="L115">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L116">        return null;</span>
+    }
+
+    @Override
+    public boolean beforeDelete(InMemoryLoggingEvent entity) {
+<span class="nc" id="L121">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

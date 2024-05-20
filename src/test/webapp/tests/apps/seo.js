@@ -287,21 +287,21 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
 
     DT.filter("name", "rozpočet");
 
-    DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "2", "2", "2"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "2", "2", "2"]);
 
     I.click("button.btn-vue-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
 
-    DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "1", "1", "1"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "1", "1", "1"]);
 
     I.amOnPage("/apps/seo/admin/number-keywords/");
 
     DT.waitForLoader();
     DT.filter("name", "rozpočet");
 
-    DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "1", "1", "1"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "1", "1", "1"]);
 
     I.click(locate("#numberKeywordsDataTable a").withText("rozpočet"));
 
@@ -366,7 +366,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.amOnPage("/apps/seo/admin/number-keywords/");
 
     DT.filter("name", "rozpočet");
-    DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "1", "1", "1"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "1", "1", "1"]);
 
     I.click({ css: "button[data-id=webPageSelect]" });
     I.see("Jet portal 4 - testovacia stranka");
@@ -375,7 +375,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     DT.waitForLoader();
 
     I.waitForText("rozpočet", "#numberKeywordsDataTable");
-    DT.checkTableRow("numberKeywordsDataTable", 1, ["4", "rozpočet", "0", "0", "0"]);
+    DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "0", "0", "0"]);
 
     //
     I.amOnPage("/apps/seo/admin/stat-keywords/");

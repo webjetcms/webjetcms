@@ -22,19 +22,19 @@ public interface EnumerationDataRepository extends JpaRepository<EnumerationData
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE EnumerationDataBean SET hidden = 1 WHERE enumerationDataId = :enumerationDataId")
-    void deleteEnumDataById(@Param("enumerationDataId")Integer enumerationDataId);
+    @Query(value = "UPDATE EnumerationDataBean SET hidden = :hidden WHERE enumerationDataId = :enumerationDataId")
+    void deleteEnumDataById(@Param("enumerationDataId")Integer enumerationDataId, @Param("hidden")boolean hidden);
 
-    @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_data_id = ?1 and hidden = 0", nativeQuery=true)
-    EnumerationDataBean getNonHiddenByEnumId(Integer enumerationDataId);
+    @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_data_id = ?1 and hidden = ?2", nativeQuery=true)
+    EnumerationDataBean getNonHiddenByEnumId(Integer enumerationDataId, boolean hidden);
 
     @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_data_id = ?1", nativeQuery=true)
     EnumerationDataBean getEnumId(Integer enumerationDataId);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE enumeration_data SET hidden = 1 WHERE enumeration_type_id = ?1", nativeQuery=true)
-    void deleteAllEnumDataByEnumTypeId(Integer enumerationTypeId);
+    @Query(value = "UPDATE enumeration_data SET hidden = ?2 WHERE enumeration_type_id = ?1", nativeQuery=true)
+    void deleteAllEnumDataByEnumTypeId(Integer enumerationTypeId, boolean hidden);
 
     @Query(value = "SELECT child_enumeration_type_id FROM enumeration_data WHERE enumeration_data_id = ?1", nativeQuery=true)
     Integer getChildEnumTypeIdByEnumDataId(Integer enumerationDataId);

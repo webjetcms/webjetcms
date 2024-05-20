@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UpdateController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.update</a> &gt; <span class="el_source">UpdateController.java</span></div><h1>UpdateController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.update;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.editor.rest.WebPagesListener;
+import sk.iway.iwcm.i18n.Prop;
+
+@Controller
+@RequestMapping(&quot;/admin/update&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('modUpdate')&quot;)
+<span class="fc" id="L24">public class UpdateController {</span>
+
+	@GetMapping(&quot;/versions&quot;)
+	@ResponseBody
+    public List&lt;VersionBean&gt; getUpdateVersions(HttpServletRequest request) {
+        try {
+<span class="fc" id="L30">			return UpdateService.getUpdateVersionsData(request);</span>
+<span class="nc" id="L31">        }  catch (Exception ex) {</span>
+<span class="nc" id="L32">            Logger.error(WebPagesListener.class, ex);</span>
+        }
+<span class="nc" id="L34">		return (new ArrayList&lt;VersionBean&gt;());</span>
+    }
+
+    @GetMapping(&quot;/prepareUpdate&quot;)
+    @ResponseBody
+    public void prepareUpdate(@RequestParam(name = &quot;version&quot;) String version, HttpServletRequest request, HttpServletResponse response) {
+        try {
+<span class="nc" id="L41">            UpdateService.prepareUpdate(version, request, response, false);</span>
+<span class="nc" id="L42">        }  catch (Exception ex) {</span>
+<span class="nc" id="L43">            Logger.error(WebPagesListener.class, ex);</span>
+
+            try {
+<span class="nc" id="L46">                flushError(request, response);</span>
+<span class="nc" id="L47">            } catch(Exception e) {</span>
+<span class="nc" id="L48">                Logger.error(WebPagesListener.class, e);</span>
+<span class="nc" id="L49">            }</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">    }</span>
+
+    @ResponseBody
+    @GetMapping(&quot;/prepareFileUpdate&quot;)
+    public void prepareFileUpdate(@RequestParam(name = &quot;version&quot;) String version, HttpServletRequest request, HttpServletResponse response) {
+        try {
+<span class="nc" id="L57">            UpdateService.prepareUpdate(version, request, response, true);</span>
+<span class="nc" id="L58">        }  catch (Exception ex) {</span>
+<span class="nc" id="L59">            Logger.error(WebPagesListener.class, ex);</span>
+
+            try {
+<span class="nc" id="L62">                flushError(request, response);</span>
+<span class="nc" id="L63">            } catch(Exception e) {</span>
+<span class="nc" id="L64">                Logger.error(WebPagesListener.class, e);</span>
+<span class="nc" id="L65">            }</span>
+<span class="nc" id="L66">        }</span>
+<span class="nc" id="L67">    }</span>
+
+    @GetMapping(&quot;/restart&quot;)
+    public String doRestart(@RequestParam(name = &quot;version&quot;) String version, HttpServletRequest request, HttpServletResponse response) {
+        try {
+<span class="nc" id="L72">            return UpdateService.doRestart(version, request, response);</span>
+<span class="nc" id="L73">        }  catch (Exception ex) {</span>
+<span class="nc" id="L74">            Logger.error(WebPagesListener.class, ex);</span>
+        }
+
+<span class="nc" id="L77">        return null;</span>
+    }
+
+    private void flushError(HttpServletRequest request, HttpServletResponse response) throws IOException {
+<span class="nc" id="L81">        PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L82">        Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L83">        out.println(&quot;&lt;span style='color: red'&gt;&quot; + prop.getText(&quot;update.failed&quot;) + &quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L84">        out.flush();</span>
+<span class="nc" id="L85">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

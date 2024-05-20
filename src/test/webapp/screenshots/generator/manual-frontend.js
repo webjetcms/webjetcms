@@ -1,13 +1,26 @@
 Feature('manual-frontend');
 
+let confLng = "sk";
+
 Before(({ I, login }) => {
-    login('admin');
+    login("admin");
+    confLng = I.getConfLng();
 });
 
 Scenario('template-bare', async({ I, DT, DTE, Document }) => {
 
+    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
+    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
+    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
+    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
+
     //bare.tau27.iway.sk/Slovensky
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=31204");
+    if("sk" === confLng) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=383");
+    } else if("en" === confLng) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=439");
+    }
+
     DT.waitForLoader();
     DTE.cancel();
 
@@ -20,14 +33,19 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     Document.screenshot("/frontend/examples/template-bare/group-editor-temp.png");
     DTE.cancel();
 
-
     //stranka hlavicka
     I.click("#pills-system-tab");
     DT.waitForLoader();
     I.jstreeClick("Hlavičky");
-    I.click("Základná hlavička");
+    I.click("Default Hlavička");
     DTE.waitForEditor();
     I.wait(10);
+
+    //Need to switch to page builder
+    I.clickCss("#DTE_Field_data-editorTypeSelector > div > button.dropdown-toggle");
+    I.waitForElement("div.dropdown-menu");
+    I.click( locate("a.dropdown-item > span").withText("Page Builder") );
+    I.wait(2);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
 
@@ -45,8 +63,11 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
 
     Document.screenshot("/frontend/examples/template-bare/header-editor.png");
 
+    I.switchTo();
+
     //screenshot skupiny sablon
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
+    DT.waitForLoader();
     DT.filter("name", "Bare");
     I.click("Bare");
     DTE.waitForEditor();
@@ -66,8 +87,11 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     Document.screenshot("/frontend/examples/template-bare/temp-editor-style.png");
 
     //screenshot web stranka
-
-    I.amOnPage("/sk/?NO_WJTOOLBAR=true");
+    if("sk" === confLng) {
+        I.amOnPage("/sk/?NO_WJTOOLBAR=true");
+    } else if("en" === confLng) {
+        I.amOnPage("/en/bare-en.html?NO_WJTOOLBAR=true");
+    }
     Document.screenshot("/frontend/examples/template-bare/barepage.png", 1000, 1190);
 
 });
@@ -163,9 +187,13 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     Document.screenshot("/frontend/examples/templates-creative/temp-editor-style.png");
 
     //web stranka
-    I.amOnPage("/sk/?NO_WJTOOLBAR=true");
+    if("sk" === confLng) {
+        I.amOnPage("/sk/?NO_WJTOOLBAR=true");
+    } else if("en" === confLng) {
+        I.amOnPage("/sk/?NO_WJTOOLBAR=true&language=en");
+    }
+    
     I.pressKey("ArrowDown");
 
     Document.screenshot("/frontend/examples/templates-creative/creativepage.png", 1000, 700);
-
 });

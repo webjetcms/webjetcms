@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VideoConvert.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">VideoConvert.java</span></div><h1>VideoConvert.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+
+import java.awt.Dimension;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.editor.UploadFileForm;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFsDB;
+
+/**
+ * VideoConvert.java - trieda pre konverziu video suborov
+ *
+ *@Title webjet4
+ *@Company Interway s.r.o. (www.interway.sk)
+ *@Copyright Interway s.r.o. (c) 2001-2007
+ *@author $Author: jeeff $
+ *@version $Revision: 1.18 $
+ *@created Date: 7.9.2007 21:24:21
+ *@modified $Date: 2009/01/15 10:08:45 $
+ */
+<span class="nc" id="L42">public class VideoConvert</span>
+{
+
+	public static boolean convertToMp4(String sourceUrl, String destinationUrl, int width, int height, int bitRate, boolean keepOrig,
+				HttpServletRequest request){
+<span class="nc" id="L47">		return  convert(&quot;mp4&quot;, sourceUrl, destinationUrl, width, height, bitRate, keepOrig, request);</span>
+	}
+
+	public static boolean convertToFlv(String sourceUrl, String destinationUrl, int width, int height, int bitRate, boolean keepOrig,
+				HttpServletRequest request)
+	{
+<span class="nc" id="L53">		return convert(&quot;flv&quot;, sourceUrl, destinationUrl, width, height, bitRate, keepOrig, request);</span>
+	}
+
+	public static boolean convert(String format, String sourceUrl, String destinationUrl, int width, int height, int bitRate, boolean keepOrig,
+				HttpServletRequest request)
+	{
+<span class="nc" id="L59">		Dimension[] dims = null;</span>
+<span class="nc" id="L60">		String flvFilename = null;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (GalleryDB.isGalleryFolder(destinationUrl))</span>
+		{
+<span class="nc" id="L63">			dims = GalleryDB.getDimension(destinationUrl);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (&quot;small&quot;.equals(Constants.getString(&quot;galleryVideoMode&quot;)))</span>
+			{
+<span class="nc" id="L66">				Dimension[] dimsNew = new Dimension[1];</span>
+<span class="nc" id="L67">				dimsNew[0] = new Dimension(dims[0].width, dims[0].height);</span>
+<span class="nc" id="L68">				dims = dimsNew;</span>
+<span class="nc" id="L69">			}</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			else if (&quot;big&quot;.equals(Constants.getString(&quot;galleryVideoMode&quot;)))</span>
+			{
+<span class="nc" id="L72">				Dimension[] dimsNew = new Dimension[1];</span>
+<span class="nc" id="L73">				dimsNew[0] = new Dimension(dims[1].width, dims[1].height);</span>
+<span class="nc" id="L74">				dims = dimsNew;</span>
+<span class="nc" id="L75">			}</span>
+		}
+		else
+		{
+<span class="nc" id="L79">			dims = new Dimension[1];</span>
+<span class="nc" id="L80">			dims[0] = new Dimension(width, height);</span>
+		}
+		try
+		{
+<span class="nc" id="L84">			String videoPath = Tools.getRealPath(sourceUrl);</span>
+<span class="nc" id="L85">			int originalBitRate = bitRate;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			for (int y = 0; y &lt; dims.length; y++)</span>
+			{
+<span class="nc" id="L88">				Dimension d = dims[y];</span>
+				// pre velky rozmer musime mat vacsi bitrate
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if (y &gt; 0)</span>
+				{
+<span class="nc" id="L92">					double pomer = (double) (dims[y].width * dims[y].height) / (double) (dims[0].width * dims[0].height);</span>
+<span class="nc" id="L93">					bitRate = (int) Math.round(originalBitRate * pomer);</span>
+				}
+<span class="nc" id="L95">				Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L96">				request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.videoconvert.converting&quot;));</span>
+<span class="nc" id="L97">				String ffmpegPath = Constants.getString(&quot;ffmpegPath&quot;).trim();</span>
+<span class="nc" id="L98">				File f = new File(ffmpegPath);</span>
+<span class="nc bnc" id="L99" title="All 6 branches missed.">				if (f.exists() == false || f.isFile() == false || f.canRead() == false)</span>
+<span class="nc" id="L100">					return false;</span>
+<span class="nc" id="L101">				flvFilename = Tools.getRealPath(</span>
+<span class="nc" id="L102">							destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + &quot;.&quot; + d.width + &quot;x&quot; + d.height</span>
+<span class="nc" id="L103">										+ destinationUrl.substring(destinationUrl.lastIndexOf('.'), destinationUrl.length()));</span>
+<span class="nc" id="L104">				Runtime rt = Runtime.getRuntime();</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (IwcmFsDB.useDBStorage(sourceUrl))</span>
+				{
+<span class="nc" id="L107">					videoPath = IwcmFsDB.getTempFilePath(videoPath);</span>
+<span class="nc" id="L108">					flvFilename = IwcmFsDB.getTempFilePath(flvFilename);</span>
+				}
+				//MBO: #15203 pre konverziu pouzijeme upravene rozmery, ak je niektory neparny, zvacsi sa o 1
+<span class="nc" id="L111">				Dimension dimsToConvert = new Dimension(</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">						(int)( ((int)Math.round(d.getWidth()))%2==1 ? d.getWidth()+1 : d.getWidth() ),</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">						(int)( ((int)Math.round(d.getHeight()))%2==1 ? d.getHeight()+1 : d.getHeight() ) );</span>
+
+<span class="nc" id="L115">				String args[] = ffmpegCommandLine(videoPath,flvFilename,format,bitRate,dimsToConvert);</span>
+
+<span class="nc" id="L117">				File flvFile=new File(flvFilename);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (flvFile.exists()){flvFile.delete();}</span>
+<span class="nc" id="L119">				int c = 0;</span>
+<span class="nc" id="L120">				String params = &quot;&quot;;</span>
+<span class="nc" id="L121">				StringBuilder buf = new StringBuilder();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (args != null)</span>
+				{
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					for (int i = 0; i &lt; args.length; i++)</span>
+					{
+<span class="nc" id="L126">						buf.append(' ').append(args[i]);</span>
+					}
+<span class="nc" id="L128">					params = buf.toString();</span>
+				}
+<span class="nc" id="L130">				Logger.println(VideoConvert.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L131">				long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L132">				long elapsedTime = 0;</span>
+<span class="nc" id="L133">				int perc = 1;</span>
+<span class="nc" id="L134">				Process proc = rt.exec(args);</span>
+<span class="nc" id="L135">				Logger.println(VideoConvert.class, &quot;executed&quot;);</span>
+<span class="nc" id="L136">				InputStream stderr = proc.getErrorStream();</span>
+<span class="nc" id="L137">				BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L138">				String line = null;</span>
+<span class="nc" id="L139">				float lengthInSeconds = 0;</span>
+<span class="nc" id="L140">				float time = 0;</span>
+<span class="nc" id="L141">				long fileSize = new File(videoPath).length();</span>
+<span class="nc" id="L142">				SimpleDateFormat formatter = new SimpleDateFormat(&quot;mm:ss&quot;);</span>
+<span class="nc" id="L143">				SimpleDateFormat sd = new SimpleDateFormat(&quot;ss&quot;);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				while ((line = br.readLine()) != null)</span>
+				{
+					try
+					{
+<span class="nc" id="L148">						elapsedTime = System.currentTimeMillis() - startTime;</span>
+<span class="nc" id="L149">						request.getSession().setAttribute(&quot;elapsedTime&quot;, formatter.format(sd.parse(Long.toString(elapsedTime / 1000))));</span>
+<span class="nc" id="L150">						Logger.println(VideoConvert.class, line);</span>
+						// TODO: ffmpeg na zaciatku vypise dlzhu videa / pocet snimkov,
+						// parsovat a dedukovat % hodnotu kompletnosti
+						// pripadne vypocitavat zostavajuci cas do konca
+<span class="nc bnc" id="L154" title="All 2 branches missed.">						if (line.contains(&quot;Duration:&quot;))</span>
+						{
+<span class="nc" id="L156">							int start = line.indexOf(&quot;Duration:&quot;);</span>
+<span class="nc" id="L157">							String dur = line.substring(start + 8 + 2, start + 1 + 8 + 8 + 1);</span>
+<span class="nc" id="L158">							dur = dur.trim();</span>
+<span class="nc" id="L159">							String durArray[] = dur.split(&quot;:&quot;);</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">							if (durArray!=null &amp;&amp; durArray.length==3)</span>
+							{
+<span class="nc" id="L162">								lengthInSeconds = Tools.getIntValue(durArray[2],0);</span>
+<span class="nc" id="L163">								lengthInSeconds += Tools.getIntValue(durArray[1],0)*60;</span>
+<span class="nc" id="L164">								lengthInSeconds += Tools.getIntValue(durArray[0],0)*60*60;</span>
+							}
+<span class="nc" id="L166">							System.out.println(&quot;dur=&quot;+dur+&quot; lengthInSeconds&quot;+lengthInSeconds);</span>
+						}
+<span class="nc bnc" id="L168" title="All 2 branches missed.">						if (line.contains(&quot;time=&quot;))</span>
+						{
+<span class="nc" id="L170">							int start = line.indexOf(&quot;time=&quot;) + &quot;time=&quot;.length();</span>
+<span class="nc" id="L171">							int end = start + 1;</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">							for (int i = start + 1; i &lt; line.length(); i++)</span>
+							{
+<span class="nc bnc" id="L174" title="All 2 branches missed.">								if (Character.isWhitespace(line.charAt(i)))</span>
+								{
+<span class="nc" id="L176">									end = i;</span>
+<span class="nc" id="L177">									break;</span>
+								}
+							}
+							try
+							{
+<span class="nc" id="L182">								time = Math.round(Float.parseFloat(line.substring(start, end)));</span>
+							}
+<span class="nc" id="L184">							catch (Exception  ex)</span>
+							{
+								try
+								{
+									//TODO: skus to sparsovat
+									//[20.11 13:16:36 {balat}{4}] frame=   21 fps=  0 q=2.0 size=      83kB time=00:00:00.46 bitrate=1463.1kbits/s
+<span class="nc" id="L190">									String timeStr[] = Tools.getTokens(line.substring(start, end), &quot;:&quot;);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">									if (timeStr.length==3)</span>
+									{
+<span class="nc" id="L193">										time = Tools.getIntValue(timeStr[0], 0)*3600;</span>
+<span class="nc" id="L194">										time += Tools.getIntValue(timeStr[1], 0)*60;</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">										if (timeStr[2].indexOf('.')==-1) time += Tools.getIntValue(timeStr[2], 0);</span>
+<span class="nc" id="L196">										else time += Tools.getIntValue(timeStr[2].substring(0, timeStr[2].indexOf('.')), 0);</span>
+									}
+								}
+<span class="nc" id="L199">								catch (Exception ex2)</span>
+								{
+<span class="nc" id="L201">									sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L202">								}</span>
+<span class="nc" id="L203">							}</span>
+<span class="nc" id="L204">							System.out.println(&quot;time=&quot;+time);</span>
+						}
+<span class="nc bnc" id="L206" title="All 2 branches missed.">						if (lengthInSeconds &gt; 0)</span>
+						{
+<span class="nc" id="L208">							float roundTmp = (float)Math.round((lengthInSeconds - (lengthInSeconds - time)) / (lengthInSeconds / 100.0));</span>
+<span class="nc" id="L209">							perc = Math.round(roundTmp);</span>
+<span class="nc" id="L210">							request.getSession().setAttribute(</span>
+										&quot;remainingTime&quot;,
+<span class="nc" id="L212">										formatter.format(sd.parseObject(Long.toString(Math.round((0.7 * (fileSize / 10000000.0))</span>
+													* ((100 - perc) / 100f))))));
+<span class="nc" id="L214">							request.getSession().setAttribute(&quot;percentage&quot;, perc);</span>
+<span class="nc" id="L215">							System.out.println(&quot;percentage=&quot;+perc);</span>
+						}
+<span class="nc" id="L217">						request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.videoconvert.converting&quot;));</span>
+					}
+<span class="nc" id="L219">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L221">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L222">					}</span>
+				}
+<span class="nc" id="L224">				br.close();</span>
+<span class="nc" id="L225">				int exitValue = proc.waitFor();</span>
+<span class="nc" id="L226">				Logger.println(VideoConvert.class, &quot;ExitValue: &quot; + exitValue);</span>
+<span class="nc bnc" id="L227" title="All 4 branches missed.">				if (format.toLowerCase().equals(&quot;flv&quot;) || format.toLowerCase().equals(&quot;mp4&quot;))</span>
+				{
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					if (format.toLowerCase().equals(&quot;flv&quot;))</span>
+					{
+<span class="nc" id="L231">						request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.videoconvert.indexing&quot;));</span>
+<span class="nc" id="L232">						String yamdiPath = Constants.getString(&quot;yamdiPath&quot;).trim();</span>
+<span class="nc" id="L233">						File yamdi = new File(yamdiPath);</span>
+<span class="nc bnc" id="L234" title="All 6 branches missed.">						if (f.exists() == false || f.isFile() == false || f.canRead() == false)</span>
+<span class="nc" id="L235">							return false;</span>
+<span class="nc" id="L236">						String yArgs[] = new String[5];</span>
+<span class="nc" id="L237">						int index = 0;</span>
+<span class="nc" id="L238">						yArgs[index++] = yamdi.getAbsolutePath();</span>
+<span class="nc" id="L239">						yArgs[index++] = &quot;-i&quot;;</span>
+<span class="nc" id="L240">						yArgs[index++] = flvFilename;</span>
+<span class="nc" id="L241">						yArgs[index++] = &quot;-o&quot;;</span>
+<span class="nc" id="L242">						yArgs[index++] = flvFilename + &quot;.tmp&quot;;</span>
+<span class="nc" id="L243">						params = &quot;&quot;;</span>
+<span class="nc" id="L244">						StringBuilder paramsBuf = new StringBuilder(params);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">						if (args != null)</span>
+						{
+<span class="nc bnc" id="L247" title="All 2 branches missed.">							for (int i = 0; i &lt; yArgs.length; i++)</span>
+							{
+<span class="nc" id="L249">								paramsBuf.append(' ').append(yArgs[i]);</span>
+							}
+						}
+<span class="nc" id="L252">						params = paramsBuf.toString();</span>
+<span class="nc" id="L253">						Logger.println(VideoConvert.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L254">						proc = rt.exec(yArgs);</span>
+<span class="nc" id="L255">						Logger.println(VideoConvert.class, &quot;executed&quot;);</span>
+<span class="nc" id="L256">						stderr = proc.getErrorStream();</span>
+<span class="nc" id="L257">						br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L258">						line = null;</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">						while ((line = br.readLine()) != null)</span>
+						{
+<span class="nc" id="L261">							Logger.println(VideoConvert.class, line);</span>
+<span class="nc" id="L262">							request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.videoconvert.indexing&quot;));</span>
+						}
+<span class="nc" id="L264">						br.close();</span>
+<span class="nc" id="L265">						exitValue = proc.waitFor();</span>
+<span class="nc" id="L266">						Logger.println(VideoConvert.class, &quot;ExitValue: &quot; + exitValue);</span>
+
+					}
+<span class="nc" id="L269">					c = 0;</span>
+<span class="nc" id="L270">					String previewArgs[] = new String[14];</span>
+<span class="nc" id="L271">					previewArgs[c++] = f.getAbsolutePath();</span>
+<span class="nc" id="L272">					previewArgs[c++] = &quot;-i&quot;;</span>
+<span class="nc" id="L273">					previewArgs[c++] = videoPath;</span>
+<span class="nc" id="L274">					previewArgs[c++] = &quot;-an&quot;;</span>
+<span class="nc" id="L275">					previewArgs[c++] = &quot;-ss&quot;;</span>
+<span class="nc" id="L276">					previewArgs[c++] = &quot;00:00:03&quot;;</span>
+<span class="nc" id="L277">					previewArgs[c++] = &quot;-t&quot;;</span>
+<span class="nc" id="L278">					previewArgs[c++] = &quot;00:00:01&quot;;</span>
+<span class="nc" id="L279">					previewArgs[c++] = &quot;-r&quot;;</span>
+<span class="nc" id="L280">					previewArgs[c++] = &quot;1&quot;;</span>
+<span class="nc" id="L281">					previewArgs[c++] = &quot;-y&quot;;</span>
+<span class="nc" id="L282">					previewArgs[c++] = &quot;-s&quot;;</span>
+<span class="nc" id="L283">					previewArgs[c++] = d.width + &quot;x&quot; + d.height;</span>
+<span class="nc" id="L284">					previewArgs[c++] = flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;%d.jpg&quot;;</span>
+<span class="nc" id="L285">					params = &quot;&quot;;</span>
+
+<span class="nc" id="L287">					StringBuilder paramsBuf = new StringBuilder(params);</span>
+
+<span class="nc bnc" id="L289" title="All 2 branches missed.">					if (args != null)</span>
+					{
+<span class="nc bnc" id="L291" title="All 2 branches missed.">						for (int i = 0; i &lt; previewArgs.length; i++)</span>
+						{
+<span class="nc" id="L293">							paramsBuf.append(' ').append(previewArgs[i]);</span>
+						}
+					}
+<span class="nc" id="L296">					params = paramsBuf.toString();</span>
+
+<span class="nc" id="L298">					Logger.println(VideoConvert.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L299">					request.getSession()</span>
+<span class="nc" id="L300">								.setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.videoconvert.creating_thumbnail&quot;));</span>
+					// proc=rt.exec(previewArgs);
+<span class="nc" id="L302">					proc = rt.exec(previewArgs);</span>
+<span class="nc" id="L303">					Logger.println(VideoConvert.class, &quot;executed&quot;);</span>
+<span class="nc" id="L304">					stderr = proc.getErrorStream();</span>
+<span class="nc" id="L305">					br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L306">					line = null;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">					while ((line = br.readLine()) != null)</span>
+					{
+<span class="nc" id="L309">						Logger.println(VideoConvert.class, line);</span>
+<span class="nc" id="L310">						request.getSession().setAttribute(&quot;uploadProgressMessage&quot;,</span>
+<span class="nc" id="L311">									prop.getText(&quot;gallery.videoconvert.creating_thumbnail&quot;));</span>
+					}
+<span class="nc" id="L313">					br.close();</span>
+<span class="nc" id="L314">					exitValue = proc.waitFor();</span>
+<span class="nc" id="L315">					Logger.println(VideoConvert.class, &quot;ExitValue: &quot; + exitValue);</span>
+					// ffmpeg -i video.flv -an -ss 00:00:03 -t 00:00:01 -r 1 -y -s
+					// 320x240 video%d.jpg
+
+					//zmen .flv.tmp subor na .flv
+<span class="nc" id="L320">					File video = new File(flvFilename);</span>
+
+<span class="nc bnc" id="L322" title="All 2 branches missed.">					if (format.toLowerCase().equals(&quot;flv&quot;))</span>
+<span class="nc" id="L323">					video.delete();</span>
+<span class="nc" id="L324">					renameFile(flvFilename + &quot;.tmp&quot;, flvFilename);</span>
+
+<span class="nc" id="L326">					video = new File(flvFilename);</span>
+
+					// vytvori to viac obrazkov, chceme len jeden
+<span class="nc" id="L329">					renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;3.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L330">								.lastIndexOf('.'))</span>
+								+ &quot;.jpg&quot;);
+<span class="nc" id="L332">					renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;2.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L333">								.lastIndexOf('.'))</span>
+								+ &quot;.jpg&quot;);
+<span class="nc" id="L335">					renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;1.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L336">								.lastIndexOf('.'))</span>
+								+ &quot;.jpg&quot;);
+<span class="nc" id="L338">					String imageName=flvFilename.substring(0, flvFilename.lastIndexOf('.'))+ &quot;.jpg&quot;;</span>
+<span class="nc" id="L339">					flvFilename = Tools.getRealPath(</span>
+<span class="nc" id="L340">								destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + &quot;.&quot; + d.width + &quot;x&quot; + d.height</span>
+<span class="nc" id="L341">											+ destinationUrl.substring(destinationUrl.lastIndexOf('.'), destinationUrl.length()));</span>
+					// sme galeria?
+<span class="nc" id="L343">					String imageUrl = destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + &quot;.&quot; + d.width + &quot;x&quot; + d.height</span>
+								+ &quot;.jpg&quot;;
+<span class="nc bnc" id="L345" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(sourceUrl))</span>
+					{
+<span class="nc" id="L347">						IwcmFsDB.writeFiletoDest(new FileInputStream(video), new File(flvFilename), (int) video.length());// zapiseme</span>
+<span class="nc" id="L348">						video.delete();</span>
+
+						//zapiseme do db obrazky
+<span class="nc" id="L351">						File image = new File(imageName);</span>
+<span class="nc" id="L352">						IwcmFsDB.writeFiletoDest(new FileInputStream(image), new File(Tools.getRealPath(imageUrl)),(int)image.length());</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">						if(image.delete() == false) return false;</span>
+					}
+<span class="nc bnc" id="L355" title="All 2 branches missed.">					if (GalleryDB.isGalleryFolder(imageUrl))</span>
+					{
+<span class="nc" id="L357">						GalleryDB.resizePicture(Tools.getRealPath(imageUrl), imageUrl.substring(0, imageUrl</span>
+<span class="nc" id="L358">									.lastIndexOf('/')));</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L363" title="All 2 branches missed.">			if(keepOrig==false)</span>
+			{
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if(new File(videoPath).delete() == false) return false; // vymazanie orig. video suboru</span>
+			}
+		}
+<span class="nc" id="L368">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L370">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L371">		}</span>
+<span class="nc" id="L372">		request.getSession().removeAttribute(&quot;uploadProgressMessage&quot;);</span>
+<span class="nc" id="L373">		return true;</span>
+	}
+
+	public static boolean convertAudio(String format, String sourceUrl, String destinationUrl, int bitRate, boolean keepOrig, HttpServletRequest request)
+	{
+		try
+		{
+<span class="nc" id="L380">			String videoPath = Tools.getRealPath(sourceUrl);</span>
+
+<span class="nc" id="L382">			Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L383">			request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.audioconvert.converting&quot;));</span>
+<span class="nc" id="L384">			String ffmpegPath = Constants.getString(&quot;ffmpegPath&quot;).trim();</span>
+<span class="nc" id="L385">			File f = new File(ffmpegPath);</span>
+<span class="nc bnc" id="L386" title="All 6 branches missed.">			if (f.exists() == false || f.isFile() == false || f.canRead() == false)</span>
+<span class="nc" id="L387">				return false;</span>
+<span class="nc" id="L388">			String flvFilename = Tools.getRealPath(destinationUrl);</span>
+<span class="nc" id="L389">			Runtime rt = Runtime.getRuntime();</span>
+<span class="nc" id="L390">			String args[] = new String[8];</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">			if (IwcmFsDB.useDBStorage(sourceUrl))</span>
+			{
+<span class="nc" id="L393">				videoPath = IwcmFsDB.getTempFilePath(videoPath);</span>
+<span class="nc" id="L394">				flvFilename = IwcmFsDB.getTempFilePath(flvFilename);</span>
+			}
+<span class="nc" id="L396">			File flvFile=new File(flvFilename);</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (flvFile.exists()){</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">				if(flvFile.delete() == false) return false;</span>
+			}
+<span class="nc" id="L400">			int c = 0;</span>
+<span class="nc" id="L401">			args[c++] = f.getAbsolutePath();</span>
+<span class="nc" id="L402">			args[c++] = &quot;-i&quot;;</span>
+<span class="nc" id="L403">			args[c++] = videoPath;</span>
+<span class="nc" id="L404">			args[c++] = &quot;-f&quot;;</span>
+<span class="nc" id="L405">			args[c++] = format;</span>
+<span class="nc" id="L406">			args[c++] = &quot;-ab&quot;;</span>
+<span class="nc" id="L407">			args[c++] = bitRate + &quot;k&quot;;</span>
+<span class="nc" id="L408">			args[c++] = flvFilename;</span>
+<span class="nc" id="L409">			String params = &quot;&quot;;</span>
+<span class="nc" id="L410">			StringBuilder buf = new StringBuilder();</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			if (args != null)</span>
+			{
+<span class="nc bnc" id="L413" title="All 2 branches missed.">				for (int i = 0; i &lt; args.length; i++)</span>
+				{
+<span class="nc" id="L415">					buf.append(' ').append(args[i]);</span>
+				}
+<span class="nc" id="L417">				params = buf.toString();</span>
+			}
+<span class="nc" id="L419">			Logger.println(VideoConvert.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L420">			long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L421">			long elapsedTime = 0;</span>
+<span class="nc" id="L422">			int perc = 1;</span>
+<span class="nc" id="L423">			Process proc = rt.exec(args);</span>
+<span class="nc" id="L424">			Logger.println(VideoConvert.class, &quot;executed&quot;);</span>
+<span class="nc" id="L425">			InputStream stderr = proc.getErrorStream();</span>
+<span class="nc" id="L426">			BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L427">			String line = null;</span>
+<span class="nc" id="L428">			float lengthInSeconds = 0;</span>
+<span class="nc" id="L429">			float time = 0;</span>
+<span class="nc" id="L430">			long fileSize = new File(videoPath).length();</span>
+<span class="nc" id="L431">			SimpleDateFormat formatter = new SimpleDateFormat(&quot;mm:ss&quot;);</span>
+<span class="nc" id="L432">			SimpleDateFormat sd = new SimpleDateFormat(&quot;ss&quot;);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">			while ((line = br.readLine()) != null)</span>
+			{
+<span class="nc" id="L435">				elapsedTime = System.currentTimeMillis() - startTime;</span>
+<span class="nc" id="L436">				request.getSession().setAttribute(&quot;elapsedTime&quot;, formatter.format(sd.parse(Long.toString(elapsedTime / 1000))));</span>
+<span class="nc" id="L437">				Logger.println(VideoConvert.class, line);</span>
+				// TODO: ffmpeg na zaciatku vypise dlzhu videa / pocet snimkov,
+				// parsovat a dedukovat % hodnotu kompletnosti
+				// pripadne vypocitavat zostavajuci cas do konca
+<span class="nc bnc" id="L441" title="All 2 branches missed.">				if (line.contains(&quot;Duration:&quot;))</span>
+				{
+<span class="nc" id="L443">					int start = line.indexOf(&quot;Duration:&quot;);</span>
+<span class="nc" id="L444">					String dur = line.substring(start + 8 + 2, start + 1 + 8 + 8 + 1);</span>
+<span class="nc" id="L445">					dur = dur.trim();</span>
+<span class="nc" id="L446">					String durArray[] = dur.split(&quot;:&quot;);</span>
+<span class="nc bnc" id="L447" title="All 4 branches missed.">					if (durArray!=null &amp;&amp; durArray.length==3)</span>
+					{
+<span class="nc" id="L449">						lengthInSeconds = Tools.getIntValue(durArray[2],0);</span>
+<span class="nc" id="L450">						lengthInSeconds += Tools.getIntValue(durArray[1],0)*60;</span>
+<span class="nc" id="L451">						lengthInSeconds += Tools.getIntValue(durArray[0],0)*60*60;</span>
+					}
+<span class="nc" id="L453">					System.out.println(&quot;dur=&quot;+dur+&quot; lengthInSeconds&quot;+lengthInSeconds);</span>
+				}
+<span class="nc bnc" id="L455" title="All 2 branches missed.">				if (line.contains(&quot;time=&quot;))</span>
+				{
+<span class="nc" id="L457">					int start = line.indexOf(&quot;time=&quot;) + &quot;time=&quot;.length();</span>
+<span class="nc" id="L458">					int end = start + 1;</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">					for (int i = start + 1; i &lt; line.length(); i++)</span>
+					{
+<span class="nc bnc" id="L461" title="All 2 branches missed.">						if (Character.isWhitespace(line.charAt(i)))</span>
+						{
+<span class="nc" id="L463">							end = i;</span>
+<span class="nc" id="L464">							break;</span>
+						}
+					}
+<span class="nc" id="L467">					time = Math.round(Float.parseFloat(line.substring(start, end)));</span>
+<span class="nc" id="L468">					System.out.println(&quot;time=&quot;+time);</span>
+				}
+<span class="nc bnc" id="L470" title="All 2 branches missed.">				if (lengthInSeconds &gt; 0)</span>
+				{
+<span class="nc" id="L472">					float roundTmp = (float)Math.round((lengthInSeconds - (lengthInSeconds - time)) / (lengthInSeconds / 100.0));</span>
+<span class="nc" id="L473">					perc = Math.round(roundTmp);</span>
+<span class="nc" id="L474">					request.getSession().setAttribute(</span>
+								&quot;remainingTime&quot;,
+<span class="nc" id="L476">								formatter.format(sd.parseObject(Long.toString(Math.round((0.7 * (fileSize / 1000000.0))</span>
+											* ((100 - perc) / 100f))))));
+<span class="nc" id="L478">					request.getSession().setAttribute(&quot;percentage&quot;, perc);</span>
+<span class="nc" id="L479">					System.out.println(&quot;percentage=&quot;+perc);</span>
+				}
+<span class="nc" id="L481">				request.getSession().setAttribute(&quot;uploadProgressMessage&quot;, prop.getText(&quot;gallery.audioconvert.converting&quot;));</span>
+			}
+<span class="nc" id="L483">			br.close();</span>
+<span class="nc" id="L484">			int exitValue = proc.waitFor();</span>
+<span class="nc" id="L485">			Logger.println(VideoConvert.class, &quot;ExitValue: &quot; + exitValue);</span>
+
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			if (IwcmFsDB.useDBStorage(sourceUrl))</span>
+			{
+<span class="nc" id="L489">				IwcmFsDB.writeFiletoDest(new FileInputStream(flvFile), new File(Tools.getRealPath(destinationUrl)) , (int) flvFile.length());// zapiseme</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">				if(flvFile.delete() == false) return false;</span>
+			}
+
+<span class="nc bnc" id="L493" title="All 2 branches missed.">			if(keepOrig==false)</span>
+			{
+<span class="nc bnc" id="L495" title="All 2 branches missed.">				if(new File(videoPath).delete() == false) return false; // vymazanie orig. video suboru</span>
+			}
+		}
+<span class="nc" id="L498">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L500">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L501">		}</span>
+<span class="nc" id="L502">		request.getSession().removeAttribute(&quot;uploadProgressMessage&quot;);</span>
+<span class="nc" id="L503">		return true;</span>
+	}
+
+	public static boolean renameFile(String oldFilePath, String newFilePath)
+	{
+<span class="nc" id="L508">		boolean renamed = false;</span>
+		try
+		{
+<span class="nc" id="L511">			File renameFile = new File(oldFilePath);</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">			if (renameFile.exists() == false)</span>
+<span class="nc" id="L513">				return false;</span>
+<span class="nc" id="L514">			renamed = renameFile.renameTo(new File(newFilePath));</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			if (renamed == false)</span>
+			{
+<span class="nc" id="L517">				File newFile = new File(newFilePath);</span>
+<span class="nc" id="L518">				File oldFile = new File(oldFilePath);</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">				if(newFile.createNewFile() == false) return false;</span>
+<span class="nc" id="L520">				FileInputStream inStream = new FileInputStream(oldFile);</span>
+<span class="nc" id="L521">				FileOutputStream out = new FileOutputStream(newFile);</span>
+				int c;
+<span class="nc" id="L523">				byte[] buff = new byte[150000];</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				while ((c = inStream.read(buff)) != -1)</span>
+				{
+<span class="nc" id="L526">					out.write(buff, 0, c);</span>
+				}
+<span class="nc" id="L528">				out.close();</span>
+<span class="nc" id="L529">				inStream.close();</span>
+<span class="nc" id="L530">				renamed = true;</span>
+				try
+				{
+					// skus ho zmazat
+<span class="nc" id="L534">					oldFile.delete();</span>
+				}
+<span class="nc" id="L536">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L538">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L539">				}</span>
+			}
+		}
+<span class="nc" id="L542">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L544">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L545">		}</span>
+<span class="nc" id="L546">		return renamed;</span>
+	}
+
+	private static String[] ffmpegCommandLine(String from,String to,String format,int bitRate,java.awt.Dimension d){
+<span class="nc" id="L550">		String params = Constants.getString(&quot;ffmpegParams&quot;);</span>
+<span class="nc" id="L551">		String[] command = params.split(&quot; &quot;);</span>
+<span class="nc" id="L552">		command = (String[]) ArrayUtils.removeElement(command, &quot; &quot;);</span>
+<span class="nc" id="L553">		command = (String[]) ArrayUtils.removeElement(command, &quot;&quot;);</span>
+
+<span class="nc" id="L555">		command[ArrayUtils.indexOf(command, &quot;ffmpeg&quot;)]  = Constants.getString(&quot;ffmpegPath&quot;).trim();</span>
+<span class="nc" id="L556">		command[ArrayUtils.indexOf(command, &quot;dimension&quot;)] =  d.width + &quot;x&quot; + d.height;</span>
+<span class="nc" id="L557">		command[ArrayUtils.indexOf(command, &quot;from&quot;)] = from;</span>
+<span class="nc" id="L558">		command[ArrayUtils.indexOf(command, &quot;to&quot;)] = to;</span>
+<span class="nc" id="L559">		command[ArrayUtils.indexOf(command, &quot;format&quot;)] = format;</span>
+<span class="nc" id="L560">		command[ArrayUtils.indexOf(command,&quot;bitrate&quot;)]=bitRate+&quot;k&quot;;</span>
+
+<span class="nc" id="L562">		return command;</span>
+	}
+
+	/**
+	 * Skonveruje uploadnuty subor na video, pouziva sa v Editore v uploade a v galerii v uploade
+	 * @param my_form
+	 * @param fileURL
+	 * @param request
+	 * @return
+	 */
+	public static String convert(UploadFileForm my_form, String fileURL, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L574" title="All 2 branches missed.">		if (my_form.getBitRate()&lt;32) my_form.setBitRate(360);</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">		if (my_form.getVideoWidth()&lt;32) my_form.setVideoWidth(320);</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">		if (my_form.getVideoHeight()&lt;32) my_form.setVideoHeight(240);</span>
+
+<span class="nc bnc" id="L578" title="All 4 branches missed.">		if (my_form.getVideoWidth()%8!=0 || my_form.getVideoHeight()%8!=0)</span>
+		{
+<span class="nc" id="L580">			my_form.setVideoWidth((my_form.getVideoWidth()/8)*8);</span>
+<span class="nc" id="L581">			my_form.setVideoHeight((my_form.getVideoHeight()/8)*8);</span>
+		}
+
+<span class="nc" id="L584">		String flvUrl = fileURL.substring(0, fileURL.lastIndexOf('.'))+&quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;);</span>
+
+<span class="nc bnc" id="L586" title="All 2 branches missed.">		if (GalleryDB.isGalleryFolder(flvUrl))</span>
+		{
+<span class="nc" id="L588">			String flvDir = flvUrl.substring(0, flvUrl.lastIndexOf(&quot;/&quot;));</span>
+<span class="nc" id="L589">			Dimension[] dm=GalleryDB.getDimension(flvDir);</span>
+<span class="nc" id="L590">			Dimension dSmall = dm[0];</span>
+<span class="nc" id="L591">			Dimension dNormal = dm[1];</span>
+
+<span class="nc bnc" id="L593" title="All 8 branches missed.">			if (dSmall.width%8!=0 || dSmall.height%8!=0 || dNormal.width%8!=0 || dNormal.height%8!=0)</span>
+			{
+<span class="nc" id="L595">				changeDimension((dSmall.width/8)*8, (dSmall.height/8)*8, (dNormal.width/8)*8, (dNormal.height/8)*8, flvDir);</span>
+			}
+		}
+
+<span class="nc" id="L599">		VideoConvert.convert( Constants.getString(&quot;defaultVideoFormat&quot;),fileURL, flvUrl, my_form.getVideoWidth(), my_form.getVideoHeight(),my_form.getBitRate(),my_form.isKeepOriginalVideo(), request);</span>
+
+<span class="nc bnc" id="L601" title="All 2 branches missed.">		if (GalleryDB.isGalleryFolder(flvUrl))</span>
+		{
+<span class="nc" id="L603">			Dimension[] dm=GalleryDB.getDimension(flvUrl.substring(0,flvUrl.lastIndexOf('/')));</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">			if (dm.length&gt;0)</span>
+			{
+<span class="nc" id="L606">				Dimension min=dm[0];</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">				for (Dimension d:dm)</span>
+				{
+<span class="nc bnc" id="L609" title="All 4 branches missed.">					if (d.width&lt;min.width &amp;&amp; d.height&lt;min.height)</span>
+					{
+<span class="nc" id="L611">						min=d;</span>
+					}
+				}
+<span class="nc" id="L614">				flvUrl=fileURL.substring(0, fileURL.lastIndexOf('.'))+&quot;.&quot;+min.width+&quot;x&quot;+min.height+&quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;);</span>
+<span class="nc" id="L615">				request.setAttribute(&quot;imageWidth&quot;, Integer.toString(min.width));</span>
+<span class="nc" id="L616">				request.setAttribute(&quot;imageHeight&quot;,Integer.toString(min.height));</span>
+			}
+<span class="nc" id="L618">		}</span>
+		else
+		{
+<span class="nc" id="L621">			flvUrl=fileURL.substring(0, fileURL.lastIndexOf('.'))+&quot;.&quot;+my_form.getVideoWidth()+&quot;x&quot;+my_form.getVideoHeight()+&quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;);</span>
+<span class="nc" id="L622">			request.setAttribute(&quot;imageWidth&quot;, Integer.toString(my_form.getVideoWidth()));</span>
+<span class="nc" id="L623">			request.setAttribute(&quot;imageHeight&quot;,Integer.toString(my_form.getVideoHeight()));</span>
+		}
+
+<span class="nc" id="L626">		return flvUrl;</span>
+	}
+
+	private static void changeDimension(int smallWidth, int smallHeight, int normalWidth, int normalHeight, String imagePath)
+	{
+<span class="nc" id="L631">		Connection db_conn = null;</span>
+<span class="nc" id="L632">		PreparedStatement ps = null;</span>
+
+		try
+		{
+<span class="nc" id="L636">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L637">			ps = db_conn.prepareStatement(&quot;update gallery_dimension set image_width = ?,image_height=?, &quot; +</span>
+					&quot;normal_width = ? , normal_height = ? &quot; +
+					&quot;where image_path = ? and domain_id = ?&quot;);
+<span class="nc" id="L640">			int index=1;</span>
+<span class="nc" id="L641">			ps.setInt(index++, smallWidth);</span>
+<span class="nc" id="L642">			ps.setInt(index++, smallHeight);</span>
+<span class="nc" id="L643">			ps.setInt(index++, normalWidth);</span>
+<span class="nc" id="L644">			ps.setInt(index++, normalHeight);</span>
+<span class="nc" id="L645">			ps.setString(index++, imagePath);</span>
+<span class="nc" id="L646">			ps.setInt(index++, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L647">			ps.execute();</span>
+
+
+<span class="nc" id="L650">			ps.close();</span>
+<span class="nc" id="L651">			db_conn.close();</span>
+
+<span class="nc" id="L653">			ps = null;</span>
+<span class="nc" id="L654">			db_conn = null;</span>
+		}
+<span class="nc" id="L656">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L658">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L664" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L665">					ps.close();</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L667">					db_conn.close();</span>
+			}
+<span class="nc" id="L669">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L671">			}</span>
+		}
+
+<span class="nc" id="L674">	}</span>
+
+
+	/**
+	 * Vrati true ak sa dany subor je mozne povazovat za video subor
+	 * @param fileName
+	 * @return
+	 */
+	public static boolean isVideoFile(String fileName)
+	{
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">		if (Tools.isEmpty(fileName)) return false;</span>
+
+<span class="fc" id="L686">		fileName = fileName.toLowerCase();</span>
+
+<span class="pc bpc" id="L688" title="2 of 4 branches missed.">		if (fileName.indexOf(&quot;.mpg&quot;)!=-1 || fileName.indexOf(&quot;.mpeg&quot;)!=-1 ||</span>
+<span class="pc bpc" id="L689" title="2 of 4 branches missed.">		   	    fileName.indexOf(&quot;.avi&quot;)!=-1 || fileName.indexOf(&quot;.qt&quot;)!=-1 ||</span>
+<span class="pc bpc" id="L690" title="2 of 4 branches missed.">		   	    fileName.indexOf(&quot;.mp4&quot;)!=-1 || fileName.indexOf(&quot;.wmv&quot;)!=-1 ||</span>
+<span class="pc bpc" id="L691" title="2 of 4 branches missed.">		   	    fileName.indexOf(&quot;.vob&quot;)!=-1 || fileName.indexOf(&quot;.mov&quot;)!=-1 ||</span>
+<span class="pc bpc" id="L692" title="2 of 4 branches missed.">		   	    fileName.indexOf(&quot;.flv&quot;)!=-1 || fileName.indexOf(&quot;.m4v&quot;)!=-1)</span>
+		{
+<span class="nc" id="L694">			return true;</span>
+		}
+
+<span class="fc" id="L697">		return false;</span>
+	}
+
+	public static String makeScreenshot(String videoPath, Dimension d) throws IOException, InterruptedException
+	{
+<span class="nc" id="L702">	    String imageName = null;</span>
+	    try
+        {
+<span class="nc" id="L705">            String flvFilename = videoPath;</span>
+
+<span class="nc" id="L707">            List&lt;String&gt; arguments = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L708">            String ffMpegPath = Constants.getString(&quot;ffmpegPath&quot;).trim();</span>
+
+<span class="nc" id="L710">            arguments.add(ffMpegPath);</span>
+<span class="nc" id="L711">            arguments.add(&quot;-i&quot;);</span>
+<span class="nc" id="L712">            arguments.add(videoPath);</span>
+<span class="nc" id="L713">            arguments.add(&quot;-an&quot;);</span>
+<span class="nc" id="L714">            arguments.add(&quot;-ss&quot;);</span>
+<span class="nc" id="L715">            arguments.add(&quot;00:00:03&quot;);</span>
+<span class="nc" id="L716">            arguments.add(&quot;-t&quot;);</span>
+<span class="nc" id="L717">            arguments.add(&quot;00:00:01&quot;);</span>
+<span class="nc" id="L718">            arguments.add(&quot;-r&quot;);</span>
+<span class="nc" id="L719">            arguments.add(&quot;1&quot;);</span>
+<span class="nc" id="L720">            arguments.add(&quot;-y&quot;);</span>
+
+
+<span class="nc bnc" id="L723" title="All 2 branches missed.">            if (d != null)</span>
+            {
+<span class="nc" id="L725">                arguments.add(&quot;-s&quot;);</span>
+<span class="nc" id="L726">                arguments.add(d.width + &quot;x&quot; + d.height);</span>
+            }
+
+<span class="nc" id="L729">            arguments.add(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;%d.jpg&quot;);</span>
+
+<span class="nc" id="L731">            String params = StringUtils.join(arguments, &quot; &quot;);</span>
+<span class="nc" id="L732">            String[] args = new String[arguments.size()];</span>
+
+<span class="nc" id="L734">            Logger.println(VideoConvert.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L735">            Runtime rt = Runtime.getRuntime();</span>
+<span class="nc" id="L736">            Process proc = rt.exec(arguments.toArray(args));</span>
+<span class="nc" id="L737">            Logger.println(VideoConvert.class, &quot;executed&quot;);</span>
+<span class="nc" id="L738">            InputStream stderr = proc.getErrorStream();</span>
+<span class="nc" id="L739">            BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L740">            String line = null;</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">            while ((line = br.readLine()) != null)</span>
+            {
+<span class="nc" id="L743">                Logger.println(VideoConvert.class, line);</span>
+            }
+<span class="nc" id="L745">            br.close();</span>
+<span class="nc" id="L746">            int exitValue = proc.waitFor();</span>
+<span class="nc" id="L747">            Logger.println(VideoConvert.class, &quot;ExitValue: &quot; + exitValue);</span>
+            // ffmpeg -i video.flv -an -ss 00:00:03 -t 00:00:01 -r 1 -y -s
+            // 320x240 video%d.jpg
+
+
+            // vytvori to viac obrazkov, chceme len jeden
+<span class="nc" id="L753">            renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;3.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L754">                    .lastIndexOf('.'))</span>
+                    + &quot;.jpg&quot;);
+<span class="nc" id="L756">            renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;2.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L757">                    .lastIndexOf('.'))</span>
+                    + &quot;.jpg&quot;);
+<span class="nc" id="L759">            renameFile(flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;1.jpg&quot;, flvFilename.substring(0, flvFilename</span>
+<span class="nc" id="L760">                    .lastIndexOf('.'))</span>
+                    + &quot;.jpg&quot;);
+<span class="nc" id="L762">            imageName = flvFilename.substring(0, flvFilename.lastIndexOf('.')) + &quot;.jpg&quot;;</span>
+        }
+<span class="nc" id="L764">        catch (Exception ex)</span>
+        {
+<span class="nc" id="L766">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L767">        }</span>
+<span class="nc" id="L768">		return imageName;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

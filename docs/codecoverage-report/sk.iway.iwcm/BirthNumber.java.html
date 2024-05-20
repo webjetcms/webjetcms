@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BirthNumber.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">BirthNumber.java</span></div><h1>BirthNumber.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.Calendar;
+import java.util.Date;
+
+/**
+ *  BirthNumber.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: thaber $
+ *@version      $Revision: 1.1 $
+ *@created      Date: Aug 5, 2009 11:12:18 AM
+ *@modified     $Date: 2009/08/19 10:56:16 $
+ */
+public class BirthNumber
+{
+<span class="nc" id="L19">	private boolean valid = false;</span>
+<span class="nc" id="L20">	private int year = -1;</span>
+<span class="nc" id="L21">	private int month = -1;</span>
+<span class="nc" id="L22">	private int day = -1;</span>
+<span class="nc" id="L23">	private int ext = -1;</span>
+<span class="nc" id="L24">	private boolean male = false;</span>
+<span class="nc" id="L25">	private int actualYear= -1;</span>
+
+	@SuppressWarnings(&quot;unused&quot;)
+<span class="nc" id="L28">	private BirthNumber() {}</span>
+
+	public BirthNumber(String birthNumber)
+<span class="nc" id="L31">	{</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">		if (Tools.isEmpty(birthNumber)) {</span>
+<span class="nc" id="L33">			return;</span>
+		}
+
+<span class="nc" id="L36">		birthNumber = birthNumber.replaceAll(&quot;[^\\d.]&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L38" title="All 6 branches missed.">		if (Tools.isEmpty(birthNumber) || birthNumber.length() &lt; 9 || birthNumber.length() &gt; 10) {</span>
+<span class="nc" id="L39">			return;</span>
+		}
+
+<span class="nc" id="L42">		month = Tools.getIntValue(birthNumber.substring(2, 4), -1);</span>
+<span class="nc" id="L43">		year = Tools.getIntValue(birthNumber.substring(0, 2), -1) + 1900;</span>
+<span class="nc" id="L44">		day = Tools.getIntValue(birthNumber.substring(4, 6), -1);</span>
+<span class="nc" id="L45">		ext = Tools.getIntValue(birthNumber.substring(6, 9), -1);</span>
+<span class="nc" id="L46">		int c = Tools.getIntValue(birthNumber.substring(9), -1);</span>
+<span class="nc" id="L47">		actualYear = Calendar.getInstance().get(Calendar.YEAR);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (actualYear - year &gt;= 100)</span>
+		{
+<span class="nc" id="L50">			year += 100;</span>
+		}
+<span class="nc bnc" id="L52" title="All 8 branches missed.">		if (!((month &gt;= 1 &amp;&amp; month &lt;= 12) || (month &gt;= 51 &amp;&amp; month &lt;= 62)))</span>
+		{
+<span class="nc" id="L54">			valid = false;</span>
+<span class="nc" id="L55">			return;</span>
+		}
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (month &gt;= 51)</span>
+		{
+<span class="nc" id="L59">			month -= 50;</span>
+<span class="nc" id="L60">			male = false;</span>
+		}
+		else
+		{
+<span class="nc" id="L64">			male = true;</span>
+		}
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (year &lt;= 1953)</span>
+		{
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			if (birthNumber.length() != 9)</span>
+			{
+<span class="nc" id="L70">				valid = false;</span>
+<span class="nc" id="L71">				return;</span>
+			}
+		}
+		else
+		{
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (birthNumber.length() != 10)</span>
+			{
+<span class="nc" id="L78">				valid = false;</span>
+<span class="nc" id="L79">				return;</span>
+			}
+<span class="nc" id="L81">			long celeCislo = Tools.getLongValue(birthNumber.substring(0, 9), -1);</span>
+<span class="nc" id="L82">			long mod = celeCislo % 11l;</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (mod == 10) {</span>
+<span class="nc" id="L85">				mod = 0;</span>
+			}
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (mod != c)</span>
+			{
+<span class="nc" id="L90">				valid = false;</span>
+<span class="nc" id="L91">				return;</span>
+			}
+		}
+<span class="nc" id="L94">		valid = true;</span>
+<span class="nc" id="L95">		return;</span>
+	}
+
+	public boolean isValid()
+	{
+<span class="nc" id="L100">		return valid;</span>
+	}
+
+	public static boolean isValid(String birthNumber)
+	{
+<span class="nc" id="L105">		return new BirthNumber(birthNumber).isValid();</span>
+	}
+
+	public int getYear()
+	{
+<span class="nc" id="L110">		return year;</span>
+	}
+
+	public int getMonth()
+	{
+<span class="nc" id="L115">		return month;</span>
+	}
+
+	public int getDay()
+	{
+<span class="nc" id="L120">		return day;</span>
+	}
+
+	public boolean isMale()
+	{
+<span class="nc" id="L125">		return male;</span>
+	}
+
+	public int getAge()
+	{
+<span class="nc" id="L130">		return actualYear-year;</span>
+	}
+
+	public int getExt() {
+<span class="nc" id="L134">		return ext;</span>
+	}
+
+	public Date getBirthDate() {
+<span class="nc" id="L138">		Calendar c = Calendar.getInstance();</span>
+<span class="nc" id="L139">		c.set(Calendar.YEAR, getYear());</span>
+<span class="nc" id="L140">		c.set(Calendar.MONTH, getMonth());</span>
+<span class="nc" id="L141">		c.set(Calendar.DAY_OF_MONTH, getDay());</span>
+
+<span class="nc" id="L143">		return c.getTime();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

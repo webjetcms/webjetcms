@@ -479,7 +479,10 @@ const WJ = (() => {
         //console.log('originalCallback=', originalCallback);
         options.okclick = () => {
             /** @type {string} */
-            const link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
+            let link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
+            if (typeof link == "undefined") {
+                link = $('#modalIframeIframeElement').contents().find('div.inputs').find('input.elfinder-url-input').val();
+            }
             //console.log('elfinder ok click link=', link, 'callback=', originalCallback);
             if (typeof originalCallback === 'function') {
                 originalCallback(link);
@@ -535,6 +538,12 @@ const WJ = (() => {
     function escapeHtml(string) {
 
         string = string.toString();
+
+        string = string.replaceAll("&#47;", "/");
+        //fix to &lt; -> &amp;lt;
+        string = string.replaceAll("&lt;", "<");
+        string = string.replaceAll("&gt;", ">");
+        string = string.replaceAll("&quot;", "\"");
 
         var entityMap = {
             '&': '&amp;',
@@ -711,7 +720,7 @@ const WJ = (() => {
         let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
 
         if (typeof config.backlink != "undefined" && config.backlink != null) {
-            let backlink = $(`<li class="nav-item"><a class="nav-link back-link" href="${config.backlink.url}"><i class="fal fa-chevron-left"></i>${config.backlink.title}</a></li>`);
+            let backlink = $(`<li class="nav-item"><a class="nav-link back-link" href="${config.backlink.url}"><i class="ti ti-chevron-left"></i>${config.backlink.title}</a></li>`);
             ul.append(backlink);
         }
 
@@ -744,10 +753,10 @@ const WJ = (() => {
 
                         if (data.backlink === "true") {
                             anchor.addClass("back-link");
-                            anchor.prepend('<i class="fal fa-chevron-left"></i>');
+                            anchor.prepend('<i class="ti ti-chevron-left"></i>');
                         } else {
                             anchor.addClass("front-link");
-                            anchor.append('<i class="fal fa-chevron-right"></i>');
+                            anchor.append('<i class="ti ti-chevron-right"></i>');
                         }
                     }
                 }
@@ -777,7 +786,12 @@ const WJ = (() => {
         if (html.indexOf("<")==-1 && html.indexOf(">")==-1) return html;
 
         //POZOR: nejde pouzit moznost cez document.createElement("div") a innerHTML/innerText lebo to vykona mozny XSS v danom DIV elemente
-        return html.replace(htmlToTextRegex, "");
+        html = html.replace(/<br>/gi, " ");
+        html = html.replace(/<br\/>/gi, " ");
+        html = html.replace(/<\/p>/gi, " ");
+        html = html.replace(/<div>/gi, " ");
+        html = html.replace(/<\/div>/gi, " ");
+        return html.replace(htmlToTextRegex, "").trim();
     }
 
 

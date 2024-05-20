@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageEditorListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">ImageEditorListener.java</span></div><h1>ImageEditorListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+@Component
+<span class="fc" id="L13">public class ImageEditorListener {</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='image-editor' &amp;&amp; event.source.subpage=='index'&quot;)
+    private void setData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+        try {
+
+            //validate URL parameters, check if it's not gallery image-&gt;replace with o_ version
+<span class="nc" id="L20">            String dir = event.getSource().getRequest().getParameter(&quot;dir&quot;);</span>
+<span class="nc" id="L21">            String name = event.getSource().getRequest().getParameter(&quot;name&quot;);</span>
+
+<span class="nc" id="L23">            name = GalleryToolsForCore.getImagePathOriginal(dir+&quot;/&quot;+name);</span>
+<span class="nc" id="L24">            name = name.substring(name.lastIndexOf(&quot;/&quot;)+1);</span>
+
+            //check valid chars
+<span class="nc bnc" id="L27" title="All 4 branches missed.">            if (FileBrowserTools.hasForbiddenSymbol(dir) || FileBrowserTools.hasForbiddenSymbol(name)) {</span>
+<span class="nc" id="L28">                dir = &quot;&quot;;</span>
+<span class="nc" id="L29">                name = &quot;&quot;;</span>
+            }
+
+<span class="nc" id="L32">            event.getSource().getModel().addAttribute(&quot;dir&quot;, dir);</span>
+<span class="nc" id="L33">            event.getSource().getModel().addAttribute(&quot;name&quot;, name);</span>
+<span class="nc" id="L34">        } catch (Exception ex) {</span>
+<span class="nc" id="L35">            Logger.error(getClass(), ex);</span>
+<span class="nc" id="L36">        }</span>
+<span class="nc" id="L37">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ForumTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">ForumTools.java</span></div><h1>ForumTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.io.File;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UserDetails;
+
+<span class="nc" id="L9">public class ForumTools {</span>
+    private static String replaceFirstOccurence(String src, String oldStr, String newStr)
+     {
+<span class="nc bnc" id="L12" title="All 2 branches missed.">        if (src == null)</span>
+         {
+<span class="nc" id="L14">             return (null);</span>
+         }
+<span class="nc bnc" id="L16" title="All 2 branches missed.">         if (src.indexOf(oldStr) == -1)</span>
+         {
+<span class="nc" id="L18">             return (src);</span>
+         }
+<span class="nc" id="L20">         StringBuilder result = new StringBuilder(src.length() + 50);</span>
+<span class="nc" id="L21">         int startIndex = 0;</span>
+<span class="nc" id="L22">         int endIndex = src.indexOf(oldStr);</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">         if (endIndex != -1)</span>
+         {
+<span class="nc" id="L25">             result.append(src.substring(startIndex, endIndex));</span>
+<span class="nc" id="L26">             result.append(newStr);</span>
+<span class="nc" id="L27">             startIndex = endIndex + oldStr.length();</span>
+         }
+<span class="nc" id="L29">         result.append(src.substring(startIndex, src.length()));</span>
+<span class="nc" id="L30">         return result.toString();</span>
+     }
+
+    public static String replaceSignatureCodes(UserDetails user)
+    {
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (user == null) return(&quot;&quot;);</span>
+
+<span class="fc" id="L37">        String signature = user.getSignature();</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (signature == null) signature = &quot;&quot;;</span>
+
+        try
+         {
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">             if (signature.toLowerCase().indexOf(&quot;javascript&quot;)!=-1) return(&quot;&quot;);</span>
+
+<span class="fc" id="L44">             signature = Tools.replace(signature, &quot;[img]/images/gallery/signature/&quot;, &quot;&lt;img src='&quot;);</span>
+<span class="fc" id="L45">             signature = Tools.replace(signature, &quot;[/img]&quot;, &quot;' /&gt;&quot;);</span>
+
+<span class="fc" id="L47">             signature = Tools.replace(signature, &quot;[b]&quot;, &quot;&lt;strong&gt;&quot;);</span>
+<span class="fc" id="L48">             signature = Tools.replace(signature, &quot;[/b]&quot;, &quot;&lt;/strong&gt;&quot;);</span>
+
+             //skus najst priamo signaturu na disku
+<span class="fc" id="L51">             String fileName = &quot;/images/gallery/signature/s_signature-&quot;+user.getUserId()+&quot;.jpg&quot;;</span>
+<span class="fc" id="L52">             File f = new File(Tools.getRealPath(fileName));</span>
+             //Logger.println(ForumSaveAction.class, &quot;replacujem signature: &quot; + f.getAbsolutePath());
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">             if (f.exists())</span>
+             {
+                 //robime replace iba prveho
+<span class="nc" id="L57">                 fileName = &quot;&lt;img class='signatureImage' src='&quot;+fileName+&quot;'&gt;&quot;;</span>
+<span class="nc" id="L58">                 signature = replaceFirstOccurence(signature, &quot;[obrazok]&quot;, fileName);</span>
+<span class="nc" id="L59">                 signature = replaceFirstOccurence(signature, &quot;[obrazek]&quot;, fileName);</span>
+<span class="nc" id="L60">                 signature = replaceFirstOccurence(signature, &quot;[image]&quot;, fileName);</span>
+                 //Logger.println(ForumSaveAction.class, &quot;replacnute: &quot;+ fileName);
+             }
+
+             //replace na linku
+<span class="fc" id="L65">             int start = signature.indexOf(&quot;[url=&quot;);</span>
+<span class="fc" id="L66">             int failsafe = 0;</span>
+<span class="pc bpc" id="L67" title="3 of 4 branches missed.">             while (start != -1 &amp;&amp; failsafe &lt; 30)</span>
+             {
+<span class="nc" id="L69">                 int end = signature.indexOf(&quot;[/url]&quot;, start);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                 if (end == -1) break;</span>
+
+<span class="nc" id="L72">                 int textStart = signature.indexOf(']', start);</span>
+
+<span class="nc" id="L74">                 String linka = signature.substring(start+5, textStart);</span>
+<span class="nc" id="L75">                 linka = linka.replace('\'', ' ');</span>
+<span class="nc" id="L76">                 String text = signature.substring(textStart+1, end);</span>
+
+<span class="nc bnc" id="L78" title="All 4 branches missed.">                 if (text.indexOf(&quot;&lt;img&quot;)==-1 &amp;&amp; text.length() &gt; 22) text = text.substring(0, 20) + &quot;...&quot;;</span>
+
+<span class="nc" id="L80">                 signature = Tools.replace(signature, signature.substring(start, end+6), &quot;&lt;a href='&quot;+linka+&quot;' target='_blank'&gt;&quot;+text+&quot;&lt;/a&gt;&quot;);</span>
+
+<span class="nc" id="L82">                 start = signature.indexOf(&quot;[url=&quot;);</span>
+<span class="nc" id="L83">             }</span>
+
+<span class="fc" id="L85">             Logger.debug(ForumTools.class, &quot;signature replacnute: &quot; + signature);</span>
+         }
+<span class="nc" id="L87">         catch (Exception ex)</span>
+         {
+<span class="nc" id="L89">             sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L90">         }</span>
+
+
+<span class="fc" id="L93">        return(signature);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

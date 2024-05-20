@@ -46,7 +46,7 @@ textarea {}
 .input-group-text {
     background-color: transparent;
     border-right: 0;
-    color: $nice-gray-100;
+    color: var(--bs-btn-color);
     position: relative;
     /*jeeff: toto netusim naco bolo ale sposobovalo to problem v liste Volitelne polia pri autocomplete inpute &::after {
         content: "";
@@ -116,7 +116,7 @@ textarea {}
                 height: 31px;
                 background-color: #b3b8c7;
                 border-width: 0 !important;
-                border-radius: 24px;
+                border-radius: 6px;
             }
             &::after {
                 content: "";
@@ -130,16 +130,17 @@ textarea {}
                 line-height: 27px;
                 text-align: center;
                 background-color: white;
-                font-family: $fa-font-name;
+                font-family: $ti-font-name-filled;
                 font-weight: 400;
                 font-size: 13px;
                 border-width: 0 !important;
                 color: #2D2E32;
-                border-radius: 50%;
+                border-radius: 6px;
                 transition: all 0.3s ease-in-out;
             }
             &.is-icon-arrows-v::after {
-                content: "\f07d";
+                content: $ti-icon-drag-drop;
+                font-size: 18px;
             }
             &.is-icon-sort::after {
                 content: "\f0dc";
@@ -176,7 +177,13 @@ textarea {}
             }
         }
         &.buttons-select-cel .form-check-label.is-icon-arrows-v::after {
-            content: "\f4a4";
+            content: $ti-icon-edit;
         }
+    }
+}
+
+div.md-breadcrumb {
+    .form-switch {
+        position: absolute;
     }
 }

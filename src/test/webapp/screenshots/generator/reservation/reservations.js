@@ -10,83 +10,93 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('reservation screens', async ({ I, DataTables, Document, DTE }) => {
+Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     let reservationObjectNameA = "autotest-reservation_object_A_screen-" + randomNumber;
     let reservationObjectNameB = "autotest-reservation_object_B_screen-" + randomNumber;
     let deletePassword = "right_password";
+    let confLng = I.getConfLng();
 
-    //Prepare some reservation objects
+    I.say("Prepare some reservation objects");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
 
-    //Object A is normal reservation obejct, NO for all day, without approver
-    I.click("div.dt-buttons button.buttons-create");
+    I.say("Object A is normal reservation obejct, NO for all day, without approver");
+    I.clickCss("button.buttons-create");
     I.dtWaitForEditor("reservationObjectDataTable");
-    I.click("#DTE_Field_name");
+    I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", reservationObjectNameA);
-    //Not important but required
-    I.click("#DTE_Field_description");
+    I.say("Not important but required");
+    I.clickCss("#DTE_Field_description");
     I.fillField("#DTE_Field_description", "Random text");
-    //Save this reservation object
+    I.say("Save this reservation object");
     DTE.save();
-    I.wait(1);
 
-    //Object B is advanced reservation obejct, for all day, with approver
-    I.click("div.dt-buttons button.buttons-create");
+    I.say("Object B is advanced reservation obejct, for all day, with approver");
+    I.clickCss("button.buttons-create");
     I.dtWaitForEditor("reservationObjectDataTable");
-    I.click("#DTE_Field_name");
+    I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", reservationObjectNameB);
-    //Not important but required
-    I.click("#DTE_Field_description");
+    I.say("Not important but required");
+    I.clickCss("#DTE_Field_description");
     I.fillField("#DTE_Field_description", "Random text");
-    //Set for all day
-    I.click("#DTE_Field_reservationForAllDay_0");
-    //Change tab
-    I.click("#pills-dt-reservationObjectDataTable-advanced-tab");
-    //Set approver
-    I.click("#DTE_Field_mustAccepted_0");
-    I.click("#DTE_Field_emailAccepter");
-    //Set bad email on purpose ... we want to be rejected :D
+    I.say("Set for all day");
+    I.clickCss("#DTE_Field_reservationForAllDay_0");
+    I.say("Change tab");
+    I.clickCss("#pills-dt-reservationObjectDataTable-advanced-tab");
+    I.say("Set approver");
+    I.clickCss("#DTE_Field_mustAccepted_0");
+    I.clickCss("#DTE_Field_emailAccepter");
+    I.say("Set bad email on purpose ... we want to be rejected :D");
     I.fillField("#DTE_Field_emailAccepter", "BAD_EMAIL@balat.sk");
-    //Set delete password
-    I.click("#DTE_Field_editorFields-addPassword_0");
-    I.click("#DTE_Field_editorFields-newPassword");
+    I.say("Set delete password");
+    I.clickCss("#DTE_Field_editorFields-addPassword_0");
+    I.clickCss("#DTE_Field_editorFields-newPassword");
     I.fillField("#DTE_Field_editorFields-newPassword", deletePassword);
-    I.click("#DTE_Field_editorFields-passwordCheck");
+    I.clickCss("#DTE_Field_editorFields-passwordCheck");
     I.fillField("#DTE_Field_editorFields-passwordCheck", deletePassword);
-    //Save this reservation object
+    I.say("Save this reservation object");
     DTE.save();
-    I.wait(1);
 
     I.amOnPage("/apps/reservation/admin/");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-datatable.png");
 
-    I.click("div.dt-buttons button.buttons-create");
+    I.clickCss("button.buttons-create");
     I.dtWaitForEditor("reservationDataTable");
 
     setReservationObejct(I, reservationObjectNameA);
-    I.click("#DTE_Field_purpose");
+    I.clickCss("#DTE_Field_purpose");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_1.png");
 
     setReservationObejct(I, reservationObjectNameB);
-    I.click("#DTE_Field_purpose");
-    I.click("#DTE_Field_editorFields-showReservationValidity_0");
+    I.clickCss("#DTE_Field_purpose");
+    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_2.png");
 
-    setReservationDate(I, "01.01.2000", "01.01.2000");
+    if("sk" === confLng) {
+        setReservationDate(I, "01.01.2000", "01.01.2000");
+    } else if("en" === confLng) {
+        setReservationDate(I, "01/01/2000", "01/01/2000");
+    }
+
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_3.png");
 
-    I.click("#DTE_Field_editorFields-showReservationValidity_0");
+    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
     I.scrollTo("#DTE_Field_editorFields-reservationTimeRangeG");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_4.png");
 
-    I.click("#pills-dt-reservationDataTable-personalInfo-tab");
+    I.clickCss("#pills-dt-reservationDataTable-personalInfo-tab");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_personalInfo_tab.png");
 
-    I.click("#pills-dt-reservationDataTable-specialPrice-tab");
+    I.clickCss("#pills-dt-reservationDataTable-specialPrice-tab");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_specialPrice_tab.png");
 
-    I.click("#pills-dt-reservationDataTable-basic-tab");
-    setReservationDate(I, "01.01.2100", "01.01.2100");
+    I.clickCss("#pills-dt-reservationDataTable-basic-tab");
+
+    if("sk" === confLng) {
+        setReservationDate(I, "01.01.2100", "01.01.2100");
+    } else if("en" === confLng) {
+        setReservationDate(I, "01/01/2100", "01/01/2100");
+    }
+
     DTE.save();
     I.wait(1);
 
@@ -94,27 +104,30 @@ Scenario('reservation screens', async ({ I, DataTables, Document, DTE }) => {
     I.pressKey('Enter', "#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input");
     I.wait(1);
 
-    I.click("td.dt-select-td.sorting_1");
-    I.click("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(5)");
-    I.click("Potvrdiť", "div.toastr-buttons");
+    I.clickCss("td.sorting_1");
+    I.clickCss("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(5)");
+    
+    if("sk" === confLng) {
+        I.click("Potvrdiť", "div.toastr-buttons");
+    } else if("en" === confLng) {
+        I.click("Submit", "div.toastr-buttons");
+    }
+
     I.wait(1);
     I.moveCursorTo('#toast-container-webjet');
     Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approve_no_right.png");
 
-    //Change approver email
+    I.say("Change approver email");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
-    I.fillField("input.dt-filter-name", reservationObjectNameB);
-    I.pressKey('Enter', "dt-filter-name");
-    I.wait(1);
+    DT.filter("name", reservationObjectNameB);
     I.click(reservationObjectNameB);
     I.click('#pills-dt-reservationObjectDataTable-advanced-tab');
     I.click("#DTE_Field_emailAccepter");
-    //Set good email now
+    I.say("Set good email now");
     I.fillField("#DTE_Field_emailAccepter", "tester@balat.sk");
     DTE.save();
-    I.wait(1);
 
-    //Return to reservation page
+    I.say("Return to reservation page");
     I.amOnPage("/apps/reservation/admin/");
     I.fillField("#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input", reservationObjectNameB);
     I.pressKey('Enter', "#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input");
@@ -124,83 +137,114 @@ Scenario('reservation screens', async ({ I, DataTables, Document, DTE }) => {
     I.click("#pills-dt-reservationDataTable-acceptation-tab");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_acceptation_tab.png");
 
-    //Approve
-    I.click("#DTE_Field_editorFields-acceptation_0");
-    I.wait(1);
+    I.say("Approve - are you sure");
+        I.click("#DTE_Field_editorFields-acceptation_0");
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approve_sure.png");
 
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approve_sure.png");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.wait(1);
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approved.png");
-    I.click("#toast-container-webjet > div > button");
+    I.say("Was approved");
+        I.clickCss(".toastr-buttons button.btn-primary");
+        I.wait(2);
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approved.png");
+        I.clickCss("button.toast-close-button");
 
-    //Reject
-    I.click("#DTE_Field_editorFields-acceptation_1");
-    I.wait(1);
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reject_sure.png");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.wait(1);
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/rejected.png");
-    I.click("#toast-container-webjet > div > button");
+    I.say("Reject - are you sure");
+        I.click("#DTE_Field_editorFields-acceptation_1");
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reject_sure.png");
 
-    //Reset
-    I.click("#DTE_Field_editorFields-acceptation_2");
-    I.wait(1);
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reset_sure.png");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.wait(1);
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reset.png");
-    I.click("#toast-container-webjet > div > button");
+    I.say("Was rejected");
+        I.clickCss(".toastr-buttons button.btn-primary");
+        I.wait(2);
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/rejected.png");
+        I.clickCss("button.toast-close-button");
+
+    I.say("Reset - are you sure");
+        I.click("#DTE_Field_editorFields-acceptation_2");
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reset_sure.png");
+
+    I.say("Was reset");
+        I.clickCss(".toastr-buttons button.btn-primary");
+        I.wait(2);
+        I.waitForElement("#toast-container-webjet", 30);
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reset.png");
+        I.clickCss("button.toast-close-button");
 
     //Close editor
     I.click("#reservationDataTable_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
 
-    //Logic about delete system
-    I.click("td.dt-select-td.sorting_1");
-    //Try delete, use WRONG password
-    I.click("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(4)");
-    I.moveCursorTo('#toast-container-webjet');
-    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/set_password.png");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-input > input");
-    I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", "Wrong_password_test");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    Document.screenshotElement("#reservationDataTable_modal > div > div", "/redactor/apps/reservation/reservations/delete_dialog.png");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.say("Logic about delete system");
+    I.clickCss("td.sorting_1");
+
+    I.say("Try delete, use WRONG password");
+        I.clickCss("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(4)");
+        I.moveCursorTo('#toast-container-webjet');
+        Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/set_password.png");
+        I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-input > input");
+        I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", "Wrong_password_test");
+        I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
+        Document.screenshotElement("#reservationDataTable_modal > div > div", "/redactor/apps/reservation/reservations/delete_dialog.png");
+    
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+    }
+
     I.moveCursorTo('#toast-container-webjet');
     Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/delete_error.png");
-    //Try delete, use GOOD password
-    I.click("td.dt-select-td.sorting_1");
-    I.click("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(4)");
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-input > input");
-    I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", deletePassword);
-    I.click("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    
+    I.say("Try delete, use GOOD password");
+        I.clickCss("td.sorting_1");
+        I.clickCss("#reservationDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(4)");
+        I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-input > input");
+        I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", deletePassword);
+        I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
 
-    //Remove reservation objects
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    }
+
+    I.say("Remove reservation objects");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
     //Object A
-    I.fillField("input.dt-filter-name", reservationObjectNameA);
-    I.pressKey('Enter', "dt-filter-name");
-    I.wait(1);
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DT.filter("name", reservationObjectNameA);
+    I.clickCss("td.sorting_1");
+    I.clickCss("button.buttons-remove");
+
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    }
+
     //Object B
-    I.fillField("input.dt-filter-name", reservationObjectNameB);
-    I.pressKey('Enter', "dt-filter-name");
-    I.wait(1);
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DT.filter("name", reservationObjectNameB);
+    I.clickCss("td.sorting_1");
+    I.clickCss("button.buttons-remove");
+
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    }
 });
 
 function setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo) {

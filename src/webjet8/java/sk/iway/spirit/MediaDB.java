@@ -17,11 +17,13 @@ import org.json.JSONObject;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -374,7 +376,7 @@ public class MediaDB extends JpaDB<Media>
 		} finally {
 			em.close();
 		}
-		return groups;
+		return filterDomainId(groups, true);
 	}
 
 
@@ -412,6 +414,41 @@ public class MediaDB extends JpaDB<Media>
 		}
 
 		return groups;
+	}
+
+	/**
+	 * Filter Media Groups by domain in multi domain environment.
+	 * In MultiWeb returns only groups with availableGroups=null or availableGroups with domainId.
+	 * @param all
+	 * @param addEmpty - true if add grups with empty perms even in MultiWeb (it it automatically added for controller domain)
+	 * @return
+	 */
+	public static List<MediaGroupBean> filterDomainId(List<MediaGroupBean> all, boolean addEmpty) {
+        List<MediaGroupBean> filtered = new ArrayList<>();
+
+        if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+            for (MediaGroupBean mediaGroupBean : all) {
+                if (Tools.isEmpty(mediaGroupBean.getAvailableGroups())) {
+					//show empty on multidomain or in MultiWeb controller domain
+                    if (addEmpty || InitServlet.isTypeCloud()==false || CloudToolsForCore.isControllerDomain()) filtered.add(mediaGroupBean);
+                }
+                else {
+                    int[] groupIds = Tools.getTokensInt(mediaGroupBean.getAvailableGroups(), ",");
+                    GroupsDB groupsDB = GroupsDB.getInstance();
+                    String domain = CloudToolsForCore.getDomainName();
+                    for (int groupId : groupIds) {
+                        GroupDetails group = groupsDB.getGroup(groupId);
+                        if (group!=null && domain.equals(group.getDomainName())) {
+                            filtered.add(mediaGroupBean);
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            filtered = all;
+        }
+		return filtered;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})

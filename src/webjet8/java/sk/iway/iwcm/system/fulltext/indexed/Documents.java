@@ -23,7 +23,6 @@ import org.apache.commons.collections4.Transformer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericField;
-import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
@@ -68,8 +67,8 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
  */
 public class Documents extends Indexed
 {
-	private static final String SELECTING_SQL = "SELECT * FROM documents WHERE available=1 and searchable=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
-	private static final String TOTAL_SQL = "SELECT count(doc_id) FROM documents WHERE available=1 and searchable=1 AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') " ;
+	private static final String SELECTING_SQL = "SELECT * FROM documents WHERE available="+DB.getBooleanSql(true)+" and searchable="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
+	private static final String TOTAL_SQL = "SELECT count(doc_id) FROM documents WHERE available="+DB.getBooleanSql(true)+" and searchable="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ";
 	private String language;
 	private Collection<String> paths;
 
@@ -237,7 +236,7 @@ public class Documents extends Indexed
         return document;
     }
 
-	public static void addMultiValueField(String value, String name, Document document) throws SQLException
+	public static void addMultiValueField(String value, String name, Document document)
     {
         if (Tools.isNotEmpty(value))
         {
@@ -257,7 +256,7 @@ public class Documents extends Indexed
         }
     }
 
-	private static void addStringValueField(String value, String name, Document document) throws SQLException
+	private static void addStringValueField(String value, String name, Document document)
     {
         if (Tools.isNotEmpty(value))
         {
@@ -292,7 +291,7 @@ public class Documents extends Indexed
 	}
 
 	private ExecutorService executor = Executors.newFixedThreadPool(5);// indexWriter umoznuje pristup max 5 vlakien naraz, opravene je to az v 4.0
-	private BlockingQueue<Document> queue = new LinkedBlockingQueue<Document>(50);
+	private BlockingQueue<Document> queue = new LinkedBlockingQueue<>(50);
 	private WriterThread save = new WriterThread();
 
 	static final class DocumentsIndexingMapper extends IndexingMapper {
@@ -321,11 +320,7 @@ public class Documents extends Indexed
 				if (document != null) documents.queue.put(document);
 				documents.executor.execute(documents.save);
 			}
-			catch (SQLException e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
-			catch (InterruptedException e)
+			catch (SQLException|InterruptedException e)
 			{
 				sk.iway.iwcm.Logger.error(e);
 			}
@@ -333,7 +328,7 @@ public class Documents extends Indexed
 		}
 	}
 
-	final static class WriterThread implements Runnable {
+	static final class WriterThread implements Runnable {
 
 		private IndexWriter writer;
 		private BlockingQueue<Document> queue;
@@ -393,15 +388,7 @@ public class Documents extends Indexed
 					}
 				}
 			}
-			catch (CorruptIndexException e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
-			catch (IOException e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
-			catch (InterruptedException e)
+			catch (IOException|InterruptedException e)
 			{
 				sk.iway.iwcm.Logger.error(e);
 			}

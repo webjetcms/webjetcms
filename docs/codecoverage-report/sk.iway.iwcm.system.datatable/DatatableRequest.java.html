@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatableRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatableRequest.java</span></div><h1>DatatableRequest.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Title        webjet8
+ * Company      Interway a. s. (www.interway.sk)
+ * Copyright    Interway a. s. (c) 2001-2019
+ * @author       tmarcinkova $
+ * @created      2019/05/10 12:41
+ *
+ * This is the structure we get from the jQuery DataTables Editor plugin when
+ * the user is inserting/updating/deleting things.
+ *
+ * @param &lt;K&gt; the type of key used by the class being wrapped.
+ * @param &lt;V&gt; the class being wrapped.
+ */
+
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+<span class="fc" id="L26">public class DatatableRequest&lt;K, V&gt;</span>
+{
+	private String action;
+	private Map&lt;K, V&gt; data;
+	private int dztotalchunkcount;
+	private int dzchunkindex;
+	private double dzchunksize;
+	private double dztotalfilesize;
+	private String name;
+	private DatatableRequestOverwriteMode overwriteMode;
+	private String uploadType;
+	private boolean writeDirectlyToDestination;
+	private String updateByColumn;
+	private boolean deleteOldData;
+	private String importMode;
+
+	//set of columns in excel import (filled in export-import.js during xlsx parsing)
+	private Set&lt;String&gt; importedColumns;
+
+	//sem sa ukaldaju error hlasenia v initBinder
+	private V errorField;
+	private String globalError;
+
+	 public boolean isInsert() {
+<span class="fc" id="L50">		  return &quot;create&quot;.equals(action);</span>
+	 }
+
+	 public boolean isUpdate() {
+<span class="fc" id="L54">		  return &quot;edit&quot;.equals(action);</span>
+	 }
+
+	 public boolean isDelete() {
+<span class="fc" id="L58">		  return &quot;remove&quot;.equals(action);</span>
+	 }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

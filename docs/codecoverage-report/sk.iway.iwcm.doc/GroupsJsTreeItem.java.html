@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsJsTreeItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupsJsTreeItem.java</span></div><h1>GroupsJsTreeItem.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.admin.jstree.JsTreeItemState;
+import sk.iway.iwcm.admin.jstree.JsTreeItemType;
+import sk.iway.iwcm.users.UserDetails;
+
+public class GroupsJsTreeItem extends JsTreeItem {
+
+    @JsonProperty(&quot;groupDetails&quot;)
+    private GroupDetails group;
+    //private UserDetails user;
+
+    public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
+<span class="fc" id="L18">        this(group, user, showPages, true);</span>
+<span class="fc" id="L19">    }</span>
+
+<span class="fc" id="L21">    public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages, boolean checkGroupsPerms) {</span>
+<span class="fc" id="L22">        this.group = group;</span>
+        //this.user = user;
+
+<span class="fc" id="L25">        setId(&quot;&quot; + group.getGroupId());</span>
+<span class="fc" id="L26">        setText(Tools.replace(group.getGroupName(), &quot;&amp;#47;&quot;, &quot;/&quot;));</span>
+<span class="fc" id="L27">        setVirtualPath(group.getVirtualPath());</span>
+
+<span class="fc" id="L29">        setIcon(getIconPrivate(user, checkGroupsPerms));</span>
+<span class="fc" id="L30">        setState(getStatePrivate());</span>
+
+<span class="fc" id="L32">        setChildren(hasChildren(showPages));</span>
+<span class="fc" id="L33">        setType(JsTreeItemType.GROUP);</span>
+<span class="fc" id="L34">    }</span>
+
+    private String getIconPrivate(UserDetails user, boolean checkGroupsPerms) {
+<span class="fc" id="L37">        String faPrefix = &quot;fas&quot;;</span>
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN) {</span>
+<span class="fc" id="L40">            faPrefix = &quot;far&quot;;</span>
+        }
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (group.isInternal()) {</span>
+<span class="fc" id="L44">            addLiClass(&quot;is-internal&quot;);</span>
+        }
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (Tools.isNotEmpty(group.getPasswordProtected())) {</span>
+<span class="fc" id="L48">            addTextIcon(&quot;fas fa-lock&quot;);</span>
+        }
+
+        //If user have allgroupPerm (for example cmp_stat_seeallgroups in stat section) we are showing all groups as editable
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (checkGroupsPerms &amp;&amp; GroupsDB.isGroupEditable(user, group.getGroupId())==false) {</span>
+<span class="fc" id="L53">            return faPrefix+&quot; fa-folder-times&quot;;</span>
+        }
+
+<span class="fc" id="L56">        return faPrefix+&quot; fa-folder&quot;;</span>
+    }
+
+    private JsTreeItemState getStatePrivate() {
+<span class="fc" id="L60">        return new JsTreeItemState();</span>
+    }
+
+    private boolean hasChildren(boolean showPages) {
+<span class="fc" id="L64">        return GroupsDB.getInstance().hasAnyChild(group.getGroupId(), showPages);</span>
+    }
+
+    public GroupDetails getGroup() {
+<span class="fc" id="L68">        return group;</span>
+    }
+
+    public void setGroup(GroupDetails group) {
+<span class="nc" id="L72">        this.group = group;</span>
+<span class="nc" id="L73">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

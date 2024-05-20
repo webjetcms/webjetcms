@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupBeanToPerexGroupsEntityMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupBeanToPerexGroupsEntityMapper.java</span></div><h1>PerexGroupBeanToPerexGroupsEntityMapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.factory.Mappers;
+
+import sk.iway.iwcm.doc.PerexGroupBean;
+
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface PerexGroupBeanToPerexGroupsEntityMapper {
+
+<span class="fc" id="L16">    PerexGroupBeanToPerexGroupsEntityMapper INSTANCE = Mappers.getMapper(PerexGroupBeanToPerexGroupsEntityMapper.class);</span>
+
+    @Mapping(source = &quot;perexGroupId&quot;, target = &quot;id&quot;, qualifiedByName = &quot;intToLong&quot;)
+    @Mapping(source = &quot;relatedPages&quot;, target = &quot;relatedPages&quot;, qualifiedByName = &quot;tokensToString&quot;)
+    PerexGroupsEntity perexGroupBeanToPerexGroupsEntity(PerexGroupBean perexGroupBean);
+    List&lt;PerexGroupsEntity&gt; perexGroupBeanListToPerexGroupsEntityList(List&lt;PerexGroupBean&gt; perexGroupBeanList);
+
+    @Named(&quot;intToLong&quot;)
+    default Long intToLong(int id) {
+<span class="fc" id="L25">        return Long.valueOf(id);</span>
+    }
+
+    @Named(&quot;tokensToString&quot;)
+    default String intToLong(String[] relatedPages) {
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if(relatedPages.length &lt; 1) return &quot;&quot;;</span>
+<span class="nc" id="L31">        return String.join(&quot;,&quot;, relatedPages);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

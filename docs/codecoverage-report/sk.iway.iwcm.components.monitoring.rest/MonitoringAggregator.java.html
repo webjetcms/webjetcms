@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringAggregator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.rest</a> &gt; <span class="el_source">MonitoringAggregator.java</span></div><h1>MonitoringAggregator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.rest;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+
+import sk.iway.iwcm.components.monitoring.jpa.MonitoringEntity;
+
+/**
+ * 50053-WJ9--monitorovanie-servera-zaznmenaie-hodnoty
+ * Agregracia dat servera, vráti maximálne hodnoty za určitý časový úsek.
+ * Autor: Sebastian Ivan
+ */
+public class MonitoringAggregator {
+
+    private  Page&lt;MonitoringEntity&gt; data;
+    private int dateRange;
+<span class="fc" id="L23">    private HashMap&lt;String, HashMap&lt;Date, MonitoringEntity&gt;&gt; map = new HashMap&lt;String, HashMap&lt;Date, MonitoringEntity&gt;&gt;();</span>
+<span class="fc" id="L24">    private Calendar calendarInstance = Calendar.getInstance();</span>
+
+    //Constructor. Set element data and compute data range in days
+<span class="fc" id="L27">    public MonitoringAggregator(Page&lt;MonitoringEntity&gt; data, Date fromDate, Date toDate) {</span>
+<span class="fc" id="L28">        this.data = data;</span>
+
+<span class="fc" id="L30">        int diffInDays = (int)( (fromDate.getTime() - toDate.getTime()) / (1000 * 60 * 60 * 24) );</span>
+<span class="fc" id="L31">        this.dateRange = Math.abs(diffInDays);</span>
+
+<span class="fc" id="L33">        this.aggregateData();</span>
+<span class="fc" id="L34">    }</span>
+
+    private void aggregateData() {
+
+<span class="fc" id="L38">        MonitoringEntity tmpEntity = new MonitoringEntity();</span>
+        //Loop MonitoringEntity array data
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for(MonitoringEntity entity : data) {</span>
+<span class="fc" id="L41">            Date dateToRound = new Date();</span>
+<span class="fc" id="L42">            String nodeName = entity.getNodeName();</span>
+            //If node name is empty, set nodeName to &quot;empty&quot; (just for FrontEnd use)
+<span class="pc bpc" id="L44" title="2 of 6 branches missed.">            if(nodeName == null || nodeName.trim().isEmpty() || nodeName == &quot;&quot;) {</span>
+<span class="fc" id="L45">                nodeName = &quot;empty&quot;;</span>
+<span class="fc" id="L46">                entity.setNodeName(&quot;empty&quot;);</span>
+            }
+
+            //Call roundDate fn to round date (later data with same round date will be aggregated together)
+<span class="fc" id="L50">            dateToRound = roundDate(entity);</span>
+<span class="fc" id="L51">            entity.setDayDate(dateToRound);</span>
+
+            /*Set HasMap, where nodeName is key (every key is uniqe) and value is another HashMap.
+            In fact every nodeName (key) has his own HashMap -&gt; key is round date and value is MonitoringEntity*/
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            if(map.get(nodeName) == null) {</span>
+<span class="fc" id="L56">                HashMap&lt;Date, MonitoringEntity&gt; tmpHashMap = new HashMap&lt;Date, MonitoringEntity&gt;();</span>
+<span class="fc" id="L57">                map.put(nodeName, tmpHashMap);</span>
+            }
+
+            //If nodeName's HashMap already contain this round date as a key combine this two Entities using setEntityWithMaxAtributes fn
+<span class="fc" id="L61">            tmpEntity = map.get(nodeName).get(dateToRound);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if(tmpEntity == null) {</span>
+<span class="fc" id="L63">                map.get(nodeName).put(dateToRound, entity);</span>
+            } else {
+<span class="fc" id="L65">                setEntityWithMaxAtributes(entity, tmpEntity);</span>
+            }
+<span class="fc" id="L67">        }</span>
+<span class="fc" id="L68">    }</span>
+
+    //Use dateRange param to call right date rounding function
+    private Date roundDate(MonitoringEntity entity) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if(this.dateRange &lt;= 5) {</span>
+<span class="fc" id="L73">            return entity.getDayDate();</span>
+<span class="pc bpc" id="L74" title="2 of 4 branches missed.">        } else if(this.dateRange &gt; 5 &amp;&amp; this.dateRange &lt;= 10) {</span>
+<span class="nc" id="L75">            return tenMinutesAggregation(entity.getDayDate());</span>
+<span class="pc bpc" id="L76" title="2 of 4 branches missed.">        } else if(this.dateRange &gt; 10 &amp;&amp; this.dateRange &lt;= 14) {</span>
+<span class="fc" id="L77">            return thirtyMinutesAggregation(entity.getDayDate());</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">        } else if(this.dateRange &gt; 14 &amp;&amp; this.dateRange &lt;= 30) {</span>
+<span class="nc" id="L79">            return oneHourAggregation(entity.getDayDate());</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">        } else if(this.dateRange &gt; 30 &amp;&amp; this.dateRange &lt;= 60) {</span>
+<span class="nc" id="L81">            return fourHoursAggregation(entity.getDayDate());</span>
+        } else {
+<span class="nc" id="L83">            return twelveHoursAggregation(entity.getDayDate());</span>
+        }
+    }
+
+    //Compare same params from 2 Entities, and return new Entity where every param had set bigger value from this 2 Entiries
+    private void setEntityWithMaxAtributes(MonitoringEntity entity1, MonitoringEntity entity2 ) {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        entity1.setCache(entity1.getCache() &gt; entity2.getCache() ? entity1.getCache() : entity2.getCache());</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        entity1.setCpuUsage(entity1.getCpuUsage() &gt; entity2.getCpuUsage() ? entity1.getCpuUsage() : entity2.getCpuUsage());</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        entity1.setDbActive(entity1.getDbActive() &gt; entity2.getDbActive() ? entity1.getDbActive() : entity2.getDbActive());</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        entity1.setDbIdle(entity1.getDbIdle() &gt; entity2.getDbIdle() ? entity1.getDbIdle() : entity2.getDbIdle());</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        entity1.setId(entity1.getId() &gt; entity2.getId() ? entity1.getId() : entity2.getId());</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        entity1.setMemFree(entity1.getMemFree() &gt; entity2.getMemFree() ? entity1.getMemFree() : entity2.getMemFree());</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        entity1.setMemTotal(entity1.getMemTotal() &gt; entity2.getMemTotal() ? entity1.getMemTotal() : entity2.getMemTotal());</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        entity1.setProcessUsage(entity1.getProcessUsage() &gt; entity2.getProcessUsage() ? entity1.getProcessUsage() : entity2.getProcessUsage());</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        entity1.setSessions(entity1.getSessions() &gt; entity2.getSessions() ? entity1.getSessions() : entity2.getSessions());</span>
+<span class="fc" id="L98">    }</span>
+
+    //10 minut date round
+    private Date tenMinutesAggregation(Date dateToRound) {
+<span class="nc" id="L102">        Calendar calendar = calendarInstance;</span>
+<span class="nc" id="L103">        calendar.setTime(dateToRound);</span>
+
+<span class="nc" id="L105">        int unroundedMinutes = calendar.get(Calendar.MINUTE);</span>
+<span class="nc" id="L106">        int mod = unroundedMinutes % 10;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        calendar.add(Calendar.MINUTE, mod &lt; 5 ? -mod : (10-mod));</span>
+<span class="nc" id="L108">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L109">        return calendar.getTime();</span>
+    }
+
+    //30 minut date round
+    private Date thirtyMinutesAggregation(Date dateToRound) {
+<span class="fc" id="L114">        Calendar calendar = calendarInstance;</span>
+<span class="fc" id="L115">        calendar.setTime(dateToRound);</span>
+
+<span class="fc" id="L117">        int actualMinutes = calendar.get(Calendar.MINUTE);</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if(actualMinutes &lt; 15) {</span>
+<span class="fc" id="L119">            calendar.set(Calendar.MINUTE, 0);</span>
+<span class="fc bfc" id="L120" title="All 4 branches covered.">        } else if(actualMinutes &gt; 15 &amp;&amp; actualMinutes &lt; 45) {</span>
+<span class="fc" id="L121">            calendar.set(Calendar.MINUTE, 30);</span>
+        } else {
+<span class="fc" id="L123">            calendar.set(Calendar.HOUR_OF_DAY, Calendar.HOUR_OF_DAY + 1);</span>
+<span class="fc" id="L124">            calendar.set(Calendar.MINUTE, 0);</span>
+        }
+<span class="fc" id="L126">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L127">        return calendar.getTime();</span>
+    }
+
+    //1 hour date round
+    private Date oneHourAggregation(Date dateToRound) {
+<span class="nc" id="L132">        Calendar calendar = calendarInstance;</span>
+<span class="nc" id="L133">        calendar.setTime(dateToRound);</span>
+
+<span class="nc" id="L135">        int actualMinutes = calendar.get(Calendar.MINUTE);</span>
+<span class="nc" id="L136">        int actualHour = calendar.get(Calendar.HOUR_OF_DAY);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        calendar.set(Calendar.HOUR_OF_DAY, actualMinutes &lt; 30 ? actualHour : actualHour + 1);</span>
+<span class="nc" id="L138">        calendar.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L139">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L140">        return calendar.getTime();</span>
+    }
+
+    //4 hours date round
+    private Date fourHoursAggregation(Date dateToRound) {
+<span class="nc" id="L145">        Calendar calendar = calendarInstance;</span>
+<span class="nc" id="L146">        calendar.setTime(dateToRound);</span>
+
+<span class="nc" id="L148">        int actualHour = calendar.get(Calendar.HOUR_OF_DAY);</span>
+<span class="nc" id="L149">        int mod = actualHour % 4;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        calendar.add(Calendar.HOUR_OF_DAY, mod &lt; 2 ? -mod : (4-mod));</span>
+<span class="nc" id="L151">        calendar.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L152">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L153">        return calendar.getTime();</span>
+    }
+
+    //12 hours date round
+    private Date twelveHoursAggregation(Date dateToRound) {
+<span class="nc" id="L158">        Calendar calendar = calendarInstance;</span>
+<span class="nc" id="L159">        calendar.setTime(dateToRound);</span>
+
+<span class="nc" id="L161">        int actualHour = calendar.get(Calendar.HOUR_OF_DAY);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        calendar.set(Calendar.HOUR_OF_DAY, actualHour &lt; 12 ? actualHour : actualHour + 1);</span>
+<span class="nc" id="L163">        calendar.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L164">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L165">        return calendar.getTime();</span>
+    }
+
+    //Transform this data which containt two HashMap into List of MonitoringEntities (we need List format to return this data to FrontEnd)
+    private List&lt;MonitoringEntity&gt; transformDataToList() {
+<span class="fc" id="L170">        List&lt;MonitoringEntity&gt; transformedData = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (Map.Entry&lt;String, HashMap&lt;Date, MonitoringEntity&gt;&gt; entry1 : this.map.entrySet()) {</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            for(Map.Entry&lt;Date, MonitoringEntity&gt; entry2 : entry1.getValue().entrySet()) {</span>
+<span class="fc" id="L173">                transformedData.add(entry2.getValue());</span>
+<span class="fc" id="L174">            }</span>
+<span class="fc" id="L175">        }</span>
+<span class="fc" id="L176">        return transformedData;</span>
+    }
+
+    public List&lt;MonitoringEntity&gt; returnAggregatedData() {
+<span class="fc" id="L180">        return this.transformDataToList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

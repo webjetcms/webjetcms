@@ -1,0 +1,129 @@
+# List of websites/news
+
+Application [News](../../redactor/apps/news/README.md), inserts a list of web pages in the specified folder into the page. It is used to insert a list of news, press releases, but also other similar listings (list of contact points, personal contacts, products and so on).
+
+The table provides editing options similar to a list of web pages.
+
+![](../../redactor/apps/news/admin-dt.png)
+
+If the customer has specific requirements for displaying columns (e.g. for a product list) or information, you can implement a custom application that uses the code for the news list.
+
+Below is the complete code for the news page. You can take advantage of the feature of editing standard columns using the `window.WJ.DataTable.mergeColumns`. The example modifies the column visibility attribute setting, but you can also rename the title as shown in the page title example.
+
+If you don't need to change the folder ID value, you can of course remove the AJAX call `/admin/rest/news/news-list/convertIdsToNamePair`, which gets the list for the folder selection field in the header.
+
+```html
+<script data-th-inline="javascript">
+	var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ "";
+</script>
+<script type="text/javascript">
+	var newsDataTable;
+	var idsConstantName = "newsAdminGroupIds";
+
+	window.domReady.add(function () {
+		WJ.breadcrumb({
+			id: "newsBreadcrumb",
+			tabs: [
+				{
+					url: "/apps/news/admin/",
+					title: "[[#{components.menu.news}]]",
+					active: true,
+				},
+				{
+					url: "#newsGroup",
+					title: "{filter}",
+					active: false,
+				},
+			],
+		});
+
+		function setGroupIdFilterSelect(data) {
+			//Get object, select
+			let filterSelect = document.getElementById("groupIdFilterSelect");
+			//Remove all options except the default one
+			while (filterSelect.options.length > 1) {
+				filterSelect.remove(1);
+			}
+			//Add new options
+			for (const s of data) {
+				filterSelect.add(new Option(s.label, s.value));
+			}
+
+			//set selected value
+			var hash = window.location.hash;
+			if (hash != "") $(filterSelect).val(hash.substr(1));
+
+			//Refresh object
+			$("#groupIdFilterSelect").selectpicker("refresh");
+		}
+
+		//move filter to top navbar
+		$("#pills-newsGroup-tab").html("");
+		$("div#groupId_extfilter").appendTo("#pills-newsGroup-tab");
+
+		let urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=constant:" + idsConstantName;
+		let data = {};
+		var includeParameter = WJ.urlGetParam("include");
+		if (includeParameter != null) {
+			data.include = includeParameter;
+		}
+
+		$.ajax({
+			url: urlGroupIdFilter,
+			data: data,
+			method: "post",
+			success: function (data) {
+				setGroupIdFilterSelect(data);
+
+				let url = "/admin/rest/web-pages";
+
+				//rename title column
+				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("apps.news.newsTitle.js") });
+				//add column visibility
+				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishStartDate", visible: true });
+				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishEndDate", visible: true });
+				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "htmlData", visible: true });
+				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "perexImage", visible: true });
+
+				window.importWebPagesDatatable().then((module) => {
+					var order = [];
+					order.push([4, "desc"]);
+
+					let wpdInstance = new module.WebPagesDatatable({
+						url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
+						columns: webpageColumns,
+						id: "newsDataTable",
+						order: order,
+					});
+					newsDataTable = wpdInstance.createDatatable();
+				});
+
+				$("#groupIdFilterSelect").on("change", function () {
+					var value = this.value;
+					var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
+					newsDataTable.ajax.url(newUrl);
+					newsDataTable.ajax.reload();
+				});
+			},
+		});
+	});
+</script>
+
+<style type="text/css">
+	#pills-newsGroup-tab .bootstrap-select,
+	#pills-newsGroup-tab .bootstrap-select button {
+		min-width: 220px;
+		width: auto;
+	}
+</style>
+
+<div id="groupId_extfilter">
+	<div class="row datatableInit">
+		<div class="col-auto">
+			<select id="groupIdFilterSelect"></select>
+		</div>
+	</div>
+</div>
+
+<table id="newsDataTable" class="datatableInit table"></table>
+```

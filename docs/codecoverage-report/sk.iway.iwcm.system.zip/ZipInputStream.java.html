@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ZipInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.zip</a> &gt; <span class="el_source">ZipInputStream.java</span></div><h1>ZipInputStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.zip;
+
+import java.io.EOFException;
+import java.io.IOException;
+/**
+ *  ZipInputStream.java - modifikovany pre podporu diakritiky v nazvoch suborov
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.3.2005 13:25:34
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+/*
+ * @(#)ZipInputStream.java	1.33 03/02/07
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+import java.io.InputStream;
+import java.io.PushbackInputStream;
+import java.util.zip.CRC32;
+import java.util.zip.Inflater;
+import java.util.zip.ZipException;
+
+/**
+ * This class implements an input stream filter for reading files in the ZIP
+ * file format. Includes support for both compressed and uncompressed entries.
+ *
+ * @author David Connelly
+ * @version 1.33, 02/07/03
+ */
+public class ZipInputStream extends sk.iway.iwcm.system.zip.InflaterInputStream implements sk.iway.iwcm.system.zip.ZipConstants
+{
+	private ZipEntry entry;
+<span class="fc" id="L38">	private CRC32 crc = new CRC32();</span>
+	private long remaining;
+<span class="fc" id="L40">	private byte[] tmpbuf = new byte[512];</span>
+	private static final int STORED = ZipEntry.STORED;
+	private static final int DEFLATED = ZipEntry.DEFLATED;
+<span class="fc" id="L43">	private boolean closed = false;</span>
+	// this flag is set to true after EOF has reached for
+	// one entry
+<span class="fc" id="L46">	private boolean entryEOF = false;</span>
+
+	/**
+	 * Check to make sure that this stream has not been closed
+	 */
+	private void ensureOpen() throws IOException
+	{
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		if (closed)</span>
+		{
+<span class="nc" id="L55">			throw new IOException(&quot;Stream closed&quot;);</span>
+		}
+<span class="fc" id="L57">	}</span>
+
+	/**
+	 * Creates a new ZIP input stream.
+	 *
+	 * @param in
+	 *           the actual input stream
+	 */
+	public ZipInputStream(InputStream in)
+	{
+<span class="fc" id="L67">		super(new PushbackInputStream(in, 512), new Inflater(true), 512);</span>
+<span class="fc" id="L68">		usesDefaultInflater = true;</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">		if (in == null)</span>
+		{
+<span class="nc" id="L71">			throw new NullPointerException(&quot;in is null&quot;);</span>
+		}
+<span class="fc" id="L73">	}</span>
+
+	/**
+	 * Reads the next ZIP file entry and positions stream at the beginning of the
+	 * entry data.
+	 *
+	 * @return the ZipEntry just read
+	 * @exception ZipException
+	 *               if a ZIP file error has occurred
+	 * @exception IOException
+	 *               if an I/O error has occurred
+	 */
+	public ZipEntry getNextEntry() throws IOException
+	{
+<span class="fc" id="L87">		ensureOpen();</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">		if (entry != null)</span>
+		{
+<span class="nc" id="L90">			closeEntry();</span>
+		}
+<span class="fc" id="L92">		crc.reset();</span>
+<span class="fc" id="L93">		inf.reset();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">		if ((entry = readLOC()) == null)</span>
+		{
+<span class="fc" id="L96">			return null;</span>
+		}
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if (entry.getMethod() == STORED)</span>
+		{
+<span class="nc" id="L100">			remaining = entry.getSize();</span>
+		}
+<span class="fc" id="L102">		entryEOF = false;</span>
+<span class="fc" id="L103">		return entry;</span>
+	}
+
+	/**
+	 * Closes the current ZIP entry and positions the stream for reading the next
+	 * entry.
+	 *
+	 * @exception ZipException
+	 *               if a ZIP file error has occurred
+	 * @exception IOException
+	 *               if an I/O error has occurred
+	 */
+	public void closeEntry() throws IOException
+	{
+<span class="nc" id="L117">		ensureOpen();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		while (read(tmpbuf, 0, tmpbuf.length) != -1);</span>
+<span class="nc" id="L119">		entryEOF = true;</span>
+<span class="nc" id="L120">	}</span>
+
+	/**
+	 * Returns 0 after EOF has reached for the current entry data, otherwise
+	 * always return 1.
+	 * &lt;p&gt;
+	 * Programs should not count on this method to return the actual number of
+	 * bytes that could be read without blocking.
+	 *
+	 * @return 1 before EOF and 0 after EOF has reached for current entry.
+	 * @exception IOException
+	 *               if an I/O error occurs.
+	 *
+	 */
+	@Override
+	public int available() throws IOException
+	{
+<span class="nc" id="L137">		ensureOpen();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (entryEOF)</span>
+		{
+<span class="nc" id="L140">			return 0;</span>
+		}
+		else
+		{
+<span class="nc" id="L144">			return 1;</span>
+		}
+	}
+
+	/**
+	 * Reads from the current ZIP entry into an array of bytes. Blocks until some
+	 * input is available.
+	 *
+	 * @param b
+	 *           the buffer into which the data is read
+	 * @param off
+	 *           the start offset of the data
+	 * @param len
+	 *           the maximum number of bytes read
+	 * @return the actual number of bytes read, or -1 if the end of the entry is
+	 *         reached
+	 * @exception ZipException
+	 *               if a ZIP file error has occurred
+	 * @exception IOException
+	 *               if an I/O error has occurred
+	 */
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException
+	{
+<span class="fc" id="L168">		ensureOpen();</span>
+<span class="pc bpc" id="L169" title="3 of 6 branches missed.">		if (off &lt; 0 || len &lt; 0 || off &gt; b.length - len)</span>
+		{
+<span class="nc" id="L171">			throw new IndexOutOfBoundsException();</span>
+		}
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">		else if (len == 0)</span>
+		{
+<span class="nc" id="L175">			return 0;</span>
+		}
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if (entry == null)</span>
+		{
+<span class="nc" id="L179">			return -1;</span>
+		}
+<span class="pc bpc" id="L181" title="2 of 3 branches missed.">		switch (entry.getMethod())</span>
+		{
+			case DEFLATED :
+<span class="fc" id="L184">				len = super.read(b, off, len);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">				if (len == -1)</span>
+				{
+<span class="fc" id="L187">					readEnd(entry);</span>
+<span class="fc" id="L188">					entryEOF = true;</span>
+<span class="fc" id="L189">					entry = null;</span>
+				}
+				else
+				{
+<span class="fc" id="L193">					crc.update(b, off, len);</span>
+				}
+<span class="fc" id="L195">				return len;</span>
+			case STORED :
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (remaining &lt;= 0)</span>
+				{
+<span class="nc" id="L199">					entryEOF = true;</span>
+<span class="nc" id="L200">					entry = null;</span>
+<span class="nc" id="L201">					return -1;</span>
+				}
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (len &gt; remaining)</span>
+				{
+<span class="nc" id="L205">					len = (int) remaining;</span>
+				}
+<span class="nc" id="L207">				len = in.read(b, off, len);</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (len == -1)</span>
+				{
+<span class="nc" id="L210">					throw new ZipException(&quot;unexpected EOF&quot;);</span>
+				}
+<span class="nc" id="L212">				crc.update(b, off, len);</span>
+<span class="nc" id="L213">				remaining -= len;</span>
+<span class="nc" id="L214">				return len;</span>
+			default :
+<span class="nc" id="L216">				throw new InternalError(&quot;invalid compression method&quot;);</span>
+		}
+	}
+
+	/**
+	 * Skips specified number of bytes in the current ZIP entry.
+	 *
+	 * @param n
+	 *           the number of bytes to skip
+	 * @return the actual number of bytes skipped
+	 * @exception ZipException
+	 *               if a ZIP file error has occurred
+	 * @exception IOException
+	 *               if an I/O error has occurred
+	 * @exception IllegalArgumentException
+	 *               if n &lt; 0
+	 */
+	@Override
+	public long skip(long n) throws IOException
+	{
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (n &lt; 0)</span>
+		{
+<span class="nc" id="L238">			throw new IllegalArgumentException(&quot;negative skip length&quot;);</span>
+		}
+<span class="nc" id="L240">		ensureOpen();</span>
+<span class="nc" id="L241">		int max = (int) Math.min(n, Integer.MAX_VALUE);</span>
+<span class="nc" id="L242">		int total = 0;</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		while (total &lt; max)</span>
+		{
+<span class="nc" id="L245">			int len = max - total;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (len &gt; tmpbuf.length)</span>
+			{
+<span class="nc" id="L248">				len = tmpbuf.length;</span>
+			}
+<span class="nc" id="L250">			len = read(tmpbuf, 0, len);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (len == -1)</span>
+			{
+<span class="nc" id="L253">				entryEOF = true;</span>
+<span class="nc" id="L254">				break;</span>
+			}
+<span class="nc" id="L256">			total += len;</span>
+<span class="nc" id="L257">		}</span>
+<span class="nc" id="L258">		return total;</span>
+	}
+
+	/**
+	 * Closes the ZIP input stream.
+	 *
+	 * @exception IOException
+	 *               if an I/O error has occurred
+	 */
+	@Override
+	public void close() throws IOException
+	{
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">		if (!closed)</span>
+		{
+<span class="fc" id="L272">			super.close();</span>
+<span class="fc" id="L273">			closed = true;</span>
+		}
+<span class="fc" id="L275">	}</span>
+
+<span class="fc" id="L277">	private byte[] b = new byte[256];</span>
+
+	/*
+	 * Reads local file (LOC) header for next entry.
+	 */
+	private ZipEntry readLOC() throws IOException
+	{
+		try
+		{
+<span class="fc" id="L286">			readFully(tmpbuf, 0, LOCHDR);</span>
+		}
+<span class="nc" id="L288">		catch (EOFException e)</span>
+		{
+<span class="nc" id="L290">			return null;</span>
+<span class="fc" id="L291">		}</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">		if (get32(tmpbuf, 0) != LOCSIG)</span>
+		{
+<span class="fc" id="L294">			return null;</span>
+		}
+		// get the entry name and create the ZipEntry first
+<span class="fc" id="L297">		int len = get16(tmpbuf, LOCNAM);</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">		if (len == 0)</span>
+		{
+<span class="nc" id="L300">			throw new ZipException(&quot;missing entry name&quot;);</span>
+		}
+<span class="fc" id="L302">		int blen = b.length;</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">		if (len &gt; blen)</span>
+		{
+			do
+<span class="nc" id="L306">				blen = blen * 2;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			while (len &gt; blen);</span>
+<span class="nc" id="L308">			b = new byte[blen];</span>
+		}
+<span class="fc" id="L310">		readFully(b, 0, len);</span>
+		//ZipEntry e = createZipEntry(getUTF8String(b, 0, len));
+
+		//WebJET - modified
+<span class="fc" id="L314">		String fileName = null;</span>
+      try
+      {
+<span class="fc" id="L317">        fileName = getUTF8String(b, 0, len);</span>
+      }
+<span class="nc" id="L319">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L321">        fileName = new String(b, 0, len, &quot;Cp852&quot;);</span>
+<span class="fc" id="L322">      }</span>
+<span class="fc" id="L323">      fileName = fileName.trim();</span>
+<span class="fc" id="L324">      ZipEntry e = createZipEntry(fileName);</span>
+
+		// now get the remaining fields for the entry
+<span class="fc" id="L327">		e.version = get16(tmpbuf, LOCVER);</span>
+<span class="fc" id="L328">		e.flag = get16(tmpbuf, LOCFLG);</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">		if ((e.flag &amp; 1) == 1)</span>
+		{
+<span class="nc" id="L331">			throw new ZipException(&quot;encrypted ZIP entry not supported&quot;);</span>
+		}
+<span class="fc" id="L333">		e.method = get16(tmpbuf, LOCHOW);</span>
+<span class="fc" id="L334">		e.time = get32(tmpbuf, LOCTIM);</span>
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">		if ((e.flag &amp; 8) == 8)</span>
+		{
+			/* EXT descriptor present */
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">			if (e.method != DEFLATED)</span>
+			{
+<span class="nc" id="L340">				throw new ZipException(&quot;only DEFLATED entries can have EXT descriptor&quot;);</span>
+			}
+		}
+		else
+		{
+<span class="nc" id="L345">			e.crc = get32(tmpbuf, LOCCRC);</span>
+<span class="nc" id="L346">			e.csize = get32(tmpbuf, LOCSIZ);</span>
+<span class="nc" id="L347">			e.size = get32(tmpbuf, LOCLEN);</span>
+		}
+<span class="fc" id="L349">		len = get16(tmpbuf, LOCEXT);</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">		if (len &gt; 0)</span>
+		{
+<span class="nc" id="L352">			byte[] bb = new byte[len];</span>
+<span class="nc" id="L353">			readFully(bb, 0, len);</span>
+<span class="nc" id="L354">			e.extra = bb;</span>
+		}
+<span class="fc" id="L356">		return e;</span>
+	}
+
+	/*
+	 * Fetches a UTF8-encoded String from the specified byte array.
+	 */
+	private static String getUTF8String(byte[] b, int off, int len)
+	{
+		// First, count the number of characters in the sequence
+<span class="fc" id="L365">		int count = 0;</span>
+<span class="fc" id="L366">		int max = off + len;</span>
+<span class="fc" id="L367">		int i = off;</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">		while (i &lt; max)</span>
+		{
+<span class="fc" id="L370">			int c = b[i++] &amp; 0xff;</span>
+<span class="pc bpc" id="L371" title="3 of 4 branches missed.">			switch (c &gt;&gt; 4)</span>
+			{
+				case 0 :
+				case 1 :
+				case 2 :
+				case 3 :
+				case 4 :
+				case 5 :
+				case 6 :
+				case 7 :
+					// 0xxxxxxx
+<span class="fc" id="L382">					count++;</span>
+<span class="fc" id="L383">					break;</span>
+				case 12 :
+				case 13 :
+					// 110xxxxx 10xxxxxx
+<span class="nc bnc" id="L387" title="All 2 branches missed.">					if ((b[i++] &amp; 0xc0) != 0x80)</span>
+					{
+<span class="nc" id="L389">						throw new IllegalArgumentException();</span>
+					}
+<span class="nc" id="L391">					count++;</span>
+<span class="nc" id="L392">					break;</span>
+				case 14 :
+					// 1110xxxx 10xxxxxx 10xxxxxx
+<span class="nc bnc" id="L395" title="All 4 branches missed.">					if (((b[i++] &amp; 0xc0) != 0x80) || ((b[i++] &amp; 0xc0) != 0x80))</span>
+					{
+<span class="nc" id="L397">						throw new IllegalArgumentException();</span>
+					}
+<span class="nc" id="L399">					count++;</span>
+<span class="nc" id="L400">					break;</span>
+				default :
+					// 10xxxxxx, 1111xxxx
+<span class="nc" id="L403">					throw new IllegalArgumentException();</span>
+			}
+<span class="fc" id="L405">		}</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">		if (i != max)</span>
+		{
+<span class="nc" id="L408">			throw new IllegalArgumentException();</span>
+		}
+		// Now decode the characters...
+<span class="fc" id="L411">		char[] cs = new char[count];</span>
+<span class="fc" id="L412">		i = 0;</span>
+<span class="fc bfc" id="L413" title="All 2 branches covered.">		while (off &lt; max)</span>
+		{
+<span class="fc" id="L415">			int c = b[off++] &amp; 0xff;</span>
+<span class="pc bpc" id="L416" title="3 of 4 branches missed.">			switch (c &gt;&gt; 4)</span>
+			{
+				case 0 :
+				case 1 :
+				case 2 :
+				case 3 :
+				case 4 :
+				case 5 :
+				case 6 :
+				case 7 :
+					// 0xxxxxxx
+<span class="fc" id="L427">					cs[i++] = (char) c;</span>
+<span class="fc" id="L428">					break;</span>
+				case 12 :
+				case 13 :
+					// 110xxxxx 10xxxxxx
+<span class="nc" id="L432">					cs[i++] = (char) (((c &amp; 0x1f) &lt;&lt; 6) | (b[off++] &amp; 0x3f));</span>
+<span class="nc" id="L433">					break;</span>
+				case 14 :
+					// 1110xxxx 10xxxxxx 10xxxxxx
+<span class="nc" id="L436">					int t = (b[off++] &amp; 0x3f) &lt;&lt; 6;</span>
+<span class="nc" id="L437">					cs[i++] = (char) (((c &amp; 0x0f) &lt;&lt; 12) | t | (b[off++] &amp; 0x3f));</span>
+<span class="nc" id="L438">					break;</span>
+				default :
+					// 10xxxxxx, 1111xxxx
+<span class="nc" id="L441">					throw new IllegalArgumentException();</span>
+			}
+<span class="fc" id="L443">		}</span>
+<span class="fc" id="L444">		return new String(cs, 0, count);</span>
+	}
+
+	/**
+	 * Creates a new &lt;code&gt;ZipEntry&lt;/code&gt; object for the specified entry name.
+	 *
+	 * @param name
+	 *           the ZIP file entry name
+	 * @return the ZipEntry just created
+	 */
+	protected ZipEntry createZipEntry(String name)
+	{
+<span class="fc" id="L456">		return new ZipEntry(name);</span>
+	}
+
+	/*
+	 * Reads end of deflated entry as well as EXT descriptor if present.
+	 */
+	private void readEnd(ZipEntry e) throws IOException
+	{
+<span class="fc" id="L464">		int n = inf.getRemaining();</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">		if (n &gt; 0)</span>
+		{
+<span class="fc" id="L467">			((PushbackInputStream) in).unread(buf, len - n, n);</span>
+		}
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">		if ((e.flag &amp; 8) == 8)</span>
+		{
+			/* EXT descriptor present */
+<span class="fc" id="L472">			readFully(tmpbuf, 0, EXTHDR);</span>
+<span class="fc" id="L473">			long sig = get32(tmpbuf, 0);</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">			if (sig != EXTSIG)</span>
+			{ // no EXTSIG present
+<span class="nc" id="L476">				e.crc = sig;</span>
+<span class="nc" id="L477">				e.csize = get32(tmpbuf, EXTSIZ - EXTCRC);</span>
+<span class="nc" id="L478">				e.size = get32(tmpbuf, EXTLEN - EXTCRC);</span>
+<span class="nc" id="L479">				((PushbackInputStream) in).unread(tmpbuf, EXTHDR - EXTCRC - 1, EXTCRC);</span>
+			}
+			else
+			{
+<span class="fc" id="L483">				e.crc = get32(tmpbuf, EXTCRC);</span>
+<span class="fc" id="L484">				e.csize = get32(tmpbuf, EXTSIZ);</span>
+<span class="fc" id="L485">				e.size = get32(tmpbuf, EXTLEN);</span>
+			}
+		}
+<span class="pc bpc" id="L488" title="1 of 2 branches missed.">		if (e.size != inf.getTotalOut())</span>
+		{
+<span class="nc" id="L490">			throw new ZipException(&quot;invalid entry size (expected &quot; + e.size + &quot; but got &quot; + inf.getTotalOut() + &quot; bytes)&quot;);</span>
+		}
+<span class="pc bpc" id="L492" title="1 of 2 branches missed.">		if (e.csize != inf.getTotalIn())</span>
+		{
+<span class="nc" id="L494">			throw new ZipException(&quot;invalid entry compressed size (expected &quot; + e.csize + &quot; but got &quot; + inf.getTotalIn() + &quot; bytes)&quot;);</span>
+		}
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">		if (e.crc != crc.getValue())</span>
+		{
+<span class="nc" id="L498">			throw new ZipException(&quot;invalid entry CRC (expected 0x&quot; + Long.toHexString(e.crc) + &quot; but got 0x&quot;</span>
+<span class="nc" id="L499">						+ Long.toHexString(crc.getValue()) + &quot;)&quot;);</span>
+		}
+<span class="fc" id="L501">	}</span>
+
+	/*
+	 * Reads bytes, blocking until all bytes are read.
+	 */
+	private void readFully(byte[] b, int off, int len) throws IOException
+	{
+<span class="fc bfc" id="L508" title="All 2 branches covered.">		while (len &gt; 0)</span>
+		{
+<span class="fc" id="L510">			int n = in.read(b, off, len);</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">			if (n == -1)</span>
+			{
+<span class="nc" id="L513">				throw new EOFException();</span>
+			}
+<span class="fc" id="L515">			off += n;</span>
+<span class="fc" id="L516">			len -= n;</span>
+<span class="fc" id="L517">		}</span>
+<span class="fc" id="L518">	}</span>
+
+	/*
+	 * Fetches unsigned 16-bit value from byte array at specified offset. The
+	 * bytes are assumed to be in Intel (little-endian) byte order.
+	 */
+	private static final int get16(byte b[], int off)
+	{
+<span class="fc" id="L526">		return (b[off] &amp; 0xff) | ((b[off + 1] &amp; 0xff) &lt;&lt; 8);</span>
+	}
+
+	/*
+	 * Fetches unsigned 32-bit value from byte array at specified offset. The
+	 * bytes are assumed to be in Intel (little-endian) byte order.
+	 */
+	private static final long get32(byte b[], int off)
+	{
+<span class="fc" id="L535">		return get16(b, off) | ((long) get16(b, off + 2) &lt;&lt; 16);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

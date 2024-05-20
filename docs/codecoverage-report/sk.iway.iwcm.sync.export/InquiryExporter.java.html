@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryExporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.export</a> &gt; <span class="el_source">InquiryExporter.java</span></div><h1>InquiryExporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.export;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.inquiry.AnswerForm;
+import sk.iway.iwcm.inquiry.InquiryBean;
+import sk.iway.iwcm.inquiry.InquiryDB;
+
+/**
+ * Export udajov pre komponent &quot;inquiry&quot;, cize ankety.
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff vbur $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.6.2012 15:21:57
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class InquiryExporter extends ComponentExporter
+{
+
+	public InquiryExporter(String params)
+	{
+<span class="nc" id="L27">		super(params);</span>
+<span class="nc" id="L28">	}</span>
+
+	@Override
+	public void export(ContentBuilder callback)
+	{
+<span class="nc" id="L33">		String inquiryGroups = pageParams.getValue(&quot;group&quot;, null);</span>
+<span class="nc" id="L34">		HttpServletRequest request = callback.getRequest();</span>
+<span class="nc" id="L35">		boolean random = pageParams.getBooleanValue(&quot;random&quot;, true);</span>
+<span class="nc" id="L36">		int imagesLength = pageParams.getIntValue(&quot;imagesLength&quot;, 10);</span>
+<span class="nc" id="L37">		String percentageFormat = pageParams.getValue(&quot;percentageFormat&quot;, &quot;0.0&quot;);</span>
+<span class="nc" id="L38">		String orderBy = pageParams.getValue(&quot;orderBy&quot;, &quot;answer_id&quot;);</span>
+<span class="nc" id="L39">		String order = pageParams.getValue(&quot;order&quot;, &quot;ascending&quot;);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		boolean orderAsc = !&quot;descending&quot;.equalsIgnoreCase(order);</span>
+
+<span class="nc" id="L42">		List&lt;Integer&gt; inquiryIds = InquiryDB.getInquiryIds(inquiryGroups, request, random);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		for (Integer inquiryId : inquiryIds)</span>
+		{
+<span class="nc" id="L45">			InquiryBean inquiry = InquiryDB.getInquiry(inquiryId.intValue(), imagesLength, percentageFormat, orderBy, orderAsc, request);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			for (AnswerForm answer : inquiry.getAnswers())</span>
+			{
+<span class="nc" id="L48">				callback.addLink(answer.getImgRootDir() + answer.getImagePath());</span>
+<span class="nc" id="L49">				callback.addLink(answer.getUrl());</span>
+<span class="nc" id="L50">			}</span>
+<span class="nc" id="L51">			callback.addInquiry(inquiry);</span>
+<span class="nc" id="L52">		}</span>
+<span class="nc" id="L53">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

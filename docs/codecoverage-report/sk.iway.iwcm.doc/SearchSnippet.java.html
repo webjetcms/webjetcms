@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchSnippet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">SearchSnippet.java</span></div><h1>SearchSnippet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.common.SearchTools;
+
+public class SearchSnippet {
+
+<span class="nc" id="L21">    private int prepend = 0;</span>
+<span class="nc" id="L22">    private int append = 0;</span>
+
+    private SearchDetails doc;
+    private String textToFind;
+    private HttpServletRequest request;
+    private String textToFindAscLC;
+    private String dataAsc;
+
+<span class="nc" id="L30">    private List&lt;String&gt; tokens = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L31">    private List&lt;String&gt; tokensFound = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L32">    private List&lt;String&gt; snippets = new ArrayList&lt;&gt;();</span>
+    private String snippet;
+
+<span class="nc" id="L35">    public SearchSnippet(SearchDetails doc, String textToFind, HttpServletRequest request) {</span>
+<span class="nc" id="L36">        this.doc = doc;</span>
+<span class="nc" id="L37">        this.textToFind = textToFind;</span>
+<span class="nc" id="L38">        this.request = request;</span>
+
+<span class="nc" id="L40">        this.prepend = Constants.getInt(&quot;searchSnippetPrepend&quot;);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (this.prepend == -1) {</span>
+<span class="nc" id="L42">            this.prepend = 100;</span>
+        }
+
+<span class="nc" id="L45">        this.append = Constants.getInt(&quot;searchSnippetAppend&quot;);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (this.append == -1) {</span>
+<span class="nc" id="L47">            this.append = 100;</span>
+        }
+
+<span class="nc" id="L50">        renderSnippet();</span>
+<span class="nc" id="L51">        renderHighlights();</span>
+<span class="nc" id="L52">    }</span>
+
+    public String getSnippet()
+    {
+<span class="nc" id="L56">        return snippet;</span>
+    }
+
+    private void renderSnippet() {
+<span class="nc" id="L60">        textToFindAscLC = DB.internationalToEnglish(textToFind).toLowerCase();</span>
+
+        //odstranme HTML kod a INCLUDE prikazy
+        String dataOriginalNoHtml;
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (SearchAction.shouldDoQuickSnippet(doc, request))</span>
+        {
+            //tu ponechavame cely HTML kod, bolo by to narozne na odstranenie (velky HTML kod)
+<span class="nc" id="L68">            dataOriginalNoHtml = doc.getDataOriginal();</span>
+
+<span class="nc" id="L70">            dataAsc = dataOriginalNoHtml;</span>
+            //pridame do ttfAscLC aj povodne slovicka (kedze ASC verziu nam to asi nenajde)
+<span class="nc" id="L72">            textToFindAscLC += &quot; &quot; + textToFind;</span>
+        }
+        else
+        {
+            //odstranme HTML kod a INCLUDE prikazy
+<span class="nc" id="L77">            dataOriginalNoHtml = EditorToolsForCore.removeHtmlTagsKeepLength(doc.getDataOriginal());</span>
+
+<span class="nc" id="L79">            dataAsc = DB.internationalToEnglish(dataOriginalNoHtml).toLowerCase();</span>
+        }
+
+        //kvoli efektivite scanovania si z povodneho HTML kodu spravime len kratke casti obsahujuce hladane slova
+        //scanujeme nad ASC slovickami ale vytvarame to v diakritikovych hodnotach
+<span class="nc" id="L84">        tokens = new ArrayList&lt;&gt;(Arrays.asList(Tools.getTokens(textToFindAscLC, &quot; &quot;)));</span>
+<span class="nc" id="L85">        tokensFound = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L87">        Pattern includeReplace = Pattern.compile(&quot;!INCLUDE.*?\\)!&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L88">        Set&lt;String&gt; uzSomHladalSlovicka = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        for (String token : tokens) {</span>
+<span class="nc bnc" id="L91" title="All 6 branches missed.">            if (tokensFound.contains(token) || uzSomHladalSlovicka.contains(token) || token.length() &lt; 3) {</span>
+<span class="nc" id="L92">                continue;</span>
+            }
+
+<span class="nc" id="L95">            uzSomHladalSlovicka.add(token);</span>
+<span class="nc" id="L96">            int i = dataOriginalNoHtml.indexOf(token);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (i==-1) i = dataAsc.indexOf(token);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (i != -1)</span>
+            {
+<span class="nc" id="L100">                int start = i - prepend;</span>
+<span class="nc" id="L101">                int end = i + append;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (start &lt; 0) start = 0;</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                if (end &gt; dataOriginalNoHtml.length()) end = dataOriginalNoHtml.length();</span>
+
+<span class="nc" id="L106">                String part = dataOriginalNoHtml.substring(start, end);</span>
+<span class="nc" id="L107">                part = clear(replaceINCLUDE(part, includeReplace));</span>
+
+<span class="nc" id="L109">                snippets.add(part);</span>
+<span class="nc" id="L110">                tokensFound = containsAny(part, tokens);</span>
+            }
+<span class="nc" id="L112">        }</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (snippets.isEmpty())</span>
+        {
+<span class="nc" id="L116">            String data = (substring(dataOriginalNoHtml, prepend + append));</span>
+            //moze nastat situacia ze klucove slova su v title ani v dataOriginal nie su ale je tam !INCLUDE ktory by sa zobrazil vo vysledkoch vyhlavania.
+<span class="nc" id="L118">            data = clear(replaceINCLUDE(data,includeReplace));</span>
+<span class="nc" id="L119">            snippets.add(data);</span>
+        }
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (snippets.isEmpty())</span>
+        {
+<span class="nc" id="L124">            String data = clear(substring(doc.getTitle(), prepend + append));</span>
+<span class="nc" id="L125">            snippets.add(data);</span>
+        }
+<span class="nc" id="L127">    }</span>
+
+    private static String replaceINCLUDE(String dataParam, Pattern includeReplace)
+    {
+<span class="nc" id="L131">        String data = includeReplace.matcher(dataParam).replaceAll(&quot; &quot;);</span>
+<span class="nc" id="L132">        int includeIndex = data.indexOf(&quot;!INCLUDE&quot;);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (includeIndex!=-1)</span>
+        {
+            //regexp nezbehol, zahod vsetko za !INCLUDE
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (includeIndex&lt;1) {</span>
+<span class="nc" id="L137">                data = &quot;&quot;;</span>
+            }
+            else {
+<span class="nc" id="L140">                data = data.substring(0, includeIndex);</span>
+            }
+        }
+<span class="nc" id="L143">        return data;</span>
+    }
+
+    private void renderHighlights() {
+<span class="nc" id="L147">        String separator = &quot;...&quot;;</span>
+<span class="nc" id="L148">        snippet = separator + Tools.join(snippets, separator + &quot; &quot; + separator) + separator;</span>
+<span class="nc" id="L149">        StringBuilder snippetData = new StringBuilder();</span>
+
+        //zvyrazni slova
+<span class="nc" id="L152">        StringTokenizer wordTokenizer = new StringTokenizer(snippet);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        while (wordTokenizer.hasMoreTokens())</span>
+        {
+<span class="nc" id="L155">            String word = wordTokenizer.nextToken();</span>
+<span class="nc" id="L156">            String wordAscLC = DB.internationalToEnglish(word).toLowerCase();</span>
+
+<span class="nc" id="L158">            boolean highlight = false;</span>
+<span class="nc" id="L159">            StringTokenizer st = new StringTokenizer(textToFindAscLC);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
+            {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                if (wordAscLC.indexOf(st.nextToken())!=-1)</span>
+                {
+<span class="nc" id="L164">                    highlight = true;</span>
+<span class="nc" id="L165">                    break;</span>
+                }
+            }
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (highlight) snippetData.append(&quot;&lt;strong&gt;&quot;);</span>
+<span class="nc" id="L170">            snippetData.append(word);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (highlight) snippetData.append(&quot;&lt;/strong&gt;&quot;);</span>
+<span class="nc" id="L172">            snippetData.append(' ');</span>
+<span class="nc" id="L173">        }</span>
+
+<span class="nc" id="L175">        snippet = snippetData.toString().trim();</span>
+<span class="nc" id="L176">    }</span>
+
+    private String toAscLc(String text) {
+<span class="nc" id="L179">        return DB.internationalToEnglish(text).toLowerCase();</span>
+    }
+
+    private List&lt;String&gt; containsAny(String text, List&lt;String&gt; tokens) {
+<span class="nc" id="L183">        String textAscLc = toAscLc(text);</span>
+<span class="nc" id="L184">        List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        for (String token : tokens) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (textAscLc.contains(token)) {</span>
+<span class="nc" id="L187">                result.add(token);</span>
+            }
+<span class="nc" id="L189">        }</span>
+
+<span class="nc" id="L191">        return result;</span>
+    }
+
+    private String substring(String text, int end) {
+<span class="nc" id="L195">        String result = text;</span>
+<span class="nc" id="L196">        int endier = end;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (endier &gt; result.length()) {</span>
+<span class="nc" id="L198">            endier = result.length();</span>
+        }
+
+<span class="nc" id="L201">        return result.substring(0, endier);</span>
+    }
+
+    private String clear(String text) {
+<span class="nc" id="L205">        String result = text;</span>
+
+<span class="nc" id="L207">        int openTagIndex = text.indexOf(&quot;&lt;&quot;);</span>
+<span class="nc" id="L208">        int closeTagIndex = text.indexOf(&quot;&gt;&quot;);</span>
+
+<span class="nc bnc" id="L210" title="All 6 branches missed.">        if (closeTagIndex &gt; -1 &amp;&amp; (openTagIndex == -1 || openTagIndex &gt; closeTagIndex)) {</span>
+<span class="nc" id="L211">            result = result.substring(closeTagIndex + 1);</span>
+        }
+
+<span class="nc" id="L214">        result = SearchTools.htmlToPlain(result);</span>
+<span class="nc" id="L215">        result = Tools.replace(result, &quot;\n&quot;, &quot; &quot;);</span>
+<span class="nc" id="L216">        result = Tools.replace(result, &quot;\r&quot;, &quot; &quot;);</span>
+<span class="nc" id="L217">        result = Tools.replace(result, &quot;\t&quot;, &quot; &quot;);</span>
+
+<span class="nc" id="L219">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

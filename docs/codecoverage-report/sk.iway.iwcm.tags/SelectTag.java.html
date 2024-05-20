@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">SelectTag.java</span></div><h1>SelectTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.taglib.TagUtils;
+import org.apache.struts.taglib.html.Constants;
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ * SelectTag.java - tag pre render selectu zo Struts s pridanim poslednej
+ * moznosti na pridanie hodnoty
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2005
+ * @author $Author: jeeff $
+ * @version $Revision: 1.3 $
+ * @created Date: 16.8.2005 11:34:08
+ * @modified $Date: 2010/01/20 11:15:08 $
+ */
+<span class="nc" id="L35">public class SelectTag extends org.apache.struts.taglib.html.SelectTag</span>
+{
+	private static final long serialVersionUID = 2751499992225522333L;
+
+	//tu je mozne zadat SQL prikaz pre setnutie ako ArrayList do pageContextu
+	// (pouzite pre options tag)
+<span class="nc" id="L41">	private String sqlQuery = null;</span>
+	//ak je nastavene na nejaku nie null hodnotu zrendruje sa ako posledna polozka option pre moznost zadania novej hodnoty
+<span class="nc" id="L43">	String enableNewText = null;</span>
+<span class="nc" id="L44">	String enableNewTextKey = null;</span>
+	public static final String NEW_OPTION_VALUE = &quot;htmlSelectTagNewValue&quot;;
+
+	@Override
+	public int doStartTag() throws JspException
+	{
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (Tools.isNotEmpty(enableNewTextKey))</span>
+		{
+<span class="nc" id="L52">			Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), (HttpServletRequest)pageContext.getRequest());</span>
+<span class="nc" id="L53">			enableNewText = prop.getText(enableNewTextKey);</span>
+		}
+
+<span class="nc" id="L56">		ArrayList&lt;LabelValueDetails&gt; options = new ArrayList&lt;LabelValueDetails&gt;();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (sqlQuery != null)</span>
+		{
+<span class="nc" id="L59">			Connection db_conn = null;</span>
+<span class="nc" id="L60">			PreparedStatement ps = null;</span>
+<span class="nc" id="L61">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L64">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L65">				ps = db_conn.prepareStatement(sqlQuery);</span>
+<span class="nc" id="L66">				rs = ps.executeQuery();</span>
+
+<span class="nc" id="L68">				int queryType = 0;</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">				if (sqlQuery.indexOf(&quot;label&quot;)!=-1 &amp;&amp; sqlQuery.indexOf(&quot;value&quot;)!=-1)</span>
+				{
+<span class="nc" id="L71">					queryType = 1;</span>
+				}
+				String label;
+				String value;
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc bnc" id="L77" title="All 2 branches missed.">					if (queryType == 1)</span>
+					{
+<span class="nc" id="L79">						label = ResponseUtils.filter(DB.getDbString(rs, &quot;label&quot;));</span>
+<span class="nc" id="L80">						value = ResponseUtils.filter(DB.getDbString(rs, &quot;value&quot;));</span>
+					}
+					else
+					{
+<span class="nc" id="L84">						label = ResponseUtils.filter(rs.getString(1));</span>
+<span class="nc" id="L85">						value = label;</span>
+					}
+<span class="nc" id="L87">					options.add(new LabelValueDetails(label, value));</span>
+				}
+<span class="nc" id="L89">				rs.close();</span>
+<span class="nc" id="L90">				ps.close();</span>
+<span class="nc" id="L91">				rs = null;</span>
+<span class="nc" id="L92">				ps = null;</span>
+
+<span class="nc bnc" id="L94" title="All 4 branches missed.">				if (Tools.isNotEmpty(enableNewText) &amp;&amp; options.size()==0)</span>
+				{
+					//aby sme sa mohli prepnut na Nova skupina
+<span class="nc" id="L97">					options.add(new LabelValueDetails(&quot;&quot;, &quot;&quot;));</span>
+				}
+
+<span class="nc" id="L100">				pageContext.setAttribute(&quot;selectSqlQueryOptions&quot;, options);</span>
+			}
+<span class="nc" id="L102">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L104">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L110" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L111">						db_conn.close();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L113">						rs.close();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L115">						ps.close();</span>
+				}
+<span class="nc" id="L117">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L119">				}</span>
+			}
+		}
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (Tools.isNotEmpty(enableNewText))</span>
+		{
+<span class="nc" id="L125">			HttpServletRequest request= (HttpServletRequest) pageContext.getRequest();</span>
+			//	zapis linku na javascript
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (request.getAttribute(&quot;sk.iway.iwcm.tags.SelectTag.isJsIncluded&quot;)==null)</span>
+			{
+<span class="nc" id="L129">				TagUtils.getInstance().write(pageContext, &quot;&lt;script type='text/javascript' language='JavaScript' src='&quot;+request.getContextPath()+&quot;/components/_common/html_tags_support.jsp'&gt;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L130">				request.setAttribute(&quot;sk.iway.iwcm.tags.SelectTag.isJsIncluded&quot;, &quot;true&quot;);</span>
+			}
+<span class="nc" id="L132">			String origOnchange = getOnchange();</span>
+<span class="nc" id="L133">			setOnchange(</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				Tools.isEmpty(origOnchange)</span>
+<span class="nc" id="L135">				? &quot;htmlSelectTagAddOption(this)&quot;</span>
+<span class="nc" id="L136">				: (&quot;htmlSelectTagAddOption(this);&quot; + origOnchange) // najprv pridame novu moznost, potom dame &quot;onchange&quot;</span>
+			);
+<span class="nc" id="L138">			setOnclick(&quot;if(1==this.length){onchange();}&quot;);</span>
+		}
+
+<span class="nc" id="L141">		TagUtils.getInstance().write(pageContext, renderSelectStartElement());</span>
+		// Store this tag itself as a page attribute
+<span class="nc" id="L143">		pageContext.setAttribute(Constants.SELECT_KEY, this);</span>
+<span class="nc" id="L144">		this.calculateMatchValues();</span>
+<span class="nc" id="L145">		return (EVAL_BODY_BUFFERED);</span>
+	}
+
+	@Override
+	public int doEndTag() throws JspException
+	{
+		// Remove the page scope attributes we created
+<span class="nc" id="L152">		pageContext.removeAttribute(Constants.SELECT_KEY);</span>
+		// Render a tag representing the end of our current form
+<span class="nc" id="L154">		StringBuilder results = new StringBuilder();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (saveBody != null)</span>
+		{
+<span class="nc" id="L157">			results.append(saveBody);</span>
+		}
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (Tools.isNotEmpty(enableNewText))</span>
+		{
+<span class="nc" id="L161">			results.append(&quot;&lt;option value='&quot;+NEW_OPTION_VALUE+&quot;'&gt;&quot;+enableNewText+&quot;&lt;/option&gt;&quot;);</span>
+		}
+<span class="nc" id="L163">		results.append(&quot;&lt;/select&gt;&quot;);</span>
+<span class="nc" id="L164">		TagUtils.getInstance().write(pageContext, results.toString());</span>
+<span class="nc" id="L165">		return (EVAL_PAGE);</span>
+	}
+
+	/**
+	 * Calculate the match values we will actually be using.
+	 *
+	 * @throws JspException
+	 */
+	private void calculateMatchValues() throws JspException
+	{
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (this.value != null)</span>
+		{
+<span class="nc" id="L177">			this.match = new String[1];</span>
+<span class="nc" id="L178">			this.match[0] = this.value;</span>
+		}
+		else
+		{
+<span class="nc" id="L182">			Object bean = TagUtils.getInstance().lookup(pageContext, name, null);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (bean == null)</span>
+			{
+				//aby sa top dalo pouzit aj v cistom forme
+<span class="nc" id="L186">				String requestProperty[] = pageContext.getRequest().getParameterValues(property);</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">				if (requestProperty != null &amp;&amp; requestProperty.length&gt;0)</span>
+				{
+<span class="nc" id="L189">					this.match = requestProperty;</span>
+<span class="nc" id="L190">					return;</span>
+				}
+
+<span class="nc" id="L193">				this.match = new String[0];</span>
+<span class="nc" id="L194">				return;</span>
+				/*
+				JspException e = new JspException(messages.getMessage(&quot;getter.bean&quot;, name));
+				RequestUtils.saveException(pageContext, e);
+				throw e;
+				*/
+			}
+			try
+			{
+<span class="nc" id="L203">				this.match = BeanUtils.getArrayProperty(bean, property);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">				if (this.match == null)</span>
+				{
+<span class="nc" id="L206">					this.match = new String[0];</span>
+				}
+			}
+<span class="nc" id="L209">			catch (IllegalAccessException e)</span>
+			{
+<span class="nc" id="L211">				TagUtils.getInstance().saveException(pageContext, e);</span>
+<span class="nc" id="L212">				throw new JspException(messages.getMessage(&quot;getter.access&quot;, property, name));</span>
+			}
+<span class="nc" id="L214">			catch (InvocationTargetException e)</span>
+			{
+<span class="nc" id="L216">				Throwable t = e.getTargetException();</span>
+<span class="nc" id="L217">				TagUtils.getInstance().saveException(pageContext, t);</span>
+<span class="nc" id="L218">				throw new JspException(messages.getMessage(&quot;getter.result&quot;, property, t.toString()));</span>
+			}
+<span class="nc" id="L220">			catch (NoSuchMethodException e)</span>
+			{
+				//RequestUtils.saveException(pageContext, e);
+				//throw new JspException(messages.getMessage(&quot;getter.method&quot;, property, name));
+
+				//mame pouzite vo forme, kde taka properties nie je, skusme vydolovat z requestu
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (Tools.isNotEmpty(pageContext.getRequest().getParameter(name)))</span>
+				{
+<span class="nc" id="L228">					this.match = pageContext.getRequest().getParameterValues(name);</span>
+				}
+<span class="nc" id="L230">			}</span>
+		}
+<span class="nc" id="L232">	}</span>
+
+	/**
+	 * @return Returns the sqlQuery.
+	 */
+	public String getSqlQuery()
+	{
+<span class="nc" id="L239">		return sqlQuery;</span>
+	}
+
+	/**
+	 * @param sqlQuery
+	 *           The sqlQuery to set.
+	 */
+	public void setSqlQuery(String sqlQuery)
+	{
+<span class="nc" id="L248">		this.sqlQuery = sqlQuery;</span>
+<span class="nc" id="L249">	}</span>
+	/**
+	 * @return Returns the enableNewText.
+	 */
+	public String getEnableNewText()
+	{
+<span class="nc" id="L255">		return enableNewText;</span>
+	}
+	/**
+	 * @param enableNewText The enableNewText to set.
+	 */
+	public void setEnableNewText(String enableNewText)
+	{
+<span class="nc" id="L262">		this.enableNewText = enableNewText;</span>
+<span class="nc" id="L263">	}</span>
+
+	public String getEnableNewTextKey()
+	{
+<span class="nc" id="L267">		return enableNewTextKey;</span>
+	}
+
+	public void setEnableNewTextKey(String enableNewTextKey)
+	{
+<span class="nc" id="L272">		this.enableNewTextKey = enableNewTextKey;</span>
+<span class="nc" id="L273">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

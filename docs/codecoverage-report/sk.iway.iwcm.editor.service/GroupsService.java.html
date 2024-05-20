@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">GroupsService.java</span></div><h1>GroupsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocHistory;
+import sk.iway.iwcm.doc.DocHistoryRepository;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+
+/**
+ * service class for groups operations
+ */
+@Service
+@RequestScope
+public class GroupsService extends NotifyService {
+
+    private GroupSchedulerDtoRepository groupSchedulerDtoRepository;
+    private Prop prop;
+
+    @Autowired
+<span class="fc" id="L40">    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, HttpServletRequest request) {</span>
+<span class="fc" id="L41">        this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;</span>
+<span class="fc" id="L42">        this.prop = Prop.getInstance(request);</span>
+<span class="fc" id="L43">    }</span>
+
+	/**
+	 * Recover group from trash.
+	 * It will try to find last parent group from history and use it as recover location.
+	 * If no history is found, group will be recovered to root.
+	 * @param group
+	 * @param currentUser
+	 * @return
+	 */
+    public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">		if (isInTrash(group) == false) return false; //Group is not in trash</span>
+
+		//Get group by id + chec perms
+<span class="fc" id="L58">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+		//Check user perms for dest group
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">		if(GroupsDB.isGroupEditable(currentUser, group.getGroupId())==false) {</span>
+<span class="nc" id="L62">			NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.failed_folder&quot;), prop.getText(&quot;editor.recover.notify.no_right&quot;), NotifyBean.NotifyType.WARNING, 60000);</span>
+<span class="nc" id="L63">			addNotify(info);</span>
+<span class="nc" id="L64">			return false;</span>
+		}
+
+<span class="fc" id="L67">		int parentGroupId = 0;</span>
+<span class="fc" id="L68">		String parentGroupPath = prop.getText(&quot;stat_settings.group_id&quot;);</span>
+		//get last parent_group_id value from history (groups_scheduler table)
+<span class="fc" id="L70">		GroupSchedulerDto latestGroupHistory = groupSchedulerDtoRepository.findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long.valueOf(group.getGroupId()));</span>
+
+		//check if parent exists and NOT in trash
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (latestGroupHistory != null) {</span>
+<span class="fc" id="L74">			GroupDetails parentGroup = groupsDB.getGroup(latestGroupHistory.getParentGroupId());</span>
+<span class="pc bpc" id="L75" title="2 of 4 branches missed.">			if (parentGroup != null &amp;&amp; isInTrash(parentGroup) == false) {</span>
+<span class="fc" id="L76">				parentGroupId = latestGroupHistory.getParentGroupId();</span>
+<span class="fc" id="L77">				parentGroupPath = parentGroup.getFullPath();</span>
+			}
+		}
+
+		//Set folder derent to root
+<span class="fc" id="L82">		group.setParentGroupId( parentGroupId );</span>
+<span class="fc" id="L83">		(new SimpleQuery()).execute(&quot;UPDATE groups SET parent_group_id=? WHERE group_id=?&quot;, parentGroupId, group.getGroupId());</span>
+
+<span class="fc" id="L85">		NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.success_folder&quot;), prop.getText(&quot;editor.recover.notify_body.success_group&quot;, group.getGroupName(), parentGroupPath), NotifyBean.NotifyType.SUCCESS, 60000);</span>
+<span class="fc" id="L86">		addNotify(info);</span>
+
+		//Update sub groups
+<span class="fc" id="L89">		StringBuilder groups = new StringBuilder();</span>
+<span class="fc" id="L90">		List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(group.getGroupId(), true, true);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">		for (GroupDetails g : subGroups) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">			if (groups.length() &gt; 0) groups.append(',').append(g.getGroupId());</span>
+<span class="fc" id="L93">			else groups.append(g.getGroupId());</span>
+<span class="fc" id="L94">		}</span>
+
+		//Repo
+<span class="fc" id="L97">		DocHistoryRepository docHistoryRepository = Tools.getSpringBean(&quot;docHistoryRepository&quot;, DocHistoryRepository.class);</span>
+
+		//List of doc id's that available should be updated (depend on history)
+<span class="fc" id="L100">		List&lt;Integer&gt; docIdsToChange = (new SimpleQuery()).forListInteger(&quot;SELECT doc_id FROM documents WHERE group_id IN (&quot; + groups.toString() + &quot;)&quot;);</span>
+
+		//History records
+<span class="fc" id="L103">		List&lt;DocHistory&gt; historyRecords = docHistoryRepository.findByDocIdInActual(docIdsToChange);</span>
+
+<span class="fc" id="L105">		List&lt;Integer&gt; availableTrue = new ArrayList&lt;&gt;(); //Update availale to true</span>
+<span class="fc" id="L106">		List&lt;Integer&gt; availableFalse = new ArrayList&lt;&gt;(); //Update availale to false</span>
+<span class="fc" id="L107">		List&lt;Integer&gt; notFound = new ArrayList&lt;&gt;(); //No history found</span>
+
+		//Loops docIdsToChange and match them with historyRecords
+<span class="fc" id="L110">		boolean wasFound = false;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">		for(Integer docId : docIdsToChange) {</span>
+<span class="fc" id="L112">			wasFound = false;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">			for(DocHistory history : historyRecords) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">				if(history.getDocId() == docId) {</span>
+<span class="fc" id="L115">					wasFound = true;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">					if(history.isAvailable()) availableTrue.add(docId);</span>
+<span class="fc" id="L117">					else availableFalse.add(docId);</span>
+<span class="fc" id="L118">					break;</span>
+				}
+<span class="fc" id="L120">			}</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">			if(!wasFound) notFound.add(docId);</span>
+<span class="fc" id="L122">		}</span>
+
+		//If history was not found, check last history with ACTUAL=false (maybe only actual is missing)
+<span class="fc bfc" id="L125" title="All 2 branches covered.">		for(Integer notFoundId : notFound) {</span>
+<span class="fc" id="L126">			Optional&lt;DocHistory&gt; history = docHistoryRepository.findTopByDocIdOrderBySaveDateDesc(notFoundId);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">			boolean available = history.isPresent() ? history.get().isAvailable() : true; //If history record is still not found, set available to true</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">			if(available) availableTrue.add(notFoundId);</span>
+<span class="fc" id="L129">			else availableFalse.add(notFoundId);</span>
+<span class="fc" id="L130">		}</span>
+
+		//Updatw doc's available status
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(true)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableTrue, &quot;,&quot;) + &quot;)&quot;);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(false)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableFalse, &quot;,&quot;) + &quot;)&quot;);</span>
+
+		//aktualizuj FT stplce
+<span class="fc" id="L137">		DocDB.updateFileNameField(group.getGroupId());</span>
+
+		//Refresh
+<span class="fc" id="L140">		DocDB.getInstance(true);</span>
+<span class="fc" id="L141">		GroupsDB.getInstance(true);</span>
+
+<span class="fc" id="L143">        return true;</span>
+	}
+
+	/**
+	 * Check if group is in trash
+	 * @param group
+	 * @return
+	 */
+    public static boolean isInTrash(GroupDetails group) {
+<span class="fc" id="L152">        GroupDetails trashGroupDetails = getTrashGroupDetails();</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (group.getFullPath().startsWith(trashGroupDetails.getFullPath())) return true;</span>
+<span class="fc" id="L154">        return false;</span>
+    }
+
+	/**
+     * Vrati adresar Kos
+     * @return
+     */
+    public static GroupDetails getTrashGroupDetails() {
+<span class="fc" id="L162">        Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L163">        String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="fc" id="L164">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L165">        GroupDetails trashGroupDetails = groupsDB.getCreateGroup(trashDirName);</span>
+<span class="fc" id="L166">        return trashGroupDetails;</span>
+    }
+
+    /**
+     * Vrati adresar System (lokalny)
+     * @return
+     */
+    public static GroupDetails getSystemGroupDetails() {
+<span class="fc" id="L174">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L175">        GroupDetails system = groupsDB.getLocalSystemGroup();</span>
+
+        //ak sa nenaslo, pouzi globalny
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if (system == null) {</span>
+<span class="nc" id="L179">            system = groupsDB.getGroupByPath(&quot;/System&quot;);</span>
+        }
+
+<span class="fc" id="L182">        return system;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

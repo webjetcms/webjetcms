@@ -118,6 +118,33 @@
             }
         },
         {
+            "label": "appStartEshopDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-eshop.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartNNDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-nnsk.xml ./gradlew appStartDebug",
@@ -148,6 +175,33 @@
             "label": "appStartOracleDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-oracle.xml ./gradlew appStartDebug",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartPgSQLDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-pgsql.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",

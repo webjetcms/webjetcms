@@ -3,6 +3,12 @@ const moment = require("moment");
 module.exports = function () {
   return actor({
 
+    getConfLng() {
+      var lng = process.env.CODECEPT_LNG;
+      if (typeof lng == "undefined" || lng == null || lng == "") lng = "sk";
+      return lng;
+    },
+
     // Define custom steps here, use 'this' to access default methods of I.
     // It is recommended to place a general 'login' function here.
     fillAreaField(area, generateRandomNum) {
@@ -77,12 +83,27 @@ module.exports = function () {
         this.closeOtherTabs();
         this.amOnPage('/logoff.do?forward=/admin/logon/');
       }
+
+      //Select language if not default
+      let language = this.getConfLng();
+      let helper = "Pomocník";
+      if ("sk" != language) {
+        //Different language detected, selecting language
+        if("en" == language) {
+          this.selectOption("language", "English");
+          helper = "Help";
+        } else if("cz" == language) {
+          this.selectOption("language", "Česky");
+          helper = "Nápověda";
+        }
+      }
+
       //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
       //odosli prihlasenie
       this.fillField("username", user);
       this.fillField("password", secret("*********"));
       this.click("login-submit");
-      if (waitForText===true) this.waitForText("Pomocník", 10);
+      if (waitForText===true) this.waitForText(helper, 10);
     },
 
     //vygenerovanie nahodneho retazca
@@ -258,35 +279,6 @@ module.exports = function () {
       this.dtEditorWaitForLoader();
     },
 
-    //skontroluje prava na datatabulke - zobrazi, odoberie pravo a overi zobrazenie chyby prav
-    dtCheckPerms(perms, url, datatableId=null) {
-      let warningText = "Prístup k tejto stránke je zamietnutý";
-      this.say("Testing permissions, perms=" + perms + " url=" + url + " warningText=" + warningText);
-      this.amOnPage(url);
-      this.dtWaitForLoader();
-      this.dontSee(warningText);
-
-      this.say("Otvaram novy tab v ktorom odstranim prava");
-      this.openNewTab();
-      this.amOnPage(url + "?removePerm=" + perms);
-      this.closeCurrentTab();
-
-      if (typeof datatableId != "undefined" && datatableId != null) this.clickCss("#"+datatableId+"_wrapper button.buttons-refresh");
-      else this.clickCss("button.buttons-refresh");
-
-      this.say("Obnovujem datatabulku, overujem prava na REST sluzbu");
-      this.waitForElement("#toast-container-webjet", 10);
-      this.see(warningText);
-      this.clickCss("button.toast-close-button", "#toast-container-webjet");
-
-      this.say("Overujem prava na zobrazenie celej stranky");
-      this.amOnPage(url + "?removePerm=" + perms);
-      this.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
-
-      this.amOnPage('/logoff.do?forward=/admin/');
-      this.waitUrlEquals('/admin/logon/', 10);
-    },
-
     //zresetuje nastavenie datatabulky (poradie stlpcov, usporiadanie, zoznam stlpcov)
     dtResetTable(name = "datatableInit") {
       var container = "#"+name+"_wrapper";
@@ -327,14 +319,29 @@ module.exports = function () {
       this.wait(0.3);
     },
 
+    jstreeReset() {
+      this.click("button.buttons-jstree-settings");
+      this.waitForElement("#jstreeSettingsModal");
+      this.uncheckOption("#jstree-settings-showid");
+      this.uncheckOption("#jstree-settings-showorder");
+      this.uncheckOption("#jstree-settings-showpages");
+      this.click("#jstree-settings-submit");
+      this.jstreeWaitForLoader();
+    },
+
     //vo vlastnostiach adresaru nastavi parent adresar na korenovy
     groupSetRootParent() {
+      let rootgroupName = "Koreňový priečinok";
+      if("en" === this.getConfLng()) {
+        rootgroupName = "Root folder";
+      }
+
       this.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
       this.waitForElement("div.jsTree-wrapper");
       this.wait(1);
-      this.waitForText('Koreňový priečinok', 5);
+      this.waitForText(rootgroupName, 5);
       this.wait(1);
-      this.click('Koreňový priečinok', 'div.jsTree-wrapper');
+      this.click(rootgroupName, 'div.jsTree-wrapper');
       this.wait(1);
       this.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
     },

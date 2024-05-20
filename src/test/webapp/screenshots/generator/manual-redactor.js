@@ -8,33 +8,27 @@ Before(({ I, login }) => {
 
 Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    let confLng = I.getConfLng();
 
-    //domenovy selektor
+    I.say("domenovy selektor");
     I.click("div.js-domain-toggler div.bootstrap-select button");
     Document.screenshot("/redactor/webpages/domain-select.png", 1360, 220);
     I.click("div.js-domain-toggler div.bootstrap-select button");
 
-    //priecinky system/kos
+    I.say("priecinky system/kos");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.click("#pills-system-tab");
     DT.waitForLoader();
     Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1360, 300);
 
-    //karta priecinky
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
-    DT.waitForLoader();
-    I.click("#pills-folders-dt-tab");
-    DT.waitForLoader();
-    Document.screenshot("/_media/changelog/2022q3/2022-40-folders-dt.png", 1360, 500);
-
-    //listy naposledy upravene a cakajuce na schvalenie
+    I.say("listy naposledy upravene a cakajuce na schvalenie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
     I.click("#pills-waiting-tab");
     DT.waitForLoader();
     Document.screenshot("/_media/changelog/2021q1/2021-13-awaiting-approve.png", 1360, 500);
 
-    //zobrazenie stranok aj z podadresarov
+    I.say("zobrazenie stranok aj z podadresarov");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     I.resizeWindow(1650, 860);
     var container="#datatableInit_wrapper";
@@ -42,7 +36,13 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
-    I.click("Nadradený priečinok");
+
+    if("sk" === confLng) {
+        I.click("Nadradený priečinok");
+    } else if("en" === confLng) {
+        I.click("Parent folder");
+    }
+
     I.click("button.btn.btn-primary.dt-close-modal");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
@@ -58,10 +58,15 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     Document.screenshot("/redactor/datatables/dt-colvis.png");
 
-    I.click("Obnoviť");
+    if("sk" === confLng) {
+        I.click("Obnoviť");
+    } else if("en" === confLng) {
+        I.click("Restore");
+    }
+
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
-    //zobrazenie poctu zaznamov
+    I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
@@ -70,13 +75,12 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu button.dt-close-modal")
 
-
-    //specialne ikony
+    I.say("specialne ikony");
     I.click("button.buttons-select-all");
     Document.screenshotElement("button.buttons-history-preview", "/redactor/webpages/icon-preview.png");
     Document.screenshotElement("div.buttons-recursive", "/redactor/webpages/icon-recursive.png");
 
-    //plavajuca lista v editore
+    I.say("specialne ikony");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=263");
     I.resizeWindow(1360, 740);
     DTE.waitForEditor();
@@ -88,7 +92,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.switchTo();
     I.wjSetDefaultWindowSize();
 
-    //ulozit pracovnu verziu
+    I.say("ulozit pracovnu verziu");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=92");
     I.resizeWindow(1280, 550);
     DTE.waitForEditor();
@@ -98,7 +102,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/webpages/save-work-version.png");
     I.wjSetDefaultWindowSize();
 
-    //stavove ikony aj s vyhladavanim
+    I.say("stavove ikony aj s vyhladavanim");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-editorFields\\.statusIcons button.btn-outline-secondary" });
     Document.screenshot("/redactor/webpages/status-icons.png");
@@ -149,9 +153,11 @@ Scenario('historia', ({ I, DT, DTE, Document }) => {
     //I.click("#datatableFieldDTE_Field_editorFields-history_wrapper th.dt-format-date-time");
     //DT.waitForLoader();
 
+    I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 120);
+
     Document.screenshotElement(null, "/redactor/webpages/history.png");
 
-    I.click("#datatableFieldDTE_Field_editorFields-history tr:nth-child(1) td.dt-select-td")
+    I.click("#datatableFieldDTE_Field_editorFields-history tr:nth-child(1) td.dt-select-td");
 
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-edit", "/redactor/webpages/history-btn-edit.png");
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-preview", "/redactor/webpages/history-btn-preview.png");
@@ -259,6 +265,7 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.resizeWindow(1280, 400);
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldI");
     I.fillField("div.DTE_Action_Edit div.DTE_Field_Name_fieldI input", "123456");
+    I.moveCursorTo('#toast-container');
     Document.screenshot("/frontend/webpages/customfields/webpages-length.png");
     I.wjSetDefaultWindowSize();
 
@@ -309,21 +316,47 @@ Scenario('datatable-duplicate', ({ I, Document }) => {
     Document.screenshot("/_media/changelog/2021q2/2021-24-duplicate-button.png", 1280, 500);
 });
 
-Scenario('apps-qa', ({ I, DTE, Document }) => {
-    I.amOnPage("/apps/otazky-odpovede/");
-    Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
+Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
 
-    I.amOnPage("/apps/qa/admin/");
-    Document.screenshot("/redactor/apps/qa/admin.png");
+    if("sk" === I.getConfLng()) {
+        I.amOnPage("/apps/otazky-odpovede/");
+        Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
 
-    I.click("Koľko nôh ma pavúk ?");
-    DTE.waitForEditor("qaDataTable");
-    I.click("#pills-dt-qaDataTable-answer-tab");
-    Document.screenshot("/redactor/apps/qa/admin-edit.png");
+        I.amOnPage("/apps/qa/admin/");
+        Document.screenshot("/redactor/apps/qa/admin.png");
+
+        DT.filter("question", "Koľko nôh ma pavúk ?");
+        I.click("Koľko nôh ma pavúk ?");
+        DTE.waitForEditor("qaDataTable");
+        I.click("#pills-dt-qaDataTable-answer-tab");
+        Document.screenshot("/redactor/apps/qa/admin-edit.png");
+    } else if("en" === I.getConfLng()) {
+        I.amOnPage("/apps/otazky-odpovede/questions-answers.html?language=en");
+        Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
+
+        I.amOnPage("/apps/qa/admin/");
+        Document.screenshot("/redactor/apps/qa/admin.png");
+
+        DT.filter("question", "How many legs does a spider have ?");
+        I.click("How many legs does a spider have ?");
+        DTE.waitForEditor("qaDataTable");
+        I.click("#pills-dt-qaDataTable-answer-tab");
+        Document.screenshot("/redactor/apps/qa/admin-edit.png");
+    }
 });
 
 Scenario('logon', ({ I, Document }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
+
+    let confLng = I.getConfLng();
+    //Select language if not default
+    if ("sk" != confLng) {
+        //Different language detected, selecting language
+        if("en" == confLng) {
+          I.selectOption("language", "English");
+        }
+    }
+
     I.fillField("#password", "12345");
     Document.screenshot("/redactor/admin/logon.png", 1080, 685);
 
@@ -341,7 +374,6 @@ Scenario('layout-menu', ({ I, Document }) => {
     Document.screenshotElement("div.ly-header", "/redactor/admin/header.png");
 
     Document.screenshotElement("a.js-logout-toggler", "/redactor/admin/icon-logoff.png");
-    Document.screenshotElement("div.js-switch8-toggler", "/redactor/admin/icon-switch8.png");
 
     I.moveCursorTo("a.js-logout-toggler");
     Document.screenshotElement("div.ly-header", "/redactor/admin/header-logoff.png");
@@ -361,12 +393,13 @@ Scenario('layout-menu', ({ I, Document }) => {
     I.wjSetDefaultWindowSize();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=12");
-    I.resizeWindow(991, 685);
+    I.resizeWindow(768, 1024);
 
+    I.wait(2); //Need to wait for included app thumbnails to load
     Document.screenshot("/redactor/admin/editor-tablet.png");
 
     I.click("#pills-dt-datatableInit-basic-tab");
-    I.resizeWindow(575, 685);
+    I.resizeWindow(390, 844);
     Document.screenshot("/redactor/admin/editor-phone.png");
 
     I.wjSetDefaultWindowSize();
@@ -415,9 +448,8 @@ Scenario('pagebuilder', ({ I, DTE, Document }) => {
 
     Document.screenshot("/redactor/webpages/pagebuilder.png");
 
-    Document.screenshotElement("div.exit-inline-editor", "/redactor/webpages/pagebuilder-switcher.png");
-
     I.switchTo();
+    Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
 });
 
 Scenario('welcome', ({ I, Document }) => {
@@ -485,6 +517,7 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
 });
 
 Scenario('formsimple', ({ I, DTE, Document }) => {
+    let confLng = I.getConfLng();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=26180");
     DTE.waitForEditor();
     I.wait(5);
@@ -493,7 +526,7 @@ Scenario('formsimple', ({ I, DTE, Document }) => {
 
     I.click("iframe.wj_component");
 
-    Document.screenshot("/redactor/apps/formsimple/editor-dialog.png");
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-basic.png");
 
     I.switchTo();
     I.wait(2);
@@ -502,23 +535,68 @@ Scenario('formsimple', ({ I, DTE, Document }) => {
     I.switchTo("#editorComponent");
     I.wait(2);
     I.click("#tabLink2");
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-advanced.png");
+
+    I.click("#tabLink3");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items.png");
 
     I.switchTo();
 
     //aby na screenshote nebolo meno usera
+
     I.amOnPage("/logoff.do?forward=/admin/");
-    I.amOnPage("/apps/formular-lahko/");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/formular-lahko/");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/formular-lahko/?language=en");
+    }
     I.wait(5);
     Document.screenshot("/redactor/apps/formsimple/formsimple.png");
 
-    //skupiny poli
-    I.amOnPage("/apps/formular-lahko/zaskrtavacie-vyberove-polia.html");
+    I.say("skupiny poli");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/formular-lahko/zaskrtavacie-vyberove-polia.html");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/formular-lahko/check-radio-fields.html?language=en");
+    }
     I.wait(5);
     Document.screenshotElement("article.ly-content div.container", "/redactor/apps/formsimple/formsimple-radiogroup.png");
 
-    //riadkove zobrazenie
-    I.amOnPage("/apps/formular-lahko/riadkove-zobrazenie.html");
+    I.say("riadkove zobrazenie");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/formular-lahko/riadkove-zobrazenie.html");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/formular-lahko/line-view.html");
+    }
     I.wait(5);
     Document.screenshotElement("article.ly-content div.container", "/redactor/apps/formsimple/formsimple-rowview.png");
+
+    I.say("wysiwyg version");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true&language=en");
+    }
+    I.wait(5);
+    I.pressKey("ArrowDown");
+    I.pressKey("ArrowDown");
+
+    I.fillField("#meno-a-priezvisko", "Form Tester");
+
+    DTE.fillCleditor("form.formsimple > div.form-group", "Lorem ipsum dolor sit amet!");
+    I.pressKey(['CommandOrControl', 'A']);
+    I.wait(0.3);
+    I.pressKey(['CommandOrControl', 'B'])
+    I.wait(0.3);
+    I.pressKey('ArrowRight');
+    I.wait(0.3);
+    I.pressKey('Enter');
+    I.pressKey(['CommandOrControl', 'B'])
+    I.type("Quis autem vel eum iure reprehenderit?", 50);
+    I.pressKey('Enter');
+    I.pressKey('Enter');
+    I.type("Lorem ipsum", 50);
+    I.click("div.cleditorButton[title=Numbering]");
+
+    Document.screenshot("/redactor/apps/formsimple/formsimple-wysiwyg.png");
 });

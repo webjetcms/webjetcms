@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiTokenAuthFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">ApiTokenAuthFilter.java</span></div><h1>ApiTokenAuthFilter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Map;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.web.filter.GenericFilterBean;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * SpringSecurity filter na prihlasovanie sa pomocou API tokenu
+ * Pridany do chain je v V9SpringConfig.configureSecurity
+ */
+<span class="fc" id="L30">public class ApiTokenAuthFilter extends GenericFilterBean {</span>
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+<span class="fc" id="L34">        boolean logged = logUserViaApiKey((HttpServletRequest)request, (HttpServletResponse)response);</span>
+<span class="fc" id="L35">        chain.doFilter(request, response);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">		if (logged) {</span>
+<span class="fc" id="L37">			((HttpServletRequest)request).getSession().invalidate();</span>
+		}
+<span class="fc" id="L39">    }</span>
+
+    /**
+	 * Prihlasenie pouzivatela pomocou tokenu v HTTP hlavicke
+	 * Token je vo formate base64(login:token) a v DB je ulozeny v api_key ako salt|hash
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private static boolean logUserViaApiKey(HttpServletRequest request, HttpServletResponse response) {
+		try {
+<span class="fc" id="L50">			String loginToken = request.getHeader(Constants.getString(&quot;logonTokenHeaderName&quot;));</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">			if (Tools.isNotEmpty(loginToken)) {</span>
+				try{
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">					if (Base64.isBase64(loginToken)) {</span>
+<span class="fc" id="L54">						Base64 b64 = new Base64();</span>
+<span class="fc" id="L55">						loginToken = new String(b64.decode(loginToken.getBytes()));</span>
+					}
+<span class="nc" id="L57">				} catch (Exception ex) {</span>
+					//asi nebolo zakodovane cez base64
+<span class="fc" id="L59">				}</span>
+
+<span class="fc" id="L61">				int pos = loginToken.indexOf(&quot;:&quot;);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">				if (pos==-1) pos = loginToken.indexOf(&quot;|&quot;);</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">				if (pos &lt; 0) return false;</span>
+
+<span class="fc" id="L66">				String login = loginToken.substring(0, pos);</span>
+<span class="fc" id="L67">				String token = loginToken.substring(pos+1);</span>
+
+<span class="fc" id="L69">				Identity user = new Identity(UsersDB.getUser(login));</span>
+
+				//pri REST volani nie je korektne setnuty RequestBean a audituje to nezmysly
+<span class="fc" id="L72">				SetCharacterEncodingFilter.registerDataContext(request);</span>
+
+<span class="fc" id="L74">				Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L75">				LogonTools.logon(login, token, user, errors, request, Prop.getInstance(request));</span>
+
+<span class="fc" id="L77">				Logger.debug(ApiTokenAuthFilter.class, &quot;errors.ERROR_KEY=&quot;+errors.get(&quot;ERROR_KEY&quot;));</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">				if (errors.get(&quot;ERROR_KEY&quot;)==null)</span>
+				{
+					// Save our logged-in user in the session
+<span class="fc" id="L82">					user.setValid(true);</span>
+<span class="fc" id="L83">					LogonTools.setUserToSession(request.getSession(), user);</span>
+<span class="fc" id="L84">					request.setAttribute(&quot;csrfDisabled&quot;, &quot;1&quot;);</span>
+
+<span class="fc" id="L86">					return true;</span>
+				}
+			}
+<span class="nc" id="L89">		} catch (Exception ex) {</span>
+<span class="nc" id="L90">			Logger.error(ApiTokenAuthFilter.class, ex);</span>
+<span class="fc" id="L91">		}</span>
+<span class="fc" id="L92">		return false;</span>
+	}
+ }
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

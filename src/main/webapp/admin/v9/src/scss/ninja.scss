@@ -1,8 +1,8 @@
 @charset "UTF-8";
 
-//FONT AWESOME 6
-$fa-font-path : "~@fortawesome/fontawesome-pro/webfonts";
-$fa-font-name: "Font Awesome 6 Pro";
+//TABLER
+$ti-font-path: "~@tabler/icons-webfont/dist/fonts";
+$ti-font-name-filled: "tabler-icons-filled";
 
 $input-btn-focus-width: 0;
 
@@ -85,13 +85,9 @@ $input-disabled-border-color: $input-border-color;
 
 @import "~bootstrap/scss/bootstrap";
 
-@import "~@fortawesome/fontawesome-pro/scss/fontawesome";
-@import "~@fortawesome/fontawesome-pro/scss/light";
-@import "~@fortawesome/fontawesome-pro/scss/solid";
-@import "~@fortawesome/fontawesome-pro/scss/regular";
-@import "~@fortawesome/fontawesome-pro/scss/duotone";
-@import "~@fortawesome/fontawesome-pro/scss/_duotone-icons";
-@import "~@fortawesome/fontawesome-pro/scss/brands";
+@import "~@tabler/icons-webfont/dist/tabler-icons-filled";
+@import "~@tabler/icons-webfont/dist/tabler-icons";
+
 
 @import "~datatables.net-bs5";
 @import "~datatables.net-editor-bs5/css/editor.bootstrap5.min.css";
@@ -121,6 +117,7 @@ $input-disabled-border-color: $input-border-color;
 @import "2-helpers/functions";
 @import "2-helpers/mixins";
 @import "2-helpers/placeholders";
+@import "2-helpers/animations";
 
 //BASE
 @import "3-base/font-face";
@@ -199,3 +196,4 @@ $input-disabled-border-color: $input-border-color;
 
 // HOTFIX
 @import "hotfix";
+

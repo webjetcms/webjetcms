@@ -18,7 +18,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
 taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
-<iwcm:checkLogon admin="true" perms="cmp_news"/>
+<iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 <stripes:useActionBean var="actionBean" beanclass="sk.iway.iwcm.components.news.NewsActionBean" /><%
 
 request.setAttribute("cmpName", "news");
@@ -701,13 +701,6 @@ function doOKNewsFCK() {
 
 function Ok()
 {
-    //ak je nahraty editor tak sprav ulozenie namiesto odoslania
-	if ($("#tabLink5").hasClass("activeTab") && $("#componentIframeWindowTab").contents().find("#editorMainDiv").is(":visible"))
-	{
-        $("#componentIframeWindowTab")[0].contentWindow.saveEditor($("#componentIframeWindowTab")[0].contentWindow.document.editorForm, true);
-        return false;
-	}
-
 	if (doOKNewsFCK()) return true;
 	else return false;
 }
@@ -749,18 +742,18 @@ function escapeHtml(unsafe) {
  }
 </script>
 
-<iwcm:menu name="menuGallery">
-	<div class="box_tab box_tab_thin left"  style="width:1100px;">
-		<ul class="tab_menu" id="Tabs" style="background-color:transparent;">
-			<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.universalComponentDialog.title"/></a></li>
-			<li class="last"><a href="#" onclick=";showHideTab('2');" id="tabLink2"><iwcm:text key="editor.tab.template" /></a></li>
-			<li class=""><a href="#" onclick="showHideTab('3');" id="tabLink3"><iwcm:text key="editor.perex.group" /></a></li>
-			<li class=""><a href="#" onclick="showHideTab('4');" id="tabLink4"><iwcm:text key="components.gallery.perex.filter.title" /></a></li>
+<div class="box_tab box_tab_thin left"  style="width:1100px;">
+	<ul class="tab_menu" id="Tabs" style="background-color:transparent;">
+		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.universalComponentDialog.title"/></a></li>
+		<li class="last"><a href="#" onclick=";showHideTab('2');" id="tabLink2"><iwcm:text key="editor.tab.template" /></a></li>
+		<li class=""><a href="#" onclick="showHideTab('3');" id="tabLink3"><iwcm:text key="editor.perex.group" /></a></li>
+		<li class=""><a href="#" onclick="showHideTab('4');" id="tabLink4"><iwcm:text key="components.gallery.perex.filter.title" /></a></li>
+		<iwcm:menu name="cmp_news">
 			<li class=""><a href="#" onclick="loadComponentIframe();showHideTab('5');" id="tabLink5"><iwcm:text key="components.news.title"/></a></li>
+		</iwcm:menu>
+	</ul>
+</div>
 
-		</ul>
-	</div>
-</iwcm:menu>
 
 <iwcm:stripForm action="/admin/editor.do" class="newsForm form-horizontal" name="textForm" beanclass="sk.iway.iwcm.components.news.NewsActionBean">
 	<div class="tab-pane toggle_content tab-pane-fullheight">
@@ -877,6 +870,16 @@ function escapeHtml(unsafe) {
 						<div class="checkbox">
 							<label>
 								<stripes:checkbox name="checkDuplicity" value="true"></stripes:checkbox> <iwcm:text key="components.news.check_duplicty"/>
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-3 col-sm-9">
+						<div class="checkbox">
+							<label>
+								<stripes:checkbox name="removeDefaultDocs" value="true"></stripes:checkbox> <iwcm:text key="components.news.remove_default_docs"/>
 							</label>
 						</div>
 					</div>

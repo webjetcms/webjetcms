@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -38,16 +39,13 @@ public class PerexGroupsEditorFields implements Serializable{
     }
 
     public void toPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {
-        List<GroupDetails> groups = perexGroupOriginal.getEditorFields().getAvailableGroups();
-        String groupsIds = "";
-        for(int i = 0; i < groups.size(); i++) {
-            if (groups.get(i)==null) return;
-            if(perexGroupOriginal.getAvailableGroups() == null || perexGroupOriginal.getAvailableGroups().equals("")) {
-                perexGroupOriginal.setAvailableGroups("" + groups.get(i).getGroupId());
-            } else {
-                groupsIds = perexGroupOriginal.getAvailableGroups();
-                perexGroupOriginal.setAvailableGroups(groupsIds + "," + groups.get(i).getGroupId());
-            }
+        String newGroupIds = "";
+        //loop MediaGroupEditorFileds.availableGroups, get every group id and join them using "," as separator
+        for(int i = 0; i < this.availableGroups.size(); i++) {
+            if (this.availableGroups.get(i)==null) continue;
+            if (Tools.isNotEmpty(newGroupIds)) newGroupIds += ",";
+            newGroupIds += this.availableGroups.get(i).getGroupId();
         }
+        perexGroupOriginal.setAvailableGroups(newGroupIds);
     }
 }

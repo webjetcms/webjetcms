@@ -16,7 +16,7 @@ Scenario('zoznam fotografii-pamatanie velkosti', ({ I, DT }) => {
     DT.waitForLoader();
     I.jstreeClick("test-vela-foto");
 
-    I.click("button.btn-gallery-size-l");
+    I.clickCss("button.btn-gallery-size-l");
     I.see("Záznamy 1 až 4 z", "div.dt-footer-row");
 
     //reloadni stranku
@@ -28,8 +28,8 @@ Scenario('zoznam fotografii-pamatanie velkosti', ({ I, DT }) => {
     I.seeElement("button.btn-gallery-size-l.active");
 
     //prepni na default
-    I.click("button.btn-gallery-size-s");
-    I.see("Záznamy 1 až 12 z", "div.dt-footer-row");
+    I.clickCss("button.btn-gallery-size-s");
+    I.see("Záznamy 1 až 16 z", "div.dt-footer-row");
 });
 
 Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
@@ -165,11 +165,11 @@ Scenario('multidomain zobrazenie', async({ I, DT }) => {
 
     // prepnutie na domenu mirroring.tau27.iway.sk
     I.say("Prepinam domenu");
-    I.click("div.js-domain-toggler div.bootstrap-select button");
+    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("mirroring.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
+    I.clickCss(".toastr-buttons button.btn-primary");
 
     I.wait(2);
     DT.waitForLoader();
@@ -189,7 +189,7 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     I.click("test", "#SomStromcek");
 
     //pri vytvoreni noveho priecinka musi byt pole pre zadanie nazvu prazdne
-    I.click("div.tree-col button.buttons-create");
+    I.clickCss("div.tree-col button.buttons-create");
     DTE.waitForEditor("galleryDimensionDatatable");
     I.dontSeeInField("#DTE_Field_name", "test");
     I.seeInField("#DTE_Field_path", "/images/gallery/test");
@@ -206,7 +206,7 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
 
     I.waitForElement("button.btn-gallery-size-table", 5);
     I.wait(1);
-    I.click("button.btn-gallery-size-table");
+    I.clickCss("button.btn-gallery-size-table");
     DT.resetTable("galleryTable");
     DT.waitForLoader();
 
@@ -228,8 +228,8 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
     I.say("check column settings-there was bug with duplicate buttons on header and footer");
 
     var container = "#galleryTable_wrapper";
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.see("Priečinok", "div.colvisbtn_wrapper button.buttons-columnVisibility span.column-title");
 
@@ -240,7 +240,7 @@ Scenario('bug-remember column order-reset', ({ I, DT }) => {
 
     I.amOnPage("/admin/v9/apps/gallery/");
 
-    I.click("button.btn-gallery-size-s");
+    I.clickCss("button.btn-gallery-size-s");
     DT.resetTable("galleryTable");
 });
 
@@ -255,7 +255,7 @@ Scenario('editor check dir select', ({ I, Document, DTE, Browser }) => {
     if (Browser.isFirefox()) I.wait(1);
     I.waitForElement("#Tabs li.last.openLast");
     I.wait(0.5);
-    I.click("#Tabs li.first a");
+    I.clickCss("#Tabs li.first a");
     I.wait(0.5);
     I.seeInField("#dir", "/images/gallery/test-vela-foto");
     I.forceClick("span.input-group-addon.btn.green");
@@ -292,7 +292,7 @@ function editImage(name, save, I, DTE) {
     I.waitForText(name, 10, "#galleryTable");
     I.click(locate("td.dt-row-edit a").withText(name));
     DTE.waitForEditor("galleryTable");
-    I.click("#pills-dt-galleryTable-photoeditor-tab");
+    I.clickCss("#pills-dt-galleryTable-photoeditor-tab");
     I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
 
     if (save) {
@@ -305,11 +305,11 @@ function editImage(name, save, I, DTE) {
         DTE.save("galleryTable");
         I.waitForElement("#toast-container-upload", 10);
         I.waitForElement(locate("#toast-container-upload div.toast-message span").withText(name), 10);
-        I.waitForElement("#toast-container-upload i.fa-spin", 10);
-        I.waitForInvisible("#toast-container-upload i.fa-spin", 10);
-        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.fa-check-circle"), 10);
+        I.waitForElement("#toast-container-upload i.ti-spin", 10);
+        I.waitForInvisible("#toast-container-upload i.ti-spin", 10);
+        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
         I.wait(0.5);
-        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.fa-check-circle"), 10);
+        I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
     } else {
         DTE.cancel("galleryTable");
         I.waitForElement("#toast-container-upload", 10);

@@ -16,7 +16,7 @@ Scenario("zalozky", ({ I }) => {
     I.see("Web stránky", container);
     I.see("Formuláre", container);
 
-    I.forceClick(container + " div.overview-logged__head__icon");
+    I.forceClick(container + " div.overview-logged__head__more i.ti");
 
     var title = "Autotest-"+random;
 
@@ -55,7 +55,7 @@ Scenario("feedback", ({ I }) => {
     var container = "#webjet-overview-dashboard .feedback";
 
     I.see("Spätná väzba", container);
-    I.forceClick(container + " div.overview-logged__head__icon");
+    I.forceClick(container + " div.overview-logged__head__more i.ti");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);
@@ -72,8 +72,9 @@ Scenario("feedback", ({ I }) => {
     I.see("Spätná väzba bola odoslaná, ďakujeme za Váš čas.", ".toast-message");
     I.forceClick("button.toast-close-button");
 
-    //skus spam protection
-    I.forceClick(container + " div.overview-logged__head__icon");
+    //
+    I.say("skus spam protection");
+    I.forceClick(container + " div.overview-logged__head__more i.ti");
 
     I.waitForElement("#feedback_modal");
     I.wait(2);

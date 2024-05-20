@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThymeleafShowdocController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.showdoc</a> &gt; <span class="el_source">ThymeleafShowdocController.java</span></div><h1>ThymeleafShowdocController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.showdoc;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.server.ResponseStatusException;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * ThymeleafShowdocController.java
+ *
+ * Zobrazuje web stranku pomocou Thymeleaf sablony
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2019
+ * @author      $Author: lpasek $
+ * @version     $Revision: 1.0 $
+ * created      14.2.2022 09:29
+ */
+@Controller
+@RequestMapping(&quot;/thymeleaf&quot;)
+<span class="fc" id="L26">public class ThymeleafShowdocController {</span>
+    /**
+     * Metoda zobrazuje view pre thymeleaf šablony a injectuje objekty ninja, docDetails, docDetailsOriginal, groupDetails a tempDetails
+     * @param request HttpServletRequest
+     * @param model Model
+     * @return String of view
+     */
+    @RequestMapping(path = &quot;/showdoc&quot;, method = {RequestMethod.POST, RequestMethod.GET})
+    public String showdoc(HttpServletRequest request, Model model) {
+
+<span class="fc" id="L36">        String template = (String) request.getAttribute(&quot;thymeleafTemplateFile&quot;);</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (template == null) {</span>
+<span class="nc" id="L38">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Template not found&quot;);</span>
+        }
+<span class="fc" id="L40">        model.addAttribute(&quot;request&quot;, request);</span>
+<span class="fc" id="L41">        model.addAttribute(&quot;session&quot;, request.getSession());</span>
+<span class="fc" id="L42">        model.addAttribute(&quot;ninja&quot;, request.getAttribute(&quot;ninja&quot;));</span>
+<span class="fc" id="L43">        model.addAttribute(&quot;docDetails&quot;, request.getAttribute(&quot;docDetails&quot;));</span>
+<span class="fc" id="L44">        model.addAttribute(&quot;docDetailsOriginal&quot;, request.getAttribute(&quot;docDetailsOriginal&quot;));</span>
+<span class="fc" id="L45">        model.addAttribute(&quot;groupDetails&quot;, request.getAttribute(&quot;pageGroupDetails&quot;));</span>
+<span class="fc" id="L46">        model.addAttribute(&quot;tempDetails&quot;, request.getAttribute(&quot;templateDetails&quot;));</span>
+<span class="fc" id="L47">        model.addAttribute(&quot;templatesGroupDetails&quot;, request.getAttribute(&quot;templatesGroupDetails&quot;));</span>
+
+<span class="fc" id="L49">        return template;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

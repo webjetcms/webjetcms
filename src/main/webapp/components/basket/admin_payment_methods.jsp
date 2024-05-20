@@ -26,7 +26,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 %>
 
 <div class="row title">
-    <h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="fa fa-angle-right"></i><iwcm:text key="components.basket.admin_invoices_list.sposob_platby"/></h1>
+    <h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="ti ti-chevron-right"></i><iwcm:text key="components.basket.admin_invoices_list.sposob_platby"/></h1>
 </div>
 
 <style>

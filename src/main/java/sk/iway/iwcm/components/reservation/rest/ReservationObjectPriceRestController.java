@@ -23,7 +23,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_reservation')")
 @Datatable
 public class ReservationObjectPriceRestController  extends DatatableRestControllerV2<ReservationObjectPriceEntity, Long> {
-    
+
     private final ReservationObjectPriceRepository reservationObjectPriceRepository;
 
     @Autowired
@@ -33,26 +33,26 @@ public class ReservationObjectPriceRestController  extends DatatableRestControll
     }
 
     @Override
-    public Page<ReservationObjectPriceEntity> getAllItems(Pageable pageable) { 
+    public Page<ReservationObjectPriceEntity> getAllItems(Pageable pageable) {
         List<ReservationObjectPriceEntity> items = new ArrayList<>();
         Integer objectId = Tools.getIntValue(getRequest().getParameter("objectId"), -1);
 
         if(objectId == -1) items = reservationObjectPriceRepository.findAllByDomainId(CloudToolsForCore.getDomainId());
         else items = reservationObjectPriceRepository.findAllByObjectIdAndDomainId(objectId, CloudToolsForCore.getDomainId());
-    
+
         DatatablePageImpl<ReservationObjectPriceEntity> page = new DatatablePageImpl<>(items);
         return page;
     }
 
     @Override
-    public ReservationObjectPriceEntity getOneItem(long id) { 
-        if(id == -1) { 
+    public ReservationObjectPriceEntity getOneItem(long id) {
+        if(id == -1) {
             ReservationObjectPriceEntity entity = new ReservationObjectPriceEntity();
             Integer objectId = Tools.getIntValue(getRequest().getParameter("objectId"), -1);
             if(objectId != -1) entity.setObjectId(objectId);
             return entity;
         }
-        return reservationObjectPriceRepository.getById(id);
+        return reservationObjectPriceRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
     }
 
     @Override

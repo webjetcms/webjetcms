@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ModuleInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ModuleInfo.java</span></div><h1>ModuleInfo.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  ModuleInfo.java - info o module
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.15 $
+ *@created      $Date: 2008/10/28 09:39:56 $
+ *@modified     $Date: 2008/10/28 09:39:56 $
+ */
+public class ModuleInfo
+{
+	/**
+	 * Kluc pre nazov modulu, napr. calendar.title
+	 */
+	private String nameKey;
+	/**
+	 * Kluc pre CSS styl a &lt;iwcm:menu name=&quot;&quot;&gt;
+	 */
+	private String itemKey;
+	/**
+	 * Cesta k suboru / adresaru, ktory sa kontroluje na pritomnost modulu
+	 */
+	private String path;
+	/**
+	 * Informacia o dostupnosti modulu
+	 */
+<span class="fc" id="L39">	private boolean available = false;</span>
+	/**
+	 * Ak je modul nahrany z databazy (_modules_) je to true (doplni sa automaticky do menu)
+	 */
+<span class="fc" id="L43">	private boolean fromDatabase = false;</span>
+	/**
+	 * Vyzadovany kluc v Constants, ak nie je null, tak kontroluje, ci
+	 * dany kluc je nastaveny a ma dlzku &gt; 1. Inak bude disabled
+	 */
+<span class="fc" id="L48">	private String requireConstantsKey = null;</span>
+
+	/**
+	 * Ak je true, polozka sa zobrazuje v pravach pouzivatela
+	 */
+<span class="fc" id="L53">	private boolean userItem = true;</span>
+	/**
+	 * identifikacia parent modulu pre submenus
+	 */
+	private String rootModule;
+
+	//identifikacia skupiny v ktorej sa menu polozka zobrazi (moduly, ovladaci panel...)
+	private String group;
+
+	//ikona pre zobrazenie v menu
+	private String menuIcon;
+
+<span class="fc" id="L65">	private String leftMenuNameKey = null;</span>
+<span class="fc" id="L66">	private int menuOrder = 1000;</span>
+<span class="fc" id="L67">	private boolean showInLeftMenu = false;</span>
+<span class="fc" id="L68">	private String leftMenuLink = null;</span>
+
+<span class="fc" id="L70">	private boolean defaultDisabled = false;</span>
+
+	private boolean hideSubmenu;
+
+<span class="fc" id="L74">	private String domainName = null;</span>
+
+	/**
+	 * V akych verziach WJ je modul dostupny
+	 */
+<span class="fc" id="L79">	private String wjVersions = &quot;&quot;;</span>
+
+<span class="fc" id="L81">	private List&lt;ModuleInfo&gt; submenus = null;</span>
+
+<span class="fc" id="L83">	private List&lt;LabelValueDetails&gt; components = null;</span>
+
+	/**
+	 * Ak je nastavene true bude sa v editacii pouzivatela zobrazovat vola pre nastavenie skupin na dany modul
+	 */
+<span class="fc" id="L88">	private boolean showSubCategories = false;</span>
+
+<span class="fc" id="L90">	private boolean custom = false;</span>
+
+	/**
+	 * @return Returns the available.
+	 */
+	public boolean isAvailable()
+	{
+		//Logger.debug(ModuleInfo.class, &quot;testing &quot; + itemKey +&quot; wjversions=&quot; +wjVersions+&quot; vs &quot;+Constants.getString(&quot;wjVersion&quot;)+&quot; available=&quot;+available);
+<span class="fc bfc" id="L98" title="All 2 branches covered.">		if (wjVersions.indexOf(Constants.getString(&quot;wjVersion&quot;))==-1)</span>
+		{
+<span class="fc" id="L100">			available = false;</span>
+		}
+<span class="fc" id="L102">		return available;</span>
+	}
+
+	public ModuleInfo()
+<span class="fc" id="L106">	{</span>
+		//empty constructor
+<span class="fc" id="L108">	}</span>
+
+	/**
+	 * Konstruktor
+	 * @param nameKey - kluc do text.properties pre nazov modulu
+	 * @param itemKey - kluc pre prava
+	 * @param path - cesta k suboru, ktory sa kontroluje na existenciu
+	 * @param requireConstantsKey - kontrola ci existuje Constants.getString(...)
+	 * @param userItem - ak true, je mozne to volit v nastaveni pouzivatela
+	 * @param showInLeftMenu - ak je true, zobrazuje sa v lavom menu pouzivatela
+	 * @param leftMenuLink - linka, ktora sa pouziva pre lave menu
+	 * @param wjWersions - na ake verzie WJ sa to pouziva B=basic, P=Pro, E=Enterprise
+	 * @param menuOrder - poradie, v akom sa menu zobrazi
+	 */
+	public ModuleInfo(String nameKey, String itemKey, String path, String requireConstantsKey, boolean userItem, boolean showInLeftMenu, String leftMenuLink, String wjWersions, int menuOrder)
+<span class="fc" id="L123">	{</span>
+<span class="fc" id="L124">		this.nameKey = nameKey;</span>
+<span class="fc" id="L125">		this.itemKey = itemKey;</span>
+<span class="fc" id="L126">		this.path = path;</span>
+<span class="fc" id="L127">		this.available = false;</span>
+<span class="fc" id="L128">		this.requireConstantsKey = requireConstantsKey;</span>
+<span class="fc" id="L129">		this.userItem = userItem;</span>
+<span class="fc" id="L130">		this.showInLeftMenu = showInLeftMenu;</span>
+<span class="fc" id="L131">		this.leftMenuLink = leftMenuLink;</span>
+<span class="fc" id="L132">		this.wjVersions = wjWersions;</span>
+<span class="fc" id="L133">		this.menuOrder = menuOrder;</span>
+<span class="fc" id="L134">	}</span>
+
+	public void addSubmenu(ModuleInfo subModule)
+	{
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		if (submenus == null) submenus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L139">		subModule.setRootModule(this.itemKey);</span>
+<span class="fc" id="L140">		submenus.add(subModule);</span>
+<span class="fc" id="L141">	}</span>
+
+	public void addSubmenu(String nameKey, String path)
+	{
+<span class="fc" id="L145">		ModuleInfo sub = new ModuleInfo();</span>
+<span class="fc" id="L146">		sub.setNameKey(nameKey);</span>
+<span class="fc" id="L147">		sub.setPath(path);</span>
+<span class="fc" id="L148">		sub.setWjVersions(this.wjVersions);</span>
+<span class="fc" id="L149">		sub.setUserItem(false);</span>
+
+<span class="fc" id="L151">		addSubmenu(sub);</span>
+<span class="fc" id="L152">	}</span>
+
+	public void addComponent(LabelValueDetails component)
+	{
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (components == null) components = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L157">		components.add(component);</span>
+<span class="nc" id="L158">	}</span>
+
+	/**
+	 * @param available The available to set.
+	 */
+	public void setAvailable(boolean available)
+	{
+<span class="fc" id="L165">		this.available = available;</span>
+<span class="fc" id="L166">	}</span>
+	/**
+	 * @return Returns the fileCheck.
+	 */
+	public String getPath()
+	{
+<span class="fc" id="L172">		return path;</span>
+	}
+	/**
+	 * @param fileCheck The fileCheck to set.
+	 */
+	public void setPath(String path)
+	{
+<span class="fc" id="L179">		this.path = path;</span>
+<span class="fc" id="L180">	}</span>
+	/**
+	 * @return Returns the itemKey.
+	 */
+	public String getItemKey()
+	{
+<span class="fc" id="L186">		return itemKey;</span>
+	}
+	/**
+	 * @param itemKey The itemKey to set.
+	 */
+	public void setItemKey(String itemKey)
+	{
+<span class="fc" id="L193">		this.itemKey = itemKey;</span>
+<span class="fc" id="L194">	}</span>
+	/**
+	 * @return Returns the nameKey.
+	 */
+	public String getNameKey()
+	{
+<span class="fc" id="L200">		return nameKey;</span>
+	}
+	/**
+	 * @param nameKey The nameKey to set.
+	 */
+	public void setNameKey(String nameKey)
+	{
+<span class="fc" id="L207">		this.nameKey = nameKey;</span>
+<span class="fc" id="L208">	}</span>
+	/**
+	 * @return Returns the fromDatabase.
+	 */
+	public boolean isFromDatabase()
+	{
+<span class="fc" id="L214">		return fromDatabase;</span>
+	}
+	/**
+	 * @param fromDatabase The fromDatabase to set.
+	 */
+	public void setFromDatabase(boolean fromDatabase)
+	{
+<span class="nc" id="L221">		this.fromDatabase = fromDatabase;</span>
+<span class="nc" id="L222">	}</span>
+	/**
+	 * @return Returns the requireConstantsKey.
+	 */
+	public String getRequireConstantsKey()
+	{
+<span class="fc" id="L228">		return requireConstantsKey;</span>
+	}
+	/**
+	 * @param requireConstantsKey The requireConstantsKey to set.
+	 */
+	public void setRequireConstantsKey(String requireConstantsKey)
+	{
+<span class="nc" id="L235">		this.requireConstantsKey = requireConstantsKey;</span>
+<span class="nc" id="L236">	}</span>
+	/**
+	 * @return Returns the userItem.
+	 */
+	public boolean isUserItem()
+	{
+<span class="fc" id="L242">		return userItem;</span>
+	}
+	/**
+	 * @param userItem The userItem to set.
+	 */
+	public void setUserItem(boolean userItem)
+	{
+<span class="fc" id="L249">		this.userItem = userItem;</span>
+<span class="fc" id="L250">	}</span>
+	public String getWjVersions()
+	{
+<span class="nc" id="L253">		return wjVersions;</span>
+	}
+	public void setWjVersions(String wjVersions)
+	{
+<span class="fc" id="L257">		this.wjVersions = wjVersions;</span>
+<span class="fc" id="L258">	}</span>
+	public String getLeftMenuNameKey()
+	{
+<span class="fc bfc" id="L261" title="All 2 branches covered.">		if (leftMenuNameKey == null)</span>
+		{
+<span class="fc" id="L263">			return(nameKey);</span>
+		}
+<span class="fc" id="L265">		return leftMenuNameKey;</span>
+	}
+	public void setLeftMenuNameKey(String leftMenuNameKey)
+	{
+<span class="fc" id="L269">		this.leftMenuNameKey = leftMenuNameKey;</span>
+<span class="fc" id="L270">	}</span>
+	public int getMenuOrder()
+	{
+<span class="fc" id="L273">		return menuOrder;</span>
+	}
+	public ModuleInfo setMenuOrder(int menuOrder)
+	{
+<span class="fc" id="L277">		this.menuOrder = menuOrder;</span>
+<span class="fc" id="L278">		return this;</span>
+	}
+	public boolean isShowInLeftMenu()
+	{
+<span class="fc" id="L282">		return showInLeftMenu;</span>
+	}
+	public void setShowInLeftMenu(boolean showInLeftMenu)
+	{
+<span class="fc" id="L286">		this.showInLeftMenu = showInLeftMenu;</span>
+<span class="fc" id="L287">	}</span>
+	public String getLeftMenuLink()
+	{
+<span class="fc bfc" id="L290" title="All 2 branches covered.">		if (leftMenuLink == null)</span>
+		{
+<span class="fc" id="L292">			String link = path;</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">			if (link.contains(&quot;/admin/v9/dist/views/&quot;)) {</span>
+<span class="fc" id="L294">				link = Tools.replace(link, &quot;/admin/v9/dist/views/&quot;, &quot;/admin/v9/&quot;);</span>
+<span class="fc" id="L295">				link = Tools.replace(link, &quot;.html&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L296">				link = Tools.replace(link, &quot;/index/&quot;, &quot;/&quot;);</span>
+			}
+<span class="fc" id="L298">			return(link);</span>
+		}
+<span class="fc" id="L300">		return leftMenuLink;</span>
+	}
+	public void setLeftMenuLink(String leftMenuLink)
+	{
+<span class="fc" id="L304">		this.leftMenuLink = leftMenuLink;</span>
+<span class="fc" id="L305">	}</span>
+	/**
+	 * @return Returns the defaultDisabled.
+	 */
+	public boolean isDefaultDisabled()
+	{
+<span class="fc" id="L311">		return defaultDisabled;</span>
+	}
+	/**
+	 * @param defaultDisabled The defaultDisabled to set.
+	 */
+	public void setDefaultDisabled(boolean defaultDisabled)
+	{
+<span class="fc" id="L318">		this.defaultDisabled = defaultDisabled;</span>
+<span class="fc" id="L319">	}</span>
+
+	public List&lt;ModuleInfo&gt; getSubmenus()
+	{
+<span class="fc" id="L323">		return submenus;</span>
+	}
+
+	public List&lt;LabelValueDetails&gt; getComponents()
+	{
+<span class="fc" id="L328">		return components;</span>
+	}
+
+	/**
+	 * Vrati zoznam submenu podla prav daneho pouzivatela
+	 * @param user
+	 * @return
+	 */
+	public List&lt;ModuleInfo&gt; getSubmenus(Identity user)
+	{
+<span class="fc" id="L338">		return Modules.getSubmenus(this, user);</span>
+	}
+
+	public void setRootModule(String rootModule)
+	{
+<span class="fc" id="L343">		this.rootModule = rootModule;</span>
+<span class="fc" id="L344">	}</span>
+
+	public String getRootModule()
+	{
+<span class="nc" id="L348">		return rootModule;</span>
+	}
+
+	public boolean isShowSubCategories()
+	{
+<span class="nc" id="L353">		return showSubCategories;</span>
+	}
+
+	public void setShowSubCategories(boolean showCategories)
+	{
+<span class="fc" id="L358">		this.showSubCategories = showCategories;</span>
+<span class="fc" id="L359">	}</span>
+
+	@Override
+	public String toString() {
+<span class="nc" id="L363">		return &quot;ModuleInfo [nameKey=&quot; + nameKey + &quot;, itemKey=&quot; + itemKey</span>
+				+ &quot;, path=&quot; + path + &quot;, available=&quot; + available
+				+ &quot;, fromDatabase=&quot; + fromDatabase + &quot;, requireConstantsKey=&quot;
+				+ requireConstantsKey + &quot;, userItem=&quot; + userItem
+				+ &quot;, menuOrder=&quot; + menuOrder + &quot;, leftMenuLink=&quot; + leftMenuLink
+				+ &quot;]&quot;;
+	}
+
+	public String getGroup()
+	{
+<span class="fc" id="L373">		return group;</span>
+	}
+
+	public ModuleInfo setGroup(String group)
+	{
+<span class="fc" id="L378">		this.group = group;</span>
+<span class="fc" id="L379">		return this;</span>
+	}
+
+	public String getMenuIcon()
+	{
+<span class="fc" id="L384">		return menuIcon;</span>
+	}
+
+	public ModuleInfo setMenuIcon(String menuIcon)
+	{
+<span class="fc" id="L389">		this.menuIcon = menuIcon;</span>
+<span class="fc" id="L390">		return this;</span>
+	}
+
+	public boolean getHideSubmenu()
+	{
+<span class="nc" id="L395">		return hideSubmenu;</span>
+	}
+
+	public void setHideSubmenu(boolean hideSubmenu)
+	{
+<span class="fc" id="L400">		this.hideSubmenu = hideSubmenu;</span>
+<span class="fc" id="L401">	}</span>
+
+	public String getDomainName()
+	{
+<span class="fc" id="L405">		return domainName;</span>
+	}
+
+	public void setDomainName(String domainName)
+	{
+<span class="fc" id="L410">		this.domainName = domainName;</span>
+<span class="fc" id="L411">	}</span>
+
+	public boolean isCustom() {
+<span class="nc" id="L414">		return custom;</span>
+	}
+
+	public void setCustom(boolean custom) {
+<span class="fc" id="L418">		this.custom = custom;</span>
+<span class="fc" id="L419">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

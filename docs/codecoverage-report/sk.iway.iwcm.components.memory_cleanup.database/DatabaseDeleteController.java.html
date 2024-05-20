@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseDeleteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.memory_cleanup.database</a> &gt; <span class="el_source">DatabaseDeleteController.java</span></div><h1>DatabaseDeleteController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.memory_cleanup.database;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.utils.Pair;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+
+/**
+ * Trieda sluzi na cistenie pamate pre Statistiku, E-maily, Historiu stranok, Monitorovanie servera a Audit.
+ *
+ * @author pgajdos
+ * @since 24.07.2020
+ */
+@Datatable
+@RestController
+@RequestMapping(value = &quot;/admin/rest/settings/date-dependent-entries&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_data_deleting')&quot;)
+public class DatabaseDeleteController extends DatatableRestControllerV2&lt;DatabaseDeleteBean, Long&gt; {
+
+    private final DatabaseDeleteService cleanupService;
+
+    @Autowired
+    public DatabaseDeleteController(DatabaseDeleteService cleanupService) {
+<span class="fc" id="L36">        super(null);</span>
+<span class="fc" id="L37">        this.cleanupService = cleanupService;</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * Mapping sluziaci na ziskanie skupin zaznamov.
+     *
+     * @param pageable Pageable objekt obsahujuci parametre pre strankovanie.
+     * @return Page&lt;MemoryCleanupDateDependentEntity&gt; Page objekt obsahujuci MemoryCleanupDateDependentEntity.
+     */
+    @Override
+    public Page&lt;DatabaseDeleteBean&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L48">        Prop prop = Prop.getInstance(getRequest());</span>
+<span class="fc" id="L49">        DatatablePageImpl&lt;DatabaseDeleteBean&gt; page = new DatatablePageImpl&lt;&gt;(cleanupService.getAllItems(prop));</span>
+<span class="fc" id="L50">        page.addOptions(&quot;groupId&quot;, cleanupService.getGroupNames(prop), &quot;label&quot;, &quot;value&quot;, false);</span>
+
+<span class="fc" id="L52">        return page;</span>
+    }
+
+    /**
+     * Metoda sluzi na filtrovanie/sortovanie skupin zaznamov. Metoda sa taktiez stara o ziskavanie poctu zaznamov na mazanie.
+     * Zaznamy sa ziskaju vtedy, pokial sa filtruje podla datumu (pokial params obsahuju datum z filtru tabulky).
+     *
+     * @param params   Parametre podla ktorych sa vykanava filtrovanie/sortovanie.
+     * @param pageable Pageable objekt obsahujuci parametre pre strankovanie.
+     * @param search   Prazdny objekt MemoryCleanupDateDependentEntity (funkcionalita z ineho modulu).
+     * @return Page&lt;MemoryCleanupDateDependentEntity&gt; Page objekt obsahujuci upraveny zoznam MemoryCleanupDateDependentEntity.
+     */
+    @Override
+    public Page&lt;DatabaseDeleteBean&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, DatabaseDeleteBean search) {
+
+        DatatablePageImpl&lt;DatabaseDeleteBean&gt; page;
+<span class="fc" id="L68">        String dateRange = params.get(&quot;searchFrom&quot;);</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(dateRange)) {</span>
+<span class="fc" id="L70">            Pair&lt;Date, Date&gt; dates = getCleanStatDateValue(dateRange);</span>
+<span class="fc" id="L71">            Prop prop = Prop.getInstance(getRequest());</span>
+<span class="fc" id="L72">            page = new DatatablePageImpl&lt;&gt;(cleanupService.getMemoryCleanupEntities(dates.first, dates.second, prop));</span>
+<span class="fc" id="L73">        }</span>
+        else {
+<span class="nc" id="L75">            Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L76">            page = new DatatablePageImpl&lt;&gt;(cleanupService.getAllItems(prop));</span>
+        }
+<span class="fc" id="L78">        return page;</span>
+    }
+
+    /**
+     * Mapping sluziaci na mazanie zaznamov.
+     *
+     * @param entities DatatableRequest objekt obsahujuci datumovi ramec v ktorom sa maju zaznami vymazat.
+     * @return boolean pre potvrdenie mazania.
+     */
+    @Override
+    public boolean deleteItem(DatabaseDeleteBean entity, long id) {
+<span class="nc" id="L89">        setForceReload(true);</span>
+<span class="nc" id="L90">        return cleanupService.delete(entity);</span>
+    }
+
+
+    /**
+     * Metoda sluzi na spracovanie prichadzajuceho casoveho ramca.
+     *
+     * @param statDate String obsahujuci casovi ramec.
+     * @return Pair objekt s dvoma datumami od/do.
+     */
+    private Pair&lt;Date, Date&gt; getCleanStatDateValue(String statDate) {
+<span class="fc" id="L101">        String filteredDate = statDate.replace(&quot;daterange:&quot;, &quot;&quot;);</span>
+<span class="fc" id="L102">        String[] stringDateArray = new String[2];</span>
+
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (filteredDate.contains(&quot;-&quot;)) {</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (filteredDate.startsWith(&quot;-&quot;)) {</span>
+<span class="nc" id="L106">                stringDateArray[0] = &quot;&quot;;</span>
+<span class="nc" id="L107">                stringDateArray[1] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);</span>
+            } else {
+<span class="fc" id="L109">                stringDateArray = filteredDate.split(&quot;-&quot;);</span>
+            }
+        } else {
+<span class="nc" id="L112">            stringDateArray[0] = filteredDate;</span>
+<span class="nc" id="L113">            stringDateArray[1] = &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L116">        long[] longDateArray = new long[]{Tools.getLongValue(stringDateArray[0], 0), Tools.getLongValue(stringDateArray[1], new Date().getTime())};</span>
+
+<span class="fc" id="L118">        Date dateFrom = new Date(longDateArray[0]);</span>
+        //datum do mame 7.10.2020 ale myslime do konca dna, posunieme teda o jeden den
+<span class="fc" id="L120">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L121">        cal.setTimeInMillis(longDateArray[1]);</span>
+<span class="fc" id="L122">        cal.add(Calendar.DATE, 1);</span>
+<span class="fc" id="L123">        cal.add(Calendar.SECOND, -1);</span>
+<span class="fc" id="L124">        Date dateTo = cal.getTime();</span>
+<span class="fc" id="L125">        return new Pair&lt;&gt;(dateFrom, dateTo);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,15 +1,17 @@
 package sk.iway.tags;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import xjava.security.Cipher;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.TagSupport;
+
+import com.google.crypto.tink.subtle.Hex;
+
 import java.security.MessageDigest;
 import java.util.Calendar;
 
@@ -141,13 +143,13 @@ public class CardPayTag extends TagSupport
 		return EVAL_PAGE;
 	}
 
-	private String getSign(JspWriter out, String toHash, String key) throws Exception
+	public static String getSign(JspWriter out, String toHash, String key) throws Exception
 	{
 		MessageDigest sha = MessageDigest.getInstance("SHA-1");
 		byte[] shaDigest = sha.digest(toHash.getBytes());
 
 		//toto je iba vypis
-		String shaDigestString = Hex.dumpString(shaDigest);
+		String shaDigestString = Hex.encode(shaDigest);
 		shaDigestString = shaDigestString.substring(0, 16).trim();
 		Logger.debug(CardPayTag.class, "toHash = [" + toHash + "]<br>");
 		Logger.debug(CardPayTag.class, "SHA-1 hash = [" + shaDigestString + "]<br>");
@@ -155,16 +157,16 @@ public class CardPayTag extends TagSupport
 
 		//key = "testep01";
 
-		Cipher ecipher = Cipher.getInstance("DES", "Cryptix");
-		RawSecretKey desKey = new RawSecretKey("DES", key.getBytes());
-		ecipher.initEncrypt(desKey);
-		byte[] desCrypt  = ecipher.crypt(shaDigest, 0, 16);
+		Cipher ecipher = Cipher.getInstance("DES");
+		SecretKeySpec desKey = new SecretKeySpec(key.getBytes(), "DES");
+		ecipher.init(Cipher.ENCRYPT_MODE, desKey);
+		byte[] desCrypt  = ecipher.doFinal(shaDigest, 0, 16);
 
-		String desCryptString = Hex.dumpString(desCrypt);
+		String desCryptString = Hex.encode(desCrypt);
 		Logger.debug(CardPayTag.class, "DES = [" + desCryptString + "]<br>");
 
 		String sign = desCryptString.substring(0, 16).trim();
-		return(sign);
+		return(sign.toUpperCase());
 	}
 
 	public String getMid()

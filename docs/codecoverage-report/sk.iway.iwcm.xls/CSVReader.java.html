@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CSVReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.xls</a> &gt; <span class="el_source">CSVReader.java</span></div><h1>CSVReader.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.xls;
+
+
+/**
+Copyright 2005 Bytecode Pty Ltd.
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *  CSVReader.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $ - (original Glen Smith)
+ *@version      $Revision: 1.2 $
+ *@created      Date: 18.12.2005 13:50:33
+ *@modified     $Date: 2007/01/08 14:41:25 $
+ */
+public class CSVReader {
+
+	private BufferedReader br;
+<span class="nc" id="L40">	private boolean hasNext = true;</span>
+	private char separator;
+	private char quotechar;
+	
+	/** The default separator to use if none is supplied to the constructor. */
+	public static final char DEFAULT_SEPARATOR = ',';
+	
+	/** The default quote character to use if none is supplied to the constructor. */
+	public static final char DEFAULT_QUOTE_CHARACTER = '&quot;';
+
+	/**
+	 * Constructs CSVReader using a comma for the separator.
+	 * 
+	 * @param reader
+	 *            the reader to an underlying CSV source.
+	 */
+	public CSVReader(Reader reader) {
+<span class="nc" id="L57">		this(reader, DEFAULT_SEPARATOR);</span>
+<span class="nc" id="L58">	}</span>
+	
+	/**
+	 * Constructs CSVReader with supplied separator.
+	 * 
+	 * @param reader the reader to an underlying CSV source.
+	 * @param separator the delimiter to use for separating entries.
+	 */
+	public CSVReader(Reader reader, char separator) {
+<span class="nc" id="L67">		this(reader, separator, DEFAULT_QUOTE_CHARACTER);</span>
+<span class="nc" id="L68">	}</span>
+	
+	/**
+	 * Constructs CSVReader with supplied separator and quote char.
+	 * 
+	 * @param reader the reader to an underlying CSV source.
+	 * @param separator the delimiter to use for separating entries
+	 * @param quotechar the character to use for quoted elements
+	 */
+<span class="nc" id="L77">	public CSVReader(Reader reader, char separator, char quotechar) {</span>
+<span class="nc" id="L78">		this.br = new BufferedReader(reader);</span>
+<span class="nc" id="L79">		this.separator = separator;	</span>
+<span class="nc" id="L80">		this.quotechar = quotechar;</span>
+<span class="nc" id="L81">	}</span>
+
+	/**
+	 * Reads the entire file into a List with each element being a String[] of
+	 * tokens.
+	 * 
+	 * @return a List of String[], with each String[] representing a line of the
+	 *         file.
+	 * 
+	 * @throws IOException
+	 *             if bad things happen during the read
+	 */
+	public List&lt;String[]&gt; readAll() throws IOException {
+
+<span class="nc" id="L95">		List&lt;String[]&gt; allElements = new ArrayList&lt;String[]&gt;();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		while (hasNext) {</span>
+<span class="nc" id="L97">			String[] nextLineAsTokens = readNext();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			if (nextLineAsTokens != null)</span>
+<span class="nc" id="L99">				allElements.add(nextLineAsTokens);</span>
+<span class="nc" id="L100">		}</span>
+<span class="nc" id="L101">		return allElements;</span>
+
+	}
+
+	/**
+	 * Reads the next line from the buffer and converts to a string array.
+	 * 
+	 * @return a string array with each comma-separated element as a separate
+	 *         entry.
+	 * 
+	 * @throws IOException
+	 *             if bad things happen during the read
+	 */
+	public String[] readNext() throws IOException {
+
+<span class="nc" id="L116">		String nextLine = getNextLine();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		return hasNext ? parseLine(nextLine) : null;</span>
+	}
+
+	/**
+	 * Reads the next line from the file.
+	 * 
+	 * @return the next line from the file without trailing newline
+	 * @throws IOException if bad things happen during the read
+	 */
+	private String getNextLine() throws IOException {
+<span class="nc" id="L127">		String nextLine = br.readLine();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (nextLine == null) {</span>
+<span class="nc" id="L129">			hasNext = false;</span>
+		}
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		return hasNext ? nextLine : null;</span>
+	}
+
+	/**
+	 * Parses an incoming String and returns an array of elements.
+	 * 
+	 * @param nextLine
+	 *            the string to parse
+	 * @return the comma-tokenized list of elements, or null if nextLine is null
+	 * @throws IOException 
+	 */
+	private String[] parseLine(String nextLine) throws IOException {
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (nextLine == null) {</span>
+<span class="nc" id="L145">			return null;</span>
+		}
+
+<span class="nc" id="L148">		List&lt;String&gt; tokensOnThisLine = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L149">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L150">		boolean inQuotes = false;</span>
+		do {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (sb.length() &gt; 0) {</span>
+				// continuing a quoted section, reappend newline
+<span class="nc" id="L154">				sb.append('\n');</span>
+<span class="nc" id="L155">				nextLine = getNextLine();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (nextLine == null)</span>
+<span class="nc" id="L157">					break;</span>
+			}
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			for (int i = 0; i &lt; nextLine.length(); i++) {</span>
+
+<span class="nc" id="L161">				char c = nextLine.charAt(i);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (c == quotechar) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					inQuotes = !inQuotes;</span>
+<span class="nc bnc" id="L164" title="All 4 branches missed.">				} else if (c == separator &amp;&amp; !inQuotes) {</span>
+<span class="nc" id="L165">					tokensOnThisLine.add(sb.toString().trim());</span>
+<span class="nc" id="L166">					sb = new StringBuilder(); // start work on next token</span>
+				} else {
+<span class="nc" id="L168">					sb.append(c);</span>
+				}
+			}
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		} while (inQuotes);</span>
+<span class="nc" id="L172">		tokensOnThisLine.add(sb.toString().trim());</span>
+<span class="nc" id="L173">		return tokensOnThisLine.toArray(new String[0]);</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

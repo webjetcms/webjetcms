@@ -1,13 +1,17 @@
 package sk.iway.iwcm.components.template_groups;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.templates.TemplateDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.doc.TemplatesGroupDB;
 import sk.iway.iwcm.i18n.IwayProperties;
@@ -15,20 +19,31 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.i18n.PropDB;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TemplateGroupsService {
+
+    TemplateDetailsService templateDetailsService;
+
+    @Autowired
+    public TemplateGroupsService(TemplateDetailsService templateDetailsService) {
+        this.templateDetailsService = templateDetailsService;
+    }
 
     List<TemplatesGroupBean> getAllTemplateGroups(HttpServletRequest request) {
         List<TemplatesGroupBean> temp = new ArrayList<>();
         String lng = getLng(request);
 
         IwayProperties prop = Prop.getChangedProperties(lng, "temp-group-");
-        List<TemplatesGroupBean> templateGroupBeans = TemplatesGroupDB.getAllTemplatesGroupsWithCount();
+        List<TemplatesGroupBean> templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroupsWithCount(), UsersDB.getCurrentUser(request));
 
         for (TemplatesGroupBean item : templateGroupBeans) {
             item.setProjectName(prop.getProperty("temp-group-" + item.getId() + ".project.name"));
@@ -52,6 +67,44 @@ public class TemplateGroupsService {
         }
 
         return temp;
+    }
+
+    /**
+     * If user has only perms for some folders/domains returns only template groups used in his available templates
+     * @param user
+     * @return
+     */
+    public List<TemplatesGroupBean> getTemplateGroups(UserDetails user) {
+        List<TemplatesGroupBean> all = TemplatesGroupDB.getAllTemplatesGroups();
+        return filterByUser(all, user);
+    }
+
+    /**
+     * If user has only perms for some folders/domains show only template groups used in his available templates
+     * @param all
+     * @param user
+     * @return
+     */
+    public List<TemplatesGroupBean> filterByUser(List<TemplatesGroupBean> all, UserDetails user) {
+        if (Tools.isEmpty(user.getEditableGroups(true))) return all;
+
+        if (CloudToolsForCore.isControllerDomain()) return all;
+
+        List<TemplatesGroupBean> filtered = new ArrayList<>();
+
+        List<TemplateDetails> temps = templateDetailsService.getAllTemplateDetails(user);
+        Set<Long> tempGroupIds = new HashSet<>();
+        for (TemplateDetails temp : temps) {
+            tempGroupIds.add(temp.getTemplatesGroupId());
+        }
+
+        for (TemplatesGroupBean group : all) {
+            if (tempGroupIds.contains(group.getId())) {
+                filtered.add(group);
+            }
+        }
+
+        return filtered;
     }
 
     TemplatesGroupBean saveTemplateGroup(TemplatesGroupBean templateGroupBean, HttpServletRequest request) {

@@ -1,0 +1,72 @@
+Feature('admin.audit-changed-webpages');
+
+var pageTitle = "audit-changed-webpage";
+var pageDocId = "81552";
+var randomNumber;
+Before(({ I, login }) => {
+    login('admin');
+
+    if (typeof randomNumber == "undefined") {
+        randomNumber = I.getRandomText();
+    }
+});
+
+Scenario("Permission check", ({ I, DT }) => {
+    I.say("Requires 2 perms: 'menuWebpages OR cmp_news' and 'cmp_adminlog'");
+    DT.checkPerms("cmp_adminlog", "/admin/v9/apps/audit-changed-webpages/");
+});
+
+Scenario("Permission check menuWebpages", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/audit-changed-webpages/?removePerm=menuWebpages");
+    DT.filter("title", pageTitle);
+    DT.checkTableRow("changedWebPagesDataTable", 1, [pageDocId, null, pageTitle, "Tester Playwright", null, "/Test stavov/"+pageTitle]);
+});
+
+Scenario("logout", ({ I }) => {
+    I.logout();
+});
+
+Scenario("Check that after change, page is on top of audit-changed-webpages + it works as webpage @singlethread", async ({ I, DT, DTE }) => {
+    var newBody = "TestBody_" + randomNumber;
+
+    I.say("change prepared web page");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+pageDocId);
+    DTE.waitForEditor();
+    I.click("#pills-dt-datatableInit-content-tab");
+    I.waitForElement("#cke_data", 10);
+    await DTE.fillCkeditor(newBody);
+    DTE.save();
+
+    I.say("Verify change in audit-changed-webpages");
+    I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
+    DT.checkTableRow("changedWebPagesDataTable", 1, [pageDocId, "", pageTitle, "Tester Playwright"]);
+
+    I.say("check body");
+    I.click(pageTitle);
+    DTE.waitForEditor("changedWebPagesDataTable");
+    I.click("#pills-dt-changedWebPagesDataTable-content-tab");
+    I.waitForElement("#cke_data", 10);
+    I.switchTo("#cke_data");
+    I.switchTo("iframe.cke_reset");
+    I.see(newBody);
+});
+
+Scenario("Check buttons preview", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
+    DT.filter("title", pageTitle);
+    I.clickCss("button.dt-filter-id");
+    I.clickCss("button.buttons-history-preview");
+    I.switchToNextTab();
+    I.see(pageTitle.toUpperCase(), "div.container h1");
+    I.closeCurrentTab();
+});
+
+Scenario("Check buttons stat", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
+    DT.filter("title", pageTitle);
+    I.clickCss("button.dt-filter-id");
+    I.clickCss("button.buttons-stat");
+    I.switchToNextTab();
+    I.waitForElement("div#topDetails-lineVariantA");
+    I.closeCurrentTab();
+});

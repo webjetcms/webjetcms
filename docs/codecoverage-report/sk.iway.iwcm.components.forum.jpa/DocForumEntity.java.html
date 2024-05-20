@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocForumEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forum.jpa</a> &gt; <span class="el_source">DocForumEntity.java</span></div><h1>DocForumEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forum.jpa;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+
+import org.apache.struts.upload.FormFile;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.DocDetailsDto;
+import sk.iway.iwcm.doc.DocDetailsConverter;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+import sk.iway.iwcm.users.UserBasicDto;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
+
+@Entity
+@Table(name = &quot;document_forum&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORUM_SAVE)
+<span class="fc" id="L47">public class DocForumEntity implements Serializable {</span>
+
+    @Id
+    @Column(name = &quot;forum_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_document_forum&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, tab=&quot;main&quot;)
+    private Long id;
+
+    @Column(name = &quot;doc_id&quot;)
+    private Integer docId;
+
+    @Transient
+    @DataTableColumn(
+        inputType = { DataTableColumnType.JSON },
+        className = &quot;dt-tree-page&quot;,
+        title = &quot;components.blog.forum.article&quot;,
+        tab=&quot;main&quot;,
+        editor = @DataTableColumnEditor(
+            attr = @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+        ),
+        filter = true
+    )
+    private DocDetailsDto docDetails;
+
+    @Column(name = &quot;subject&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;forum.subject&quot;,
+        tab=&quot;main&quot;
+    )
+    private String subject;
+
+    @Column(name = &quot;send_answer_notif&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;components.forum.send_answer_notif&quot;,
+        tab=&quot;main&quot;,
+        hidden = true
+    )
+    private Boolean sendAnswerNotif;
+
+    @Column(name = &quot;active&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;components.forum.active&quot;,
+        tab=&quot;main&quot;,
+        hidden = true
+    )
+    private Boolean active;
+
+    @Column(name = &quot;question&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        className = &quot;dt-row-edit&quot;,
+        title=&quot;components.forum.admin.text&quot;,
+        tab=&quot;main&quot;
+    )
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String question;
+
+    @Column(name = &quot;question_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.forum.admin.datum&quot;,
+        hiddenEditor = true
+    )
+    private Date questionDate;
+
+    @Column(name = &quot;author_name&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.admin.autor&quot;,
+        tab=&quot;main&quot;
+    )
+    private String authorName;
+
+    @Column(name = &quot;author_email&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.forum.admin.email&quot;,
+        tab=&quot;main&quot;
+    )
+    private String authorEmail;
+
+<span class="fc" id="L134">    @Transient</span>
+	@DataTableColumnNested
+	private DocForumEditorFields editorFields = null;
+
+    /* Adding ForumGroupEntity (DB tbale forum), it's used as forum setting's */
+    @Transient
+    @DataTableColumnNested
+    private ForumGroupEntity forumGroupEntity;
+
+    @Column(name = &quot;confirmed&quot;)
+    @DataTableColumn( inputType = DataTableColumnType.HIDDEN )
+    private Boolean confirmed;
+
+    @Column(name = &quot;deleted&quot;)
+    @DataTableColumn( inputType = DataTableColumnType.HIDDEN )
+    private Boolean deleted;
+
+    @Column(name = &quot;parent_id&quot;)
+    private Integer parentId;
+
+    @Column(name = &quot;ip&quot;)
+    private String ip;
+
+    @Column(name = &quot;hash_code&quot;)
+    private String hashCode;
+
+    @Column(name = &quot;user_id&quot;)
+    private Integer userId;
+
+    @Column(name = &quot;flag&quot;)
+    private String flag;
+
+    @Column(name = &quot;stat_views&quot;)
+    private Integer statViews;
+
+    @Column(name = &quot;stat_replies&quot;)
+    private Integer statReplies;
+
+    @Column(name = &quot;stat_last_post&quot;)
+    private Date statLastPost;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+
+<span class="fc" id="L178">    @Transient</span>
+    private FormFile uploadedFile = null;
+
+    @Transient
+    private String prefix;
+
+    @Transient
+    private Integer level;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
+    private UserBasicDto userDetails;
+
+    //***************SPECIAL LOGIC METHODS***************************
+    public void setDocDetails(DocDetailsDto docDetails) {
+<span class="fc" id="L193">        this.docDetails = docDetails;</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (docDetails != null) this.docId = docDetails.getDocId();</span>
+<span class="fc" id="L195">    }</span>
+
+    private boolean isAdmin(UserDetails user, ForumGroupEntity fge) {
+        //If not set, try get from this entity
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if(fge == null) fge = getForumGroupEntity();</span>
+
+<span class="pc bpc" id="L201" title="2 of 6 branches missed.">        if(user != null &amp;&amp; fge != null &amp;&amp; fge.isAdmin(user)) return true;</span>
+
+<span class="pc bpc" id="L203" title="3 of 4 branches missed.">        if(user != null &amp;&amp; user.isAdmin()) return true;</span>
+
+<span class="fc" id="L205">        return false;</span>
+    }
+
+    private boolean baseCheck(UserDetails user, ForumGroupEntity fge, boolean mustBeLogged) {
+        //If not set, try get from this entity
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if(fge == null) fge = getForumGroupEntity();</span>
+
+        //Must be logged -&gt; when perform delete and upload
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if(mustBeLogged) {</span>
+            //Check if he is logged
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if(user == null) return false;</span>
+
+            //When logged, he must be allso AUTHOR of the Forum
+<span class="nc bnc" id="L218" title="All 4 branches missed.">            if(getUserId() != null &amp;&amp; getUserId() != user.getUserId()) return false;</span>
+        }
+
+        //Check that whole DOC is active
+<span class="pc bpc" id="L222" title="2 of 4 branches missed.">        if(fge != null &amp;&amp; !fge.getActive()) return false;</span>
+
+        //Check if is allready deleted
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if(getDeleted()) return false;</span>
+
+        //Must be active
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if(!getActive()) return false;</span>
+
+        //Must be approved
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if(!getConfirmed()) return false;</span>
+
+<span class="fc" id="L233">        return true;</span>
+    }
+
+    public boolean canDelete(UserDetails user, int delMinutes) {
+<span class="fc" id="L237">        return canDelete(user, delMinutes, null);</span>
+    }
+
+    public boolean canDelete(UserDetails user, int delMinutes, ForumGroupEntity fge) {
+        //ADMIN can do anything
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
+
+        //If he is not admin, do all the test's
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
+
+        //Question date must be set to compute limit range
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (getQuestionDate() == null) return false;</span>
+
+        //Delete can be performed only in specific range from create
+<span class="nc" id="L251">		long delTimeLimitMsec = getQuestionDate().getTime() + (delMinutes * 60L * 1000);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if(delTimeLimitMsec &gt; Tools.getNow()) return true;</span>
+
+        //It's all good
+<span class="nc" id="L255">		return false;</span>
+	}
+
+    public boolean canUpload(UserDetails user, LabelValueDetails uploadLimits) {
+<span class="nc" id="L259">        return canUpload(user, uploadLimits, null);</span>
+    }
+
+    public boolean canUpload(UserDetails user, LabelValueDetails uploadLimits, ForumGroupEntity fge) {
+        //ADMIN can do anything
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
+
+        //If he is not admin, do all the test's
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
+
+        //Upload limits must be set
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if(uploadLimits == null) return false;</span>
+
+        //It's all good
+<span class="nc" id="L273">		return true;</span>
+    }
+
+
+    public boolean canPost() {
+<span class="nc" id="L278">        return canPost(null, null);</span>
+    }
+
+    public boolean canPost(ForumGroupEntity fge) {
+<span class="nc" id="L282">        return canPost(fge, null);</span>
+    }
+
+    public boolean canPost(ForumGroupEntity fge, UserDetails user) {
+        //ADMIN can do anything
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        if(isAdmin(user, fge)) return true;</span>
+
+        //If he is not admin, do all the test's
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if(!baseCheck(user, fge, false)) return false;</span>
+
+<span class="fc" id="L292">        return true;</span>
+    }
+
+    public String getSubject() {
+<span class="pc bpc" id="L296" title="1 of 4 branches missed.">        if (subject == null || subject.trim().length() &lt; 1) {</span>
+<span class="fc" id="L297">            sk.iway.iwcm.i18n.Prop prop = sk.iway.iwcm.i18n.Prop.getInstance();</span>
+<span class="fc" id="L298">            return prop.getText(&quot;components.forum.empty_subject&quot;);</span>
+        }
+
+<span class="fc" id="L301">        return subject;</span>
+    }
+
+    public void setQuestion(String question) {
+   	    //odfiltruj nepovolene veci
+<span class="fc" id="L306">   	    question = Tools.replaceIgnoreCase(question, &quot;script&quot;, &quot;&lt;span style='display: none;'&gt;s&lt;/span&gt;script&quot;);</span>
+
+<span class="fc" id="L308">        this.question = question;</span>
+<span class="fc" id="L309">    }</span>
+
+    public String getQuestionHtml() {
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        if (question == null)</span>
+<span class="nc" id="L313">            return (&quot;&quot;);</span>
+
+<span class="fc" id="L315">        String ret = Tools.replace(question, &quot;&lt;&quot;, &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L316">        ret = Tools.replace(ret, &quot;\n&quot;, &quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L317">        return (ret);</span>
+    }
+
+    public String getAuthorPhoto(String defaultPhoto) {
+<span class="fc" id="L321">        UserDetails tmp = UsersDB.getUser(getUserId());</span>
+
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if(tmp == null) tmp = new UserDetails();</span>
+
+<span class="fc" id="L325">        String authorPhoto = tmp.getPhoto();</span>
+
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">        if(Tools.isEmpty(authorPhoto)) return defaultPhoto;</span>
+<span class="nc" id="L328">        return GalleryDB.getImagePathOriginal(authorPhoto);</span>
+    }
+
+    //******************METHODS for BACKWARD COMPATIBILITY*********************
+    public boolean isConfirmed() {
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if(getConfirmed() == null) return false;</span>
+<span class="fc" id="L334">		return getConfirmed();</span>
+	}
+
+    public boolean isSendNotif() {
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">		if(getSendAnswerNotif() == null) return false;</span>
+<span class="fc" id="L339">        return getSendAnswerNotif();</span>
+	}
+
+    public boolean isActive() {
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">        if(getActive() == null) return false;</span>
+<span class="fc" id="L344">		return getActive();</span>
+	}
+
+    public boolean isDeleted() {
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">        if(getDeleted() == null) return false;</span>
+<span class="fc" id="L349">		return getDeleted();</span>
+	}
+
+    public int getForumId() {
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">        if (getId() == null) return 0;</span>
+<span class="fc" id="L354">        return getId().intValue();</span>
+    }
+
+    public String getQuestionDateDisplayDate() {
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
+
+<span class="fc" id="L360">        return Tools.formatDate(getQuestionDate());</span>
+    }
+
+    public String getQuestionDateDisplayTime() {
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
+
+<span class="fc" id="L366">        return Tools.formatTime(getQuestionDate());</span>
+    }
+
+    public String getLastPost() {
+<span class="fc" id="L370">        return Tools.formatDateTime(getStatLastPost(), &quot;&quot;);</span>
+	}
+
+    public UserBasicDto getUserDetails() {
+<span class="fc bfc" id="L374" title="All 4 branches covered.">        if (userId == null || userId &lt; 1) return null;</span>
+<span class="fc bfc" id="L375" title="All 2 branches covered.">        if (userDetails!=null) return userDetails;</span>
+<span class="fc" id="L376">        userDetails = new UserBasicDtoConverter().convertToEntityAttribute(userId);</span>
+<span class="fc" id="L377">        return userDetails;</span>
+    }
+
+    public DocDetailsDto getDocDetails() {
+<span class="pc bpc" id="L381" title="2 of 4 branches missed.">        if (docId == null || docId &lt; 1) return null;</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">        if (docDetails!=null) return docDetails;</span>
+<span class="fc" id="L383">        docDetails = new DocDetailsConverter().convertToEntityAttribute(docId);</span>
+<span class="fc" id="L384">        return docDetails;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

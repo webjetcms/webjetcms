@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.rest</a> &gt; <span class="el_source">QuizService.java</span></div><h1>QuizService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.rest;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.components.quiz.jpa.NameValueBean;
+import sk.iway.iwcm.components.quiz.jpa.QuizAnswerEntity;
+import sk.iway.iwcm.components.quiz.jpa.QuizAnswerRespository;
+import sk.iway.iwcm.components.quiz.jpa.QuizEntity;
+import sk.iway.iwcm.components.quiz.jpa.QuizQuestionEntity;
+import sk.iway.iwcm.components.quiz.jpa.QuizQuestionRepository;
+import sk.iway.iwcm.components.quiz.jpa.QuizRepository;
+import sk.iway.iwcm.components.quiz.jpa.QuizStatDTO;
+import sk.iway.iwcm.components.quiz.jpa.QuizType;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.utils.Pair;
+
+<span class="fc" id="L32">public class QuizService {</span>
+
+    static final String rightKey = &quot;components.quiz.stat.right_answers&quot;;
+    static final String wrongKey = &quot;components.quiz.stat.wrong_answers&quot;;
+    static final String allKey = &quot;components.quiz.stat.all_answers&quot;;
+    
+    /**************************** GET data methods ****************************/
+    public static QuizEntity getById(int id) {
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if(id &lt; 1) return new QuizEntity();</span>
+<span class="fc" id="L41">        QuizRepository qr = Tools.getSpringBean(&quot;quizRepository&quot;, QuizRepository.class);</span>
+<span class="fc" id="L42">        Optional&lt;QuizEntity&gt; opt =  qr.findById((long) id);</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if(opt.isPresent()) return opt.get();</span>
+<span class="nc" id="L44">        else return new QuizEntity();</span>
+    }
+
+    public static List&lt;QuizEntity&gt; getAll() {
+<span class="nc" id="L48">        QuizRepository qr = Tools.getSpringBean(&quot;quizRepository&quot;, QuizRepository.class);</span>
+<span class="nc" id="L49">        return qr.findAll();</span>
+    }
+
+    public static List&lt;QuizQuestionEntity&gt; getQuizQuestions(int quizId) {
+<span class="fc" id="L53">        QuizQuestionRepository qqr = Tools.getSpringBean(&quot;quizQuestionRepository&quot;, QuizQuestionRepository.class);</span>
+<span class="fc" id="L54">        List&lt;QuizQuestionEntity&gt; quizQuestions = qqr.findAllByQuizId(quizId);</span>
+<span class="pc bpc" id="L55" title="2 of 4 branches missed.">        if(quizQuestions == null || quizQuestions.size() &lt; 1) return new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L56">        return quizQuestions;</span>
+    }
+
+    public static Map&lt;Integer, QuizQuestionEntity&gt; getQuizQuestionsMap(int quizId) { 
+<span class="fc" id="L60">        List&lt;QuizQuestionEntity&gt; quizQuestions = getQuizQuestions(quizId);</span>
+        
+<span class="fc" id="L62">        Map&lt;Integer, QuizQuestionEntity&gt; quizQuestionsByQuestionId = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (QuizQuestionEntity item : quizQuestions) {</span>
+<span class="fc" id="L64">            quizQuestionsByQuestionId.put(item.getId().intValue(), item);</span>
+<span class="fc" id="L65">        }</span>
+
+<span class="fc" id="L67">        return quizQuestionsByQuestionId;</span>
+    }
+    
+    /**************************** SAVE data method ****************************/
+    public static List&lt;QuizAnswerEntity&gt; saveAnswersAndGetResult(int quizId, String formId, List&lt;NameValueBean&gt; answers) {
+        //Get quiz questions
+<span class="fc" id="L73">        QuizAnswerRespository qar = Tools.getSpringBean(&quot;quizAnswerRespository&quot;, QuizAnswerRespository.class);</span>
+<span class="fc" id="L74">        Map&lt;Integer, QuizQuestionEntity&gt; quizQuestionsByQuestionId = getQuizQuestionsMap(quizId);</span>
+
+<span class="fc" id="L76">        QuizType quizType = QuizType.getQuizType( (new SimpleQuery()).forString(&quot;SELECT quiz_type FROM quiz WHERE id=? AND domain_id=?&quot;, quizId, CloudToolsForCore.getDomainId()) );</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (NameValueBean answer : answers) {</span>
+<span class="fc" id="L78">            QuizAnswerEntity existingAnswer = JpaTools.findFirstByProperties(QuizAnswerEntity.class,</span>
+<span class="fc" id="L79">                    new Pair&lt;String, Integer&gt;(&quot;quizId&quot;, quizId), new Pair&lt;String, String&gt;(&quot;formId&quot;, formId),</span>
+<span class="fc" id="L80">                    new Pair&lt;String, Integer&gt;(&quot;quizQuestionId&quot;, answer.getName()));</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (existingAnswer != null) {</span>
+<span class="nc" id="L82">                break;</span>
+            }
+
+<span class="fc" id="L85">            QuizAnswerEntity newAnswer = new QuizAnswerEntity();</span>
+<span class="fc" id="L86">            newAnswer.setQuizId(quizId);</span>
+<span class="fc" id="L87">            newAnswer.setFormId(formId);</span>
+<span class="fc" id="L88">            newAnswer.setQuizQuestionId(answer.getName());</span>
+<span class="fc" id="L89">            newAnswer.setAnswer(answer.getValue());</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            if(quizType == QuizType.RIGHT_ANSWER) {</span>
+<span class="fc" id="L92">                int rightAnswer = quizQuestionsByQuestionId.get(answer.getName()).getRightAnswer();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">                boolean isCorrect = rightAnswer == answer.getValue();</span>
+<span class="fc" id="L94">                newAnswer.setIsCorrect(isCorrect);</span>
+<span class="fc" id="L95">                newAnswer.setRightAnswer(rightAnswer);</span>
+
+                //By default, if answer is correct, set rate to 1
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                if(isCorrect) newAnswer.setRate(1);</span>
+<span class="fc" id="L99">                else newAnswer.setRate(0);</span>
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            } else if(quizType == QuizType.RATED_ANSWER) {</span>
+<span class="fc" id="L102">                int rate = quizQuestionsByQuestionId.get( answer.getName() ).getRate( answer.getValue() );</span>
+<span class="fc" id="L103">                newAnswer.setRate(rate);</span>
+
+                //If rate is greater than 0, answer is correct
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                if(rate &gt; 0) { </span>
+<span class="fc" id="L107">                    newAnswer.setIsCorrect(true);</span>
+<span class="fc" id="L108">                    newAnswer.setRightAnswer( answer.getValue() ); //If our answer is correct, set it as right answer</span>
+                } else {
+<span class="fc" id="L110">                    newAnswer.setIsCorrect(false);</span>
+<span class="fc" id="L111">                    newAnswer.setRightAnswer( -1 ); //If our answer is wrong, set -1 as right answer</span>
+                }
+            }
+<span class="fc" id="L114">            newAnswer.setCreated(new Date());</span>
+<span class="fc" id="L115">            qar.save(newAnswer);</span>
+<span class="fc" id="L116">        }</span>
+<span class="fc" id="L117">        return qar.findAllByFormId(formId);</span>
+    }
+
+    /**************************** STAT methods ****************************/
+
+    /**
+     * Prepare list of QuizStatDTO entities (for chart), where every entity represents one question and has compute number of right/wrong answers for selected date range via &quot;stringRange&quot;.
+     * 
+     * @param quizId - QuizEntity id
+     * @param stringRange - clasic string range
+     * @param chartType
+     * @param quizAnswerRespository
+     * @return if any error occur, return empty list
+     */    
+    public static List&lt;QuizStatDTO&gt; statTableData(Integer quizId, String stringRange, ChartType chartType, QuizAnswerRespository quizAnswerRespository) {
+<span class="pc bpc" id="L132" title="2 of 4 branches missed.">        if(quizId == null || quizId &lt; 1) return new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L133">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+
+        //Sort data into map -&gt; based on questionId
+<span class="fc" id="L136">        Map&lt;Integer, List&lt;QuizAnswerEntity&gt;&gt; questionAnswers = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) {</span>
+<span class="fc" id="L138">            Integer answerQuestionId = answer.getQuizQuestionId();</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            if(questionAnswers.get(answerQuestionId) == null) {</span>
+<span class="fc" id="L141">                questionAnswers.put(answerQuestionId, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L142">                questionAnswers.get(answerQuestionId).add(answer);</span>
+<span class="fc" id="L143">            } else { questionAnswers.get(answerQuestionId).add(answer); }</span>
+<span class="fc" id="L144">        }</span>
+
+        //Loop map and compute right/wrong answers + all answers for specific date
+<span class="fc" id="L147">        List&lt;QuizStatDTO&gt; stats = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for (Map.Entry&lt;Integer, List&lt;QuizAnswerEntity&gt;&gt; entry : questionAnswers.entrySet()) {</span>
+<span class="fc" id="L149">            QuizStatDTO newStat = null;</span>
+<span class="fc" id="L150">            int rightAnswers = 0;</span>
+<span class="fc" id="L151">            int wrongAnswers = 0;</span>
+<span class="fc" id="L152">            int gainedPoints = 0;</span>
+<span class="fc" id="L153">            QuizType quizType = QuizType.RIGHT_ANSWER;</span>
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            for(QuizAnswerEntity answer : entry.getValue()) {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                if(newStat == null) {</span>
+<span class="fc" id="L157">                    newStat = new QuizStatDTO();</span>
+<span class="fc" id="L158">                    newStat.setQuestion(answer.getQuizQuestion().getQuestion());</span>
+<span class="fc" id="L159">                    newStat.setImageUrl(answer.getQuizQuestion().getImageUrl());</span>
+<span class="fc" id="L160">                    quizType = answer.getQuiz().getQuizTypeEnum();</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                    if(quizType == QuizType.RATED_ANSWER) newStat.setQuestionMaxPoints( answer.getQuizQuestion().getMaxRate() );</span>
+                }
+
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                if(quizType == QuizType.RATED_ANSWER) gainedPoints += answer.getQuizQuestion().getRate( answer.getAnswer() );</span>
+
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                if(answer.getIsCorrect()) rightAnswers++;</span>
+<span class="fc" id="L167">                else wrongAnswers++;</span>
+<span class="fc" id="L168">            }</span>
+
+            //If entry is not null, prepare it and add it to list
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">            if(newStat != null) {</span>
+<span class="fc" id="L172">                newStat.setNumberOfRightAnswers(rightAnswers);</span>
+<span class="fc" id="L173">                newStat.setNumberOfWrongAnswers(wrongAnswers);</span>
+                
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                if(chartType == ChartType.NOT_CHART) newStat.setPercentageOfRightAnswers( (float) rightAnswers / (float) (rightAnswers + wrongAnswers) * 100 );</span>
+<span class="fc" id="L176">                else newStat.setPercentageOfRightAnswers( (float) Math.round((float) rightAnswers / (float) (rightAnswers + wrongAnswers) * 100) );</span>
+
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                if(quizType == QuizType.RATED_ANSWER) newStat.setAverageGainedPoints( (float) gainedPoints / (float) entry.getValue().size() );</span>
+<span class="fc" id="L179">                stats.add(newStat);</span>
+            }
+<span class="fc" id="L181">        }</span>
+
+        //sort it based on number of right answers
+<span class="fc" id="L184">        Collections.sort(stats, Comparator.comparingInt(QuizStatDTO::getNumberOfRightAnswers).reversed());</span>
+
+        //Prepare valid question format
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if(chartType != ChartType.NOT_CHART) {</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">            for(QuizStatDTO stat : stats) {</span>
+<span class="fc" id="L189">                stat.setQuestion( prepareQuestionString( stat.getQuestion() ) );</span>
+<span class="fc" id="L190">            }</span>
+        }
+
+<span class="fc" id="L193">        return stats;</span>
+    }
+
+    /**
+     * Nulify hours, minutes, seconds and miliseconds in date. (whole time part)
+     * @param date
+     * @return
+     */
+    private static Date prepareDate(Date date) {
+<span class="fc" id="L202">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L203">        cal.setTime(date);</span>
+<span class="fc" id="L204">        cal.set(Calendar.HOUR, 0);</span>
+<span class="fc" id="L205">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L206">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L207">        cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L208">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L209">        return cal.getTime();</span>
+    }
+
+    public static Map&lt;String, List&lt;QuizStatDTO&gt;&gt; statLineData(Integer quizId, String dateRange, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) { 
+<span class="pc bpc" id="L213" title="2 of 4 branches missed.">        if(quizId == null || quizId &lt; 1) return new HashMap&lt;&gt;();</span>
+<span class="fc" id="L214">        Date[] dateRangeArr = StatService.processDateRangeString(dateRange);</span>
+
+<span class="pc bpc" id="L216" title="1 of 4 branches missed.">        if(Tools.isAnyEmpty(quizType) || &quot;0&quot;.equals(quizType)) </span>
+<span class="fc" id="L217">            return statLineDataAllAnswers(quizId, dateRangeArr, quizType, quizAnswerRespository, prop);</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">        else if(&quot;1&quot;.equals(quizType)) </span>
+<span class="fc" id="L219">            return statLineDataAnswers(quizId, dateRangeArr, quizType, quizAnswerRespository, prop);</span>
+        else 
+<span class="nc" id="L221">            return new HashMap&lt;&gt;();</span>
+    }
+
+    private static Map&lt;String, List&lt;QuizStatDTO&gt;&gt; statLineDataAllAnswers(Integer quizId, Date[] dateRangeArr, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) {
+        //Create combination of dates and number of right/wrong answers (separe maps)
+<span class="fc" id="L226">        Map&lt;Date, Integer&gt; rightAnswPerDay = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L227">        Map&lt;Date, Integer&gt; wrongAnswPerDay = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) { </span>
+<span class="fc" id="L229">            Date created = prepareDate( answer.getCreated() );</span>
+
+<span class="fc bfc" id="L231" title="All 2 branches covered.">            if(answer.getIsCorrect()) {</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">                if(rightAnswPerDay.get(created) == null) rightAnswPerDay.put(created, 1);</span>
+<span class="fc" id="L233">                else rightAnswPerDay.put(created, rightAnswPerDay.get(created) + 1);</span>
+            } else {
+<span class="fc bfc" id="L235" title="All 2 branches covered.">                if(wrongAnswPerDay.get(created) == null) wrongAnswPerDay.put(created, 1);</span>
+<span class="fc" id="L236">                else wrongAnswPerDay.put(created, wrongAnswPerDay.get(created) + 1);</span>
+            }
+<span class="fc" id="L238">        }</span>
+
+<span class="fc" id="L240">        List&lt;QuizStatDTO&gt; rightAnsw = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; entry : rightAnswPerDay.entrySet()) {</span>
+<span class="fc" id="L242">            QuizStatDTO newStatAnsw = new QuizStatDTO();</span>
+<span class="fc" id="L243">            newStatAnsw.setDayDate(entry.getKey());</span>
+<span class="fc" id="L244">            newStatAnsw.setChartValue(entry.getValue());</span>
+<span class="fc" id="L245">            rightAnsw.add(newStatAnsw);</span>
+<span class="fc" id="L246">        }</span>
+
+<span class="fc" id="L248">        List&lt;QuizStatDTO&gt; wrongAnsw = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; entry : wrongAnswPerDay.entrySet()) {</span>
+<span class="fc" id="L250">            QuizStatDTO newStatAnsw = new QuizStatDTO();</span>
+<span class="fc" id="L251">            newStatAnsw.setDayDate(entry.getKey());</span>
+<span class="fc" id="L252">            newStatAnsw.setChartValue(entry.getValue());</span>
+<span class="fc" id="L253">            wrongAnsw.add(newStatAnsw);</span>
+<span class="fc" id="L254">        }</span>
+
+        //Combine days value (combine maps) -&gt; put/sum right map into wrong map
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; right : rightAnswPerDay.entrySet()) {</span>
+
+<span class="fc" id="L259">            Integer wrongValue = wrongAnswPerDay.get( right.getKey() );</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">            if(wrongValue == null) {</span>
+<span class="nc" id="L261">                wrongAnswPerDay.put(right.getKey(), right.getValue());</span>
+            } else {
+<span class="fc" id="L263">                wrongAnswPerDay.put(right.getKey(), right.getValue() + wrongValue);</span>
+            }
+<span class="fc" id="L265">        }</span>
+        //Loop combined map and create list of QuizStatDTO
+<span class="fc" id="L267">        List&lt;QuizStatDTO&gt; allAnsw = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; combined : wrongAnswPerDay.entrySet()) { </span>
+<span class="fc" id="L269">            QuizStatDTO newStat = new QuizStatDTO();</span>
+<span class="fc" id="L270">            newStat.setDayDate(combined.getKey());</span>
+<span class="fc" id="L271">            newStat.setChartValue(combined.getValue());</span>
+<span class="fc" id="L272">            allAnsw.add(newStat);</span>
+<span class="fc" id="L273">        }</span>
+
+<span class="fc" id="L275">        Map&lt;String, List&lt;QuizStatDTO&gt;&gt; lineChartData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L276">        lineChartData.put(prop.getText(rightKey), rightAnsw);</span>
+<span class="fc" id="L277">        lineChartData.put(prop.getText(wrongKey), wrongAnsw);</span>
+<span class="fc" id="L278">        lineChartData.put(prop.getText(allKey), allAnsw);</span>
+
+<span class="fc" id="L280">        return lineChartData;</span>
+    }
+
+    private static Map&lt;String, List&lt;QuizStatDTO&gt;&gt; statLineDataAnswers(Integer quizId, Date[] dateRangeArr, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) {
+        //Compute points sum for every question for every day (time part of date is nulified)
+<span class="fc" id="L285">        Map&lt;String, QuizStatDTO&gt; valueByDateAndQuestion = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) { </span>
+<span class="fc" id="L287">            Date created = prepareDate( answer.getCreated() );</span>
+<span class="fc" id="L288">            String mapKey = &quot;&quot; + created.getTime() + &quot;_&quot; + prepareQuestionString( answer.getQuizQuestion().getQuestion() );</span>
+            
+<span class="fc bfc" id="L290" title="All 2 branches covered.">            if(valueByDateAndQuestion.get(mapKey) == null) {</span>
+<span class="fc" id="L291">                QuizStatDTO newStat = new QuizStatDTO();</span>
+<span class="fc" id="L292">                newStat.setDayDate(created);</span>
+<span class="fc" id="L293">                newStat.setChartValue(answer.getRate());</span>
+                
+<span class="fc bfc" id="L295" title="All 2 branches covered.">                if(answer.getIsCorrect()) {</span>
+<span class="fc" id="L296">                    newStat.setNumberOfRightAnswers(1);</span>
+<span class="fc" id="L297">                    newStat.setNumberOfWrongAnswers(0);</span>
+                } else {
+<span class="fc" id="L299">                    newStat.setNumberOfRightAnswers(0);</span>
+<span class="fc" id="L300">                    newStat.setNumberOfWrongAnswers(1);</span>
+                }
+<span class="fc" id="L302">                valueByDateAndQuestion.put(mapKey, newStat);</span>
+<span class="fc" id="L303">            } else {</span>
+<span class="fc" id="L304">                valueByDateAndQuestion.get(mapKey).setChartValue( valueByDateAndQuestion.get(mapKey).getChartValue() + answer.getRate() );</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">                if(answer.getIsCorrect()) </span>
+<span class="fc" id="L306">                    valueByDateAndQuestion.get(mapKey).setNumberOfRightAnswers( valueByDateAndQuestion.get(mapKey).getNumberOfRightAnswers() + 1 );</span>
+                else
+<span class="fc" id="L308">                    valueByDateAndQuestion.get(mapKey).setNumberOfWrongAnswers( valueByDateAndQuestion.get(mapKey).getNumberOfWrongAnswers() + 1 );</span>
+            }
+<span class="fc" id="L310">        }</span>
+
+        //Tranform data to line chart format
+<span class="fc" id="L313">        Map&lt;String, List&lt;QuizStatDTO&gt;&gt; lineChartData = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        for (Map.Entry&lt;String, QuizStatDTO&gt; entry : valueByDateAndQuestion.entrySet()) { </span>
+<span class="fc" id="L315">            String[] keyParts = entry.getKey().split(&quot;_&quot;);</span>
+
+<span class="fc bfc" id="L317" title="All 2 branches covered.">            if(lineChartData.get(keyParts[1]) == null) lineChartData.put(keyParts[1], new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L319">            lineChartData.get(keyParts[1]).add(entry.getValue());</span>
+<span class="fc" id="L320">        }</span>
+
+<span class="fc" id="L322">        return lineChartData;</span>
+    }
+
+    /**
+     * Remove Html tags from string.
+     * If string is longer than 64 characters, cut it and add &quot;...&quot; at the end.
+     * else return string.
+     * 
+     * If string is null, return empty string.
+     * 
+     * @param question
+     * @return
+     */
+    private static String prepareQuestionString (String question) {
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if(question == null)  return &quot;&quot;;</span>
+
+<span class="fc" id="L338">        String formatted = EditorToolsForCore.removeHtmlTagsKeepLength( question );</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if(formatted.length() &lt; 64) return formatted;</span>
+<span class="nc" id="L340">        else return formatted.substring(0, 64) + &quot;...&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

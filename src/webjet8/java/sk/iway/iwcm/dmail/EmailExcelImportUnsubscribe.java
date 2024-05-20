@@ -7,8 +7,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.validator.EmailValidator;
-
 import jxl.Cell;
 import jxl.Sheet;
 import sk.iway.iwcm.Tools;
@@ -48,9 +46,7 @@ public class EmailExcelImportUnsubscribe extends ExcelImportJXL
 		String email = getValue(row, "email").trim().toLowerCase();
 		if (Tools.isNotEmpty(email))
 		{
-			EmailValidator emailValidator = EmailValidator.getInstance();
-
-			if (!emailValidator.isValid(email)) {
+			if (!Tools.isEmail(email)) {
 				// validacia na email
 				printlnError(prop.getText("components.dmail.xlsImport.notEmail", email));
 				return;

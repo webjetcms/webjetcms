@@ -18,10 +18,12 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -105,6 +107,13 @@ public class SessionHolder
 		}
 		for (Entry<String, SessionDetails> me : entries)
 		{
+			if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
+			{
+				if (me.getValue().getDomainId() != CloudToolsForCore.getDomainId())
+				{
+					continue;
+				}
+			}
 			list.add(me.getValue());
 		}
 		return list;
@@ -172,6 +181,8 @@ public class SessionHolder
 			}
 		}
 		det.setLastURL(lastURL);
+		det.setDomainId(CloudToolsForCore.getDomainId());
+		det.setDomainName(CloudToolsForCore.getDomainName());
 
 		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);
 		if (user != null) {

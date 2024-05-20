@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PasteCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">PasteCommandExecutor.java</span></div><h1>PasteCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="nc" id="L23">public class PasteCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="nc" id="L29">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+		//String src = request.getParameter(&quot;src&quot;);
+<span class="nc" id="L31">		String dst = request.getParameter(&quot;dst&quot;);</span>
+<span class="nc" id="L32">		boolean cut = &quot;1&quot;.equals(request.getParameter(&quot;cut&quot;));</span>
+
+<span class="nc" id="L34">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="nc" id="L35">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
+
+		//FsItemEx fsrc = super.findItem(fsService, src);
+<span class="nc" id="L38">		FsItemEx fdst = super.findItem(fsService, dst);</span>
+
+		//skontrolujem prava na zapis do cieloveho adresara
+<span class="nc" id="L41">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L42">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L43" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))</span>
+		{
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			for (String target : targets)</span>
+			{
+<span class="nc" id="L47">				FsItemEx ftgt = super.findItem(fsService, target);</span>
+<span class="nc" id="L48">				String name = ftgt.getName();</span>
+<span class="nc" id="L49">				FsItemEx newFile = new FsItemEx(fdst, name);</span>
+
+
+
+				//JEEFF: upravene pre podporu nasho DocGroup
+<span class="nc bnc" id="L54" title="All 2 branches missed.">				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+				{
+<span class="nc" id="L56">					((IwcmDocGroupFsVolume)ftgt.getVolume()).createAndCopy(ftgt, fdst, cut);</span>
+				}
+				else
+				{
+<span class="nc" id="L60">					super.createAndCopy(ftgt, newFile);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">					if (cut)</span>
+					{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
+						{
+							//#20481 - po vystrihnuti/premenovani vytvori redirect
+<span class="nc bnc" id="L66" title="All 2 branches missed.">							if(isAllowedFolder(ftgt.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
+<span class="nc" id="L67">								createRedirect(ftgt, ftgt.getPath(), newFile.getPath(), request);</span>
+
+							//ak chcem povodny vymazat, musim mat pravo na zapis aj do zdrojoveho
+<span class="nc" id="L70">							ftgt.delete();</span>
+						}
+						else
+						{
+<span class="nc" id="L74">							json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.paste.cut.error&quot;, ftgt.getParent().getPath()));</span>
+						}
+					}
+				}
+<span class="nc" id="L78">				added.add(newFile);</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (cut)</span>
+				{
+					//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
+<span class="nc" id="L83">					removed.add(ftgt.getHash());</span>
+				}
+			}
+		}
+		else
+		{
+<span class="nc" id="L89">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.paste.error&quot;, fdst.getPath()));</span>
+
+		}
+
+
+
+<span class="nc" id="L95">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+		//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
+<span class="nc" id="L97">		json.put(&quot;removed&quot;, removed.toArray());</span>
+<span class="nc" id="L98">	}</span>
+
+	/**
+	 * vrati true, ak path zacina na niektory allowed adresar(adresare oddelene ciarkou)
+	 *
+	 * @param path
+	 * @param allowed
+	 * @return
+	 */
+	static boolean isAllowedFolder(String path, String allowed)
+	{
+<span class="nc bnc" id="L109" title="All 4 branches missed.">		if(Tools.isNotEmpty(allowed) &amp;&amp; Tools.isNotEmpty(path))</span>
+		{
+			//zero or more whitespace, a literal comma, zero or more whitespace
+<span class="nc" id="L112">			String[] allowedFolders = allowed.split(&quot;\\s*,\\s*&quot;);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			for(String folder : allowedFolders)</span>
+			{
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if(path.startsWith(folder))</span>
+<span class="nc" id="L116">					return true;</span>
+			}
+		}
+<span class="nc" id="L119">		return false;</span>
+	}
+
+	/**
+	 * rekurzivne prejde vsetky subory zadaneho adresara a vytvori presmerovania na ich novu lokaciu
+	 *
+	 * @param file
+	 * @param originalLink
+	 * @param newLink
+	 * @param request
+	 */
+	static void createRedirect(FsItemEx file, String originalLink, String newLink, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L132" title="All 4 branches missed.">		if(Tools.isNotEmpty(originalLink) &amp;&amp; newLink!=null)</span>
+		{
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if(file.isFolder())</span>
+			{
+<span class="nc bnc" id="L136" title="All 2 branches missed.">				for(FsItemEx child : file.listChildren())</span>
+				{
+<span class="nc" id="L138">					createRedirect(child, originalLink, newLink, request);</span>
+<span class="nc" id="L139">				}</span>
+			}
+			else
+			{
+				try
+				{
+					//nahradime staru(original) cestu za novu
+<span class="nc" id="L146">					UrlRedirectDB.addRedirect(file.getPath(), newLink+file.getPath().substring(originalLink.length()), DocDB.getDomain(request), 301);</span>
+				}
+<span class="nc" id="L148">				catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
+			}
+		}
+<span class="nc" id="L151">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

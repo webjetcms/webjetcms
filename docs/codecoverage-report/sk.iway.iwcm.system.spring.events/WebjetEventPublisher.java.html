@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetEventPublisher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.events</a> &gt; <span class="el_source">WebjetEventPublisher.java</span></div><h1>WebjetEventPublisher.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.events;
+
+import org.springframework.context.ApplicationContext;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+
+<span class="nc" id="L10">public class WebjetEventPublisher {</span>
+
+   @SuppressWarnings(&quot;rawtypes&quot;)
+   public static void publishEvent(WebjetEvent event) {
+<span class="fc" id="L14">      RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+
+<span class="fc bfc" id="L16" title="All 2 branches covered.">      if (&quot;sk.iway.iwcm.system.ConfDetails&quot;.equals(event.getClazz())==false) Logger.debug(WebjetEventPublisher.class, &quot;publishEvent, event.clazz=&quot;+event.getClazz()+&quot; event.type=&quot;+event.getEventType().name());</span>
+
+      ApplicationContext context;
+<span class="fc bfc" id="L19" title="All 2 branches covered.">      if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;);</span>
+<span class="fc" id="L20">		else context = requestBean.getSpringContext();</span>
+
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">		if (context != null) {</span>
+			try {
+<span class="fc" id="L24">				context.publishEvent(event);</span>
+<span class="nc" id="L25">			} catch (Exception ex) {</span>
+<span class="nc" id="L26">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L27">			}</span>
+		}
+<span class="fc" id="L29">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

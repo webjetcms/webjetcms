@@ -6,7 +6,10 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
 
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.i18n.Prop;
 
 // trieda pre preklady
@@ -19,6 +22,12 @@ public class WebjetMessageSource implements MessageSource {
 
     @Override
     public String getMessage(String s, Object[] objects, Locale locale) throws NoSuchMessageException {
+
+        if(!InitServlet.isWebjetConfigured()) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            return Prop.getInstance(rb.getLng()).getText(s);
+        }
+
         try {
                 if (objects != null && objects.length>0) {
                 String[] objString = new String[objects.length];

@@ -65,7 +65,7 @@ function Quiz(qId) {
 
             // show next btn
             if(this.showNext()) {
-                console.log('canShowNext');
+                //console.log('canShowNext');
                 this.showHideNext();
                 $('.progressContainer').show();
                 $('.resultsPanel').hide();
@@ -75,7 +75,7 @@ function Quiz(qId) {
                     $('.btn.next').removeClass('sendResults');
                 }
             } else {
-                console.log('canNotShowNext');
+                //console.log('canNotShowNext');
                 $('.btn.next').removeClass('sendResults');
                 $('.btn.next').hide();
                 $('.progressContainer').hide();
@@ -84,10 +84,10 @@ function Quiz(qId) {
 
             // show prev btn
             if(this.showPrev()) {
-                console.log('canShowPrev');
+                //console.log('canShowPrev');
                 $('.btn.back').show();
             } else {
-                console.log('canNotShowPrev');
+                //console.log('canNotShowPrev');
                 $('.btn.back').hide();
             }
 		} else {
@@ -129,13 +129,13 @@ function Quiz(qId) {
 	
 	this.goNext = function() {
 		actualStep++;
-		console.log('goNext=' + actualStep);
+		//console.log('goNext=' + actualStep);
 		this.showActualStep();
 	};
 	
 	this.goPrev = function() {
 		actualStep--;
-		console.log('goPrev=' + actualStep);
+		//console.log('goPrev=' + actualStep);
 		this.showActualStep();
 	};
 	

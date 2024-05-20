@@ -106,13 +106,6 @@ public class InitServlet extends HttpServlet
 					sk.iway.iwcm.Logger.error(ex);
 				}
 
-				//ak sme Tomcat 7 nemozeme mat spring komponenty (ma staru verziu el), musime zmazat
-                if (sc.getServerInfo().contains("Tomcat/7"))
-                {
-                    deleteDirTree("/WEB-INF/update/"+version+"/WEB-INF/classes/sk/iway/iwcm/system/spring/webjet_component", notDeleted, version, sc);
-                    deleteFile("/WEB-INF/update/"+version+"/WEB-INF/lib/hibernate-validator-6.0.7.Final.jar", notDeleted, version, sc);
-                }
-
 				//skopiruj vsetky subory
 				moveDir("/", version, sc);
 			}
@@ -1008,7 +1001,7 @@ public class InitServlet extends HttpServlet
 		String updateDir = "/WEB-INF/update/"+version+path;
 		File updateDirFile = new File(sc.getRealPath(updateDir));
 
-		if (updateDirFile == null || updateDirFile.exists()==false || updateDirFile.isDirectory()==false)
+		if (updateDirFile.exists()==false || updateDirFile.isDirectory()==false)
 		{
 			return;
 		}
@@ -1152,18 +1145,6 @@ public class InitServlet extends HttpServlet
 		}
 		return (result);
 	}
-
-    /**
-     * Zmaze subor na zadanom URL
-     * @param url
-     * @param sc
-     * @return
-     */
-	private static boolean deleteFile(String url, Collection<File> notDeleted, String version, ServletContext sc)
-    {
-        File f = new File(sc.getRealPath(url));
-        return deleteFile(f, url, notDeleted, version, sc);
-    }
 
 	private static boolean deleteFile(File f, String url, Collection<File> notDeleted, String version, ServletContext sc)
     {

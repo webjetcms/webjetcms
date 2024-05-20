@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PageLng.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">PageLng.java</span></div><h1>PageLng.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.Map;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sourceforge.stripes.controller.IwayStripesUtils;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  Stranku na pracu s nastavenim jazyka pouzivatela
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Sobota, 2003, november 22
+ *@modified     $Date: 2003/11/23 13:22:16 $
+ */
+public class PageLng
+{
+
+<span class="nc" id="L27">   protected PageLng() {</span>
+      //utility class
+<span class="nc" id="L29">   }</span>
+
+   public static void setUserLng(HttpServletRequest request, HttpServletResponse response, String setLng)
+   {
+      try
+      {
+<span class="fc" id="L35">         String actualCookieValue = Tools.getCookieValue(request.getCookies(), &quot;lng&quot;, null);</span>
+<span class="fc" id="L36">         String lng = setLng;</span>
+
+<span class="pc bpc" id="L38" title="3 of 4 branches missed.">         if (request.getAttribute(&quot;is404&quot;) != null &amp;&amp; Tools.isNotEmpty(actualCookieValue))</span>
+         {
+            //som 404 stranka, nesmiem zmenit jazyk, pretoze potom na session nastavi iny jazyk ako je v cookie
+            //napr. pri volani components/_common/ninja.min.css.map sa nastavi SK jazyk, pretoze to nie je /en/404.html
+            //zachovame teda cookie hdonotu a nezmenime ho
+<span class="nc" id="L43">            lng = actualCookieValue;</span>
+         }
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">         if (response != null)</span>
+         {
+<span class="fc bfc" id="L48" title="All 4 branches covered.">            if (actualCookieValue == null || actualCookieValue.equals(lng) == false)</span>
+            {
+<span class="fc" id="L50">               Cookie c = new Cookie(&quot;lng&quot;, lng);</span>
+<span class="fc" id="L51">               c.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L52">               c.setMaxAge(30 * 24 * 3600);</span>
+<span class="fc" id="L53">               c.setHttpOnly(true);</span>
+<span class="fc" id="L54">               Tools.addCookie(c, response, request);</span>
+            }
+         }
+
+<span class="fc" id="L58">         request.getSession().setAttribute(&quot;lng&quot;, lng);</span>
+<span class="fc" id="L59">         request.setAttribute(&quot;PageLng&quot;, lng);</span>
+
+<span class="fc" id="L61">         IwayStripesUtils.setLocale(request, lng);</span>
+<span class="fc" id="L62">         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">         if (rb!=null)</span>
+         {
+<span class="fc" id="L65">        	 rb.setLng(lng);</span>
+         }
+      }
+<span class="nc" id="L68">      catch (Exception ex)</span>
+      {
+<span class="nc" id="L70">         sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L71">      }</span>
+<span class="fc" id="L72">   }</span>
+
+   public static String getUserLngIso(HttpServletRequest request)
+   {
+<span class="fc" id="L76">      String lng = getUserLng(request);</span>
+
+<span class="fc" id="L78">      return getUserLngIso(lng);</span>
+   }
+
+   /**
+    * Skonvertuje jazyk vo WebJETe na ISO kod jazyk-krajina, pre sk vrati sk-SK, pre cz vrati cs-CZ a podobne
+    * krajina sa da konfigurovat v konf. premennej countryForLng
+    * @param lng
+    * @return
+    */
+   public static String getUserLngIso(final String lng)
+   {
+<span class="fc" id="L89">      String lngFixed = lng;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">      if (Tools.isEmpty(lngFixed)) lngFixed = &quot;sk&quot;;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">      if (&quot;cz&quot;.equals(lng)) lngFixed = &quot;cs&quot;;</span>
+
+<span class="fc" id="L93">      String country = getCountryFromLng(lngFixed);</span>
+<span class="fc" id="L94">      String lngIso = lngFixed.toLowerCase()+&quot;-&quot;+country;</span>
+
+<span class="fc" id="L96">      return lngIso;</span>
+   }
+
+   /**
+    * Vrati krajinu pre zadany jazyk
+    * @param lng
+    * @return
+    */
+   public static String getCountryFromLng(final String lng)
+   {
+<span class="fc" id="L106">      String lngFixed = lng;</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">      if (&quot;cz&quot;.equals(lng)) lngFixed = &quot;cs&quot;;</span>
+
+<span class="fc" id="L109">      String CACHE_KEY = &quot;PageLng.countryTable&quot;;</span>
+<span class="fc" id="L110">      Cache c = Cache.getInstance();</span>
+      @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L112">      Map&lt;String, String&gt; countryTable = (Map&lt;String, String&gt;)c.getObject(CACHE_KEY);</span>
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">      if (countryTable == null)</span>
+      {
+<span class="fc" id="L116">         countryTable = Constants.getHashtable(&quot;countryForLng&quot;);</span>
+<span class="fc" id="L117">         c.setObject(CACHE_KEY, countryTable, 60);</span>
+      }
+
+<span class="fc" id="L120">      String country = countryTable.get(lngFixed);</span>
+
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">      if (Tools.isEmpty(country))</span>
+      {
+         //failsafe ak by nebolo definovane nic v tabulke
+<span class="nc bnc" id="L125" title="All 4 branches missed.">         if (&quot;cz&quot;.equals(lngFixed) || &quot;cs&quot;.equals(lngFixed)) country = &quot;CZ&quot;;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">         else if (&quot;en&quot;.equals(lngFixed)) country = &quot;GB&quot;;</span>
+<span class="nc" id="L127">         else country = lngFixed.toUpperCase();</span>
+      }
+
+<span class="fc" id="L130">      return country;</span>
+   }
+
+   public static String getUserLng(HttpServletRequest request)
+   {
+<span class="fc" id="L135">      String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+
+      try
+      {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">         if (request!=null)</span>
+         {
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (request.getParameter(&quot;language&quot;) != null)</span>
+            {
+<span class="fc" id="L143">               lng = request.getParameter(&quot;language&quot;);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            } else if (request.getParameter(&quot;__lng&quot;) != null)</span>
+            {
+<span class="fc" id="L146">               lng = request.getParameter(&quot;__lng&quot;);</span>
+<span class="pc bpc" id="L147" title="1 of 4 branches missed.">            } else if (request.getParameter(&quot;lng&quot;) != null &amp;&amp; request.getParameter(&quot;key&quot;)==null)</span>
+            {
+                //key tam je preto, aby nam to nemenilo jazyk v dialogu prop_edit.jsp
+<span class="fc" id="L150">               lng = request.getParameter(&quot;lng&quot;);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            } else if (request.getAttribute(&quot;PageLng&quot;) != null)</span>
+            {
+<span class="fc" id="L153">               lng = (String) request.getAttribute(&quot;PageLng&quot;);</span>
+<span class="pc bpc" id="L154" title="1 of 8 branches missed.">            } else if (request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG) != null &amp;&amp; request.getSession().getAttribute(Constants.USER_KEY) != null &amp;&amp; request.getRequestURI() != null &amp;&amp; request.getRequestURI().indexOf(&quot;admin&quot;) != -1)</span>
+            {
+               //najskor musi ist test pre admina, aby sa nemenil jazyk admin casti
+<span class="fc" id="L157">               lng = (String) request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">            } else if (request.getSession().getAttribute(&quot;lng&quot;) != null)</span>
+            {
+<span class="fc" id="L160">               lng = (String) request.getSession().getAttribute(&quot;lng&quot;);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            } else if (request.getCookies() != null)</span>
+            {
+               //preiteruj cez cookies
+<span class="fc" id="L164">               Cookie[] cookies = request.getCookies();</span>
+               int i;
+<span class="fc" id="L166">               int len = cookies.length;</span>
+               Cookie c;
+<span class="fc bfc" id="L168" title="All 2 branches covered.">               for (i = 0; i &lt; len; i++)</span>
+               {
+<span class="fc" id="L170">                  c = cookies[i];</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                  if (&quot;lng&quot;.equals(c.getName()))</span>
+                  {
+<span class="fc" id="L173">                     lng = c.getValue();</span>
+<span class="fc" id="L174">                     break;</span>
+                  }
+               }
+            }
+         }
+      }
+<span class="nc" id="L180">      catch (Exception ex)</span>
+      {
+
+<span class="fc" id="L183">      }</span>
+
+      //System.out.println(&quot;lng1=&quot;+lng);
+
+      //kontrola a ochrana pred xss v cookies
+<span class="pc bpc" id="L188" title="2 of 6 branches missed.">      if (lng == null || (lng.length()!=2 &amp;&amp; lng.length()!=3))</span>
+      {
+<span class="fc" id="L190">         lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+      }
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">      if (DocTools.testXss(lng)) lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+
+<span class="pc bpc" id="L194" title="1 of 4 branches missed.">      if (Tools.isEmpty(lng) || &quot;null&quot;.equals(lng))</span>
+      {
+<span class="fc" id="L196">      	lng = &quot;sk&quot;;</span>
+      }
+
+      //toto nemozeme nastavit, potom boli dialogy pre pridanie komponenty v admin casti v jazyku sablony nie WebJETu
+      //request.setAttribute(&quot;PageLng&quot;, lng);
+
+      //System.out.println(&quot;lng2=&quot;+lng);
+
+<span class="fc" id="L204">      return(lng);</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

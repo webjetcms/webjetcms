@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetResourceBundleMessageInterpolator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component</a> &gt; <span class="el_source">WebjetResourceBundleMessageInterpolator.java</span></div><h1>WebjetResourceBundleMessageInterpolator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component;
+
+import java.lang.invoke.MethodHandles;
+import java.security.PrivilegedAction;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.el.ELManager;
+import javax.el.ExpressionFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.ValidationException;
+
+import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTerm;
+import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTermType;
+import org.hibernate.validator.internal.engine.messageinterpolation.parser.MessageDescriptorFormatException;
+import org.hibernate.validator.internal.engine.messageinterpolation.parser.Token;
+import org.hibernate.validator.internal.engine.messageinterpolation.parser.TokenCollector;
+import org.hibernate.validator.internal.engine.messageinterpolation.parser.TokenIterator;
+import org.hibernate.validator.internal.util.ConcurrentReferenceHashMap;
+import org.hibernate.validator.internal.util.logging.Log;
+import org.hibernate.validator.internal.util.logging.LoggerFactory;
+import org.hibernate.validator.internal.util.privilegedactions.GetClassLoader;
+import org.hibernate.validator.internal.util.privilegedactions.SetContextClassLoader;
+import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
+import org.hibernate.validator.resourceloading.PlatformResourceBundleLocator;
+import org.hibernate.validator.spi.resourceloading.ResourceBundleLocator;
+import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
+
+import sk.iway.iwcm.Logger;
+
+public class WebjetResourceBundleMessageInterpolator implements MessageInterpolator {
+<span class="fc" id="L37">    private boolean cachingEnabled = false;</span>
+    private ExpressionFactory expressionFactory;
+
+<span class="fc" id="L40">    private static final Log LOG = LoggerFactory.make(MethodHandles.lookup());</span>
+    private final Locale defaultLocale;
+    private final ResourceBundleLocator userResourceBundleLocator;
+    private final ResourceBundleLocator defaultResourceBundleLocator;
+    private final ResourceBundleLocator contributorResourceBundleLocator;
+    private final ConcurrentReferenceHashMap&lt;String, List&lt;Token&gt;&gt; tokenizedParameterMessages;
+    private final ConcurrentReferenceHashMap&lt;String, List&lt;Token&gt;&gt; tokenizedELMessages;
+<span class="fc" id="L47">    private static final Pattern LEFT_BRACE = Pattern.compile(&quot;\\{&quot;, 16);</span>
+<span class="fc" id="L48">    private static final Pattern RIGHT_BRACE = Pattern.compile(&quot;\\}&quot;, 16);</span>
+<span class="fc" id="L49">    private static final Pattern SLASH = Pattern.compile(&quot;\\\\&quot;, 16);</span>
+<span class="fc" id="L50">    private static final Pattern DOLLAR = Pattern.compile(&quot;\\$&quot;, 16);</span>
+
+    public WebjetResourceBundleMessageInterpolator() {
+<span class="fc" id="L53">        this(new MessageSourceResourceBundleLocator( new WebjetMessageSource()), new PlatformResourceBundleLocator(&quot;org.hibernate.validator.ValidationMessages&quot;), false);</span>
+<span class="fc" id="L54">        this.expressionFactory = buildExpressionFactory();</span>
+<span class="fc" id="L55">    }</span>
+
+<span class="fc" id="L57">    public WebjetResourceBundleMessageInterpolator(ResourceBundleLocator userResourceBundleLocator, ResourceBundleLocator contributorResourceBundleLocator, boolean cacheMessages) {</span>
+<span class="fc" id="L58">        this.defaultLocale = Locale.getDefault();</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (userResourceBundleLocator == null) {</span>
+<span class="nc" id="L60">            this.userResourceBundleLocator = new PlatformResourceBundleLocator(&quot;ValidationMessages&quot;);</span>
+        } else {
+<span class="fc" id="L62">            this.userResourceBundleLocator = userResourceBundleLocator;</span>
+        }
+
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (contributorResourceBundleLocator == null) {</span>
+<span class="nc" id="L66">            this.contributorResourceBundleLocator = new PlatformResourceBundleLocator(&quot;ContributorValidationMessages&quot;, (ClassLoader)null, true);</span>
+        } else {
+<span class="fc" id="L68">            this.contributorResourceBundleLocator = contributorResourceBundleLocator;</span>
+        }
+
+<span class="fc" id="L71">        this.defaultResourceBundleLocator = new PlatformResourceBundleLocator(&quot;org.hibernate.validator.ValidationMessages&quot;);</span>
+<span class="fc" id="L72">        this.cachingEnabled = cacheMessages;</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (this.cachingEnabled) {</span>
+<span class="nc" id="L74">            this.tokenizedParameterMessages = new ConcurrentReferenceHashMap&lt;&gt;(100, 0.75F, 16, ConcurrentReferenceHashMap.ReferenceType.SOFT, ConcurrentReferenceHashMap.ReferenceType.SOFT, EnumSet.noneOf(ConcurrentReferenceHashMap.Option.class));</span>
+<span class="nc" id="L75">            this.tokenizedELMessages = new ConcurrentReferenceHashMap&lt;&gt;(100, 0.75F, 16, ConcurrentReferenceHashMap.ReferenceType.SOFT, ConcurrentReferenceHashMap.ReferenceType.SOFT, EnumSet.noneOf(ConcurrentReferenceHashMap.Option.class));</span>
+        } else {
+<span class="fc" id="L77">            this.tokenizedParameterMessages = null;</span>
+<span class="fc" id="L78">            this.tokenizedELMessages = null;</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+    public String interpolate(String message, Context context) {
+<span class="nc" id="L83">        String interpolatedMessage = message;</span>
+
+        try {
+<span class="nc" id="L86">            interpolatedMessage = this.interpolateMessage(message, context, this.defaultLocale);</span>
+<span class="nc" id="L87">        } catch (MessageDescriptorFormatException var5) {</span>
+<span class="nc" id="L88">            LOG.warn(var5.getMessage());</span>
+<span class="nc" id="L89">        }</span>
+
+<span class="nc" id="L91">        return interpolatedMessage;</span>
+    }
+
+    public String interpolate(String message, Context context, Locale locale) {
+<span class="fc" id="L95">        String interpolatedMessage = message;</span>
+
+        try {
+<span class="fc" id="L98">            interpolatedMessage = this.interpolateMessage(message, context, locale);</span>
+<span class="nc" id="L99">        } catch (ValidationException var6) {</span>
+<span class="nc" id="L100">            LOG.warn(var6.getMessage());</span>
+<span class="fc" id="L101">        }</span>
+
+<span class="fc" id="L103">        return interpolatedMessage;</span>
+    }
+
+    private String interpolateMessage(String message, Context context, Locale locale) throws MessageDescriptorFormatException {
+<span class="fc" id="L107">        String resolvedMessage = this.resolveMessage(message, locale);</span>
+
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (resolvedMessage.indexOf(123) &gt; -1) {</span>
+<span class="fc" id="L110">            resolvedMessage = this.interpolateExpression(new TokenIterator(this.getParameterTokens(resolvedMessage, this.tokenizedParameterMessages, InterpolationTermType.PARAMETER)), context, locale);</span>
+<span class="fc" id="L111">            resolvedMessage = this.interpolateExpression(new TokenIterator(this.getParameterTokens(resolvedMessage, this.tokenizedELMessages, InterpolationTermType.EL)), context, locale);</span>
+        }
+
+<span class="fc" id="L114">        resolvedMessage = this.replaceEscapedLiterals(resolvedMessage);</span>
+<span class="fc" id="L115">        return resolvedMessage;</span>
+    }
+
+    private List&lt;Token&gt; getParameterTokens(String resolvedMessage, ConcurrentReferenceHashMap&lt;String, List&lt;Token&gt;&gt; cache, InterpolationTermType termType) {
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        return this.cachingEnabled</span>
+                ?
+<span class="nc" id="L121">                cache.computeIfAbsent(resolvedMessage, rm -&gt; (new TokenCollector(resolvedMessage, termType)).getTokenList())</span>
+                :
+<span class="fc" id="L123">                (new TokenCollector(resolvedMessage, termType)).getTokenList();</span>
+    }
+
+    private String resolveMessage(String message, Locale locale) {
+<span class="fc" id="L127">        String resolvedMessage = message;</span>
+<span class="fc" id="L128">        ResourceBundle userResourceBundle = this.userResourceBundleLocator.getResourceBundle(locale);</span>
+<span class="fc" id="L129">        ResourceBundle constraintContributorResourceBundle = this.contributorResourceBundleLocator.getResourceBundle(locale);</span>
+<span class="fc" id="L130">        ResourceBundle defaultResourceBundle = this.defaultResourceBundleLocator.getResourceBundle(locale);</span>
+<span class="fc" id="L131">        boolean evaluatedDefaultBundleOnce = false;</span>
+
+        while(true) {
+<span class="fc" id="L134">            String userBundleResolvedMessage = userResourceBundle.getString(resolvedMessage);</span>
+
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (this.hasReplacementNotTakenPlace(userBundleResolvedMessage, resolvedMessage)) {</span>
+<span class="fc" id="L137">                userBundleResolvedMessage = this.interpolateBundleMessage(resolvedMessage, constraintContributorResourceBundle, locale, true);</span>
+            }
+
+<span class="pc bpc" id="L140" title="1 of 4 branches missed.">            if (evaluatedDefaultBundleOnce &amp;&amp; this.hasReplacementNotTakenPlace(userBundleResolvedMessage, resolvedMessage)) {</span>
+<span class="fc" id="L141">                return resolvedMessage;</span>
+            }
+
+<span class="fc" id="L144">            resolvedMessage = this.interpolateBundleMessage(userBundleResolvedMessage, defaultResourceBundle, locale, false);</span>
+<span class="fc" id="L145">            evaluatedDefaultBundleOnce = true;</span>
+<span class="fc" id="L146">        }</span>
+    }
+
+    private String replaceEscapedLiterals(String resolvedMessage) {
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (resolvedMessage.indexOf(92) &gt; -1) {</span>
+<span class="nc" id="L151">            resolvedMessage = LEFT_BRACE.matcher(resolvedMessage).replaceAll(&quot;{&quot;);</span>
+<span class="nc" id="L152">            resolvedMessage = RIGHT_BRACE.matcher(resolvedMessage).replaceAll(&quot;}&quot;);</span>
+<span class="nc" id="L153">            resolvedMessage = SLASH.matcher(resolvedMessage).replaceAll(Matcher.quoteReplacement(&quot;\\&quot;));</span>
+<span class="nc" id="L154">            resolvedMessage = DOLLAR.matcher(resolvedMessage).replaceAll(Matcher.quoteReplacement(&quot;$&quot;));</span>
+        }
+
+<span class="fc" id="L157">        return resolvedMessage;</span>
+    }
+
+    private boolean hasReplacementNotTakenPlace(String origMessage, String newMessage) {
+<span class="fc" id="L161">        return origMessage.equals(newMessage);</span>
+    }
+
+    private String interpolateBundleMessage(String message, ResourceBundle bundle, Locale locale, boolean recursive) throws MessageDescriptorFormatException {
+<span class="fc" id="L165">        TokenCollector tokenCollector = new TokenCollector(message, InterpolationTermType.PARAMETER);</span>
+<span class="fc" id="L166">        TokenIterator tokenIterator = new TokenIterator(tokenCollector.getTokenList());</span>
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        while(tokenIterator.hasMoreInterpolationTerms()) {</span>
+<span class="fc" id="L169">            String term = tokenIterator.nextInterpolationTerm();</span>
+<span class="fc" id="L170">            String resolvedParameterValue = this.resolveParameter(term, bundle, locale, recursive);</span>
+<span class="fc" id="L171">            tokenIterator.replaceCurrentInterpolationTerm(resolvedParameterValue);</span>
+<span class="fc" id="L172">        }</span>
+
+<span class="fc" id="L174">        return tokenIterator.getInterpolatedMessage();</span>
+    }
+
+    private String interpolateExpression(TokenIterator tokenIterator, Context context, Locale locale) throws MessageDescriptorFormatException {
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        while(tokenIterator.hasMoreInterpolationTerms()) {</span>
+<span class="fc" id="L179">            String term = tokenIterator.nextInterpolationTerm();</span>
+<span class="fc" id="L180">            String resolvedExpression = this.interpolate(context, locale, term);</span>
+<span class="fc" id="L181">            tokenIterator.replaceCurrentInterpolationTerm(resolvedExpression);</span>
+<span class="fc" id="L182">        }</span>
+
+<span class="fc" id="L184">        return tokenIterator.getInterpolatedMessage();</span>
+    }
+
+    private String resolveParameter(String parameterName, ResourceBundle bundle, Locale locale, boolean recursive) throws MessageDescriptorFormatException {
+        String parameterValue;
+        try {
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">            if (bundle != null) {</span>
+<span class="fc" id="L191">                parameterValue = bundle.getString(this.removeCurlyBraces(parameterName));</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">                if (recursive) {</span>
+<span class="fc" id="L193">                    parameterValue = this.interpolateBundleMessage(parameterValue, bundle, locale, recursive);</span>
+                }
+            } else {
+<span class="nc" id="L196">                parameterValue = parameterName;</span>
+            }
+<span class="fc" id="L198">        } catch (MissingResourceException var7) {</span>
+<span class="fc" id="L199">            parameterValue = parameterName;</span>
+<span class="fc" id="L200">        }</span>
+
+<span class="fc" id="L202">        return parameterValue;</span>
+    }
+
+    private String removeCurlyBraces(String parameter) {
+<span class="fc" id="L206">        return parameter.substring(1, parameter.length() - 1);</span>
+    }
+
+    public String interpolate(Context context, Locale locale, String message) {
+<span class="fc" id="L210">        InterpolationTerm expression = new InterpolationTerm(message, locale, expressionFactory);</span>
+<span class="fc" id="L211">        return expression.interpolate(context);</span>
+    }
+
+    private static ExpressionFactory buildExpressionFactory() {
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (canLoadExpressionFactory()) {</span>
+<span class="fc" id="L216">            ExpressionFactory expressionFactory = ELManager.getExpressionFactory();</span>
+<span class="fc" id="L217">            Logger.debug(WebjetResourceBundleMessageInterpolator.class, &quot;Loaded expression factory via original TCCL&quot;);</span>
+<span class="fc" id="L218">            return expressionFactory;</span>
+        } else {
+<span class="nc" id="L220">            ClassLoader originalContextClassLoader = run(GetClassLoader.fromContext());</span>
+
+            try {
+<span class="nc" id="L223">                run(SetContextClassLoader.action(ResourceBundleMessageInterpolator.class.getClassLoader()));</span>
+                ExpressionFactory expressionFactory;
+                ExpressionFactory var2;
+<span class="nc bnc" id="L226" title="All 2 branches missed.">                if (canLoadExpressionFactory()) {</span>
+<span class="nc" id="L227">                    expressionFactory = ELManager.getExpressionFactory();</span>
+<span class="nc" id="L228">                    Logger.debug(WebjetResourceBundleMessageInterpolator.class, &quot;Loaded expression factory via HV classloader&quot;);</span>
+<span class="nc" id="L229">                    var2 = expressionFactory;</span>
+<span class="nc" id="L230">                    return var2;</span>
+                }
+
+<span class="nc" id="L233">                run(SetContextClassLoader.action(ELManager.class.getClassLoader()));</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                if (canLoadExpressionFactory()) {</span>
+<span class="nc" id="L235">                    expressionFactory = ELManager.getExpressionFactory();</span>
+<span class="nc" id="L236">                    Logger.debug(WebjetResourceBundleMessageInterpolator.class, &quot;Loaded expression factory via EL classloader&quot;);</span>
+<span class="nc" id="L237">                    var2 = expressionFactory;</span>
+<span class="nc" id="L238">                    return var2;</span>
+                }
+<span class="nc" id="L240">            } catch (Exception var6) {</span>
+<span class="nc" id="L241">                throw LOG.getUnableToInitializeELExpressionFactoryException(var6);</span>
+            } finally {
+<span class="nc" id="L243">                run(SetContextClassLoader.action(originalContextClassLoader));</span>
+            }
+
+<span class="nc" id="L246">            throw LOG.getUnableToInitializeELExpressionFactoryException((Throwable)null);</span>
+        }
+    }
+
+    private static boolean canLoadExpressionFactory() {
+        try {
+<span class="fc" id="L252">            ExpressionFactory.newInstance();</span>
+<span class="fc" id="L253">            return true;</span>
+<span class="nc" id="L254">        } catch (Exception var1) {</span>
+<span class="nc" id="L255">            return false;</span>
+        }
+    }
+
+    private static &lt;T&gt; T run(PrivilegedAction&lt;T&gt; action) {
+<span class="nc" id="L260">        return action.run();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -107,7 +107,7 @@ Scenario('from struts to Spring', async ({I, DTE}) => {
 
 Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) => {
     let copyValue = "copyValue_" + randomNumber;
-    let question = "bugTest_" + randomNumber + "_autotest";
+    let question = "bugTest-autotest-" + randomNumber;
 
     I.amOnPage("/apps/qa/admin/");
     I.clickCss("button.buttons-create");
@@ -130,12 +130,11 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     const answer_b = await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor");
     I.assertEqual("<p>" + copyValue + "</p>", answer_b);
 
-    DTE.fillQuill("answer", "");
     DTE.save();
 
     I.say("Check AnswerCheck status");
     DT.filter("question", question);
-    DT.filter("answer", copyValue + "_change");
+    DT.filter("answer", copyValue);
     I.seeElement( locate("#qaDataTable > tbody > tr > td").withText("Áno") );
 
     I.clickCss("button.buttons-select-all");

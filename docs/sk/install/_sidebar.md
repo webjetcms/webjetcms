@@ -11,3 +11,6 @@
   - [Externá konfigurácia](/install/external-configuration.md)
 - Migrácia
   - [Migrácia medzi prostrediami](/install/migrate-dev-prod.md)
+- MultiWeb
+  - [Úvod](/install/multiweb/README.md)
+  - [Konfigurácia](/install/multiweb/config.md)

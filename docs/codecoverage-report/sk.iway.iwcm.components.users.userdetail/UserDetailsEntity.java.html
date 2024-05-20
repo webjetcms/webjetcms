@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsEntity.java</span></div><h1>UserDetailsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+/**
+ * Udaje pouzivatela
+ * POZOR: z databazy necita/nezapisuje password a salt, to sa zapisuje separatnym SQL prikazom
+ * je to tak kvoli bezpecnosti, aby sa nahodou nedostali hash hesiel/salt na FE
+ */
+@Entity
+@Table(name = &quot;users&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_EDIT)
+public class UserDetailsEntity extends UserDetailsBasic {
+
+<span class="fc" id="L39">    public UserDetailsEntity(){</span>
+        //
+<span class="fc" id="L41">    }</span>
+
+    /*PERSONAL INFO - Access*/
+
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.users.email}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        sortAfter = &quot;editorFields.login&quot;
+    )
+    private String email;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;[[#{components.users.authorized}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;useredit.access&quot;)
+                }
+            )
+        },
+        visible = false,
+        sortAfter = &quot;photo&quot;
+    )
+    private Boolean authorized;
+
+    @Column(name = &quot;allow_login_start&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title = &quot;[[#{user.admin.allowLoginStart}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        visible = false,
+        sortAfter = &quot;authorized&quot;
+    )
+    private Date allowLoginStart;
+
+    @Column(name = &quot;allow_login_end&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title = &quot;[[#{user.admin.allowLoginEnd}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        visible = false,
+        sortAfter = &quot;allowLoginStart&quot;
+    )
+    private Date allowLoginEnd;
+
+
+    /*FREE ITEMS - Fre usable items*/
+
+    @Column(name = &quot;field_a&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.field_a}]]&quot;,
+        tab = &quot;freeItems&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.users.free_usabel_items&quot;)
+                }
+            )
+        },
+        visible = false
+    )
+    private String fieldA;
+
+    @Column(name = &quot;field_b&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.field_b}]]&quot;,
+        tab = &quot;freeItems&quot;,
+        visible = false
+    )
+    private String fieldB;
+
+    @Column(name = &quot;field_c&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.field_c}]]&quot;,
+        tab = &quot;freeItems&quot;,
+        visible = false
+    )
+    private String fieldC;
+
+    @Column(name = &quot;field_d&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.field_d}]]&quot;,
+        tab = &quot;freeItems&quot;,
+        visible = false
+    )
+    private String fieldD;
+
+    @Column(name = &quot;field_e&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{user.field_e}]]&quot;,
+        tab = &quot;freeItems&quot;,
+        visible = false
+    )
+    private String fieldE;
+
+    /*RIGHTS*/
+
+    @Column(name = &quot;is_admin&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;user.admin.admin&quot;,
+        tab = &quot;rightsTab&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                label = &quot;components.users.admin&quot;,
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.users.admin_section_entry&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+                }
+            )
+        },
+        visible = true,
+        sortAfter = &quot;editorFields.emails&quot;
+    )
+    private Boolean admin;
+
+    @Transient
+    private String userGroupsNames;
+
+    //ciarkou oddeleny zoznam
+    @Column(name = &quot;user_groups&quot;)
+    private String userGroupsIds;
+
+    @Column(name = &quot;editable_groups&quot;)
+    private String editableGroups;
+
+    @Column(name = &quot;editable_pages&quot;)
+    private String editablePages;
+
+    @Column(name = &quot;writable_folders&quot;)
+    private String writableFolders;
+
+    //vo WJ8 sa settuje v triede UsersDB na riadku 88
+    @Transient
+    private String lastLogon;
+
+    @Column(name = &quot;last_logon&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        title = &quot;admin.users.lastlogon&quot;,
+        inputType = DataTableColumnType.DATETIME,
+        hiddenEditor = true,
+        tab = &quot;rightsTab&quot;,
+        sortAfter = &quot;admin&quot;
+    )
+    private Date lastLogonAsDate;
+
+    // private String modulePerms;
+
+    // private String disabledItems;
+
+    @Column(name = &quot;reg_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        title = &quot;components.forum.regdate&quot;,
+        inputType = DataTableColumnType.DATETIME,
+        hiddenEditor = true,
+        visible = false,
+        tab = &quot;rightsTab&quot;,
+        sortAfter = &quot;lastLogonAsDate&quot;
+    )
+    private Date regDate;
+
+    @Column(name = &quot;forum_rank&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN,
+        hidden = true
+    )
+    private Integer forumRank;
+
+    @Column(name = &quot;rating_rank&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN,
+        hidden = true
+    )
+    private Integer ratingRank;
+
+//    private String authorizeHash;
+
+    @Column(name = &quot;parent_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        hidden = true,
+        hiddenEditor = true,
+        visible = false
+    )
+    private Integer parentId;
+
+    @Transient //toto nechceme citat z DB a ani prenasat na FE
+    @JsonIgnore
+    private String passwordSalt;
+
+//    private int domainId;
+
+    //@Column(name = &quot;mobile_device&quot;)
+    //private String mobileDevice;
+
+    //@Column(name = &quot;api_key&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.PASSWORD,
+        title = &quot;[[#{components.user.apiKey}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        hidden = true
+    )
+    @Transient //toto nechceme citat z DB
+    private String apiKey;
+
+<span class="fc" id="L259">    @Transient</span>
+    @DataTableColumnNested
+    @Valid
+	private UserDetailsEditorFields editorFields = null;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

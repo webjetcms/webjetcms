@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlspFileExporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.file_export</a> &gt; <span class="el_source">SlspFileExporter.java</span></div><h1>SlspFileExporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.file_export;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  SlspFileExporter.java
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 25.9.2009 16:47:59
+ *@modified     $Date: 2009/10/01 07:39:06 $
+ */
+<span class="nc" id="L20">public class SlspFileExporter extends PaymentFileExporter</span>
+{
+static final String SINGLE_PAYMENT_CHAR = &quot;1&quot;;
+	
+	static final String REPETITIVE_PAYMENT_CHAR = &quot;2&quot;;
+	
+	static final String DELIMITER_SEQUENCE = &quot;;&quot;;
+	
+	private boolean isSourceAccountIncorrect()
+	{
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		return getSourceAccount() == null || </span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">			Tools.isAnyEmpty(getSourceAccount().getAccountPrefix(), getSourceAccount().getAccountNumber());</span>
+	}
+
+	@Override
+	protected String getExporterIdentifierForFileName()
+	{
+<span class="nc" id="L37">		return &quot;slsp&quot;;</span>
+	}
+	
+	@Override
+	public String createRowFrom(Payment payment)
+	{
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (isSourceAccountIncorrect())</span>
+<span class="nc" id="L44">			throw new IllegalStateException(&quot;Call setAccount() first - source account as Payment's account &quot;);</span>
+				
+<span class="nc" id="L46">		return new StringBuilder().</span>
+<span class="nc" id="L47">			append(new SimpleDateFormat(&quot;dd.MM.yyyy&quot;).format(new Date())).</span>
+<span class="nc" id="L48">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L49">			append(getSourceAccount().getAccountPrefix()).</span>
+<span class="nc" id="L50">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L51">			append(getSourceAccount().getAccountNumber()).</span>
+<span class="nc" id="L52">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L53">			append(payment.getAccountPrefix()).</span>
+<span class="nc" id="L54">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L55">			append(payment.getAccountNumber()).</span>
+<span class="nc" id="L56">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L57">			append('+').append(payment.getAmountString()).</span>
+<span class="nc" id="L58">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L59">			append(payment.getCurrency()).</span>
+<span class="nc" id="L60">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L61">			append(payment.getBankCode()).</span>
+<span class="nc" id="L62">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L63">			append(payment.getVariableSymbol()).</span>
+<span class="nc" id="L64">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L65">			append(payment.getConstantSymbol()).</span>
+<span class="nc" id="L66">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L67">			append(payment.getSpecificSymbol()).</span>
+<span class="nc" id="L68">			append(DELIMITER_SEQUENCE).</span>
+<span class="nc" id="L69">			append(payment.getDescription()).</span>
+<span class="nc" id="L70">			append(&quot;;N;00;Nie&quot;). //dummy end - not even specified in their internal documents</span>
+<span class="nc" id="L71">			append(&quot;\r\n&quot;).</span>
+<span class="nc" id="L72">			toString();</span>
+	}
+
+	@Override
+	protected String getFileExtension()
+	{
+<span class="nc" id="L78">		return &quot;txt&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

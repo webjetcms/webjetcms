@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WelcomeDataBackTime.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.welcome</a> &gt; <span class="el_source">WelcomeDataBackTime.java</span></div><h1>WelcomeDataBackTime.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.welcome;
+
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DateTools;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.StatTableDB;
+
+/**
+ * WelcomeDataBackTime.java
+ *
+ * Ziskanie a cachovanie udajov z WebJETu pre homepage WebJET 8. Poskytuje
+ * nasledovne udaje za obdobie poslednych 24 hodin. Obdobie sa konfiguruje cez
+ * konfiguracnu premennu &quot;welcomeDataBackTimeMinutes&quot; co je pocet minut za ktore
+ * sa budu data z DB vyberat.
+ *
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2014
+ * @author $Author: jeeff mkolejak $
+ * @version $Revision: 1.3 $
+ * @created Date: 14.7.2014 13:37:29
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+public class WelcomeDataBackTime
+{
+	private static WelcomeDataBean welcomeDataBean;
+	//private static long month_4 = 4l * 30l * 24l * 60l * 60l * 1000l;
+	//private static long days_17 = 17l * 24l * 60l * 60l * 1000l;
+
+<span class="nc" id="L42">	protected WelcomeDataBackTime() {</span>
+		//utility class
+<span class="nc" id="L44">	}</span>
+
+	public static WelcomeDataBean getWelcomeDataBackTime()
+	{
+<span class="fc" id="L48">		String cacheKey = &quot;welcomeDataBackTimes-domainId=&quot;+CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L49">		Cache cache = Cache.getInstance();</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		if (cache.getObject(cacheKey) != null)</span>
+		{
+<span class="fc" id="L52">			welcomeDataBean = (WelcomeDataBean) (cache.getObject(cacheKey));</span>
+		}
+		else
+		{
+<span class="fc" id="L56">			welcomeDataBean = initialize();</span>
+<span class="fc" id="L57">			cache.setObjectSeconds(cacheKey, welcomeDataBean, getWelcomeDataCacheMinutesConst()*60, true);</span>
+		}
+<span class="fc" id="L59">		return welcomeDataBean;</span>
+	}
+
+	public static int getWelcomeDataCacheMinutesConst()
+	{
+<span class="fc" id="L64">		return Constants.getInt(&quot;welcomeDataCacheMinutes&quot;);</span>
+	}
+
+	public static WelcomeDataBean initialize()
+	{
+<span class="fc" id="L69">		welcomeDataBean = new WelcomeDataBean();</span>
+<span class="fc" id="L70">		initFillFormNumber();</span>
+<span class="fc" id="L71">		initDocumentForumNumber();</span>
+<span class="fc" id="L72">		Calendar calendarFrom = DateTools.timestampToCalendar(getTimeFrom());</span>
+<span class="fc" id="L73">		Calendar calendarTo = DateTools.timestampToCalendar(getTimeTo());</span>
+<span class="fc" id="L74">		initStatsViewNumber(calendarFrom, calendarTo);</span>
+<span class="fc" id="L75">		initStatsErrorNumber(calendarFrom, calendarTo);</span>
+<span class="fc" id="L76">		return welcomeDataBean;</span>
+	}
+
+	private static void initDocumentForumNumber()
+	{
+		try
+		{
+<span class="fc" id="L83">			int documentForumNumber = new SimpleQuery().forInt(</span>
+<span class="fc" id="L84">						&quot;SELECT count(*) AS countForums FROM document_forum WHERE question_date between ? and ? &quot; + CloudToolsForCore.getDomainIdSqlWhere(true), getTimeFrom(),</span>
+<span class="fc" id="L85">						getTimeTo());</span>
+<span class="fc" id="L86">			Logger.debug(WelcomeDataBackTime.class, &quot;documentForumNumber: &quot; + documentForumNumber);</span>
+<span class="fc" id="L87">			welcomeDataBean.setDocumentForumNumber(documentForumNumber);</span>
+		}
+<span class="nc" id="L89">		catch (Exception e)</span>
+		{
+<span class="nc" id="L91">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L92">		}</span>
+
+<span class="fc" id="L94">	}</span>
+
+	private static void initFillFormNumber()
+	{
+		try
+		{
+<span class="fc" id="L100">			int fillFormsNumber = new SimpleQuery().forInt(</span>
+<span class="fc" id="L101">						&quot;SELECT count(*) AS countForms FROM forms WHERE create_date is not null AND create_date between ? and ? &quot; + CloudToolsForCore.getDomainIdSqlWhere(true), getTimeFrom(),</span>
+<span class="fc" id="L102">						getTimeTo());</span>
+<span class="fc" id="L103">			Logger.debug(WelcomeDataBackTime.class, &quot;fillFormsNumber: &quot; + fillFormsNumber);</span>
+<span class="fc" id="L104">			welcomeDataBean.setFillFormsNumber(fillFormsNumber);</span>
+		}
+<span class="nc" id="L106">		catch (Exception e)</span>
+		{
+<span class="nc" id="L108">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L109">		}</span>
+<span class="fc" id="L110">	}</span>
+
+	private static void initStatsErrorNumber(Calendar calendarFrom, Calendar calendarTo)
+	{
+<span class="fc" id="L114">		int statErrorNumber = 0;</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;))==false)</span>
+		{
+			try
+			{
+			/*
+			String multiwebSql = &quot;&quot;;
+			if(InitServlet.isTypeCloud())
+			{
+				multiwebSql = &quot; AND query_string LIKE '%&quot;+CloudToolsForCore.getDomainName()+&quot;%'&quot;;
+			}
+
+			String table_stat_error = &quot;stat_error&quot; + &quot;_&quot; + calendarTo.get(Calendar.YEAR) + &quot;_&quot; + (calendarTo.get(Calendar.MONTH) + 1);
+			String sql_stat_error = &quot;select sum(count) from  &quot; + table_stat_error + &quot; where week = ? &quot;;
+			int week = calendarFrom.get(Calendar.WEEK_OF_YEAR)+1;
+			//.get(Calendar.WEEK_OF_YEAR)+1 lebo calendarFrom je cas presne pred tyzdnom a v tabulke su zaznamy iba podla cisel tyzdnov.
+			//To znamena ze ak by nebolo +1 dostaly by sme zaznamy v celom minulom tyzdni (pondelok-nedela), takto je to v aktualnom
+			statErrorNumber = new SimpleQuery().forInt(sql_stat_error+multiwebSql, week);
+			if (calendarFrom.get(Calendar.MONTH) + 1 == calendarTo.get(Calendar.MONTH))
+			{
+				table_stat_error = &quot;stat_error&quot; + &quot;_&quot; + calendarFrom.get(Calendar.YEAR) + &quot;_&quot; + (calendarFrom.get(Calendar.MONTH) + 1);
+				sql_stat_error = &quot;select sum(count) from  &quot; + table_stat_error + &quot; where week = ? &quot;;
+				statErrorNumber += new SimpleQuery().forInt(sql_stat_error+multiwebSql, week);
+			}
+			*/
+
+<span class="fc" id="L140">				List&lt;Column&gt; errorPages = StatTableDB.getErrorPages(99999, calendarFrom.getTime(), calendarTo.getTime(), null);</span>
+			/*for (Column c : errorPages)
+			{
+				statErrorNumber += c.getIntColumn5();
+			}*/
+<span class="fc" id="L145">				statErrorNumber = errorPages.size();</span>
+
+<span class="fc" id="L147">				Logger.debug(WelcomeDataBackTime.class, &quot;statErrorNumber: &quot; + statErrorNumber);</span>
+<span class="nc" id="L148">			} catch (Exception e)</span>
+			{
+<span class="nc" id="L150">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L151">			}</span>
+		}
+<span class="fc" id="L153">		welcomeDataBean.setStatErrorNumber(statErrorNumber);</span>
+<span class="fc" id="L154">	}</span>
+
+	private static void initStatsViewNumber(Calendar calendarFrom, Calendar calendarTo)
+	{
+<span class="fc" id="L158">		int statViewsNumber = 0;</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;))==false)</span>
+		{
+			try
+			{
+			/*
+			String multiwebSql = &quot;&quot;;
+			if(InitServlet.isTypeCloud())
+			{
+				// &quot; AND &quot; + column + &quot; IN (&quot;+searchGroups+&quot;) &quot;;
+				multiwebSql = StatDB.getRootGroupWhere(&quot;group_id&quot;, CloudToolsForCore.getDomainId());
+				if(multiwebSql.startsWith(&quot; AND&quot;))
+					multiwebSql = multiwebSql.replace(&quot; AND &quot;, &quot;&quot;);
+				multiwebSql = &quot; WHERE &quot; + multiwebSql;
+			}
+
+			String table_stat_views = &quot;stat_views&quot; + &quot;_&quot; + calendarTo.get(Calendar.YEAR) + &quot;_&quot; + (calendarTo.get(Calendar.MONTH) + 1);
+			String sql_stat_views = &quot;select count(distinct session_id) from  &quot; + table_stat_views;
+			int statViewsNumber = new SimpleQuery().forInt(sql_stat_views+multiwebSql);
+			if (calendarFrom.get(Calendar.MONTH) + 1 == calendarTo.get(Calendar.MONTH))
+			{
+				table_stat_views = &quot;stat_views&quot; + &quot;_&quot; + calendarFrom.get(Calendar.YEAR) + &quot;_&quot; + (calendarFrom.get(Calendar.MONTH) + 1);
+				sql_stat_views = &quot;select count(distinct session_id) from &quot; + table_stat_views;
+				statViewsNumber += new SimpleQuery().forInt(sql_stat_views+multiwebSql);
+			}
+			*/
+
+<span class="fc" id="L185">				int groupId = -1;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">				if (InitServlet.isTypeCloud()) groupId = CloudToolsForCore.getDomainId();</span>
+
+<span class="fc" id="L188">				List&lt;Column&gt; statVSDays = StatNewDB.getDayViews(calendarFrom.getTime(), calendarTo.getTime(), groupId, true);</span>
+
+<span class="fc bfc" id="L190" title="All 2 branches covered.">				for (Column c : statVSDays)</span>
+				{
+<span class="fc" id="L192">					statViewsNumber += c.getIntColumn3();</span>
+<span class="fc" id="L193">				}</span>
+
+<span class="fc" id="L195">				Logger.debug(WelcomeDataBackTime.class, &quot;statViewsNumber: &quot; + statViewsNumber);</span>
+<span class="nc" id="L196">			} catch (Exception e)</span>
+			{
+<span class="nc" id="L198">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L199">			}</span>
+		}
+<span class="fc" id="L201">		welcomeDataBean.setStatViewsNumber(statViewsNumber);</span>
+<span class="fc" id="L202">	}</span>
+
+	public static Timestamp getTimeFrom()
+	{
+<span class="fc" id="L206">		long welcomeDataBackTimeMinutes = getWelcomeDataBackTimeConst();</span>
+<span class="fc" id="L207">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L208">		cal.add(Calendar.MINUTE, -(int)welcomeDataBackTimeMinutes);</span>
+<span class="fc" id="L209">		cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L210">		cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L211">		cal.set(Calendar.SECOND, 0);</span>
+
+<span class="fc" id="L213">		Timestamp timeFrom = new Timestamp(cal.getTimeInMillis());</span>
+<span class="fc" id="L214">		Logger.debug(WelcomeDataBackTime.class, &quot;timeFrom: &quot; + timeFrom);</span>
+<span class="fc" id="L215">		return timeFrom;</span>
+	}
+
+	public static Timestamp getTimeTo()
+	{
+<span class="fc" id="L220">		Timestamp timeTo = new Timestamp(new Date().getTime());</span>
+<span class="fc" id="L221">		Logger.debug(WelcomeDataBackTime.class, &quot;timeTo: &quot; + timeTo);</span>
+<span class="fc" id="L222">		return timeTo;</span>
+	}
+
+	public static int getWelcomeDataBackTimeConst()
+	{
+<span class="fc" id="L227">		return Constants.getInt(&quot;welcomeDataBackTime&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

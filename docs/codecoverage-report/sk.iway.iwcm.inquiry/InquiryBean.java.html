@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.inquiry</a> &gt; <span class="el_source">InquiryBean.java</span></div><h1>InquiryBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.inquiry;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * &lt;p&gt;Title: WebJET Content Management Server&lt;/p&gt;
+ * &lt;p&gt;Description: drzi info o ankete &lt;/p&gt;
+ * &lt;p&gt;Copyright: Copyright (c) 2001-2003&lt;/p&gt;
+ * &lt;p&gt;Company: Interway s.r.o. (www.interway.sk)&lt;/p&gt;
+ * @author not attributable
+ * @version 1.0
+ */
+
+<span class="fc" id="L15">public class InquiryBean</span>
+{
+<span class="fc" id="L17">   private String question=&quot;&quot;;</span>
+<span class="fc" id="L18">   private List&lt;AnswerForm&gt; answers=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L19">   private int imagesLength = 10;</span>
+<span class="fc" id="L20">   private String canAnswer = &quot;yes&quot;;</span>
+   private boolean multiple;
+   private int totalClicksMultiple;
+
+
+
+	public int getTotalClicksMultiple()
+	{
+<span class="nc" id="L28">		return totalClicksMultiple;</span>
+	}
+	public void setTotalClicksMultiple(int totalClicksMultiple)
+	{
+<span class="fc" id="L32">		this.totalClicksMultiple = totalClicksMultiple;</span>
+<span class="fc" id="L33">	}</span>
+
+	public boolean isMultiple()
+	{
+<span class="fc" id="L37">		return multiple;</span>
+	}
+	public void setMultiple(boolean multiple)
+	{
+<span class="fc" id="L41">		this.multiple = multiple;</span>
+<span class="fc" id="L42">	}</span>
+	public String getQuestion()
+   {
+<span class="fc" id="L45">      return question;</span>
+   }
+   public void setQuestion(String question)
+   {
+<span class="fc" id="L49">      this.question = question;</span>
+<span class="fc" id="L50">   }</span>
+   public List&lt;AnswerForm&gt; getAnswers()
+   {
+<span class="fc" id="L53">      return answers;</span>
+   }
+   public void setAnswers(List&lt;AnswerForm&gt; answers)
+   {
+<span class="fc" id="L57">      this.answers = answers;</span>
+<span class="fc" id="L58">   }</span>
+   public int getImagesLength()
+   {
+<span class="nc" id="L61">      return imagesLength;</span>
+   }
+   public void setImagesLength(int imagesLength)
+   {
+<span class="nc" id="L65">      this.imagesLength = imagesLength;</span>
+<span class="nc" id="L66">   }</span>
+   public String getCanAnswer()
+   {
+<span class="fc" id="L69">      return canAnswer;</span>
+   }
+   public void setCanAnswer(String canAnswer)
+   {
+<span class="fc" id="L73">      this.canAnswer = canAnswer;</span>
+<span class="fc" id="L74">   }</span>
+
+   public int getTotalClicks()
+   {
+<span class="nc" id="L78">      int total = 0;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">      for (AnswerForm aForm : answers)</span>
+      {
+<span class="nc" id="L81">         total += aForm.getAnswerClicks();</span>
+<span class="nc" id="L82">      }</span>
+<span class="nc" id="L83">      return(total);</span>
+   }
+
+   public void setImgRootDir(String imgRootDir)
+   {
+      AnswerForm aForm;
+<span class="fc" id="L89">      int len = answers.size();</span>
+      int i;
+<span class="fc bfc" id="L91" title="All 2 branches covered.">      for (i=0; i&lt;len; i++)</span>
+      {
+<span class="fc" id="L93">         aForm = answers.get(i);</span>
+<span class="fc" id="L94">         aForm.setImgRootDir(imgRootDir);</span>
+<span class="fc" id="L95">         answers.set(i, aForm);</span>
+      }
+<span class="fc" id="L97">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

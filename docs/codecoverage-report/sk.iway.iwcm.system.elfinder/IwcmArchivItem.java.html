@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmArchivItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmArchivItem.java</span></div><h1>IwcmArchivItem.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsVolume;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
+
+
+
+public class IwcmArchivItem implements FsItem {
+    FileArchivatorBean _fab;
+    String _path;
+
+    FsVolume _volumn;
+
+    @Override
+    public FsVolume getVolume() {
+<span class="fc" id="L18">        return _volumn;</span>
+    }
+
+    public void set_volumn(FsVolume _volumn) {
+<span class="nc" id="L22">        this._volumn = _volumn;</span>
+<span class="nc" id="L23">    }</span>
+
+    public IwcmArchivItem(IwcmArchivFsVolume volumn, String path, FileArchivatorBean fab)
+    {
+<span class="fc" id="L27">        super();</span>
+        //Logger.debug(this,&quot;new IwcmArchivItem (&quot;+path+&quot;)&quot;+(fab != null ? fab.getId():&quot;-&quot;));
+<span class="fc" id="L29">        _volumn = volumn;</span>
+<span class="fc" id="L30">        _path = path;</span>
+<span class="fc" id="L31">        _fab = fab;</span>
+<span class="fc" id="L32">    }</span>
+
+    public IwcmArchivItem(IwcmArchivFsVolume volumn, FileArchivatorBean fab)
+    {
+<span class="nc" id="L36">        super();</span>
+<span class="nc" id="L37">        _volumn = volumn;</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if(fab != null)</span>
+        {
+<span class="nc" id="L40">            _fab = fab;</span>
+<span class="nc" id="L41">            _path = fab.getVirtualPath();</span>
+        }
+<span class="nc" id="L43">    }</span>
+
+    public String getName()
+    {
+        //nt lastIndex = _path.lastIndexOf(&quot;/&quot;);
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (_fab != null)</span>
+<span class="nc" id="L49">            return _fab.getVirtualFileName();</span>
+<span class="pc bpc" id="L50" title="2 of 4 branches missed.">        if(Tools.isNotEmpty(_path) &amp;&amp; !_path.endsWith(&quot;/&quot;))</span>
+<span class="fc" id="L51">            return _path.substring(_path.lastIndexOf(&quot;/&quot;)+1);</span>
+        else {
+<span class="nc" id="L53">            String[] tokens = Tools.getTokens(_path, &quot;/&quot;);</span>
+<span class="nc" id="L54">            return tokens[tokens.length - 1];</span>
+        }
+    }
+
+    public String getPath() {
+<span class="fc" id="L59">        return _path;</span>
+    }
+
+    public void setPath(String _path) {
+<span class="nc" id="L63">        this._path = _path;</span>
+<span class="nc" id="L64">    }</span>
+
+    public FileArchivatorBean getFab() {
+<span class="fc" id="L67">        return _fab;</span>
+    }
+
+    public void setFab(FileArchivatorBean _fab) {
+<span class="nc" id="L71">        this._fab = _fab;</span>
+<span class="nc" id="L72">    }</span>
+
+    public int getSortPriority()
+    {
+<span class="pc bpc" id="L76" title="3 of 4 branches missed.">        if (getFab() != null &amp;&amp; getFab().getId() &gt; 0) {</span>
+<span class="nc" id="L77">            return getFab().getId();</span>
+        }
+
+<span class="fc" id="L80">        return 10;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

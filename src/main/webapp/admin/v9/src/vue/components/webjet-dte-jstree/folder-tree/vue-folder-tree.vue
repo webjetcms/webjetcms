@@ -2,7 +2,7 @@
     <section id="custom-modal-id" :class="['custom-modal', {'open-custom-modal': readyToOpen}]">
         <div class="custom-modal-wrapper">
             <a class="close-custom-modal" href="javascript:;" @click.prevent="hideCustomModal">
-                <i class="far fa-times-circle"></i>
+                <i class="ti ti-circle-x"></i>
             </a>
             <div class="jsTree-wrapper">
                 <div id="jsTree" data-rest-url="/admin/rest/groups/tree?click=aaa" data-rest-param-name="id" :data-group-id="groupId"></div>

@@ -36,7 +36,7 @@ public class GdprCron {
             }
 
             if (argArray[0].equalsIgnoreCase("regexps")) {
-                regexps = new ArrayList<GdprRegExpBean>();
+                regexps = new ArrayList<>();
                 for(String value:valuesArray)
                 {
                     regexps.add(new GdprRegExpBean(value));
@@ -49,7 +49,6 @@ public class GdprCron {
                 for (String value : valuesArray) {
                     modules.add(GdprModule.valueOf(value));
                 }
-                continue;
             }
         }
 
@@ -69,11 +68,11 @@ public class GdprCron {
         ve.init();
         ve.evaluate(vc, message, "GdprCron evaluate", VelocityTools.upgradeTemplate(FileTools.readFileContent("/components/gdpr/admin_list_search_detail_velocity.jsp")));
 
-        MailHelper mailer = new MailHelper();
-        mailer.setFromEmail(Constants.getString("GdprCron.fromEmail", "web@interway.sk"));
-        mailer.setFromName(Constants.getString("GdprCron.fromName", "Interway"));
-        mailer.setMessage(message.toString());
-        mailer.setSubject(Constants.getString("GdprCron.subject", "GDPR Cron"));
+        MailHelper mailer = new MailHelper()
+            .setFromEmail(Constants.getString("GdprCron.fromEmail", "web@interway.sk"))
+            .setFromName(Constants.getString("GdprCron.fromName", "WebJET CMS"))
+            .setMessage(message.toString())
+            .setSubject(Constants.getString("GdprCron.subject", "GDPR Cron"));
 
         for (String email : emails) {
             mailer.addRecipient(email);

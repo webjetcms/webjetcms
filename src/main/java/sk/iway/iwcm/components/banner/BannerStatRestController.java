@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class BannerStatRestController extends DatatableRestControllerV2<BannerBean, Long> {
 
     private final BannerRepository bannerRepository;
+    private static final String VIEWS = "views";
+    private static final String CLICKS = "clicks";
 
     @Autowired
     public BannerStatRestController(BannerRepository bannerRepository) {
@@ -45,9 +48,9 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
 
         int bannerId = Tools.getIntValue(getRequest().getParameter("bannerId"), -1);
         if(bannerId > -1) {
-            BannerBean bn = bannerRepository.findByIdAndDomainId(Long.valueOf(bannerId), CloudToolsForCore.getDomainId());
-            if(bn != null) bn.setNameLink(bn.getName());
-            return new DatatablePageImpl<>(Arrays.asList(bn));
+            Optional<BannerBean> optBanner = bannerRepository.findFirstByIdAndDomainId(Long.valueOf(bannerId), CloudToolsForCore.getDomainId());
+            if(optBanner.isPresent()) optBanner.get().setNameLink(optBanner.get().getName());
+            return new DatatablePageImpl<>( Arrays.asList(optBanner.orElse(null)) );
         }
 
         return new DatatablePageImpl<>(getDataAndConvertIntoPageItems(null));
@@ -97,9 +100,9 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
         Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
 
         Map<String,  Map<Date, Number>> data;
-        if(dataType.equals("views")) {
+        if(dataType.equals(VIEWS)) {
             data = BannerDB.getTop10BannersViewsTimeData(dateRangeArr[0], dateRangeArr[1], null);
-        } else if(dataType.equals("clicks")) {
+        } else if(dataType.equals(CLICKS)) {
             data = BannerDB.getTop10BannersClicksTimeData(dateRangeArr[0], dateRangeArr[1], null);
         } else {
             //Invalid parameter
@@ -121,9 +124,9 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
         Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
 
         Map<String,  Map<Date, Number>> data;
-        if(dataType.equals("views")) {
+        if(dataType.equals(VIEWS)) {
             data = BannerDB.getBannerStatViewsTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);
-        } else if(dataType.equals("clicks")) {
+        } else if(dataType.equals(CLICKS)) {
             data = BannerDB.getBannerStatClicksTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);
         } else {
             //Invalid parameter
@@ -145,7 +148,7 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
             List<BannerBean> items = new ArrayList<>();
             Map<Date, Number> dayViews = hashtable.get(key);
 
-            if(dataType.equals("clicks")) {
+            if(dataType.equals(CLICKS)) {
                 //Clicks
                 for (Map.Entry<Date, Number> entry : dayViews.entrySet()) {
                     BannerBean item = new BannerBean();
@@ -154,7 +157,7 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
                     item.setStatClicks(entry.getValue().intValue());
                     items.add(item);
                 }
-            } else if(dataType.equals("views")) {
+            } else if(dataType.equals(VIEWS)) {
                 //Views
                 for (Map.Entry<Date, Number> entry : dayViews.entrySet()) {
                     BannerBean item = new BannerBean();
@@ -173,9 +176,8 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
     @ResponseBody
     public String getDocTitle(@RequestParam("bannerId") long bannerId) {
 
-        BannerBean banner = bannerRepository.findByIdAndDomainId(bannerId, CloudToolsForCore.getDomainId());
-        if (banner != null && Tools.isNotEmpty(banner.getName())) return banner.getName();
-        else return "Banner "+bannerId;
-
+        Optional<BannerBean> optBanner = bannerRepository.findFirstByIdAndDomainId(bannerId, CloudToolsForCore.getDomainId());
+        if (optBanner.isPresent() && Tools.isNotEmpty(optBanner.get().getName())) return optBanner.get().getName();
+        else return "Banner " + bannerId;
     }
 }

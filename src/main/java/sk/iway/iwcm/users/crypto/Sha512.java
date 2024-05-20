@@ -4,7 +4,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-import cryptix.util.core.Hex;
+import com.google.crypto.tink.subtle.Hex;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.users.PasswordSecurityAlgorithm;
 import sk.iway.iwcm.users.UnknownHashAlgorithm;
@@ -23,7 +24,7 @@ public class Sha512 implements PasswordSecurityAlgorithm {
 	public String generateSalt() {
 		byte[] randomBytes = new byte[8];
 		new SecureRandom().nextBytes(randomBytes);
-		return Hex.toString(randomBytes).toLowerCase();
+		return Hex.encode(randomBytes).toLowerCase();
 	}
 
     /**
@@ -46,7 +47,7 @@ public class Sha512 implements PasswordSecurityAlgorithm {
 				//povodna marosova implementacia
 				MessageDigest hash = MessageDigest.getInstance("SHA-512");
 				byte bytesHash[] = hash.digest((password+salt).getBytes());
-				return Hex.toString(bytesHash).toLowerCase();
+				return Hex.encode(bytesHash).toLowerCase();
 			} else {
 				//presne podla OWASP - https://www.owasp.org/index.php/Hashing_Java
 				MessageDigest digest = MessageDigest.getInstance("SHA-512");
@@ -57,7 +58,7 @@ public class Sha512 implements PasswordSecurityAlgorithm {
 					digest.reset();
 					input = digest.digest(input);
 				}
-				return Hex.toString(input).toLowerCase();
+				return Hex.encode(input).toLowerCase();
 			}
 		} catch (NoSuchAlgorithmException e) { throw new UnknownHashAlgorithm(); }
 	}

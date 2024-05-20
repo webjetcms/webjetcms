@@ -60,7 +60,7 @@ Po uložení sa vykoná obnovenie údajov datatabuľky volaním ```EDITOR.TABLE.
 Vo vnorenom dialógovom okne nechceme zobrazovať datatabuľku, ani navigačné možnosti, ale iba samotný editor. To je zabezpečené pomocou CSS štýlov:
 
 - v ```app-init.js``` je pre prípad okna v iframe nastavená CSS trieda ```in-iframe``` na ```html``` značke. Nastavuje sa podľa URL parametra ```showOnlyEditor=true``` ktorý sa pridáva pri otvorení dialógu k URL automaticky. Dialóg pre ostatné prípady nastavuje CSS triedu ```in-iframe-show-table```, ktorá ponechá zobrazenú aj datatabuľku. Parametrom ```showEditorFooterPrimary=true``` je možné zobraziť pätičku s aktívnym primárnym tlačidlom (ak sa Uloženie nevykonáva vnoreným spôsobom).
-- po inicializácii je vyvolaná udalosť ```WJ.iframeLoaded```, ktorá následne spustí kód funkcie ```onload``` [iframe dialógu](../frameworks/webjetjs.md?id=iframe-dialóg).
+- po inicializácii je vyvolaná udalosť ```WJ.iframeLoaded```, ktorá následne spustí kód funkcie ```onload```, [iframe dialógu](../frameworks/webjetjs.md?id=iframe-dialóg).
 
 V súbore ```src/main/webapp/admin/v9/src/scss/3-base/_modal.scss``` je nastavené zobrazenie v režime ```html.in-iframe```, ktoré schová celý ```.ly-page-wrapper``` v ktorom je datatabuľka a celé GUI.
 

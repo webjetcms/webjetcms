@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorFacade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.facade</a> &gt; <span class="el_source">EditorFacade.java</span></div><h1>EditorFacade.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.facade;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.MediaService;
+import sk.iway.iwcm.editor.service.MultigroupService;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.spirit.model.Media;
+
+/**
+ * Facade pre editaciu web stranok. Dolezite su metody getDocForEditor pre ziskanie DocDetails pre editor a save pre jeho ulozenie.
+ */
+@Service
+@RequestScope
+public class EditorFacade {
+
+    private EditorService editorService;
+    private MultigroupService multigroupService;
+    private MediaService mediaService;
+	private GroupsService groupsService;
+    private HttpServletRequest request;
+
+    //nastavene na true ak je potrebne vyvolat obnovenie stromovej struktury/datatabulky po ulozeni
+<span class="fc" id="L47">	private boolean forceReload = false;</span>
+
+	//set to true if you want to directly edit multigroup page (eg. change sort order or groupId), used from jstree calls
+<span class="fc" id="L50">	private boolean ignoreMultigroupMapping = false;</span>
+
+    @Autowired
+<span class="fc" id="L53">    public EditorFacade(EditorService editorService, MultigroupService multigroupService, MediaService mediaService, GroupsService groupsService, HttpServletRequest request) {</span>
+<span class="fc" id="L54">        this.editorService = editorService;</span>
+<span class="fc" id="L55">        this.multigroupService = multigroupService;</span>
+<span class="fc" id="L56">        this.mediaService = mediaService;</span>
+<span class="fc" id="L57">		this.groupsService = groupsService;</span>
+<span class="fc" id="L58">        this.request = request;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+	 * Ulozenie web stranky, vykonava nasledovne operacie:
+	 *
+	 * - multigroup mapping - web stranka moze byt vo viacerych adresaroch, ak sa edituje child, tak sa prepne na editaciu master verzie a nasledne sa rozkopiruje do dalsich priecinkov
+	 * - vykona samotne ulozenie stranky, vid metoda saveEditedDoc
+	 * - po ulozeni aktualizuje TemplatesDB ak sa jedna o stranku zo System adresara
+	 * - ak nastala zmena vyzadujuca reload nastavi atribut forceReload=true
+	 * - ulozi Media novej web stranky (tie sa ukladaju do DB pre novu stranku s -user_id namiesto web stranky)
+	 *
+	 * @param entity
+	 * @return
+	 */
+	public DocDetails save(DocDetails entity) {
+		//najskor over multigroup mapping
+<span class="fc" id="L75">		int docIdOriginal = entity.getDocId();</span>
+<span class="fc" id="L76">		int originalSortPriority = entity.getSortPriority();</span>
+<span class="fc" id="L77">		String originalVirtualPath = entity.getVirtualPath();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">			if (docIdOriginal &gt; 0) {</span>
+<span class="fc" id="L80">				int masterId = multigroupService.getMasterDocId(docIdOriginal);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">				if(masterId &gt; 0) {</span>
+<span class="fc" id="L82">					entity.setDocId(masterId);</span>
+
+<span class="fc" id="L84">					DocDetails master = DocDB.getInstance().getDoc(masterId, -1, true);</span>
+
+<span class="fc" id="L86">					boolean multiGroupkeepSortPriority = Constants.getBoolean(&quot;multiGroupKeepSortPriority&quot;);</span>
+					//ak chcem zachovat sort priority a ukladam slave clanok, potrebujem zachovat sort priority mastra
+<span class="pc bpc" id="L88" title="2 of 4 branches missed.">					if(multiGroupkeepSortPriority &amp;&amp; entity.getDocId()&gt;0)</span>
+					{
+<span class="fc" id="L90">						entity.setSortPriority(master.getSortPriority());</span>
+					}
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">					if (masterId != docIdOriginal) {</span>
+						//set original master virtualPath because we are saving MASTER doc (see entity.setDocId(masterId)) and want to keep URL on master
+<span class="fc" id="L94">						entity.setVirtualPath(master.getVirtualPath());</span>
+					}
+				}
+			}
+		}
+
+		//prenesme nazad hodnoty z editorFields do DocDetails
+<span class="fc" id="L101">		entity.getEditorFields().toDocDetails(entity);</span>
+
+<span class="fc" id="L103">		int historyId = editorService.saveEditedDoc(entity);</span>
+<span class="fc" id="L104">		Logger.debug(EditorFacade.class, &quot;Page saved, historyId=&quot; + historyId);</span>
+
+<span class="fc" id="L106">        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId());</span>
+
+		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
+<span class="fc" id="L109">		GroupDetails group = entity.getGroup();</span>
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">		if (group != null &amp;&amp; group.getFullPath().startsWith(&quot;/System/&quot;))</span>
+<span class="nc" id="L111">			TemplatesDB.getInstance(true);</span>
+
+		//ak sa jedna o novu stranku je potrebne zmenit mediam hodnotu -user_id na novo ulozene docId
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if(docIdOriginal &lt; 1) {</span>
+<span class="fc" id="L115">			mediaService.assignDocIdToMedia(entity.getDocId());</span>
+		}
+
+		//save attrs - MUST BE BEFORE multigroupHandleSlaves
+<span class="fc bfc" id="L119" title="All 2 branches covered.">		if (entity.getEditorFields().getAttrs() != null) {</span>
+<span class="fc" id="L120">			editorService.saveAttrs(entity, entity.getEditorFields().getAttrs(), Constants.getBoolean(&quot;attrAlwaysCleanOnSave&quot;));</span>
+		}
+
+<span class="fc bfc" id="L123" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
+<span class="fc" id="L124">			boolean multigroupRedirectSlavesToMaster = Constants.getBoolean(&quot;multigroupRedirectSlavesToMaster&quot;);</span>
+			//Write multigroup mapping
+<span class="fc bfc" id="L126" title="All 2 branches covered.">			if (entity.getEditorFields().getGroupCopyDetails() != null) {</span>
+<span class="fc" id="L127">				entity.setSortPriority(originalSortPriority);</span>
+<span class="fc" id="L128">				entity.setVirtualPath(originalVirtualPath);</span>
+<span class="fc" id="L129">				multigroupService.multigroupHandleSlaves(entity, docIdOriginal, entity.getEditorFields().getGroupCopyDetails(), multigroupRedirectSlavesToMaster);</span>
+			}
+		}
+
+		//vrat aktualny zaznam z DB
+<span class="fc" id="L134">		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);</span>
+<span class="fc" id="L135">		DocEditorFields def = new DocEditorFields();</span>
+<span class="fc" id="L136">		def.fromDocDetails(savedCopy, true);</span>
+<span class="fc" id="L137">		savedCopy.setEditorFields(def);</span>
+<span class="fc" id="L138">		savedCopy.setHistoryId(historyId);</span>
+
+		//ak sme editovali multigroup stranku nastav nazad povodne docId
+<span class="fc bfc" id="L141" title="All 2 branches covered.">		if (docIdOriginal &gt; 0) savedCopy.setDocId(docIdOriginal);</span>
+
+<span class="fc" id="L143">		return savedCopy;</span>
+	}
+
+	/**
+	 * Ulozi entitu ako B variantu web stranky pre app AB testovanie
+	 * @param entity
+	 * @return
+	 */
+	public DocDetails saveAsBVariant(DocDetails entity) {
+<span class="fc" id="L152">		String virtualPath = entity.getVirtualPath();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		if (virtualPath.contains(Constants.getString(&quot;ABTestingName&quot;))) {</span>
+<span class="nc" id="L154">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.isbvariant&quot;, entity.getTitle(), String.valueOf(entity.getId())), NotifyType.INFO, 5000));</span>
+<span class="nc" id="L155">			return null;</span>
+		}
+
+		//nastav virtual path
+<span class="fc" id="L159">		int i = virtualPath.indexOf(&quot;.&quot;);</span>
+<span class="fc" id="L160">		String variantName = Constants.getString(&quot;ABTestingName&quot;)+&quot;b&quot;;</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">		if (i != -1) {</span>
+<span class="fc" id="L162">			virtualPath = virtualPath.substring(0, i) + &quot;-&quot; + variantName + virtualPath.substring(i);</span>
+		} else {
+<span class="nc" id="L164">			virtualPath = virtualPath + variantName + &quot;.html&quot;;</span>
+		}
+
+		//over, ci uz nahodou neexistuje stranka so zadanou URL
+<span class="fc" id="L168">		String domain = GroupsDB.getInstance().getDomain(entity.getGroupId());</span>
+<span class="fc" id="L169">		int actualDocId = DocDB.getDocIdFromURL(virtualPath, domain);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">		if (actualDocId&gt;0) {</span>
+<span class="nc" id="L171">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.exists&quot;, entity.getTitle(), String.valueOf(entity.getId()), String.valueOf(actualDocId)), NotifyType.INFO, 5000));</span>
+<span class="nc" id="L172">			return null;</span>
+		}
+
+		//sprav kopiu entity
+<span class="fc" id="L176">		entity.setDocId(-1);</span>
+<span class="fc" id="L177">		entity.setVirtualPath(virtualPath);</span>
+<span class="fc" id="L178">		entity.setGenerateUrlFromTitle(false);</span>
+<span class="fc" id="L179">		entity.setUrlInheritGroup(false);</span>
+<span class="fc" id="L180">		entity.setShowInMenu(false);</span>
+<span class="fc" id="L181">		entity.setLoggedShowInMenu(false);</span>
+<span class="fc" id="L182">		entity.setSearchable(false);</span>
+
+<span class="fc" id="L184">		return save(entity);</span>
+	}
+
+    /**
+	 * Pripravi entitu na editaciu, na rozdiel od standardneho ziskania getOne riesi:
+	 *
+	 * - multigroup mapovanie - ak editujem slave vrati udaje master verzie
+	 * - ak sa jedna o novu stranku (doc_id==-1) pripravi stranke udaje podla adresara (sablona, poradie usporiadania...)
+	 * - dokaze nacitat stranku aj z historie, pokial je zadane historyId
+	 *
+	 * @param docId - id web stranky, alebo -1 pre novu stranku
+	 * @param historyId - id z historie, alebo -1 pre vratenie aktualnej verzie stranky
+	 * @param groupId - id adresara
+	 * @return
+	 */
+    public DocDetails getDocForEditor(int docId, int historyId, int groupId) {
+
+<span class="fc" id="L201">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="pc bpc" id="L202" title="1 of 4 branches missed.">		if (groupId &lt; 1 &amp;&amp; docId &gt; 0) {</span>
+			//try to autodetect current groupId
+<span class="fc" id="L204">			DocDetails current = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L205" title="2 of 4 branches missed.">			if (current != null &amp;&amp; current.getGroupId()&gt;0) groupId = current.getGroupId();</span>
+		}
+
+<span class="fc" id="L208">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+		//lebo pre zadane docId group ignorujeme (moze to byt 999997)
+<span class="pc bpc" id="L210" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; group == null) return null;</span>
+
+		DocDetails editedDoc;
+
+		// vymazem docasne ulozene media (uzivatel neulozil novu stranku po
+<span class="fc" id="L215">		mediaService.deleteTempMedia();</span>
+
+<span class="pc bpc" id="L217" title="1 of 4 branches missed.">        if (docId == -1 &amp;&amp; group.getNewPageDocIdTemplate() &gt; 0) {</span>
+			//je potrebne pouzit sablonu namiesto -1
+<span class="nc" id="L219">			docId = -group.getNewPageDocIdTemplate();</span>
+		}
+
+        //sablona nemoze byt -1 (to je blank page)
+<span class="pc bpc" id="L223" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; historyId &lt; 0) {</span>
+<span class="fc" id="L224">			editedDoc = editorService.prepareNewDocForEditor(docId, group);</span>
+		} else {
+<span class="fc" id="L226">			editedDoc = editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);</span>
+
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">			if(editedDoc == null) return null;</span>
+		}
+
+<span class="fc bfc" id="L231" title="All 4 branches covered.">		if (Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;) &amp;&amp; editedDoc.getPublishStartDate()==null) {</span>
+<span class="fc" id="L232">			editedDoc.setPublishStartDate(new Date(Tools.getNow()));</span>
+		}
+
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">		if (request != null) {</span>
+<span class="fc" id="L236">			editedDoc.setHistoryId(historyId);</span>
+
+<span class="fc" id="L238">			String domainName = DocDB.getDomain(request);</span>
+<span class="fc" id="L239">			GroupDetails editorGroup = groupsDB.getGroup(editedDoc.getGroupId());</span>
+
+<span class="pc bpc" id="L241" title="2 of 4 branches missed.">			if (editorGroup != null &amp;&amp; Tools.isNotEmpty(editorGroup.getDomainName())) domainName = editorGroup.getDomainName();</span>
+<span class="fc" id="L242">			request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, domainName);</span>
+		}
+
+<span class="pc bpc" id="L245" title="2 of 4 branches missed.">		if (request != null &amp;&amp; ContextFilter.isRunning(request)) {</span>
+			//do editoru nahrame texty s pridanymi linkami
+<span class="nc" id="L247">			editedDoc.setData(ContextFilter.addContextPath(request.getContextPath(), editedDoc.getData()));</span>
+		}
+
+<span class="fc" id="L250">        return editedDoc;</span>
+    }
+
+	/**
+	 * Vytvori web stranku
+	 * @param group - adresar v ktorom ma byt vytvorena
+	 * @param title - volitelny titulok stranky, ak je NULL vytvori sa podla mena adresara
+	 * @param available - urci, ci stranka na byt ihned zobrazitelna (true), alebo nie (false)
+	 * @return
+	 */
+	public DocDetails createEmptyWebPage(GroupDetails group, String title, boolean available) {
+		DocDetails doc;
+<span class="pc bpc" id="L262" title="3 of 4 branches missed.">        if (group.getDefaultDocId()&gt;0 &amp;&amp; title==null) doc = getDocForEditor(group.getDefaultDocId(), -1, group.getGroupId());</span>
+<span class="fc" id="L263">        else doc = getDocForEditor(-1, -1, group.getGroupId());</span>
+
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (Tools.isEmpty(title)) title = group.getGroupName();</span>
+
+<span class="fc" id="L267">        doc.setTitle(title);</span>
+<span class="fc" id="L268">        doc.setNavbar(title);</span>
+
+<span class="fc" id="L270">		save(doc);</span>
+
+<span class="fc" id="L272">        return doc;</span>
+	}
+
+	public boolean delete(DocDetails doc) {
+<span class="fc" id="L276">		return editorService.deleteWebpage(doc, true);</span>
+	}
+
+	public void recoverWebpageFromTrash(DocDetails doc) {
+<span class="pc bpc" id="L280" title="2 of 4 branches missed.">		if (doc != null &amp;&amp; doc.getDocId()&gt;0) editorService.recoverWebpageFromTrash(doc.getDocId());</span>
+<span class="fc" id="L281">	}</span>
+
+    public boolean isForceReload() {
+<span class="pc bpc" id="L284" title="2 of 4 branches missed.">        return forceReload || editorService.isForceReload();</span>
+    }
+
+    /**
+	 * Ak nastalo schvalovanie vrati zoznam schvalovatelov
+	 * @return
+	 */
+	public List&lt;UserDetails&gt; getApprovers() {
+<span class="fc" id="L292">		return editorService.getApprovers();</span>
+	}
+
+	/**
+	 * Ak ma web stranka publikovanie v buducnosti nastavi sa sem timestamp zaciatku publikovania
+	 * @return
+	 */
+	public Long getPublihStart() {
+<span class="fc" id="L300">		return editorService.getPublihStart();</span>
+	}
+
+	/**
+	 * Ak bola stranka uspesne vypublikovana na verejne zobrazenie vrati true
+	 * @return
+	 */
+	public boolean isPageSavedToPublic() {
+<span class="nc" id="L308">		return editorService.isPageSavedToPublic();</span>
+	}
+
+	/**
+	 * Ak bola stranka korektne ulozena ako rozpracovana verzia vrati true
+	 * @return
+	 */
+	public boolean isPageSavedAsWorkVersion() {
+<span class="fc" id="L316">		return editorService.isPageSavedAsWorkVersion();</span>
+	}
+
+    /**
+     * Vrati zoznam moznych notifikacii pre pouzivatela
+     * @return
+     */
+    public List&lt;NotifyBean&gt; getNotify() {
+<span class="fc" id="L324">		List&lt;NotifyBean&gt; notify = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) notify.addAll(editorService.getNotify());</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">		if (groupsService.getNotify()!=null) notify.addAll(groupsService.getNotify());</span>
+<span class="fc" id="L327">        return notify;</span>
+    }
+
+	/**
+	 * Clears notify list
+	 */
+	public void clearNotify() {
+<span class="pc bpc" id="L334" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) editorService.getNotify().clear();</span>
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">		if (groupsService.getNotify()!=null) groupsService.getNotify().clear();</span>
+<span class="fc" id="L336">    }</span>
+
+	/**
+	 * Vrati zoznam vsetkych medii priradenych k zadanej web stranke
+	 * @param docId - ID stranky
+	 * @return
+	 */
+	public List&lt;Media&gt; getAllMedia(Integer docId) {
+<span class="nc" id="L344">		return mediaService.getAllMedia(docId, &quot;documents&quot;);</span>
+	}
+
+	/**
+	 * Duplikuje media pri duplikovani web stranky
+	 * @param oldDocId
+	 * @param newDocId
+	 * @return
+	 */
+	public void duplicateMedia(Integer oldDocId, Integer newDocId) {
+		// zduplikuj aj media
+<span class="nc" id="L355">        List&lt;Media&gt; mediaList = getAllMedia(oldDocId);</span>
+<span class="nc bnc" id="L356" title="All 4 branches missed.">        if (mediaList != null &amp;&amp; mediaList.isEmpty()==false) {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">            for (Media m : mediaList) {</span>
+<span class="nc" id="L358">                Logger.debug(getClass(), &quot;Duplikujem medium: &quot;+m.getMediaId()+&quot; &quot;+m.getMediaTitleSk());</span>
+<span class="nc" id="L359">				m.setId(null);</span>
+<span class="nc" id="L360">				m.setMediaFkId(newDocId);</span>
+<span class="nc" id="L361">				m.save();</span>
+<span class="nc" id="L362">            }</span>
+        }
+<span class="nc" id="L364">	}</span>
+
+	/**
+	 * Overi, ci pouzivatel ma pravo na editaciu zadanej web stranky
+	 * @param user
+	 * @param doc
+	 * @param isDelete - ak je true kontroluje sa pravo deletePage, inak sa kontroluje addPage/pageSave
+	 * @return
+	 */
+	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
+<span class="fc" id="L374">		return editorService.isPageEditable(user, doc, isDelete);</span>
+	}
+
+	public boolean isIgnoreMultigroupMapping() {
+<span class="fc" id="L378">		return ignoreMultigroupMapping;</span>
+	}
+
+	/**
+	 * set to true if you want to directly edit multigroup page (eg. change sort order or groupId)
+	 * @param ignoreMultigroupMapping
+	 */
+	public void setIgnoreMultigroupMapping(boolean ignoreMultigroupMapping) {
+<span class="fc" id="L386">		this.ignoreMultigroupMapping = ignoreMultigroupMapping;</span>
+<span class="fc" id="L387">	}</span>
+
+	/**
+	 * Recover group from trash:
+	 * - check permissions
+	 * - set parentGroupId by history (if exists) or set to 0
+	 * @param entity
+	 * @param currentUser
+	 * @return
+	 */
+	public boolean recoverGroupFromTrash(GroupDetails entity, Identity currentUser) {
+<span class="fc" id="L398">		return groupsService.recoverGroupFromTrash(entity, currentUser);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

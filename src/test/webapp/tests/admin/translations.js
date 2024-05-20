@@ -64,7 +64,7 @@ Scenario("odhlasenie", ({ I }) => {
     I.logout();
 });
 
-Scenario("Konfiguracia jazykov @singlethread", ({ I, Document, login, DTE }) => {
+Scenario("Konfiguracia jazykov @singlethread", ({ I, Document, DTE }) => {
     I.relogin('admin');
 
     Document.setConfigValue("languages", "sk,cz,en,de,pl,hu,cho,ru,esp");
@@ -87,13 +87,13 @@ Scenario("Konfiguracia jazykov @singlethread", ({ I, Document, login, DTE }) => 
     Document.setConfigValue("languages", "sk,cz,en,de,pl,hu,cho,ru,esp");
 });
 
-Scenario("reset jazyka", ({ I, Document, login }) => {
+Scenario("reset jazyka", ({ I, Document }) => {
     I.relogin('admin');
 
     Document.setConfigValue("languages", "sk,cz,en,de,pl,hu,cho,ru,esp");
 });
 
-Scenario("filter by date and keyword", ({ I, DT, login }) => {
+Scenario("filter by date and keyword", ({ I, DT }) => {
     I.relogin('admin');
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.filter("from-updateDate", "06.07.2021");
@@ -130,7 +130,7 @@ Scenario("filter by date and keyword", ({ I, DT, login }) => {
     I.see("CCX", "#datatableInit");
 });
 
-Scenario("edit from searchall", ({ I, DT, DTE, login }) => {
+Scenario("edit from searchall", ({ I, DT, DTE }) => {
     I.relogin('admin');
     I.amOnPage("/admin/searchall.jsp");
     I.fillField("#text1", "cookies.bar.");

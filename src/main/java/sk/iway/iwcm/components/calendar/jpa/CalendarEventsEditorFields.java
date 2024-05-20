@@ -15,6 +15,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -63,7 +64,6 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
             originalEntity.setDateFrom(new Date());
             originalEntity.setDateTo(new Date());
             originalEntity.setNotifyIntrotext(prop.getText("calendar_edit.notify_introtext_default"));
-            originalEntity.setDomainId(CloudToolsForCore.getDomainId());
 
             Identity loggedUser = UsersDB.getCurrentUser(request);
             originalEntity.setNotifySender(loggedUser.getEmail());
@@ -102,7 +102,7 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
         originalEntity.setEditorFields(this);
     }
 
-    public void toCalendarEventsEntity(CalendarEventsEntity originalEntity, CalendarTypesRepository ctr, Prop prop, CalendarEventsRepository cer, HttpServletRequest request) {
+    public void toCalendarEventsEntity(CalendarEventsEntity originalEntity, CalendarTypesRepository ctr, Prop prop, CalendarEventsRepository cer, HttpServletRequest request, ProcessItemAction action) {
 
         StringBuilder notifySendertext = new StringBuilder();
         UserGroupsDB ugdb = UserGroupsDB.getInstance();
@@ -114,20 +114,23 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
         }
         originalEntity.setNotifyEmails(notifySendertext.toString());
 
-        Boolean newEntity = false;
-        Boolean changedType = false;
+        //Set domainId - if create
+        if(action == ProcessItemAction.CREATE) originalEntity.setDomainId(CloudToolsForCore.getDomainId());
+
+        boolean newEntity = false;
+        boolean changedType = false;
 
         //Check if entity is new
         if(originalEntity.getId() == null || originalEntity.getId() == -1) newEntity = true;
 
         //Check if type was changed
         CalendarEventsEntity fromDB = null;
-        if (originalEntity.getId()!=null) fromDB = cer.getById(originalEntity.getId());
+        if (originalEntity.getId()!=null) fromDB = cer.findFirstByIdAndDomainId(originalEntity.getId(), CloudToolsForCore.getDomainId()).orElse(null);
         if(fromDB != null && fromDB.getTypeId().equals(originalEntity.getTypeId())==false) changedType = true;
 
         if(newEntity || changedType) {
             //Get selected calendar type
-            CalendarTypesEntity cte = ctr.getById(Long.valueOf(originalEntity.getTypeId()));
+            CalendarTypesEntity cte = ctr.findFirstByIdAndDomainId(Long.valueOf(originalEntity.getTypeId()), CloudToolsForCore.getDomainId()).orElse(null);
             Integer approverId = cte.getApproverId();
             UserDetails loggedUser = UsersDB.getUser(originalEntity.getCreatorId());
 
@@ -144,6 +147,8 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
                 sendMailToApprover(originalEntity, approverId, loggedUser, prop, request);
             }
         }
+
+        if(newEntity) originalEntity.setSuggest(false);
     }
 
     private void sendMailToApprover(CalendarEventsEntity originalEntity, Integer approverId, UserDetails creator, Prop prop, HttpServletRequest request) {

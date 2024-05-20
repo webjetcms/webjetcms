@@ -8,6 +8,11 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/news/admin/");
     DT.waitForLoader();
 
+    I.clickCss("#groupId_extfilter > div > div > div > button.dropdown-toggle");
+    I.waitForElement("body > div.bs-container.dropdown.bootstrap-select > div.dropdown-menu");
+    I.click( locate("a.dropdown-item > span").withText("/English/News") );
+    DT.waitForLoader();
+
     Document.screenshot("/redactor/apps/news/admin-dt.png");
 
     I.click("McGregor sales force");

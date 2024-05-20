@@ -1,0 +1,1767 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailDB.java</span></div><h1>EmailDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.RowSetDynaClass;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+
+/**
+ *  EmailDB.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: bhric $
+ *@version      $Revision: 1.19 $
+ *@created      Date: 5.10.2005 16:24:20
+ *@modified     $Date: 2009/10/07 12:08:54 $
+ */
+public class EmailDB
+{
+<span class="nc" id="L53">	protected EmailDB() {</span>
+		//utility class
+<span class="nc" id="L55">	}</span>
+
+	public static List&lt;DynaBean&gt; getEmail(HttpSession session)
+	{
+<span class="nc" id="L59">		String sql = &quot;SELECT c.*, u.first_name, u.last_name FROM  emails_campain c LEFT JOIN users u ON c.created_by_user_id = u.user_id ORDER BY create_date DESC&quot;;</span>
+<span class="nc" id="L60">		Connection db_conn = null;</span>
+<span class="nc" id="L61">		PreparedStatement ps = null;</span>
+<span class="nc" id="L62">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L65">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if(db_conn != null)</span>
+			{
+<span class="nc" id="L69">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L70">				rs = ps.executeQuery();</span>
+
+<span class="nc" id="L72">				RowSetDynaClass rsdc = new RowSetDynaClass(rs);</span>
+<span class="nc" id="L73">				rs.close();</span>
+<span class="nc" id="L74">				ps.close();</span>
+<span class="nc" id="L75">				rs = null;</span>
+<span class="nc" id="L76">				ps = null;</span>
+
+<span class="nc" id="L78">				return(rsdc.getRows());</span>
+			}
+		}
+<span class="nc" id="L81">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L83">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L89" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L90">					db_conn.close();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L92">					rs.close();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L94">					ps.close();</span>
+			}
+<span class="nc" id="L96">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L98">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L99">			}</span>
+		}
+
+<span class="nc" id="L102">		return(new ArrayList&lt;&gt;());</span>
+	}
+
+	public static List&lt;DynaBean&gt; getEmailFromEmails(HttpSession session)
+	{
+<span class="nc" id="L107">		String sql = &quot; SELECT count(e.email_id) AS countt, max(e.sent_date) AS esent_date, e.create_date AS ecreate_date, c.*&quot;+</span>
+						 &quot; FROM emails_campain c  RIGHT JOIN emails e ON e.create_date=c.create_date&quot;+
+						 &quot; WHERE e.sent_date IS NOT NULL&quot;+
+		             &quot; GROUP BY e.create_date&quot; +
+		             &quot; ORDER BY e.create_date DESC&quot;;
+
+<span class="nc" id="L113">		Connection db_conn = null;</span>
+<span class="nc" id="L114">		PreparedStatement ps = null;</span>
+<span class="nc" id="L115">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L118">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if(db_conn != null)</span>
+			{
+<span class="nc" id="L122">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L123">				rs = ps.executeQuery();</span>
+
+<span class="nc" id="L125">				RowSetDynaClass rsdc = new RowSetDynaClass(rs);</span>
+
+<span class="nc" id="L127">				rs.close();</span>
+<span class="nc" id="L128">				ps.close();</span>
+
+<span class="nc" id="L130">				rs = null;</span>
+<span class="nc" id="L131">				ps = null;</span>
+
+<span class="nc" id="L133">				return(rsdc.getRows());</span>
+			}
+		}
+<span class="nc" id="L136">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L138">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L145">					db_conn.close();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L147">					rs.close();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L149">					ps.close();</span>
+			}
+<span class="nc" id="L151">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L153">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L154">			}</span>
+		}
+
+<span class="nc" id="L157">		return(new ArrayList&lt;&gt;());</span>
+	}
+
+	/**
+	 * Zaznamena statistiku kliknutia z emailu
+	 * @param emailId
+	 */
+	public static void addStatClick(int emailId, String url, String params, HttpServletRequest request, HttpServletResponse response)
+	{
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (Tools.isNotEmpty(params))</span>
+		{
+			try
+			{
+				//webjetDmsp= je vzdy na konci parametrov
+<span class="nc" id="L171">				int i = params.indexOf(Constants.getString(&quot;dmailStatParam&quot;));</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				if (i &gt; 0)</span>
+				{
+<span class="nc" id="L174">					url = url + &quot;?&quot; + params.substring(0, i);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">					if (url.endsWith(&quot;&amp;&quot;))</span>
+<span class="nc" id="L176">						url = url.substring(0, url.length()-1);</span>
+				}
+			}
+<span class="nc" id="L179">			catch (RuntimeException e)</span>
+			{
+<span class="nc" id="L181">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L182">			}</span>
+		}
+
+<span class="nc" id="L185">		Connection db_conn = null;</span>
+<span class="nc" id="L186">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L189">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L190">			ps = db_conn.prepareStatement(&quot;INSERT INTO emails_stat_click (email_id, link, click_date, session_id, browser_id) VALUES (?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L191">			ps.setInt(1, emailId);</span>
+<span class="nc" id="L192">			ps.setString(2, DB.prepareString(url, 255));</span>
+<span class="nc" id="L193">			ps.setTimestamp(3, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L194">			ps.setLong(4, StatDB.getSessionId(request));</span>
+<span class="nc" id="L195">			ps.setLong(5, StatDB.getBrowserId(request, response));</span>
+
+<span class="nc" id="L197">			ps.execute();</span>
+
+<span class="nc" id="L199">			ps.close();</span>
+<span class="nc" id="L200">			db_conn.close();</span>
+
+<span class="nc" id="L202">			ps = null;</span>
+<span class="nc" id="L203">			db_conn = null;</span>
+		}
+<span class="nc" id="L205">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L207">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L214">					ps.close();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L216">					db_conn.close();</span>
+			}
+<span class="nc" id="L218">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L220">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L221">			}</span>
+		}
+<span class="nc" id="L223">	}</span>
+
+	/**
+	 * Ziska stav kampane, vrati hodnoty:
+	 *  - unknown (neznama kampan)
+	 *  - disabled (kampan je zastavena)
+	 *  - enabled (kampan je spustena)
+	 *  - all_sent (vsetky emaily odoslane)
+	 * @param campaignId
+	 * @return
+	 */
+	public static String getStaus(int campaignId)
+	{
+<span class="fc" id="L236">		String status = &quot;unknown&quot;;</span>
+
+<span class="fc" id="L238">		Connection db_conn = null;</span>
+<span class="fc" id="L239">		PreparedStatement ps = null;</span>
+<span class="fc" id="L240">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L243">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L244">			ps = db_conn.prepareStatement(&quot;SELECT DISTINCT(disabled) as disabled FROM emails WHERE campain_id = ?&quot;);</span>
+<span class="fc" id="L245">			ps.setInt(1, campaignId);</span>
+<span class="fc" id="L246">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">			if (rs.next())</span>
+			{
+<span class="fc bfc" id="L249" title="All 2 branches covered.">				if (rs.getBoolean(&quot;disabled&quot;))</span>
+<span class="fc" id="L250">					status=&quot;disabled&quot;;</span>
+				else
+<span class="fc" id="L252">					status = &quot;enabled&quot;;</span>
+			}
+<span class="fc" id="L254">			rs.close();</span>
+<span class="fc" id="L255">			ps.close();</span>
+
+			//zisti ci nahodou uz nie je vsetko odoslane
+<span class="fc bfc" id="L258" title="All 2 branches covered.">			if (&quot;enabled&quot;.equals(status))</span>
+			{
+<span class="fc" id="L260">				ps = db_conn.prepareStatement(&quot;SELECT count(email_id) as to_send FROM emails WHERE campain_id = ? AND sent_date IS NULL&quot;);</span>
+<span class="fc" id="L261">				ps.setInt(1, campaignId);</span>
+<span class="fc" id="L262">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">					if (rs.getInt(&quot;to_send&quot;) == 0)</span>
+<span class="fc" id="L266">						status=&quot;all_sent&quot;;</span>
+				}
+<span class="fc" id="L268">				rs.close();</span>
+<span class="fc" id="L269">				ps.close();</span>
+			}
+
+<span class="fc" id="L272">			db_conn.close();</span>
+<span class="fc" id="L273">			rs = null;</span>
+<span class="fc" id="L274">			ps = null;</span>
+<span class="fc" id="L275">			db_conn = null;</span>
+		}
+<span class="nc" id="L277">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L279">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L286">					rs.close();</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L288">					ps.close();</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L290">					db_conn.close();</span>
+			}
+<span class="nc" id="L292">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L294">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L295">			}</span>
+		}
+<span class="fc" id="L297">		return(status);</span>
+	}
+
+	/**
+	 * Znova odosle emaily kampane (moze sa zmenit obsah stranky a znova odoslat)
+	 * @param campaignId
+	 */
+	public static void resendEmail(int campaignId)
+	{
+<span class="nc" id="L306">		deleteUnsubscribedEmailsFromCampaign(campaignId);</span>
+
+		try
+		{
+<span class="nc" id="L310">			new SimpleQuery().execute(&quot;UPDATE emails SET sent_date = ?, retry = ?, disabled = ? WHERE campain_id = ?&quot;, null, 0, false, campaignId);</span>
+		}
+<span class="nc" id="L312">		catch (Exception e)</span>
+		{
+<span class="nc" id="L314">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L315">		}</span>
+<span class="nc" id="L316">	}</span>
+
+	/**
+	 * Aktivovanie / deaktivovanie kampane
+	 * @param disabled
+	 * @param campainId
+	 */
+	public static void activateDisableEmails(boolean disabled, int campainId)
+	{
+<span class="nc" id="L325">		deleteUnsubscribedEmailsFromCampaign(campainId);</span>
+
+		try
+		{
+<span class="nc" id="L329">			new SimpleQuery().execute(&quot;UPDATE emails SET disabled = ? WHERE campain_id = ?&quot;, disabled, campainId);</span>
+		}
+<span class="nc" id="L331">		catch (Exception e)</span>
+		{
+<span class="nc" id="L333">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L334">		}</span>
+<span class="nc" id="L335">	}</span>
+
+	public static boolean createEmail(String recipientEmail, String recipientName, String senderName, String senderEmail, String subject, String userUrl, String attachments, int createdByUserId, Timestamp createDate, int campaignId, String replyTo, String ccEmail, String bccEmail, int recipientUserId, boolean disabled)
+	{
+<span class="nc" id="L339">		boolean saveOK = false;</span>
+
+<span class="nc" id="L341">		Connection db_conn = null;</span>
+<span class="nc" id="L342">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L345">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L346">			String sql = &quot;INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, created_by_user_id, create_date, disabled, campain_id, reply_to, cc_email, bcc_email, recipient_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L347">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L348">			ps.setString(1, recipientEmail);</span>
+<span class="nc" id="L349">			ps.setString(2, recipientName);</span>
+<span class="nc" id="L350">			ps.setString(3, senderName);</span>
+<span class="nc" id="L351">			ps.setString(4, senderEmail);</span>
+<span class="nc" id="L352">			ps.setString(5, subject);</span>
+<span class="nc" id="L353">			ps.setString(6, userUrl);</span>
+<span class="nc" id="L354">			DB.setClob(ps, 7, attachments);</span>
+<span class="nc" id="L355">			ps.setInt(8, createdByUserId);</span>
+<span class="nc" id="L356">			ps.setTimestamp(9, createDate);</span>
+<span class="nc" id="L357">			ps.setBoolean(10, disabled);</span>
+<span class="nc" id="L358">			ps.setInt(11, campaignId);</span>
+<span class="nc" id="L359">			ps.setString(12, replyTo);</span>
+<span class="nc" id="L360">			ps.setString(13, ccEmail);</span>
+<span class="nc" id="L361">			ps.setString(14, bccEmail);</span>
+<span class="nc" id="L362">			ps.setInt(15, recipientUserId);</span>
+<span class="nc" id="L363">			ps.execute();</span>
+
+<span class="nc" id="L365">			saveOK = true;</span>
+		}
+<span class="nc" id="L367">		catch(Exception e)</span>
+		{
+<span class="nc" id="L369">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L375" title="All 2 branches missed.">				if(ps != null)</span>
+<span class="nc" id="L376">					ps.close();</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">				if(db_conn != null)</span>
+<span class="nc" id="L378">					db_conn.close();</span>
+			}
+<span class="nc" id="L380">			catch(Exception e)</span>
+			{
+<span class="nc" id="L382">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L383">			}</span>
+		}
+<span class="nc" id="L385">		return saveOK;</span>
+	}
+
+	/**
+	 * Naplni bean z result setu
+	 * @param e
+	 * @param rs
+	 * @throws SQLException
+	 */
+	public static void fillEmailCampainBean(EmailCampainBean e, ResultSet rs) throws SQLException
+	{
+<span class="nc" id="L396">		e.setEmailsCampainId(rs.getInt(&quot;emails_campain_id&quot;));</span>
+<span class="nc" id="L397">		e.setSenderName(DB.getDbString(rs, &quot;sender_name&quot;));</span>
+<span class="nc" id="L398">		e.setSenderEmail(DB.getDbString(rs, &quot;sender_email&quot;));</span>
+<span class="nc" id="L399">		e.setSubject(DB.getDbString(rs, &quot;subject&quot;));</span>
+<span class="nc" id="L400">		e.setUrl(DB.getDbString(rs, &quot;url&quot;));</span>
+<span class="nc" id="L401">		e.setCreatedByUserId(rs.getInt(&quot;created_by_user_id&quot;));</span>
+<span class="nc" id="L402">		e.setCreateDate(rs.getDate(&quot;create_date&quot;));</span>
+<span class="nc" id="L403">		e.setCountOfRecipients(rs.getInt(&quot;count_of_recipients&quot;));</span>
+<span class="nc" id="L404">		e.setCountOfSentEmails(rs.getInt(&quot;count_of_sent_mails&quot;));</span>
+<span class="nc" id="L405">		e.setLastSentDate(rs.getDate(&quot;last_sent_date&quot;));</span>
+<span class="nc" id="L406">		e.setUserGroups(DB.getDbString(rs, &quot;user_groups&quot;));</span>
+
+<span class="nc" id="L408">		e.setSendAt(rs.getDate(&quot;send_at&quot;));</span>
+<span class="nc" id="L409">		e.setAttachments(DB.getDbString(rs, &quot;attachments&quot;));</span>
+<span class="nc" id="L410">		e.setReplyTo(DB.getDbString(rs, &quot;reply_to&quot;));</span>
+<span class="nc" id="L411">		e.setCcEmail(DB.getDbString(rs, &quot;cc_email&quot;));</span>
+<span class="nc" id="L412">		e.setBccEmail(DB.getDbString(rs, &quot;bcc_email&quot;));</span>
+<span class="nc" id="L413">	}</span>
+
+	/**
+	 * Ziska zadanu kampan
+	 * @param campainId
+	 * @return
+	 */
+	public static EmailCampainBean getCampaign(int campainId)
+	{
+<span class="nc" id="L422">		EmailCampainBean e = null;</span>
+
+<span class="nc" id="L424">		Connection db_conn = null;</span>
+<span class="nc" id="L425">		PreparedStatement ps = null;</span>
+<span class="nc" id="L426">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L429">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L430">			ps = db_conn.prepareStatement(&quot;SELECT * FROM emails_campain WHERE emails_campain_id = ?&quot;);</span>
+<span class="nc" id="L431">			ps.setInt(1, campainId);</span>
+<span class="nc" id="L432">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L435">				e = new EmailCampainBean();</span>
+<span class="nc" id="L436">				fillEmailCampainBean(e, rs);</span>
+			}
+<span class="nc" id="L438">			rs.close();</span>
+<span class="nc" id="L439">			ps.close();</span>
+<span class="nc" id="L440">			db_conn.close();</span>
+<span class="nc" id="L441">			rs = null;</span>
+<span class="nc" id="L442">			ps = null;</span>
+<span class="nc" id="L443">			db_conn = null;</span>
+		}
+<span class="nc" id="L445">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L447">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L453" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L454">					rs.close();</span>
+<span class="nc bnc" id="L455" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L456">					ps.close();</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L458">					db_conn.close();</span>
+			}
+<span class="nc" id="L460">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L462">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L463">			}</span>
+		}
+<span class="nc" id="L465">		return e;</span>
+	}
+
+	/**
+	 * Ziska zoznam kampani (obsah tabulky emails_campain)
+	 * @return
+	 */
+	public static List&lt;EmailCampainBean&gt; getCampaigns()
+	{
+<span class="nc" id="L474">		List&lt;EmailCampainBean&gt; campains = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L476">		Connection db_conn = null;</span>
+<span class="nc" id="L477">		PreparedStatement ps = null;</span>
+<span class="nc" id="L478">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L481">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L482">			ps = db_conn.prepareStatement(&quot;SELECT * FROM emails_campain ORDER BY emails_campain_id DESC&quot;);</span>
+<span class="nc" id="L483">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L486">				EmailCampainBean e = new EmailCampainBean();</span>
+<span class="nc" id="L487">				fillEmailCampainBean(e, rs);</span>
+<span class="nc" id="L488">				campains.add(e);</span>
+<span class="nc" id="L489">			}</span>
+<span class="nc" id="L490">			rs.close();</span>
+<span class="nc" id="L491">			ps.close();</span>
+<span class="nc" id="L492">			db_conn.close();</span>
+<span class="nc" id="L493">			rs = null;</span>
+<span class="nc" id="L494">			ps = null;</span>
+<span class="nc" id="L495">			db_conn = null;</span>
+		}
+<span class="nc" id="L497">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L499">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L505" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L506">					rs.close();</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L508">					ps.close();</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L510">					db_conn.close();</span>
+			}
+<span class="nc" id="L512">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L514">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L515">			}</span>
+		}
+<span class="nc" id="L517">		return campains;</span>
+	}
+
+	/**
+	 * Prida do mailingu novy zaznam, vrati Hashtabulku so zoznamom uz pridanych zaznamov
+	 * @param allreadyHasEmails - hashtabulka uz pridanych zaznamov, ak je prazdna, nacita sa z DB
+	 * @param campain
+	 * @param emailDetails
+	 * @return
+	 */
+	public static boolean addToMailing(Map&lt;String, Integer&gt; allreadyHasEmails, EmailCampainBean campain, EMailDetails emailDetails)
+	{
+<span class="nc bnc" id="L529" title="All 4 branches missed.">		if (emailDetails == null || Tools.isEmpty(emailDetails.getEmail()))</span>
+<span class="nc" id="L530">			return false;</span>
+
+<span class="nc bnc" id="L532" title="All 4 branches missed.">		if (allreadyHasEmails != null &amp;&amp; allreadyHasEmails.get(emailDetails.getEmail()) != null)</span>
+<span class="nc" id="L533">			return false;</span>
+
+<span class="nc" id="L535">		boolean saveOK = false;</span>
+
+<span class="nc" id="L537">		Connection db_conn = null;</span>
+<span class="nc" id="L538">		PreparedStatement ps = null;</span>
+<span class="nc" id="L539">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L542">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L544" title="All 4 branches missed.">			if (allreadyHasEmails == null || allreadyHasEmails.size() &lt; 1)</span>
+			{
+<span class="nc bnc" id="L546" title="All 2 branches missed.">				if (allreadyHasEmails == null) allreadyHasEmails = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L547">				ps = db_conn.prepareStatement(&quot;SELECT recipient_email, recipient_user_id FROM emails WHERE campain_id=?&quot;);</span>
+<span class="nc" id="L548">				ps.setInt(1, campain.getEmailsCampainId());</span>
+<span class="nc" id="L549">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L552">					allreadyHasEmails.put(rs.getString(&quot;recipient_email&quot;), rs.getInt(&quot;recipient_user_id&quot;));</span>
+				}
+<span class="nc" id="L554">				rs.close();</span>
+<span class="nc" id="L555">				ps.close();</span>
+			}
+
+
+<span class="nc bnc" id="L559" title="All 4 branches missed.">			if (allreadyHasEmails!=null &amp;&amp; allreadyHasEmails.get(emailDetails.getEmail())!=null)</span>
+			{
+<span class="nc" id="L561">				return false;</span>
+			}
+
+<span class="nc" id="L564">			String userURL = campain.getUrl() + &quot;&amp;userid=&quot; + emailDetails.getUserId();</span>
+<span class="nc" id="L565">			saveOK = createEmail(emailDetails.getEmail(), emailDetails.getFull_name(), campain.getSenderName(), campain.getSenderEmail(), campain.getSubject(), userURL, campain.getAttachments(), campain.getCreatedByUserId(), new Timestamp(campain.getCreateDate().getTime()), campain.getEmailsCampainId(), campain.getReplyTo(), campain.getCcEmail(), campain.getBccEmail(), emailDetails.getUserId(), true);</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">			if (saveOK)</span>
+			{
+<span class="nc" id="L568">				allreadyHasEmails.put(emailDetails.getEmail(), emailDetails.getUserId());</span>
+				//aktualizuj pocet prijemcov v mail kampani
+<span class="nc" id="L570">				ps = db_conn.prepareStatement(&quot;UPDATE emails_campain SET count_of_recipients=? WHERE emails_campain_id=?&quot;);</span>
+<span class="nc" id="L571">				ps.setInt(1, allreadyHasEmails.size());</span>
+<span class="nc" id="L572">				ps.setInt(2, campain.getEmailsCampainId());</span>
+<span class="nc" id="L573">				ps.execute();</span>
+<span class="nc" id="L574">				ps.close();</span>
+			}
+
+<span class="nc" id="L577">			db_conn.close();</span>
+<span class="nc" id="L578">			rs = null;</span>
+<span class="nc" id="L579">			ps = null;</span>
+<span class="nc" id="L580">			db_conn = null;</span>
+		}
+<span class="nc" id="L582">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L584">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L590" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L591">					rs.close();</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L593">					ps.close();</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L595">					db_conn.close();</span>
+			}
+<span class="nc" id="L597">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L599">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L600">			}</span>
+		}
+
+<span class="nc" id="L603">		return saveOK;</span>
+	}
+
+	public static boolean preGenerate(int eid)
+	{
+<span class="nc" id="L608">		boolean result = false;</span>
+
+		String sql;
+<span class="nc" id="L611">		int realnyPocetPrijemcov = 0;</span>
+<span class="nc" id="L612">		Connection db_conn = null;</span>
+<span class="nc" id="L613">		PreparedStatement ps = null;</span>
+<span class="nc" id="L614">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L617">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L618">			ps = db_conn.prepareStatement(&quot;DELETE FROM emails WHERE campain_id=?&quot;);</span>
+<span class="nc" id="L619">			ps.setInt(1, eid);</span>
+<span class="nc" id="L620">			ps.execute();</span>
+<span class="nc" id="L621">			ps.close();</span>
+
+<span class="nc" id="L623">			ps = db_conn.prepareStatement(&quot;SELECT * FROM emails_campain WHERE emails_campain_id=?&quot;);</span>
+<span class="nc" id="L624">			ps.setInt(1, eid);</span>
+<span class="nc" id="L625">			rs = ps.executeQuery();</span>
+<span class="nc" id="L626">			List&lt;UserDetails&gt; usersList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L627">			EmailCampainBean e = new EmailCampainBean();</span>
+<span class="nc bnc" id="L628" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L630">					fillEmailCampainBean(e, rs);</span>
+<span class="nc" id="L631">					String[] users = e.getUserGroups().split(&quot;,&quot;);</span>
+<span class="nc" id="L632">					int[] usersNum = new int[users.length];</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">					for(int i = 0; i &lt; users.length; i++){</span>
+<span class="nc" id="L634">						usersNum[i] = Tools.getIntValue(users[i], -1);</span>
+					}
+<span class="nc" id="L636">					usersList = EmailDB.getUsersByGroup(usersNum);</span>
+			}
+<span class="nc" id="L638">			rs.close();</span>
+<span class="nc" id="L639">			ps.close();</span>
+<span class="nc bnc" id="L640" title="All 2 branches missed.">			if(!usersList.isEmpty()){</span>
+				//EMailAction.saveEmails(usersList, e.getUrl(), e.getSenderName(), e.getSenderEmail(), e.getReplyTo(), e.getCcEmail(), e.getBccEmail(), e.getSubject(), e.getAttachments(), e.getCreatedByUserId(), new Timestamp(e.getCreateDate().getTime()), null, null, null);
+				String userUrl;
+				String recipientEmail;
+				String recipientName;
+<span class="nc" id="L645">				Map&lt;String, Integer&gt; uzMamEmailsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">				for (UserDetails ud : usersList)</span>
+				{
+					//if (ud.isAuthorized()==false || ud.isAllowDateLogin()==false) continue;
+
+					try
+					{
+<span class="nc" id="L652">						userUrl = e.getUrl() + &quot;&amp;userid=&quot; + ud.getUserId();</span>
+<span class="nc" id="L653">						recipientEmail = ud.getEmail();</span>
+<span class="nc" id="L654">						recipientName = ud.getFullName();</span>
+
+<span class="nc bnc" id="L656" title="All 6 branches missed.">						if (recipientEmail == null || recipientEmail.indexOf('@')==-1 || uzMamEmailsTable.get(recipientEmail)!=null)</span>
+						{
+<span class="nc" id="L658">							continue;</span>
+						}
+<span class="nc" id="L660">						uzMamEmailsTable.put(recipientEmail, 1);</span>
+
+						//if (out!=null) out.println(&quot;&lt;hr&gt;&quot;);
+
+<span class="nc" id="L664">						Logger.println(EmailDB.class,&quot;fill: &quot; + recipientName + &quot; email=&quot; + recipientEmail);</span>
+
+
+<span class="nc" id="L667">						sql = &quot;INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, created_by_user_id, create_date, disabled, campain_id, reply_to, cc_email, bcc_email, recipient_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L668">						ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L669">						ps.setString(1, recipientEmail);</span>
+<span class="nc" id="L670">						ps.setString(2, recipientName);</span>
+<span class="nc" id="L671">						ps.setString(3, e.getSenderName());</span>
+<span class="nc" id="L672">						ps.setString(4, e.getSenderEmail());</span>
+<span class="nc" id="L673">						ps.setString(5, e.getSubject());</span>
+<span class="nc" id="L674">						ps.setString(6, userUrl);</span>
+<span class="nc" id="L675">						DB.setClob(ps, 7, e.getAttachments());</span>
+<span class="nc" id="L676">						ps.setInt(8, e.getCreatedByUserId());</span>
+<span class="nc" id="L677">						ps.setTimestamp(9, new Timestamp(e.getCreateDate().getTime()));</span>
+<span class="nc" id="L678">						ps.setBoolean(10, true);</span>
+<span class="nc" id="L679">						ps.setInt(11, e.getEmailsCampainId());</span>
+<span class="nc" id="L680">						ps.setString(12, e.getReplyTo());</span>
+<span class="nc" id="L681">						ps.setString(13, e.getCcEmail());</span>
+<span class="nc" id="L682">						ps.setString(14, e.getBccEmail());</span>
+<span class="nc" id="L683">						ps.setInt(15, ud.getUserId());</span>
+<span class="nc" id="L684">						ps.execute();</span>
+<span class="nc" id="L685">						ps.close();</span>
+
+<span class="nc" id="L687">						realnyPocetPrijemcov++;</span>
+
+						//ps.close();
+
+					}
+<span class="nc" id="L692">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L694">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L695">					}</span>
+<span class="nc" id="L696">				}</span>
+			}
+
+<span class="nc" id="L699">			realnyPocetPrijemcov -= deleteUnsubscribedEmailsFromCampaign(eid);</span>
+
+<span class="nc" id="L701">			sql = &quot;UPDATE emails_campain SET count_of_recipients=? WHERE emails_campain_id=?&quot;;</span>
+<span class="nc" id="L702">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L703">			ps.setInt(1, realnyPocetPrijemcov);</span>
+<span class="nc" id="L704">			ps.setInt(2, e.getEmailsCampainId());</span>
+<span class="nc" id="L705">			ps.execute();</span>
+<span class="nc" id="L706">			ps.close();</span>
+
+<span class="nc" id="L708">			db_conn.close();</span>
+
+<span class="nc" id="L710">			rs = null;</span>
+<span class="nc" id="L711">			ps = null;</span>
+<span class="nc" id="L712">			db_conn = null;</span>
+
+<span class="nc" id="L714">			result = true;</span>
+		}
+<span class="nc" id="L716">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L718">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L724" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L725">					rs.close();</span>
+<span class="nc bnc" id="L726" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L727">					ps.close();</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L729">					db_conn.close();</span>
+			}
+<span class="nc" id="L731">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L733">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L734">			}</span>
+		}
+<span class="nc" id="L736">		return (result);</span>
+	}
+
+	public static void fillUnsubscribedEmailBean(EmailUnsubscribedBean e, ResultSet rs) throws SQLException
+	{
+<span class="nc" id="L741">		e.setEmailsUnsubscribedId(rs.getInt(&quot;emails_unsubscribed_id&quot;));</span>
+<span class="nc" id="L742">		e.setEmail(rs.getString(&quot;email&quot;));</span>
+<span class="nc" id="L743">		e.setCreateDate(DB.getDate(rs, &quot;create_date&quot;));</span>
+<span class="nc" id="L744">	}</span>
+
+	public static List&lt;EmailUnsubscribedBean&gt; getUnsubscribedEmail(String searchString)
+	{
+<span class="nc" id="L748">		List&lt;EmailUnsubscribedBean&gt; list = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L750">		Connection db_conn = null;</span>
+<span class="nc" id="L751">		PreparedStatement ps = null;</span>
+<span class="nc" id="L752">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L755">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L756">			StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L757">			sql.append(&quot;SELECT * FROM emails_unsubscribed&quot;);</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">			if (searchString != null)</span>
+<span class="nc" id="L759">				sql.append(&quot; WHERE email LIKE ?&quot;);</span>
+
+<span class="nc" id="L761">			ps = db_conn.prepareStatement(sql.toString());</span>
+
+<span class="nc bnc" id="L763" title="All 2 branches missed.">			if (searchString != null)</span>
+<span class="nc" id="L764">				ps.setString(1, &quot;%&quot; + searchString + &quot;%&quot;);</span>
+
+<span class="nc" id="L766">			rs = ps.executeQuery();</span>
+			EmailUnsubscribedBean e;
+<span class="nc bnc" id="L768" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L770">				e = new EmailUnsubscribedBean();</span>
+<span class="nc" id="L771">				fillUnsubscribedEmailBean(e, rs);</span>
+<span class="nc" id="L772">				list.add(e);</span>
+			}
+
+<span class="nc" id="L775">			rs.close();</span>
+<span class="nc" id="L776">			ps.close();</span>
+<span class="nc" id="L777">			db_conn.close();</span>
+
+<span class="nc" id="L779">			rs = null;</span>
+<span class="nc" id="L780">			ps = null;</span>
+<span class="nc" id="L781">			db_conn = null;</span>
+		}
+<span class="nc" id="L783">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L785">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L791" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L792">					rs.close();</span>
+<span class="nc bnc" id="L793" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L794">					ps.close();</span>
+<span class="nc bnc" id="L795" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L796">					db_conn.close();</span>
+			}
+<span class="nc" id="L798">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L800">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L801">			}</span>
+		}
+<span class="nc" id="L803">		return (list);</span>
+	}
+
+	public static boolean deleteUnsubscribedEmail(int id)
+	{
+		try
+		{
+<span class="nc" id="L810">			new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ?&quot;, id);</span>
+<span class="nc" id="L811">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, id=&quot;+id, id, -1);</span>
+<span class="nc" id="L812">			return true;</span>
+		}
+<span class="nc" id="L814">		catch (Exception e)</span>
+		{
+<span class="nc" id="L816">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L817">			return false;</span>
+		}
+	}
+
+	public static boolean deleteUnsubscribedEmail(String email)
+	{
+		try
+		{
+<span class="nc" id="L825">			new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE email = ?&quot;, email);</span>
+<span class="nc" id="L826">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, email=&quot;+email, -1, -1);</span>
+<span class="nc" id="L827">			return true;</span>
+		}
+<span class="nc" id="L829">		catch (Exception e)</span>
+		{
+<span class="nc" id="L831">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L832">			return false;</span>
+		}
+	}
+
+	public static boolean addUnsubscribedEmail(String email)
+	{
+<span class="nc bnc" id="L838" title="All 2 branches missed.">		if (!EmailDB.deleteUnsubscribedEmail(email))//najprv skusi email vymazat, ak uz existuje</span>
+<span class="nc" id="L839">			return false;</span>
+
+		try
+		{
+<span class="nc" id="L843">			new SimpleQuery().execute(&quot;INSERT INTO emails_unsubscribed (email, create_date) VALUES (?,?)&quot;, email, new Date());</span>
+<span class="nc" id="L844">			return true;</span>
+		}
+<span class="nc" id="L846">		catch (Exception e)</span>
+		{
+<span class="nc" id="L848">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L849">			return false;</span>
+		}
+	}
+
+	public static Map&lt;String, Integer&gt; getHashtableFromUnsubscribedEmails()
+	{
+<span class="fc" id="L855">		Map&lt;String, Integer&gt; hashTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L856">		Connection db_conn = null;</span>
+<span class="fc" id="L857">		PreparedStatement ps = null;</span>
+<span class="fc" id="L858">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L861">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L862">			ps = db_conn.prepareStatement(&quot;SELECT * FROM emails_unsubscribed&quot;);</span>
+<span class="fc" id="L863">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L864" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L866">				hashTable.put(DB.getDbString(rs, &quot;email&quot;).toLowerCase(), 1);</span>
+			}
+<span class="fc" id="L868">			rs.close();</span>
+<span class="fc" id="L869">			ps.close();</span>
+<span class="fc" id="L870">			db_conn.close();</span>
+
+<span class="fc" id="L872">			rs = null;</span>
+<span class="fc" id="L873">			ps = null;</span>
+<span class="fc" id="L874">			db_conn = null;</span>
+		}
+<span class="nc" id="L876">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L878">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L884" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L885">					rs.close();</span>
+<span class="pc bpc" id="L886" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L887">					ps.close();</span>
+<span class="pc bpc" id="L888" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L889">					db_conn.close();</span>
+			}
+<span class="nc" id="L891">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L893">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L894">			}</span>
+		}
+<span class="fc" id="L896">		return (hashTable);</span>
+	}
+
+
+	/**
+	 * Prida do mailingu prienik dvoch zoznamov
+	 * @param allreadyHasEmails - hashtabulka uz pridanych zaznamov, ak je prazdna, nacita sa z DB
+	 * @param campain
+	 * @param emailDetails
+	 * @return
+	 */
+	public static int addConjToMailing(Map&lt;String, Integer&gt; allreadyHasEmails,Map&lt;String, Integer&gt; table, EmailCampainBean campain)
+	{
+<span class="nc" id="L909">		int pocetPridanych = 0;</span>
+
+<span class="nc" id="L911">		Connection db_conn = null;</span>
+<span class="nc" id="L912">		PreparedStatement ps = null;</span>
+<span class="nc" id="L913">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L916">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L918" title="All 4 branches missed.">			if (allreadyHasEmails == null || allreadyHasEmails.size() &lt; 1)</span>
+			{
+<span class="nc bnc" id="L920" title="All 2 branches missed.">				if (allreadyHasEmails == null)</span>
+<span class="nc" id="L921">					allreadyHasEmails = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L923">				ps = db_conn.prepareStatement(&quot;SELECT recipient_email, recipient_user_id FROM emails WHERE campain_id=?&quot;);</span>
+<span class="nc" id="L924">				ps.setInt(1, campain.getEmailsCampainId());</span>
+<span class="nc" id="L925">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L926" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L928">					allreadyHasEmails.put(rs.getString(&quot;recipient_email&quot;), rs.getInt(&quot;recipient_user_id&quot;));</span>
+				}
+
+<span class="nc" id="L931">				rs.close();</span>
+<span class="nc" id="L932">				ps.close();</span>
+
+<span class="nc bnc" id="L934" title="All 4 branches missed.">				if (allreadyHasEmails != null &amp;&amp; allreadyHasEmails.size() &gt; 0)</span>
+				{
+<span class="nc bnc" id="L936" title="All 2 branches missed.">					for (Map.Entry&lt;String, Integer&gt; entry : allreadyHasEmails.entrySet())</span>
+					{
+<span class="nc" id="L938">						String email = entry.getKey();</span>
+
+<span class="nc bnc" id="L940" title="All 2 branches missed.">                  if (table.get(email) == null)// ak nie je v prvom, alebo nie je v druom vybere, tak ho odstranime</span>
+                  {
+<span class="nc" id="L942">                  	deleteEmail(campain.getEmailsCampainId(), entry.getValue(), allreadyHasEmails.size()-1);</span>
+<span class="nc" id="L943">                  	allreadyHasEmails.remove(email);</span>
+<span class="nc" id="L944">                  	pocetPridanych++;</span>
+                  }
+<span class="nc" id="L946">					}</span>
+				}
+			}
+
+<span class="nc" id="L950">			db_conn.close();</span>
+<span class="nc" id="L951">			rs = null;</span>
+<span class="nc" id="L952">			ps = null;</span>
+<span class="nc" id="L953">			db_conn = null;</span>
+		}
+<span class="nc" id="L955">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L957">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L963" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L964">					rs.close();</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L966">					ps.close();</span>
+<span class="nc bnc" id="L967" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L968">					db_conn.close();</span>
+			}
+<span class="nc" id="L970">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L972">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L973">			}</span>
+		}
+
+<span class="nc" id="L976">		return pocetPridanych;</span>
+	}
+
+	/**
+	 * Prida do mailingu rozdiel dvoch zoznamov
+	 * @param allreadyHasEmails - hashtabulka uz pridanych zaznamov, ak je prazdna, nacita sa z DB
+	 * @param campain
+	 * @param emailDetails
+	 * @return
+	 */
+	public static int addNegToMailing(Map&lt;String, Integer&gt; allreadyHasEmails, Map&lt;String, Integer&gt; table,EmailCampainBean campain)
+	{
+<span class="nc" id="L988">		int pocetPridanych = 0;</span>
+
+<span class="nc" id="L990">		Connection db_conn = null;</span>
+<span class="nc" id="L991">		PreparedStatement ps = null;</span>
+<span class="nc" id="L992">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L995">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L997" title="All 4 branches missed.">			if (allreadyHasEmails == null || allreadyHasEmails.size() &lt; 1)</span>
+			{
+<span class="nc bnc" id="L999" title="All 2 branches missed.">				if (allreadyHasEmails==null) allreadyHasEmails = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L1000">				ps = db_conn.prepareStatement(&quot;SELECT recipient_email, recipient_user_id FROM emails WHERE campain_id=?&quot;);</span>
+<span class="nc" id="L1001">				ps.setInt(1, campain.getEmailsCampainId());</span>
+<span class="nc" id="L1002">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1003" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L1005">					allreadyHasEmails.put(rs.getString(&quot;recipient_email&quot;), rs.getInt(&quot;recipient_user_id&quot;));</span>
+				}
+<span class="nc" id="L1007">				rs.close();</span>
+<span class="nc" id="L1008">				ps.close();</span>
+
+<span class="nc bnc" id="L1010" title="All 4 branches missed.">				if (allreadyHasEmails != null &amp;&amp; allreadyHasEmails.size()&gt;0 )</span>
+				{
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">					for (Map.Entry&lt;String, Integer&gt; entry : allreadyHasEmails.entrySet())</span>
+					{
+<span class="nc" id="L1014">						String email = entry.getKey();</span>
+
+<span class="nc bnc" id="L1016" title="All 2 branches missed.">						if (table.get(email) != null)//ak je email v prvom vybere tak ho odstranime</span>
+						{
+<span class="nc" id="L1018">							deleteEmail(campain.getEmailsCampainId(), entry.getValue(), allreadyHasEmails.size()-1);</span>
+<span class="nc" id="L1019">							allreadyHasEmails.remove(email);</span>
+<span class="nc" id="L1020">							pocetPridanych++;</span>
+						}
+<span class="nc" id="L1022">					}</span>
+				}
+			}
+
+<span class="nc" id="L1026">			db_conn.close();</span>
+<span class="nc" id="L1027">			rs = null;</span>
+<span class="nc" id="L1028">			ps = null;</span>
+<span class="nc" id="L1029">			db_conn = null;</span>
+		}
+<span class="nc" id="L1031">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1033">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1039" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1040">					rs.close();</span>
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1042">					ps.close();</span>
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1044">					db_conn.close();</span>
+			}
+<span class="nc" id="L1046">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1048">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1049">			}</span>
+		}
+
+<span class="nc" id="L1052">		return pocetPridanych;</span>
+	}
+
+	private static void deleteEmail(int campaignId, int userId, int newSize)
+	{
+		try
+		{
+<span class="nc" id="L1059">			new SimpleQuery().execute(&quot;DELETE from emails WHERE campain_id = ? AND recipient_user_id = ? &quot;, campaignId, userId);</span>
+<span class="nc" id="L1060">			new SimpleQuery().execute(&quot;UPDATE emails_campain SET count_of_recipients = ? WHERE emails_campain_id= ? &quot;, newSize, campaignId);//aktualizuj pocet prijemcov v mail kampani</span>
+		}
+<span class="nc" id="L1062">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1064">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1065">		}</span>
+<span class="nc" id="L1066">	}</span>
+
+	/**
+	 * Vymaze email kampan vratane prijemcov
+	 */
+	public static void deleteEmailCampaign(int emailCampaignId)
+	{
+		try
+		{
+<span class="nc" id="L1075">			new SimpleQuery().execute(&quot;DELETE from emails_campain WHERE emails_campain_id = ? &quot;, emailCampaignId);</span>
+<span class="nc" id="L1076">			new SimpleQuery().execute(&quot;DELETE from emails WHERE campain_id = ? &quot;, emailCampaignId);</span>
+		}
+<span class="nc" id="L1078">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1080">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1081">		}</span>
+<span class="nc" id="L1082">	}</span>
+
+	/**
+	 * Vymaze prijemcov kampane
+	 */
+	public static void deleteEmailCampaignRecipients(int emailCampaignId)
+	{
+		try
+		{
+<span class="nc" id="L1091">			new SimpleQuery().execute(&quot;DELETE FROM emails WHERE campain_id = ? &quot;, emailCampaignId);</span>
+<span class="nc" id="L1092">			new SimpleQuery().execute(&quot;UPDATE emails_campain SET count_of_recipients = 0 WHERE emails_campain_id = ? &quot;, emailCampaignId);</span>
+		}
+<span class="nc" id="L1094">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1096">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1097">		}</span>
+<span class="nc" id="L1098">	}</span>
+
+	/**
+	 * Vrati email pre zadane email_id z tabulky emails, pouziva sa na kontrolu emailu pre odhlasenie
+	 * @param emailId
+	 * @return
+	 */
+	public static String getEmail(int emailId)
+	{
+<span class="nc" id="L1107">		String email = null;</span>
+
+<span class="nc" id="L1109">		Connection db_conn = null;</span>
+<span class="nc" id="L1110">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1111">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1114">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1115">			ps = db_conn.prepareStatement(&quot;SELECT recipient_email FROM emails WHERE email_id=?&quot;);</span>
+<span class="nc" id="L1116">			ps.setInt(1, emailId);</span>
+<span class="nc" id="L1117">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1120">				email = DB.getDbString(rs, &quot;recipient_email&quot;);</span>
+			}
+<span class="nc" id="L1122">			rs.close();</span>
+<span class="nc" id="L1123">			ps.close();</span>
+<span class="nc" id="L1124">			db_conn.close();</span>
+
+<span class="nc" id="L1126">			rs = null;</span>
+<span class="nc" id="L1127">			ps = null;</span>
+<span class="nc" id="L1128">			db_conn = null;</span>
+		}
+<span class="nc" id="L1130">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1132">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1139">					rs.close();</span>
+<span class="nc bnc" id="L1140" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1141">					ps.close();</span>
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1143">					db_conn.close();</span>
+			}
+<span class="nc" id="L1145">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1147">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1148">			}</span>
+		}
+
+<span class="nc" id="L1151">		return email;</span>
+	}
+
+	/**
+	 * Vymaze odhlasene emaily z danej kampane, je potrebne vykonat pred znovaspustenim kampane
+	 * @param campaignId
+	 * @return pocet zmazanych emailov
+	 */
+	private static int deleteUnsubscribedEmailsFromCampaign(int campaignId)
+	{
+<span class="nc" id="L1161">		int pocetZmazanych = 0;</span>
+<span class="nc" id="L1162">		List&lt;EmailUnsubscribedBean&gt; emails = getUnsubscribedEmail(null);</span>
+
+<span class="nc" id="L1164">		Connection db_conn = null;</span>
+<span class="nc" id="L1165">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1168">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1169">			ps = db_conn.prepareStatement(&quot;DELETE FROM emails WHERE campain_id= ? and recipient_email = ?&quot;);</span>
+
+<span class="nc bnc" id="L1171" title="All 2 branches missed.">			for (EmailUnsubscribedBean eb : emails)</span>
+			{
+<span class="nc" id="L1173">				ps.setInt(1, campaignId);</span>
+<span class="nc" id="L1174">				ps.setString(2, eb.getEmail());</span>
+<span class="nc" id="L1175">				int count = ps.executeUpdate();</span>
+<span class="nc" id="L1176">				pocetZmazanych += count;</span>
+<span class="nc" id="L1177">			}</span>
+
+<span class="nc" id="L1179">			ps.close();</span>
+<span class="nc" id="L1180">			db_conn.close();</span>
+<span class="nc" id="L1181">			ps = null;</span>
+<span class="nc" id="L1182">			db_conn = null;</span>
+		}
+<span class="nc" id="L1184">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1186">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1192" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1193">					ps.close();</span>
+<span class="nc bnc" id="L1194" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1195">					db_conn.close();</span>
+			}
+<span class="nc" id="L1197">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1199">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1200">			}</span>
+		}
+
+<span class="nc" id="L1203">		return pocetZmazanych;</span>
+	}
+
+	/**
+	 * Vrati zoznam prijemcov e-mail kampane ako pouzivatelov systemu reprezentovanych objektom {@link UserDetails}. Pre tych, co nie su registrovani v systeme sa vrati iba e-mail adresa
+	 * v poli ForumRank je vratena hodnota email_id
+	 *
+	 * @param campaignId	identifikator e-mailovej kampane
+	 *
+	 * @return ak dana kampan neexistuje, vrati sa null
+	 */
+	public static List&lt;UserDetails&gt; getUsersInCampaign(int campaignId)
+	{
+<span class="nc bnc" id="L1216" title="All 2 branches missed.">		if (campaignId &lt; 0)</span>
+<span class="nc" id="L1217">			return null;</span>
+
+<span class="nc" id="L1219">		String sql = &quot;SELECT u.user_id, u.title, u.first_name, u.last_name, u.user_groups, e.recipient_email, e.email_id, e.recipient_name &quot; +</span>
+						&quot;FROM users u RIGHT JOIN emails e ON u.user_id = e.recipient_user_id WHERE e.campain_id = ? ORDER BY email_id DESC&quot;;
+
+<span class="nc" id="L1222">      List&lt;UserDetails&gt; campaignUsers = new ComplexQuery().setSql(sql).setParams(campaignId).list(new Mapper&lt;UserDetails&gt;()</span>
+<span class="nc" id="L1223">      {</span>
+<span class="nc" id="L1224">      	UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+
+         @Override
+			public UserDetails map(ResultSet rs) throws SQLException
+         {
+<span class="nc" id="L1229">         	UserDetails user = new UserDetails();</span>
+
+<span class="nc" id="L1231">         	user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc bnc" id="L1232" title="All 2 branches missed.">         	if (user.getUserId()&gt;0)</span>
+         	{
+<span class="nc" id="L1234">	         	user.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1235">					user.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="nc" id="L1236">					user.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+         	}
+         	else
+         	{
+<span class="nc" id="L1240">         		user.splitFullName(DB.getDbString(rs, &quot;recipient_name&quot;));</span>
+         	}
+<span class="nc" id="L1242">				user.setUserGroupsIds(DB.getDbString(rs, &quot;user_groups&quot;));</span>
+<span class="nc" id="L1243">				user.setUserGroupsNames(userGroupsDB.convertIdsToNames(user.getUserGroupsIds()));</span>
+
+<span class="nc" id="L1245">				user.setEmail(DB.getDbString(rs, &quot;recipient_email&quot;));</span>
+
+<span class="nc" id="L1247">				user.setForumRank(rs.getInt(&quot;email_id&quot;));</span>
+
+<span class="nc" id="L1249">         	return user;</span>
+         }
+      });
+
+<span class="nc" id="L1253">		return campaignUsers;</span>
+	}
+
+	/**
+	 * Aktualizuje e-mailovu kampan. Najprv nastavi jej zakladne parametre (prilohy sa neaktualizuju, tie sa iba prekopiruju, nedaju zmenit), potom sa vymazu vsetky e-maily prijemcov a
+	 * nakoniec sa nove e-maily ulozia do tabulky emails. A uplne na konci sa aktualizuje pocet prijemcov e-mail kampane
+	 *
+	 * @param campaignId				identifikator kampane
+	 * @param users					novy zoznam prijemcov
+	 * @param url						url adresa
+	 * @param senderName				meno odosielatela
+	 * @param senderEmail			e-mail odosielatela
+	 * @param replyTo					e-mail na odpoved
+	 * @param ccEmail					kopia
+	 * @param bccEmail				tajna kopia
+	 * @param subject					predmet e-mailu
+	 * @param userId					identifikator aktualne prihlaseneho pouzivatela
+	 * @param userGroupsString		retazec skupin, v ktorych sa pouzivatel nachadza
+	 * @param attachments			prilohy
+	 *
+	 * @return	Ak e-mailova kampan neexistuje, vrati false, inak vrati true
+	 */
+   public static boolean updateEmails(int campaignId, List&lt;UserDetails&gt; users, String url, String senderName, String senderEmail, String replyTo, String ccEmail, String bccEmail, String subject, int userId, String userGroupsString, String attachments)
+   {
+<span class="nc bnc" id="L1277" title="All 2 branches missed.">		if (campaignId &lt; 0)</span>
+<span class="nc" id="L1278">			return false;</span>
+
+<span class="nc" id="L1280">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L1282" title="All 2 branches missed.">		if (!Tools.isEmail(replyTo))</span>
+<span class="nc" id="L1283">			replyTo = null;</span>
+<span class="nc bnc" id="L1284" title="All 2 branches missed.">		if (!Tools.isEmail(ccEmail))</span>
+<span class="nc" id="L1285">			ccEmail = null;</span>
+<span class="nc bnc" id="L1286" title="All 2 branches missed.">		if (!Tools.isEmail(bccEmail))</span>
+<span class="nc" id="L1287">			bccEmail = null;</span>
+
+		/**
+		 * Aktualizacia emailovej kampane
+		 */
+<span class="nc" id="L1292">		params.clear();</span>
+<span class="nc" id="L1293">		params.add(senderName);</span>
+<span class="nc" id="L1294">		params.add(senderEmail);</span>
+<span class="nc bnc" id="L1295" title="All 2 branches missed.">		if(users != null) params.add(users.size());</span>
+<span class="nc" id="L1296">		else params.add(0);</span>
+<span class="nc" id="L1297">		params.add(subject);</span>
+<span class="nc" id="L1298">		params.add(url);</span>
+<span class="nc" id="L1299">		params.add(userGroupsString);</span>
+<span class="nc" id="L1300">		params.add(replyTo);</span>
+<span class="nc" id="L1301">		params.add(ccEmail);</span>
+<span class="nc" id="L1302">		params.add(bccEmail);</span>
+<span class="nc" id="L1303">		params.add(campaignId);</span>
+
+<span class="nc" id="L1305">		new SimpleQuery().execute(&quot;UPDATE emails_campain SET sender_name = ?, sender_email = ?, count_of_recipients = ?, subject = ?, url = ?, user_groups = ?, reply_to = ?, cc_email = ?, bcc_email = ? WHERE emails_campain_id = ?&quot;, params.toArray());</span>
+
+		//zoznam odhlasenych emailov
+<span class="nc" id="L1308">		Map&lt;String, Integer&gt; uzMamEmailsTable = EmailDB.getHashtableFromUnsubscribedEmails();</span>
+<span class="nc" id="L1309">		int realnyPocetPrijemcov = 0;</span>
+
+		//ziskaj zoznam aktualnych prijemcov kampane ako list aj hashtabulku
+<span class="nc" id="L1312">		List&lt;UserDetails&gt; actualRecipients = EmailDB.getUsersInCampaign(campaignId);</span>
+<span class="nc" id="L1313">		Map&lt;String, UserDetails&gt; actualRecipientsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L1314" title="All 2 branches missed.">		for (UserDetails ud : actualRecipients)</span>
+		{
+<span class="nc" id="L1316">			actualRecipientsTable.put(ud.getEmail().toLowerCase(), ud);</span>
+<span class="nc" id="L1317">			Logger.debug(EmailDB.class, &quot;Existing emails in campaign &quot; + campaignId + &quot;: &quot; + ud.getEmail());</span>
+
+			//aktualizuj hodnoty aktualnym prijemcom
+<span class="nc" id="L1320">			String userUrl = url + &quot;&amp;userid=&quot; + ud.getUserId();</span>
+<span class="nc" id="L1321">			params.clear();</span>
+<span class="nc" id="L1322">			params.add(senderName);</span>
+<span class="nc" id="L1323">			params.add(senderEmail);</span>
+<span class="nc" id="L1324">			params.add(subject);</span>
+<span class="nc" id="L1325">			params.add(userUrl);</span>
+<span class="nc" id="L1326">			params.add(userId);</span>
+
+<span class="nc" id="L1328">			params.add(replyTo);</span>
+<span class="nc" id="L1329">			params.add(ccEmail);</span>
+<span class="nc" id="L1330">			params.add(bccEmail);</span>
+<span class="nc" id="L1331">			params.add(campaignId);</span>
+<span class="nc" id="L1332">			params.add(ud.getForumRank());</span>
+
+<span class="nc" id="L1334">			new SimpleQuery().execute(&quot;UPDATE emails SET sender_name=?, sender_email=?, subject=?, url=?, created_by_user_id=?, reply_to=?, cc_email=?, bcc_email=?, campain_id=? WHERE email_id=?&quot;, params.toArray());</span>
+
+<span class="nc" id="L1336">			uzMamEmailsTable.put(ud.getEmail().toLowerCase(), 1);</span>
+
+<span class="nc" id="L1338">			realnyPocetPrijemcov++;</span>
+<span class="nc" id="L1339">		}</span>
+
+		String recipientEmail;
+		String recipientName;
+
+<span class="nc bnc" id="L1344" title="All 2 branches missed.">		if (users != null)</span>
+		{
+
+<span class="nc bnc" id="L1347" title="All 2 branches missed.">			for (UserDetails ud : users)</span>
+			{
+<span class="nc" id="L1349">				recipientEmail = ud.getEmail();</span>
+<span class="nc" id="L1350">				recipientName = ud.getFullName();</span>
+
+				//odstranme zo zoznamu povodnych emailov aby sme vedeli co sa vymazalo
+<span class="nc" id="L1353">				actualRecipientsTable.remove(ud.getEmail());</span>
+
+<span class="nc bnc" id="L1355" title="All 6 branches missed.">				if (recipientEmail == null || recipientEmail.indexOf('@')==-1 || uzMamEmailsTable.get(recipientEmail) != null)</span>
+<span class="nc" id="L1356">					continue;</span>
+
+<span class="nc" id="L1358">				uzMamEmailsTable.put(recipientEmail, 1);</span>
+
+<span class="nc" id="L1360">				String userUrl = url + &quot;&amp;userid=&quot; + ud.getUserId();</span>
+
+<span class="nc" id="L1362">				params.clear();</span>
+<span class="nc" id="L1363">				params.add(recipientEmail);</span>
+<span class="nc" id="L1364">				params.add(recipientName);</span>
+<span class="nc" id="L1365">				params.add(senderName);</span>
+<span class="nc" id="L1366">				params.add(senderEmail);</span>
+<span class="nc" id="L1367">				params.add(subject);</span>
+<span class="nc" id="L1368">				params.add(userUrl);</span>
+<span class="nc" id="L1369">				params.add(attachments);</span>
+<span class="nc" id="L1370">				params.add(userId);</span>
+<span class="nc" id="L1371">				params.add(new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L1372">				params.add(false);</span>
+<span class="nc" id="L1373">				params.add(campaignId);</span>
+<span class="nc" id="L1374">				params.add(replyTo);</span>
+<span class="nc" id="L1375">				params.add(ccEmail);</span>
+<span class="nc" id="L1376">				params.add(bccEmail);</span>
+<span class="nc" id="L1377">				params.add(ud.getUserId());</span>
+
+<span class="nc" id="L1379">				Logger.debug(EmailDB.class, &quot;inserting email &quot;+recipientEmail);</span>
+
+<span class="nc" id="L1381">				new SimpleQuery().execute(&quot;INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, created_by_user_id, create_date, disabled, campain_id, reply_to, cc_email, bcc_email, recipient_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;, params.toArray());</span>
+
+<span class="nc" id="L1383">				realnyPocetPrijemcov++;</span>
+<span class="nc" id="L1384">			}</span>
+		}
+
+		//ty co nam zostali v actualRecipientsTable boli zmazany
+<span class="nc bnc" id="L1388" title="All 2 branches missed.">		for (UserDetails ud : actualRecipientsTable.values())</span>
+		{
+<span class="nc" id="L1390">			new SimpleQuery().execute(&quot;DELETE FROM emails WHERE email_id=? AND campain_id=?&quot;, ud.getForumRank(), campaignId);</span>
+<span class="nc" id="L1391">			realnyPocetPrijemcov--;</span>
+<span class="nc" id="L1392">		}</span>
+
+		//	aktualizuj realny pocet prijemcov
+<span class="nc" id="L1395">		new SimpleQuery().execute(&quot;UPDATE emails_campain SET count_of_recipients = ? WHERE emails_campain_id = ?&quot;, realnyPocetPrijemcov, campaignId);</span>
+
+<span class="nc" id="L1397">		return(true);</span>
+	}
+
+   /**
+ 	 * Vymaze zaznam prijemcu e-mailovej kampane z tabulky emails a zmensi pocet prijemcov o 1
+ 	 *
+ 	 * @param deleteEmailId	identifikator prijemcu
+ 	 * @param campaignId		identifikator e-mail kampane
+ 	 * @param count			pocet prijemcov kampane
+ 	 *
+ 	 * @return true ak vymazanie z databazy prebehlo v poriadku, inak false
+ 	 */
+	public static boolean deleteRecipient(int deleteEmailId, int campaignId, int count)
+	{
+		try
+		{
+<span class="nc" id="L1413">			new SimpleQuery().execute(&quot;DELETE FROM emails WHERE email_id = ?&quot;, deleteEmailId);</span>
+<span class="nc" id="L1414">			new SimpleQuery().execute(&quot;UPDATE emails_campain SET count_of_recipients = ? WHERE emails_campain_id = ? &quot;, (count - 1), campaignId);</span>
+<span class="nc" id="L1415">			return true;</span>
+		}
+<span class="nc" id="L1417">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1419">			return false;</span>
+		}
+	}
+
+	/**
+	 * Naplnenie tabulky emailov
+	 *
+	 * @param userGroupId - id skupiny pousivatelov, ktorym sa mail posiela
+	 * @param url - URL adresa webu (http://www.interway.sk/showdoc.do?docid=10) - aby zbehol loopback connect
+	 * @param senderName - meno odosielatela
+	 * @param senderEmail - email odosielatela
+	 * @param subject - predmet
+	 * @param attachments - zoznam priloh oddelenych ; (linka na subor na disku)
+	 * @param userId - id pouzivatela, ktory kampan vytvara
+	 * @param createDate - datum vytvorenia (podla toho je potom potrebne zavolat runEmails)
+	 * @param prop - I18N prop (alebo null ak sa nic nevypisuje)
+	 *
+	 * @return
+	 */
+	public static boolean saveEmails(int userGroupId, String url, String senderName, String senderEmail, String subject, String attachments, int userId, Timestamp createDate, Prop prop, PrintWriter out)
+	{
+<span class="nc" id="L1440">		List&lt;UserDetails&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1441" title="All 2 branches missed.">		for (UserDetails ud : UsersDB.getUsersByGroup(userGroupId))</span>
+		{
+<span class="nc bnc" id="L1443" title="All 4 branches missed.">			if (ud.isAuthorized() == false || ud.isAllowDateLogin() == false)</span>
+<span class="nc" id="L1444">				continue;</span>
+<span class="nc" id="L1445">			users.add(ud);</span>
+<span class="nc" id="L1446">		}</span>
+
+<span class="nc" id="L1448">		return(saveEmails(users, url, senderName, senderEmail, null, null, null, subject, attachments, userId, createDate, null));</span>
+	}
+
+	public static boolean saveEmails(List&lt;UserDetails&gt; users, String url, String senderName, String senderEmail, String replyTo, String ccEmail, String bccEmail, String subject, String attachments, int userId, Timestamp createDate, String userGroupsString)
+	{
+<span class="nc" id="L1453">		boolean sendOK = false;</span>
+
+<span class="nc bnc" id="L1455" title="All 2 branches missed.">		if (Tools.isEmail(replyTo) == false)</span>
+<span class="nc" id="L1456">			replyTo = null;</span>
+<span class="nc bnc" id="L1457" title="All 2 branches missed.">		if (Tools.isEmail(ccEmail) == false)</span>
+<span class="nc" id="L1458">			ccEmail = null;</span>
+<span class="nc bnc" id="L1459" title="All 2 branches missed.">		if (Tools.isEmail(bccEmail) == false)</span>
+<span class="nc" id="L1460">			bccEmail = null;</span>
+
+<span class="nc" id="L1462">		Connection dbConn = null;</span>
+<span class="nc" id="L1463">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1464">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1467">			dbConn = DBPool.getConnection();</span>
+
+<span class="nc" id="L1469">			String sql = &quot;INSERT INTO emails_campain (sender_name, sender_email,count_of_recipients, subject, url, created_by_user_id, create_date, user_groups, send_at, attachments, reply_to, cc_email, bcc_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L1470">			ps = dbConn.prepareStatement(sql);</span>
+<span class="nc" id="L1471">			ps.setString(1, senderName);</span>
+<span class="nc" id="L1472">			ps.setString(2, senderEmail);</span>
+<span class="nc bnc" id="L1473" title="All 2 branches missed.">			if (users != null)</span>
+<span class="nc" id="L1474">				ps.setInt(3, users.size());</span>
+<span class="nc" id="L1475">			else ps.setInt(3, 0);</span>
+<span class="nc" id="L1476">			ps.setString(4, subject);</span>
+<span class="nc" id="L1477">			ps.setString(5, url);</span>
+<span class="nc" id="L1478">			ps.setInt(6, userId);</span>
+<span class="nc" id="L1479">			ps.setTimestamp(7, createDate);</span>
+<span class="nc" id="L1480">			ps.setString(8, userGroupsString);</span>
+<span class="nc" id="L1481">			ps.setTimestamp(9, null);</span>
+<span class="nc" id="L1482">			DB.setClob(ps, 10, attachments);</span>
+<span class="nc" id="L1483">			ps.setString(11, replyTo);</span>
+<span class="nc" id="L1484">			ps.setString(12, ccEmail);</span>
+<span class="nc" id="L1485">			ps.setString(13, bccEmail);</span>
+<span class="nc" id="L1486">			ps.execute();</span>
+<span class="nc" id="L1487">			ps.close();</span>
+
+<span class="nc" id="L1489">			int campaignId = -1;</span>
+
+<span class="nc" id="L1491">			ps = dbConn.prepareStatement(&quot;SELECT max(emails_campain_id) FROM emails_campain WHERE created_by_user_id=?&quot;);</span>
+<span class="nc" id="L1492">			ps.setInt(1, userId);</span>
+<span class="nc" id="L1493">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1494" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L1496">				campaignId = rs.getInt(1);</span>
+			}
+<span class="nc" id="L1498">			rs.close();</span>
+<span class="nc" id="L1499">			ps.close();</span>
+
+			String userUrl;
+			String recipientEmail;
+			String recipientName;
+
+<span class="nc" id="L1505">			int realnyPocetPrijemcov = 0;</span>
+<span class="nc bnc" id="L1506" title="All 2 branches missed.">			if (users != null)</span>
+			{
+<span class="nc" id="L1508">				Map&lt;String, Integer&gt; uzMamEmailsTable = EmailDB.getHashtableFromUnsubscribedEmails();</span>
+<span class="nc bnc" id="L1509" title="All 2 branches missed.">				for (UserDetails ud : users)</span>
+				{
+
+					try
+					{
+<span class="nc" id="L1514">						userUrl = url + &quot;&amp;userid=&quot; + ud.getUserId();</span>
+<span class="nc" id="L1515">						recipientEmail = ud.getEmail().toLowerCase();</span>
+<span class="nc" id="L1516">						recipientName = ud.getFullName();</span>
+
+<span class="nc bnc" id="L1518" title="All 6 branches missed.">						if (recipientEmail == null || recipientEmail.indexOf('@')==-1 || uzMamEmailsTable.get(recipientEmail)!=null)</span>
+						{
+<span class="nc" id="L1520">							continue;</span>
+						}
+<span class="nc" id="L1522">						uzMamEmailsTable.put(recipientEmail.toLowerCase(), 1);</span>
+
+<span class="nc" id="L1524">						Logger.println(EmailDB.class,&quot;fill: &quot; + recipientName + &quot; email=&quot; + recipientEmail);</span>
+
+<span class="nc" id="L1526">						sql = &quot;INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, created_by_user_id, create_date, disabled, campain_id, reply_to, cc_email, bcc_email, recipient_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L1527">						ps = dbConn.prepareStatement(sql);</span>
+<span class="nc" id="L1528">						ps.setString(1, recipientEmail);</span>
+<span class="nc" id="L1529">						ps.setString(2, recipientName);</span>
+<span class="nc" id="L1530">						ps.setString(3, senderName);</span>
+<span class="nc" id="L1531">						ps.setString(4, senderEmail);</span>
+<span class="nc" id="L1532">						ps.setString(5, subject);</span>
+<span class="nc" id="L1533">						ps.setString(6, userUrl);</span>
+<span class="nc" id="L1534">						DB.setClob(ps, 7, attachments);</span>
+<span class="nc" id="L1535">						ps.setInt(8, userId);</span>
+<span class="nc" id="L1536">						ps.setTimestamp(9, createDate);</span>
+<span class="nc" id="L1537">						ps.setBoolean(10, true);</span>
+<span class="nc" id="L1538">						ps.setInt(11, campaignId);</span>
+<span class="nc" id="L1539">						ps.setString(12, replyTo);</span>
+<span class="nc" id="L1540">						ps.setString(13, ccEmail);</span>
+<span class="nc" id="L1541">						ps.setString(14, bccEmail);</span>
+<span class="nc" id="L1542">						ps.setInt(15, ud.getUserId());</span>
+<span class="nc" id="L1543">						ps.execute();</span>
+<span class="nc" id="L1544">						ps.close();</span>
+
+<span class="nc" id="L1546">						realnyPocetPrijemcov++;</span>
+
+					}
+<span class="nc" id="L1549">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L1551">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1552">					}</span>
+<span class="nc" id="L1553">				}</span>
+
+			}
+<span class="nc" id="L1556">			sendOK = true;</span>
+
+			//	aktualizuj realny pocet prijemcov
+<span class="nc" id="L1559">			sql = &quot;UPDATE emails_campain SET count_of_recipients=? WHERE emails_campain_id = ?&quot;;</span>
+<span class="nc" id="L1560">			ps = dbConn.prepareStatement(sql);</span>
+<span class="nc" id="L1561">			ps.setInt(1, realnyPocetPrijemcov);</span>
+<span class="nc" id="L1562">			ps.setInt(2, campaignId);</span>
+<span class="nc" id="L1563">			ps.execute();</span>
+<span class="nc" id="L1564">			ps.close();</span>
+
+<span class="nc" id="L1566">			rs = null;</span>
+<span class="nc" id="L1567">			ps = null;</span>
+		}
+<span class="nc" id="L1569">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1571">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1577" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1578">					rs.close();</span>
+<span class="nc bnc" id="L1579" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1580">					ps.close();</span>
+<span class="nc bnc" id="L1581" title="All 2 branches missed.">				if (dbConn != null)</span>
+<span class="nc" id="L1582">					dbConn.close();</span>
+			}
+<span class="nc" id="L1584">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1586">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1587">			}</span>
+		}
+
+<span class="nc" id="L1590">		return(sendOK);</span>
+	}
+
+	/**
+	 * Aktivovanie odosielania emailov so zadanym datumom
+	 * @param date
+	 */
+	public static void activateEmails(long date)
+	{
+		try
+		{
+		    //spustime v okoli sekundy kvoli zaokruhlovaniu v DB
+<span class="nc" id="L1602">			new SimpleQuery().execute(&quot;UPDATE emails SET disabled = ? WHERE create_date &gt; ? AND create_date &lt; ?&quot;, false, new Timestamp(date-1000), new Timestamp(date+1000));</span>
+		}
+<span class="nc" id="L1604">		catch (Exception e)</span>
+		{
+<span class="nc" id="L1606">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1607">		}</span>
+<span class="nc" id="L1608">	}</span>
+
+	public static List&lt;UserDetails&gt; getUsersByGroup(int[] userGroupIds)
+	{
+<span class="nc" id="L1612">		DebugTimer dt = new DebugTimer(&quot;getUsersByGroup&quot;);</span>
+
+<span class="nc" id="L1614">		List&lt;UserDetails&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1615">		Map&lt;String, UserDetails&gt; usersTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L1616">		UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+
+<span class="nc" id="L1618">		Connection dbConn = null;</span>
+<span class="nc" id="L1619">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1620">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1623">			dt.diff(&quot; nacitavam users&quot;);</span>
+
+<span class="nc" id="L1625">			dbConn = DBPool.getConnection();</span>
+<span class="nc" id="L1626">			ps = dbConn.prepareStatement(&quot;SELECT user_id, title, first_name, last_name, user_groups, email, authorized, allow_login_start, allow_login_end FROM users&quot;); //ORDER BY last_name, first_name</span>
+<span class="nc" id="L1627">			rs = ps.executeQuery();</span>
+
+<span class="nc" id="L1629">			dt.diff(&quot; mam rs&quot;);</span>
+
+			UserDetails usr;
+<span class="nc bnc" id="L1632" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1634">				usr = new UserDetails();</span>
+<span class="nc" id="L1635">				usr.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L1636">				usr.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1637">				usr.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="nc" id="L1638">				usr.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+<span class="nc" id="L1639">				usr.setUserGroupsIds(DB.getDbString(rs, &quot;user_groups&quot;));</span>
+<span class="nc" id="L1640">				usr.setUserGroupsNames(userGroupsDB.convertIdsToNames(usr.getUserGroupsIds()));</span>
+
+<span class="nc" id="L1642">				usr.setEmail(DB.getDbString(rs, &quot;email&quot;));</span>
+
+<span class="nc" id="L1644">				usr.setAuthorized(rs.getBoolean(&quot;authorized&quot;));</span>
+
+<span class="nc" id="L1646">				usr.setAllowLoginStart(DB.getDbDate(rs, &quot;allow_login_start&quot;));</span>
+<span class="nc" id="L1647">				usr.setAllowLoginEnd(DB.getDbDate(rs, &quot;allow_login_end&quot;));</span>
+
+<span class="nc" id="L1649">				usr.setAllowDateLogin(LogonTools.checkAllowLoginDates(rs));</span>
+
+<span class="nc bnc" id="L1651" title="All 10 branches missed.">				if (usr.isAuthorized() &amp;&amp; usr.isAllowDateLogin() &amp;&amp; Tools.isNotEmpty(usr.getEmail()) &amp;&amp; usr.getEmail().length()&gt;4 &amp;&amp; usersTable.get(usr.getEmail())==null)</span>
+				{
+<span class="nc bnc" id="L1653" title="All 4 branches missed.">					if (userGroupIds == null || userGroupIds.length==0)</span>
+					{
+<span class="nc" id="L1655">						users.add(usr);</span>
+<span class="nc" id="L1656">						usersTable.put(usr.getEmail(), usr);</span>
+					}
+					else
+					{
+<span class="nc bnc" id="L1660" title="All 2 branches missed.">						for (int i = 0; i &lt; userGroupIds.length; i++)</span>
+						{
+<span class="nc bnc" id="L1662" title="All 2 branches missed.">							if (usr.isInUserGroup(userGroupIds[i]))</span>
+							{
+<span class="nc" id="L1664">								users.add(usr);</span>
+<span class="nc" id="L1665">								usersTable.put(usr.getEmail(), usr);</span>
+<span class="nc" id="L1666">								break;</span>
+							}
+						}
+					}
+				}
+			}
+<span class="nc" id="L1672">			rs.close();</span>
+<span class="nc" id="L1673">			ps.close();</span>
+<span class="nc" id="L1674">			dbConn.close();</span>
+
+<span class="nc" id="L1676">			rs = null;</span>
+<span class="nc" id="L1677">			ps = null;</span>
+<span class="nc" id="L1678">			dbConn = null;</span>
+
+<span class="nc" id="L1680">			dt.diff(&quot;rs nacitane&quot;);</span>
+		}
+<span class="nc" id="L1682">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1684">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1690" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1691">					rs.close();</span>
+<span class="nc bnc" id="L1692" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1693">					ps.close();</span>
+<span class="nc bnc" id="L1694" title="All 2 branches missed.">				if (dbConn != null)</span>
+<span class="nc" id="L1695">					dbConn.close();</span>
+			}
+<span class="nc" id="L1697">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1699">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1700">			}</span>
+		}
+<span class="nc" id="L1702">		return (users);</span>
+	}
+
+	/**
+	 * Zisti z DB z tabulky emails, ze ci je email aktivovany, ci sa bude posielat, ak je disabled 1, email sa uz poslal resp. sa nebude posielat
+	 *
+	 * @param campaignId			id emailovej kampane
+	 * @param recipientEmail	email adresata
+	 *
+	 * @return	vrati true, ak je e-mail deaktivovany, inak vrati false. Ak je cislo e-mail kampane &lt; 1 alebo je prazdny/null email adresata, potom vrati true.
+	 */
+	public static boolean isEmailDisabled(int campaignId, String recipientEmail)
+	{
+<span class="nc bnc" id="L1715" title="All 4 branches missed.">		if (Tools.isEmpty(recipientEmail) || campaignId &lt; 1)</span>
+<span class="nc" id="L1716">			return true;</span>
+
+<span class="nc" id="L1718">		boolean isEmailDisabled = true;</span>
+
+<span class="nc" id="L1720">		Connection db_conn = null;</span>
+<span class="nc" id="L1721">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1722">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L1725">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1726">			ps = db_conn.prepareStatement(&quot;SELECT disabled FROM emails WHERE campain_id = ? AND recipient_email = ?&quot;);</span>
+<span class="nc" id="L1727">			int psCounter = 1;</span>
+<span class="nc" id="L1728">			ps.setInt(psCounter++, campaignId);</span>
+<span class="nc" id="L1729">			ps.setString(psCounter++, recipientEmail);</span>
+<span class="nc" id="L1730">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1731" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1733">				isEmailDisabled = rs.getBoolean(&quot;disabled&quot;);</span>
+			}
+<span class="nc" id="L1735">			rs.close();</span>
+<span class="nc" id="L1736">			ps.close();</span>
+<span class="nc" id="L1737">			db_conn.close();</span>
+<span class="nc" id="L1738">			rs = null;</span>
+<span class="nc" id="L1739">			ps = null;</span>
+<span class="nc" id="L1740">			db_conn = null;</span>
+		}
+<span class="nc" id="L1742">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1744">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1750" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1751">					rs.close();</span>
+<span class="nc bnc" id="L1752" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1753">					ps.close();</span>
+<span class="nc bnc" id="L1754" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1755">					db_conn.close();</span>
+			}
+<span class="nc" id="L1757">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1759">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1760">			}</span>
+		}
+
+<span class="nc" id="L1763">		return isEmailDisabled;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

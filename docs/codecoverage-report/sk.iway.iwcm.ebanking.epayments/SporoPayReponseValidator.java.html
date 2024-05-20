@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SporoPayReponseValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">SporoPayReponseValidator.java</span></div><h1>SporoPayReponseValidator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Constants;
+
+/**
+ *  SporoPayReponseValidator.java
+ *
+ *		Validates a reponse coming from SporoPay. Extracted from {@link SporoPayInformation}
+ *		because of it's length and discohesiveness with the rest of the class.
+ *
+ *
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 4.9.2009 13:46:49
+ *@modified     $Date: 2010/03/05 08:18:54 $
+ */
+class SporoPayReponseValidator
+{
+	String clientPrefix;
+	String clientAccount;
+	String clientBankCode;
+	String ourAccountPrefix;
+	String ourAccount;
+	String ourBankCode;
+	String amount;
+	String currency;
+	String variableSymbol;
+	String specificSymbol;
+	String url;
+	String params;
+	String result;
+	String realization;
+	String sign;
+
+	public SporoPayReponseValidator(HttpServletRequest request)
+<span class="nc" id="L46">	{</span>
+<span class="nc" id="L47">		clientPrefix = request.getParameter(&quot;u_predcislo&quot;);</span>
+<span class="nc" id="L48">		clientAccount = request.getParameter(&quot;u_cislo&quot;);</span>
+<span class="nc" id="L49">		clientBankCode = request.getParameter(&quot;u_kbanky&quot;);</span>
+<span class="nc" id="L50">		ourAccountPrefix = request.getParameter(&quot;pu_predcislo&quot;);</span>
+<span class="nc" id="L51">		ourAccount = request.getParameter(&quot;pu_cislo&quot;);</span>
+<span class="nc" id="L52">		ourBankCode = request.getParameter(&quot;pu_kbanky&quot;);</span>
+<span class="nc" id="L53">		amount = request.getParameter(&quot;suma&quot;);</span>
+<span class="nc" id="L54">		currency = request.getParameter(&quot;mena&quot;);</span>
+<span class="nc" id="L55">		variableSymbol = request.getParameter(&quot;vs&quot;);</span>
+<span class="nc" id="L56">		specificSymbol = request.getParameter(&quot;ss&quot;);</span>
+<span class="nc" id="L57">		url = request.getParameter(&quot;url&quot;);</span>
+<span class="nc" id="L58">		params = request.getParameter(&quot;param&quot;);</span>
+<span class="nc" id="L59">		result = request.getParameter(&quot;result&quot;);</span>
+<span class="nc" id="L60">		realization = request.getParameter(&quot;real&quot;);</span>
+<span class="nc" id="L61">		sign = request.getParameter(&quot;SIGN2&quot;);</span>
+<span class="nc" id="L62">	}</span>
+
+	public boolean validate() throws InvalidSignatureException, InvalidBankResponceException
+	{
+<span class="nc" id="L66">		checkParameters();</span>
+<span class="nc" id="L67">		String signWeExpect = generateSign();</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (!signWeExpect.equalsIgnoreCase(sign))</span>
+<span class="nc" id="L70">			throw new InvalidSignatureException(&quot;Expected: &quot;+signWeExpect+&quot;, got: &quot;+sign);</span>
+
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		return &quot;OK&quot;.equalsIgnoreCase(realization) &amp;&amp; &quot;OK&quot;.equalsIgnoreCase(result);</span>
+	}
+
+	private String generateSign()
+	{
+<span class="nc" id="L77">		String toBeHashed = new StringBuilder().</span>
+<span class="nc" id="L78">			append(clientPrefix).</span>
+<span class="nc" id="L79">			append(';').append(clientAccount).</span>
+<span class="nc" id="L80">			append(';').append(clientBankCode).</span>
+<span class="nc" id="L81">			append(';').append(ourAccountPrefix).</span>
+<span class="nc" id="L82">			append(';').append(ourAccount).</span>
+<span class="nc" id="L83">			append(';').append(ourBankCode).</span>
+<span class="nc" id="L84">			append(';').append(amount).</span>
+<span class="nc" id="L85">			append(';').append(currency).</span>
+<span class="nc" id="L86">			append(';').append(variableSymbol).</span>
+<span class="nc" id="L87">			append(';').append(specificSymbol).</span>
+<span class="nc" id="L88">			append(';').append(url).</span>
+<span class="nc" id="L89">			append(';').append(params).</span>
+<span class="nc" id="L90">			append(';').append(result).</span>
+<span class="nc" id="L91">			append(';').append(realization).</span>
+<span class="nc" id="L92">			toString();</span>
+<span class="nc" id="L93">		return TripleDesHashCalculator.calculateHash(toBeHashed, getDecrypredKey(Constants.getString(&quot;basketPaymentSporoPayKey&quot;)));</span>
+	}
+
+
+	private void checkParameters() throws InvalidBankResponceException
+	{
+<span class="nc" id="L99">		List&lt;String&gt; parameters = Arrays.asList(clientPrefix, clientAccount, clientBankCode,</span>
+			ourAccountPrefix, ourAccount, ourBankCode, amount, currency, variableSymbol, specificSymbol,
+			url, params, result, realization, sign);
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		for (String parameter : parameters)</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			if (parameter == null)</span>
+<span class="nc" id="L105">				throw new InvalidBankResponceException();</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (!Arrays.asList(&quot;OK&quot;, &quot;NOK&quot;,&quot;ok&quot;,&quot;nok&quot;).contains(result))</span>
+<span class="nc" id="L108">			throw new InvalidBankResponceException();</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (!Arrays.asList(&quot;OK&quot;, &quot;NOK&quot;,&quot;ok&quot;,&quot;nok&quot;).contains(realization))</span>
+<span class="nc" id="L111">			throw new InvalidBankResponceException();</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (!ourAccount.equals(Constants.getString(&quot;basketPaymentSporoPayAccount&quot;)))</span>
+<span class="nc" id="L114">			throw new InvalidBankResponceException();</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (!ourAccountPrefix.equals(Constants.getString(&quot;basketPaymentSporoPayAccountPrefix&quot;)))</span>
+<span class="nc" id="L117">			throw new InvalidBankResponceException();</span>
+<span class="nc" id="L118">	}</span>
+
+	private String getDecrypredKey(String key)
+	{
+		try
+		{
+<span class="nc" id="L124">			Password password = new Password();</span>
+<span class="nc" id="L125">			return password.decrypt(key);</span>
+		}
+<span class="nc" id="L127">		catch(Exception e)</span>
+		{
+<span class="nc" id="L129">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L131">		return &quot;&quot;;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

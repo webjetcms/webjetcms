@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CardPayInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">CardPayInformation.java</span></div><h1>CardPayInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import java.util.Arrays;
+import java.util.Enumeration;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  CardPayInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 30.11.2009 10:33:18
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+public class CardPayInformation extends PaymentInformation
+{
+	CardPayInformation()
+<span class="nc" id="L27">	{</span>
+<span class="nc" id="L28">		this.merchantId = Constants.getString(&quot;basketPaymentTatraPayMid&quot;);</span>
+<span class="nc" id="L29">		this.key = getDecrypredKey(Constants.getString(&quot;basketPaymentTatraPayKey&quot;));</span>
+<span class="nc" id="L30">		this.constantSymbol = Integer.valueOf(Constants.getInt(&quot;basketPaymentTatraPayConstantSymbol&quot;));</span>
+<span class="nc" id="L31">	}</span>
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L35">		String confUrl = Constants.getString(&quot;basketPaymentTatraPayUrl&quot;);</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L37">			return confUrl;</span>
+		else
+<span class="nc" id="L39">			return &quot;https://moja.tatrabanka.sk/cgi-bin/e-commerce/start/e-commerce.jsp&quot;;</span>
+		//return &quot;http://epaymentsimulator.monogram.sk/TB_CardPay.aspx&quot;;
+	}
+	@Override
+	public String getReturnEmail()
+	{
+<span class="nc" id="L45">		return Constants.getString(&quot;basketPaymentTatraPayNotificationEmail&quot;);</span>
+	}
+	
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L51">		return true;</span>
+	}
+	
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (request.getAttribute(&quot;RURL&quot;) == null)</span>
+<span class="nc" id="L58">			throw new IllegalStateException(&quot;HttpServletRequest needs to have 'RURL'(return URL) attribute&quot;);</span>
+	
+<span class="nc" id="L60">		String buyerName = payment.getBuyerName();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if(Tools.isEmpty(buyerName))</span>
+<span class="nc" id="L62">			throw new IllegalStateException(&quot;Attribute 'Payment.buyerName' is required in CardPay&quot;);</span>
+		
+<span class="nc" id="L64">		buyerName = getBuyerNameFormatted(buyerName);</span>
+<span class="nc" id="L65">		StringBuilder form = new StringBuilder().</span>
+<span class="nc" id="L66">		append(&quot;&lt;FORM action='&quot;+getUrlString()+&quot;' METHOD='GET' name='payForm'&gt;&quot;).</span>
+<span class="nc" id="L67">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;PT\&quot; value=\&quot;CardPay\&quot; /&gt;&quot;).</span>
+<span class="nc" id="L68">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;MID\&quot; value='&quot;+getMerchantId()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L69">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;AMT\&quot; value='&quot;+payment.getAmountString()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L70">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;VS\&quot; value='&quot;+payment.getVariableSymbol()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L71">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CS\&quot; value='&quot;+payment.getConstantSymbol()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L72">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;RURL\&quot; value='&quot;+request.getAttribute(&quot;RURL&quot;)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L73">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;SIGN\&quot; value='&quot;+generateOutcomingSign(payment, request)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L74">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;CURR\&quot; value=\&quot;978\&quot; /&gt;&quot;).//978 = ISO EURO</span>
+<span class="nc" id="L75">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;IPC\&quot; value=\&quot;&quot;+request.getRemoteAddr()+&quot;\&quot; /&gt;&quot;).</span>
+<span class="nc" id="L76">			append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;NAME\&quot; value=\&quot;&quot;+buyerName+&quot;\&quot; /&gt;&quot;);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (Tools.isNotEmpty(getReturnEmail()))</span>
+<span class="nc" id="L78">			form.append(&quot;&lt;INPUT type=\&quot;hidden\&quot; NAME=\&quot;REM\&quot; value='&quot;+getReturnEmail()+&quot;' /&gt;&quot;);			</span>
+<span class="nc" id="L79">		form.append(&quot;&lt;/FORM&gt;&quot;);</span>
+<span class="nc" id="L80">		return form.toString();</span>
+	}	
+	
+	private String generateOutcomingSign(Payment payment, HttpServletRequest request)
+	{
+<span class="nc" id="L85">		StringBuilder stringToEncypher = new StringBuilder().</span>
+<span class="nc" id="L86">			append(getMerchantId()).</span>
+<span class="nc" id="L87">			append(payment.getAmountString()).</span>
+<span class="nc" id="L88">			append(&quot;978&quot;). //978 = ISO EURO</span>
+<span class="nc" id="L89">			append(payment.getVariableSymbol()).</span>
+<span class="nc" id="L90">			append(payment.getConstantSymbol()).</span>
+<span class="nc" id="L91">			append(request.getAttribute(&quot;RURL&quot;)).</span>
+<span class="nc" id="L92">			append(request.getRemoteAddr()).</span>
+<span class="nc" id="L93">			append(getBuyerNameFormatted(payment.getBuyerName()));</span>
+<span class="nc" id="L94">		return generateSign(stringToEncypher.toString());</span>
+	}
+	
+	private String generateSign(String stringToEncypher)
+	{
+<span class="nc" id="L99">		return DefaultHashCalculator.calculateHash(stringToEncypher, getKey());</span>
+	}
+	
+	
+	@Override
+	public boolean validateBankResponce(HttpServletRequest request) throws Exception
+	{
+<span class="nc" id="L106">		String signWeGot = null;</span>
+<span class="nc" id="L107">		String variableSymbol = null;</span>
+<span class="nc" id="L108">		String ac=&quot;&quot;;</span>
+<span class="nc" id="L109">		String result = null;</span>
+		
+<span class="nc" id="L111">		Enumeration&lt;?&gt; parameters = request.getParameterNames();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		while (parameters.hasMoreElements())</span>
+		{
+<span class="nc" id="L114">			String parameterName = parameters.nextElement().toString();</span>
+<span class="nc" id="L115">			String value = request.getParameter(parameterName);;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (&quot;SIGN&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L117">				signWeGot = value;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (&quot;VS&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L119">				variableSymbol = value;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (&quot;RES&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L121">				result = value;</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (&quot;AC&quot;.equalsIgnoreCase(parameterName))</span>
+<span class="nc" id="L123">				ac = value;</span>
+<span class="nc" id="L124">		}</span>
+		
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (Tools.isAnyEmpty(signWeGot, variableSymbol, result))</span>
+<span class="nc" id="L127">			throw new InvalidBankResponceException();</span>
+		
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (!Arrays.asList(&quot;OK&quot;, &quot;FAIL&quot;, &quot;TOUT&quot;).contains(result))</span>
+<span class="nc" id="L130">			throw new InvalidBankResponceException();</span>
+		
+<span class="nc" id="L132">		String signWeExpect = generateSign(variableSymbol + result + ac);</span>
+		
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (!signWeExpect.equals(signWeGot))</span>
+<span class="nc" id="L135">			throw new InvalidSignatureException(&quot;Expected: &quot;+signWeExpect+&quot;, got: &quot;+signWeGot);</span>
+		
+<span class="nc" id="L137">		return &quot;OK&quot;.equals(result);</span>
+	}
+	
+	private String getBuyerNameFormatted(String buyerName)
+	{
+<span class="nc" id="L142">		String retBuyerName = DB.internationalToEnglish(buyerName);</span>
+<span class="nc" id="L143">		retBuyerName = retBuyerName.substring(0,Math.min(30, retBuyerName.length()));</span>
+<span class="nc" id="L144">		return retBuyerName;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

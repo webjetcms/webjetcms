@@ -1,8 +1,8 @@
 
 <%@page import="java.util.Collection"%>
-<%@page import="sk.iway.iwcm.components.quiz.QuizBean"%>
+<%@page import="sk.iway.iwcm.components.quiz.jpa.QuizEntity"%>
 <%@page import="java.util.List"%>
-<%@page import="sk.iway.iwcm.components.quiz.QuizService"%>
+<%@page import="sk.iway.iwcm.components.quiz.rest.QuizService"%>
 <%
 	sk.iway.iwcm.Encoding
 			.setResponseEnc(request, response, "text/html");
@@ -32,7 +32,7 @@ taglib
 	request.setAttribute("descKey", "components.quiz.desc");
 	request.setAttribute("iconLink", "/components/quiz/editoricon.png");
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
-	Collection<QuizBean> quizes = new QuizService().getAll();
+	Collection<QuizEntity> quizes = new QuizService().getAll();
 	if (Tools.isNotEmpty(paramPageParams))
 	{
 		request.setAttribute("includePageParams", paramPageParams);
@@ -51,8 +51,7 @@ taglib
 
 
 	function getQuiz() {
-		return "!INCLUDE(/components/quiz/quiz.jsp, quizId="
-				+ document.textForm.quizId.value + ")!";
+		return "!INCLUDE(/components/quiz/quiz.jsp, quizId=" + document.textForm.quizId.value + ", showAllAnswers=" + document.textForm.showAllAnswers.checked + ")!";
 	}
 
 	function Ok() {
@@ -69,8 +68,8 @@ taglib
     function reloadSelect()
 	{
 	    $.get('/admin/rest/quiz/all', function(data) {
-	        console.log('reloadSelect');
-	        console.log(data);
+	        //console.log('reloadSelect');
+	        //console.log(data);
 
             selectedQuizId = $('#quizIdSelect').val();
 
@@ -94,7 +93,7 @@ taglib
 <div class="box_tab box_tab_thin left">
 	<ul class="tab_menu" id="Tabs" style="background-color:transparent;">
 		<li class="first openFirst"><a href="#" onclick="reloadSelect();showHideTab('1');" id="tabLink1"><iwcm:text key="components.universalComponentDialog.title"/></a></li>
-		<li class="last"><a href="#" onclick="loadComponentIframe();showHideTab('2');" id="tabLink2"><iwcm:text key="components.quiz.editorComponent.quiz"/></a></li>
+		<li class="last"><a href="#" onclick="loadComponentIframe();showHideTab('2');" id="tabLink2"><iwcm:text key="components.quiz.title"/></a></li>
 	</ul>
 </div>
 
@@ -107,16 +106,20 @@ taglib
 							key="components.quiz.editorComponent.quiz" />:</td>
 					<td>
 						<select id="quizIdSelect" name="quizId">
-							<option value="0">-</option>
 						<%
-						for(QuizBean q : quizes) {
+						for(QuizEntity q : quizes) {
 						%>
 							<option value="<%=q.getId() %>" <%=(q.getId() == pageParams.getIntValue("quizId", 0) ? "selected=\"selected\"" : "") %>><%=q.getName() %></option>
 						<% } %>
 						</select>
 					</td>
 				</tr>
+
 			</table>
+			<div style="display: flex; padding-top: 20px;">
+				<input type="checkbox" id="showAllAnswers"/>
+				<label for="showAllAnswers"> <iwcm:text key="components.quiz.editor_component.show_all"/> </label>
+			</div>
 		</form>
 	</div>
 

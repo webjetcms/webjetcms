@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CombineAttributeModelProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component.dialect</a> &gt; <span class="el_source">CombineAttributeModelProcessor.java</span></div><h1>CombineAttributeModelProcessor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component.dialect;
+
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.model.IModel;
+import org.thymeleaf.model.IModelFactory;
+import org.thymeleaf.model.IOpenElementTag;
+import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.model.IStandaloneElementTag;
+import org.thymeleaf.model.ITemplateEvent;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Trieda CombineAttributeTagProcessor pre iwcm tag s nazvom combine
+ * Tag &lt;combine data-iwcm-combine=&quot;&quot;/&gt; sluzi na vlozenie JS a CSS do sablon
+ * parsuje aj BODY tagu, kde hlada script a link tagy a berie z nich linky
+ * je to tak preto, aby sa to dalo pouzit aj bez WJ s npm run start
+ */
+public class CombineAttributeModelProcessor extends AbstractIwcmAttributeModelProcessor {
+    private static final String ATTR_NAME = &quot;combine&quot;;
+    private static final int PRECEDENCE = 10002;
+
+    public CombineAttributeModelProcessor(String dialectPrefix) {
+<span class="fc" id="L30">        super(dialectPrefix, ATTR_NAME, PRECEDENCE);</span>
+<span class="fc" id="L31">    }</span>
+
+    @Override
+    protected void processTag(ITemplateContext context, IModel model, IProcessableElementTag baseTag, HttpServletRequest request) {
+
+<span class="fc" id="L36">        final IModelFactory modelFactory = context.getModelFactory();</span>
+
+        //zozbieraj zoznam liniek
+<span class="fc" id="L39">        List&lt;String&gt; links = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for (int i=0; i&lt;model.size(); i++) {</span>
+<span class="fc" id="L41">            final ITemplateEvent event = model.get(i);</span>
+            //Logger.debug(CombineAttributeModelProcessor.class, &quot;event=&quot;+event);
+
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">            if (event instanceof IStandaloneElementTag) {</span>
+<span class="fc" id="L45">                IStandaloneElementTag tag = (IStandaloneElementTag)event;</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">                if (&quot;link&quot;.equalsIgnoreCase(tag.getElementCompleteName())) {</span>
+<span class="nc" id="L47">                    links.add(tag.getAttributeValue(&quot;href&quot;));</span>
+                }
+<span class="pc bnc" id="L49" title="All 2 branches missed.">            } else if (event instanceof IOpenElementTag) {</span>
+<span class="nc" id="L50">                IOpenElementTag tag = (IOpenElementTag)event;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">                if (&quot;script&quot;.equalsIgnoreCase(tag.getElementCompleteName())) {</span>
+<span class="nc" id="L52">                    links.add(tag.getAttributeValue(&quot;src&quot;));</span>
+                }
+            }
+        }
+
+<span class="fc" id="L57">        model.reset();</span>
+
+        //mame zoznam liniek vnutri v tagu
+
+        //Logger.debug(CombineAttributeModelProcessor.class, &quot;======&gt; LINKS.size=&quot;+links.size()+&quot; words=&quot;+request.getParameter(&quot;words&quot;));
+
+<span class="fc" id="L63">        String lng = ProcessorTools.getLng(request);</span>
+<span class="fc" id="L64">        boolean combine = isCombine(request);</span>
+<span class="fc" id="L65">        long v = ProcessorTools.getVersion();</span>
+
+<span class="fc" id="L67">        List&lt;String&gt; set = getSetFiles(baseTag, context, request, links);</span>
+<span class="pc bpc" id="L68" title="2 of 4 branches missed.">        if (set == null || set.isEmpty()) {</span>
+<span class="nc" id="L69">            Logger.error(CombineAttributeModelProcessor.class, &quot;Set is null&quot;);</span>
+<span class="nc" id="L70">            return;</span>
+        }
+
+        // pridanie systemovych JS A CSS suborov
+<span class="fc" id="L74">        set = addSystemFiles(set);</span>
+        // vyfiltrovanie CSS suborov
+<span class="fc" id="L76">        List&lt;String&gt; css = set.stream().filter(s -&gt; s.endsWith(&quot;.css&quot;)).collect(Collectors.toList());</span>
+        // vyfiltrovanie JS suborov
+<span class="fc bfc" id="L78" title="All 4 branches covered.">        List&lt;String&gt; js = set.stream().filter(s -&gt; s.endsWith(&quot;.js&quot;) || s.endsWith(&quot;.js.jsp&quot;)).collect(Collectors.toList());</span>
+
+        // ak je povoleny combine
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (combine) {</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (!css.isEmpty()) {</span>
+<span class="fc" id="L83">                addCssTag(model, modelFactory, &quot;/components/_common/combine.jsp?t=css&amp;amp;f=&quot;+String.join(&quot;,&quot;, css)+&quot;&amp;amp;v=&quot;+v+&quot;&amp;amp;lng=&quot;+lng);</span>
+            }
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if (!js.isEmpty()) {</span>
+<span class="fc" id="L86">                addScriptTag(model, modelFactory, &quot;/components/_common/combine.jsp?t=js&amp;amp;f=&quot;+String.join(&quot;,&quot;, js)+&quot;&amp;amp;v=&quot;+v+&quot;&amp;amp;lng=&quot;+lng);</span>
+            }
+        }
+        // ak nie je povoleny combine
+        else
+        {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (!css.isEmpty()) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                for (String s : css) {</span>
+<span class="nc" id="L94">                    addCssTag(model, modelFactory, s+&quot;?v=&quot;+v+&quot;&amp;amp;lng=&quot;+lng);</span>
+<span class="nc" id="L95">                }</span>
+            }
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (!js.isEmpty()) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                for (String s : js) {</span>
+<span class="nc" id="L99">                    addScriptTag(model, modelFactory, s+&quot;?v=&quot;+v+&quot;&amp;amp;lng=&quot;+lng);</span>
+<span class="nc" id="L100">                }</span>
+            }
+        }
+<span class="fc" id="L103">    }</span>
+
+    /**
+     * Metoda pre pridanie systemovych suborov do zoznamu na vlozenie
+     * @param set List&lt;String&gt;
+     * @return List&lt;String&gt;
+     */
+    private static List&lt;String&gt; addSystemFiles(List&lt;String&gt; set) {
+<span class="fc" id="L111">        List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (String s : set) {</span>
+            // pridanie combine soborov z konstanty
+<span class="fc" id="L114">            String constValue = Constants.getString(&quot;combine-&quot; + s);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(constValue)) {</span>
+<span class="nc" id="L116">                result.add(constValue);</span>
+<span class="nc" id="L117">                continue;</span>
+            }
+
+<span class="fc" id="L120">            result.add(s);</span>
+<span class="fc" id="L121">        }</span>
+
+<span class="fc" id="L123">        return result;</span>
+    }
+
+    /**
+     * Metoda pre overenie ci je povolene kombinovat subory cez combine.jsp
+     * @param request HttpServletRequest
+     * @return boolean
+     */
+    private static boolean isCombine(HttpServletRequest request) {
+<span class="fc" id="L132">        boolean combine = true;</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+        {
+<span class="nc" id="L135">            combine = false;</span>
+<span class="nc" id="L136">            request.getSession().setAttribute(&quot;combineEnabled&quot;, &quot;false&quot;);</span>
+        }
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+        {
+<span class="nc" id="L140">            combine = true;</span>
+<span class="nc" id="L141">            request.getSession().removeAttribute(&quot;combineEnabled&quot;);</span>
+        }
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (request.getSession().getAttribute(&quot;combineEnabled&quot;)!=null) combine = false;</span>
+<span class="fc" id="L144">        return combine;</span>
+    }
+
+    /**
+     * Metoda pre ziskanie suborov na vlozenie
+     * @return List&lt;String&gt;
+     */
+    private static List&lt;String&gt; getSetFiles(IProcessableElementTag combineTag, ITemplateContext context, HttpServletRequest request, List&lt;String&gt; bodyLinks) {
+
+<span class="fc" id="L153">        final String basePath = ProcessorTools.getAttributeValue(combineTag, context, &quot;basePath&quot;);</span>
+<span class="fc" id="L154">        final String baseCss = (String)request.getAttribute(&quot;base_css_link_nocombine&quot;);</span>
+<span class="fc" id="L155">        final String cssLink = (String)request.getAttribute(&quot;css_link_nocombine&quot;);</span>
+<span class="fc" id="L156">        String combineAttribute = ProcessorTools.getAttributeValue(combineTag, context, &quot;data-iwcm-combine&quot;);</span>
+
+<span class="fc" id="L158">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
+        //prve musia ist body linky, tam je typicky jquery
+<span class="fc" id="L160">        list.addAll(bodyLinks);</span>
+        //az potom specificke pre WJ
+<span class="fc" id="L162">        list.addAll(Tools.getStringListValue(Tools.getTokens(combineAttribute, &quot;\n&quot;)));</span>
+
+<span class="fc" id="L164">        list = list.stream().map(l -&gt; {</span>
+<span class="fc" id="L165">            l = removeCrLf(l.trim());</span>
+<span class="fc" id="L166">            l = Tools.replace(l, &quot;USERLANG&quot;, Tools.replace(ProcessorTools.getLng(request), &quot;cz&quot;, &quot;cs&quot;));</span>
+
+<span class="pc bpc" id="L168" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(baseCss) &amp;&amp; l.contains(&quot;base_css_link&quot;)) {</span>
+<span class="nc" id="L169">                l = Tools.replace(l, &quot;base_css_link&quot;, removeCrLf(baseCss));</span>
+            }
+
+<span class="pc bpc" id="L172" title="3 of 4 branches missed.">            if (Tools.isNotEmpty(cssLink) &amp;&amp; l.contains(&quot;css_link&quot;)) {</span>
+<span class="nc" id="L173">                l = Tools.replace(l, &quot;css_link&quot;, removeCrLf(cssLink));</span>
+            }
+
+<span class="pc bpc" id="L176" title="1 of 6 branches missed.">            if (Tools.isNotEmpty(basePath) &amp;&amp; (l.endsWith(&quot;.js&quot;) || l.endsWith(&quot;.css&quot;))) {</span>
+<span class="pc bpc" id="L177" title="2 of 4 branches missed.">                if (l.startsWith(basePath)==false &amp;&amp; l.startsWith(&quot;/templates/&quot;)==false) l = basePath + l;</span>
+            }
+
+<span class="fc bfc" id="L180" title="All 2 branches covered.">            if (l.contains(&quot;page_functions&quot;)) {</span>
+                //ak obsahuje page_functions predpokladame, ze je uz vlozene aj jQuery, musime poznacit aby sa nevlozilo pri doc_data
+<span class="fc" id="L182">                Tools.insertJQuery(request);</span>
+            }
+
+<span class="fc" id="L185">            return l;</span>
+<span class="fc" id="L186">        }).collect(Collectors.toList());</span>
+
+<span class="fc" id="L188">        return list;</span>
+    }
+
+    /**
+     * Metoda pre odstranenie nechcenych znakov z vyrazu
+     * @param str String
+     * @return String
+     */
+    private static String removeCrLf(String str)
+    {
+<span class="fc" id="L198">        String result = Tools.replace(str, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L199">        result = Tools.replace(result, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L200">        result = Tools.replace(result, &quot; &quot;, &quot;&quot;);</span>
+<span class="fc" id="L201">        result = Tools.replace(result, &quot;\t&quot;, &quot;&quot;);</span>
+<span class="fc" id="L202">        result = Tools.replace(result, &quot;,,&quot;, &quot;,&quot;);</span>
+        //ked nie je pagefunctions na konci a je to vlozene cez EL tak sa spojja dve dokopy (odstrani sa enter) a vtedy sa to posaha
+<span class="fc" id="L204">        result = Tools.replace(result, &quot;page_functions.js.jsp/&quot;, &quot;page_functions.js.jsp,/&quot;);</span>
+<span class="fc" id="L205">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

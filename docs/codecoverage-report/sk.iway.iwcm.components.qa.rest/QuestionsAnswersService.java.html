@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionsAnswersService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.qa.rest</a> &gt; <span class="el_source">QuestionsAnswersService.java</span></div><h1>QuestionsAnswersService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.qa.rest;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.qa.jpa.QuestionsAnswersEntity;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
+
+@Service
+<span class="fc" id="L17">public class QuestionsAnswersService {</span>
+
+	/**
+	 * Odosle odpoved navstevnikovi stranky
+	 * @param qa
+	 * @param request
+	 * @return
+	 */
+    public boolean sendAnswerEmail(QuestionsAnswersEntity qa, HttpServletRequest request) {
+
+<span class="fc" id="L27">        String lng =  (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="fc" id="L28">        Prop prop = Prop.getInstance(Constants.getServletContext(), lng, false);</span>
+
+        try {
+<span class="fc" id="L31">			String message = &quot;&lt;p&gt;&quot;+prop.getText(&quot;components.qa.add_action.answer_to_your_question&quot;) + &quot;:&lt;br/&gt;&lt;/p&gt;&quot;;</span>
+
+<span class="fc" id="L33">			String question = qa.getQuestion().trim();</span>
+<span class="fc" id="L34">			String answer = qa.getAnswerToEmail().trim();</span>
+<span class="fc" id="L35">			String sender = qa.getToName().trim();</span>
+<span class="fc" id="L36">			String recipient = qa.getFromName().trim();</span>
+
+<span class="pc bpc" id="L38" title="4 of 8 branches missed.">			if (Tools.isEmail(qa.getToEmail()) &amp;&amp; Tools.isEmail(qa.getFromEmail()) &amp;&amp; Tools.isNotEmpty(answer) &amp;&amp; answer.length()&gt;10) {</span>
+
+<span class="fc" id="L40">				message += &quot;&lt;p&gt;&quot; + prop.getText(&quot;components.qa.add_action.question&quot;) + &quot;:&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&quot;+question+&quot;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&quot;;</span>
+<span class="fc" id="L41">				message += &quot;&lt;p&gt;&quot; + prop.getText(&quot;components.qa.add_action.answer&quot;) + &quot;:&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&quot;+answer+&quot;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;&quot;;</span>
+
+<span class="fc" id="L43">				message += &quot;&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&quot; + prop.getText(&quot;components.qa.add_action.footer&quot;) +  &quot; &quot; + sender + &quot;&lt;/p&gt;&quot;;</span>
+
+				//bacha, toto je odpoved, takze toName je vlastne sender
+				//a fromName je recipient
+
+<span class="fc" id="L48">				String toName = qa.getToName();</span>
+<span class="pc bpc" id="L49" title="2 of 4 branches missed.">				if (toName == null || toName.length()&lt;2)</span>
+				{
+<span class="nc" id="L51">					toName = qa.getToEmail();</span>
+				}
+<span class="fc" id="L53">				String subject = prop.getText(&quot;components.qa.add_action.answer_to_your_question&quot;);</span>
+
+				//tu si treba uvedomit, ze from je navstevnik webu a to je admin, ktory odpoveda na otazku
+<span class="fc" id="L56">				SendMail.send(toName, qa.getToEmail(), qa.getFromEmail(), subject, message);</span>
+
+				//daj do requestu answer
+<span class="fc" id="L59">				String email = &quot;&lt;table border=0&gt;&lt;tr&gt;&lt;td&gt;&quot;+prop.getText(&quot;components.qa.add_action.sender&quot;)+&quot;: &lt;/td&gt;&lt;td&gt;&quot;+sender+&quot; &amp;lt;&quot;+qa.getToEmail()+&quot;&amp;gt;&lt;/td&gt;&lt;/tr&gt;&quot;;</span>
+<span class="fc" id="L60">				email += &quot;&lt;tr&gt;&lt;td&gt;&quot;+prop.getText(&quot;components.qa.add_action.recipient&quot;)+&quot;: &lt;/td&gt;&lt;td&gt;&quot;+recipient+&quot; &amp;lt;&quot;+qa.getFromEmail()+&quot;&amp;gt;&lt;/td&gt;&lt;/tr&gt;&quot;;</span>
+<span class="fc" id="L61">				email += &quot;&lt;tr&gt;&lt;td&gt;&quot;+prop.getText(&quot;components.qa.add_action.subject&quot;)+&quot;: &lt;/td&gt;&lt;td&gt;&quot;+subject+&quot;&lt;/td&gt;&lt;/tr&gt;&quot;;</span>
+<span class="fc" id="L62">				email += &quot;&lt;tr&gt;&lt;td&gt;&quot;+prop.getText(&quot;components.qa.add_action.email_body&quot;)+&quot;: &lt;/td&gt;&lt;td&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;&quot;;</span>
+<span class="fc" id="L63">				email += &quot;&lt;tr&gt;&lt;td colspan=2&gt;&quot;+Tools.replace(message, &quot;\n&quot;, &quot;&lt;br&gt;&quot;)+&quot;&lt;/td&gt;&lt;/tr&gt;&quot;;</span>
+<span class="fc" id="L64">				email += &quot;&lt;/table&gt;&quot;;</span>
+
+<span class="fc" id="L66">				request.setAttribute(&quot;answer&quot;, email);</span>
+			}
+
+<span class="fc" id="L69">			return true;</span>
+		}
+<span class="nc" id="L71">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L73">			Logger.error(QuestionsAnswersService.class, ex);</span>
+<span class="nc" id="L74">			return false;</span>
+		}
+    }
+
+	/**
+	 * Ziska hodnotu poradia usporiadania pre novy zaznam
+	 * @param groupName
+	 * @return
+	 */
+	public int getNewPriority(String groupName){
+<span class="fc" id="L84">		return new SimpleQuery().forInt(&quot;select max(sort_priority) from questions_answers where group_name=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), groupName)+10;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

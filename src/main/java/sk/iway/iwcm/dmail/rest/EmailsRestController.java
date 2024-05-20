@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.Sender;
@@ -62,9 +63,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
         if(selectType != null && !selectType.isEmpty()) {
             if(selectType.equals("recipients")) {
-                page = new DatatablePageImpl<>(emailsRepository.findAllByCampainId(campainId, pageable));
+                page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndDomainId(campainId, CloudToolsForCore.getDomainId() , pageable));
             } else if(selectType.equals("opens")) {
-                page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndSeenDateIsNotNull(campainId, pageable));
+                page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndDomainIdAndSeenDateIsNotNull(campainId, CloudToolsForCore.getDomainId(), pageable));
             }
         } else {
             page = new DatatablePageImpl<>(emailsRepository.findAll(pageable));
@@ -103,7 +104,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         CampaingsEntity campaign = (campainId > 0L) ? campaingsRepository.getById(campainId) : null;
 
         //Load allready pushed emails in DB
-        for (String email : emailsRepository.getAllCampainEmails(CampaingsRestController.getCampaignId(campaign, getUser()))) {
+        for (String email : emailsRepository.getAllCampainEmails( CampaingsRestController.getCampaignId(campaign, getUser()), CloudToolsForCore.getDomainId()) ) {
             emailsTable.add(email.toLowerCase());
         }
 
@@ -221,6 +222,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         entity.setCreateDate(new Date());
         entity.setRetry(0);
 
+        //Set domainId
+        entity.setDomainId( CloudToolsForCore.getDomainId() );
+
         if (entity.getId()==null || entity.getId().longValue()<1) {
             entity.setDisabled(true);
         }
@@ -228,7 +232,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
     @Override
     public boolean beforeDelete(EmailsEntity entity) {
-        statClicksRepository.deleteByEmailId(entity.getId());
+        statClicksRepository.deleteByEmailId( entity.getId() );
         return true;
     }
 

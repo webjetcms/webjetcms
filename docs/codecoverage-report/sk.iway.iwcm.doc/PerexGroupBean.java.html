@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">PerexGroupBean.java</span></div><h1>PerexGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+;
+
+/**
+ *  Vlastnosti perex skupiny
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      $Date: 2007/09/07 13:39:29 $
+ *@modified     $Date: 2007/09/07 13:39:29 $
+ */
+<span class="fc" id="L20">public class PerexGroupBean</span>
+{
+   private int perexGroupId;
+   private String perexGroupName;
+   private String[] relatedPages;
+
+   /**
+    * V akych skupinach je mozne perex skupinu pouzit
+    */
+   private String availableGroups;
+
+
+	/**
+	 * @return Returns the perexGroupName.
+	 */
+	public String getPerexGroupName()
+	{
+<span class="fc" id="L37">		return perexGroupName;</span>
+	}
+
+	public String getPerexGroupNameId()
+	{
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;perexGroupIncludeId&quot;)==false) return getPerexGroupName();</span>
+
+<span class="fc" id="L44">		return perexGroupName+&quot; (id:&quot;+perexGroupId+&quot;)&quot;;</span>
+	}
+
+	/**
+	 * @param perexGroupName The perexGroupName to set.
+	 */
+	public void setPerexGroupName(String perexGroupName)
+	{
+<span class="fc" id="L52">		this.perexGroupName = perexGroupName;</span>
+<span class="fc" id="L53">	}</span>
+
+	/**
+	 * @return Returns the relatedPages.
+	 */
+	public String[] getRelatedPages()
+	{
+<span class="fc" id="L60">		return relatedPages;</span>
+	}
+
+	/**
+	 * @param relatedPages The relatedPages to set.
+	 */
+	public void setRelatedPages(String pages)
+	{
+		int size;
+		StringTokenizer st;
+<span class="fc" id="L70">		int index = 0;</span>
+<span class="fc" id="L71">		String[] relatedPages = new String[0];</span>
+
+		try
+		{
+
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(pages))</span>
+			{
+<span class="nc" id="L78">				st = new StringTokenizer(pages, &quot;,&quot;);</span>
+<span class="nc" id="L79">				size = st.countTokens();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (size &gt; 0)</span>
+				{
+					//Logger.println(this,&quot;-------\nRelatedPages: &quot;+pages);
+<span class="nc" id="L83">					relatedPages = new String[size];</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
+					{
+<span class="nc bnc" id="L86" title="All 2 branches missed.">						if ( index &lt; size)</span>
+						{
+<span class="nc" id="L88">							relatedPages[index] = st.nextToken().trim();</span>
+							//Logger.println(this,relatedPages[index]);
+<span class="nc" id="L90">							index++;</span>
+						}
+					}
+				}
+			}
+
+			//relatedPages = RelatedPagesDB.getTokens(pages, &quot;,&quot;);
+		}
+<span class="nc" id="L98">		catch (Exception e)</span>
+		{
+<span class="nc" id="L100">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L101">		}</span>
+<span class="fc" id="L102">		this.relatedPages = relatedPages;</span>
+<span class="fc" id="L103">	}</span>
+
+	/**
+	 * @return Returns the perexGroupId.
+	 */
+	public int getPerexGroupId()
+	{
+<span class="fc" id="L110">		return perexGroupId;</span>
+	}
+	/**
+	 * @param perexGroupId The perexGroupId to set.
+	 */
+	public void setPerexGroupId(int perexGroupId)
+	{
+<span class="fc" id="L117">		this.perexGroupId = perexGroupId;</span>
+<span class="fc" id="L118">	}</span>
+
+	public String getAvailableGroups()
+	{
+<span class="fc" id="L122">		return availableGroups;</span>
+	}
+
+	public int[] getAvailableGroupsInt()
+	{
+<span class="fc" id="L127">		return Tools.getTokensInt(availableGroups, &quot;,&quot;);</span>
+	}
+
+	public void setAvailableGroups(String availableGroups)
+	{
+<span class="fc" id="L132">		this.availableGroups = availableGroups;</span>
+<span class="fc" id="L133">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

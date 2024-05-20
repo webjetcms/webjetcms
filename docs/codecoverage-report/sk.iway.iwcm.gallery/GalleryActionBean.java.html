@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">GalleryActionBean.java</span></div><h1>GalleryActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.StreamingResolution;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.findexer.FileIndexer;
+import sk.iway.iwcm.findexer.ResultBean;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.stripes.BindPageParams;
+import sk.iway.iwcm.system.stripes.PageParamOnly;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.utils.Pair;
+
+@BindPageParams
+<span class="fc" id="L29">public class GalleryActionBean extends WebJETActionBean</span>
+{
+	@PageParamOnly
+	String perexGroup;
+
+<span class="fc" id="L34">	@PageParamOnly</span>
+	String dir = &quot;/images/gallery&quot;;
+
+	@PageParamOnly
+	boolean recursive;
+
+<span class="fc" id="L40">	@PageParamOnly</span>
+	String orderBy = &quot;title&quot;;
+
+<span class="fc" id="L43">	@PageParamOnly</span>
+	String orderDirection = &quot;asc&quot;;
+
+	@PageParamOnly
+	int itemsOnPage;
+
+<span class="fc" id="L49">	@PageParamOnly</span>
+	String style = &quot;photoSwipe&quot;;
+
+	List&lt;GalleryBean&gt; photoList;
+	int itemsCount;
+
+	private String img;
+	private int width;
+	private int height;
+	private String virtualPath;
+
+	@PageParamOnly
+	private boolean shortDescription;
+
+	@PageParamOnly
+	private boolean longDescription;
+
+	@PageParamOnly
+	private boolean author;
+
+<span class="fc" id="L69">	@PageParamOnly</span>
+	private int imagesInRow = -1;
+
+	@PageParamOnly
+	private boolean thumbsShortDescription;
+
+	@DefaultHandler
+	public Resolution defaultEvent()
+	{
+<span class="fc" id="L78">		String lng = PageLng.getUserLng(getRequest());</span>
+<span class="fc" id="L79">		photoList = GalleryDB.getImages(dir, recursive, lng, perexGroup, orderBy, orderDirection, getRequest());</span>
+
+<span class="fc" id="L81">		int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+<span class="fc" id="L82">		int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), -1);</span>
+
+<span class="fc" id="L84">		String uploadSubdir = UploadFileTools.getPageUploadSubDir(docId, groupId, null, &quot;/images/gallery&quot;);</span>
+<span class="fc" id="L85">		IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">		if (&quot;/images/gallery&quot;.equals(dir))</span>
+		{
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if (uploadDirFile.exists()==false)</span>
+			{
+<span class="nc" id="L90">				boolean created = uploadDirFile.mkdirs();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (created) dir = uploadSubdir;</span>
+<span class="nc" id="L92">			}</span>
+			else
+			{
+<span class="nc" id="L95">				dir = uploadSubdir;</span>
+			}
+		}
+
+
+<span class="fc" id="L100">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+	}
+
+	public String getPerexGroup()
+	{
+<span class="fc" id="L105">		return perexGroup;</span>
+	}
+
+	public void setPerexGroup(String perexGroup)
+	{
+<span class="fc" id="L110">		this.perexGroup = perexGroup;</span>
+<span class="fc" id="L111">	}</span>
+
+	public String getDir()
+	{
+<span class="fc" id="L115">		return dir;</span>
+	}
+
+	public void setDir(String dir)
+	{
+<span class="fc" id="L120">		this.dir = dir;</span>
+<span class="fc" id="L121">	}</span>
+
+	public boolean isRecursive()
+	{
+<span class="fc" id="L125">		return recursive;</span>
+	}
+
+	public void setRecursive(boolean recursive)
+	{
+<span class="fc" id="L130">		this.recursive = recursive;</span>
+<span class="fc" id="L131">	}</span>
+
+	public String getOrderBy()
+	{
+<span class="fc" id="L135">		return orderBy;</span>
+	}
+
+	public void setOrderBy(String orderBy)
+	{
+<span class="fc" id="L140">		this.orderBy = orderBy;</span>
+<span class="fc" id="L141">	}</span>
+
+	public String getOrderDirection()
+	{
+<span class="fc" id="L145">		return orderDirection;</span>
+	}
+
+	public void setOrderDirection(String orderDirection)
+	{
+<span class="fc" id="L150">		this.orderDirection = orderDirection;</span>
+<span class="fc" id="L151">	}</span>
+
+	public List&lt;GalleryBean&gt; getPhotoList()
+	{
+<span class="fc" id="L155">		return photoList;</span>
+	}
+
+	public void setPhotoList(List&lt;GalleryBean&gt; photoList)
+	{
+<span class="nc" id="L160">		this.photoList = photoList;</span>
+<span class="nc" id="L161">	}</span>
+
+	public boolean getPagination()
+	{
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		return itemsOnPage &gt; 0;</span>
+	}
+
+	public int getItemsCount()
+	{
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">		if (photoList != null) {</span>
+<span class="fc" id="L171">			return photoList.size();</span>
+		}
+<span class="nc" id="L173">		return itemsCount;</span>
+	}
+
+	public void setItemsCount(int itemsCount)
+	{
+<span class="nc" id="L178">		this.itemsCount = itemsCount;</span>
+<span class="nc" id="L179">	}</span>
+
+	public int getItemsOnPage()
+	{
+<span class="fc" id="L183">		return itemsOnPage;</span>
+	}
+
+	public void setItemsOnPage(int itemsOnPage)
+	{
+<span class="fc" id="L188">		this.itemsOnPage = itemsOnPage;</span>
+<span class="fc" id="L189">	}</span>
+
+	public String getStyle()
+	{
+<span class="fc" id="L193">		return style;</span>
+	}
+
+	public void setStyle(String style)
+	{
+<span class="fc" id="L198">		this.style = style;</span>
+<span class="fc" id="L199">	}</span>
+
+	public List&lt;Pair&lt;String, String&gt;&gt; getStyles()
+	{
+<span class="fc" id="L203">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="fc" id="L204">		List&lt;Pair&lt;String, String&gt;&gt; result = new LinkedList&lt;&gt;();</span>
+
+<span class="fc" id="L206">		result.add(new Pair&lt;&gt;(&quot;prettyPhoto&quot;, prop.getText(&quot;components.gallery.visual_style.prettyPhoto&quot;)));</span>
+<span class="fc" id="L207">		result.add(new Pair&lt;&gt;(&quot;photoSwipe&quot;, prop.getText(&quot;components.gallery.visual_style.photoSwipe&quot;)));</span>
+
+		//preskumaj adresar ci tam nieco nie je
+<span class="fc" id="L210">		IwcmFile[] files = new IwcmFile(Tools.getRealPath(&quot;/components/&quot; + Constants.getInstallName() + &quot;/gallery/&quot;)).listFiles();</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">		for (IwcmFile f : files)</span>
+		{
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (f.getName().startsWith(&quot;gallery-&quot;)==false) continue;</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">			if (f.getName().contains(&quot;-prettyPhoto.jsp&quot;) || f.getName().contains(&quot;-photoSwipe.jsp&quot;)) continue;</span>
+
+			try
+			{
+<span class="nc" id="L218">				String name = f.getName().substring(&quot;gallery-&quot;.length(), f.getName().length()-4);</span>
+<span class="nc" id="L219">				addPair(name, result, prop);</span>
+			}
+<span class="nc" id="L221">			catch (Exception e)</span>
+			{
+<span class="nc" id="L223">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L224">			}</span>
+		}
+
+		//over ci je tam ten co je zadany
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(getStyle()))</span>
+		{
+<span class="fc" id="L230">			boolean found = false;</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">			for (Pair&lt;String, String&gt; pair : result)</span>
+			{
+<span class="fc bfc" id="L233" title="All 2 branches covered.">				if (pair.first.equals(getStyle())) found = true;</span>
+<span class="fc" id="L234">			}</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">			if (found == false)</span>
+			{
+<span class="nc" id="L237">				addPair(getStyle(), result, prop);</span>
+			}
+		}
+
+<span class="fc" id="L241">		return result;</span>
+	}
+
+	private void addPair(String name, List&lt;Pair&lt;String, String&gt;&gt; result, Prop prop)
+	{
+<span class="nc" id="L246">		String desc = prop.getText(&quot;components.gallery.visual_style.&quot;+name);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		if (desc.startsWith(&quot;components.gallery&quot;)) desc = name;</span>
+
+<span class="nc" id="L249">		result.add(new Pair&lt;&gt;(name, desc));</span>
+<span class="nc" id="L250">	}</span>
+
+	public boolean getAlsoTags()
+	{
+<span class="fc" id="L254">		return Tools.isNotEmpty(perexGroup);</span>
+	}
+
+	public Resolution saveImage()
+	{
+<span class="nc" id="L259">		JSONObject result = new JSONObject();</span>
+
+		try {
+<span class="nc" id="L262">			List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if(Tools.isEmpty(img)) {</span>
+<span class="nc" id="L265">				errors.add(&quot;Img can not be empty&quot;);</span>
+			}
+
+<span class="nc bnc" id="L268" title="All 2 branches missed.">			if(Tools.isEmpty(virtualPath)) {</span>
+<span class="nc" id="L269">				errors.add(&quot;VirtualPath can not be empty&quot;);</span>
+			}
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if(width == 0) {</span>
+<span class="nc" id="L273">				errors.add(&quot;Width can not be zero&quot;);</span>
+			}
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">			if(height == 0) {</span>
+<span class="nc" id="L277">				errors.add(&quot;Height can not be zero&quot;);</span>
+			}
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">			if (errors.size() &gt; 0) {</span>
+<span class="nc" id="L281">				result.put(&quot;errors&quot;, new JSONArray(errors));</span>
+<span class="nc" id="L282">				result.put(&quot;result&quot;, false);</span>
+
+<span class="nc" id="L284">				return new StreamingResolution(&quot;application/json&quot;, result.toString());</span>
+			}
+
+
+<span class="nc" id="L288">			String filename = img.substring(img.lastIndexOf('/') + 1);</span>
+<span class="nc" id="L289">			String extension = filename.substring(filename.lastIndexOf('.') + 1);</span>
+
+<span class="nc" id="L291">			String file = virtualPath + &quot;/&quot; + filename;</span>
+<span class="nc" id="L292">			String realPathFile = Tools.getRealPath(file);</span>
+
+<span class="nc" id="L294">			String smallFileUrl = file.substring(0, file.lastIndexOf('_')) + &quot;_&quot; + width + &quot;_&quot; + height + &quot;.&quot; + extension;</span>
+<span class="nc" id="L295">			String realPathFileSmall = Tools.getRealPath(smallFileUrl);</span>
+
+<span class="nc" id="L297">			FileTools.downloadFile(img, file);</span>
+<span class="nc" id="L298">			GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);</span>
+<span class="nc" id="L299">			new IwcmFile(realPathFile).delete();</span>
+
+			//ak je treba, aplikujem vodotlac na obrazky
+<span class="nc" id="L302">			IwcmFile newFileIwcm = new IwcmFile(realPathFileSmall);</span>
+<span class="nc" id="L303">			GalleryDB.applyWatermarkOnUpload(newFileIwcm);</span>
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (GalleryDB.isGalleryFolder(virtualPath))</span>
+			{
+<span class="nc" id="L307">				GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), virtualPath);</span>
+			}
+<span class="nc bnc" id="L309" title="All 2 branches missed.">			else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;))</span>
+			{
+<span class="nc" id="L311">				GalleryDB.setImage(virtualPath, filename);</span>
+			}
+
+			//ak existuje adresar files, treba indexovat
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (FileIndexer.isFileIndexerConfigured())</span>
+			{
+<span class="nc" id="L317">				List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L318">				FileIndexer.indexFile(smallFileUrl, indexedFiles, getRequest());</span>
+			}
+
+<span class="nc" id="L321">			result.put(&quot;result&quot;, true);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">			if (GalleryDB.isGalleryFolder(virtualPath)) result.put(&quot;virtualPath&quot;, GalleryDB.getImagePathSmall(smallFileUrl));</span>
+<span class="nc" id="L323">			else result.put(&quot;virtualPath&quot;, smallFileUrl);</span>
+<span class="nc" id="L324">			result.put(&quot;cwd&quot;, virtualPath);</span>
+		}
+<span class="nc" id="L326">		catch (Exception e)</span>
+		{
+<span class="nc" id="L328">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L329">		}</span>
+
+<span class="nc" id="L331">		return new StreamingResolution(&quot;application/json&quot;, result.toString());</span>
+	}
+
+	public String getimg()
+	{
+<span class="nc" id="L336">		return img;</span>
+	}
+
+	public void setImg(String img)
+	{
+<span class="nc" id="L341">		this.img = img;</span>
+<span class="nc" id="L342">	}</span>
+
+	public int getWidth()
+	{
+<span class="nc" id="L346">		return width;</span>
+	}
+
+	public void setWidth(int width)
+	{
+<span class="nc" id="L351">		this.width = width;</span>
+<span class="nc" id="L352">	}</span>
+
+	public int getHeight()
+	{
+<span class="nc" id="L356">		return height;</span>
+	}
+
+	public void setHeight(int height)
+	{
+<span class="nc" id="L361">		this.height = height;</span>
+<span class="nc" id="L362">	}</span>
+
+	public String getVirtualPath()
+	{
+<span class="nc" id="L366">		return virtualPath;</span>
+	}
+
+	public void setVirtualPath(String virtualPath)
+	{
+<span class="nc" id="L371">		this.virtualPath = virtualPath;</span>
+<span class="nc" id="L372">	}</span>
+
+	public boolean isShortDescription()
+	{
+<span class="fc" id="L376">		return shortDescription;</span>
+	}
+
+	public void setShortDescription(boolean shortDescription)
+	{
+<span class="fc" id="L381">		this.shortDescription = shortDescription;</span>
+<span class="fc" id="L382">	}</span>
+
+	public boolean isLongDescription()
+	{
+<span class="fc" id="L386">		return longDescription;</span>
+	}
+
+	public void setLongDescription(boolean longDescription)
+	{
+<span class="fc" id="L391">		this.longDescription = longDescription;</span>
+<span class="fc" id="L392">	}</span>
+
+	public boolean isAuthor()
+	{
+<span class="fc" id="L396">		return author;</span>
+	}
+
+	public void setAuthor(boolean author)
+	{
+<span class="fc" id="L401">		this.author = author;</span>
+<span class="fc" id="L402">	}</span>
+
+	public int getImagesInRow()
+	{
+<span class="fc" id="L406">		return imagesInRow;</span>
+	}
+
+	public void setImagesInRow(int imagesInRow)
+	{
+<span class="nc" id="L411">		this.imagesInRow = imagesInRow;</span>
+<span class="nc" id="L412">	}</span>
+
+	public boolean isThumbsShortDescription()
+	{
+<span class="fc" id="L416">		return thumbsShortDescription;</span>
+	}
+
+	public void setThumbsShortDescription(boolean thumbsShortDescription)
+	{
+<span class="fc" id="L421">		this.thumbsShortDescription = thumbsShortDescription;</span>
+<span class="fc" id="L422">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

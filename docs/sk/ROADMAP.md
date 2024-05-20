@@ -19,20 +19,28 @@ Vysvetlenie použitých piktogramov:
 ## 2024
 
 - [x] Prechod na Java 17 - WebJET od verzie 2024.0 bude vyžadovať Java verzie 17. (#54425)
-- [ ] Výmena sady ikon z `FontAwesome` za sadu `Tabler Icons`.
+- [x] Výmena sady ikon z `FontAwesome` za sadu `Tabler Icons` (#56397).
 - [x] Publikovanie JAR súborov do `Maven Central` (#43144).
-- [ ] Nová verzia aplikácie Nákupný košík/`eshop`, ukážková verzia web stránky, integrácia cez API na online fakturačné systémy, aktualizované integrácie na platobné brány.
+- [ ] Nová verzia aplikácie Nákupný košík/`eshop`, ukážková verzia web stránky, integrácia cez API na online fakturačné systémy, aktualizované integrácie na platobné brány (#56329,56385,56325).
 - [x] Prekladové kľúče - možnosť importovať len neexistujúce kľúče (#56061).
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
 - [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
-- [ ] Web stránky - ak je zapnutá konf. premenná `syncGroupAndWebpageTitle` a jedna stránka je nastavená ako hlavná viacerým priečinkom vypnúť premenovávanie názvu priečinku podľa hlavnej stránky. Plus keď je hlavná stránka v inom priečinku, tiež nepremenovávať.
-- [ ] Audit - prerobiť Zmenené stránky a Čaká na publikovanie do datatabuliek (#56165).
-- [ ] Blog - administrácia `bloggerov` prerobiť do datatabuliek (#56169).
-- [ ] Blog - komentáre - integrovať na sekciu Diskusia, pridať `bloggerom` práva aj na sekciu Diskusia (#56173).
-- [ ] AB testovanie - prerobenie do DT, využiť možnosti z `news` aplikácie, spraviť nastavenie konf. premenných podľa zadaného prefixu (#56177).
-- [ ] Kalendár udalostí - neschválené a odporúčanie udalosti - prerobiť do DT, využiť kód pre zoznam udalostí (#56181).
+- [x] Web stránky - ak je zapnutá konf. premenná `syncGroupAndWebpageTitle` a jedna stránka je nastavená ako hlavná viacerým priečinkom vypnúť premenovávanie názvu priečinku podľa hlavnej stránky. Plus keď je hlavná stránka v inom priečinku, tiež nepremenovávať (#56477).
+- [x] Audit - prerobiť Zmenené stránky a Čaká na publikovanie do datatabuliek (#56165).
+- [x] Blog - administrácia `bloggerov` prerobiť do datatabuliek (#56169).
+- [x] Blog - komentáre - integrovať na sekciu Diskusia, pridať `bloggerom` práva aj na sekciu Diskusia (#56173).
+- [x] AB testovanie - prerobenie do DT, využiť možnosti z `news` aplikácie, spraviť nastavenie konf. premenných podľa zadaného prefixu (#56177).
+- [x] Kalendár udalostí - neschválené a odporúčanie udalosti - prerobiť do DT, využiť kód pre zoznam udalostí (#56181).
 - [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Editor - pri vytvorení odkazu na email to v okne automaticky pridáva http, aj keď odkaz nakoniec vloží správne s `mailto:` prefixom (#56189).
+- [x] Dotazníky - prerobiť aplikáciu do datatabuliek (#55949).
+- [x] +PostgreSQL - pridať podporu databázy (#56305).
+- [x] Formulár ľahko - pridať možnosti ako majú štandardné formuláre (hlavne nastavenie presmerovania po odoslaní), možnosť odoslať formulár aj na používateľa (pre kontrolu) (#56481).
+- [x] +Formulár ľahko - pridať podporu pre wysiwyg polia (#56481).
+- [x] +Zmazať nepoužívané a vymeniť málo používané knižnice (#56265).
+- [x] +MultiWeb - overiť funkčnosť, doplniť potrebné práva (#56421, #56405, #56425).
+- [x] +Hromadný email - pridať podporu odhlásenia jedným klikom (#56409).
+- [ ] +Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
 
 ## 2023.52 / 2024.0
 
@@ -44,16 +52,16 @@ Vysvetlenie použitých piktogramov:
 - [x] Fórum - prerobiť do Spring (#55649).
 - [x] Používatelia - pridať stĺpec skupina práv do datatabuľky (#55601).
 - [ ] Galéria - nový typ pre zobrazenie malého počtu fotiek s expanziou, možnosť prechodu medzi všetkými fotkami v článku (#55349).
-- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server
+- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Web stránky - pridať možnosť obnovenia zmazaného priečinka tak, aby sa korektne nastavil web stránkam atribút `available` (#55937).
 - [ ] Prieskumník - upraviť do nového dizajnu, aktualizovať JS kód elfinder (#55849).
 - [x] Web stránky - pri vytváraní odkazov v dialógovom okne zapamätať posledný adresár a pri pridaní ďalšieho odkazu ho rovno použiť (#54953-29).
 - [ ] Kalendár udalostí - ak sa zadá udalosť v októbri na november kedy dochádza k posunu času zobrazuje sa s o hodinu posunutým časom.
-- [ ] upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie
+- [ ] upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie.
 - [x] Aplikácie - zlepšiť opis každej aplikácie, aktualizovať obrázky aplikácie (#55293).
 - [x] Foto galéria - optimalizovať množstvo načítaných dát (#56093).
-- [x] Foto galéria - image editor sa inicializuje pri každom otvorení okna, upraviť, aby sa použil už existujúci editor (#55853)
+- [x] Foto galéria - image editor sa inicializuje pri každom otvorení okna, upraviť, aby sa použil už existujúci editor (#55853).
 - [ ] Datatabuľky - do automatizovaného testu doplniť testovanie funkcie Duplikovať.
 - [ ] Banner - pridať možnosť používania šablón pre zobrazenie banneru, napr. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals.
 - [ ] Overiť ako fungujú SEO rozšírenia pre WordPress (napr. https://yoast.com/beginners-guide-yoast-seo/) a navrhnúť podobné riešenie pre WebJET CMS. Integrovať niečo ako https://github.com/thinhlam/seo-defect-checker do editora.
@@ -63,11 +71,10 @@ Vysvetlenie použitých piktogramov:
 - [x] Editor - pridať možnosť zobraziť pre vybrané web stránky editor typu HTML, ktorý sa nebude dať prepnúť do WYSIWYG režimu. Použité na špeciálne stránky integrujúce rôzne JavaScript aplikácie alebo špeciálne komponenty. Vhodný editor je [Ace-code](https://www.npmjs.com/package/ace-code) (#56129).
 - [x] Fulltext - priečinok `files` vo web stránkach s indexom presunúť do karty System (54953-30).
 - [x] +Používatelia - zamedziť zmazaniu samého seba (#55917).
-- [ ] +Novinky - doplniť kontrolu práv na priečinok a zobraziť len také, na ktoré ma používateľ práva.
+- [ ] +Novinky - doplniť kontrolu práv na priečinok a zobraziť len také, na ktoré ma používateľ práva (#56661).
 - [x] +Aplikácie - možnosť podmienene zobraziť aplikácie podľa typu zariadenia, implementovať genericky, nastaviteľné cez UI pre Banner (#55921).
 - [x] +Štatistika - obmedzenie zobrazených štatistík len na priečinky, na ktoré má používateľ právo (#55941).
 - [x] +Reštauračné menu - prerobiť aplikáciu do datatabuliek (#55945).
-- [ ] +Dotazníky - prerobiť aplikáciu do datatabuliek (#55949).
 - [x] +Presmerovania - oddeliť presmerovania podľa zvolenej domény (#55957).
 - [x] +Perex skupiny - oddeliť administráciu perex skupín podľa práv používateľa na web stránky (#55961).
 - [x] +Banner - podmienené zobrazenie podľa zariadenia mobil/tablet/desktop (#55997).
@@ -411,3 +418,15 @@ Vysvetlenie použitých piktogramov:
 - [ ] spísanie sekcie Čo je nové pre WebJET 8.8
 - [x] +úprava dokumentácie na formát ```docsify``` a presun na server http://docs.webjetcms.sk/ (#52384)
 - [x] +aktualizácia testovacieho frameworku codeceptjs na verziu 3.0.4 (#52444)
+
+<script type="text/javascript">
+setTimeout(function() {
+    for (var node of document.querySelectorAll("input[type=checkbox]")) {
+        node.removeAttribute("disabled");
+        // Prevent click events
+        node.addEventListener('click', function(event) {
+            event.preventDefault();
+        });
+    }
+}, 100);
+</script>

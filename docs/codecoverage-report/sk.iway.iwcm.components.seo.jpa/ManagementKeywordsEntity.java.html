@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ManagementKeywordsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.jpa</a> &gt; <span class="el_source">ManagementKeywordsEntity.java</span></div><h1>ManagementKeywordsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.jpa;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;seo_keywords&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SEO)
+<span class="fc" id="L29">public class ManagementKeywordsEntity {</span>
+
+    @Id
+    @Column(name = &quot;seo_keyword_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_seo_keywords&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;name&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.seo.keywords.name&quot;
+    )
+    @Size(max = 100)
+    private String name;
+
+    //Beware !!
+    //This is not lasic domain id value, it's string, so we dont use DomainRepo
+    @Column(name = &quot;domain&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title=&quot;components.seo.keywords.domain&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/seo/management-keywords/domain-autocomplete&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-min-length&quot;, value = &quot;1&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+				}
+			)
+		}
+    )
+    @NotBlank
+    @Size(max = 255)
+	private String domain;
+
+    @Column(name = &quot;search_bot&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.seo.keywords.searchBot&quot;,
+        editor = {
+			@DataTableColumnEditor(
+                attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/seo/management-keywords/searchBot-autocomplete&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-min-length&quot;, value = &quot;1&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+				}
+			)
+		}
+    )
+    @NotBlank
+    @Size(max = 150)
+    private String searchBot;
+
+    @Column(name = &quot;created_time&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.seo.keywords.createdTime&quot;,
+		hiddenEditor = true
+    )
+	private Date createdTime;
+
+    @Column(name = &quot;author&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.seo.keywords.author&quot;,
+        hiddenEditor = true
+    )
+    private Integer author;
+
+    @Column(name = &quot;actual_position&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.seo.keywords.actual.position&quot;,
+        hiddenEditor = true
+    )
+    private Integer actualPosition;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

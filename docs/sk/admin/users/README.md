@@ -58,6 +58,9 @@ Karta Skupiny sa delí na dve časti a to :
 - Skupiny používateľov - zvolením mena skupiny používateľov získa používateľ prístupové práva k neverejným sekciám web sídla.
 - Hromadný e-mail - zvolením mena skupiny sa prihlási používateľ k skupine hromadného e-mailu.
 
+Karta obsahuje taktiež možnosť Odoslať emaily o pridaní do používateľských skupín.
+**Pozor"** emaily sa odošlú iba ak daná skupina používateľov má nastavené ``ID stránky s textom e-mailu``.
+
 ![](users-tab-groups.png)
 
 ## Karta - Práva

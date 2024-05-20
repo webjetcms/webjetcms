@@ -52,6 +52,14 @@ Pri existujúcej šablóne zobrazuje zoznam priečinkov, ktoré majú nastavenú
 
 Pri existujúcej šablóne zobrazuje zoznam web stránok, ktoré šablónu používajú.
 
+## Jazykové mutácie
+
+Ak prevádzkujete web stránku vo viacerých jazykových mutáciach nie je potrebné vytvárať samostatné šablóny pre každú jazykovú mutáciu. Odporúčame využiť možnosť [nastavenia jazyka pre priečinok web stránky](../../redactor/webpages/group.md#karta-šablóna).
+
+Po nastavení jazyku priečinka WebJET automaticky vyhľadá aj jazykové mutácie priradených hlavičiek, pätičiek a menu v šablóne. Ak má šablóna nastavenú hlavičku s názvom "default hlavička" alebo "SK-default hlavička"  automaticky pri zobrazení stránky s nastaveným jazykom EN WebJET vyhľadá stránku "EN-default hlavička".
+
+V šablóne máte teda predvolený jazyk a predvolenú stránku hlavičky/pätičky/menu. Priečinku English vo web stránkach nastavíte anglický jazyk a WebJET pri zobrazení stránky bude hľadať príslušné EN verzie stránok pre hlavičky/pätičky/menu.
+
 ## Zobrazenie pre špecifické zariadenie
 
 WebJET podporuje možnosť úpravy šablóny pre špecifické zariadenie. To je štandardne `phone, tablet, pc` podľa pripojeného zariadenia, je možné ho ale ovplyvniť pomocou URL parametra `?forceBrowserDetector=blind` napr. pre optimalizovanú šablónu pre slabozrakých.

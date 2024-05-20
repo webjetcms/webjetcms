@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupEditorField.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupEditorField.java</span></div><h1>GroupEditorField.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.Date;
+import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+<span class="fc" id="L23">public class GroupEditorField extends BaseEditorFields {</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;group.superior_directory&quot;, tab = &quot;basic&quot;, visible = false, sortAfter = &quot;editorFields.forceDomainNameChange&quot;, className = &quot;dt-tree-group-root&quot;, editor = {
+            @DataTableColumnEditor(attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;) }) })
+    private GroupDetails parentGroupDetails;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;[[#{groupedit.folde_main_site}]]&quot;, tab = &quot;basic&quot;, visible = false, sortAfter = &quot;editorFields.parentGroupDetails&quot;, className = &quot;dt-tree-page&quot;)
+    private DocDetails defaultDocDetails;
+
+<span class="fc" id="L32">    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, editor = {</span>
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;basic&quot;, message = &quot;editor.apply_for_all_sub_folders.tooltip&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceInternalToSubgroups = false;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;[[#{editor.access_restrictions_enable}]]&quot;, tab = &quot;access&quot;, visible = false, editor = {
+            @DataTableColumnEditor(attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.access_restrictions&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] permisions;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;editor.access_restrictions_enable_email&quot;,
+        tab = &quot;access&quot;,
+        visible = false,
+        sortAfter = &quot;editorFields.permisions&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;menu.email&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+                }
+            )
+        }
+    )
+    private Integer[] emails;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;editorFields.emails&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;access&quot;, attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }, options = {
+                            @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean passwordProtectedSubFolders;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = &quot;[[#{groupedit.log_on_page}]]&quot;, tab = &quot;access&quot;, visible = false, sortAfter = &quot;editorFields.passwordProtectedSubFolders&quot;, className = &quot;dt-tree-page&quot;)
+    private DocDetails logonPage;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;editorFields.logonPage&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;access&quot;, message = &quot;[[#{editor.use_default_settings.tooltip}]]&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.use_default_settings&quot;, value = &quot;true&quot;) }) })
+    private boolean useDefaultLogonPage;
+
+<span class="fc" id="L74">    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;menuType&quot;, editor = {</span>
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceMenuTypeSubfolders = false;
+
+<span class="fc" id="L79">    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;loggedMenuType&quot;, editor = {</span>
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceLoggedMenuTypeSubfolders = false;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;newPageDocIdTemplate&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;template&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceNewPageDocIdTemplateSubFolders;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;showInNavbar&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceNavbarSubfolders;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;showInSitemap&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }, options = {
+                            @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceSitemapSubfolders;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;loggedShowInNavbar&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceLoggedNavbarSubfolders;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;loggedShowInSitemap&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;) }) })
+    private boolean forceLoggedSitemapSubfolders;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{groupedit.scheduler.plan}]]&quot;, visible = false, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;publishing&quot;, attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.publish_headline&quot;) }) })
+    private boolean publishPlan;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-date-time&quot;, title = &quot;[[#{groupedit.scheduler.title}]]&quot;, visible = false, editor = {
+            @DataTableColumnEditor(type = &quot;datetime&quot;, label = &quot;[[#{groupedit.scheduler.title}]]&quot;, tab = &quot;publishing&quot;) })
+    private Date publishDate;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;urlDirName&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;basic&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders_and_sub_pages&quot;, value = &quot;true&quot;) }) })
+    private boolean forceUrlDirNameChange;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;domainName&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;basic&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;groupedit.changeDomainRedirects&quot;, value = &quot;true&quot;) }) })
+    private boolean forceDomainNameChange;
+
+    @DataTableColumn(renderFormat = &quot;dt-format-checkbox&quot;, title = &quot;[[#{}]]&quot;, visible = false, sortAfter = &quot;sortPriority&quot;, editor = {
+            @DataTableColumnEditor(type = &quot;checkbox&quot;, tab = &quot;menu&quot;, options = {
+                    @DataTableColumnEditorAttr(key = &quot;groupedit.priority.regenerate_page_order&quot;, value = &quot;true&quot;) }) })
+    private boolean forcePriorityRecalculation;
+
+    //Special anotation, get inner table into publishing tab, table type groupSchedulerDto. Beware, sererSide must by true because we use repo in this case
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;publishing&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/group-scheduler?groupId={groupId}&amp;selectType=plannedChanges&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.editor.rest.GroupSchedulerDto&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;3,desc&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,import,celledit&quot;)
+            }
+        )
+    })
+    private List&lt;GroupSchedulerDto&gt; groupSchedulerPlannedChanges;
+
+    //Special anotation, get inner table into history tab, table type groupSchedulerDto. Beware, sererSide must by true because we use repo in this case
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;history&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/group-scheduler?groupId={groupId}&amp;selectType=changeHistory&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.editor.rest.GroupSchedulerDto&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;2,desc&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-removeColumns&quot;, value = &quot;whenToPublish,datePublished&quot;)
+            }
+        )
+    })
+    private List&lt;GroupSchedulerDto&gt; groupSchedulerChangeHistory;
+
+    @DataTableColumn(
+        renderFormat = &quot;dt-format-checkbox&quot;,
+        title = &quot;[[#{}]]&quot;,
+        className = &quot;DTE_Field_Has_Checkbox&quot;,
+        visible = false,
+        sortAfter = &quot;tempId&quot;,
+        editor = {
+                @DataTableColumnEditor(
+                        type = &quot;checkbox&quot;,
+                        tab = &quot;template&quot;,
+                        options = {
+                                        @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders_and_sub_pages&quot;, value = &quot;true&quot;)
+                        }
+                )
+        }
+    )
+    private boolean forceTemplateToSubgroupsAndPages;
+
+    @DataTableColumn(
+        renderFormat = &quot;dt-format-checkbox&quot;,
+        title = &quot;[[#{}]]&quot;,
+        visible = false,
+        sortAfter = &quot;lng&quot;,
+        editor = {
+                        @DataTableColumnEditor(
+                                        type = &quot;checkbox&quot;,
+                                        tab = &quot;template&quot;,
+                                        attr = {
+                                                        @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+                                        },
+                                        options = {
+                                                        @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;)
+                                        }
+                        )
+        }
+    )
+    private boolean forceLngToSubFolders;
+
+    //zoznam volnych poli
+    public List&lt;Field&gt; fieldsDefinition;
+
+    /**
+     * POZOR: tato metoda vytovir KLON group objektu a vrati ho, zaroven mu setne
+     * tento EditorFields
+     *
+     * je to z toho dovodu, ze GroupDetails je cachovane a potom sa nam menili cachovane zaznamy
+     *
+     * @param group
+     * @return
+     */
+    public GroupDetails fromGroupDetails(GroupDetails groupOriginal) {
+
+<span class="fc" id="L217">        GroupDetails group = null;</span>
+        try {
+<span class="fc" id="L219">            group = (GroupDetails) groupOriginal.clone();</span>
+
+<span class="fc" id="L221">            setLogonPage(WebpagesService.getBasicDoc(group.getLogonPageDocId()));</span>
+
+<span class="fc" id="L223">            setParentGroupDetails(WebpagesService.getGroup(group.getParentGroupId()));</span>
+
+<span class="fc" id="L225">            setDefaultDocDetails(WebpagesService.getBasicDoc(group.getDefaultDocId()));</span>
+
+<span class="fc" id="L227">            int pp[] = Tools.getTokensInt(group.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="fc" id="L228">            List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(pp);</span>
+<span class="fc" id="L229">            permisions = splitPermsEmails.get(0);</span>
+<span class="fc" id="L230">            emails = splitPermsEmails.get(1);</span>
+
+            //definicia volnych poli
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            if (group.getTempId() &gt; 0)</span>
+            {
+                //nastavenie prefixu klucov podla skupiny sablon
+<span class="fc" id="L236">                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(group.getTempId());</span>
+<span class="pc bpc" id="L237" title="3 of 6 branches missed.">                if (temp != null &amp;&amp; temp.getTemplatesGroupId()!=null &amp;&amp; temp.getTemplatesGroupId().longValue() &gt; 0) {</span>
+<span class="fc" id="L238">                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());</span>
+<span class="pc bpc" id="L239" title="2 of 4 branches missed.">                    if (tgb != null &amp;&amp; Tools.isNotEmpty(tgb.getKeyPrefix())) {</span>
+<span class="nc" id="L240">                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);</span>
+                    }
+                }
+
+<span class="fc" id="L244">                RequestBean.addTextKeyPrefix(&quot;temp-&quot;+group.getTempId(), false);</span>
+            }
+<span class="fc" id="L246">            fieldsDefinition = getFields(group, &quot;groupedit&quot;, 'D');</span>
+
+<span class="fc" id="L248">            group.setEditorFields(this);</span>
+<span class="nc" id="L249">        } catch (CloneNotSupportedException e) {</span>
+<span class="nc" id="L250">            Logger.error(GroupEditorField.class, e);</span>
+<span class="fc" id="L251">        }</span>
+<span class="fc" id="L252">        return group;</span>
+    }
+
+    public void toGroupDetails(GroupDetails group) {
+        //Validation is secure by validateEditor in GroupRestController
+<span class="fc" id="L257">        group.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));</span>
+
+<span class="fc" id="L259">        group.setParentGroupId(group.getEditorFields().parentGroupDetails.getGroupId());</span>
+
+<span class="fc" id="L261">        group.setDefaultDocId(group.getEditorFields().defaultDocDetails.getDocId());</span>
+
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        if(group.getEditorFields().isUseDefaultLogonPage() == true) {</span>
+<span class="fc" id="L264">            group.setLogonPageDocId(0);</span>
+        } else {
+<span class="fc" id="L266">            group.setLogonPageDocId(group.getEditorFields().getLogonPage().getDocId());</span>
+        }
+<span class="fc" id="L268">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

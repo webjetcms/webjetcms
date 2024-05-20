@@ -85,4 +85,6 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
     @Modifying
     @Query(value = "DELETE FROM DocDetails dd WHERE dd.id IN :docIds")
     public void deleteByDocIdIn(@Param("docIds")List<Long> docIds);
+
+    Page<DocDetails> findAllByOrderByDateCreatedDesc(Pageable pageable);
 }

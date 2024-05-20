@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupActionsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.setup</a> &gt; <span class="el_source">SetupActionsService.java</span></div><h1>SetupActionsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.setup;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.Vector;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.springframework.ui.Model;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.XmlUtils;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.UpdateDatabase;
+
+/**
+ * SetupAction.java - priprava formularu pre nastavenie systemu
+ */
+@SuppressWarnings(&quot;java:S106&quot;)
+public class SetupActionsService {
+
+	private static final String FORWARD = &quot;/admin/setup/setup&quot;;
+	private static final String SAVED = &quot;/admin/setup/setup_saved&quot;;
+
+	private SetupActionsService() {
+		// Private constructor to hide the implicit public one.
+	}
+
+	private static boolean isHostAllowed(String serverName) {
+<span class="nc bnc" id="L47" title="All 4 branches missed.">		if (&quot;iwcm.interway.sk&quot;.equals(serverName) || &quot;localhost&quot;.equals(serverName)) return true;</span>
+<span class="nc" id="L48">		return false;</span>
+	}
+
+	private static String readPoolman() {
+		// nacitaj DB konfiguraciu (ak existuje)
+<span class="nc" id="L53">		String systemIwcmDBName = InitServlet.getContextDbName();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (Tools.isEmpty(systemIwcmDBName)) systemIwcmDBName = System.getProperty(&quot;webjetDbname&quot;);</span>
+<span class="nc" id="L55">		System.out.println(&quot;systemIwcmDBName=&quot;+systemIwcmDBName);</span>
+
+		//aj cez &lt;Context ... &lt;Parameter name=&quot;webjetDbname&quot; value=&quot;/poolman-local.xml&quot; override=&quot;true&quot;/&gt; je mozne zadat cestu
+<span class="nc" id="L58">		String customPoolmanPath = null;</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">		if (Tools.isNotEmpty(systemIwcmDBName) &amp;&amp; systemIwcmDBName.endsWith(&quot;.xml&quot;)) {</span>
+<span class="nc" id="L60">			customPoolmanPath = systemIwcmDBName;</span>
+<span class="nc" id="L61">			systemIwcmDBName = &quot;iwcm&quot;;</span>
+		}
+<span class="nc" id="L63">		String data = DBPool.readFileContent(customPoolmanPath);</span>
+
+<span class="nc" id="L65">		return data;</span>
+	}
+
+	public static String setupAction(Model model, HttpServletRequest request, HttpServletResponse response, String lng) throws IOException {
+
+<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false) {</span>
+<span class="nc" id="L71">			return null;</span>
+		}
+
+<span class="nc" id="L74">		String data = readPoolman();</span>
+
+<span class="nc bnc" id="L76" title="All 6 branches missed.">		if ((data != null &amp;&amp; data.length()&gt;30) &amp;&amp; isHostAllowed(request.getServerName()) == false) {</span>
+<span class="nc" id="L77">			System.out.println(&quot;poolman allready exists&quot;);</span>
+<span class="nc" id="L78">			return null;</span>
+		}
+
+<span class="nc" id="L81">		SetupFormBean sForm = new SetupFormBean();</span>
+
+<span class="nc bnc" id="L83" title="All 4 branches missed.">		if (data != null &amp;&amp; Tools.isNotEmpty(data)) {</span>
+			try {
+<span class="nc" id="L85">				DocumentBuilderFactory b = DocumentBuilderFactory.newInstance();</span>
+				// to be compliant, completely disable DOCTYPE declaration:
+<span class="nc" id="L87">				b.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);</span>
+<span class="nc" id="L88">				DocumentBuilder dc = b.newDocumentBuilder();</span>
+<span class="nc" id="L89">				ByteArrayInputStream input = new ByteArrayInputStream(data.getBytes());</span>
+<span class="nc" id="L90">				Document doc = dc.parse(input);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if (doc != null) {</span>
+<span class="nc" id="L92">					Node n = XmlUtils.getFirstChild(doc.getDocumentElement(), &quot;datasource&quot;);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">					if (n != null) {</span>
+<span class="nc" id="L94">						sForm.setDbUsername(XmlUtils.getFirstChildValue(n, &quot;username&quot;));</span>
+<span class="nc" id="L95">						sForm.setDbPassword(XmlUtils.getFirstChildValue(n, &quot;password&quot;));</span>
+
+						try {
+<span class="nc" id="L98">							String driver = XmlUtils.getFirstChildValue(n, &quot;driver&quot;);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">							if (driver != null) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">								if (driver.contains(&quot;Oracle&quot;))</span>
+<span class="nc" id="L101">									sForm.setDbDriver(&quot;oracle.jdbc.driver.OracleDriver&quot;);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">								else if (driver.contains(&quot;jtds&quot;))</span>
+<span class="nc" id="L103">									sForm.setDbDriver(&quot;net.sourceforge.jtds.jdbc.Driver&quot;);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">								else if (driver.contains(&quot;postgresql&quot;))</span>
+<span class="nc" id="L105">									sForm.setDbDriver(&quot;org.postgresql.Driver&quot;);</span>
+							}
+<span class="nc" id="L107">							String url = XmlUtils.getFirstChildValue(n, &quot;url&quot;);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">							if (url != null) {</span>
+<span class="nc" id="L109">								String serverNameDelimiter = &quot;://&quot;;</span>
+<span class="nc" id="L110">								int iServerName = url.indexOf(serverNameDelimiter);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">								if (iServerName == -1) {</span>
+<span class="nc" id="L112">									serverNameDelimiter = &quot;@&quot;;</span>
+<span class="nc" id="L113">									iServerName = url.indexOf(serverNameDelimiter); // oracle verzia</span>
+								}
+<span class="nc bnc" id="L115" title="All 2 branches missed.">								if (iServerName &gt; 0) {</span>
+<span class="nc" id="L116">									int iSchemaName = url.indexOf(&quot;/&quot;, iServerName + serverNameDelimiter.length());</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">									if (iSchemaName &gt; iServerName) {</span>
+<span class="nc" id="L118">										String serverName = url.substring(iServerName + serverNameDelimiter.length(),</span>
+												iSchemaName);
+<span class="nc" id="L120">										int i = serverName.indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">										if (i &gt; 0) {</span>
+<span class="nc" id="L122">											sForm.setDbDomain(serverName.substring(0, i));</span>
+<span class="nc" id="L123">											sForm.setDbPort(serverName.substring(i + 1));</span>
+										} else {
+<span class="nc" id="L125">											sForm.setDbDomain(serverName);</span>
+										}
+
+<span class="nc" id="L128">										String schemaName = url.substring(iSchemaName + 1);</span>
+<span class="nc" id="L129">										i = schemaName.indexOf(&quot;?&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">										if (i == -1)</span>
+<span class="nc" id="L131">											i = schemaName.indexOf(&quot;;&quot;);</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">										if (i &gt; 0) {</span>
+<span class="nc" id="L134">											sForm.setDbName(schemaName.substring(0, i));</span>
+<span class="nc" id="L135">											sForm.setDbParameters(schemaName.substring(i + 1));</span>
+										} else {
+<span class="nc" id="L137">											sForm.setDbName(schemaName);</span>
+										}
+
+<span class="nc" id="L140">										String installName = sForm.getDbName();</span>
+<span class="nc" id="L141">										i = installName.indexOf(&quot;_web&quot;);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">										if (i &gt; 0)</span>
+<span class="nc" id="L143">											installName = installName.substring(0, i);</span>
+<span class="nc" id="L144">										sForm.setConf_installName(installName);</span>
+									}
+
+<span class="nc bnc" id="L147" title="All 4 branches missed.">									if (driver != null &amp;&amp; driver.contains(&quot;Oracle&quot;)) {</span>
+<span class="nc" id="L148">										sForm.setDbParameters(sForm.getDbName());</span>
+<span class="nc" id="L149">										sForm.setDbName(&quot;&quot;);</span>
+									}
+
+								}
+							}
+<span class="nc" id="L154">						} catch (Exception ex) {</span>
+<span class="nc" id="L155">							ex.printStackTrace(System.err);</span>
+<span class="nc" id="L156">						}</span>
+					}
+				}
+<span class="nc" id="L159">			} catch (Exception ex) {</span>
+<span class="nc" id="L160">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L161">			}</span>
+		}
+
+<span class="nc" id="L164">		data = FileTools.readFileContent(&quot;/WEB-INF/web-runtime.xml&quot;);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (Tools.isNotEmpty(data)) {</span>
+			try {
+<span class="nc" id="L167">				DocumentBuilderFactory b = DocumentBuilderFactory.newInstance();</span>
+				// to be compliant, completely disable DOCTYPE declaration:
+<span class="nc" id="L169">				b.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);</span>
+<span class="nc" id="L170">				DocumentBuilder dc = b.newDocumentBuilder();</span>
+<span class="nc" id="L171">				ByteArrayInputStream input = new ByteArrayInputStream(data.getBytes());</span>
+<span class="nc" id="L172">				Document doc = dc.parse(input);</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				if (doc != null) {</span>
+<span class="nc" id="L174">					Vector&lt;Node&gt; servletNodes = XmlUtils.getChildNodes(doc.getDocumentElement(), &quot;servlet&quot;);</span>
+<span class="nc bnc" id="L175" title="All 4 branches missed.">					if (servletNodes != null &amp;&amp; servletNodes.size() &gt; 0) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">						for (Node servletNode : servletNodes) {</span>
+<span class="nc" id="L177">							Vector&lt;Node&gt; initParamNodes = XmlUtils.getChildNodes(servletNode, &quot;init-param&quot;);</span>
+<span class="nc bnc" id="L178" title="All 4 branches missed.">							if (initParamNodes != null &amp;&amp; initParamNodes.size() &gt; 0) {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">								for (Node initParamNode : initParamNodes) {</span>
+<span class="nc" id="L180">									String paramName = XmlUtils.getFirstChildValue(initParamNode, &quot;param-name&quot;);</span>
+<span class="nc" id="L181">									String paramValue = XmlUtils.getFirstChildValue(initParamNode, &quot;param-value&quot;);</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">									if (Tools.isEmpty(paramValue))</span>
+<span class="nc" id="L184">										continue;</span>
+
+<span class="nc bnc" id="L186" title="All 2 branches missed.">									if (&quot;license&quot;.equals(paramName)) {</span>
+<span class="nc" id="L187">										sForm.setConf_license(paramValue);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">									} else if (&quot;smtpServer&quot;.equals(paramName)) {</span>
+<span class="nc" id="L189">										sForm.setConf_smtpServer(paramValue);</span>
+									}
+<span class="nc" id="L191">								}</span>
+							}
+<span class="nc" id="L193">						}</span>
+					}
+				}
+<span class="nc" id="L196">			} catch (Exception ex) {</span>
+<span class="nc" id="L197">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L198">			}</span>
+		}
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (Tools.isEmpty(sForm.getConf_installName())) {</span>
+			// zdetekuj install name
+<span class="nc" id="L203">			String path = Constants.getServletContext().getRealPath(&quot;/&quot;);</span>
+
+<span class="nc" id="L205">			String installName = &quot;&quot;;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (path != null) {</span>
+<span class="nc" id="L207">				File f = new File(path);</span>
+<span class="nc" id="L208">				installName = f.getName();</span>
+<span class="nc" id="L209">				installName = Tools.replace(installName, &quot;.sk&quot;, &quot;&quot;);</span>
+<span class="nc" id="L210">				installName = Tools.replace(installName, &quot;.cz&quot;, &quot;&quot;);</span>
+<span class="nc" id="L211">				installName = Tools.replace(installName, &quot;.com&quot;, &quot;&quot;);</span>
+<span class="nc" id="L212">				installName = Tools.replace(installName, &quot;www.&quot;, &quot;&quot;);</span>
+			}
+<span class="nc" id="L214">			sForm.setConf_installName(installName);</span>
+<span class="nc" id="L215">			sForm.setDbName(installName + &quot;_web&quot;);</span>
+		}
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		if(Tools.isNotEmpty(lng)) {</span>
+<span class="nc" id="L219">            PageLng.setUserLng(request, response, lng);</span>
+<span class="nc" id="L220">            request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
+<span class="nc" id="L221">			sForm.setPageLngIndicator(lng);</span>
+    	} else {
+<span class="nc" id="L223">			String oldLng = (String) request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			if(Tools.isNotEmpty(oldLng)) sForm.setPageLngIndicator(oldLng);</span>
+		}
+
+<span class="nc" id="L227">		setModel(model, sForm, false, false);</span>
+
+<span class="nc" id="L229">		return FORWARD;</span>
+	}
+
+	public static String setupSaveAction(SetupFormBean setupForm, Model model, HttpServletRequest request, HttpServletResponse response) {
+<span class="nc bnc" id="L233" title="All 4 branches missed.">		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false){</span>
+<span class="nc" id="L234">			System.out.println(&quot;WebJET is allready initialized&quot;);</span>
+<span class="nc" id="L235">			return SAVED;</span>
+		}
+
+<span class="nc" id="L238">		String data = readPoolman();</span>
+<span class="nc bnc" id="L239" title="All 6 branches missed.">		if ((data != null &amp;&amp; data.length() &gt; 30) &amp;&amp; isHostAllowed(request.getServerName()) == false) {</span>
+<span class="nc" id="L240">			System.out.println(&quot;poolman allready exists&quot;);</span>
+<span class="nc" id="L241">			return null;</span>
+		}
+
+		//uloz DB konfiguraciu
+<span class="nc bnc" id="L245" title="All 4 branches missed.">		if (data == null || data.length() &lt; 30)</span>
+<span class="nc" id="L246">			savePoolman(setupForm);</span>
+
+		//vytvor/napln databazu
+<span class="nc" id="L249">		boolean dbConnectOK = false;</span>
+<span class="nc" id="L250">		String connErrMsg = &quot;&quot;;</span>
+<span class="nc" id="L251">		Connection con = null;</span>
+		try {
+<span class="nc" id="L253">			System.out.println(&quot;Checking database connection: &quot;);</span>
+
+			try {
+<span class="nc" id="L256">				Class.forName(setupForm.getDbDriver()).getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L257">			} catch (Exception ex) {</span>
+<span class="nc" id="L258">				connErrMsg += &quot;Could Not Find the database Driver: &quot; + setupForm.getDbDriver();</span>
+<span class="nc" id="L259">			}</span>
+
+<span class="nc" id="L261">			String userName = setupForm.getDbUsername();</span>
+<span class="nc" id="L262">			String password = setupForm.getDbPassword();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			if (Tools.isEmpty(userName)) userName = null;</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (Tools.isEmpty(password)) password = null;</span>
+<span class="nc" id="L265">			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);</span>
+<span class="nc" id="L266">			con.close();</span>
+<span class="nc" id="L267">			dbConnectOK = true;</span>
+		}
+<span class="nc" id="L269">		catch (Exception ex) {</span>
+			try {
+<span class="nc bnc" id="L271" title="All 2 branches missed.">				if (con != null) con.close();</span>
+<span class="nc" id="L272">			} catch (Exception e) {}</span>
+
+<span class="nc" id="L274">			String msg = ex.getMessage();</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">			if (msg.indexOf(&quot;Unknown database &quot;) != -1) {</span>
+				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
+
+<span class="nc" id="L279">				String origDBName = setupForm.getDbName();</span>
+<span class="nc" id="L280">				setupForm.setDbName(&quot;mysql&quot;);</span>
+
+				try {
+<span class="nc bnc" id="L283" title="All 2 branches missed.">					if (setupForm.isDbUseSuperuser()) {</span>
+<span class="nc" id="L284">						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());</span>
+					} else {
+<span class="nc bnc" id="L286" title="All 2 branches missed.">						if (con != null) con.close();</span>
+<span class="nc" id="L287">						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());</span>
+					}
+
+<span class="nc" id="L290">					PreparedStatement ps = con.prepareStatement(&quot;CREATE DATABASE &quot; + origDBName);</span>
+<span class="nc" id="L291">					ps.execute();</span>
+<span class="nc" id="L292">					ps.close();</span>
+
+<span class="nc" id="L294">					con.close();</span>
+
+<span class="nc" id="L296">					setupForm.setDbName(origDBName);</span>
+
+<span class="nc" id="L298">					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());</span>
+<span class="nc" id="L299">					con.close();</span>
+
+<span class="nc" id="L301">					dbConnectOK = true;</span>
+<span class="nc" id="L302">				} catch (Exception e) {</span>
+<span class="nc" id="L303">					connErrMsg += msg;</span>
+<span class="nc" id="L304">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L305">				}</span>
+<span class="nc" id="L306">				setupForm.setDbName(origDBName);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			} else if (msg.indexOf(&quot;Cannot open database requested&quot;) != -1) {</span>
+				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
+
+<span class="nc" id="L310">				String origDBName = setupForm.getDbName();</span>
+<span class="nc" id="L311">				setupForm.setDbName(&quot;master&quot;);</span>
+
+				try {
+<span class="nc bnc" id="L314" title="All 2 branches missed.">					if (setupForm.isDbUseSuperuser()) {</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">						if (con != null) con.close();</span>
+<span class="nc" id="L316">						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());</span>
+					} else {
+<span class="nc bnc" id="L318" title="All 2 branches missed.">						if (con != null) con.close();</span>
+<span class="nc" id="L319">						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());</span>
+					}
+
+<span class="nc" id="L322">					PreparedStatement ps = con.prepareStatement(&quot;CREATE DATABASE &quot; + origDBName);</span>
+<span class="nc" id="L323">					ps.execute();</span>
+<span class="nc" id="L324">					ps.close();</span>
+
+<span class="nc" id="L326">					con.close();</span>
+
+<span class="nc" id="L328">					setupForm.setDbName(origDBName);</span>
+
+<span class="nc" id="L330">					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());</span>
+<span class="nc" id="L331">					con.close();</span>
+
+<span class="nc" id="L333">					dbConnectOK = true;</span>
+<span class="nc" id="L334">				} catch (Exception e) {</span>
+<span class="nc" id="L335">					connErrMsg += msg;</span>
+<span class="nc" id="L336">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L337">				}</span>
+<span class="nc" id="L338">				setupForm.setDbName(origDBName);</span>
+<span class="nc" id="L339">			} else {</span>
+<span class="nc" id="L340">				connErrMsg += msg;</span>
+<span class="nc" id="L341">				System.out.println(&quot;------ DB FAIL ------\n&quot;);</span>
+<span class="nc" id="L342">				ex.printStackTrace(System.err);</span>
+			}
+<span class="nc" id="L344">		}</span>
+
+<span class="nc" id="L346">		System.out.println(&quot;dbConnectOK=&quot;+dbConnectOK+&quot; driver=&quot;+setupForm.getDbDriver());</span>
+
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (dbConnectOK) {</span>
+			//resetni DBPool
+<span class="nc" id="L350">			DBPool.getInstance(true);</span>
+
+<span class="nc" id="L352">			String dbCreateErrMsg = null;</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">			if (&quot;org.mariadb.jdbc.Driver&quot;.equals(setupForm.getDbDriver())) {</span>
+				//napln databazu
+<span class="nc" id="L355">				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMySQL();</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">			} else if (&quot;oracle.jdbc.driver.OracleDriver&quot;.equals(setupForm.getDbDriver())) {</span>
+				//napln databazu
+<span class="nc" id="L358">				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseOracle();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			} else if (&quot;org.postgresql.Driver&quot;.equals(setupForm.getDbDriver())) {</span>
+				//napln databazu
+<span class="nc" id="L361">				String schema = &quot;webjet_cms&quot;;</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">				if (Tools.isNotEmpty(setupForm.getDbParameters())) {</span>
+<span class="nc" id="L363">					String[] params = Tools.getTokens(setupForm.getDbParameters(), &quot;&amp;&quot;);</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">					for (String param : params) {</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">						if (param.startsWith(&quot;currentSchema=&quot;)) {</span>
+<span class="nc" id="L366">							schema = param.substring(14);</span>
+<span class="nc" id="L367">							break;</span>
+						}
+					}
+				}
+<span class="nc" id="L371">				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabasePgSQL(schema);</span>
+<span class="nc" id="L372">			} else {</span>
+				//	napln databazu
+<span class="nc" id="L374">				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMSSQL();</span>
+			}
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			if (Tools.isNotEmpty(dbCreateErrMsg)) {</span>
+<span class="nc" id="L378">				setModelWithErr(model, setupForm, false, null, dbCreateErrMsg);</span>
+<span class="nc" id="L379">				return FORWARD;</span>
+			}
+
+			//uloz konfiguracne hodnoty
+<span class="nc" id="L383">			Connection db_conn = null;</span>
+			try {
+<span class="nc" id="L385">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L387">				Enumeration&lt;String&gt; e = request.getParameterNames();</span>
+				String name;
+				String value;
+<span class="nc bnc" id="L390" title="All 2 branches missed.">				while (e.hasMoreElements()) {</span>
+<span class="nc" id="L391">					name = e.nextElement();</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">					if (name.startsWith(&quot;conf_&quot;)) {</span>
+<span class="nc" id="L393">						value = request.getParameter(name);</span>
+<span class="nc" id="L394">						name = name.substring(5);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">						if (Tools.isNotEmpty(value))</span>
+<span class="nc" id="L396">							saveConf(name, value, db_conn);</span>
+					}
+				}
+<span class="nc" id="L399">			} catch (Exception ex) {</span>
+<span class="nc" id="L400">				ex.printStackTrace(System.err);</span>
+			} finally {
+				try {
+<span class="nc bnc" id="L403" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L404">				} catch (Exception ex2) {}</span>
+			}
+
+			//nastav character coding vo web.xml a skopiruj to z runtime
+<span class="nc" id="L408">			String webXML = FileTools.readFileContent(&quot;/WEB-INF/web-runtime.xml&quot;);</span>
+
+<span class="nc bnc" id="L410" title="All 8 branches missed.">			if (webXML != null &amp;&amp; webXML.length() &gt; 100 &amp;&amp; (data == null || data.length() &lt; 100)) {</span>
+<span class="nc" id="L411">				webXML = Tools.replace(webXML, &quot;&lt;param-value&gt;windows-1250&lt;/param-value&gt;&quot;, &quot;&lt;param-value&gt;&quot;+setupForm.getEncoding()+&quot;&lt;/param-value&gt;&quot;);</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">				if (&quot;net.sourceforge.jtds.jdbc.Driver&quot;.equals(setupForm.getDbDriver()))</span>
+<span class="nc" id="L413">					webXML = Tools.replace(webXML, &quot;&lt;param-value&gt;TOMCAT_MYSQL&lt;/param-value&gt;&quot;, &quot;&lt;param-value&gt;RESIN_MSSQL&lt;/param-value&gt;&quot;);</span>
+
+				//	prekopiruj web.xml
+<span class="nc" id="L416">				FileTools.saveFileContent(&quot;/WEB-INF/web.xml&quot;, webXML);</span>
+			}
+
+			//restartni server
+<span class="nc" id="L420">			InitServlet.restart();</span>
+
+			//setModelForSave(model, setupForm);
+
+<span class="nc" id="L424">			setModel(model, null, true, true);</span>
+
+<span class="nc" id="L426">			return SAVED;</span>
+		} else {
+<span class="nc" id="L428">			setModelWithErr(model, setupForm, true, connErrMsg, null);</span>
+<span class="nc" id="L429">			return FORWARD;</span>
+		}
+	}
+
+	/**
+	 * Ulozenie suboru poolman.xml
+	 * @param sForm
+	 */
+	private static void savePoolman(SetupFormBean sForm)
+	{
+<span class="nc" id="L439">		StringBuilder poolman = new StringBuilder(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\r\n&quot;)</span>
+<span class="nc" id="L440">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L441">				.append(&quot;&lt;poolman&gt;\r\n&quot;)</span>
+<span class="nc" id="L442">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L443">				.append(&quot;  &lt;management-mode&gt;local&lt;/management-mode&gt;\r\n&quot;)</span>
+<span class="nc" id="L444">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L445">				.append(&quot;  &lt;datasource&gt;\r\n&quot;)</span>
+<span class="nc" id="L446">				.append(&quot;      &lt;dbname&gt;iwcm&lt;/dbname&gt;\r\n&quot;)</span>
+<span class="nc" id="L447">				.append(&quot;      &lt;driver&gt;&quot;).append(sForm.getDbDriver()).append(&quot;&lt;/driver&gt;\r\n&quot;);</span>
+
+<span class="nc" id="L449">		poolman.append(&quot;      &lt;url&gt;&quot;).append(getDBURLString(sForm)).append(&quot;&lt;/url&gt;\r\n&quot;);</span>
+
+<span class="nc" id="L451">		poolman.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L452">				.append(&quot;      &lt;username&gt;&quot;+sForm.getDbUsername()+&quot;&lt;/username&gt;\r\n&quot;)</span>
+<span class="nc" id="L453">				.append(&quot;      &lt;password&gt;&quot;+sForm.getDbPassword()+&quot;&lt;/password&gt;\r\n&quot;)</span>
+<span class="nc" id="L454">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L455">				.append(&quot;      &lt;initialConnections&gt;2&lt;/initialConnections&gt;\r\n&quot;)</span>
+<span class="nc" id="L456">				.append(&quot;      &lt;minimumSize&gt;0&lt;/minimumSize&gt;\r\n&quot;)</span>
+<span class="nc" id="L457">				.append(&quot;      &lt;maximumSize&gt;60&lt;/maximumSize&gt;\r\n&quot;)</span>
+<span class="nc" id="L458">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L459">				.append(&quot;      &lt;connectionTimeout&gt;600&lt;/connectionTimeout&gt;\r\n&quot;)</span>
+<span class="nc" id="L460">				.append(&quot;      &lt;userTimeout&gt;120&lt;/userTimeout&gt;\r\n&quot;)</span>
+<span class="nc" id="L461">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L462">				.append(&quot;  &lt;/datasource&gt;\r\n&quot;)</span>
+<span class="nc" id="L463">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L464">				.append(&quot;&lt;/poolman&gt;\r\n&quot;);</span>
+
+<span class="nc" id="L466">		FileTools.saveFileContent(&quot;/WEB-INF/classes/poolman.xml&quot;, poolman.toString());</span>
+<span class="nc" id="L467">	}</span>
+
+	/**
+	 * Pripravi URL string pre connection (bez username a password)
+	 * @param sForm
+	 * @return
+	 */
+	private static String getDBURLString(SetupFormBean sForm) {
+<span class="nc" id="L475">		String url = null;</span>
+<span class="nc" id="L476">		String port = &quot;&quot;;</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">		if (Tools.isNotEmpty(sForm.getDbPort()))</span>
+<span class="nc" id="L478">			port = &quot;:&quot;+sForm.getDbPort();</span>
+
+<span class="nc bnc" id="L480" title="All 2 branches missed.">		if (&quot;com.mysql.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L481">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">		} else if (&quot;org.mariadb.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L483">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">		} else if (&quot;net.sourceforge.jtds.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L485">			url = &quot;jdbc:jtds:sqlserver://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;;&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">		} else if (&quot;oracle.jdbc.driver.OracleDriver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L487">			url = &quot;jdbc:oracle:thin:@&quot;+sForm.getDbDomain()+port;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbName()))</span>
+<span class="nc" id="L489">				url += &quot;:&quot;+sForm.getDbName();</span>
+
+<span class="nc bnc" id="L491" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters()))</span>
+<span class="nc" id="L492">				url += &quot;/&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">		} else if (&quot;org.postgresql.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L494">			String params = &quot;currentSchema=webjet_cms&quot;;</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters())) params = sForm.getDbParameters();</span>
+<span class="nc" id="L496">			url = &quot;jdbc:postgresql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+params;</span>
+		}
+<span class="nc" id="L498">		return(url);</span>
+	}
+
+	/**
+	 * Ulozenie hodnoty do konfiguracnej tabulky
+	 * @param name
+	 * @param value
+	 * @param db_conn
+	 * @throws SQLException
+	 */
+	private static void saveConf(String name, String value, Connection db_conn) throws SQLException {
+<span class="nc" id="L509">		PreparedStatement ps = db_conn.prepareStatement(&quot;DELETE FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; WHERE name=?&quot;);</span>
+<span class="nc" id="L510">		ps.setString(1, name);</span>
+<span class="nc" id="L511">		ps.execute();</span>
+<span class="nc" id="L512">		ps.close();</span>
+
+<span class="nc" id="L514">		ps = db_conn.prepareStatement(&quot;INSERT INTO &quot;+ConfDB.CONF_TABLE_NAME+&quot; (name, value) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L515">		ps.setString(1, name);</span>
+<span class="nc" id="L516">		ps.setString(2, value);</span>
+<span class="nc" id="L517">		ps.execute();</span>
+<span class="nc" id="L518">		ps.close();</span>
+<span class="nc" id="L519">	}</span>
+
+	private static void setModel(Model model, SetupFormBean setupForm, Boolean disableLanguageSelect, boolean isSave) {
+		//Informing FE what key to use, when creating page
+<span class="nc bnc" id="L523" title="All 2 branches missed.">		if(isSave)</span>
+			// page /admin/setup/setup
+<span class="nc" id="L525">			model.addAttribute(&quot;isSetupSave&quot;, true);</span>
+		else
+		// page /admin/setup/setup_saved
+<span class="nc" id="L528">			model.addAttribute(&quot;isSetup&quot;, true);</span>
+
+		//Object that will be used in filling setup form
+<span class="nc bnc" id="L531" title="All 2 branches missed.">		if(setupForm != null) model.addAttribute(&quot;setupForm&quot;, setupForm);</span>
+		//Style file content for page
+<span class="nc" id="L533">		model.addAttribute(&quot;cmpCss&quot;, FileTools.readFileContent(&quot;/components/cmp.css&quot;));</span>
+		//If true, user will not see select to change language
+<span class="nc" id="L535">		model.addAttribute(&quot;disableLng&quot;, disableLanguageSelect);</span>
+<span class="nc" id="L536">	}</span>
+
+	private static void setModelWithErr(Model model, SetupFormBean setupForm, Boolean conErr, String conErrMsg, String createErrMsg) {
+<span class="nc" id="L539">		setModel(model, setupForm, true, false);</span>
+
+		//Will show con error msg in page
+<span class="nc" id="L542">		model.addAttribute(&quot;dbConnFail&quot;, conErr);</span>
+		//This is content of con err msg
+<span class="nc" id="L544">		model.addAttribute(&quot;dbErrMsg&quot;, conErrMsg);</span>
+		//Separe crate rr message, will be shown if != null
+<span class="nc" id="L546">		model.addAttribute(&quot;dbCreateErrMsg&quot;, createErrMsg);</span>
+<span class="nc" id="L547">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

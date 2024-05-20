@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionsAnswersEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.qa.jpa</a> &gt; <span class="el_source">QuestionsAnswersEntity.java</span></div><h1>QuestionsAnswersEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.qa.jpa;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+
+@Entity
+@Table(name = &quot;questions_answers&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QA_UPDATE)
+<span class="fc" id="L26">public class QuestionsAnswersEntity implements Serializable{</span>
+
+	private static final long serialVersionUID = -1805144846544468397L;
+
+    @Id
+    @Column(name = &quot;qa_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_questions_answers&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;, tab=&quot;basic&quot;)
+    private Long id;
+
+	@Column(name = &quot;question&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;[[#{qa.form.question}]]&quot;,
+		editor = {
+            @DataTableColumnEditor(type = &quot;quill&quot;)
+        },
+		tab = &quot;answer&quot;
+    )
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String question;
+
+
+	//Autocomplete field
+	@Column(name = &quot;group_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.roots}]]&quot;,
+		tab = &quot;basic&quot;,
+		editor = {
+			@DataTableColumnEditor(attr = {
+				@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/qa/autocomplete&quot;),
+				@DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+			})
+		}
+    )
+	private String groupName;
+
+	@Column(name = &quot;category_name&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.form.categoryName}]]&quot;,
+		tab = &quot;basic&quot;
+    )
+	private String categoryName;
+
+	@Column(name = &quot;from_name&quot;)
+	@NotBlank
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.form.fromName}]]&quot;,
+		tab = &quot;basic&quot;
+    )
+	private String fromName;
+
+	@Column(name = &quot;from_company&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{components.qa.ask.your_company}]]&quot;,
+		visible = false,
+		tab = &quot;basic&quot;
+    )
+	private String fromCompany;
+
+	@Column(name = &quot;from_phone&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{components.qa.ask.your_phone}]]&quot;,
+		visible = false,
+		tab = &quot;basic&quot;
+    )
+	private String fromPhone;
+
+	@Column(name = &quot;from_email&quot;)
+	@NotBlank
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.form.fromEmail}]]&quot;,
+		visible = false,
+		tab = &quot;basic&quot;
+    )
+	private String fromEmail;
+
+
+
+	@Column(name = &quot;to_name&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.form.toName}]]&quot;,
+		visible = false,
+		tab = &quot;answer&quot;
+    )
+	private String toName;
+
+	@Column(name = &quot;to_email&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{qa.form.toEmail}]]&quot;,
+		visible = false,
+		tab = &quot;answer&quot;
+    )
+	private String toEmail;
+
+	//This field is send as Email to receiver using QuestionAnswerService.sendAnswerEmail
+	@Transient
+	@DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title=&quot;[[#{qa.form.answer}]]&quot;,
+		hidden = true,
+		tab = &quot;answer&quot;
+    )
+	private String answerToEmail;
+
+	@Column(name = &quot;allow_publish_on_web&quot;)
+	@DataTableColumn(
+		title = &quot;components.qa.allowPublishOnWeb&quot;,
+        inputType = DataTableColumnType.BOOLEAN,
+		visible = false,
+		tab = &quot;answer&quot;
+    )
+	private Boolean allowPublishOnWeb;
+
+	@Column(name = &quot;publish_on_web&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;[[#{qa.form.publishOnWeb}]]&quot;,
+		visible = false,
+		tab = &quot;answer&quot;
+    )
+	private Boolean publishOnWeb;
+
+    @Column(name = &quot;answer&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title=&quot;[[#{qa.form.answerWeb}]]&quot;,
+		renderFormat = &quot;dt-format-text&quot;,
+		tab = &quot;answer&quot;
+    )
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String answer;
+
+	@Column(name = &quot;question_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;[[#{qa.date}]]&quot;,
+		hiddenEditor = true
+    )
+	private Date questionDate;
+
+	//Column hold boolean information if answer for question is already add
+<span class="fc" id="L178">	@Transient</span>
+	@DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;[[#{components.qa.answer.exist}]]&quot;,
+		hiddenEditor = true
+    )
+<span class="fc" id="L184">	private Boolean answerCheck = false;</span>
+
+	@Column(name = &quot;sort_priority&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+		title=&quot;[[#{qa.form.sortPriority}]]&quot;,
+		visible = false,
+		tab = &quot;basic&quot;
+    )
+	private Integer sortPriority;
+
+
+	/*Hidden unused fields*/
+
+	@Column(name = &quot;answer_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+		hidden = true,
+		hiddenEditor = true
+    )
+	private Date answerDate;
+
+	@Column(name = &quot;hash&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		hidden = true,
+		hiddenEditor = true
+    )
+	private String hash;
+
+	@Column(name = &quot;field_a&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.qa.field_a&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldA;
+
+	@Column(name = &quot;field_b&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.qa.field_b&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldB;
+
+	@Column(name = &quot;field_c&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.qa.field_c&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldC;
+
+	@Column(name = &quot;field_d&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.qa.field_d&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldD;
+
+	@Column(name = &quot;domain_id&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN,
+		tab=&quot;basic&quot;
+    )
+	private Integer domainId;
+
+<span class="fc" id="L258">	@Transient</span>
+    @DataTableColumnNested
+	private QuestionsAnswersEditorFields editorFields = null;
+
+	public Boolean isAnswerCheck() {
+<span class="pc bpc" id="L263" title="2 of 6 branches missed.">		if (Tools.isNotEmpty(getAnswer()) || Tools.isNotEmpty(getAnswerToEmail()) || Boolean.TRUE.equals(publishOnWeb) ){</span>
+<span class="fc" id="L264">			return Boolean.TRUE;</span>
+		}
+<span class="fc" id="L266">		return Boolean.FALSE;</span>
+	}
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

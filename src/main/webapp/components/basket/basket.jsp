@@ -402,7 +402,7 @@ $(".addToBasket").on("click", function(){
           <% } else if("02".equals(style)){ %>
           result += ' <tr class="itemTr itemId_'+ options.id +' basketId_'+ options.basketId +'">';
           result += '<td>';
-         result += '<a href="javascript:void(0)" class="deleteItem"><i class="fa fa-times" aria-hidden="true"></i></a>';
+         result += '<a href="javascript:void(0)" class="deleteItem"><i class="ti ti-x" aria-hidden="true"></i></a>';
           result += ' </td>';
          result += '<td>';
          result += '<div class="media">';
@@ -598,7 +598,7 @@ $(".addToBasket").on("click", function(){
 									<tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
 
 										<td>
-										<a href="javascript:void(0)" class="deleteItem"><i class="fa fa-times" aria-hidden="true"></i></a>
+										<a href="javascript:void(0)" class="deleteItem"><i class="ti ti-x" aria-hidden="true"></i></a>
 
 										</td>
 										<td>

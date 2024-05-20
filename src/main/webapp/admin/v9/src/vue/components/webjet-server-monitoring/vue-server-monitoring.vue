@@ -4,7 +4,7 @@
             <div id="secondsDropdown" class="dropdown">
                 <div class="secondsSelectorWrapper" :title="`${$updateInterval}`">
                     <button class="btn btn-sm buttons-collection dropdown-toggle btn-outline-secondary buttons-settings" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fal fa-clock"></i>
+                        <i class="ti ti-clock align-middle"></i>
                         <span id="seconds-display">
                             5s
                         </span>

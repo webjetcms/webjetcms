@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsertScriptDocBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.insertScript</a> &gt; <span class="el_source">InsertScriptDocBean.java</span></div><h1>InsertScriptDocBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.insertScript;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+
+import javax.persistence.*;
+import java.io.Serializable;
+
+/**
+ *  InsertScriptDocBean.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2016
+ *@author       $Author: jeeff prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 24.10.2016 13:05:32
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;insert_script_doc&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INSERT_SCRIPT)
+public class InsertScriptDocBean extends ActiveRecordRepository implements Serializable {
+
+	@JsonIgnore
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_insert_script_doc&quot;)
+	@TableGenerator(name=&quot;WJGen_insert_script_doc&quot;,pkColumnValue=&quot;insert_script_doc&quot;)
+	@Column(name=&quot;insert_script_doc_id&quot;)
+	private Long id;
+
+	@Column(name=&quot;doc_id&quot;)
+	int docId;
+
+	@ManyToOne
+	@JsonBackReference(value=&quot;insertScriptBeanDoc&quot;)
+	@JoinColumn(name=&quot;insert_script&quot;)
+	private InsertScriptBean insertScriptBeanDoc;
+
+<span class="fc" id="L50">    public InsertScriptDocBean() {</span>
+
+<span class="fc" id="L52">    }</span>
+
+<span class="fc" id="L54">    public InsertScriptDocBean(String path) {</span>
+<span class="fc" id="L55">        DocDetails doc = DocDB.getInstance().getCreateDoc(path);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (doc != null) docId = doc.getDocId();</span>
+<span class="fc" id="L57">    }</span>
+
+	@Override
+	public void setId(Long id)
+	{
+<span class="fc" id="L62">		setInsertScriptDocId(id);</span>
+<span class="fc" id="L63">	}</span>
+
+	@Override
+	public Long getId()
+	{
+<span class="fc" id="L68">		return getInsertScriptDocId();</span>
+	}
+
+	public Long getInsertScriptDocId() {
+<span class="fc" id="L72">		return id;</span>
+	}
+
+	public void setInsertScriptDocId(Long insertScriptDocId) {
+<span class="fc" id="L76">		this.id = insertScriptDocId;</span>
+<span class="fc" id="L77">	}</span>
+
+	public int getDocId() {
+<span class="fc" id="L80">		return docId;</span>
+	}
+
+	public void setDocId(int docId) {
+<span class="fc" id="L84">		this.docId = docId;</span>
+<span class="fc" id="L85">	}</span>
+
+	@JsonIgnore
+	public InsertScriptBean getInsertScript() {
+<span class="nc" id="L89">		return insertScriptBeanDoc;</span>
+	}
+
+	public void setInsertScript(InsertScriptBean insertScriptBean) {
+<span class="nc" id="L93">		this.insertScriptBeanDoc = insertScriptBean;</span>
+<span class="nc" id="L94">	}</span>
+
+	/**
+     * Vratenie cesty pre vue komponentu
+     * @return
+     */
+	@JsonProperty(access = Access.READ_ONLY)
+    public String getFullPath() {
+<span class="fc" id="L102">		DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (doc != null) {</span>
+<span class="fc" id="L104">			return doc.getFullPath();</span>
+		}
+<span class="nc" id="L106">		return &quot;&quot;;</span>
+	}
+
+	@JsonIgnore
+	public String toString() {
+<span class="fc" id="L111">		return &quot;InsertScriptDocBean id=&quot;+getId()+&quot; path=&quot;+getFullPath();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -32,7 +32,7 @@ Táto verzia prináša viaceré zmeny, ktoré nemusia byť spätne kompatibilné
 - Import/Export - pridané nastavenie lokálnych ID priečinkov pri vytvorení šablóny. Rieši problém pri editácii stránky po importe, kde šablóna síce je vytvorená, ale nemá správne nastavený prístup k priečinkom. Neexistujúce priečinky sú odfiltrované. Po importe odporúčame skontrolovať nastavenie šablón (#55993).
 - Pri vytvorení novej web stránky a vkladaní obrázka/súboru/média je už pred uložením vytvorený priečinok pre Média tejto stránky. Vytvorí sa podľa hodnoty zadanej v poli Názov položky v menu (#54953-29).
 - Pri editácii jednej web stránky si okno pre vloženie obrázku/vytvorenie odkazu pamätá aj po zatvorení posledný priečinok a neprepne sa nazad do sekcie Média tejto stránky pri znova otvorení. Ak vkladáte viacero obrázkov z iného priečinka je to praktickejšie. Do sekcie Média tejto stránky sa stále môžete prepnúť kliknutím v stromovej štruktúre (#54953-29).
-- Pridaná podpora pre ![](redactor/webpages/recover-button.png ":no-zoom") [Obnovenie web stránok a priečinkov z koša](redactor/webpages/recover.md) (#55937).
+- Pridaná podpora pre ![](redactor/webpages/recover-button.png ":no-zoom"), [Obnovenie web stránok a priečinkov z koša](redactor/webpages/recover.md) (#55937).
 - Priečinok `/files` s plno textovým indexom súborov je presunutý do karty Systém (#54953-30).
 - Šablóny - pridaná možnosť nastaviť Typ editora stránok (pôvodne Inline editor štruktúry) pre šablónu, predvolená hodnota je Podľa skupiny šablón, kedy sa Typ editora stránok nastaví podľa priradenej skupiny šablón (#56129).
 
@@ -575,7 +575,7 @@ implementation("sk.iway:webjet:${webjetVersion}:jtidy")
 
 Prečistené/zmazané viaceré Java triedy a balíky a príslušné JSP súboru. Pre podporu zmazaných častí v projektoch je potrebné použiť buď príslušný produkt typu WebJET NET alebo do projektu ich preniesť z verzie 8:
 
-- Odosielanie SMS správ ```SendSMS```, konverzia Sk na Eur ```SkkEuroLoader```, Import SAX ```XmlSaxImporter```, Vkladanie JS/CSS priamo do stránky (Packager), kompilácia ```sass``` ```SassFileMonitor```, ```Skriptovanie v editore```, import používateľov z ```TXT/CSV``` súboru v starom ```Outlook``` formáte (použite import z xlsx formátu).
+- Odosielanie SMS správ ```SendSMS```, konverzia Sk na Eur ```SkkEuroLoader```, Import SAX ```XmlSaxImporter```, Vkladanie JS/CSS priamo do stránky (Packager), kompilácia ```sass```, ```SassFileMonitor```, ```Skriptovanie v editore```, import používateľov z ```TXT/CSV``` súboru v starom ```Outlook``` formáte (použite import z xlsx formátu).
 - Značky ```iwcm:vue``` a ```vue.tld``` pre vkladanie VUE komponent, dnes odporúčame ich vkladať priamo ako JS súbory.
 - Integrácia na ```Alfresco``` a ```Sharepoint``` (bude neskôr dostupné ako súčasť produktu NET).
 - Aplikácie: Bazár, ```AppCache```, ```Chat```, ```Clipboard```, ```Docman```, ```emailAttachmentsPublisher```, ```Events```, Graf, Majetok, Inzercia, ```PageUpdateInfo```, Poradňa, SITA, Tip dňa, Úschovňa, ```Wiki```, Zmluvy (časť aplikácii je nahradená v produkte WebJET NET).
@@ -699,7 +699,7 @@ Doplnené vlastnosti:
 
 - Zlepšená podpora databázového servera Oracle (#54953-6, #54953-7).
 - Pri multi doménovej inštalácii s použitím doménových aliasov je pri generovaní ```/thumb``` obrázka overené, či existuje varianta v priečinku s pridaným doménovým aliasom (```/images/ALIAS/cesta/obrazok.jpg```). Ak neexistuje, použije sa pôvodne požadovaná cesta (#54993).
-- Pridaná konf. premenná `languages` [nastavujúca dostupné jazykové mutácie](admin/setup/languages.md)
+- Pridaná konf. premenná `languages`, [nastavujúca dostupné jazykové mutácie](admin/setup/languages.md)
 - Upravená pauza pri zápise štatistík - pôvodne sa náhodná pauza (0-10 sekúnd) vykonala pred každým zápisom SQL výrazu, po novom sa vykoná len pred prvým záznamom. Pauza je náhodná, aby v clustri nedochádzalo k nadmernému zaťaženiu databázy v 0 sekunde kedy sa predvolene vykonáva úloha na pozadí pre zápis štatistík.
 
 ### Oprava chýb
@@ -738,7 +738,7 @@ Doplnené vlastnosti:
 
 ### Testovanie
 
-- Do [testovania Datatabuľky](developer/testing/datatable.md#možnosti-nastavenia) ```DataTables.baseTest``` doplnená možnosť ```afterCreateSteps(I, options, requiredFields, DT, DTE)``` pre nastavenie napr. povinných polí po uložení záznamu (ak tabuľka neobsahuje žiadne povinné polia je možné nastaviť pole pre vyhľadávanie záznamu v ďalších krokoch).
+- Do [testovania Datatabuľky](developer/testing/datatable.md#možnosti-nastavenia), ```DataTables.baseTest``` doplnená možnosť ```afterCreateSteps(I, options, requiredFields, DT, DTE)``` pre nastavenie napr. povinných polí po uložení záznamu (ak tabuľka neobsahuje žiadne povinné polia je možné nastaviť pole pre vyhľadávanie záznamu v ďalších krokoch).
 - Doplnený test ```webpages.webpage-virtual-path ```nastavovania URL adries stránok - kontrola duplicity, kontrola adries so znakom hviezdička (#55161).
 
 ### Dokumentácia

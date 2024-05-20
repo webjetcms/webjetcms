@@ -127,7 +127,7 @@ function loadComponentIframe()
 </style>
 
 <div class="row title">
-    <h1 class="page-title"><i class="fa icon-layers"></i><iwcm:text key="components.file_archiv.name"/><i class="fa fa-angle-right"></i><iwcm:text key="components.file_archiv.list_files"/></h1>
+    <h1 class="page-title"><i class="fa icon-layers"></i><iwcm:text key="components.file_archiv.name"/><i class="ti ti-chevron-right"></i><iwcm:text key="components.file_archiv.list_files"/></h1>
 </div>
 
 <%

@@ -32,7 +32,7 @@
 </script>
 
 <div class="row title">
-	<h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="fa fa-angle-right"></i><iwcm:text key="components.basket.invoices_header" /></h1>
+	<h1 class="page-title"><i class="fa icon-basket-loaded"></i><iwcm:text key="components.basket.invoices"/><i class="ti ti-chevron-right"></i><iwcm:text key="components.basket.invoices_header" /></h1>
 </div>
 
 <%

@@ -81,8 +81,7 @@ try
 	out.println("Data readed. ("+dt.getLastDiff()+" ms<br/>");
 	out.flush();
 	ps = db_conn.prepareStatement("select * from banner_stat_views", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
-	if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);
-   else ps.setFetchSize(1);
+	ps.setFetchSize(1);
 	rs = ps.executeQuery();
 
 	out.println("Summing banners views. <br>");

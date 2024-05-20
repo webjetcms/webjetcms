@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadExampleListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.basecms.contact.upload</a> &gt; <span class="el_source">UploadExampleListener.java</span></div><h1>UploadExampleListener.java</h1><pre class="source lang-java linenums">package sk.iway.basecms.contact.upload;
+
+import javax.validation.Validator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+
+import sk.iway.iwcm.admin.AbstractUploadListener;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+/**
+ * Ukazkovy Thymeleaf listener pre spracovanie uploadu suboru
+ */
+@Component
+public class UploadExampleListener extends AbstractUploadListener&lt;Form&gt; {
+
+<span class="fc" id="L22">    private static final Logger LOGGER = LoggerFactory.getLogger(UploadExampleListener.class);</span>
+
+    protected UploadExampleListener(Validator validator) {
+<span class="fc" id="L25">        super(validator);</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='contact' &amp;&amp; event.source.subpage=='upload'&quot;)
+    public void processForm(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+        // sprocesovanie dat formularu do objektu a validacia tohto objektu
+<span class="nc" id="L32">        super.processForm(event);</span>
+<span class="nc" id="L33">        ModelMap model = event.getSource().getModel();</span>
+        // ziskanie objektu a vlozenie do modelu
+<span class="nc" id="L35">        Form form = getForm();</span>
+<span class="nc" id="L36">        model.addAttribute(&quot;form&quot;, form);</span>
+
+<span class="nc" id="L38">        LOGGER.debug(&quot;Is post: {}&quot;, isPost());</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (!isPost()) {</span>
+            // ak nie je request typu post, tak dalej nic nerobime
+<span class="nc" id="L41">            return;</span>
+        }
+
+        // ziskanie validacnych errorov
+<span class="nc" id="L45">        BindingResult errors = getBindingResult();</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (errors.hasErrors()) {</span>
+<span class="nc" id="L47">            LOGGER.debug(&quot;We have errors: {}&quot;, errors.getErrorCount());</span>
+<span class="nc" id="L48">            return;</span>
+        }
+
+        //
+        //...spravte s formularom co potrebujete
+        //
+<span class="nc" id="L54">        model.addAttribute(&quot;importedFileName&quot;, form.getDocument().getOriginalFilename());</span>
+<span class="nc" id="L55">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

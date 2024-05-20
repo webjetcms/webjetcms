@@ -2,10 +2,10 @@
 
 .ly-header {
     border: 0;
-    padding: 14px 0 15px 0;
+    padding: 8px 0 8px 0;
     margin: 0;
 
-    height: 60px;
+    height: 48px;
 
     position: fixed;
     top: 0;
@@ -34,6 +34,9 @@
         .header-link-group:first-child {
             margin-left: 0;
         }
+        .ti {
+            vertical-align: middle;
+        }
     }
 
     .header-link-group {
@@ -45,9 +48,6 @@
         a.dropdown-item, button.btn {
             font-size: 14px;
             cursor: pointer;
-            i.fa, i.fas, i.far {
-                padding-right: 6px;
-            }
         }
 
         button.btn:focus {
@@ -77,6 +77,11 @@
 
     .js-sidebar-toggler {
         display: none;
+        padding-left: 7px;
+        padding-bottom: 2px;
+        i.ti {
+            font-size: 20px;
+        }
     }
     .js-help-toggler {
         max-width: 120px;
@@ -93,7 +98,7 @@
     .js-domain-toggler {
         max-width: 258px;
         //margin-top: -8px;
-        padding: 0px 0px 4px 8px;
+        padding: 1px 0px 4px 8px;
         border-radius: 6px;
         i {
             position: relative;

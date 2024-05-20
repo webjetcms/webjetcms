@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogoffServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">LogoffServlet.java</span></div><h1>LogoffServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor;
+import sk.iway.iwcm.users.UserDetails;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.util.Map;
+
+@WebServlet(name = &quot;LogOff&quot;,
+        urlPatterns = {&quot;/logoff.do&quot;,&quot;/admin/logoff.do&quot;}
+)
+<span class="fc" id="L18">public class LogoffServlet extends HttpServlet {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+<span class="fc" id="L25">        Logger.println(LogoffServlet.class,&quot;LogoffServlet  CALLED - GET&quot;);</span>
+<span class="fc" id="L26">        execute(request,response);</span>
+<span class="fc" id="L27">    }</span>
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+<span class="nc" id="L32">        Logger.println(LogoffServlet.class,&quot;LogoffServlet  CALLED - POST&quot;);</span>
+<span class="nc" id="L33">        execute(request,response);</span>
+<span class="nc" id="L34">    }</span>
+
+    public void execute(HttpServletRequest request,
+                                 HttpServletResponse response)
+            throws IOException, ServletException
+    {
+
+<span class="fc" id="L41">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L42">        Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc bfc" id="L43" title="All 4 branches covered.">        if (user != null &amp;&amp; user.isAdmin())</span>
+        {
+<span class="fc" id="L45">            sk.iway.iwcm.stat.StatDB.addAdmin(request);</span>
+        }
+
+<span class="fc" id="L48">        this.callLogonLogoffInterceptor(user, request);</span>
+
+        /**
+         * install-custom actions before logoff
+         * method takes one argument -  request
+         * return value is not dealt with
+         * format is fully.qualified.class.name.methodName
+         */
+<span class="fc" id="L56">        String beforeLogoffAction = Constants.getString(&quot;beforeLogoffAction&quot;);</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(beforeLogoffAction))</span>
+        {
+            try{
+<span class="nc" id="L60">                int i = beforeLogoffAction.lastIndexOf('.');</span>
+<span class="nc" id="L61">                String beforeLogoffClass = beforeLogoffAction.substring(0, i);</span>
+<span class="nc" id="L62">                String beforeLogoffMethod = beforeLogoffAction.substring(i+1);</span>
+<span class="nc" id="L63">                Logger.debug(getClass(), &quot;Before logoff action:&quot; + beforeLogoffAction);</span>
+<span class="nc" id="L64">                Class&lt;?&gt; c = Class.forName(beforeLogoffClass);</span>
+                Method m;
+<span class="nc" id="L66">                Class&lt;?&gt;[] parameterTypes = new Class&lt;?&gt;[] {HttpServletRequest.class};</span>
+<span class="nc" id="L67">                Object[] arguments = new Object[] {request};</span>
+<span class="nc" id="L68">                m = c.getDeclaredMethod(beforeLogoffMethod, parameterTypes);</span>
+<span class="nc" id="L69">                m.setAccessible(true); //NOSONAR</span>
+<span class="nc" id="L70">                m.invoke(null, arguments);</span>
+            }
+<span class="nc" id="L72">            catch(Exception e){</span>
+                //sk.iway.iwcm.Logger.error(e);
+<span class="nc" id="L74">                Logger.debug(getClass(), &quot;Failed to perform before logoff action:&quot; + beforeLogoffAction + &quot; cause: &quot; +e.getMessage());</span>
+<span class="nc" id="L75">            }</span>
+        }
+
+<span class="fc" id="L78">        session.removeAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L79">        session.removeAttribute(&quot;loggeduser&quot;);</span>
+<span class="fc" id="L80">        session.invalidate();</span>
+<span class="fc" id="L81">        String admin = &quot;&quot;;</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">        if (user != null &amp;&amp; user.isAdmin()) admin = &quot; (ADMIN)&quot;;</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (user != null) Adminlog.add(Adminlog.TYPE_USER_LOGOFF, &quot;LogoffAction - user&quot;+admin+&quot; successfully logged off: name = &quot; + user.getLogin(), -1, -1);</span>
+
+<span class="fc" id="L85">        removePermanentLogon(request, response);</span>
+
+        //zmaz z cache user objekty
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (user != null)</span>
+        {
+<span class="fc" id="L90">            Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L91">            cache.removeUserAllUserObjects(user);</span>
+        }
+
+        // Forward control to the specified success URI
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (request.getParameter(&quot;forwardDocId&quot;)!=null)</span>
+        {
+<span class="nc" id="L97">            response.sendRedirect(&quot;/showdoc.do?docid=&quot;+ Tools.getIntValue(request.getParameter(&quot;forwardDocId&quot;), 4));</span>
+<span class="nc" id="L98">            return;</span>
+        }
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        else if (request.getParameter(&quot;forward&quot;)!=null)</span>
+        {
+<span class="fc" id="L102">            String forward = Tools.replace(Tools.sanitizeHttpHeaderParam(request.getParameter(&quot;forward&quot;)), &quot;//&quot;, &quot;/&quot;);</span>
+            //security: allow only forwards to local addresses, if requested to external address use forwardDocId with redirect set in webpage
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">            if (forward.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L105">                response.sendRedirect(forward);</span>
+            }
+<span class="fc" id="L107">            return;</span>
+        }
+        //request.getRequestDispatcher(&quot;success&quot;).forward(request,response);
+        //response.sendRedirect(&quot;/&quot;);
+<span class="fc" id="L111">        String logoffRedirect = Constants.getString(&quot;logoffRedirectUrl&quot;);</span>
+<span class="fc" id="L112">        response.sendRedirect(logoffRedirect);</span>
+<span class="fc" id="L113">    }</span>
+
+    private void callLogonLogoffInterceptor(UserDetails user, HttpServletRequest request)
+    {
+<span class="fc" id="L117">        String interceptorClassName = Constants.getString(&quot;stripesLogonLogoffInterceptorClass&quot;);</span>
+
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        if (Tools.isEmpty(interceptorClassName)) {</span>
+<span class="fc" id="L120">            interceptorClassName = Tools.getStringValue((String) request.getAttribute(&quot;afterSaveInterceptor&quot;), &quot;&quot;);</span>
+        }
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(interceptorClassName)) {</span>
+            try
+            {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L127">                Class&lt;? extends AfterLogonLogoffInterceptor&gt; interceptorClass = (Class&lt;? extends AfterLogonLogoffInterceptor&gt;) Class.forName(interceptorClassName);</span>
+<span class="nc" id="L128">                AfterLogonLogoffInterceptor interceptor = interceptorClass.getDeclaredConstructor().newInstance();</span>
+
+<span class="nc" id="L130">                interceptor.logoff(user, request);</span>
+            }
+<span class="nc" id="L132">            catch (Exception e)</span>
+            {
+<span class="nc" id="L134">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L135">            }</span>
+        }
+<span class="fc" id="L137">    }</span>
+
+    /**
+     * @param request
+     * @throws UnsupportedEncodingException
+     * @author mhalas
+     */
+    private void removePermanentLogon(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException
+    {
+        try
+        {
+<span class="fc" id="L148">            String cookieName = &quot;wjpltrack&quot;;</span>
+
+<span class="fc" id="L150">            Cookie[] cookies = request.getCookies();</span>
+<span class="fc" id="L151">            Cookie plcookie = null;</span>
+<span class="pc bpc" id="L152" title="1 of 4 branches missed.">            if(cookies != null &amp;&amp; cookies.length &gt; 0)</span>
+            {
+<span class="fc bfc" id="L154" title="All 2 branches covered.">                for(Cookie c : cookies)</span>
+                {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">                    if(c.getName().equals(cookieName)){</span>
+<span class="nc" id="L157">                        plcookie = c; break;</span>
+                    }
+                }
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">                if(plcookie != null)</span>
+                {
+<span class="nc" id="L162">                    String[] keyua = plcookie.getValue().split(&quot;-&quot;);</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L164">                    Map&lt;String, String&gt; plmap = (Map&lt;String, String&gt;)Constants.getServletContext().getAttribute(cookieName);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                    if (plmap != null) plmap.remove(keyua[0]);</span>
+
+                    //delete cookie from client
+<span class="nc" id="L168">                    Cookie cookie = new Cookie(cookieName, URLEncoder.encode(&quot;deleted&quot;,&quot;UTF-8&quot;));</span>
+<span class="nc" id="L169">                    cookie.setMaxAge(0);</span>
+<span class="nc" id="L170">                    cookie.setPath(&quot;/&quot;);</span>
+<span class="nc" id="L171">                    response.addCookie(cookie);</span>
+                }
+            }
+        }
+<span class="nc" id="L175">        catch (Exception e)</span>
+        {
+<span class="nc" id="L177">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L178">        }</span>
+
+<span class="fc" id="L180">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

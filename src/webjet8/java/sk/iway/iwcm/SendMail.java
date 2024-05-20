@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
-import com.amazonaws.services.simpleemail.AWSJavaMailTransport;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -115,8 +115,40 @@ public class SendMail
 	 * @return true, ak sa email podarilo odoslat, inak false
 	 * @throws Exception
 	 */
-	public static Pair<Boolean, Exception> sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList, boolean sendLaterWhenException, boolean writeToAuditLog)
+	public static Pair<Boolean, Exception> sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList, boolean sendLaterWhenException, boolean writeToAuditLog) {
+		MailHelper mailHelper = new MailHelper()
+				.setFromName(senderName)
+				.setFromEmail(senderEmail)
+				.setToEmail(recipientEmail)
+				.setReplyTo(replyTo)
+				.setCcEmail(ccEmail)
+				.setBccEmail(bccEmail)
+				.setSubject(subject)
+				.setMessage(message)
+				.setBaseHref(baseHref)
+				.setAttachments(attachmentsList)
+				.setSendLaterWhenException(sendLaterWhenException)
+				.setWriteToAuditLog(writeToAuditLog);
+
+		return sendCapturingException(mailHelper);
+	}
+
+	public static Pair<Boolean, Exception> sendCapturingException(MailHelper mailHelper)
 	{
+		String senderName = mailHelper.getFromName();
+		String senderEmail = mailHelper.getFromEmail();
+		String recipientEmail = mailHelper.getToEmail();
+		String replyTo = mailHelper.getReplyTo();
+		String ccEmail = mailHelper.getCcEmail();
+		String bccEmail = mailHelper.getBccEmail();
+		String subject = mailHelper.getSubject();
+		String message = mailHelper.getMessage();
+		String baseHref = mailHelper.getBaseHref();
+		String attachmentsList = mailHelper.getAttachments();
+		boolean sendLaterWhenException = mailHelper.isSendLaterWhenException();
+		boolean writeToAuditLog = mailHelper.isWriteToAuditLog();
+		List< Pair<String, String> > headers = mailHelper.getHeaders();
+
 		if ("false".equals(Constants.getString("useSMTPServer")) && writeToAuditLog) // mail neodosleme ale ulozime do db pre \odoslanie na inom node, okrem pripadu, ze potrebujeme odoslat chybu sposobenu pri dosiahnuti maximalenho poctu DB spojeni
 		{
 			Logger.debug(SendMail.class, "useSMTPServer=false -> sending later. " );
@@ -270,6 +302,14 @@ public class SendMail
 			    mes.setHeader("X-Autoreply",AUTOREPLY_SUBJECT);
 			}
 
+			if (headers != null && headers.size() > 0)
+			{
+				for (Pair<String, String> header : headers)
+				{
+					mes.setHeader(header.getFirst(), header.getSecond());
+				}
+			}
+
 			if (senderEmail.length() > 0)
 			{
 				mes.setFrom(new InternetAddress(senderEmail, senderName));
@@ -400,13 +440,6 @@ public class SendMail
 				if (Constants.getBoolean("sendMailSaveEmail")) {
 					saveEmailToFile(mes);
 				}
-				else if (Constants.getBoolean("useAmazonSES"))
-				{
-					AWSJavaMailTransport transport = new AWSJavaMailTransport(ms, null);
-					transport.connect();
-					transport.sendMessage(mes,null);
-					transport.close();
-				}
 				else
 				{
 					Transport.send(mes);
@@ -520,7 +553,7 @@ public class SendMail
 						ps.setString(counter++, attachments);
 					}
 					ps.setInt(counter++, 0);
-					ps.setString(counter++, null);
+					ps.setNull(counter++, Types.TIMESTAMP);
 					ps.setInt(counter++, -1);
 					ps.setTimestamp(counter++, new Timestamp(Tools.getNow()));
 					if (Tools.isNotEmpty(date) && Tools.isNotEmpty(time))
@@ -656,7 +689,7 @@ public class SendMail
 				{
 					if (url.charAt(0)!='/')
 					{
-						url = "/" + url;
+						url = "/" + url; //NOSONAR
 					}
 
 					//ak mame multidomain fixni cesty

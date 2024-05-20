@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestaurantMenuEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.restaurant_menu.jpa</a> &gt; <span class="el_source">RestaurantMenuEditorFields.java</span></div><h1>RestaurantMenuEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.restaurant_menu.jpa;
+
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class RestaurantMenuEditorFields extends BaseEditorFields {
+
+<span class="fc" id="L25">    public RestaurantMenuEditorFields() {</span>
+        //konstruktor
+<span class="fc" id="L27">    }</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.cron_task.day_in_week&quot;,
+        sortAfter = &quot;id&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false
+    )
+    private String dayOfWeek;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.restaurant_menu.cathegory&quot;,
+        sortAfter = &quot;editorFields.dayOfWeek&quot;,
+        orderable = false,
+        filter = false,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.restaurant_menu.soup&quot;, value = &quot;1Polievka&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.restaurant_menu.main_dish&quot;, value = &quot;2Hlavné jedlo&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.restaurant_menu.side_dish&quot;, value = &quot;3Príloha&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.restaurant_menu.dessert&quot;, value = &quot;4Dezert&quot;)
+				}
+			)
+		}
+    )
+    private String mealCathegory;
+
+    //In table just showing meal name
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.restaurant_menu.meal_name&quot;,
+        sortAfter = &quot;editorFields.mealCathegory&quot;,
+        renderFormatLinkTemplate = &quot;javascript:openMealDetail({{mealId}});&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false
+    )
+    private String mealName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.MULTISELECT,
+        title = &quot;components.restaurant_menu.alergens&quot;,
+        renderFormat = &quot;dt-format-select&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false
+    )
+    private Integer[] mealAlergens;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.restaurant_menu.description&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false,
+        visible = false
+    )
+    private String mealDescription;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.restaurant_menu.weight&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false,
+        visible = false
+    )
+    private String mealWeight;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.restaurant_menu.price&quot;,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false,
+        visible = false
+    )
+    private Double mealPrice;
+
+    //In editor it's meal select - values are add throu ajax request in FE
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.restaurant_menu.meal_name&quot;,
+        sortAfter = &quot;editorFields.mealCathegory&quot;,
+        hidden = true
+    )
+    private Integer selectedMealId;
+
+    public void fromRestaurantMenuEntity(RestaurantMenuEntity originalEntity, Prop prop) {
+<span class="fc" id="L121">        RestaurantMenuMealsEntity meal = originalEntity.getMeal();</span>
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if(meal == null) return;</span>
+<span class="fc" id="L124">        this.mealCathegory = meal.getCathegory();</span>
+<span class="fc" id="L125">        this.mealName = meal.getName();</span>
+<span class="fc" id="L126">        this.mealDescription = meal.getDescription();</span>
+<span class="fc" id="L127">        this.mealWeight = meal.getWeight();</span>
+<span class="fc" id="L128">        this.mealPrice = meal.getPrice();</span>
+<span class="fc" id="L129">        this.mealAlergens = Arrays.stream( Tools.getTokensInt(meal.getAlergens(), &quot;,&quot;) ).boxed().toArray( Integer[]::new );</span>
+
+        //set day of week
+<span class="fc" id="L132">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L133">        cal.setTime(originalEntity.getDayDate());</span>
+<span class="fc" id="L134">        this.dayOfWeek = prop.getText(&quot;dayfull.&quot; + cal.get(Calendar.DAY_OF_WEEK));</span>
+
+<span class="fc" id="L136">        originalEntity.setMealId(meal.getId());</span>
+<span class="fc" id="L137">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L138">    }</span>
+
+    public void toRestaurantMenuEntity(RestaurantMenuEntity originalEntity, RestaurantMenuMealsRepository rmmr) {
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if(originalEntity.getEditorFields() == null) return;</span>
+
+<span class="fc" id="L143">        Optional&lt;RestaurantMenuMealsEntity&gt; selectedMeal = rmmr.findByIdAndDomainId(selectedMealId, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if(selectedMeal.isPresent()) originalEntity.setMeal( selectedMeal.get() );</span>
+<span class="nc" id="L145">        else throw new RuntimeException(&quot;Something went wrong - uknow meal&quot;);</span>
+<span class="fc" id="L146">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

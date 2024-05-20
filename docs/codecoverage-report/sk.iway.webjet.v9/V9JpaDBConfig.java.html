@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>V9JpaDBConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.webjet.v9</a> &gt; <span class="el_source">V9JpaDBConfig.java</span></div><h1>V9JpaDBConfig.java</h1><pre class="source lang-java linenums">package sk.iway.webjet.v9;
+
+import java.util.Properties;
+
+import org.eclipse.persistence.config.PersistenceUnitProperties;
+import org.eclipse.persistence.config.TargetDatabase;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
+import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
+import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
+
+/**
+ * JpaDBConfig - zakladna konfiguracia JPA aby sme vedeli, co mame preniest potom do standardneho WJ
+ */
+@Configuration
+@EnableTransactionManagement
+@EnableJpaRepositories(
+    entityManagerFactoryRef = &quot;webjet2022EntityManager&quot;,
+    transactionManagerRef = &quot;webjet2022TransactionManager&quot;,
+    basePackages = {
+        &quot;sk.iway.iwcm.components.gallery&quot;,
+        &quot;sk.iway.iwcm.system&quot;,
+        &quot;sk.iway.iwcm.system.audit.jpa&quot;,
+        &quot;sk.iway.iwcm.components.redirects&quot;,
+        &quot;sk.iway.iwcm.components.translation_keys.jpa&quot;,
+        &quot;sk.iway.iwcm.components.forms&quot;,
+        &quot;sk.iway.iwcm.components.forms.archive&quot;,
+        &quot;sk.iway.iwcm.components.insertScript&quot;,
+        &quot;sk.iway.iwcm.components.memory_cleanup.memory_cleanup_date_dependent&quot;,
+        &quot;sk.iway.iwcm.components.memory_cleanup&quot;,
+        &quot;sk.iway.iwcm.components.monitoring.jpa&quot;,
+        &quot;sk.iway.iwcm.components.media&quot;,
+        &quot;sk.iway.spirit.model&quot;,
+        &quot;sk.iway.iwcm.editor.rest&quot;,
+        &quot;sk.iway.iwcm.components.configuration&quot;,
+        &quot;sk.iway.iwcm.components.users.userdetail&quot;,
+        &quot;sk.iway.iwcm.components.users.usergroups&quot;,
+        &quot;sk.iway.iwcm.components.users.groups_approve&quot;,
+        &quot;sk.iway.iwcm.components.users.permgroups&quot;,
+        &quot;sk.iway.iwcm.components.perex_groups&quot;,
+        &quot;sk.iway.iwcm.users&quot;,
+        &quot;sk.iway.iwcm.users.jpa&quot;,
+        &quot;sk.iway.iwcm.components.gdpr.model&quot;,
+        &quot;sk.iway.iwcm.components.qa.jpa&quot;,
+        &quot;sk.iway.iwcm.doc&quot;,
+        &quot;sk.iway.iwcm.components.export&quot;,
+        &quot;sk.iway.iwcm.components.banner&quot;,
+        &quot;sk.iway.iwcm.dmail.jpa&quot;,
+        &quot;sk.iway.iwcm.stat.jpa&quot;,
+        &quot;sk.iway.iwcm.components.calendar.jpa&quot;,
+        &quot;sk.iway.iwcm.components.reservation.jpa&quot;,
+        &quot;sk.iway.iwcm.components.inquiry.jpa&quot;,
+        &quot;sk.iway.iwcm.doc.attributes.jpa&quot;,
+        &quot;sk.iway.basecms.contact&quot;,
+        &quot;sk.iway.iwcm.components.proxy.jpa&quot;,
+        &quot;sk.iway.iwcm.components.enumerations.model&quot;,
+        &quot;sk.iway.iwcm.components.response_header.jpa&quot;,
+        &quot;sk.iway.iwcm.components.forum.jpa&quot;,
+        &quot;sk.iway.iwcm.components.seo.jpa&quot;,
+        &quot;sk.iway.iwcm.components.rating.jpa&quot;,
+        &quot;sk.iway.iwcm.components.restaurant_menu.jpa&quot;,
+        &quot;sk.iway.iwcm.components.quiz.jpa&quot;,
+        &quot;sk.iway.iwcm.components.blog.jpa&quot;
+    }
+) // package s repozitarmi
+<span class="fc" id="L77">public class V9JpaDBConfig {</span>
+
+    @Bean(&quot;webjet2022EntityManager&quot;)
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory()
+    {
+<span class="fc" id="L82">        InMemoryLoggingDB.setQueueSize(Constants.getInt(&quot;loggingInMemoryQueueSize&quot;));</span>
+
+<span class="fc" id="L84">        Logger.println(V9JpaDBConfig.class, &quot;WebJET V9JpaDBConfig&quot;);</span>
+
+<span class="fc" id="L86">        LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();</span>
+<span class="fc" id="L87">        emf.setPersistenceProvider(new WebJETPersistenceProvider());</span>
+<span class="fc" id="L88">        emf.setDataSource(DBPool.getInstance().getDataSource(&quot;iwcm&quot;));</span>
+<span class="fc" id="L89">        emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());</span>
+<span class="fc" id="L90">        emf.setPackagesToScan(</span>
+                            &quot;sk.iway.iwcm.components.gallery&quot;,
+                            &quot;sk.iway.iwcm.system&quot;,
+                            &quot;sk.iway.iwcm.system.audit.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.forms&quot;,
+                            &quot;sk.iway.iwcm.components.forms.archive&quot;,
+                            &quot;sk.iway.iwcm.components.redirects&quot;,
+                            &quot;sk.iway.iwcm.components.translation_keys.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.insertScript&quot;,
+                            &quot;sk.iway.iwcm.components.memory_cleanup.memory_cleanup_date_dependent&quot;,
+                            &quot;sk.iway.iwcm.components.memory_cleanup&quot;,
+                            &quot;sk.iway.iwcm.components.monitoring.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.media&quot;,
+                            &quot;sk.iway.spirit.model&quot;,
+                            &quot;sk.iway.iwcm.editor.rest&quot;,
+                            &quot;sk.iway.iwcm.components.configuration&quot;,
+                            &quot;sk.iway.iwcm.components.users.userdetail&quot;,
+                            &quot;sk.iway.iwcm.components.users.usergroups&quot;,
+                            &quot;sk.iway.iwcm.components.users.groups_approve&quot;,
+                            &quot;sk.iway.iwcm.components.users.permgroups&quot;,
+                            &quot;sk.iway.iwcm.components.perex_groups&quot;,
+                            &quot;sk.iway.iwcm.doc&quot;,
+                            &quot;sk.iway.iwcm.users&quot;,
+                            &quot;sk.iway.iwcm.users.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.gdpr.model&quot;,
+                            &quot;sk.iway.iwcm.components.qa.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.export&quot;,
+                            &quot;sk.iway.iwcm.components.banner&quot;,
+                            &quot;sk.iway.iwcm.dmail.jpa&quot;,
+                            &quot;sk.iway.iwcm.stat.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.calendar.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.reservation.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.inquiry.jpa&quot;,
+                            &quot;sk.iway.iwcm.doc.attributes.jpa&quot;,
+                            &quot;sk.iway.basecms.contact&quot;,
+                            &quot;sk.iway.iwcm.components.proxy.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.enumerations.model&quot;,
+                            &quot;sk.iway.iwcm.components.response_header.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.forum.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.seo.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.rating.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.restaurant_menu.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.quiz.jpa&quot;,
+                            &quot;sk.iway.iwcm.components.blog.jpa&quot;
+        );
+
+<span class="fc" id="L136">        Properties properties = new Properties();</span>
+<span class="fc" id="L137">        properties.setProperty(&quot;eclipselink.weaving&quot;, &quot;false&quot;);</span>
+<span class="fc" id="L138">        properties.setProperty(&quot;eclipselink.session.customizer&quot;, &quot;sk.iway.webjet.v9.JpaSessionCustomizer&quot;);</span>
+
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (Constants.DB_TYPE == Constants.DB_ORACLE) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        else if (Constants.DB_TYPE == Constants.DB_MSSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        else if (Constants.DB_TYPE == Constants.DB_PGSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);</span>
+<span class="fc" id="L143">        else properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);</span>
+
+<span class="fc" id="L145">        WebJETJavaSECMPInitializer.setDefaultProperties(properties);</span>
+<span class="fc" id="L146">        emf.setJpaProperties(properties);</span>
+
+<span class="fc" id="L148">        return emf;</span>
+    }
+
+    /*@Override
+    public PlatformTransactionManager annotationDrivenTransactionManager() {
+        return transactionManager();
+    }*/
+
+    @Bean(&quot;webjet2022TransactionManager&quot;)
+    public PlatformTransactionManager transactionManager(){
+<span class="fc" id="L158">        JpaTransactionManager transactionManager = new JpaTransactionManager();</span>
+<span class="fc" id="L159">        transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());</span>
+<span class="fc" id="L160">        return transactionManager;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileCache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">FileCache.java</span></div><h1>FileCache.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.CacheBean;
+import sk.iway.iwcm.CacheListener;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  FileCache.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: Feb 13, 2009 1:10:53 PM
+ *@modified     $Date: 2009/06/02 06:37:34 $
+ */
+<span class="fc" id="L20">public class FileCache implements CacheListener</span>
+{
+
+	public static final String FILE_CACHE_PREFIX = &quot;FSDB_&quot;;
+
+<span class="fc" id="L25">	private static Cache cache=Cache.getInstance();</span>
+<span class="fc" id="L26">	private static int maxFileSize=10240;</span>
+<span class="fc" id="L27">	private static int maxCacheSize = 10240*20;</span>
+<span class="fc" id="L28">	private static boolean useFileCache = false;</span>
+<span class="fc" id="L29">	private static int timeInCacheInMinutes = 15;</span>
+<span class="fc" id="L30">	private static int actualCacheSize = 0;</span>
+
+
+	static
+	{
+<span class="fc" id="L35">		FileCache theCache = new FileCache();</span>
+<span class="fc" id="L36">		Cache.subscribe(theCache);</span>
+<span class="fc" id="L37">	}</span>
+
+	private static long getKey(String virtualPath)
+	{
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage()) return IwcmFsDB.getFatIdTable().get(virtualPath);</span>
+
+		//aby nam to samo expirovalo po zmene datumu
+<span class="nc" id="L44">		IwcmFile f = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc" id="L45">		return f.lastModified();</span>
+	}
+
+	public static void setObject(String virtualPath, byte[] fileData)
+	{
+<span class="nc" id="L50">		long fatId=getKey(virtualPath);</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if ((actualCacheSize+fileData.length)&lt;=maxCacheSize &amp;&amp; fileData.length &lt; maxFileSize)</span>
+		{
+<span class="nc" id="L53">			cache.setObject(FILE_CACHE_PREFIX+virtualPath+fatId, fileData, timeInCacheInMinutes);</span>
+		}
+<span class="nc" id="L55">	}</span>
+
+	public static boolean isInCache(String virtualPath)
+	{
+<span class="nc" id="L59">		long fatId=getKey(virtualPath);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (cache.getObject(FILE_CACHE_PREFIX+virtualPath+fatId)!=null)</span>
+		{
+<span class="nc" id="L62">			return true;</span>
+		}
+		else
+		{
+<span class="nc" id="L66">			return false;</span>
+		}
+	}
+
+	public static byte[] getObject(String name)
+	{
+<span class="nc" id="L72">		long fatId=getKey(name);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (fatId &lt; 1) return null;</span>
+<span class="nc" id="L74">		return (byte[])cache.getObject(FILE_CACHE_PREFIX+name+fatId);</span>
+	}
+
+	public static byte[] getObject(String name, int fatId)
+	{
+<span class="nc" id="L79">		return (byte[])cache.getObject(FILE_CACHE_PREFIX+name+fatId);</span>
+	}
+
+	public static  void init()
+	{
+<span class="fc" id="L84">		maxFileSize=Constants.getInt(&quot;iwfs_maxFileSize&quot;);</span>
+<span class="fc" id="L85">		maxCacheSize = Constants.getInt(&quot;iwfs_maxCacheSize&quot;);</span>
+<span class="fc" id="L86">		useFileCache = Constants.getBoolean(&quot;iwfs_useFileCache&quot;);</span>
+<span class="fc" id="L87">		timeInCacheInMinutes = Constants.getInt(&quot;iwfs_timeInCacheInMinutes&quot;);</span>
+<span class="fc" id="L88">	}</span>
+
+	public static int getMaxFileSize()
+	{
+<span class="nc" id="L92">		return maxFileSize;</span>
+	}
+
+	public static void setMaxFileSize(int maxFileSize)
+	{
+<span class="nc" id="L97">		FileCache.maxFileSize = maxFileSize;</span>
+<span class="nc" id="L98">	}</span>
+
+	public static int getMaxCacheSize()
+	{
+<span class="nc" id="L102">		return maxCacheSize;</span>
+	}
+
+	public static void setMaxCacheSize(int maxCacheSize)
+	{
+<span class="nc" id="L107">		FileCache.maxCacheSize = maxCacheSize;</span>
+<span class="nc" id="L108">	}</span>
+
+	public static boolean useFileCache()
+	{
+<span class="fc" id="L112">		return useFileCache;</span>
+	}
+
+	public static void setUseFileCache(boolean useFileCache)
+	{
+<span class="nc" id="L117">		FileCache.useFileCache = useFileCache;</span>
+<span class="nc" id="L118">	}</span>
+
+	public static int getTimeInCacheInMinutes()
+	{
+<span class="nc" id="L122">		return timeInCacheInMinutes;</span>
+	}
+
+	public static void setTimeInCacheInMinutes(int timeInCacheInMinutes)
+	{
+<span class="nc" id="L127">		FileCache.timeInCacheInMinutes = timeInCacheInMinutes;</span>
+<span class="nc" id="L128">	}</span>
+
+	@Override
+	public void objectAdded(CacheBean theObject)
+	{
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (theObject.getName().startsWith(FILE_CACHE_PREFIX))</span>
+		{
+<span class="nc" id="L135">			byte[] data = (byte[])theObject.getObject();</span>
+<span class="nc" id="L136">			actualCacheSize += data.length; //NOSONAR</span>
+		}
+<span class="fc" id="L138">	}</span>
+
+	@Override
+	public void objectRemoved(CacheBean theObject)
+	{
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">		if (theObject.getName().startsWith(FILE_CACHE_PREFIX))</span>
+		{
+<span class="nc" id="L145">			byte[] data = (byte[])theObject.getObject();</span>
+<span class="nc" id="L146">			actualCacheSize -= data.length; //NOSONAR</span>
+		}
+<span class="fc" id="L148">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

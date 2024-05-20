@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTableColumnsFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DataTableColumnsFactory.java</span></div><h1>DataTableColumnsFactory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.struts.util.ResponseUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.json.DataTableColumn;
+import sk.iway.iwcm.system.datatable.json.DataTableTab;
+
+import javax.servlet.http.HttpServletRequest;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DataTableColumnsFactory {
+    Class&lt;?&gt; dto;
+<span class="fc" id="L26">    public DataTableColumnsFactory(String clazz) {</span>
+        try {
+<span class="fc" id="L28">            dto = Class.forName(clazz);</span>
+<span class="nc" id="L29">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L30">            Logger.error(DataTableColumnsFactory.class, e);</span>
+<span class="fc" id="L31">        }</span>
+<span class="fc" id="L32">    }</span>
+
+    public List&lt;DataTableColumn&gt; getColumns(String fieldPrefix) {
+<span class="fc" id="L35">        List&lt;DataTableColumn&gt; columns = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (dto != null) {</span>
+<span class="fc" id="L38">            Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);</span>
+
+            //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
+<span class="fc" id="L41">            boolean includeCommonSettings = true;</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {</span>
+<span class="fc" id="L43">                includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();</span>
+            }
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            for (Field declaredField : declaredFields) {</span>
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">                if (declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested.class)) {</span>
+                    //rekurzia
+<span class="fc" id="L50">                    DataTableColumnsFactory dtcf = new DataTableColumnsFactory(declaredField.getGenericType().getTypeName());</span>
+
+                    //ziskaj prefix premennej (aby vzniklo editorFields.allowChangeUrl), defaultne podla mena premennej, alebo z anotacie
+<span class="fc" id="L53">                    DataTableColumnNested annotation = declaredField.getAnnotation(DataTableColumnNested.class);</span>
+                    String nestedFieldPrefix;
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                    if (&quot;auto&quot;.equals(annotation.prefix())) nestedFieldPrefix = declaredField.getName()+&quot;.&quot;;</span>
+<span class="nc" id="L56">                    else nestedFieldPrefix = annotation.prefix();</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                    if (Tools.isNotEmpty(fieldPrefix)) nestedFieldPrefix = fieldPrefix + nestedFieldPrefix;</span>
+
+<span class="fc" id="L59">                    List&lt;DataTableColumn&gt; columnsNested = dtcf.getColumns(nestedFieldPrefix);</span>
+
+<span class="fc" id="L61">                    columns.addAll(columnsNested);</span>
+                }
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {</span>
+<span class="fc" id="L65">                    continue;</span>
+                }
+
+                //If we dont want common settings, skip all fields with tab commonSettings
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if(includeCommonSettings==false) {</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                    if(&quot;commonSettings&quot;.equals( declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).tab()) ) continue;</span>
+                }
+
+<span class="fc" id="L73">                columns.add(new DataTableColumn(dto, declaredField, fieldPrefix));</span>
+            }
+        }
+
+<span class="fc" id="L77">        return columns;</span>
+    }
+
+    public String getColumnsJson() throws JsonProcessingException {
+<span class="fc" id="L81">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L82">        List&lt;DataTableColumn&gt; columns = getColumns(null);</span>
+<span class="fc" id="L83">        List&lt;DataTableColumn&gt; columnsSorted = sortColumns(columns);</span>
+<span class="fc" id="L84">        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(columnsSorted);</span>
+    }
+
+    public static List&lt;DataTableColumn&gt; sortColumns(List&lt;DataTableColumn&gt; columns) {
+<span class="fc" id="L88">        List&lt;DataTableColumn&gt; columnsSorted = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L89">        List&lt;DataTableColumn&gt; columnsToSort = new ArrayList&lt;&gt;();</span>
+
+        //najskor nakopirujeme columny kde nie je nastaveny sort atribut, tie predpokladame, ze su v korektnom poradi
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (DataTableColumn c : columns) {</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (&quot;FIRST&quot;.equals(c.getSortAfter())) {</span>
+<span class="fc" id="L94">                columnsSorted.add(0, c);</span>
+            }
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            else if (Tools.isEmpty(c.getSortAfter())) {</span>
+<span class="fc" id="L97">                columnsSorted.add(c);</span>
+            } else {
+<span class="fc" id="L99">                columnsToSort.add(c);</span>
+            }
+<span class="fc" id="L101">        }</span>
+
+<span class="fc" id="L103">        int failsafe = 0;</span>
+<span class="fc bfc" id="L104" title="All 4 branches covered.">        while (columnsToSort.size()&gt;0 &amp;&amp; failsafe++ &lt; 1000) {</span>
+<span class="fc" id="L105">            DataTableColumn c = columnsToSort.get(0);</span>
+
+            //prehladaj sorted a pridaj ho
+            int i;
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            for (i=0; i&lt;columnsSorted.size(); i++) {</span>
+<span class="fc" id="L110">                DataTableColumn cs = columnsSorted.get(i);</span>
+<span class="pc bpc" id="L111" title="1 of 4 branches missed.">                if (cs.getData()!= null &amp;&amp; cs.getData().equals(c.getSortAfter())) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                    if (i == columnsSorted.size()-1) columnsSorted.add(c);</span>
+<span class="fc" id="L113">                    else columnsSorted.add(i+1, c);</span>
+<span class="fc" id="L114">                    c = null;</span>
+<span class="fc" id="L115">                    break;</span>
+                }
+            }
+
+            //bolo pridane do sorted, removneme ho
+<span class="fc" id="L120">            columnsToSort.remove(0);</span>
+            //inak ho pridame na koniec, asi je zavisle na nejakom poli v toSort pred nim
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            if (c != null) {</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                if (i&gt;500) Logger.debug(DataTableColumnsFactory.class, &quot;sortColumns(&quot;+failsafe+&quot;) POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, prilis vysoke i sortovania - nenaslo sa, c=&quot;+c.getName());</span>
+<span class="fc" id="L124">                columnsToSort.add(c);</span>
+            }
+<span class="fc" id="L126">        }</span>
+
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (columnsToSort.size()&gt;0) {</span>
+            //nieco je zle zosortovane, pre istotu pridame na koniec
+<span class="fc" id="L130">            columnsSorted.addAll(columnsToSort);</span>
+        }
+
+<span class="fc" id="L133">        return columnsSorted;</span>
+    }
+
+    public static String translate(String str) {
+
+<span class="fc" id="L138">        String result = str;</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (&quot;[[#{}]]&quot;.equals(str)) return &quot;&quot;;</span>
+
+<span class="fc" id="L142">        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (requestAttributes != null) {</span>
+<span class="fc" id="L144">            int failsafe = 0;</span>
+<span class="fc" id="L145">            int startIndex = result.indexOf(&quot;[[#{&quot;);</span>
+<span class="fc" id="L146">            boolean hasDot = result.contains(&quot;.&quot;);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            if (hasDot) {</span>
+<span class="fc" id="L148">                HttpServletRequest request = requestAttributes.getRequest();</span>
+<span class="fc" id="L149">                Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                if (startIndex == -1) {</span>
+<span class="fc" id="L152">                    result = escapeSpecialChars(prop.getText(result));</span>
+                } else {
+<span class="pc bpc" id="L154" title="1 of 4 branches missed.">                    while (startIndex!=-1 &amp;&amp; failsafe++&lt;20) {</span>
+<span class="fc" id="L155">                        hasDot = result.contains(&quot;.&quot;);</span>
+<span class="pc bpc" id="L156" title="3 of 4 branches missed.">                        if (startIndex&lt;0 &amp;&amp; hasDot == false) return result;</span>
+
+<span class="fc" id="L158">                        int endIndex = result.indexOf(&quot;}]]&quot;, startIndex);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">                        if (endIndex&gt;startIndex) {</span>
+<span class="fc" id="L160">                            String key = result.substring(startIndex+4, endIndex);</span>
+<span class="fc" id="L161">                            String translated = escapeSpecialChars(prop.getText(key));</span>
+<span class="fc" id="L162">                            result = Tools.replace(result, result.substring(startIndex, endIndex+3), translated);</span>
+                        }
+<span class="fc" id="L164">                        startIndex = result.indexOf(&quot;[[#{&quot;);</span>
+<span class="fc" id="L165">                    }</span>
+                }
+            }
+        }
+<span class="fc" id="L169">        return result;</span>
+    }
+
+    private static String escapeSpecialChars(String translated) {
+<span class="fc" id="L173">        return ResponseUtils.filter(translated);</span>
+    }
+
+    /**
+     * Metoda pre ziskanie vsetkych moznych tabov z anotacii DataTableColumn pre danu triedu
+     * @return List&lt;DataTableTab&gt;
+     */
+    public List&lt;DataTableTab&gt; getTabs() {
+<span class="fc" id="L181">        List&lt;DataTableTab&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        if (dto == null) {</span>
+<span class="nc" id="L184">            return result;</span>
+        }
+
+        //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
+<span class="fc" id="L188">        boolean includeCommonSettings = true;</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {</span>
+<span class="fc" id="L190">            includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();</span>
+        }
+
+<span class="fc" id="L193">        Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);</span>
+
+<span class="fc bfc" id="L195" title="All 2 branches covered.">        for (Field declaredField : declaredFields) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {</span>
+<span class="fc" id="L197">                continue;</span>
+            }
+
+<span class="fc" id="L200">            sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);</span>
+<span class="fc" id="L201">            String tab = annotation.tab();</span>
+
+            //If we dont want common settings, skip all fields with tab commonSettings
+<span class="fc bfc" id="L204" title="All 4 branches covered.">            if(includeCommonSettings==false &amp;&amp; &quot;commonSettings&quot;.equals(tab)) continue;</span>
+
+            //If tab is not empty and tab is not already in result, add it
+<span class="pc bpc" id="L207" title="1 of 4 branches missed.">            if (Tools.isNotEmpty(tab) &amp;&amp; result.stream().noneMatch(r -&gt; r.getId().equals(tab))) {</span>
+<span class="fc" id="L208">                result.add(new DataTableTab(annotation, result.isEmpty()));</span>
+            }
+        }
+
+<span class="fc" id="L212">        return result;</span>
+    }
+
+    /**
+     * Returns translated app title from nameKey attribute of WebjetAppStore annotation
+     * @return
+     */
+    public String getTitle() {
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        if (dto == null) {</span>
+<span class="nc" id="L221">            return null;</span>
+        }
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">        if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {</span>
+<span class="fc" id="L224">            String key = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).nameKey();</span>
+<span class="fc" id="L225">            return translate(key);</span>
+        }
+<span class="nc" id="L227">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

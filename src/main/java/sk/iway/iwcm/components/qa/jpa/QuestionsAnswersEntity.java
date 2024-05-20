@@ -127,14 +127,13 @@ public class QuestionsAnswersEntity implements Serializable{
     )
 	private String toEmail;
 
-	//This field is send as Email to receiver using QuestionAnswerService.sendAnswerEmail
-	@Transient
+	@Column(name = "answer_to_email")
 	@DataTableColumn(
         inputType = DataTableColumnType.QUILL,
         title="[[#{qa.form.answer}]]",
-		hidden = true,
 		tab = "answer"
     )
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String answerToEmail;
 
 	@Column(name = "allow_publish_on_web")
@@ -159,7 +158,6 @@ public class QuestionsAnswersEntity implements Serializable{
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,
         title="[[#{qa.form.answerWeb}]]",
-		renderFormat = "dt-format-text",
 		tab = "answer"
     )
 	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
@@ -257,7 +255,7 @@ public class QuestionsAnswersEntity implements Serializable{
 
 	@Transient
     @DataTableColumnNested
-	private QuestionsAnswersEditorFields editorFields = null; //NOSONAR
+	private transient QuestionsAnswersEditorFields editorFields = null;
 
 	public Boolean getAnswerCheck() {
 		return isAnswerCheck();

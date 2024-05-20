@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsApproveEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.groups_approve</a> &gt; <span class="el_source">GroupsApproveEntity.java</span></div><h1>GroupsApproveEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.groups_approve;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupDetailsConverter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserBasicDto;
+import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
+
+/**
+ * Pouzivatelia - mapovanie schvalovania
+ */
+@Entity
+@Table(name = &quot;groups_approve&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_UPDATE)
+<span class="fc" id="L39">public class GroupsApproveEntity implements Serializable {</span>
+
+    @Id
+    @Column(name = &quot;approve_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_groups_approve&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title = &quot;datatables.id.js&quot;
+    )
+    private Long id;
+
+    @NotNull
+    @Valid
+    @Column(name = &quot;group_id&quot;)
+    @Convert(converter = GroupDetailsConverter.class)
+    @DataTableColumn(
+        inputType = { DataTableColumnType.OPEN_EDITOR, DataTableColumnType.JSON },
+        className = &quot;dt-tree-group&quot;,
+        title = &quot;useredit.approve.dir&quot;
+    )
+    private GroupDetails group;
+
+    @NotNull
+    @Column(name = &quot;user_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.HIDDEN
+    )
+    private Long userId;
+
+    @NotNull
+    @Column(name = &quot;approve_mode&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;useredit.approve.mode&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;useredit.approveMode.approve&quot;, value = &quot;0&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;useredit.approveMode.notify&quot;, value = &quot;1&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;useredit.approveMode.none&quot;, value = &quot;2&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;useredit.approveMode.level2&quot;, value = &quot;3&quot;)
+                }
+            )
+        }
+    )
+    private Integer approveMode;
+
+    //User detials, who is approver
+	@Column(name = &quot;user_id&quot;, insertable = false, updatable = false) // author_id is allready used, so this one must be read onl
+    @Convert(converter = UserBasicDtoConverter.class)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
+    private UserBasicDto userDetails;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

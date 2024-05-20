@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultipartWrapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.stripes</a> &gt; <span class="el_source">MultipartWrapper.java</span></div><h1>MultipartWrapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.stripes;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemHeaders;
+import org.apache.commons.fileupload.FileUploadBase;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
+import net.sourceforge.stripes.action.FileBean;
+import net.sourceforge.stripes.controller.FileUploadLimitExceededException;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  MultipartWrapper.java - multipart pri stripes nie je mozne pouzit, potom by nefungovali veci v admin casti WebJETu (pouzivajuce struts)
+ *
+ *@Title        webjet5
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2007
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.7 $
+ *@created      Date: 26.3.2007 9:52:29
+ *@modified     $Date: 2009/09/11 06:54:19 $
+ */
+<span class="fc" id="L45">public class MultipartWrapper implements net.sourceforge.stripes.controller.multipart.MultipartWrapper //NOSONAR</span>
+{
+	private HttpServletRequest request;
+<span class="fc" id="L48">	private boolean isParsed = false;</span>
+<span class="fc" id="L49">	private Map&lt;String,FileItem&gt; files = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L50">	private Map&lt;String,String[]&gt; parameters = new HashMap&lt;&gt;();</span>
+	private Map&lt;String, List&lt;String&gt;&gt; params;
+<span class="fc" id="L52">	private List&lt;String&gt; uploadPaths = new ArrayList&lt;&gt;();</span>
+
+	@Override
+	public void build(HttpServletRequest request, File tempDir, long maxPostSize) throws IOException, FileUploadLimitExceededException
+	{
+<span class="fc" id="L57">		Logger.debug(MultipartWrapper.class, &quot;build...&quot;);</span>
+<span class="fc" id="L58">		String path = request.getRequestURI();</span>
+<span class="fc" id="L59">		String queryString = request.getQueryString();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">		if (queryString==null) queryString = &quot;&quot;;</span>
+<span class="pc bpc" id="L61" title="3 of 8 branches missed.">		if (path.contains(&quot;upload&quot;) || path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.contains(&quot;stripes&quot;) ||</span>
+<span class="pc bpc" id="L62" title="3 of 6 branches missed.">			queryString.contains(&quot;__sfu=1&quot;) || path.contains(&quot;/admin/elfinder-connector/&quot;) || queryString.contains(&quot;__forceParse=1&quot;)) {</span>
+
+<span class="fc" id="L64">			boolean processUpload = true;</span>
+			//multiplefileupload.do aj ine Struts action sa spracovavaju napriamo
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">			if (path.contains(&quot;.do&quot;)) processUpload = false;</span>
+			//wj9 spring admin apps su springove, upload spracuju same
+<span class="pc bpc" id="L68" title="3 of 4 branches missed.">			if (path.startsWith(&quot;/apps/&quot;) &amp;&amp; path.contains(&quot;/admin/&quot;)) processUpload = false;</span>
+
+<span class="pc bpc" id="L70" title="4 of 8 branches missed.">			if (path.contains(&quot;spring&quot;) || path.contains(&quot;rest&quot;) || path.startsWith(&quot;/admin/v9/&quot;) || queryString.contains(&quot;__sfu=0&quot;) ) {</span>
+				//do not process this URLs, it's spring upload
+<span class="nc" id="L72">				processUpload = false;</span>
+			}
+
+			//moznost ovplyvnit spracovanie uploadu pomocou URL parametra bez ohladu na dalsie parametre
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (queryString.contains(&quot;__forceParse=1&quot;)) processUpload = true;</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">			if (queryString.contains(&quot;__forceParse=0&quot;)) processUpload = false;</span>
+
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">			if (processUpload)</span>
+			{
+<span class="fc" id="L81">				buildImpl(request, tempDir, maxPostSize, queryString);</span>
+<span class="pc bpc" id="L82" title="3 of 6 branches missed.">				if (Constants.getBoolean(&quot;alwaysStoreUploadedFileToRequest&quot;) || queryString.indexOf(&quot;__setf=1&quot;)!=-1 || path.contains(&quot;/admin/elfinder-connector/&quot;))</span>
+				{
+<span class="nc" id="L84">					Logger.debug(MultipartWrapper.class, &quot;Storing files to request&quot;);</span>
+<span class="nc" id="L85">					request.setAttribute(&quot;MultipartWrapper.files&quot;, files);</span>
+				}
+			}
+		}
+
+<span class="fc" id="L90">		this.request = request;</span>
+<span class="fc" id="L91">	}</span>
+
+	private boolean isFileAllowedForUpload(Identity user, FileItem file)
+	{
+		//zmenene z false na true pretoze potom sa zle plnili polia so subormi a padalo to dalej na NPE
+<span class="pc bpc" id="L96" title="2 of 4 branches missed.">		if (file == null || Tools.isEmpty(file.getName())) return true;</span>
+
+<span class="fc" id="L98">		return FileTools.isFileAllowedForUpload(user, file.getName());</span>
+	}
+
+	private void buildImpl(HttpServletRequest request, File tempDir, long maxPostSize, String queryString) throws IOException, FileUploadLimitExceededException
+	{
+		//list nazvov suborov ktore sa neuploadli kvoli pravam usera (napr. prekrocena max velkost suboru), ziska sa nasledne v Elfinderi pre vypis error hlasky
+<span class="fc" id="L104">		List&lt;String&gt; notUploaded = new ArrayList&lt;&gt;();</span>
+
+		try
+		{
+<span class="fc" id="L108">			Logger.debug(MultipartWrapper.class, &quot;Build IMPL&quot;);</span>
+<span class="fc" id="L109">			DiskFileItemFactory factory = new DiskFileItemFactory();</span>
+<span class="fc" id="L110">			factory.setRepository(tempDir);</span>
+
+<span class="fc" id="L112">			ServletFileUpload upload = new ServletFileUpload(factory);</span>
+<span class="fc" id="L113">			upload.setHeaderEncoding(SetCharacterEncodingFilter.getEncoding());</span>
+
+			// MBO FIX: po upgrade Stripes niekedy davno:) prestali ist uploady
+			// velkych suborov, maxPostSize sa ktovie odkial bral a mal hodnotu
+			// 947912704
+			// vytiahneme z konfiguracie maxPostSize pre Stripes, konvertneme na
+			// long a nastavime pre upload
+<span class="fc" id="L120">			long maxPostSizeOveride = Tools.getLongValue(Tools.replace(Constants.getString(&quot;stripes.FileUpload.MaximumPostSize&quot;), &quot;m&quot;, &quot;000000&quot;), 5000000000L);</span>
+<span class="fc" id="L121">			upload.setSizeMax(maxPostSizeOveride);</span>
+
+<span class="fc" id="L123">			List&lt;FileItem&gt; items = upload.parseRequest(request);</span>
+<span class="fc" id="L124">			params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L125">			Identity user = UsersDB.getCurrentUser(request.getSession());</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">            for (FileItem item : items) {</span>
+                // If it's a form field, add the string value to the list
+<span class="fc bfc" id="L129" title="All 2 branches covered.">                if (item.isFormField()) {</span>
+<span class="fc" id="L130">                    List&lt;String&gt; values = params.get(item.getFieldName());</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                    if (values == null) {</span>
+<span class="fc" id="L132">                        values = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L133">                        params.put(item.getFieldName(), values);</span>
+                    }
+<span class="fc" id="L135">                    values.add(item.getString(SetCharacterEncodingFilter.getEncoding()));</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                    if (item.getFieldName().equalsIgnoreCase(&quot;upload_path[]&quot;)) {</span>
+<span class="nc" id="L138">                        uploadPaths.add(item.getString(SetCharacterEncodingFilter.getEncoding()));</span>
+                    }
+                }
+<span class="fc" id="L141">            }</span>
+
+            //default true, kedze nie vsade je CSRF token
+<span class="fc" id="L144">            boolean csrfOK = true;</span>
+            //CSRF ochrana
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (queryString.indexOf(&quot;__sfu=1&quot;)!=-1)</span>
+            {
+                //ak nepride token, default je false
+<span class="nc" id="L149">                csrfOK = false;</span>
+
+				//skonvertuj queryString hodnoty do parametrov, nech sa to da pouzit standardizovane
+<span class="nc" id="L152">				String[] queryParamValues = Tools.getTokens(queryString, &quot;&amp;&quot;);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				for (String paramValue : queryParamValues)</span>
+				{
+<span class="nc" id="L155">					int index = paramValue.indexOf(&quot;=&quot;);</span>
+<span class="nc bnc" id="L156" title="All 4 branches missed.">					if (index&gt;0 &amp;&amp; index&lt;paramValue.length())</span>
+					{
+<span class="nc" id="L158">						String name = paramValue.substring(0, index);</span>
+
+<span class="nc" id="L160">						List&lt;String&gt; values = params.get(name);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">						if(values==null) values = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L162">						values.add(paramValue.substring(index+1));</span>
+
+<span class="nc" id="L164">						this.params.put(name, values);</span>
+					}
+				}
+
+<span class="nc" id="L168">				List&lt;String&gt; values = this.params.get(&quot;__token&quot;);</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">                if (values!=null &amp;&amp; values.size()&gt;0)</span>
+                {
+<span class="nc" id="L171">						String token = values.get(0);</span>
+
+<span class="nc bnc" id="L173" title="All 4 branches missed.">						if (request.getRequestURI().contains(&quot;/rest/datatables&quot;) || request.getParameter(&quot;csrfKeepToken&quot;)!=null)</span>
+                  {
+                     //datatables ma vynimku, token po nahrati suboru nemazeme, pretoze sa nemeni datatable save URL
+<span class="nc" id="L176">                     csrfOK = CSRF.verifyTokenAjax(request.getSession(), token);</span>
+                  }
+                  else
+                  {
+<span class="nc" id="L180">                     csrfOK = CSRF.verifyTokenAndDeleteIt(request.getSession(), token);</span>
+                  }
+                }
+            }
+
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">            if (csrfOK)</span>
+            {
+<span class="fc bfc" id="L187" title="All 2 branches covered.">                for (FileItem item : items) {</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                    if (!item.isFormField()) {</span>
+<span class="fc" id="L189">                        String fileName = clearFileName(item.getName());</span>
+<span class="fc" id="L190">                        String directory = getDirectory(fileName); //NOSONAR</span>
+<span class="fc" id="L191">                        FileItem fi = new RenamedFileItem(item, fileName);</span>
+
+<span class="fc" id="L193">                        boolean isAllowedForUpload = isFileAllowedForUpload(user, fi);</span>
+<span class="fc" id="L194">                        Logger.debug(MultipartWrapper.class, &quot;Storing file: &quot; + fi.getFieldName() + &quot;, File name: &quot; + fi.getName() + &quot;, File type: &quot; + fi.getContentType()</span>
+<span class="fc" id="L195">                                + &quot;, File size: &quot; + fi.getSize() + &quot;, allowed=&quot; + isAllowedForUpload);</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">                        if (isAllowedForUpload) {</span>
+<span class="fc" id="L197">                            String key = fi.getFieldName();</span>
+                            //toto je pre elfinder pre multiupload, vtedy subory odkladame do mapy pod rozumnymi nazvami a nie original field name
+                            //cid sa posiela pri chunked uploade a vtedy mame nazvy ulozene inde
+<span class="pc bpc" id="L200" title="3 of 4 branches missed.">                            if (key.equalsIgnoreCase(&quot;upload[]&quot;) &amp;&amp; params.get(&quot;cid&quot;) == null) {</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                                key = Tools.isNotEmpty(directory) ? directory + &quot;/&quot; + fileName : fileName;</span>
+                            }
+<span class="fc" id="L203">                            Logger.debug(MultipartWrapper.class, &quot;Storing file &quot; + key);</span>
+<span class="fc" id="L204">                            files.put(key, fi);</span>
+<span class="fc" id="L205">                        } else {</span>
+<span class="nc" id="L206">                            notUploaded.add(fi.getName());</span>
+                        }
+                    }
+<span class="fc" id="L209">                }</span>
+            }
+            else
+				{
+<span class="nc" id="L213">					Logger.error(MultipartWrapper.class, &quot;CHYBA: nesedi CSRF token, pre upload je povinny&quot;);</span>
+				}
+
+
+<span class="fc" id="L217">			fixDocIdQueryString(request);</span>
+<span class="fc" id="L218">			convertParams();</span>
+
+<span class="fc" id="L220">			slowdownUpload();</span>
+
+<span class="fc" id="L222">			isParsed = true;</span>
+		}
+<span class="nc" id="L224">		catch (FileUploadBase.SizeLimitExceededException slee)</span>
+		{
+<span class="nc" id="L226">			throw new FileUploadLimitExceededException(maxPostSize, maxPostSize);</span>
+		}
+<span class="nc" id="L228">		catch (FileUploadException fue)</span>
+		{
+<span class="nc" id="L230">			IOException ioe = new IOException(&quot;Could not parse and cache file upload data.&quot;);</span>
+<span class="nc" id="L231">			ioe.initCause(fue);</span>
+<span class="nc" id="L232">			throw ioe;</span>
+<span class="fc" id="L233">		}</span>
+
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">		if (notUploaded.size()&gt;0)</span>
+		{
+<span class="nc" id="L237">			request.setAttribute(&quot;MultipartWrapper.notUploaded&quot;, notUploaded);</span>
+		}
+<span class="fc" id="L239">	}</span>
+
+	/**
+	 * Riesenie problemu s chybou 429 Too Many Requests
+	 */
+	public static void slowdownUpload()
+	{
+<span class="fc" id="L246">		int uploadProtectionInterval = Constants.getInt(&quot;uploadProtectionInterval&quot;);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">		if (uploadProtectionInterval &gt; 0)</span>
+		{
+<span class="fc" id="L249">			Logger.debug(MultipartWrapper.class, &quot;Waiting for &quot;+uploadProtectionInterval+&quot; ms&quot;);</span>
+			try
+			{
+<span class="fc" id="L252">				Thread.sleep(uploadProtectionInterval);</span>
+			}
+<span class="nc" id="L254">			catch (Exception e)</span>
+			{
+<span class="nc" id="L256">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L257">			}</span>
+<span class="fc" id="L258">			Logger.debug(MultipartWrapper.class, &quot;Waiting done&quot;);</span>
+		}
+<span class="fc" id="L260">	}</span>
+
+	private String getDirectory(String fileName) {
+<span class="pc bpc" id="L263" title="2 of 4 branches missed.">		if (uploadPaths != null &amp;&amp; uploadPaths.size() &gt; 0) {</span>
+<span class="nc" id="L264">			Iterator&lt;String&gt; i = uploadPaths.iterator();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			while (i.hasNext()) {</span>
+<span class="nc" id="L266">			   String uploadPath = i.next();</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			   if (uploadPath.endsWith(fileName)) {</span>
+<span class="nc" id="L268">					fileName = uploadPath;</span>
+<span class="nc" id="L269">					i.remove();</span>
+<span class="nc" id="L270">					break;</span>
+				}
+<span class="nc" id="L272">			}</span>
+		}
+
+<span class="fc" id="L275">		int lomka = fileName.lastIndexOf(&quot;/&quot;);</span>
+
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">		if (lomka &gt; 0) {</span>
+<span class="nc" id="L278">			return fileName.substring(0, lomka);</span>
+		}
+
+<span class="fc" id="L281">		return &quot;&quot;;</span>
+	}
+
+	private String clearFileName(String fileName) {
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">		if (fileName == null) return null;</span>
+
+		// MBO oprava IE bugu, kedy IE posiela pri uploade celu
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">		if (fileName.contains(&quot;\\&quot;))</span>
+		{
+<span class="nc" id="L290">			fileName = fileName.substring(fileName.lastIndexOf(&quot;\\&quot;) + 1);</span>
+<span class="nc" id="L291">			Logger.debug(MultipartWrapper.class, &quot;IE poslalo celu cestu k suboru, orezavam ho iba nan nazov: &quot; + fileName);</span>
+		}
+
+<span class="fc" id="L294">		int lomka = fileName.lastIndexOf(&quot;/&quot;);</span>
+
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">		if (lomka &gt; -1) {</span>
+<span class="nc" id="L297">			return fileName.substring(lomka + 1);</span>
+		}
+
+<span class="fc" id="L300">		return fileName;</span>
+	}
+
+	private void fixDocIdQueryString(HttpServletRequest request) {
+		try
+		{
+
+			// fix na docid v query stringu
+<span class="fc" id="L308">			String queryString = request.getQueryString();</span>
+<span class="pc bpc" id="L309" title="3 of 4 branches missed.">			if (queryString != null &amp;&amp; params.get(&quot;docid&quot;) == null)</span>
+			{
+<span class="nc" id="L311">				int i = queryString.indexOf(&quot;docid=&quot;);</span>
+<span class="nc" id="L312">				int j = queryString.indexOf('&amp;');</span>
+<span class="nc bnc" id="L313" title="All 4 branches missed.">				if (i != -1 &amp;&amp; j &gt; i)</span>
+				{
+<span class="nc" id="L315">					String value = queryString.substring(i + 6, j);</span>
+<span class="nc" id="L316">					List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L317">					values.add(value);</span>
+<span class="nc" id="L318">					Logger.debug(MultipartWrapper.class, &quot;Adding docid: &quot; + value);</span>
+<span class="nc" id="L319">					params.put(&quot;docid&quot;, values);</span>
+				}
+			}
+		}
+<span class="nc" id="L323">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L325">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L326">		}</span>
+<span class="fc" id="L327">	}</span>
+
+	private void convertParams() {
+		// Now convert them down into the usual map of String-&gt;String[]
+<span class="fc bfc" id="L331" title="All 2 branches covered.">		for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : params.entrySet())</span>
+		{
+<span class="fc" id="L333">			List&lt;String&gt; values = entry.getValue();</span>
+<span class="fc" id="L334">			this.parameters.put(entry.getKey(), values.toArray(new String[values.size()]));</span>
+<span class="fc" id="L335">		}</span>
+<span class="fc" id="L336">	}</span>
+
+	@Override
+	public Enumeration&lt;String&gt; getParameterNames() {
+<span class="fc bfc" id="L340" title="All 2 branches covered.">      if (isParsed == false) return this.request.getParameterNames();</span>
+
+<span class="fc" id="L342">      return new IteratorEnumeration(this.parameters.keySet().iterator());</span>
+  }
+
+	@Override
+	public String[] getParameterValues(String name) {
+<span class="fc bfc" id="L347" title="All 2 branches covered.">      if (isParsed == false) return this.request.getParameterValues(name);</span>
+
+<span class="fc" id="L349">      return this.parameters.get(name);</span>
+  }
+	@Override
+	public Enumeration&lt;String&gt; getFileParameterNames() {
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">		if (isParsed == false) return(null);</span>
+
+<span class="fc" id="L355">		return new IteratorEnumeration(this.files.keySet().iterator());</span>
+  }
+	@Override
+	public FileBean getFileParameterValue(String name) {
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">		if (isParsed == false) return null;</span>
+
+<span class="fc" id="L361">		final FileItem item = this.files.get(name);</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">      if (item == null) {</span>
+<span class="nc" id="L363">          return null;</span>
+      }
+      else {
+          // Use an subclass of FileBean that overrides all the
+          // methods that rely on having a File present, to use the FileItem
+          // created by commons upload instead.
+<span class="fc" id="L369">      	return new IwayFileBean(null, item);</span>
+      }
+  }
+
+	/** Little helper class to create an enumeration as per the interface. */
+   private static class IteratorEnumeration implements Enumeration&lt;String&gt; { //NOSONAR
+		Iterator&lt;String&gt; iterator;
+
+       /** Constructs an enumeration that consumes from the underlying iterator. */
+<span class="fc" id="L378">       IteratorEnumeration(Iterator&lt;String&gt; iterator) { this.iterator = iterator; }</span>
+
+       /** Returns true if more elements can be consumed, false otherwise. */
+       @Override
+<span class="fc" id="L382">       public boolean hasMoreElements() { return this.iterator.hasNext(); }</span>
+
+       /** Gets the next element out of the iterator. */
+       @Override
+<span class="fc" id="L386">       public String nextElement() { return this.iterator.next(); }</span>
+   }
+
+   	/**
+   	 * FileItem so zmenenym nazvom - umoznuje odstranovat celu cestu k suboru
+   	 * @author MBO
+   	 *
+   	 */
+   	public static class RenamedFileItem implements FileItem
+	{
+
+		private FileItem item;
+		private String name;
+
+<span class="fc" id="L400">		public RenamedFileItem(FileItem item, String name) {</span>
+<span class="fc" id="L401">			this.item = item;</span>
+<span class="fc" id="L402">			this.name = name;</span>
+<span class="fc" id="L403">		}</span>
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+<span class="fc" id="L407">			return item.getInputStream();</span>
+		}
+
+		@Override
+		public String getContentType() {
+<span class="fc" id="L412">			return item.getContentType();</span>
+		}
+
+		@Override
+		public String getName() {
+<span class="fc" id="L417">			return name;</span>
+		}
+
+		@Override
+		public boolean isInMemory() {
+<span class="nc" id="L422">			return item.isInMemory();</span>
+		}
+
+		@Override
+		public long getSize() {
+<span class="fc" id="L427">			return item.getSize();</span>
+		}
+
+		@Override
+		public byte[] get() {
+<span class="nc" id="L432">			return item.get();</span>
+		}
+
+		@Override
+		public String getString(String paramString) throws UnsupportedEncodingException {
+<span class="nc" id="L437">			return item.getString(paramString);</span>
+		}
+
+		@Override
+		public String getString() {
+<span class="nc" id="L442">			return item.getString();</span>
+		}
+
+		@Override
+		public void write(File paramFile) throws Exception {
+<span class="nc" id="L447">			item.write(paramFile);</span>
+
+<span class="nc" id="L449">		}</span>
+
+		@Override
+		public void delete() {
+<span class="nc" id="L453">			item.delete();</span>
+
+<span class="nc" id="L455">		}</span>
+
+		@Override
+		public String getFieldName() {
+<span class="fc" id="L459">			return item.getFieldName();</span>
+		}
+
+		@Override
+		public void setFieldName(String paramString) {
+<span class="nc" id="L464">			item.setFieldName(paramString);</span>
+
+<span class="nc" id="L466">		}</span>
+
+		@Override
+		public boolean isFormField() {
+<span class="nc" id="L470">			return item.isFormField();</span>
+		}
+
+		@Override
+		public void setFormField(boolean paramBoolean) {
+<span class="nc" id="L475">			item.setFormField(paramBoolean);</span>
+
+<span class="nc" id="L477">		}</span>
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+<span class="nc" id="L481">			return item.getOutputStream();</span>
+		}
+
+		@Override
+		public FileItemHeaders getHeaders() {
+<span class="nc" id="L486">			return item.getHeaders();</span>
+		}
+
+		@Override
+		public void setHeaders(FileItemHeaders arg0) {
+<span class="nc" id="L491">			item.setHeaders(arg0);</span>
+
+<span class="nc" id="L493">		}</span>
+
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

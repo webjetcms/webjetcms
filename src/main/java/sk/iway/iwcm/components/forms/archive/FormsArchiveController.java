@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.forms.FormColumns;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -103,4 +105,13 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
         return formsService.deleteItem(entity, id);
     }
 
+    @Override
+    public boolean checkItemPerms(FormsArchiveEntity entity, Long id) {
+        if (InitServlet.isTypeCloud()) {
+            if (entity.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
+            FormsArchiveEntity old = getRepo().getById(entity.getId());
+            if (old != null && old.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
+        }
+        return true;
+    }
 }

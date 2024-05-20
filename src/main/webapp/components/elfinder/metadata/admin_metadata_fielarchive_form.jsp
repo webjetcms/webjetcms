@@ -215,7 +215,7 @@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %><iwcm:checkLog
                                 <div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
                                     <input name="validFrom<%="_"+fileCount%>" id="validFrom<%="_"+fileCount%>" type="text" class="form-control datepicker inputtext" value="<%=fab.getValidFrom() != null ? fab.getValidFrom():"" %>">
                                     <span class="input-group-btn">
-                                        <button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+                                        <button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
                                     </span>
                                 </div>
                             </div>
@@ -230,7 +230,7 @@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %><iwcm:checkLog
                                 <div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
                                     <input name="validTo<%="_"+fileCount%>" id="validTo<%="_"+fileCount%>" type="text" class="form-control datepicker inputtext" value="<%=fab.getValidTo() != null ? fab.getValidTo():"" %>">
                                     <span class="input-group-btn">
-                                        <button type="button" class="btn default"><i class="fa fa-calendar"></i></button>
+                                        <button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
                                     </span>
                                 </div>
                             </div>

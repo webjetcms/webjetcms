@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.jpa.UnsubscribedEntity;
 import sk.iway.iwcm.dmail.jpa.UnsubscribedRepository;
@@ -23,14 +24,11 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RequestMapping("/admin/rest/dmail/unsubscribed")
 @PreAuthorize("@WebjetSecurityService.hasPermission('menuEmail')")
 @Datatable
-public class UnsubscribedRestController extends DatatableRestControllerV2<UnsubscribedEntity, Long>{
-
-    //private final UnsubscribedRepository unsubscribedRepository;
+public class UnsubscribedRestController extends DatatableRestControllerV2<UnsubscribedEntity, Long> {
 
     @Autowired
     public UnsubscribedRestController(UnsubscribedRepository unsubscribedRepository) {
         super(unsubscribedRepository);
-        //this.unsubscribedRepository = unsubscribedRepository;
     }
 
     @Override
@@ -51,7 +49,7 @@ public class UnsubscribedRestController extends DatatableRestControllerV2<Unsubs
         String[] emails = Tools.getTokens(entity.getEmail(), ", ;\n", true);
         if (emails.length>0) {
             for (int i=0; i<emails.length; i++) {
-                String email = emails[i];
+                String email = emails[i].trim().toLowerCase();
                 if (Tools.isEmail(email)==false) {
                     throwConstraintViolation(getProp().getText("components.dmail.unsubscribe.email.error", email));
                 }
@@ -61,6 +59,7 @@ public class UnsubscribedRestController extends DatatableRestControllerV2<Unsubs
                     UnsubscribedEntity e = new UnsubscribedEntity();
                     e.setEmail(email);
                     e.setCreateDate(new Date());
+                    e.setDomainId(CloudToolsForCore.getDomainId());
                     insertItem(e);
                 }
             }

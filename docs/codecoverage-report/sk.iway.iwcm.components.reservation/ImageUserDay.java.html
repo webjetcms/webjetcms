@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageUserDay.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ImageUserDay.java</span></div><h1>ImageUserDay.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.imageio.ImageIO;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ * ImageUserDay - do outputstreamu posle obrazok s kalendarom
+ *@Title        magma schodzky ImageUserDay
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       Roman Hrivik (roman@hrivik.com)
+ *@version      $Revision: 1.1 $
+ *@created      Utorok, 2002, marec 12
+ *@modified     $Date: 2010/02/17 09:38:06 $
+ */
+
+public class ImageUserDay
+{
+
+   /**
+    *  pocet minut na jeden bod na vysku
+    */
+   private static final int MINUTE_INTERVAL = 5;
+
+   private static final int HOUR_HEIGHT = 39;
+
+   /**
+    *  Constructor for the ImageUserDay object
+    */
+   public ImageUserDay()
+<span class="nc" id="L40">   {</span>
+<span class="nc" id="L41">      setWidth(200);</span>
+<span class="nc" id="L42">      setHeight(20);</span>
+<span class="nc" id="L43">      setMyHourPixelWidth(6);</span>
+<span class="nc" id="L44">      setLineBar(0);</span>
+<span class="nc" id="L45">      setRecount(1.0);</span>
+<span class="nc" id="L46">      setImgDate(new Date());</span>
+<span class="nc" id="L47">      setBackgroundColor(new Color(250, 250, 250));</span>
+<span class="nc" id="L48">      setCalendarFillColor(new Color(217, 17, 17));</span>
+<span class="nc" id="L49">      setHoursColor(new Color(200, 200, 200));</span>
+<span class="nc" id="L50">      setLineBarColor(Color.red);</span>
+<span class="nc" id="L51">      setStopLineBarColor(Color.blue);</span>
+<span class="nc" id="L52">      setBoundaryLineColor(new Color(150, 150, 150));</span>
+<span class="nc" id="L53">   }</span>
+
+   private Graphics2D graphics;
+   private int width;
+   private int height;
+   private int lineBar;
+   private int myHourPixelWidth;
+   private double recount;
+   private java.text.SimpleDateFormat formatter;
+   private java.util.Date imgDate;
+   private java.awt.Color backgroundColor;
+   private java.awt.Color calendarFillColor;
+   private java.awt.Color hoursColor;
+   private java.awt.Color lineBarColor;
+   private java.awt.Color boundaryLineColor;
+   private String startTime;
+<span class="nc" id="L69">   private int stopLineBar = 0;</span>
+   private String stopTime;
+   private java.awt.Color stopLineBarColor;
+
+   /**
+    *  Description of the Method
+    *
+    *@param  x0         Description of the Parameter
+    *@param  retHeight  Description of the Parameter
+    *@param  color      Description of the Parameter
+    */
+   private void drawRectangleBar(int x0, int retHeight, Color color)
+   {
+<span class="nc" id="L82">      graphics.setColor(color);</span>
+<span class="nc" id="L83">      graphics.fillRect(x0, 1, retHeight, height - 2);</span>
+<span class="nc" id="L84">   }</span>
+
+   /**
+    *  Description of the Method
+    *
+    *@param  x      Description of the Parameter
+    *@param  color  Description of the Parameter
+    */
+   private void drawLineBar(int x, Color color)
+   {
+<span class="nc" id="L94">      graphics.setColor(color);</span>
+<span class="nc" id="L95">      graphics.fillRect(x, 1, 2, height - 2);</span>
+      //graphics.draw(new Line2D.Double(x,1,x,height-2)); //|
+      //graphics.draw(new Line2D.Double(x+1,1,x+1,height-2)); //|
+<span class="nc" id="L98">   }</span>
+
+   /**
+    *  Description of the Method
+    *
+    *@param  color  Description of the Parameter
+    */
+   private void drawHours(Color color)
+   {
+<span class="nc" id="L107">      graphics.setColor(color);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">      for (int i = 1; i &lt; 24; i++)</span>
+      {
+<span class="nc" id="L110">         int pos = i * myHourPixelWidth;</span>
+<span class="nc" id="L111">         graphics.drawLine(pos, 0, pos, height);</span>
+      }
+<span class="nc" id="L113">   }</span>
+
+   private int getArrYPos(Date datum)
+   {
+<span class="nc" id="L117">   	Calendar cal = Calendar.getInstance();</span>
+      //preved cas na minuty
+<span class="nc" id="L119">      cal.setTime(datum);</span>
+<span class="nc" id="L120">      int yPos = 0;</span>
+<span class="nc" id="L121">      int hours = cal.get(Calendar.HOUR_OF_DAY);</span>
+      //minuta v danom dni
+<span class="nc" id="L123">      int minutes = cal.get(Calendar.MINUTE) + (hours * 60);</span>
+
+      //System.out.println(&quot;Calendar:getArrYPos hours=&quot; + hours + &quot; min=&quot; + cal.get(Calendar.MINUTE) + &quot; minutes=&quot; + minutes);
+
+      //zaokruhli na intervaly
+<span class="nc" id="L128">      yPos = (minutes / MINUTE_INTERVAL);</span>
+      //yPos = yPos * MINUTE_INTERVAL;
+<span class="nc" id="L130">      return (yPos);</span>
+   }
+
+   /**
+    *  Description of the Method
+    *
+    *@param  stream           Description of the Parameter
+    *@return                  Description of the Return Value
+    *@exception  IOException  Description of the Exception
+    */
+   public String createImageFromReservation(OutputStream stream, int reservationId) throws IOException
+   {
+<span class="nc" id="L142">      stream.flush();</span>
+
+<span class="nc" id="L144">      setRecount(((double) getMyHourPixelWidth() / (double) HOUR_HEIGHT));</span>
+<span class="nc" id="L145">      setWidth(myHourPixelWidth * 24);</span>
+
+<span class="nc" id="L147">      BufferedImage bi = new BufferedImage(getWidth(),</span>
+<span class="nc" id="L148">            getHeight(),</span>
+            BufferedImage.TYPE_INT_RGB);
+
+<span class="nc" id="L151">      graphics = bi.createGraphics();</span>
+      //basic background
+<span class="nc" id="L153">      graphics.setColor(getBackgroundColor());</span>
+<span class="nc" id="L154">      graphics.fillRect(0, 0, getWidth(), getHeight());</span>
+
+
+<span class="nc" id="L157">      ReservationBean rb = ReservationManager.getReservationById(reservationId);</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">      if(rb != null &amp;&amp; rb.getReservationId() &gt; 0)</span>
+      {
+<span class="nc" id="L160">         int startPos = getArrYPos(rb.getDateFrom());</span>
+<span class="nc" id="L161">         int endPos = getArrYPos(rb.getDateTo());</span>
+<span class="nc" id="L162">         int height = endPos - startPos; //NOSONAR</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">         if (height &lt; 1) height = 1;</span>
+<span class="nc" id="L164">         float tmp1 = (float) ((height * MINUTE_INTERVAL) / 60.00);</span>
+<span class="nc" id="L165">         int pixelHeight = (int) (tmp1 * HOUR_HEIGHT);</span>
+
+<span class="nc" id="L167">         int pixelYPos = (int) ((getArrYPos(rb.getDateFrom()) * MINUTE_INTERVAL / 60.00) * HOUR_HEIGHT);</span>
+
+<span class="nc" id="L169">         drawRectangleBar((int) (pixelYPos * recount), (int) (pixelHeight * recount), getCalendarFillColor());</span>
+      }
+
+<span class="nc" id="L172">      drawHours(getHoursColor());</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">      if (stopLineBar &gt; 0)</span>
+      {
+<span class="nc" id="L176">         drawLineBar(stopLineBar, getStopLineBarColor());</span>
+      }
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">      if (lineBar &gt; 0)</span>
+      {
+<span class="nc" id="L181">         drawLineBar(lineBar, getLineBarColor());</span>
+      }
+
+<span class="nc" id="L184">      graphics.setColor(getBoundaryLineColor());</span>
+<span class="nc" id="L185">      graphics.drawRect(0, 0, getWidth() - 1, getHeight() - 1);</span>
+
+
+<span class="nc" id="L188">      ImageIO.write(bi, &quot;png&quot;, stream);</span>
+
+<span class="nc" id="L190">      stream.flush();</span>
+
+<span class="nc" id="L192">      return (&quot;image/png&quot;);</span>
+   }
+
+   /**
+    *  Description of the Method
+    *
+    *@param  hour  Description of the Parameter
+    *@param  min   Description of the Parameter
+    *@return       Description of the Return Value
+    */
+   private int countLineBar(int hour, int min)
+   {
+<span class="nc" id="L204">      return ((int) ((((double) hour) * ((double) getMyHourPixelWidth())) + ((((double) getMyHourPixelWidth()) / ((double) 60)) * (min))));</span>
+   }
+
+   public void setBoundaryLineColor(java.awt.Color boundaryLineColor)
+   {
+<span class="nc" id="L209">      this.boundaryLineColor = boundaryLineColor;</span>
+<span class="nc" id="L210">   }</span>
+
+   public java.awt.Color getBoundaryLineColor()
+   {
+<span class="nc" id="L214">      return boundaryLineColor;</span>
+   }
+
+   public void setHoursColor(java.awt.Color hoursColor)
+   {
+<span class="nc" id="L219">       this.hoursColor = hoursColor;</span>
+<span class="nc" id="L220">   }</span>
+
+   public java.awt.Color getHoursColor()
+   {
+<span class="nc" id="L224">      return hoursColor;</span>
+   }
+
+    public void setImgDate(java.util.Date imgDate)
+    {
+<span class="nc" id="L229">       this.imgDate = imgDate;</span>
+<span class="nc" id="L230">    }</span>
+
+    public void setImgDate(String strDate)
+    {
+<span class="nc bnc" id="L234" title="All 2 branches missed.">       if (Tools.isNotEmpty(strDate))</span>
+       {
+          try
+          {
+<span class="nc" id="L238">             this.imgDate = (formatter.parse(strDate));</span>
+          }
+<span class="nc" id="L240">          catch (Exception ex)</span>
+          {
+<span class="nc" id="L242">             this.imgDate = new Date();</span>
+<span class="nc" id="L243">          }</span>
+       }
+       else
+       {
+<span class="nc" id="L247">          this.imgDate = new Date();</span>
+       }
+<span class="nc" id="L249">    }</span>
+
+    public java.util.Date getImgDate()
+    {
+<span class="nc" id="L253">       return imgDate;</span>
+    }
+
+   public void setStartTime(String startTime)
+   {
+<span class="nc" id="L258">      this.startTime = startTime;</span>
+
+      //try to count linebar position
+<span class="nc" id="L261">      int hour = 0;</span>
+<span class="nc" id="L262">      int min = 0;</span>
+<span class="nc" id="L263">      java.util.StringTokenizer token = new java.util.StringTokenizer(startTime, &quot;:&quot;);</span>
+      //get hour
+<span class="nc bnc" id="L265" title="All 2 branches missed.">      if (token.hasMoreTokens())</span>
+      {
+         try
+         {
+<span class="nc" id="L269">            hour = Integer.parseInt(token.nextToken());</span>
+         }
+<span class="nc" id="L271">         catch (Exception ex)</span>
+         {
+<span class="nc" id="L273">            hour = 0;</span>
+<span class="nc" id="L274">         }</span>
+      }
+      //get min
+<span class="nc bnc" id="L277" title="All 2 branches missed.">      if (token.hasMoreTokens())</span>
+      {
+         try
+         {
+<span class="nc" id="L281">            min = Integer.parseInt(token.nextToken());</span>
+         }
+<span class="nc" id="L283">         catch (Exception ex)</span>
+         {
+<span class="nc" id="L285">            min = 0;</span>
+<span class="nc" id="L286">         }</span>
+      }
+
+      // count linebar
+<span class="nc" id="L290">      setLineBar(countLineBar(hour, min));</span>
+<span class="nc" id="L291">   }</span>
+
+   public String getStartTime()
+   {
+<span class="nc" id="L295">      return startTime;</span>
+   }
+
+      /**
+    *  Sets the stopTime attribute of the ImageUserDay object
+    *
+    *@param  stopTime  The new stopTime value
+    */
+    public void setStopTime(String stopTime)
+    {
+<span class="nc" id="L305">       this.stopTime = stopTime;</span>
+
+       //try to count linebar position
+<span class="nc" id="L308">       int hour = 0;</span>
+<span class="nc" id="L309">       int min = 0;</span>
+<span class="nc" id="L310">       java.util.StringTokenizer token = new java.util.StringTokenizer(stopTime, &quot;:&quot;);</span>
+       //get hour
+<span class="nc bnc" id="L312" title="All 2 branches missed.">       if (token.hasMoreTokens())</span>
+       {
+          try
+          {
+<span class="nc" id="L316">             hour = Integer.parseInt(token.nextToken());</span>
+          }
+<span class="nc" id="L318">          catch (Exception ex)</span>
+          {
+<span class="nc" id="L320">             hour = 0;</span>
+<span class="nc" id="L321">          }</span>
+       }
+       //get min
+<span class="nc bnc" id="L324" title="All 2 branches missed.">       if (token.hasMoreTokens())</span>
+       {
+          try
+          {
+<span class="nc" id="L328">             min = Integer.parseInt(token.nextToken());</span>
+          }
+<span class="nc" id="L330">          catch (Exception ex)</span>
+          {
+<span class="nc" id="L332">             min = 0;</span>
+<span class="nc" id="L333">          }</span>
+       }
+
+       // count linebar
+<span class="nc" id="L337">       setStopLineBar(countLineBar(hour, min));</span>
+
+<span class="nc" id="L339">    }</span>
+
+    public String getStopTime()
+    {
+<span class="nc" id="L343">       return stopTime;</span>
+    }
+
+   public int getWidth() {
+<span class="nc" id="L347">      return width;</span>
+   }
+
+   public void setWidth(int width) {
+<span class="nc" id="L351">      this.width = width;</span>
+<span class="nc" id="L352">   }</span>
+
+   public int getHeight() {
+<span class="nc" id="L355">      return height;</span>
+   }
+
+   public void setHeight(int height) {
+<span class="nc" id="L359">      this.height = height;</span>
+<span class="nc" id="L360">   }</span>
+
+   public int getLineBar() {
+<span class="nc" id="L363">      return lineBar;</span>
+   }
+
+   public void setLineBar(int lineBar) {
+<span class="nc" id="L367">      this.lineBar = lineBar;</span>
+<span class="nc" id="L368">   }</span>
+
+   public int getMyHourPixelWidth() {
+<span class="nc" id="L371">      return myHourPixelWidth;</span>
+   }
+
+   public void setMyHourPixelWidth(int myHourPixelWidth) {
+<span class="nc" id="L375">      this.myHourPixelWidth = myHourPixelWidth;</span>
+<span class="nc" id="L376">   }</span>
+
+   public double getRecount() {
+<span class="nc" id="L379">      return recount;</span>
+   }
+
+   public void setRecount(double recount) {
+<span class="nc" id="L383">      this.recount = recount;</span>
+<span class="nc" id="L384">   }</span>
+
+   public java.awt.Color getBackgroundColor() {
+<span class="nc" id="L387">      return backgroundColor;</span>
+   }
+
+   public void setBackgroundColor(java.awt.Color backgroundColor) {
+<span class="nc" id="L391">      this.backgroundColor = backgroundColor;</span>
+<span class="nc" id="L392">   }</span>
+
+   public java.awt.Color getCalendarFillColor() {
+<span class="nc" id="L395">      return calendarFillColor;</span>
+   }
+
+   public void setCalendarFillColor(java.awt.Color calendarFillColor) {
+<span class="nc" id="L399">      this.calendarFillColor = calendarFillColor;</span>
+<span class="nc" id="L400">   }</span>
+
+   public java.awt.Color getLineBarColor() {
+<span class="nc" id="L403">      return lineBarColor;</span>
+   }
+
+   public void setLineBarColor(java.awt.Color lineBarColor) {
+<span class="nc" id="L407">      this.lineBarColor = lineBarColor;</span>
+<span class="nc" id="L408">   }</span>
+
+   public int getStopLineBar() {
+<span class="nc" id="L411">      return stopLineBar;</span>
+   }
+
+   public void setStopLineBar(int stopLineBar) {
+<span class="nc" id="L415">      this.stopLineBar = stopLineBar;</span>
+<span class="nc" id="L416">   }</span>
+
+   public java.awt.Color getStopLineBarColor() {
+<span class="nc" id="L419">      return stopLineBarColor;</span>
+   }
+
+   public void setStopLineBarColor(java.awt.Color stopLineBarColor) {
+<span class="nc" id="L423">      this.stopLineBarColor = stopLineBarColor;</span>
+<span class="nc" id="L424">   }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

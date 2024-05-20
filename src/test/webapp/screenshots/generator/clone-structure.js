@@ -26,9 +26,10 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario("Structure clone screenshots", async ({ I, DTE, DT, Document })  => {
+Scenario("Structure clone screenshots", async ({ I, Document })  => {
     I.amOnPage("/components/clone_structure/clone_structure.jsp");
-    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png", 500, 500);
+    I.resizeWindow(600, 500); //Need to by first resize and than screenshot)
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png");
     //I.click("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
     //Document.screenshot("/redactor/apps/clone-structure/clone_structure_2.png");
 });
@@ -60,12 +61,19 @@ async function fillDocBody(I, DTE, body) {
 }
 
 Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  => {
+    let confLng = I.getConfLng();
 
     //
     I.say("Preparing source folder");
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
         DT.waitForLoader();
-        createGroup(I, DTE, srcGroupName, "Slovenský", true);
+
+        if("sk" === confLng) {
+            createGroup(I, DTE, srcGroupName, "Slovenský", true);
+        } else if("en" === confLng) {
+            createGroup(I, DTE, srcGroupName, "Slovak", true);
+        }
+
         I.jstreeClick(srcGroupName);
         //Save groupID
         const srcGroupId = await I.grabValueFrom('#tree-folder-id');
@@ -83,14 +91,25 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
 
         //
         I.say("Create sub group");
-        createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
+
+        if("sk" === confLng) {
+            createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
+        } else if("en" === confLng) {
+            createGroup(I, DTE, srcGroupChildName, "Slovak", false);
+        }
 
         I.jstreeClick(srcGroupChildName);
         await fillDocBody(I, DTE, doc_b_sk);
 
     //
     I.say("Preparing dest folder");
-        createGroup(I, DTE, destGroupName, "Anglický", true);
+
+        if("sk" === confLng) {
+            createGroup(I, DTE, destGroupName, "Anglický", true);
+        } else if("en" === confLng) {
+            createGroup(I, DTE, destGroupName, "English", true);
+        }
+        
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
         const destGroupId = await I.grabValueFrom('#tree-folder-id');
 
@@ -104,15 +123,23 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
         I.say("Save groupID");
         I.clickCss("#btnOk");
 
-        I.waitForElement("#dialogCentralRow");
-        I.waitForText("Klonujem adresár:", 100);
-        I.waitForText("/clone-src-autotest"+randomNumber+"/Subfolder-autotest")
-        I.waitForText("Klonovanie štruktúry dokončené", 100);
+        I.waitForElement(".wjDialogHeaderTable");
+
+        if("sk" === confLng) {
+            I.waitForText("Klonujem adresár:", 100);
+            I.waitForText("/clone-src-autotest" + randomNumber + "/Subfolder-autotest")
+            I.waitForText("Klonovanie štruktúry dokončené", 100);
+        } else if("en" === confLng) {
+            I.waitForText("Cloning directory:", 100);
+            I.waitForText("/clone-src-autotest" + randomNumber + "/Subfolder-autotest")
+            I.waitForText("Clone structure done", 100);
+        }
 
     Document.screenshot("/redactor/apps/clone-structure/clone_structure_result.png", 500, 500);
 });
 
 Scenario('delete data', ({ I, DTE }) => {
+    let confLng = I.getConfLng();
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
     //
     I.say("Delete and check");
@@ -121,7 +148,13 @@ Scenario('delete data', ({ I, DTE }) => {
         //delete
         I.click(delete_button);
         DTE.waitForEditor("groups-datatable");
-        I.click("Zmazať", "div.DTE_Action_Remove");
+
+        if("sk" === confLng) {
+            I.click("Zmazať", "div.DTE_Action_Remove");
+        } else if("en" === confLng) { 
+            I.click("Delete", "div.DTE_Action_Remove");
+        };
+
         DTE.waitForLoader();
         //Check that both folders are gone
         I.waitForInvisible(  locate("a.jstree-anchor").withText(srcGroupName), 10 );
@@ -130,7 +163,13 @@ Scenario('delete data', ({ I, DTE }) => {
         //delete
         I.click(delete_button);
         DTE.waitForEditor("groups-datatable");
-        I.click("Zmazať", "div.DTE_Action_Remove");
+
+        if("sk" === confLng) {
+            I.click("Zmazať", "div.DTE_Action_Remove");
+        } else if("en" === confLng) { 
+            I.click("Delete", "div.DTE_Action_Remove");
+        }
+
         //Check that both folders are gone
         DTE.waitForLoader();
 });

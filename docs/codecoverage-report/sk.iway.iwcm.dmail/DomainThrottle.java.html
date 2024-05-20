@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainThrottle.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">DomainThrottle.java</span></div><h1>DomainThrottle.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.eclipse.persistence.jpa.JpaEntityManager;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+
+/**
+ *  DomainThrottle.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2013
+ *@author       $Author: jeeff mhalas $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 23.7.2013 16:01:40
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class DomainThrottle
+{
+
+	private SortedMap&lt;Long, String&gt; map ;
+	private Map&lt;String,Long&gt; lastEmails;
+<span class="fc" id="L38">	private static DomainThrottle instance = null;</span>
+	private Map&lt;String,DomainLimitBean&gt; domainLimits;
+<span class="fc" id="L40">	private long maxTimeLimit = 0;</span>
+
+	private DomainThrottle(){
+<span class="fc" id="L43">		super();</span>
+<span class="fc" id="L44">		init();</span>
+<span class="fc" id="L45">	}</span>
+
+	private void init(){
+<span class="fc" id="L48">		domainLimits = Collections.emptyMap();</span>
+<span class="fc" id="L49">		maxTimeLimit = 0;</span>
+<span class="fc" id="L50">		Collection&lt;DomainLimitBean&gt; allLimits = DomainLimitsDB.getInstance(true).getAll();</span>
+		try {
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">			if(allLimits != null) {</span>
+				//domainLimits = Lambda.index(allLimits, Lambda.on(DomainLimitBean.class).getDomain());
+<span class="nc" id="L54">				allLimits.forEach(domainLimit -&gt; domainLimits.put(domainLimit.getDomain(), domainLimit));</span>
+			}
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			if(!domainLimits.isEmpty()) {</span>
+				//maxTimeLimit = Lambda.max(domainLimits.values(), Lambda.on(DomainLimitBean.class).getTimeUnit().toMillis(1));
+<span class="nc bnc" id="L58" title="All 2 branches missed.">				for (DomainLimitBean limit : domainLimits.values()) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">					if (maxTimeLimit &lt; limit.getMinDelay()) maxTimeLimit = limit.getMinDelay();</span>
+<span class="nc" id="L60">				}</span>
+			}
+<span class="fc" id="L62">		} catch (Exception ex) {</span>
+<span class="fc" id="L63">			Logger.error(DomainThrottle.class, ex);</span>
+<span class="nc" id="L64">		}</span>
+<span class="fc" id="L65">		map = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L66">		lastEmails = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L67">		loadMap();</span>
+<span class="fc" id="L68">	}</span>
+
+	/**
+	 * Zinicializuje mapu Cas-&gt;domena z tabulky emailov, berie len odoslane a cas len od nahdlhsieho nastaveneho limitu
+	 */
+	private void loadMap()
+	{
+<span class="fc" id="L75">		String exceptionMessage = null;</span>
+<span class="fc" id="L76">		Connection db_conn = null;</span>
+<span class="fc" id="L77">		PreparedStatement ps = null;</span>
+<span class="fc" id="L78">		ResultSet rs = null;</span>
+<span class="fc" id="L79">		String sql = &quot;SELECT recipient_email, sent_date FROM emails WHERE sent_date IS NOT NULL AND sent_date &gt;= ? &quot;;</span>
+		try
+		{
+<span class="fc" id="L82">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L83">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L84">			int parameterIndex = 1;</span>
+<span class="fc" id="L85">			ps.setTimestamp(parameterIndex++, DB.getDbTimestamp(System.currentTimeMillis()-maxTimeLimit));</span>
+<span class="fc" id="L86">			rs = ps.executeQuery();</span>
+<span class="fc" id="L87">			String domain = &quot;&quot;;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L90">				domain = getDomainFromEmail(rs.getString(&quot;recipient_email&quot;));</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				if(Tools.isNotEmpty(domain))</span>
+				{
+<span class="nc" id="L93">					map.put(DB.getDbTimestamp(rs, &quot;sent_date&quot;), domain);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					if(domainLimits.containsKey(domain))</span>
+<span class="nc" id="L95">						lastEmails.put(domain, DB.getDbTimestamp(rs, &quot;sent_date&quot;));</span>
+				}
+			}
+<span class="fc" id="L98">			rs.close();</span>
+<span class="fc" id="L99">			ps.close();</span>
+<span class="fc" id="L100">			db_conn.close();</span>
+<span class="fc" id="L101">			rs = null;</span>
+<span class="fc" id="L102">			ps = null;</span>
+<span class="fc" id="L103">			db_conn = null;</span>
+		}
+<span class="nc" id="L105">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L107">			exceptionMessage = ex.getMessage();</span>
+<span class="nc" id="L108">			IllegalStateException exception = new IllegalStateException(exceptionMessage);</span>
+<span class="nc" id="L109">			exception.initCause(ex);</span>
+<span class="nc" id="L110">			throw exception;</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L117">					rs.close();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L119">					ps.close();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L121">					db_conn.close();</span>
+			}
+<span class="nc" id="L123">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L125">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L126">			}</span>
+		}
+
+<span class="fc" id="L129">	}</span>
+
+	/**
+	 * dummy impl of getting domain from email address
+	 * @param string
+	 * @return
+	 */
+	public static String getDomainFromEmail(String address)
+	{
+<span class="nc" id="L138">		String domain = &quot;&quot;;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if(address.indexOf(&quot;@&quot;)!=-1)</span>
+		{
+<span class="nc" id="L141">			domain = address.substring(address.indexOf(&quot;@&quot;)+1);</span>
+		}
+<span class="nc" id="L143">		return domain;</span>
+	}
+
+	public static DomainThrottle getInstance(){
+<span class="fc" id="L147">		DomainThrottle throttle = instance;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">		if(throttle == null)</span>
+		{
+<span class="fc" id="L150">			synchronized(DomainThrottle.class)</span>
+			{
+<span class="fc" id="L152">				throttle = instance;</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">				if(throttle == null)</span>
+<span class="fc" id="L154">					instance = throttle = new DomainThrottle();</span>
+<span class="fc" id="L155">			}</span>
+		}
+<span class="fc" id="L157">		return throttle;</span>
+	}
+
+	/**
+	 * Zisti ci je mozne na zaklade nastaveny limitov poslat email na danu domenu
+	 * najpr sa kontroluje ci ma domena nejaky limit, ak nie poslanie sa hned povoli
+	 * ak ano, najprv sa skontroluje ci posledny email na danu domenu neodisiel uz davnejsie ako je
+	 * minimalne delay pre danu domenu, ak ano tak sa poslanie povoli, ak nie
+	 * tak sa spocita pocet emailov na danu domenu za cas od teraz po casovy limit a ak nie je limit prekroceny
+	 * tak sa odoslanie povoli.
+	 * @param domain domena
+	 * @return
+	 */
+	public synchronized boolean canSend(String domain)
+	{
+<span class="nc" id="L172">		boolean canSend = true;</span>
+
+<span class="nc bnc" id="L174" title="All 4 branches missed.">		if(domainLimits.get(domain)==null &amp;&amp; domainLimits.get(&quot;*&quot;)!=null)</span>
+		{
+<span class="nc" id="L176">			cloneGenericLimit(domain);</span>
+		}
+<span class="nc" id="L178">		DomainLimitBean domainLimit=domainLimits.get(domain);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if(domainLimit!=null)</span>
+		{
+<span class="nc" id="L181">			long now = System.currentTimeMillis();</span>
+			//minimalny delay
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if(domainLimit.isDelayActive())</span>
+			{
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				if(lastEmails.containsKey(domain))</span>
+				{
+<span class="nc" id="L187">					long lastEmailTime = lastEmails.get(domain);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">					if(lastEmailTime &lt;= (now-domainLimit.getMinDelay())) canSend = true;</span>
+					else {
+<span class="nc" id="L190">						canSend = false;</span>
+<span class="nc" id="L191">						Logger.debug(getClass(), &quot;Domain: &quot;+domain +&quot; -&gt; Min delay not reached yet&quot;);</span>
+					}
+				}
+			}
+			//este skontrolujeme limit poctu mailov za casovu jednotku
+<span class="nc bnc" id="L196" title="All 4 branches missed.">			if(domainLimit.isActive() &amp;&amp; canSend)</span>
+			{
+				//Logger.debug(getClass(), &quot;getting count of emails sent to &quot;+ domain + &quot; from: &quot;+(now-domainLimit.getTimeUnit().toMillis(1)) + &quot; to: &quot;+now);
+<span class="nc" id="L199">				int sentEmailsCount = countEmailsSentToDomain(now-domainLimit.getTimeUnit().toMillis(1), now, domain);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">				if(sentEmailsCount &lt; domainLimit.getLimit()) canSend = true;</span>
+				else{
+<span class="nc" id="L202">					canSend = false;</span>
+					//Logger.debug(getClass(), &quot;Domain: &quot;+domain +&quot; -&gt; Limit over time crossed&quot;);
+				}
+			}
+		}
+<span class="nc" id="L207">		Logger.debug(getClass(), &quot;Domain: &quot;+domain +&quot; Can send: &quot;+canSend);</span>
+<span class="nc" id="L208">		return canSend;</span>
+	}
+
+	/**
+	 * Spravi kopiu generickeho limitu pre domenu ktora nema explicitne definovane limity
+	 * tuto kopiu ale neulozi do DB, prepocita maxTimeLimit a oshapuje mapu emailov ak treba
+	 * @param domain domena
+	 */
+	protected void cloneGenericLimit(String domain)
+	{
+<span class="nc" id="L218">		Logger.debug(getClass(), &quot;No limit defined for domain &quot; + domain + &quot; , generic limit enabled, copying...&quot;);</span>
+<span class="nc" id="L219">		DomainLimitBean matrix = domainLimits.get(&quot;*&quot;);</span>
+<span class="nc" id="L220">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L221">		manager.detach(matrix);</span>
+<span class="nc" id="L222">		matrix.setDomain(domain);</span>
+<span class="nc" id="L223">		matrix.setId(0);</span>
+<span class="nc" id="L224">		domainLimits.put(domain, matrix);</span>
+<span class="nc" id="L225">		Logger.debug(getClass(), &quot;Limit for domain: &quot; + domain + &quot; added. Limit: &quot; +matrix);</span>
+<span class="nc" id="L226">		Logger.debug(getClass(), &quot;Recalculating maxTimeLimit...&quot;);</span>
+		//maxTimeLimit = Lambda.max(domainLimits.values(), Lambda.on(DomainLimitBean.class).getTimeUnit().toMillis(1));
+<span class="nc" id="L228">		maxTimeLimit = 0;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		for (DomainLimitBean limit : domainLimits.values()) {</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if (maxTimeLimit &lt; limit.getMinDelay()) maxTimeLimit = limit.getMinDelay();</span>
+<span class="nc" id="L231">		}</span>
+<span class="nc" id="L232">		Logger.debug(getClass(), &quot;maxTimeLimit: &quot; + maxTimeLimit);</span>
+<span class="nc" id="L233">		long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		if(!map.isEmpty())</span>
+		{
+<span class="nc" id="L236">			long from = currentTime - maxTimeLimit;</span>
+<span class="nc" id="L237">			long to  = currentTime;</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			if(from &lt; this.map.firstKey()) from = this.map.firstKey();</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			if(to &gt; this.map.lastKey()) to = this.map.lastKey();</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if(from &lt;= to ) map = new TreeMap&lt;&gt;(map.subMap(from, to));</span>
+		}
+<span class="nc" id="L242">	}</span>
+
+	/**
+	 * toto by malo zistit kolko mailov bolo na danu domenu poslanych v danom rozsahu casov
+	 * snad to bude dostatocne rychle
+	 * otazka concurent modification?
+	 * @param from
+	 * @param to
+	 * @param domain
+	 * @return
+	 */
+	private int countEmailsSentToDomain(long from, long to, String domain)
+	{
+<span class="nc bnc" id="L255" title="All 2 branches missed.">		if(this.map.isEmpty()) return 0;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		if(from &lt; this.map.firstKey()) from = this.map.firstKey();</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if(to &gt; this.map.lastKey()) to = this.map.lastKey();</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if(from &gt; to){</span>
+<span class="nc" id="L259">			Logger.debug(getClass(), &quot;from key &gt; to, returning 0&quot;);</span>
+<span class="nc" id="L260">			return 0;</span>
+		}
+<span class="nc" id="L262">		SortedMap&lt;Long,String&gt; subMap = this.map.subMap(from, to);</span>
+<span class="nc" id="L263">		int count = 0;</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		for(String d : subMap.values())</span>
+		{
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			if(d.equals(domain)) count++;</span>
+<span class="nc" id="L267">		}</span>
+<span class="nc" id="L268">		return count;</span>
+	}
+
+	/**
+	 * This method will reload domain limits settings
+	 * recalculate longest limit and shape domain records
+	 * according to longest limit (keep records only from longest limit to present)
+	 */
+	public synchronized void refresh()
+	{
+<span class="fc" id="L278">		Collection&lt;DomainLimitBean&gt; allLimits = DomainLimitsDB.getInstance(true).getAll();</span>
+		try {
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">			if(allLimits != null) {</span>
+				//domainLimits = Lambda.index(allLimits, Lambda.on(DomainLimitBean.class).getDomain());
+<span class="fc" id="L282">				domainLimits = Collections.emptyMap();</span>
+<span class="nc" id="L283">				allLimits.forEach(limit -&gt; domainLimits.put(limit.getDomain(), limit));</span>
+			}
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if(!domainLimits.isEmpty()) {</span>
+				//maxTimeLimit = Lambda.max(domainLimits.values(), Lambda.on(DomainLimitBean.class).getTimeUnit().toMillis(1));
+<span class="nc" id="L287">				maxTimeLimit = 0;</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">				for (DomainLimitBean limit : domainLimits.values()) {</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">					if (maxTimeLimit &lt; limit.getMinDelay()) maxTimeLimit = limit.getMinDelay();</span>
+<span class="nc" id="L290">				}</span>
+			}
+<span class="nc" id="L292">			long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">			if(!map.isEmpty())</span>
+			{
+<span class="nc" id="L295">				long from = currentTime - maxTimeLimit;</span>
+<span class="nc" id="L296">				long to  = currentTime;</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">				if(from &lt; this.map.firstKey()) from = this.map.firstKey();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">				if(to &gt; this.map.lastKey()) to = this.map.lastKey();</span>
+<span class="nc" id="L299">				map = new TreeMap&lt;&gt;(map.subMap(from, to));</span>
+			}
+<span class="fc" id="L301">		} catch (Exception e) {</span>
+<span class="fc" id="L302">			Logger.error(DomainThrottle.class, e);</span>
+
+<span class="fc" id="L304">			map = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L305">			lastEmails = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L306">			loadMap();</span>
+<span class="nc" id="L307">		}</span>
+
+<span class="fc" id="L309">	}</span>
+
+	/**
+	 * Prida odoslany email do tabuliek
+	 * @param domain domena
+	 * @param timeSent cas odoslania v milisekundach
+	 */
+	public synchronized void  addEmail(String domain, long timeSent)
+	{
+<span class="nc" id="L318">		lastEmails.put(domain, timeSent);</span>
+<span class="nc" id="L319">		map.put(timeSent, domain);</span>
+<span class="nc" id="L320">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

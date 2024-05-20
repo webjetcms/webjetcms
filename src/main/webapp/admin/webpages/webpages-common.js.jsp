@@ -1388,61 +1388,6 @@ function parseTemplateSelectData(dirty)
 //posledne vybrata verzia ulozenej a nepublikovanej stranky na zobrazenie
 var lastHistoryRow;
 
-/**
- * Funkcia, ktora obnovi editor a ajaxom natiahne stranku ulozenu, ale nepublikovanu
- *
- * @param docId - identifikator stranky - docId
- * @param historyId - ulozena verzia stranky, ktora ale este nebola publikovana
- */
-function historyPageClick(docId, historyId)
-{
-	if (docId == 0)
-		return;
-
-	$("#editHistoryImg" + historyId).attr("src","/admin/images/ajax-loader.gif");
-
-	$.ajax({
-		type: 'GET',
-		url: "/admin/rest/document/" + docId + "/" + historyId,
-		dataType: 'json',
-		timeout: 30000,
-		success: function(json)
-		{
-			ajaxFillEditorForm(json);
-
-			if (lastHistoryRow != undefined)
-				$("#historyRow" + lastHistoryRow).css("background-color", "");//odfarbi posledne vybratu stranku
-
-			$("#historyRow" + historyId).css("background-color", "yellow"); //zafarbi aktualne vybratu stranku
-			lastHistoryRow = historyId;
-
-			try { $("#editorMainDiv #tabLink1").tab("show"); } catch (e) {}
-		},
-		error:function(xmlHttpRequest, textStatus, errorThrown)
-		{
-			try
-			{
-				if (xmlHttpRequest.status == 200)
-				{
-					alert("<iwcm:text key="editor.ajax.load.error.login"/>");
-					$("#errorWarningDiv").html("<div class=\"topNotify\"><img src=\"/admin/images/warning.gif\" align=\"absmiddle\" alt=\"\"/><iwcm:text key='editor.ajax.load.error.login'/><br /></div>");
-				}
-				else
-				{
-					alert("<iwcm:text key="editor.ajax.save.error.default"/>");
-					$("#errorWarningDiv").html("<div class=\"topNotify\"><img src=\"/admin/images/warning.gif\" align=\"absmiddle\" alt=\"\"/><iwcm:text key='editor.ajax.save.error.default'/><br /></div>");
-				}
-			}
-			catch (ex)
-			{}
-		},
-		complete: function(xmlRequest, textStatus)
-		{
-			$("#editHistoryImg" + historyId).attr("src","images/icon_edit.gif");
-		}
-	});
-}
-
 //============ WebJET 8 funkcie ====================
 
     <%
@@ -1516,198 +1461,6 @@ function saveEditorAsTest(button)
 
 		saveEditorAs(button);
 	}
-}
-
-function saveEditor(button, publish)
-{
-
-    try {
-        $.isFunction(GridEditorDeinit());
-    } catch (e) {}
-
-	var editorForm = window.editorForm;
-
-	var editor = CKEDITOR.instances.data;
-
-	if (window.FCKBeforePublish)
-  	{
-  		var canSubmit = window.FCKBeforePublish(editorForm);
-  		if (canSubmit == false) return;
-  	}
-
-	var savingHtml = "<div class=\"topWaiting\"><iwcm:text key='editor.ajax.save.info'/></div>";
-
-	$("#errorWarningDiv").html(savingHtml);
-	$("#errorWarningDiv").show();
-
-	needToSave = false;
-
-	if (publish == false && editorForm.publicable.checked)
-		editorForm.publicable.checked = false;
-
-	//alert na publikovanie stranky
-	if (publish && editorForm.publicable.checked)
-		window.alert("<iwcm:text key="editor.publish.note"/> "+editorForm.publishStart.value+" "+editorForm.publishStartTime.value);
-
-	editorForm.saveAsNew = "0";
-	if (publish)
-		$(editorForm.publish).val("1")	// ak sa ma publikovat, nastavi sa flag publish na true
-	else
-		$(editorForm.publish).val("0")
-
-	//TODO: treba dorobit standardny save bez ajaxu (ak je vela dat v editore)
-
-	//textarei vo forme, ktory sa posiela sa nastavi kod z FCK editora
-	var htmlCode = editor.getData();
-
-	//window.alert("html in wjef="+htmlCode)
-	$(editorForm.data).val(htmlCode);
-
-	//console.log($(editorForm).serialize())
-
-	$.ajax({
-	  type: 'POST',
-	  url: "/admin/rest/document/save?&rnd=" + (new Date()).getTime(),
-	  data: $(editorForm).serialize(),
-	  dataType: 'json',
-	  cache: false,
-	  timeout: 300000,
-	  success: function(html)
-	  {
-		  if (html == null)
-		  {
-			  alert("<iwcm:text key="editor.ajax.save.error.server"/>");
-			  $("#errorWarningDiv").html("<div class=\"topNotify\"><div class=\"notifyText\"><iwcm:text key='editor.ajax.save.error.server'/></div></div>");
-			  return;
-		  }
-
-		  setWarnings(html.ajaxSaveFormWarnings);
-
-		  if(html.ajaxSaveFormPermDenied)
-		  {
-		  	  alert("<iwcm:text key="editor.permsDenied"/>");
-			  $("#errorWarningDiv").html("<div class=\"topNotify\"><div class=\"notifyText\"><iwcm:text key='editor.permsDenied'/></div></div>");
-			  return;
-		  }
-
-		  //reloadne div s upozorneniami a chybami po ulozeni dokumentu
-		  setTimeout(reloadValidationDiv, 100);
-
-		  //ak sa ma refreshnut strom vlavo, tak ho refreshne a vysvieti aktualne ulozenu stranku, ktora je aj otvorena
-		  if(html.ajaxSaveFormRefreshLeft == true)
-		  {
-			  try
-			  {
-					setTimeout(function() {
-						//toto nefungovalo dobre, trebalo reloadnut parenta
-						//var groupId = $(editorForm.groupId).val();
-						//refreshGroup(groupId);
-						reloadWebpagesTree();
-					}, 1000);
-
-					refreshOtherGroups();
-			  } catch (e) {}
-		  }
-		  //nastavi virtualnu cestu podla toho, aku mu nastavil SaveDoc
-		  $(editorForm.virtualPath).val(html.ajaxSaveFormVirtualPath);
-		  $(editorForm.virtualPathOriginal).val(html.ajaxSaveFormVirtualPath);
-
-		  //nastavi docId podla toho, ake mu nastavil SaveDoc
-		  $(editorForm.docId).val(html.ajaxSaveFormDocId);
-		  $("#docIdInputBox").val(html.ajaxSaveFormDocId);
-
-		  //nastavi lastDocId podla toho, ake mu nastavil SaveDoc
-		  $(editorForm.lastDocId).val(html.ajaxSaveFormLastDocId);
-
-		  //nastavi flag zobrazovat podla toho, ake mu nastavil SaveDoc
-		  $(editorForm.available).prop('checked', html.ajaxSaveFormAvailable);
-		  //console.log("html.ajaxSaveFormAvailable="+html.ajaxSaveFormAvailable);
-		  $(editorForm.available).bootstrapSwitch('state' , html.ajaxSaveFormAvailable);
-
-		  //reset editora, uz ho nebude povazovat za zmeneny, kedze vsetky zmeny sa ulozili
-		  needToSave = false;
-		  //reloadne media zalozku
-		  $('#mediaIFrameId').attr("src", "/components/media/admin_media_list.jsp?docid=" + html.ajaxSaveFormLastDocId+"&rnd="+(new Date()).getTime());
-
-		  try
-		  {
-
-		  	//toto sa deje predsa hore s testom if(html.ajaxSaveFormRefreshLeft == true) refreshOtherGroups();
-
-		  	//tu sa refreshne povodny adresar
-			//toto sa deje predsa hore s testom if(html.ajaxSaveFormRefreshLeft == true) refreshGroup($(editorForm.groupId).val())
-
-			//v groupId mame povodny adresar (pri zmene) a v groupidString mame novy (ak nastala zmena)
-		  	var groupIdNew = parseInt(editorForm.groupIdString.value);
-		  	if (editorForm.groupId.value != groupIdNew)
-		  	{
-		  		//refreshni novy adresar
-				editorForm.groupId.value = groupIdNew;
-		   	refreshGroup($(editorForm.groupId).val())
-		   }
-		  }
-		  catch (e) { console.log(e); }
-
-		  try
-		  {
-			  if (publish && window.parent && window.parent.parent && window.parent.parent.WJInlineDialog != undefined)
-			  {
-			     window.setTimeout(inlineReloadParentWindow, 1000);
-			  }
-			  if (publish && window.parent && window.parent.opener && window.parent.opener.WJInlineDialog != undefined)
-			  {
-				  window.setTimeout(inlineReloadParentWindow, 1000);
-			  }
-		  } catch (e) {}
-
-		  try
-		  {
-		  	  var callFunction = getParameterByName("afterSaveCall");
-		  	  //console.log("callFunction1="+callFunction);
-		  	  var failsafeCount = 0;
-		  	  var currentWindow = window;
-		  	  while (failsafeCount++ < 10)
-		  	  {
-		  	  	  //console.log("Testing window: "+currentWindow.location.href);
-		  	     var fn = currentWindow[callFunction];
-		  	     //console.log(fn);
-		  	     if(typeof fn === 'function')
-		  	     {
-		  	     		//console.log("Executing fn");
-					    fn(editorForm);
-					    break;
-				  }
-
-				  currentWindow = currentWindow.parent;
-		  	  }
-		  }
-		  catch (e) { console.log("ERROR: "+e); }
-
-		  try
-		  {
-			  //TODO: FCK.ResetIsDirty();
-			  resetDirtyEditor();
-			  setTimeout(function() { resetDirtyEditor() }, 1000);
-		  }
-		  catch (ex) {}
-	  },
-		error:function(xmlHttpRequest, textStatus, errorThrown)
-		{
-			try
-			{
-				if (xmlHttpRequest.status == 200 || xmlHttpRequest.status == 302 || xmlHttpRequest.status == 0)
-				{
-					alert("<iwcm:text key="editor.ajax.save.error.login"/>");
-					$("#errorWarningDiv").html("<div class=\"topNotify\"><div class=\"notifyText\"><iwcm:text key='editor.ajax.save.error.login'/></div></div>");
-				}
-				else
-				{
-					$("#errorWarningDiv").html("<div class=\"topNotify\"><div class=\"notifyText\"><iwcm:text key='editor.ajax.save.error'/></div></div>");
-				}
-			}
-			catch (ex) {}
-		}
-	});
 }
 
 function setWarnings(warnings) {
@@ -1808,7 +1561,7 @@ function changeNodeText(instance, node) {
 
 function fillFields(jsonEditorForm) {
     var textTemplate = '<input name="field{pismeno}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" id="fieldInput{pismeno}" class="form-control" type="text">';
-	var autocompleteTemplate = '<div class="input-icon input-icon-lg right"><i class="fa fa-search"></i><input type="text" class="form-control" name="field{pismeno}" value="{value}" id="fieldAutocompleteId{pismeno}"/></div>';
+	var autocompleteTemplate = '<div class="input-icon input-icon-lg right"><i class="ti ti-search"></i><input type="text" class="form-control" name="field{pismeno}" value="{value}" id="fieldAutocompleteId{pismeno}"/></div>';
 	var selectTemplate = '<select name="field{pismeno}" id="fieldInput{pismeno}" class="form-control">{options}</select>';
 	//JICH - add
     var hiddenTemplate = '<input name="field{pismeno}" value="{value}" id="fieldInput{pismeno}" class="form-control" type="hidden"><div id="fieldDisplay{pismeno}"></div>';
@@ -1869,13 +1622,13 @@ function fillFields(jsonEditorForm) {
 			template = autocompleteTemplate.replace(new RegExp('{pismeno}', 'g'), keyUpper).replace(new RegExp('{value}', 'g'), value);
 		}
 		else if (v.type == 'image') {
-			template += '<span class="input-group-addon btn green"><i onclick="openImageDialogWindow(\'editorForm\', \'field' + keyUpper + '\', \'\')" class="fa fa-image"></i></span>';
+			template += '<span class="input-group-addon btn green"><i onclick="openImageDialogWindow(\'editorForm\', \'field' + keyUpper + '\', \'\')" class="ti ti-photo"></i></span>';
 		}
 		else if (v.type == 'link') {
-			template += '<span class="input-group-addon btn green"><i onclick="openLinkDialogWindow(\'editorForm\', \'field' + keyUpper + '\')" class="fa fa-link"></i></span>';
+			template += '<span class="input-group-addon btn green"><i onclick="openLinkDialogWindow(\'editorForm\', \'field' + keyUpper + '\')" class="ti ti-link"></i></span>';
 		}
         else if (v.type == 'file_archiv_link_insert_new') {
-            template += '<span class="input-group-addon btn green"><i onclick=" WJDialog.OpenDialog( \'editorForm\' , \'Image\',\'/components/file_archiv/file_archiv_upload.jsp?form=editorForm&amp;field=field' + keyUpper + '\')" class="fa fa-link"></i></span>';
+            template += '<span class="input-group-addon btn green"><i onclick=" WJDialog.OpenDialog( \'editorForm\' , \'Image\',\'/components/file_archiv/file_archiv_upload.jsp?form=editorForm&amp;field=field' + keyUpper + '\')" class="ti ti-link"></i></span>';
         }
         // LPA
         else if (v.type == 'none') {

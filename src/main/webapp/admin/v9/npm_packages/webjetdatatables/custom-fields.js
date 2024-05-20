@@ -113,7 +113,7 @@ export function update(EDITOR, action) {
     //pomen mena poli
     var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control">{value}</textarea>';
-    var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="far fa-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
+    var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
@@ -231,9 +231,9 @@ export function update(EDITOR, action) {
                 backgroundImage = "url("+value+")";
                 prependClassName = " has-image";
             }
-            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="far fa-image"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="far fa-pencil"></i></button> </div>';
+            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'link') {
-            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="far fa-pencil"></i></button> </div>';
+            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
             template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_field'+identifier+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'none') {
@@ -253,11 +253,11 @@ export function update(EDITOR, action) {
 
                 if (v.typeValues[0].value == null || v.typeValues[0].value == "") {
                     //kdyz nemame displayScript prepneme na textTemplate
-                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"btn green input-group-addon\"><i class=\"fa fa-pencil\"></i></span>";
+                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"btn green input-group-addon\"><i class=\"ti ti-focus-2\"></i></span>";
                     hiddenTemplate = textTemplate;
                     hiddenTemplate = hiddenTemplate + button;
                 } else {
-                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"float-end btn green\"><i class=\"fa fa-pencil\"></i></span>";
+                    button = "<span type=\"button\" id=\"fieldButton" + identifier + "\" class=\"float-end btn green\"><i class=\"ti ti-focus-2\"></i></span>";
                     hiddenTemplate = button + hiddenTemplate;
                 }
             }

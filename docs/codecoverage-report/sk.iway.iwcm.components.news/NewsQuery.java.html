@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsQuery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsQuery.java</span></div><h1>NewsQuery.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.news.criteria.Criteria;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria.CriteriaType;
+import sk.iway.iwcm.components.news.criteria.ResultCriteria;
+import sk.iway.iwcm.doc.AtrBean;
+import sk.iway.iwcm.doc.AtrDocBean;
+import sk.iway.iwcm.doc.DataAccessHelper;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.utils.Pair;
+
+/**
+ * Realizuje DB dotazy pre nove News komponenty. Zaujima ju len DB logika, nezaujima ju aka je to stranka, ci ma hladat len aktivne stranky a spol
+ * @author mbocko
+ *
+ */
+@SuppressWarnings({&quot;unused&quot;, &quot;unchecked&quot;})
+<span class="fc" id="L41">public class NewsQuery</span>
+{
+	private static final int NOT_SET_INT = Integer.MIN_VALUE;
+
+<span class="fc" id="L45">	private List&lt;DatabaseCriteria&gt; databaseCriteriaList = new LinkedList&lt;DatabaseCriteria&gt;();</span>
+<span class="fc" id="L46">	private List&lt;ResultCriteria&gt; resultCriteriaList = new LinkedList&lt;ResultCriteria&gt;();</span>
+<span class="fc" id="L47">	private List&lt;Object&gt; arguments = new LinkedList&lt;Object&gt;();</span>
+<span class="fc" id="L48">	private List&lt;Pair&lt;OrderEnum, SortEnum&gt;&gt; orderings = new LinkedList&lt;Pair&lt;OrderEnum,SortEnum&gt;&gt;();</span>
+<span class="fc" id="L49">	private int limit = NOT_SET_INT;</span>
+<span class="fc" id="L50">	private int offset = NOT_SET_INT;</span>
+
+<span class="fc" id="L52">	private int resultCriteriaTotalCount = 0;</span>
+
+<span class="fc" id="L54">	private int pageSize = NOT_SET_INT;</span>
+<span class="fc" id="L55">	private int page = NOT_SET_INT;</span>
+<span class="fc" id="L56">	private int initialOffset = 0;</span>
+
+<span class="fc" id="L58">	private boolean loadData = false;</span>
+<span class="fc" id="L59">	private boolean perexGroupUseJoin = false;</span>
+
+<span class="fc" id="L61">	private boolean useAtributeSearch = false;</span>
+
+<span class="fc" id="L63">	private boolean returnDocdetailsWithAtributes = false;</span>
+
+
+	/**
+	 * vygeneruje DB dotaz na zaklade kriterii
+	 * @param count vrati len pocet najdenych stranok
+	 * @param noData vrati objekty bez atributu data
+	 * @return
+	 */
+	private String getSelectSql(boolean count, boolean noData)
+	{
+<span class="fc" id="L74">		StringBuilder sql = new StringBuilder();</span>
+
+<span class="fc" id="L76">		sql.append(&quot;SELECT &quot;);</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (count)</span>
+<span class="nc" id="L78">			sql.append(&quot;count(d.doc_id) &quot;);</span>
+		else
+		{
+
+<span class="fc" id="L82">			String docFields = FieldEnum.getFields();</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if (noData) docFields = FieldEnum.getFieldsNoData();</span>
+			//TODO: zatial, neskor treba dorobit
+			//perexGroupUseJoin = false;//Constants.getBoolean(&quot;perexGroupUseJoin&quot;) &amp;&amp; Tools.isNotEmpty(whereSql) &amp;&amp; whereSql.contains(&quot;p.perex_group_id&quot;);
+
+<span class="fc" id="L87">			sql.append(&quot;u.title as u_title, u.first_name, u.last_name, u.email, u.photo, &quot;)</span>
+<span class="fc" id="L88">			.append(docFields);</span>
+
+<span class="fc" id="L90">			String[] additionalFields = DataAccessHelper.getDocFields();</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">			if (additionalFields!=null &amp;&amp; additionalFields.length&gt;0) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">				for (String field : additionalFields) {</span>
+<span class="fc" id="L93">					sql.append(&quot;, d.&quot;).append(field);</span>
+				}
+			}
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">			if (useAtributeSearch)</span>
+			{
+<span class="nc" id="L99">				sql.append(&quot;, dad.*, da.value_string, da.value_int, da.value_bool &quot;);</span>
+			}
+		}
+<span class="fc" id="L102">		sql.append(&quot; FROM documents d &quot;);</span>
+
+<span class="fc" id="L104">		sql.append(&quot;LEFT JOIN users u ON d.author_id=u.user_id &quot;);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;perexGroupUseJoin&quot;))</span>
+		{
+<span class="nc" id="L107">			sql.append(&quot;LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id &quot;);</span>
+		}
+
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (useAtributeSearch)</span>
+		{
+<span class="nc" id="L112">			sql.append(&quot;LEFT JOIN doc_atr da ON da.doc_id = d.doc_id LEFT JOIN doc_atr_def dad ON dad.atr_id = da.atr_id &quot;);</span>
+		}
+
+
+<span class="fc" id="L116">		boolean addAnd = false;</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">		if (databaseCriteriaList.size()&gt;0)</span>
+		{
+<span class="fc bfc" id="L119" title="All 2 branches covered.">			for (DatabaseCriteria criteria : databaseCriteriaList)</span>
+			{
+<span class="fc bfc" id="L121" title="All 2 branches covered.">				if (!addAnd)</span>
+				{
+<span class="fc" id="L123">					sql.append(&quot;WHERE &quot;);</span>
+				}
+				else
+				{
+<span class="fc" id="L127">					sql.append(&quot;AND &quot;);</span>
+				}
+<span class="fc" id="L129">				appendCriteria(criteria, sql);</span>
+<span class="fc" id="L130">				addAnd = true;</span>
+<span class="fc" id="L131">			}</span>
+		}
+
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (!count) {</span>
+<span class="fc" id="L135">			setOrdering(sql, &quot;d&quot;, false);</span>
+		}
+
+		// strankovanie
+<span class="pc bpc" id="L139" title="3 of 6 branches missed.">		if (!count &amp;&amp; limit!=NOT_SET_INT &amp;&amp; Tools.isEmpty(resultCriteriaList))</span>
+		{
+			// nastavim limity a strankovanie, ale len v pripade ze sa nejedna po select pre pocet dokumentov (tam sa strankovanie nepouzije)
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">			if (Constants.DB_TYPE==Constants.DB_MYSQL)</span>
+			{
+<span class="fc" id="L144">				sql.append(&quot;LIMIT &quot;);</span>
+				//if (offset!=NOT_SET_INT &amp;&amp; initialOffset&gt;0)
+				{
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">					sql.append(&quot; &quot;).append((offset&gt;0?offset:0)+initialOffset).append(&quot;, &quot;);</span>
+				}
+<span class="fc" id="L149">				sql.append(limit);</span>
+			}
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			else if (Constants.DB_TYPE==Constants.DB_PGSQL)</span>
+			{
+<span class="nc" id="L153">				sql.append(&quot;LIMIT &quot;);</span>
+<span class="nc" id="L154">				sql.append(limit);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">				int finalOffset = (offset&gt;0?offset:0)+initialOffset;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (finalOffset&gt;0)</span>
+				{
+<span class="nc" id="L158">					sql.append(&quot; OFFSET &quot;).append(finalOffset).append(&quot; &quot;);</span>
+				}
+
+<span class="nc" id="L161">			}</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			else if (Constants.DB_TYPE==Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L164">				StringBuilder oraclePaging = new StringBuilder();</span>
+<span class="nc bnc" id="L165" title="All 4 branches missed.">				if (offset==NOT_SET_INT &amp;&amp; initialOffset==0)</span>
+				{
+<span class="nc" id="L167">					oraclePaging.append(&quot;SELECT * FROM (&quot;);</span>
+<span class="nc" id="L168">					oraclePaging.append(sql);</span>
+<span class="nc" id="L169">					oraclePaging.append(&quot;) WHERE ROWNUM &lt;= &quot;).append(limit);</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					oraclePaging.append(&quot;SELECT * FROM ( SELECT /*+ FIRST_ROWS(&quot;).append((offset&gt;0?offset:0) + initialOffset + limit).append(&quot;) */ a.*, ROWNUM RNUM FROM (&quot;);</span>
+<span class="nc" id="L174">					oraclePaging.append(sql);</span>
+<span class="nc bnc" id="L175" title="All 4 branches missed.">					oraclePaging.append(&quot;) a WHERE ROWNUM &lt;= &quot;).append(limit+initialOffset+(offset&gt;0?offset:0)).append(&quot;) WHERE RNUM &gt; &quot;).append((offset&gt;0?offset:0)+initialOffset);</span>
+				}
+<span class="nc" id="L177">				sql = oraclePaging;</span>
+<span class="nc" id="L178">			}</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			else if (Constants.DB_TYPE==Constants.DB_MSSQL)</span>
+			{
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			    if (Constants.getBoolean(&quot;mssqlUseOldTopQuery&quot;))</span>
+                {
+                    //toto je potrebne pre staru verziu MSSQL
+<span class="nc" id="L184">                    StringBuilder sqlPaging = new StringBuilder();</span>
+<span class="nc bnc" id="L185" title="All 4 branches missed.">                    if (offset==NOT_SET_INT &amp;&amp; initialOffset==0)</span>
+                    {
+<span class="nc" id="L187">                        sqlPaging.append(&quot;SELECT TOP &quot;).append(limit).append(sql.substring(6));</span>
+                    }
+                    else
+                    {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                        sqlPaging.append(&quot;SELECT * FROM (SELECT TOP &quot;).append(limit).append(&quot; * FROM ( SELECT TOP &quot;).append(limit + (offset&gt;0?offset:0) + initialOffset);</span>
+<span class="nc" id="L192">                        sqlPaging.append(sql.substring(6));</span>
+<span class="nc" id="L193">                        sqlPaging.append(&quot;) AS _subQuery1 &quot;);</span>
+                        // pridam reverzny ordering
+<span class="nc" id="L195">                        setOrdering(sqlPaging, &quot;_subQuery1&quot;, true);</span>
+                        // znova zoradim do povodneho radenia
+<span class="nc" id="L197">                        sqlPaging.append(&quot;) AS _subQuery2 &quot;);</span>
+<span class="nc" id="L198">                        setOrdering(sqlPaging, &quot;_subQuery2&quot;, false);</span>
+                    }
+<span class="nc" id="L200">                    sql = sqlPaging;</span>
+<span class="nc" id="L201">                }</span>
+			    else
+                {
+                    /* LPA - uprava limit a offset pre MS SQL */
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                    sql.append(&quot;OFFSET &quot;).append((offset &gt; 0 ? offset : 0) + initialOffset).append(&quot; ROWS &quot;)</span>
+<span class="nc" id="L206">                            .append(&quot;FETCH NEXT &quot;).append(limit).append(&quot; ROWS ONLY&quot;);</span>
+                }
+
+				/*
+				takto nejak:
+					Select * from (
+						select top /LIMIT/ * from (
+								select top /LIMIT+OFFSET/ d.doc_id,d.title from documents  d order by d.title asc
+						) as res1 order by res1.title desc
+					) as res2 order by res2.title asc
+
+				 */
+			}
+		}
+
+<span class="fc" id="L221">		return sql.toString();</span>
+	}
+
+
+
+
+
+	/**
+	 * Prida jednotlive kriteria do stringBuildera
+	 * @param c
+	 * @param sql
+	 * @return
+	 */
+	private StringBuilder appendCriteria(DatabaseCriteria c, StringBuilder sql)
+	{
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">		if (c.getType()==CriteriaType.NOT)</span>
+		{
+			//je to not
+<span class="nc" id="L239">			DatabaseCriteria criteria = (DatabaseCriteria)c.getValue();</span>
+<span class="nc" id="L240">			sql.append(&quot;NOT ( &quot;);</span>
+
+<span class="nc" id="L242">			appendCriteria(criteria, sql);</span>
+
+<span class="nc" id="L244">			sql.append(&quot;) &quot;);</span>
+<span class="nc" id="L245">		}</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">		else if (c.getType()==CriteriaType.OR)</span>
+		{
+			//je to or
+<span class="fc" id="L249">			List&lt;DatabaseCriteria&gt; orCriteriaList = (List&lt;DatabaseCriteria&gt;)c.getValue();</span>
+<span class="fc" id="L250">			sql.append(&quot;( &quot;);</span>
+<span class="fc" id="L251">			boolean isNextOr = false;</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">			for (DatabaseCriteria orCriteria : orCriteriaList)</span>
+			{
+<span class="fc bfc" id="L254" title="All 2 branches covered.">				if (isNextOr)</span>
+				{
+<span class="fc" id="L256">					sql.append(&quot;OR &quot;);</span>
+				}
+<span class="fc" id="L258">				isNextOr = true;</span>
+<span class="fc" id="L259">				appendCriteria(orCriteria, sql);</span>
+<span class="fc" id="L260">			}</span>
+<span class="fc" id="L261">			sql.append(&quot;) &quot;);</span>
+<span class="fc" id="L262">		}</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">		else if (c.getType()==CriteriaType.AND)</span>
+		{
+			//je to and
+<span class="fc" id="L266">			List&lt;DatabaseCriteria&gt; andCriteriaList = (List&lt;DatabaseCriteria&gt;)c.getValue();</span>
+<span class="fc" id="L267">			sql.append(&quot;( &quot;);</span>
+<span class="fc" id="L268">			boolean isNextAnd = false;</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">			for (DatabaseCriteria andCriteria : andCriteriaList)</span>
+			{
+<span class="fc bfc" id="L271" title="All 2 branches covered.">				if (isNextAnd)</span>
+				{
+<span class="fc" id="L273">					sql.append(&quot;AND &quot;);</span>
+				}
+<span class="fc" id="L275">				isNextAnd = true;</span>
+<span class="fc" id="L276">				appendCriteria(andCriteria, sql);</span>
+<span class="fc" id="L277">			}</span>
+<span class="fc" id="L278">			sql.append(&quot;) &quot;);</span>
+<span class="fc" id="L279">		}</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">		else if (c.isAtributeCriteria())</span>
+		{
+			// ak mam zadany nazov atributu
+<span class="nc bnc" id="L283" title="All 2 branches missed.">			if (Tools.isNotEmpty(c.getAtributeName()))</span>
+			{
+<span class="nc" id="L285">				sql.append(&quot;(dad.atr_name=? AND &quot;);</span>
+<span class="nc" id="L286">				arguments.add(c.getAtributeName());</span>
+			}
+			else
+			{
+<span class="nc" id="L290">				sql.append(&quot;(dad.atr_id=?  AND &quot;);</span>
+<span class="nc" id="L291">				arguments.add(c.getAtributeId());</span>
+			}
+<span class="nc bnc" id="L293" title="All 4 branches missed.">			switch (c.getAtributeType())</span>
+			{
+<span class="nc" id="L295">				case DatabaseCriteria.ATRIBUTE_TYPE_STRING: sql.append(&quot;dad.atr_type=0 AND da.value_string&quot;); break;</span>
+<span class="nc" id="L296">				case DatabaseCriteria.ATRIBUTE_TYPE_INTEGER: sql.append(&quot;dad.atr_type=1 AND da.value_int&quot;); break;</span>
+<span class="nc" id="L297">				case DatabaseCriteria.ATRIBUTE_TYPE_BOOLEAN: sql.append(&quot;dad.atr_type=2 AND da.value_bool&quot;); break;</span>
+			}
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">			if (c.getType()==CriteriaType.EQUALS)</span>
+			{
+<span class="nc" id="L302">				sql.append(&quot; = ?)&quot;);</span>
+<span class="nc" id="L303">				arguments.add(c.getValue());</span>
+			}
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			else if (c.getType()==CriteriaType.GREATER_THAN)</span>
+			{
+<span class="nc" id="L307">				sql.append(&quot; &gt; ?)&quot;);</span>
+<span class="nc" id="L308">				arguments.add(c.getValue());</span>
+			}
+<span class="nc bnc" id="L310" title="All 2 branches missed.">			else if (c.getType()==CriteriaType.LESS_THAN)</span>
+			{
+<span class="nc" id="L312">				sql.append(&quot; &lt; ?)&quot;);</span>
+<span class="nc" id="L313">				arguments.add(c.getValue());</span>
+			}
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			else if (c.getType()==CriteriaType.LIKE)</span>
+			{
+<span class="nc" id="L317">				sql.append(&quot; LIKE ?)&quot;);</span>
+<span class="nc bnc" id="L318" title="All 4 branches missed.">				String value = (c.isBeforeWildcard()?&quot;%&quot;:&quot;&quot;) + String.valueOf(c.getValue()) + (c.isAfterWildcard()?&quot;%&quot;:&quot;&quot;);</span>
+<span class="nc" id="L319">				arguments.add(value);</span>
+<span class="nc" id="L320">			}</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			else if (c.getType()==CriteriaType.NOT_LIKE)</span>
+			{
+<span class="nc" id="L323">				sql.append(&quot; NOT LIKE ?)&quot;);</span>
+<span class="nc bnc" id="L324" title="All 4 branches missed.">				String value = (c.isBeforeWildcard()?&quot;%&quot;:&quot;&quot;) + String.valueOf(c.getValue()) + (c.isAfterWildcard()?&quot;%&quot;:&quot;&quot;);</span>
+<span class="nc" id="L325">				arguments.add(value);</span>
+<span class="nc" id="L326">			}</span>
+		}
+<span class="fc bfc" id="L328" title="All 2 branches covered.">		else if (c.getType()==CriteriaType.IN)</span>
+		{
+<span class="fc" id="L330">			List&lt;Object&gt; objectList = (List&lt;Object&gt;)c.getValue();</span>
+<span class="fc" id="L331">			sql.append(c.getProperty().getDbName()).append(&quot; IN ( &quot;);</span>
+<span class="fc" id="L332">			boolean addComma = false;</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">			for (Object obj : objectList)</span>
+			{
+<span class="fc bfc" id="L335" title="All 2 branches covered.">				if (addComma)</span>
+				{
+<span class="fc" id="L337">					sql.append(&quot;, &quot;);</span>
+				}
+<span class="fc" id="L339">				addComma = true;</span>
+				//appendCriteria(andCriteria, sql);
+<span class="fc" id="L341">				sql.append(&quot;?&quot;);</span>
+<span class="fc" id="L342">				arguments.add(obj);</span>
+<span class="fc" id="L343">			}</span>
+<span class="fc" id="L344">			sql.append(&quot;) &quot;);</span>
+<span class="fc" id="L345">		}</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">		else if (c.getType()==CriteriaType.NOT_IN)</span>
+		{
+<span class="fc" id="L348">			List&lt;Object&gt; objectList = (List&lt;Object&gt;)c.getValue();</span>
+<span class="fc" id="L349">			sql.append(c.getProperty().getDbName()).append(&quot; NOT IN ( &quot;);</span>
+<span class="fc" id="L350">			boolean addComma = false;</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">			for (Object obj : objectList)</span>
+			{
+<span class="fc bfc" id="L353" title="All 2 branches covered.">				if (addComma)</span>
+				{
+<span class="fc" id="L355">					sql.append(&quot;, &quot;);</span>
+				}
+<span class="fc" id="L357">				addComma = true;</span>
+<span class="fc" id="L358">				sql.append(&quot;?&quot;);</span>
+<span class="fc" id="L359">				arguments.add(obj);</span>
+<span class="fc" id="L360">			}</span>
+<span class="fc" id="L361">			sql.append(&quot;) &quot;);</span>
+<span class="fc" id="L362">		}</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">		else if (c.getType()==CriteriaType.LIKE)</span>
+		{
+<span class="fc" id="L365">			String arg = (String)c.getValue();</span>
+<span class="fc" id="L366">			sql.append(c.getProperty().getDbName()).append(&quot; LIKE ? &quot;);</span>
+
+<span class="fc bfc" id="L368" title="All 2 branches covered.">			if (c.isBeforeWildcard())</span>
+<span class="fc" id="L369">				arg = &quot;%&quot;+arg;</span>
+
+<span class="fc bfc" id="L371" title="All 2 branches covered.">			if (c.isAfterWildcard())</span>
+<span class="fc" id="L372">				arg = arg+&quot;%&quot;;</span>
+
+<span class="fc" id="L374">			arguments.add(arg);</span>
+<span class="fc" id="L375">		}</span>
+<span class="pc bpc" id="L376" title="3 of 6 branches missed.">		else if (c.getType()==CriteriaType.NOT_EQUALS &amp;&amp; Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; Tools.isEmpty(String.valueOf(c.getValue())))</span>
+		{
+			//do nothing - Oracle s tym malo problem
+<span class="nc" id="L379">			sql.delete(sql.length()-4, sql.length());</span>
+		}
+<span class="pc bpc" id="L381" title="2 of 4 branches missed.">		else if (c.getType() == CriteriaType.DATALENGTH_GREATER || c.getType() == CriteriaType.DATALENGTH_EQUAL) {</span>
+<span class="nc" id="L382">			sql.append(&quot; datalength(&quot;).append(c.getProperty().getDbName()).append(&quot;) &quot;).append(c.getType().getSymbol()).append(&quot; ?&quot;);</span>
+<span class="nc" id="L383">			arguments.add(c.getValue());</span>
+		}
+<span class="pc bpc" id="L385" title="2 of 4 branches missed.">		else if (c.getType() == CriteriaType.LENGTH_GREATER || c.getType() == CriteriaType.LENGTH_EQUAL) {</span>
+<span class="nc" id="L386">			sql.append(&quot; length(&quot;).append(c.getProperty().getDbName()).append(&quot;) &quot;).append(c.getType().getSymbol()).append(&quot; ?&quot;);</span>
+<span class="nc" id="L387">			arguments.add(c.getValue());</span>
+		}
+		else
+		{
+<span class="fc" id="L391">			sql.append(c.getProperty().getDbName()).append(&quot; &quot;).append(c.getType().getSymbol()).append(&quot; &quot;);</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">			if (c.getValue()!=null)</span>
+			{
+<span class="fc" id="L394">				arguments.add(c.getValue());</span>
+<span class="fc" id="L395">				sql.append(&quot;? &quot;);</span>
+			}
+		}
+
+<span class="fc" id="L399">		return sql;</span>
+	}
+
+	/**
+	 * Prida zoradenie
+	 * @param sql
+	 * @param prefix - Prefix tabulky, standardne je to 'd', pri vnorenych selectoch sa to tam nasupuje same
+	 * @param reverse - true ak ma vracat opacne sort - pri pagingu pre MSSQL
+	 */
+	private void setOrdering(StringBuilder sql, String prefix, boolean reverse)
+	{
+<span class="fc" id="L410">		sql.append(&quot;ORDER BY &quot;);</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">		if (!orderings.isEmpty())</span>
+		{
+<span class="fc" id="L413">			boolean addComma = false;</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">			for (Pair&lt;OrderEnum, SortEnum&gt; ordering : orderings)</span>
+			{
+<span class="pc bpc" id="L416" title="1 of 2 branches missed.">				if (addComma) sql.append(&quot;, &quot;);</span>
+<span class="fc" id="L417">				sql.append(ordering.first.getOrderName(prefix))</span>
+<span class="pc bpc" id="L418" title="1 of 2 branches missed.">				.append(/* ak je true, zoradi to cele naopak */reverse?ordering.second.getReverse():ordering.second);</span>
+<span class="fc" id="L419">				addComma = true;</span>
+<span class="fc" id="L420">			}</span>
+<span class="fc" id="L421">		}</span>
+		else
+		{
+<span class="nc" id="L424">			sql.append(OrderEnum.TITLE.getOrderName(prefix))</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">			.append(/* ak je true, zoradi to cele naopak */reverse?SortEnum.ASC.getReverse():SortEnum.ASC);</span>
+		}
+<span class="fc" id="L427">	}</span>
+
+	/**
+	 * nasetuje parametre do PS
+	 * @param ps
+	 * @throws SQLException
+	 */
+	private void setArguments(PreparedStatement ps) throws SQLException
+	{
+<span class="fc" id="L436">		StringBuilder sb = new StringBuilder();</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">		if (!arguments.isEmpty())</span>
+		{
+<span class="fc" id="L439">			int index=1;</span>
+
+<span class="fc bfc" id="L441" title="All 2 branches covered.">			for (Object argument : arguments)</span>
+			{
+<span class="fc" id="L443">				sb.append(index).append(&quot;:&quot;).append(argument).append(&quot; &quot;);</span>
+
+<span class="fc bfc" id="L445" title="All 2 branches covered.">				if (argument instanceof Integer)</span>
+				{
+<span class="fc" id="L447">					Integer val = (Integer)argument;</span>
+<span class="fc" id="L448">					ps.setInt(index++, val);</span>
+<span class="fc" id="L449">				}</span>
+<span class="pc bpc" id="L450" title="1 of 2 branches missed.">				else if (argument instanceof Double)</span>
+				{
+<span class="nc" id="L452">					Double val = (Double)argument;</span>
+<span class="nc" id="L453">					ps.setDouble(index++, val);</span>
+<span class="nc" id="L454">				}</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">				else if (argument instanceof Long)</span>
+				{
+<span class="nc" id="L457">					Long val = (Long)argument;</span>
+<span class="nc" id="L458">					ps.setLong(index++, val);</span>
+<span class="nc" id="L459">				}</span>
+<span class="fc bfc" id="L460" title="All 2 branches covered.">				else if (argument instanceof Boolean)</span>
+				{
+<span class="fc" id="L462">					Boolean val = (Boolean)argument;</span>
+<span class="fc" id="L463">					ps.setBoolean(index++, val);</span>
+<span class="fc" id="L464">				}</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">				else if (argument instanceof Timestamp)</span>
+				{
+<span class="fc" id="L467">					Timestamp val = (Timestamp)argument;</span>
+<span class="fc" id="L468">					ps.setTimestamp(index++, val);</span>
+<span class="fc" id="L469">				}</span>
+<span class="pc bpc" id="L470" title="1 of 2 branches missed.">				else if (argument instanceof Date)</span>
+				{
+<span class="nc" id="L472">					Date dateVal = (Date)argument;</span>
+<span class="nc" id="L473">					Timestamp val = new Timestamp(dateVal.getTime());</span>
+<span class="nc" id="L474">					ps.setTimestamp(index++, val);</span>
+<span class="nc" id="L475">				}</span>
+<span class="pc bpc" id="L476" title="1 of 2 branches missed.">				else if (argument instanceof String)</span>
+				{
+<span class="fc" id="L478">					String val = (String)argument;</span>
+<span class="fc" id="L479">					ps.setString(index++, val);</span>
+<span class="fc" id="L480">				}</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">				else if (argument instanceof PerexGroupBean)</span>
+				{
+<span class="nc" id="L483">					PerexGroupBean val = (PerexGroupBean)argument;</span>
+<span class="nc" id="L484">					ps.setInt(index++, val.getPerexGroupId());</span>
+<span class="nc" id="L485">				}</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">				else if (argument instanceof DocDetails)</span>
+				{
+<span class="nc" id="L488">					DocDetails val = (DocDetails)argument;</span>
+<span class="nc" id="L489">					ps.setInt(index++, val.getDocId());</span>
+<span class="nc" id="L490">				}</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">				else if (argument instanceof UserDetails)</span>
+				{
+<span class="nc" id="L493">					UserDetails val = (UserDetails)argument;</span>
+<span class="nc" id="L494">					ps.setInt(index++, val.getUserId());</span>
+<span class="nc" id="L495">				}</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">				else if (argument instanceof GroupDetails)</span>
+				{
+<span class="nc" id="L498">					GroupDetails val = (GroupDetails)argument;</span>
+<span class="nc" id="L499">					ps.setInt(index++, val.getGroupId());</span>
+<span class="nc" id="L500">				}</span>
+				else
+				{
+<span class="nc" id="L503">					ps.setObject(index++, argument);</span>
+				}
+<span class="fc" id="L505">			}</span>
+		}
+
+<span class="fc" id="L508">		Logger.debug(NewsQuery.class, &quot;PARAMS: &quot;+sb.toString());</span>
+
+<span class="fc" id="L510">		this.arguments = new LinkedList&lt;Object&gt;();</span>
+<span class="fc" id="L511">	}</span>
+
+	/**
+	 * Vrati zoznam stranok s aplikovanymi DBCriteriami, aj s ResultCriteriami
+	 *
+	 * @return zoznam stranok
+	 */
+	public List&lt;DocDetails&gt; getNewsList()
+	{
+<span class="fc" id="L520">		Connection db_conn = null;</span>
+<span class="fc" id="L521">		PreparedStatement ps = null;</span>
+<span class="fc" id="L522">		ResultSet rs = null;</span>
+<span class="fc" id="L523">		List&lt;DocDetails&gt; result = new LinkedList&lt;DocDetails&gt;();</span>
+		try
+		{
+<span class="fc" id="L526">			db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">			String sql = getSelectSql(false, !loadData);</span>
+<span class="fc" id="L528">			Logger.debug(this,&quot;sql: &quot;+sql);</span>
+<span class="fc" id="L529">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L530">			setArguments(ps);</span>
+<span class="fc" id="L531">			rs = ps.executeQuery();</span>
+			DocDetails doc;
+			//if (returnDocdetailsWithAtributes) //= new DocDetails();
+
+<span class="fc bfc" id="L535" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+				// ak sa maju vracat stranky aj s atributmi, musim vytvorit instanciu AtrDocBean
+<span class="pc bpc" id="L538" title="1 of 2 branches missed.">				if (returnDocdetailsWithAtributes) doc = new AtrDocBean();</span>
+<span class="fc" id="L539">				else doc = new DocDetails();</span>
+
+<span class="pc bpc" id="L541" title="1 of 2 branches missed.">				if (Constants.getBoolean(&quot;docAuthorLazyLoad&quot;))</span>
+				{
+<span class="nc bnc" id="L543" title="All 2 branches missed.">					DocDB.getDocDetails(rs, doc, !loadData, true);</span>
+				}
+				else
+				{
+					//doc = DocDB.getDocDetails(rs, !loadData);
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">					DocDB.getDocDetails(rs, doc, !loadData, false);</span>
+				}
+				//pozrem ci su nejake resultCriteria a ak ano, aplikujem ich
+<span class="pc bpc" id="L551" title="1 of 2 branches missed.">				if (resultCriteriaList.size()&gt;0)</span>
+				{
+
+<span class="nc bnc" id="L554" title="All 2 branches missed.">					for (ResultCriteria criteria : resultCriteriaList)</span>
+					{
+						//ak vyhovuje filtru, pokracuj
+<span class="nc bnc" id="L557" title="All 2 branches missed.">						if (criteria.filter(doc))</span>
+						{
+<span class="nc" id="L559">							resultCriteriaTotalCount++;</span>
+
+							// ak je nastaveny limit aj offset a pocitadlo je viac ako offset a zaroven vo vysledku je menej alebo rovno zaznamov ako ma byt, pridaj
+							// ak je nastaveny len limit (ide o prvu stranku zoznamu), a este ichg tam neni tolko, pridaj to tam
+							// ak nieje vobec strankovanie, tak ho tam pridaj
+<span class="nc bnc" id="L564" title="All 12 branches missed.">							if ((limit&gt;0 &amp;&amp; offset+initialOffset&gt;0 &amp;&amp; resultCriteriaTotalCount&gt;offset+initialOffset &amp;&amp; result.size()&lt;=limit) ||</span>
+<span class="nc bnc" id="L565" title="All 6 branches missed.">									(limit&gt;0 &amp;&amp; offset+initialOffset&lt;=0 &amp;&amp; result.size()&lt;limit) ||</span>
+									(limit&lt;=0 &amp;&amp; offset+initialOffset&lt;=0))
+							{
+<span class="nc" id="L568">								result.add(doc);</span>
+							}
+
+						}
+						else
+						{
+							continue;
+						}
+<span class="nc" id="L576">					}</span>
+					//resultCriteriaTotalCount = counter;
+				}
+				else
+				{
+<span class="fc" id="L581">					result.add(doc);</span>
+				}
+			}
+<span class="fc" id="L584">			rs.close();</span>
+<span class="fc" id="L585">			ps.close();</span>
+<span class="fc" id="L586">			rs = null;</span>
+<span class="fc" id="L587">			ps = null;</span>
+
+<span class="pc bpc" id="L589" title="3 of 4 branches missed.">			if (returnDocdetailsWithAtributes &amp;&amp; result!=null)</span>
+			{
+				//List&lt;Integer&gt; ids = new LinkedList&lt;Integer&gt;();
+<span class="nc" id="L592">				Map&lt;Integer, AtrDocBean&gt; docMap = new HashMap&lt;Integer, AtrDocBean&gt;();</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">				for (DocDetails d : result)</span>
+				{
+<span class="nc" id="L595">					docMap.put(d.getDocId(), (AtrDocBean)d);</span>
+<span class="nc" id="L596">				}</span>
+<span class="nc" id="L597">				String atrSql = &quot;SELECT daf.*, da.doc_id, da.value_string, da.value_int, da.value_bool FROM doc_atr da LEFT JOIN doc_atr_def daf ON da.atr_id=daf.atr_id WHERE da.doc_id IN (&quot;+StringUtils.join(docMap.keySet().iterator(),&quot;,&quot;)+&quot;) &quot;;</span>
+<span class="nc" id="L598">				ps = db_conn.prepareStatement(atrSql);</span>
+<span class="nc" id="L599">				rs = ps.executeQuery();</span>
+<span class="nc" id="L600">				AtrBean atr = null;</span>
+<span class="nc bnc" id="L601" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L603">					atr = new AtrBean();</span>
+<span class="nc" id="L604">					atr.setAtrId(rs.getInt(&quot;atr_id&quot;));</span>
+<span class="nc" id="L605">					atr.setAtrName(DB.getDbString(rs, &quot;atr_name&quot;));</span>
+<span class="nc" id="L606">					atr.setOrderPriority(rs.getInt(&quot;order_priority&quot;));</span>
+<span class="nc" id="L607">					atr.setAtrDescription(DB.getDbString(rs, &quot;atr_description&quot;));</span>
+<span class="nc" id="L608">					atr.setAtrDefaultValue(DB.getDbString(rs, &quot;atr_default_value&quot;));</span>
+<span class="nc" id="L609">					atr.setAtrType(rs.getInt(&quot;atr_type&quot;));</span>
+<span class="nc" id="L610">					atr.setAtrGroup(DB.getDbString(rs, &quot;atr_group&quot;));</span>
+<span class="nc" id="L611">					atr.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L612">					atr.setValueString(DB.getDbString(rs, &quot;value_string&quot;));</span>
+<span class="nc" id="L613">					atr.setValueNumber(rs.getDouble(&quot;value_int&quot;));</span>
+<span class="nc" id="L614">					atr.setValueBool(rs.getBoolean(&quot;value_bool&quot;));</span>
+<span class="nc" id="L615">					atr.setTrueValue(DB.getDbString(rs, &quot;true_value&quot;));</span>
+<span class="nc" id="L616">					atr.setFalseValue(DB.getDbString(rs, &quot;false_value&quot;));</span>
+
+<span class="nc bnc" id="L618" title="All 2 branches missed.">					if (docMap.containsKey(atr.getDocId()))</span>
+					{
+<span class="nc" id="L620">						docMap.get(atr.getDocId()).addAtr(atr);</span>
+					}
+
+				}
+<span class="nc" id="L624">				rs.close();</span>
+<span class="nc" id="L625">				ps.close();</span>
+<span class="nc" id="L626">				rs = null;</span>
+<span class="nc" id="L627">				ps = null;</span>
+<span class="nc" id="L628">				result = new LinkedList&lt;DocDetails&gt;(docMap.values());</span>
+			}
+
+<span class="fc" id="L631">			db_conn.close();</span>
+<span class="fc" id="L632">			db_conn = null;</span>
+		}
+<span class="nc" id="L634">		catch (Exception e)</span>
+		{
+<span class="nc" id="L636">			Logger.debug(getClass(), &quot;Nastala chyba:&quot;+e.getMessage());</span>
+<span class="nc" id="L637">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L643" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L644">					rs.close();</span>
+<span class="pc bpc" id="L645" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L646">					ps.close();</span>
+<span class="pc bpc" id="L647" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L648">					db_conn.close();</span>
+			}
+<span class="nc" id="L650">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L652">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L653">			}</span>
+		}
+
+<span class="fc" id="L656">		return result;</span>
+	}
+
+	/**
+	 * Vrati jeden dokument
+	 * @param requireSingleResult ak je true, pozaduje z DB prave jeden vysledok
+	 * @return
+	 */
+	public DocDetails getSingleDoc(boolean requireSingleResult)
+	{
+<span class="nc" id="L666">		List&lt;DocDetails&gt; results = getNewsList();</span>
+<span class="nc bnc" id="L667" title="All 4 branches missed.">		if (results!=null &amp;&amp; results.size()&gt;0)</span>
+		{
+<span class="nc bnc" id="L669" title="All 4 branches missed.">			if (requireSingleResult &amp;&amp; results.size()&gt;1) throw new IllegalStateException(&quot;Multiple results.&quot;);</span>
+<span class="nc" id="L670">			return results.get(0);</span>
+		}
+<span class="nc" id="L672">		return null;</span>
+	}
+
+	public List&lt;AtrDocBean&gt; getNewsListWithAtributes()
+	{
+<span class="nc" id="L677">		this.returnDocdetailsWithAtributes = true;</span>
+<span class="nc" id="L678">		List&lt;AtrDocBean&gt; result = new LinkedList&lt;AtrDocBean&gt;();</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">		for (DocDetails d : getNewsList())</span>
+		{
+<span class="nc" id="L681">			AtrDocBean a = (AtrDocBean)d;</span>
+<span class="nc" id="L682">			result.add(a);</span>
+<span class="nc" id="L683">		}</span>
+<span class="nc" id="L684">		return result;</span>
+	}
+
+	/**
+	 * Vrati pocet stranok, bez zohladnenia strankovania, neaplikuje ResultCriteria
+	 * (nieje mozne ich aplikovat, nemam dostupne objekty na ktore by sa aplikoval)
+	 *
+	 * @return pocet stranok ktore vyhovuju dotazu
+	 * */
+	public int getNewsCount()
+	{
+<span class="nc bnc" id="L695" title="All 4 branches missed.">		if (!Tools.isEmpty(resultCriteriaList) &amp;&amp; resultCriteriaTotalCount&gt;0)</span>
+		{
+<span class="nc" id="L697">			return resultCriteriaTotalCount;</span>
+		}
+<span class="nc" id="L699">		Connection db_conn = null;</span>
+<span class="nc" id="L700">		PreparedStatement ps = null;</span>
+<span class="nc" id="L701">		ResultSet rs = null;</span>
+<span class="nc" id="L702">		int result = 0;</span>
+		try
+		{
+<span class="nc" id="L705">			db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="nc" id="L706">			String sql = getSelectSql(true, loadData);</span>
+<span class="nc" id="L707">			Logger.debug(this,&quot;sql: &quot;+sql);</span>
+
+<span class="nc" id="L709">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L711">			setArguments(ps);</span>
+<span class="nc" id="L712">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L715">				result = rs.getInt(1);</span>
+			}
+<span class="nc" id="L717">			rs.close();</span>
+<span class="nc" id="L718">			ps.close();</span>
+<span class="nc" id="L719">			db_conn.close();</span>
+
+<span class="nc" id="L721">			rs = null;</span>
+<span class="nc" id="L722">			ps = null;</span>
+<span class="nc" id="L723">			db_conn = null;</span>
+
+
+		}
+<span class="nc" id="L727">		catch (Exception e)</span>
+		{
+<span class="nc" id="L729">			Logger.debug(getClass(), &quot;Nastala chyba:&quot;+e.getMessage());</span>
+<span class="nc" id="L730">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L736" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L737">					rs.close();</span>
+<span class="nc bnc" id="L738" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L739">					ps.close();</span>
+<span class="nc bnc" id="L740" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L741">					db_conn.close();</span>
+			}
+<span class="nc" id="L743">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L745">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L746">			}</span>
+		}
+
+<span class="nc bnc" id="L749" title="All 2 branches missed.">		if (initialOffset&gt;0)</span>
+		{
+<span class="nc" id="L751">			result = result - initialOffset;</span>
+		}
+<span class="nc" id="L753">		return result;</span>
+	}
+
+	/**
+	 * Prida Criteria pre Query, mozu to byt DatabaseCriteria aj ResultCriteria
+	 * @param criteria
+	 * @return
+	 */
+	public NewsQuery addCriteria(Criteria criteria)
+	{
+<span class="pc bpc" id="L763" title="1 of 2 branches missed.">		if (criteria instanceof DatabaseCriteria)</span>
+		{
+<span class="fc" id="L765">			DatabaseCriteria c = (DatabaseCriteria)criteria;</span>
+<span class="pc bpc" id="L766" title="1 of 2 branches missed.">			if (c.isAtributeCriteria()) this.useAtributeSearch = true;</span>
+<span class="fc" id="L767">			this.databaseCriteriaList.add(c);</span>
+<span class="fc" id="L768">		}</span>
+<span class="nc bnc" id="L769" title="All 2 branches missed.">		else if (criteria instanceof ResultCriteria)</span>
+		{
+<span class="nc" id="L771">			ResultCriteria c = (ResultCriteria)criteria;</span>
+<span class="nc" id="L772">			this.resultCriteriaList.add(c);</span>
+		}
+<span class="fc" id="L774">		return this;</span>
+	}
+
+	/**
+	 * Nastavi limit poctu vratenych dokumentov
+	 *
+	 * @param limit
+	 * @return
+	 */
+	public NewsQuery setLimit(int limit)
+	{
+<span class="nc" id="L785">		this.limit = limit;</span>
+<span class="nc" id="L786">		return this;</span>
+	}
+
+	/**
+	 * Nastavi offset vysledkov -&gt; pre druhu stranku vysledkov pri velkosti stranky 10, sa nastavi offset 10, limit 10
+	 * @param offset
+	 * @return
+	 */
+	public NewsQuery setOffset(int offset)
+	{
+<span class="nc" id="L796">		this.offset = offset;</span>
+<span class="nc" id="L797">		return this;</span>
+	}
+
+	/**
+	 * ak sa nastavi true, vrati aj docData, default ho nevracia
+	 * @param loadData
+	 * @return
+	 */
+	public NewsQuery setLoadData(boolean loadData)
+	{
+<span class="fc" id="L807">		this.loadData = loadData;</span>
+<span class="fc" id="L808">		return this;</span>
+	}
+
+	/**
+	 * polia podla ktorych je mozne radit vysledky
+	 * @author mbocko
+	 *
+	 */
+<span class="fc" id="L816">	public static enum OrderEnum</span>
+	{
+<span class="fc" id="L818">		TITLE (&quot;title &quot;),</span>
+<span class="fc" id="L819">		DATE (&quot;publish_start &quot;),</span>
+<span class="fc" id="L820">		ID (&quot;doc_id &quot;),</span>
+<span class="fc" id="L821">		PRIORITY (&quot;sort_priority &quot;),</span>
+<span class="fc" id="L822">		PLACE (&quot;perex_place &quot;),</span>
+<span class="fc" id="L823">		EVENT_DATE (&quot;event_date &quot;),</span>
+<span class="fc" id="L824">		SAVE_DATE (&quot;date_created &quot;),</span>
+<span class="fc" id="L825">		RATING (&quot;forum_count &quot;);</span>
+
+
+		private OrderEnum(String orderField)
+<span class="fc" id="L829">		{</span>
+<span class="fc" id="L830">			this.orderField = orderField;</span>
+<span class="fc" id="L831">		}</span>
+
+		private String orderField;
+
+		@Override
+		public String toString()
+		{
+<span class="nc" id="L838">			return getOrderName(&quot;d&quot;);</span>
+		}
+
+		public String getOrderName(String prefix)
+		{
+<span class="fc" id="L843">			return prefix + &quot;.&quot; + orderField;</span>
+		}
+	}
+
+	/**
+	 * smer zoradenia vysledkov
+	 * @author mbocko
+	 *
+	 */
+<span class="fc" id="L852">	public static enum SortEnum</span>
+	{
+<span class="fc" id="L854">		ASC (&quot;ASC &quot;),</span>
+<span class="fc" id="L855">		DESC (&quot;DESC &quot;);</span>
+
+		private SortEnum(String sort)
+<span class="fc" id="L858">		{</span>
+<span class="fc" id="L859">			this.sort = sort;</span>
+<span class="fc" id="L860">		}</span>
+
+		private String sort;
+
+		@Override
+		public String toString()
+		{
+<span class="fc" id="L867">			return sort;</span>
+		}
+
+		/**
+		 * vrati reverzny sort (pri strankovani MSSQL)
+		 * @return
+		 */
+		public SortEnum getReverse()
+		{
+<span class="nc bnc" id="L876" title="All 2 branches missed.">			if (this==ASC) return DESC;</span>
+<span class="nc" id="L877">			else return ASC;</span>
+		}
+	}
+
+	/**
+	 * true ak sa priradenie perex skupiny k dokumentu deje cez spojovaciu tabulku
+	 *
+	 * @param perexGroupUseJoin
+	 * @return
+	 */
+	public NewsQuery setPerexGroupUseJoin(boolean perexGroupUseJoin)
+	{
+<span class="nc" id="L889">		this.perexGroupUseJoin = perexGroupUseJoin;</span>
+<span class="nc" id="L890">		return this;</span>
+	}
+
+	/**
+	 * prida stlpec a radenie vysledkov, je mozne pridat viac krat
+	 * @param order
+	 * @param sort
+	 * @return
+	 */
+	public NewsQuery addOrder(OrderEnum order, SortEnum sort)
+	{
+<span class="fc" id="L901">		orderings.add(Pair.of(order, sort));</span>
+<span class="fc" id="L902">		return this;</span>
+	}
+
+
+
+
+
+	public NewsQuery setPageSize(int pageSize)
+	{
+<span class="fc" id="L911">		limit = pageSize;</span>
+<span class="fc" id="L912">		return this;</span>
+	}
+
+
+	public void setInitialOffset(int initialOffset)
+	{
+<span class="nc" id="L918">		this.initialOffset = initialOffset;</span>
+<span class="nc" id="L919">	}</span>
+
+	public NewsQuery setReturnDocdetailsWithAtributes(boolean returnDocdetailsWithAtributes)
+	{
+<span class="nc" id="L923">		this.returnDocdetailsWithAtributes = returnDocdetailsWithAtributes;</span>
+<span class="nc" id="L924">		return this;</span>
+	}
+
+
+
+
+
+	public NewsQuery setPage(int page)
+	{
+<span class="nc bnc" id="L933" title="All 2 branches missed.">		if (page&lt;=0) page = 1;</span>
+<span class="nc bnc" id="L934" title="All 2 branches missed.">		if (limit&gt;NOT_SET_INT)</span>
+		{
+<span class="nc" id="L936">			offset = page * limit - limit;</span>
+		}
+<span class="nc" id="L938">		return this;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -143,6 +143,7 @@ public class Adminlog
 	public static final int TYPE_DOC_ATTRIBUTES = 309;
 	public static final int TYPE_SEO = 310;
 	public static final int TYPE_RESTAURANT_MENU = 311;
+	public static final int TYPE_QUIZ = 312;
 
 	/*
 	public static final int TYPE_HEAT_MAP_CLEAN = 940;
@@ -761,7 +762,7 @@ public class Adminlog
 				sql = new StringBuilder("SELECT TOP ").append(size).append(" * FROM ").append(ConfDB.ADMINLOG_TABLE_NAME);
 				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);
 			}
-			else if (Constants.DB_TYPE == Constants.DB_MYSQL)
+			else if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 			{
 				sql = new StringBuilder(ADMINLOG_FIELDS_NODATA).append(ConfDB.ADMINLOG_TABLE_NAME);
 				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);

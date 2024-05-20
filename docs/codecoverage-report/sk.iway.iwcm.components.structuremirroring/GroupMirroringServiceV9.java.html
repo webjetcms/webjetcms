@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupMirroringServiceV9.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.structuremirroring</a> &gt; <span class="el_source">GroupMirroringServiceV9.java</span></div><h1>GroupMirroringServiceV9.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.structuremirroring;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.system.translation.TranslationService;
+//Riesi vytvaranie/zmeny synchronizovanych adresarov podla sync_id - EUSTREAMNW-84
+<span class="fc" id="L24">public class GroupMirroringServiceV9 {</span>
+
+   public void handleGroupSave(GroupDetails group, WebjetEventType type) {
+
+<span class="fc" id="L28">      int testGroupId = group.getGroupId();</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">      if (testGroupId&lt;1) testGroupId = group.getParentGroupId();</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">      if (MirroringService.isEnabled(testGroupId)==false) return;</span>
+
+<span class="fc" id="L32">      Logger.debug(GroupMirroringServiceV9.class, &quot;handleGroupSave GROUP type=&quot; + type + &quot;, group=&quot; + group + &quot; thread=&quot;+Thread.currentThread().getName());</span>
+
+<span class="fc" id="L34">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L35">      Prop prop = Prop.getInstance();</span>
+<span class="pc bpc" id="L36" title="2 of 4 branches missed.">      if (&quot;Nový podadresár&quot;.equals(group.getGroupName()) || prop.getText(&quot;editor.dir.new_dir&quot;).equals(group.getGroupName())) return;</span>
+
+<span class="fc bfc" id="L38" title="All 4 branches covered.">      if (group.getSyncId() &lt; 1 &amp;&amp; group.getGroupId()&gt;0) {</span>
+<span class="fc" id="L39">         group.setSyncId(getSyncId(group.getGroupId()));</span>
+      }
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">      if (type == WebjetEventType.ON_START) {</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">         if (group.getSyncId()&lt;1) {</span>
+            //jedna sa o novy adresar, vygenerujeme mu syncId
+<span class="fc" id="L45">            group.setSyncId(PkeyGenerator.getNextValue(&quot;structuremirroring&quot;));</span>
+         }
+<span class="fc bfc" id="L47" title="All 2 branches covered.">      } else if (type == WebjetEventType.AFTER_SAVE) {</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">         if (group.getSyncId()&gt;1) {</span>
+            //najdi k tomu mirror verzie
+<span class="fc" id="L50">            List&lt;GroupDetails&gt; syncedGroups = getGroupsBySyncId(group.getSyncId(), group.getGroupId());</span>
+<span class="fc" id="L51">            List&lt;GroupDetails&gt; mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());</span>
+<span class="fc" id="L52">            List&lt;GroupDetails&gt; mappedGroupsListNotExisting = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (mappedGroupsList.size()&gt;syncedGroups.size()) {</span>
+               //there is new mapping group created in allready synced groups, we must create missing one
+<span class="fc bfc" id="L56" title="All 2 branches covered.">               for (GroupDetails mappedGroup : mappedGroupsList) {</span>
+<span class="fc" id="L57">                  boolean containGroup = false;</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                  for (GroupDetails syncedGroup : syncedGroups) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                     if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {</span>
+                        //ok, this group is allready synced
+<span class="nc" id="L61">                        containGroup = true;</span>
+<span class="nc" id="L62">                        break;</span>
+                     }
+<span class="nc" id="L64">                  }</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);</span>
+<span class="fc" id="L66">               }</span>
+<span class="fc" id="L67">               mappedGroupsList = mappedGroupsListNotExisting;</span>
+            }
+
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">            if (syncedGroups.isEmpty() || mappedGroupsListNotExisting.size()&gt;0) {</span>
+               //este neexistuje, musime vytvorit novu grupu (kopiu)
+               //vytvor kopie adresara v ostatnych mapovanych adresaroch
+
+               //ak nie je pre tento adresar ziadne mapovanie, skonci, asi sa jedna o adresar mimo nastaveneho mapovania
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">               if (mappedGroupsList.size()&lt;1) return;</span>
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">               for (GroupDetails mappedGroup : mappedGroupsList) {</span>
+<span class="fc" id="L78">                  String translatedGroupName = TranslationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));</span>
+<span class="fc" id="L79">                  GroupDetails existing = groupsDB.getGroup(translatedGroupName, mappedGroup.getGroupId());</span>
+
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                  if (existing!=null) {</span>
+                     //ak uz existuje, tak ho nevytvaram
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                     if (existing.getSyncId()==group.getSyncId()) {</span>
+<span class="nc" id="L84">                        continue;</span>
+                     }
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                     if (existing.getSyncId()&lt;1) {</span>
+                        //ak nema syncId, tak ho nastavim
+<span class="nc" id="L88">                        existing.setSyncId(group.getSyncId());</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                        if (existing.getParentGroupId()&gt;0) {</span>
+                           //nastav rovnaky sort priority (poziadavka zo zadania)
+<span class="nc" id="L91">                           existing.setSortPriority(group.getSortPriority());</span>
+                        }
+
+<span class="nc" id="L94">                        groupsDB.setGroup(existing, false);</span>
+
+<span class="nc" id="L96">                        MirroringService.forceReloadTree();</span>
+<span class="nc" id="L97">                        continue;</span>
+                     }
+                  }
+
+<span class="fc" id="L101">                  GroupDetails mirror = groupsDB.getNewGroupDetails(translatedGroupName, mappedGroup.getGroupId());</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                  if (Constants.getBoolean(&quot;structureMirroringDisabledOnCreate&quot;)) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
+                  else {
+<span class="fc" id="L104">                     mirror.setMenuType(group.getMenuType());</span>
+<span class="fc" id="L105">                     mirror.setLoggedMenuType(group.getLoggedMenuType());</span>
+                  }
+<span class="fc" id="L107">                  mirror.setParentGroupId(mappedGroup.getGroupId());</span>
+<span class="fc" id="L108">                  mirror.setDefaultDocId(0);</span>
+<span class="fc" id="L109">                  mirror.setSyncId(group.getSyncId());</span>
+                  //nastav rovnaky sort priority (poziadavka zo zadania)
+<span class="fc" id="L111">                  mirror.setSortPriority(group.getSortPriority());</span>
+<span class="fc" id="L112">                  groupsDB.setGroup(mirror, false);</span>
+<span class="fc" id="L113">                  MirroringService.forceReloadTree();</span>
+<span class="fc" id="L114">               }</span>
+            }
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (syncedGroups.size()&gt;0) {</span>
+               //adresare uz existuju, over, ze tam je vsetko dobre nastavene
+               //POZOR na zacyklenie
+
+               //overenie zmeny parent adresara
+<span class="fc" id="L122">               GroupDetails parentGroup = groupsDB.getGroup(group.getParentGroupId());</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">               if (parentGroup != null) {</span>
+<span class="fc" id="L124">                  List&lt;GroupDetails&gt; syncedParentGroups = getGroupsBySyncId(parentGroup.getSyncId(), parentGroup.getGroupId());</span>
+                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                  for (GroupDetails syncedGroup : syncedGroups) {</span>
+<span class="fc" id="L127">                     GroupDetails syncedCorrectParentGroup = MirroringService.selectMappedGroup(syncedGroup, syncedParentGroups);</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">                     if (syncedCorrectParentGroup != null) {</span>
+                        //porovnaj IDecko voci aktualnemu parentu
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                        if (syncedGroup.getParentGroupId()!=syncedCorrectParentGroup.getGroupId()) {</span>
+<span class="fc" id="L131">                           Logger.debug(GroupMirroringServiceV9.class, &quot;NESEDI PARENT GROUP, syncedGroup=&quot;+syncedGroup.toString()+&quot; syncedCorrectParentGroup=&quot;+syncedCorrectParentGroup.toString());</span>
+<span class="fc" id="L132">                           GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());</span>
+<span class="fc" id="L133">                           groupToSave.setParentGroupId(syncedCorrectParentGroup.getGroupId());</span>
+<span class="fc" id="L134">                           groupsDB.setGroup(groupToSave, false);</span>
+<span class="fc" id="L135">                           MirroringService.forceReloadTree();</span>
+                        }
+                     }
+<span class="fc" id="L138">                  }</span>
+               }
+
+               //overenie sort priority
+<span class="fc bfc" id="L142" title="All 2 branches covered.">               for (GroupDetails syncedGroup : syncedGroups) {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                  if (syncedGroup.getSortPriority()!=group.getSortPriority()) {</span>
+<span class="fc" id="L144">                     Logger.debug(GroupMirroringServiceV9.class, &quot;NESEDI SORT PRIORITY, syncedGroup=&quot;+syncedGroup.toString()+&quot; sort=&quot;+syncedGroup.getSortPriority()+&quot; group=&quot;+group.toString()+&quot; sort=&quot;+group.getSortPriority());</span>
+<span class="fc" id="L145">                     GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                     if (groupToSave.getParentGroupId()&gt;0) {</span>
+                        //ak to nie je root grupa nastav sort priority (root chceme mat usporiadane ako chceme my)
+<span class="nc" id="L148">                        groupToSave.setSortPriority(group.getSortPriority());</span>
+<span class="nc" id="L149">                        groupsDB.setGroup(groupToSave, false);</span>
+<span class="nc" id="L150">                        MirroringService.forceReloadTree();</span>
+                     }
+                  }
+<span class="fc" id="L153">               }</span>
+
+               //overenie zmeny defaultDocId
+<span class="fc" id="L156">               int defaultDocSyncId = DocMirroringServiceV9.getSyncId(group.getDefaultDocId());</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">               if (defaultDocSyncId&gt;0) {</span>
+<span class="fc" id="L158">                  List&lt;DocDetails&gt; syncedDocs = DocMirroringServiceV9.getDocBySyncId(defaultDocSyncId, group.getDefaultDocId());</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                  for (GroupDetails syncedGroup : syncedGroups) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">                     for (DocDetails syncedDoc : syncedDocs) {</span>
+<span class="fc" id="L161">                        GroupDetails syncedDocGroup = groupsDB.getGroup(syncedDoc.getGroupId());</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                        if (syncedDocGroup != null) {</span>
+                           //ak zacina cesta adresara web stranky na cestu aktualneho sync adresara je to spravna vetva a mozeme stranku pouzit
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                           if (syncedDocGroup.getFullPath().startsWith(syncedGroup.getFullPath())) {</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                              if (syncedGroup.getDefaultDocId() != syncedDoc.getDocId()) {</span>
+<span class="fc" id="L166">                                 Logger.debug(GroupMirroringServiceV9.class, &quot;NESEDI DEFAULT_DOC_ID, syncedGroup=&quot;+syncedGroup.toString()+&quot; OLD defaultDocId=&quot;+group.getDefaultDocId()+&quot; NEW defaultDocId=&quot;+syncedDoc.getDocId()+&quot; group.defaultDocId=&quot;+group.getDefaultDocId());</span>
+<span class="fc" id="L167">                                 GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());</span>
+<span class="fc" id="L168">                                 groupToSave.setDefaultDocId(syncedDoc.getDocId());</span>
+<span class="fc" id="L169">                                 groupsDB.setGroup(groupToSave, false);</span>
+<span class="fc" id="L170">                                 MirroringService.forceReloadTree();</span>
+                              }
+                           }
+                        }
+<span class="fc" id="L174">                     }</span>
+<span class="fc" id="L175">                  }</span>
+               }
+            }
+<span class="fc" id="L178">         }</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">      } else if (type == WebjetEventType.ON_DELETE) {</span>
+         //musi byt ON_DELETE, pretoze AFTER je uz v kosi
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">         if (group.getSyncId()&gt;1) {</span>
+            //najdi k tomu mirror verzie
+<span class="fc" id="L183">            List&lt;GroupDetails&gt; syncedGroups = getGroupsBySyncId(group.getSyncId(), group.getGroupId());</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            for (GroupDetails syncedGroup : syncedGroups) {</span>
+<span class="fc" id="L185">               Logger.debug(GroupMirroringServiceV9.class, &quot;MAZEM, syncedGroup=&quot;+syncedGroup.toString()+&quot; group=&quot;+group.toString());</span>
+<span class="fc" id="L186">               GroupsDB.deleteGroup(syncedGroup.getGroupId(), true, false, false);</span>
+<span class="fc" id="L187">               MirroringService.forceReloadTree();</span>
+<span class="fc" id="L188">            }</span>
+         }
+      }
+
+<span class="fc" id="L192">   }</span>
+
+   /**
+    * Vrati group details objekty podla zadaneho syncId, ak je zadane nenulove skipGroupId tak v zozname nebude zadany adresar
+    * @param syncId
+    * @param skipGroupId - ak je &gt;0 v zozname sa nebude nachadzat zadany adresar
+    * @return
+    */
+   public static List&lt;GroupDetails&gt; getGroupsBySyncId(int syncId, int skipGroupId)
+	{
+<span class="fc" id="L202">      StringBuilder sql = new StringBuilder();</span>
+<span class="fc" id="L203">      sql.append(&quot;SELECT * FROM groups WHERE sync_id=?&quot;);</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">      if (skipGroupId&gt;0) sql.append(&quot; AND group_id!=? &quot;);</span>
+<span class="fc" id="L205">      sql.append(&quot; ORDER BY group_id ASC&quot;);</span>
+
+<span class="fc" id="L207">      ComplexQuery cq = new ComplexQuery();</span>
+<span class="fc" id="L208">      cq.setSql(sql.toString());</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">      if (skipGroupId&gt;0) cq.setParams(syncId, skipGroupId);</span>
+<span class="nc" id="L210">      else cq.setParams(syncId);</span>
+
+<span class="fc" id="L212">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L214">		List&lt;GroupDetails&gt; groups = cq.list(new Mapper&lt;GroupDetails&gt;()</span>
+<span class="fc" id="L215">		{</span>
+			public GroupDetails map(ResultSet rs) throws SQLException
+			{
+<span class="fc" id="L218">            GroupDetails group = GroupsDB.fillFieldsByResultSet(rs);</span>
+<span class="fc" id="L219">            group.setFullPath(groupsDB.getPath(group.getGroupId()));</span>
+<span class="fc" id="L220">				return group;</span>
+			}
+
+		});
+
+      //filter groups which is not synced anymore
+<span class="fc" id="L226">      List&lt;GroupDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">      for (GroupDetails group : groups) {</span>
+<span class="fc" id="L228">         List&lt;GroupDetails&gt; parents = groupsDB.getParentGroups(group.getGroupId(), true);</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">         for (GroupDetails parent : parents) {</span>
+<span class="fc" id="L230">            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">            if (rootIds != null) {</span>
+<span class="fc" id="L232">               filtered.add(group);</span>
+<span class="fc" id="L233">               break;</span>
+            }
+<span class="fc" id="L235">         }</span>
+<span class="fc" id="L236">      }</span>
+
+<span class="fc" id="L238">      return filtered;</span>
+	}
+
+   public static String getLanguage(GroupDetails group) {
+
+      //najskor dohladaj posla nastaveneho jazyka v parent adresaroch
+<span class="fc" id="L244">      GroupDetails parent = group;</span>
+<span class="fc" id="L245">      int failsafe = 0;</span>
+<span class="fc" id="L246">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="pc bpc" id="L247" title="2 of 4 branches missed.">      while (parent != null &amp;&amp; failsafe++ &lt; 100) {</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">         if (Tools.isNotEmpty(parent.getLng())) return parent.getLng();</span>
+
+<span class="nc" id="L250">         parent = groupsDB.getGroup(parent.getParentGroupId());</span>
+      }
+
+      //nenaslo sa, tak skus podla sablony
+<span class="nc bnc" id="L254" title="All 2 branches missed.">      if (group != null) {</span>
+<span class="nc" id="L255">         TemplateDetails temp = TemplatesDB.getInstance().getTemplate(group.getTempId());</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">         if (temp != null) return temp.getLng();</span>
+      }
+
+<span class="nc" id="L259">      return null;</span>
+   }
+
+   public static int getSyncId(int groupId) {
+<span class="fc" id="L263">      int syncId = new SimpleQuery().forInt(&quot;SELECT sync_id FROM groups WHERE group_id=?&quot;, groupId);</span>
+<span class="fc" id="L264">      return syncId;</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

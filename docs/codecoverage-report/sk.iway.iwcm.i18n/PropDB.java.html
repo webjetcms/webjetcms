@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PropDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.i18n</a> &gt; <span class="el_source">PropDB.java</span></div><h1>PropDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.i18n;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.ConfDB;
+
+/**
+ *  PropDB.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: Marián Halaš $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 9.2.2012 16:47:09
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class PropDB
+{
+<span class="nc" id="L31">	protected PropDB() {</span>
+		//utility class
+<span class="nc" id="L33">	}</span>
+
+	/**
+	 * Metoda spravi insert/update do customizovanych properties, ak v danom jazyku uz je v db dany kluc spravi sa update
+	 * ak tam taky kluc nie je, spravi sa insert
+	 *
+	 * @param iwprop
+	 * @param lng
+	 * @param addPrefix - prida zadany prefix na zaciatok kluca
+	 * @param filterPrefix - ulozi iba kluce zacinajuce na tento prefix
+	 * @param onlyNewKeys - ak je true, a ak uz taky kluc existuje, nevykona sa update
+	 * @deprecated - use version with Identity user parameter
+	 */
+	@Deprecated
+	public static void save(IwayProperties iwprop, String lng, String addPrefix, String filterPrefix, boolean onlyNewKeys) {
+<span class="nc" id="L48">		save(null, iwprop, lng, addPrefix, filterPrefix, onlyNewKeys);</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Metoda spravi insert/update do customizovanych properties, ak v danom jazyku uz je v db dany kluc spravi sa update
+	 * ak tam taky kluc nie je, spravi sa insert
+	 *
+	 * @param user - aktualne prihlaseny pouzivatel
+	 * @param iwprop
+	 * @param lng
+	 * @param addPrefix - prida zadany prefix na zaciatok kluca
+	 * @param filterPrefix - ulozi iba kluce zacinajuce na tento prefix
+	 * @param onlyNewKeys - ak je true, a ak uz taky kluc existuje, nevykona sa update
+	 */
+	public static void save(Identity user, IwayProperties iwprop, String lng, String addPrefix, String filterPrefix, boolean onlyNewKeys)
+	{
+<span class="fc" id="L64">		int insertCounter = 0;</span>
+<span class="fc" id="L65">		int updateCounter = 0;</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if(iwprop == null) throw new IllegalArgumentException(&quot;IwayProp can't be null!&quot;);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">		if(Tools.isEmpty(lng)) throw new IllegalArgumentException(&quot;Language can't be empty!&quot;);</span>
+
+<span class="fc bfc" id="L69" title="All 2 branches covered.">		for(Entry&lt;String, String&gt; property : iwprop.entrySet())</span>
+		{
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">			if(Tools.isEmpty(property.getKey())) continue;</span>
+
+<span class="fc" id="L73">			String key = property.getKey();</span>
+
+			//pripoji zadany prefix pred nazov kluca
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(addPrefix))</span>
+<span class="fc" id="L77">				key = addPrefix + &quot;.&quot; + key;</span>
+
+<span class="fc" id="L79">			key = Tools.replace(key, &quot;\&quot;&quot;, &quot;&quot;);</span>
+
+			//ulozi iba kluce, kotre zacinaju na filterPrefix
+<span class="pc bpc" id="L82" title="3 of 4 branches missed.">			if(Tools.isNotEmpty(filterPrefix) &amp;&amp; !key.startsWith(filterPrefix))</span>
+<span class="nc" id="L83">				continue;</span>
+
+<span class="fc" id="L85">			String value = escapeUnsafeValue(user, lng, key, property.getValue());</span>
+<span class="fc" id="L86">			Logger.debug(PropDB.class, &quot;Importing prop, key=&quot;+key+&quot; value=&quot;+value);</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">			if((new SimpleQuery().forInt(&quot;Select count(*) from &quot;+ConfDB.PROPERTIES_TABLE_NAME+&quot; where lng = ? and prop_key = ?&quot;, lng, key)) &gt; 0)</span>
+			{
+				// ak onlyNewKeys je true -&gt; nerobime update uz existujucich klucov, iba vkladame nove
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">				if(onlyNewKeys == false)</span>
+				{
+<span class="fc" id="L93">					new SimpleQuery().execute(&quot;UPDATE &quot;+ConfDB.PROPERTIES_TABLE_NAME+&quot; SET prop_value=? WHERE prop_key=? AND lng = ?&quot;,value,key,lng);</span>
+<span class="fc" id="L94">					updateCounter++;</span>
+				}
+			}
+			else
+			{
+<span class="fc" id="L99">				new SimpleQuery().execute(&quot;INSERT INTO &quot;+ConfDB.PROPERTIES_TABLE_NAME+&quot; (prop_key,lng,prop_value) VALUES (?,?,?)&quot;,key,lng,value);</span>
+<span class="fc" id="L100">				insertCounter++;</span>
+			}
+<span class="fc" id="L102">		}</span>
+<span class="fc" id="L103">		Logger.debug(PropDB.class, &quot;IwayProperties saved, inserted: &quot; + insertCounter + &quot; , updated: &quot; + updateCounter);</span>
+<span class="fc" id="L104">	}</span>
+
+	/**
+	 * Odfiltruje zoznam textovych klucov podla nastaveni konstanty propertiesEnabledKeys a prav usera (na neobmedzene zobrazenie textov)
+	 * @param user
+	 * @param propList
+	 * @return
+	 */
+	public static List&lt;String&gt; filterByPerms(Identity user, List&lt;String&gt; propList)
+	{
+		//odfiltruj zoznam podla prav
+<span class="nc" id="L115">		String propertiesEnabledKeys = Constants.getStringExecuteMacro(&quot;propertiesEnabledKeys&quot;);</span>
+
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (Tools.isEmpty(propertiesEnabledKeys) || user.isEnabledItem(&quot;prop.show_all_texts&quot;)) return propList;</span>
+
+<span class="nc" id="L119">		List&lt;String&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L120">		String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, &quot;,&quot;);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		for (String c : propList)</span>
+		{
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (isKeyVisibleToUser(user, enabledKeys, c))</span>
+			{
+<span class="nc" id="L125">				filtered.add(c);</span>
+			}
+<span class="nc" id="L127">		}</span>
+
+<span class="nc" id="L129">		return filtered;</span>
+	}
+
+	public static Map&lt;String, String&gt; filterByPerms(Identity user, Map&lt;String, String&gt; propList)
+	{
+		//odfiltruj zoznam podla prav
+<span class="fc" id="L135">		String propertiesEnabledKeys = Constants.getStringExecuteMacro(&quot;propertiesEnabledKeys&quot;);</span>
+
+<span class="pc bpc" id="L137" title="2 of 4 branches missed.">		if (Tools.isEmpty(propertiesEnabledKeys) || user.isEnabledItem(&quot;prop.show_all_texts&quot;)) return propList;</span>
+
+<span class="nc" id="L139">		Map&lt;String, String&gt; filtered = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L140">		String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, &quot;,&quot;);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		for (Entry&lt;String, String&gt; e : propList.entrySet())</span>
+		{
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (isKeyVisibleToUser(user, enabledKeys, e.getKey()))</span>
+			{
+<span class="nc" id="L145">				filtered.put(e.getKey(), e.getValue());</span>
+			}
+<span class="nc" id="L147">		}</span>
+
+<span class="nc" id="L149">		return filtered;</span>
+	}
+
+	public static boolean isKeyVisibleToUser(Identity user, String[] enabledKeys, String key)
+	{
+<span class="pc bpc" id="L154" title="1 of 4 branches missed.">		if (Tools.isEmpty(key) || user.isEnabledItem(&quot;prop.show_all_texts&quot;)) return true;</span>
+
+<span class="fc bfc" id="L156" title="All 2 branches covered.">		for (String testKey : enabledKeys)</span>
+		{
+<span class="fc bfc" id="L158" title="All 2 branches covered.">			if (key.startsWith(testKey))</span>
+			{
+<span class="fc" id="L160">				return true;</span>
+			}
+		}
+<span class="fc" id="L163">		return false;</span>
+	}
+
+	/**
+	 * Overi, ci pouzivatel moze upravit dany kluc
+	 * @param user
+	 * @param key
+	 * @return
+	 */
+	public static boolean canEdit(Identity user, String key)
+	{
+<span class="fc" id="L174">		String propertiesEnabledKeys = Constants.getStringExecuteMacro(&quot;propertiesEnabledKeys&quot;);</span>
+<span class="fc" id="L175">		String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, &quot;,&quot;);</span>
+<span class="fc" id="L176">		boolean canEdit = isKeyVisibleToUser(user, enabledKeys, key);</span>
+<span class="fc" id="L177">		return canEdit;</span>
+	}
+
+	/**
+	 * Riesi problem s HTML kodom v prekladovych textoch. Ak pouzivatel nema pravo na zobrazenie vsetkych prekladovych textov
+	 * vykona escape specialnych znakov na entitu. Povolene su len vybrane HTML tagy a vybrane atributy
+	 *
+	 * priklad (povoleny): Toto je XSS pokus &lt;a href=&quot;pokus&quot;&gt;xss&lt;/strong&gt;
+	 * priklad (escapnuty): Toto je XSS pokus&quot;);alert(1)
+	 * @param user
+	 * @param lng
+	 * @param key
+	 * @param newValue
+	 * @return
+	 */
+	public static String escapeUnsafeValue(Identity user, String lng, String key, String newValue) {
+		//ma plne prava, vratime to co zadal
+<span class="pc bpc" id="L194" title="1 of 4 branches missed.">		if (user != null &amp;&amp; user.isEnabledItem(&quot;prop.show_all_texts&quot;)) return newValue;</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">		if (Tools.isEmpty(newValue)) return newValue;</span>
+
+<span class="fc" id="L197">		String propAllowedTags = Constants.getString(&quot;propAllowedTags&quot;);</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">		if (&quot;*&quot;.equals(propAllowedTags)) return newValue;</span>
+
+<span class="fc" id="L200">		String escapedValue = ResponseUtils.filter(newValue);</span>
+		//odporucane v penteste
+<span class="fc" id="L202">		escapedValue = Tools.replace(escapedValue, &quot;(&quot;, &quot;&amp;#x28;&quot;);</span>
+<span class="fc" id="L203">		escapedValue = Tools.replace(escapedValue, &quot;)&quot;, &quot;&amp;#x29;&quot;);</span>
+<span class="fc" id="L204">		String escapedValueOriginal = escapedValue;</span>
+
+<span class="pc bpc" id="L206" title="2 of 4 branches missed.">		if (Tools.isNotEmpty(propAllowedTags) &amp;&amp; propAllowedTags.equals(&quot;-&quot;)==false) {</span>
+			//povol niektore znacky ako &lt;p, &lt;div, &lt;a, &lt;sub, &lt;sup, &lt;br /&gt;
+<span class="fc" id="L208">			String[] allowedTags = Tools.getTokens(Constants.getString(&quot;propAllowedTags&quot;), &quot;,&quot;);</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">			for (String tag : allowedTags) {</span>
+<span class="fc" id="L210">				escapedValue = Tools.replace(escapedValue, &quot;&amp;lt;&quot;+tag, &quot;&lt;&quot;+tag);</span>
+<span class="fc" id="L211">				escapedValue = Tools.replace(escapedValue, &quot;&amp;lt;/&quot;+tag, &quot;&lt;/&quot;+tag);</span>
+			}
+
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">			if (escapedValueOriginal.equals(escapedValue)==false) {</span>
+				//obsahuje povolenu znacku, povol koncovy zobak a koncove uvodzovky
+<span class="nc" id="L216">				escapedValue = Tools.replace(escapedValue, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
+
+<span class="nc" id="L218">				escapedValue = Tools.replace(escapedValue, &quot;&amp;quot; &quot;, &quot;\&quot; &quot;);</span>
+<span class="nc" id="L219">				escapedValue = Tools.replace(escapedValue, &quot;&amp;quot;&gt;&quot;, &quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L220">				escapedValue = Tools.replace(escapedValue, &quot;&amp;#39; &quot;, &quot;' &quot;);</span>
+<span class="nc" id="L221">				escapedValue = Tools.replace(escapedValue, &quot;&amp;#39;&gt;&quot;, &quot;'&gt;&quot;);</span>
+
+				//povol aj HTML atributy
+<span class="nc" id="L224">				String[] allowedAttributes = Tools.getTokens(Constants.getString(&quot;propAllowedAttrs&quot;), &quot;,&quot;);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				for (String attribute : allowedAttributes) {</span>
+<span class="nc" id="L226">					escapedValue = Tools.replace(escapedValue, attribute+&quot;=&amp;quot;&quot;, attribute+&quot;=\&quot;&quot;);</span>
+<span class="nc" id="L227">					escapedValue = Tools.replace(escapedValue, attribute+&quot;=&amp;#39;&quot;, attribute+&quot;='&quot;);</span>
+				}
+			}
+		}
+
+		//pri dvojitom ulozeni vznikaju taketo haluze
+<span class="fc" id="L233">		escapedValue = Tools.replace(escapedValue, &quot;&amp;amp;amp;&quot;, &quot;&amp;amp;&quot;);</span>
+<span class="fc" id="L234">		escapedValue = Tools.replace(escapedValue, &quot;&amp;amp;quot;&quot;, &quot;&amp;quot;&quot;);</span>
+<span class="fc" id="L235">		escapedValue = Tools.replace(escapedValue, &quot;&amp;amp;lt;&quot;, &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L236">		escapedValue = Tools.replace(escapedValue, &quot;&amp;amp;gt;&quot;, &quot;&amp;gt;&quot;);</span>
+<span class="fc" id="L237">		escapedValue = Tools.replace(escapedValue, &quot;&amp;amp;#&quot;, &quot;&amp;#&quot;);</span>
+
+<span class="fc" id="L239">		return escapedValue;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

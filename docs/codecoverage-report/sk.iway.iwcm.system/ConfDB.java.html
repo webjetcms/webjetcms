@@ -1,0 +1,784 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ConfDB.java</span></div><h1>ConfDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.ninja.Ninja;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.users.UserDetails;
+
+public class ConfDB
+{
+<span class="fc" id="L33">	public static String CONF_TABLE_NAME = &quot;_conf_&quot;; //NOSONAR</span>
+<span class="fc" id="L34">	public static String CONF_PREPARED_TABLE_NAME = &quot;_conf_prepared_&quot;; //NOSONAR</span>
+<span class="fc" id="L35">	public static String MODULES_TABLE_NAME = &quot;_modules_&quot;; //NOSONAR</span>
+<span class="fc" id="L36">	public static String ADMINLOG_TABLE_NAME = &quot;_adminlog_&quot;; //NOSONAR</span>
+<span class="fc" id="L37">	public static String DB_TABLE_NAME = &quot;_db_&quot;; //NOSONAR</span>
+<span class="fc" id="L38">	public static String PROPERTIES_TABLE_NAME = &quot;_properties_&quot;; //NOSONAR</span>
+
+<span class="nc" id="L40">	protected ConfDB() {</span>
+		//utility class
+<span class="nc" id="L42">	}</span>
+
+	public static List&lt;ConfDetails&gt; getConfig()
+	{
+<span class="fc" id="L46">		return(getConfig(null));</span>
+	}
+
+	/**
+	 * Vrati konfiguracne hodnotu, ak prefix nie je null tak zacinajuce sa na hodnotu prefixu
+	 * @param prefix
+	 * @return
+	 */
+	public static List&lt;ConfDetails&gt; getConfig(String prefix)
+	{
+<span class="fc" id="L56">		List&lt;ConfDetails&gt; conf = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L57">		Connection db_conn = null;</span>
+<span class="fc" id="L58">		PreparedStatement ps = null;</span>
+<span class="fc" id="L59">		ResultSet rs = null;</span>
+		try
+		{
+			//nacitaj data z DB
+<span class="fc" id="L63">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L64">			ps = db_conn.prepareStatement(&quot;SELECT * FROM &quot; + ConfDB.CONF_TABLE_NAME + &quot; ORDER BY name&quot;);</span>
+<span class="fc" id="L65">			rs = ps.executeQuery();</span>
+			String value;
+			String name;
+<span class="fc bfc" id="L68" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L70">				name = DB.getDbString(rs, &quot;name&quot;);</span>
+<span class="fc" id="L71">				value = DB.getDbString(rs, &quot;value&quot;);</span>
+
+<span class="fc bfc" id="L73" title="All 4 branches covered.">				if (Tools.isEmpty(prefix) || name.startsWith(prefix))</span>
+				{
+<span class="fc" id="L75">					conf.add(new ConfDetails(name, value, DB.getDate(rs, &quot;date_changed&quot;)));</span>
+				}
+			}
+<span class="fc" id="L78">			rs.close();</span>
+<span class="fc" id="L79">			ps.close();</span>
+<span class="fc" id="L80">			db_conn.close();</span>
+<span class="fc" id="L81">			rs = null;</span>
+<span class="fc" id="L82">			ps = null;</span>
+<span class="fc" id="L83">			db_conn = null;</span>
+		}
+<span class="nc" id="L85">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L87">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L94">					rs.close();</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L96">					ps.close();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L98">					db_conn.close();</span>
+			}
+<span class="nc" id="L100">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L102">			}</span>
+		}
+<span class="fc" id="L104">		return conf;</span>
+	}
+
+	public static List&lt;ConfDetails&gt; filterConfDetailsByPerms(Identity user, List&lt;ConfDetails&gt; confList)
+	{
+		//odfiltruj zoznam podla prav
+<span class="fc" id="L110">		String configEnabledKeys = Constants.getStringExecuteMacro(&quot;configEnabledKeys&quot;);</span>
+
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem(&quot;conf.show_all_variables&quot;)) return confList;</span>
+
+<span class="fc" id="L114">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L115">		String[] enabledKeys = Tools.getTokens(configEnabledKeys, &quot;,&quot;);</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">		for (ConfDetails c : confList)</span>
+		{
+<span class="fc bfc" id="L118" title="All 2 branches covered.">			if (isKeyVisibleToUser(user, enabledKeys, c.getName()))</span>
+			{
+<span class="fc" id="L120">				filtered.add(c);</span>
+			}
+<span class="fc" id="L122">		}</span>
+
+<span class="fc" id="L124">		return filtered;</span>
+	}
+
+	public static List&lt;String&gt; filterByPerms(Identity user, List&lt;String&gt; confList)
+	{
+		//odfiltruj zoznam podla prav
+<span class="nc" id="L130">		String configEnabledKeys = Constants.getStringExecuteMacro(&quot;configEnabledKeys&quot;);</span>
+
+<span class="nc bnc" id="L132" title="All 4 branches missed.">		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem(&quot;conf.show_all_variables&quot;)) return confList;</span>
+
+<span class="nc" id="L134">		List&lt;String&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L135">		String[] enabledKeys = Tools.getTokens(configEnabledKeys, &quot;,&quot;);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		for (String c : confList)</span>
+		{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (isKeyVisibleToUser(user, enabledKeys, c))</span>
+			{
+<span class="nc" id="L140">				filtered.add(c);</span>
+			}
+<span class="nc" id="L142">		}</span>
+
+<span class="nc" id="L144">		return filtered;</span>
+	}
+
+	public static boolean isKeyVisibleToUser(Identity user, String key) {
+		//odfiltruj zoznam podla prav
+<span class="nc" id="L149">		String configEnabledKeys = Constants.getStringExecuteMacro(&quot;configEnabledKeys&quot;);</span>
+
+<span class="nc bnc" id="L151" title="All 4 branches missed.">		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem(&quot;conf.show_all_variables&quot;)) return true;</span>
+
+<span class="nc" id="L153">		String[] enabledKeys = Tools.getTokens(configEnabledKeys, &quot;,&quot;);</span>
+<span class="nc" id="L154">		return isKeyVisibleToUser(user, enabledKeys, key);</span>
+	}
+
+	public static boolean isKeyVisibleToUser(Identity user, String[] enabledKeys, String key)
+	{
+<span class="pc bpc" id="L159" title="2 of 4 branches missed.">		if (Tools.isEmpty(key) || user.isEnabledItem(&quot;conf.show_all_variables&quot;)) return true;</span>
+
+<span class="fc bfc" id="L161" title="All 2 branches covered.">		for (String testKey : enabledKeys)</span>
+		{
+<span class="fc bfc" id="L163" title="All 2 branches covered.">			if (key.startsWith(testKey))</span>
+			{
+<span class="fc" id="L165">				return true;</span>
+			}
+		}
+<span class="fc" id="L168">		return false;</span>
+	}
+
+	public static boolean deleteName(String name)
+	{
+<span class="fc" id="L173">		Connection db_conn = null;</span>
+<span class="fc" id="L174">		PreparedStatement psDelete = null;</span>
+		try
+		{
+			//nacitaj data z DB
+<span class="fc" id="L178">			String sqlDel = &quot;&quot;;</span>
+			//editacia DB _conf_
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">			if (name != null)</span>
+			{
+<span class="fc" id="L182">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L183">				sqlDel = &quot;DELETE FROM &quot; + ConfDB.CONF_TABLE_NAME + &quot; WHERE name=?&quot;;</span>
+<span class="fc" id="L184">				psDelete = db_conn.prepareStatement(sqlDel);</span>
+<span class="fc" id="L185">				psDelete.setString(1, name);</span>
+<span class="fc" id="L186">				psDelete.execute();</span>
+				//Logger.println(this,&quot;Number of DELETED rows= &quot; + update);
+<span class="fc" id="L188">				psDelete.close();</span>
+<span class="fc" id="L189">				db_conn.close();</span>
+<span class="fc" id="L190">				psDelete = null;</span>
+<span class="fc" id="L191">				db_conn = null;</span>
+<span class="fc" id="L192">				Adminlog.add(Adminlog.TYPE_CONF_DELETE, &quot;Zmazana konfiguracna premenna: &quot;+name, -1, -1);</span>
+
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">				if (&quot;statLanguageDomain&quot;.equals(name)) StatDB.setLanguageDomainTable(null);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">				if (name.startsWith(&quot;multiDomainAlias:&quot;)) MultiDomainFilter.clearDomainAlias();</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">				if (&quot;responseHeaders&quot;.equals(name)) PathFilter.resetResponseHeaders();</span>
+
+				//if (update != 0)
+<span class="fc" id="L199">				return true;</span>
+			}
+
+		}
+<span class="nc" id="L203">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L205">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">				if (psDelete != null)</span>
+<span class="nc" id="L212">					psDelete.close();</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L214">					db_conn.close();</span>
+			}
+<span class="nc" id="L216">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L218">			}</span>
+		}
+<span class="nc" id="L220">		return false;</span>
+	}
+
+	/**
+	 * Pokusi sa desifrovat hodnotu ktora je zasifrovana v konfiguracii
+	 * @param value
+	 * @return
+	 */
+	public static String tryDecrypt(String value)
+	{
+<span class="fc bfc" id="L230" title="All 6 branches covered.">		if (value!=null &amp;&amp; value.length()&gt;32 &amp;&amp; value.startsWith(&quot;encrypted:&quot;))</span>
+		{
+			try {
+<span class="fc" id="L233">				Password pass = new Password();</span>
+<span class="fc" id="L234">				String decoded = pass.decrypt(value.substring(&quot;encrypted:&quot;.length()));</span>
+<span class="fc" id="L235">				value = decoded;</span>
+			}
+<span class="nc" id="L237">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L239">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L240">			}</span>
+		}
+<span class="fc" id="L242">		return value;</span>
+	}
+
+	public static boolean setName(String nameParam, String value)
+	{
+<span class="fc" id="L247">		boolean ret = false;</span>
+<span class="fc" id="L248">		Connection db_conn = null;</span>
+<span class="fc" id="L249">		PreparedStatement psInsert = null;</span>
+		try
+		{
+<span class="fc" id="L252">			String name = null;</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">			if (nameParam != null) {</span>
+<span class="fc" id="L254">				name = cleanTextRemoveNonPrintableCharacters(nameParam);</span>
+			}
+
+			//vyvolaj event
+<span class="fc" id="L258">			ConfDetails conf = null;</span>
+<span class="pc bpc" id="L259" title="2 of 4 branches missed.">			if (name != null &amp;&amp; value != null) {</span>
+<span class="fc" id="L260">				 conf = new ConfDetails(name, value);</span>
+			}
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">			if (conf != null) (new WebjetEvent&lt;ConfDetails&gt;(conf, WebjetEventType.ON_START)).publishEvent();</span>
+
+			//nacitaj data z DB
+<span class="fc" id="L265">			db_conn = DBPool.getConnection();</span>
+			//editacia DB _conf_
+
+<span class="pc bpc" id="L268" title="2 of 4 branches missed.">			if (name != null &amp;&amp; value != null)</span>
+			{
+<span class="fc" id="L270">				String sqlUpdate = &quot;UPDATE &quot; + ConfDB.CONF_TABLE_NAME + &quot; SET value=?, date_changed=? WHERE name=?&quot;;</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">				if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &amp;&amp;</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">					SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() &gt; 0)</span>
+				{
+<span class="fc" id="L274">					StringBuilder message = new StringBuilder(&quot;Nastavena konfiguracna premenna: &quot;).append(name).append('\n');</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">					if (Tools.isNotEmpty(Constants.getString(name)))</span>
+<span class="fc" id="L276">						message.append(Constants.getString(name)).append(&quot; =&gt; &quot;);</span>
+<span class="fc" id="L277">					message.append(value);</span>
+<span class="fc" id="L278">					Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);</span>
+				}
+<span class="fc" id="L280">				psInsert = db_conn.prepareStatement(sqlUpdate);</span>
+<span class="fc" id="L281">				psInsert.setString(1, value);</span>
+<span class="fc" id="L282">				psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L283">				psInsert.setString(3, name);</span>
+<span class="fc" id="L284">				int update = psInsert.executeUpdate();</span>
+<span class="fc" id="L285">				psInsert.close();</span>
+<span class="fc" id="L286">				psInsert = null;</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">				if (update &lt; 1)</span>
+				{
+<span class="fc" id="L289">					String sqlIns = &quot;INSERT INTO &quot; + ConfDB.CONF_TABLE_NAME + &quot; (name, value, date_changed) VALUES (?,?,?)&quot;;</span>
+<span class="fc" id="L290">					psInsert = db_conn.prepareStatement(sqlIns);</span>
+<span class="fc" id="L291">					psInsert.setString(1, name);</span>
+<span class="fc" id="L292">					psInsert.setString(2, value);</span>
+<span class="fc" id="L293">					psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L294">					psInsert.execute();</span>
+<span class="fc" id="L295">					psInsert.close();</span>
+<span class="fc" id="L296">					psInsert = null;</span>
+				}
+<span class="fc" id="L298">				ret = true;</span>
+				//refreshni hodnotu v Constants, odporucany je ale aj tak restart
+
+<span class="fc" id="L301">				setConstantValueImpl(name, value);</span>
+			}
+<span class="fc" id="L303">			db_conn.close();</span>
+<span class="fc" id="L304">			db_conn = null;</span>
+
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">			if (conf != null) (new WebjetEvent&lt;ConfDetails&gt;(conf, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
+		}
+<span class="nc" id="L308">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L310">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">				if (psInsert != null)</span>
+<span class="nc" id="L317">					psInsert.close();</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L319">					db_conn.close();</span>
+			}
+<span class="nc" id="L321">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L323">			}</span>
+		}
+<span class="fc" id="L325">		return ret;</span>
+	}
+
+	private static void setConstantValueImpl(String name, String valueParam)
+	{
+<span class="fc" id="L330">		String value = tryDecrypt(valueParam);</span>
+
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">		if (&quot;linkType&quot;.equals(name))</span>
+		{
+<span class="nc bnc" id="L334" title="All 2 branches missed.">			if (&quot;html&quot;.equalsIgnoreCase(value))</span>
+			{
+<span class="nc" id="L336">				Constants.setInt(name, Constants.LINK_TYPE_HTML);</span>
+			}
+			else
+			{
+<span class="nc" id="L340">				Constants.setInt(name, Constants.LINK_TYPE_DOCID);</span>
+			}
+		}
+		else
+		{
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">			if (&quot;statLanguageDomain&quot;.equals(name)) StatDB.setLanguageDomainTable(null);</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">			else if (name.startsWith(&quot;multiDomainAlias:&quot;)) MultiDomainFilter.clearDomainAlias();</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">			else if (&quot;logLevel&quot;.equals(name)) Logger.setWJLogLevel(value);</span>
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">			else if (&quot;logLevels&quot;.equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));</span>
+<span class="pc bpc" id="L349" title="2 of 4 branches missed.">			else if (&quot;cacheStaticContentSeconds&quot;.equals(name) || &quot;cacheStaticContentSuffixes&quot;.equals(name)) PathFilter.resetCacheStaticContentSeconds();</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">			else if (&quot;responseHeaders&quot;.equals(name)) PathFilter.resetResponseHeaders();</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">			else if (&quot;constantsAliasSearch&quot;.equals(name)) Constants.setConstantsAliasSearch(&quot;true&quot;.equals(value));</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">			else if (&quot;multiDomainFolders&quot;.equals(name)) MultiDomainFilter.clearDomainFolders();</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">			else if (&quot;xssHtmlAllowedFields&quot;.equals(name)) DB.resetHtmlAllowedFields();</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">			else if (&quot;ninjaNbspReplaceRegex&quot;.equals(name)) Ninja.resetNbspReplaceRegex();</span>
+<span class="fc" id="L355">			Constants.setString(name, value);</span>
+		}
+<span class="fc" id="L357">	}</span>
+
+	/**
+	 * Zadisabluje polozku menu vsetkym administratorom
+	 *
+	 * @param menuItemName
+	 * @return
+	 */
+	public static List&lt;UserDetails&gt; disableMenuItemAll(String menuItemName)
+	{
+<span class="nc" id="L367">		List&lt;UserDetails&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L368">		List&lt;UserDetails&gt; changedUsers = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		if(Tools.isEmpty(menuItemName)) return changedUsers;</span>
+<span class="nc" id="L370">		Connection db_conn = null;</span>
+<span class="nc" id="L371">		PreparedStatement ps = null;</span>
+<span class="nc" id="L372">		ResultSet rs = null;</span>
+		try
+		{
+			//nacitaj data z DB
+<span class="nc" id="L376">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L378">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  users WHERE is_admin=?&quot;);</span>
+<span class="nc" id="L379">			ps.setBoolean(1, true);</span>
+<span class="nc" id="L380">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L383">				UserDetails user = new UserDetails();</span>
+<span class="nc" id="L384">				user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L385">				user.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="nc" id="L386">				user.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+<span class="nc" id="L387">				users.add(user);</span>
+<span class="nc" id="L388">			}</span>
+<span class="nc" id="L389">			rs.close();</span>
+<span class="nc" id="L390">			ps.close();</span>
+<span class="nc" id="L391">			rs = null;</span>
+<span class="nc" id="L392">			ps = null;</span>
+			//preiteruj cez userov a zrus im danu polozku
+			boolean found;
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			for (UserDetails user : users)</span>
+			{
+<span class="nc" id="L397">				ps = db_conn.prepareStatement(&quot;SELECT * FROM user_disabled_items WHERE user_id=? AND item_name=?&quot;);</span>
+<span class="nc" id="L398">				ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L399">				ps.setString(2, menuItemName);</span>
+<span class="nc" id="L400">				rs = ps.executeQuery();</span>
+<span class="nc" id="L401">				found = false;</span>
+<span class="nc bnc" id="L402" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L404">					found = true;</span>
+				}
+<span class="nc" id="L406">				rs.close();</span>
+<span class="nc" id="L407">				ps.close();</span>
+<span class="nc" id="L408">				rs = null;</span>
+<span class="nc" id="L409">				ps = null;</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">				if (!found)</span>
+				{
+<span class="nc" id="L412">					ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L413">					ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L414">					ps.setString(2, menuItemName);</span>
+<span class="nc" id="L415">					ps.execute();</span>
+<span class="nc" id="L416">					ps.close();</span>
+<span class="nc" id="L417">					ps = null;</span>
+<span class="nc" id="L418">					changedUsers.add(user);</span>
+				}
+<span class="nc" id="L420">			}</span>
+<span class="nc" id="L421">			db_conn.close();</span>
+<span class="nc" id="L422">			db_conn = null;</span>
+		}
+<span class="nc" id="L424">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L426">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L432" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L433">					rs.close();</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L435">					ps.close();</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L437">					db_conn.close();</span>
+			}
+<span class="nc" id="L439">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L441">			}</span>
+		}
+<span class="nc" id="L443">		return (changedUsers);</span>
+	}
+
+	/**
+	 * Ziskam si premennu z DB
+	 *
+	 * @param name -
+	 *           nazov premennej
+	 * @return
+	 */
+	public static ConfDetails getVariable(String name)
+	{
+<span class="fc" id="L455">		Connection db_conn = null;</span>
+<span class="fc" id="L456">		PreparedStatement ps = null;</span>
+<span class="fc" id="L457">		ResultSet rs = null;</span>
+		try
+		{
+<span class="pc bpc" id="L460" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(name))</span>
+			{
+				//nacitaj data z DB (uncomited je tu kvoli clustru a MonitoringManager citaniu session hodnot)
+<span class="fc" id="L463">				db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="fc" id="L464">				ps = db_conn.prepareStatement(&quot;SELECT * FROM &quot; + ConfDB.CONF_TABLE_NAME + &quot; WHERE name=?&quot;);</span>
+<span class="fc" id="L465">				ps.setString(1, name);</span>
+<span class="fc" id="L466">				rs = ps.executeQuery();</span>
+				String value;
+<span class="fc" id="L468">				ConfDetails cDet = null;</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">				if (rs.next())</span>
+				{
+<span class="fc" id="L471">					value = DB.getDbString(rs, &quot;value&quot;);</span>
+<span class="fc" id="L472">					cDet = new ConfDetails(name, value, DB.getDate(rs, &quot;date_changed&quot;));</span>
+				}
+<span class="fc" id="L474">				rs.close();</span>
+<span class="fc" id="L475">				ps.close();</span>
+<span class="fc" id="L476">				db_conn.close();</span>
+<span class="fc" id="L477">				rs = null;</span>
+<span class="fc" id="L478">				ps = null;</span>
+<span class="fc" id="L479">				db_conn = null;</span>
+<span class="fc" id="L480">				return (cDet);</span>
+				//  Logger.println(this,&quot;Name= &quot; +varName+ &quot;\t\t Value= &quot; +varValue+
+				// &quot;\t\t Action= &quot; +varAction);
+			}
+		}
+<span class="nc" id="L485">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L487">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L493" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L494">					rs.close();</span>
+<span class="pc bpc" id="L495" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L496">					ps.close();</span>
+<span class="pc bpc" id="L497" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L498">					db_conn.close();</span>
+			}
+<span class="nc" id="L500">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L502">			}</span>
+		}
+<span class="nc" id="L504">		return (null);</span>
+	}
+
+	/**
+	 * Vrati zoznam moznych konfiguracnych premennych pre zadanu JSP stranku (pouziva pomocnik)
+	 * @param url
+	 * @return
+	 */
+	public static List&lt;ConfDetails&gt; getConfForJsp(String url)
+	{
+<span class="nc" id="L514">		List&lt;ConfDetails&gt; list = new ArrayList&lt;&gt;();</span>
+		try
+		{
+			//najskor uprav URL na nazov modulu
+<span class="nc" id="L518">			int i = url.lastIndexOf('/');</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">			if (i != -1) url = url.substring(i+1);</span>
+
+<span class="nc" id="L521">			i = url.lastIndexOf('.');</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">			if (i != -1) url = url.substring(0, i);</span>
+
+<span class="nc bnc" id="L524" title="All 2 branches missed.">			if (&quot;banner_system&quot;.equals(url)) url = &quot;banner&quot;;</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">			else if (&quot;forms&quot;.equals(url)) url = &quot;form&quot;;</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">			else if (&quot;related_pages&quot;.equals(url)) url = &quot;related-pages&quot;;</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">			else if (&quot;dynamic_tags&quot;.equals(url)) url = &quot;webpages&quot;;</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">			else if (&quot;reservations&quot;.equals(url)) url = &quot;reservation&quot;;</span>
+
+<span class="nc" id="L530">			Logger.debug(ConfDB.class, &quot;getConfForJsp url = &quot;+url);</span>
+
+<span class="nc bnc" id="L532" title="All 2 branches missed.">			for (ConfDetails conf : Constants.getAllValues())</span>
+			{
+<span class="nc bnc" id="L534" title="All 6 branches missed.">				if (conf.getModules()!=null &amp;&amp; (conf.getModules().indexOf(url)==0 || conf.getModules().indexOf(&quot;;&quot;+url)!=-1)) list.add(conf);</span>
+<span class="nc" id="L535">			}</span>
+		}
+<span class="nc" id="L537">		catch (Exception e)</span>
+		{
+<span class="nc" id="L539">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L540">		}</span>
+<span class="nc" id="L541">		return list;</span>
+	}
+
+	/**
+	 * Vyhladavanie v konfiguracii (meno a popis)
+	 * @param text
+	 * @return
+	 */
+	public static List&lt;ConfDetails&gt; searchConfig(String text)
+	{
+<span class="nc" id="L551">		text = DB.internationalToEnglish(text).toLowerCase();</span>
+<span class="nc" id="L552">		List&lt;ConfDetails&gt; list = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc bnc" id="L555" title="All 2 branches missed.">			for (ConfDetails conf : Constants.getAllValues())</span>
+			{
+<span class="nc bnc" id="L557" title="All 4 branches missed.">				if (conf.getName().toLowerCase().indexOf(text)!=-1 || DB.internationalToEnglish(conf.getDescription()).toLowerCase().indexOf(text)!=-1)</span>
+				{
+<span class="nc" id="L559">					list.add(conf);</span>
+				}
+<span class="nc" id="L561">			}</span>
+		}
+<span class="nc" id="L563">		catch (Exception e)</span>
+		{
+<span class="nc" id="L565">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L566">		}</span>
+<span class="nc" id="L567">		return list;</span>
+	}
+
+    /**
+     * Obnovi v Constants konfiguracnu premmenu podla hodnoty v databaze
+     * @param name
+     */
+    public static void refreshVariable(String name)
+	 {
+<span class="fc" id="L576">	 	 String value = new SimpleQuery().forString(&quot;SELECT value FROM &quot; + ConfDB.CONF_TABLE_NAME + &quot; WHERE name=?&quot;,name);</span>
+<span class="fc" id="L577">		 setConstantValueImpl(name, value);</span>
+<span class="fc" id="L578">    }</span>
+
+	private static String cleanTextRemoveNonPrintableCharacters(String text)
+	{
+		// strips off all non-ASCII characters
+<span class="fc" id="L583">		text = text.replaceAll(&quot;[^\\x00-\\x7F]&quot;, &quot;&quot;);</span>
+
+		// erases all the ASCII control characters
+<span class="fc" id="L586">		text = text.replaceAll(&quot;[\\p{Cntrl}&amp;&amp;[^\r\n\t]]&quot;, &quot;&quot;);</span>
+
+		// removes non-printable characters from Unicode
+<span class="fc" id="L589">		text = text.replaceAll(&quot;\\p{C}&quot;, &quot; &quot;);</span>
+
+<span class="fc" id="L591">		text = Tools.replace(text, &quot;'&quot;, &quot;&quot;);</span>
+<span class="fc" id="L592">		text = Tools.replace(text, &quot; &quot;, &quot;&quot;);</span>
+
+<span class="fc" id="L594">		return text.trim();</span>
+	}
+
+    public static boolean setNamePrepared(String name, String value, Date datePrepared)
+ 	{
+<span class="fc" id="L599"> 		boolean ret = false;</span>
+<span class="fc" id="L600"> 		Connection db_conn = null;</span>
+<span class="fc" id="L601"> 		PreparedStatement psInsert = null;</span>
+ 		try
+ 		{
+ 			//nacitaj data z DB
+<span class="fc" id="L605"> 			db_conn = DBPool.getConnection();</span>
+ 			//editacia DB _conf_
+<span class="pc bpc" id="L607" title="2 of 4 branches missed."> 			if (name != null &amp;&amp; value != null)</span>
+ 			{
+ 				/*String sqlUpdate = &quot;UPDATE &quot; + ConfDB.CONF_PREPARED_TABLE_NAME + &quot; SET value=?, date_changed=?, date_prepared=? WHERE name=?&quot;;
+ 				if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &amp;&amp;
+ 					SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() &gt; 0)
+ 				{
+ 					StringBuilder message = new StringBuilder(&quot;Nastavena konfiguracna premenna: &quot;).append(name).append('\n');
+ 					if (Tools.isNotEmpty(Constants.getString(name)))
+ 						message.append(Constants.getString(name)).append(&quot; =&gt; &quot;);
+ 					message.append(value);
+ 					//Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
+ 				}
+ 				psInsert = db_conn.prepareStatement(sqlUpdate);
+ 				psInsert.setString(1, value);
+ 				psInsert.setTimestamp(2, new java.sql.Timestamp(Tools.getNow()));
+
+ 				if (datePrepared!=null) psInsert.setTimestamp(4, new java.sql.Timestamp(datePrepared.getTime()));
+				else psInsert.setNull(4, Types.TIMESTAMP);
+
+				psInsert.setString(3, name);
+
+ 				int update = psInsert.executeUpdate();
+ 				psInsert.close();
+ 				psInsert = null;
+
+ 				*/
+<span class="fc" id="L633">				Integer userId = null;</span>
+
+<span class="fc" id="L635">				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L636" title="1 of 2 branches missed.">				if (rb != null) userId = Integer.valueOf(rb.getUserId());</span>
+
+<span class="fc" id="L638">				String sqlIns = &quot;INSERT INTO &quot; + ConfDB.CONF_PREPARED_TABLE_NAME + &quot; (name, value, date_changed, date_prepared, user_id) VALUES (?,?,?,?,?)&quot;;</span>
+<span class="fc" id="L639">				psInsert = db_conn.prepareStatement(sqlIns);</span>
+<span class="fc" id="L640">				psInsert.setString(1, name);</span>
+<span class="fc" id="L641">				psInsert.setString(2, value);</span>
+<span class="fc" id="L642">				psInsert.setTimestamp(3, new java.sql.Timestamp(Tools.getNow()));</span>
+
+<span class="pc bpc" id="L644" title="1 of 2 branches missed.">				if (datePrepared!=null) psInsert.setTimestamp(4, new java.sql.Timestamp(datePrepared.getTime()));</span>
+<span class="fc" id="L645">				else psInsert.setNull(4, Types.TIMESTAMP);</span>
+
+<span class="pc bpc" id="L647" title="1 of 2 branches missed.">				if (userId != null) psInsert.setInt(5, userId.intValue());</span>
+<span class="nc" id="L648">				else psInsert.setNull(5, Types.INTEGER);</span>
+
+<span class="fc" id="L650">				psInsert.execute();</span>
+<span class="fc" id="L651">				psInsert.close();</span>
+<span class="fc" id="L652">				psInsert = null;</span>
+<span class="fc" id="L653"> 				ret = true;</span>
+ 			}
+<span class="fc" id="L655"> 			db_conn.close();</span>
+<span class="fc" id="L656"> 			db_conn = null;</span>
+ 		}
+<span class="nc" id="L658"> 		catch (Exception ex)</span>
+ 		{
+<span class="nc" id="L660"> 			sk.iway.iwcm.Logger.error(ex);</span>
+ 		}
+ 		finally
+ 		{
+ 			try
+ 			{
+<span class="pc bpc" id="L666" title="1 of 2 branches missed."> 				if (psInsert != null)</span>
+<span class="nc" id="L667"> 					psInsert.close();</span>
+<span class="pc bpc" id="L668" title="1 of 2 branches missed."> 				if (db_conn != null)</span>
+<span class="nc" id="L669"> 					db_conn.close();</span>
+ 			}
+<span class="nc" id="L671"> 			catch (Exception ex2)</span>
+ 			{
+<span class="fc" id="L673"> 			}</span>
+ 		}
+<span class="fc" id="L675"> 		return ret;</span>
+ 	}
+
+ 	public static boolean deleteNamePrepared(String name, long now)
+ 	{
+<span class="nc" id="L680"> 		Connection db_conn = null;</span>
+<span class="nc" id="L681"> 		PreparedStatement psDelete = null;</span>
+ 		try
+ 		{
+<span class="nc" id="L684"> 			String sqlDel = &quot;&quot;;</span>
+<span class="nc bnc" id="L685" title="All 2 branches missed."> 			if (name != null)</span>
+ 			{
+<span class="nc" id="L687"> 				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L688"> 				sqlDel = &quot;UPDATE &quot; + ConfDB.CONF_PREPARED_TABLE_NAME + &quot; SET date_published=? WHERE name=? AND date_published IS NULL AND date_prepared IS NOT NULL AND date_prepared &lt; ?&quot;;</span>
+<span class="nc" id="L689"> 				psDelete = db_conn.prepareStatement(sqlDel);</span>
+<span class="nc" id="L690">				psDelete.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L691"> 				psDelete.setString(2, name);</span>
+<span class="nc" id="L692">				psDelete.setTimestamp(3, new Timestamp(now));</span>
+<span class="nc" id="L693"> 				psDelete.execute();</span>
+<span class="nc" id="L694"> 				psDelete.close();</span>
+<span class="nc" id="L695"> 				db_conn.close();</span>
+<span class="nc" id="L696"> 				psDelete = null;</span>
+<span class="nc" id="L697"> 				db_conn = null;</span>
+ 				//Adminlog.add(Adminlog.TYPE_CONF_DELETE, &quot;Zmazana prepared konfiguracna premenna: &quot;+name, -1, -1);
+<span class="nc" id="L699"> 				return true;</span>
+ 			}
+ 		}
+<span class="nc" id="L702"> 		catch (Exception ex)</span>
+ 		{
+<span class="nc" id="L704"> 			sk.iway.iwcm.Logger.error(ex);</span>
+ 		}
+ 		finally
+ 		{
+ 			try
+ 			{
+<span class="nc bnc" id="L710" title="All 2 branches missed."> 				if (psDelete != null)</span>
+<span class="nc" id="L711"> 					psDelete.close();</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed."> 				if (db_conn != null)</span>
+<span class="nc" id="L713"> 					db_conn.close();</span>
+ 			}
+<span class="nc" id="L715"> 			catch (Exception ex2)</span>
+ 			{
+<span class="nc" id="L717"> 			}</span>
+ 		}
+<span class="nc" id="L719"> 		return false;</span>
+ 	}
+
+	/**
+	 * Vrati predpripravenu konfiguracne hodnotu, ak prefix nie je null tak zacinajuce sa na hodnotu prefixu
+	 * @param prefix
+	 * @return
+	 */
+	public static List&lt;ConfPreparedDetails&gt; getConfigPrepared(String prefix)
+	{
+<span class="nc" id="L729">		List&lt;ConfPreparedDetails&gt; conf = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L730">		Connection db_conn = null;</span>
+<span class="nc" id="L731">		PreparedStatement ps = null;</span>
+<span class="nc" id="L732">		ResultSet rs = null;</span>
+		try
+		{
+			//nacitaj data z DB
+<span class="nc" id="L736">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L737">			ps = db_conn.prepareStatement(&quot;SELECT * FROM &quot; + ConfDB.CONF_PREPARED_TABLE_NAME + &quot; ORDER BY name&quot;);</span>
+<span class="nc" id="L738">			rs = ps.executeQuery();</span>
+			String value;
+			String name;
+<span class="nc bnc" id="L741" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L743">				name = DB.getDbString(rs, &quot;name&quot;);</span>
+<span class="nc" id="L744">				value = DB.getDbString(rs, &quot;value&quot;);</span>
+
+<span class="nc bnc" id="L746" title="All 4 branches missed.">				if (Tools.isEmpty(prefix) || name.startsWith(prefix))</span>
+				{
+<span class="nc" id="L748">					conf.add(new ConfPreparedDetails(name, value, DB.getDate(rs, &quot;date_changed&quot;), DB.getDate(rs, &quot;date_prepared&quot;)));</span>
+				}
+			}
+<span class="nc" id="L751">			rs.close();</span>
+<span class="nc" id="L752">			ps.close();</span>
+<span class="nc" id="L753">			db_conn.close();</span>
+<span class="nc" id="L754">			rs = null;</span>
+<span class="nc" id="L755">			ps = null;</span>
+<span class="nc" id="L756">			db_conn = null;</span>
+<span class="nc bnc" id="L757" title="All 2 branches missed.">			if (conf.size() &gt; 0)</span>
+<span class="nc" id="L758">				return (conf);</span>
+			//  Logger.println(this,&quot;Name= &quot; +varName+ &quot;\t\t Value= &quot; +varValue+
+			// &quot;\t\t Action= &quot; +varAction);
+		}
+<span class="nc" id="L762">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L764">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L770" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L771">					rs.close();</span>
+<span class="nc bnc" id="L772" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L773">					ps.close();</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L775">					db_conn.close();</span>
+			}
+<span class="nc" id="L777">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L779">			}</span>
+		}
+<span class="nc" id="L781">		return (null);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

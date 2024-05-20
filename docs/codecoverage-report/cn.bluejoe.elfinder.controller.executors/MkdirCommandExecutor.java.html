@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MkdirCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">MkdirCommandExecutor.java</span></div><h1>MkdirCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.io.IOException;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="nc" id="L22">public class MkdirCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+	FsService fsService;
+	Prop prop;
+	HttpServletRequest request;
+	JSONObject json;
+
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="nc" id="L33">		this.fsService = fsService;</span>
+<span class="nc" id="L34">		this.prop = Prop.getInstance(request);</span>
+<span class="nc" id="L35">		this.request = request;</span>
+<span class="nc" id="L36">		this.json = json;</span>
+
+<span class="nc" id="L38">		String target = Tools.getStringValue(request.getParameter(&quot;target&quot;), &quot;&quot;);</span>
+<span class="nc" id="L39">		String name = Tools.getStringValue(request.getParameter(&quot;name&quot;), &quot;&quot;);</span>
+<span class="nc" id="L40">		String[] dirs = request.getParameterValues(&quot;dirs[]&quot;);</span>
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(name)) {</span>
+<span class="nc" id="L43">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.error.banned_character&quot;));</span>
+<span class="nc" id="L44">			return;</span>
+		}
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		if (Tools.isNotEmpty(target)) {</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">			if (dirs != null &amp;&amp; dirs.length &gt; 0) {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">				for (String dir : dirs) {</span>
+<span class="nc" id="L50">					mkDir(target, dir);</span>
+				}
+			}
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			else if (Tools.isNotEmpty(name)) {</span>
+<span class="nc" id="L54">				mkDir(target, name);</span>
+			}
+		}
+		else {
+<span class="nc" id="L58">			json.put(&quot;error&quot;, prop.getText(&quot;target cannot be null&quot;));</span>
+		}
+<span class="nc" id="L60">	}</span>
+
+	private void mkDir(String target, String name) throws IOException, JSONException
+	{
+<span class="nc" id="L64">		FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="nc" id="L65">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L66">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))</span>
+		{
+<span class="nc bnc" id="L69" title="All 4 branches missed.">			if (fsi.getPath().startsWith(&quot;/files&quot;) || fsi.getPath().startsWith(&quot;/images&quot;))</span>
+			{
+<span class="nc" id="L71">				name = DB.internationalToEnglish(name);</span>
+<span class="nc" id="L72">				name = DocTools.removeCharsDir(name, true).toLowerCase();</span>
+			}
+<span class="nc" id="L74">			FsItemEx dir = new FsItemEx(fsi, name);</span>
+<span class="nc" id="L75">			dir.createFolder();</span>
+
+<span class="nc" id="L77">			json.put(&quot;added&quot;, new Object[] { getFsItemInfo(request, dir) });</span>
+<span class="nc" id="L78">		}</span>
+		else
+		{
+<span class="nc" id="L81">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.mkdir.error&quot;, fsi.getPath()));</span>
+<span class="nc" id="L82">			json.put(&quot;added&quot;, new Object[] {});</span>
+		}
+<span class="nc" id="L84">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

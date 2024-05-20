@@ -351,7 +351,7 @@ if(!isAjaxCall)
 	<div class="row mobile-fix">
 		<div class="col-md-2 col-xs-12">
 			<% if (canPostNewTopic) { %>
-			<a class="btn btn-primary btn-sm" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<%=parentId%>&type=mb&rootForumId=<%=rootForumId%>&docid=<%=docId%>');" title="<iwcm:text key="components.forum.new_topic"/>">
+			<a class="btn btn-primary btn-sm" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<%=parentId%>&type=mb&rootForumId=<%=rootForumId%>&docid=<%=docId%>&language=<%=lng%>');" title="<iwcm:text key="components.forum.new_topic"/>">
 				<!--span class="btn-label"><i class="fa fa-pencil-square-o"></i></span-->
 				<iwcm:text key="components.forum.new_topic"/>
 			</a>

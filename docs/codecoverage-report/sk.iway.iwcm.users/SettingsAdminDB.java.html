@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SettingsAdminDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">SettingsAdminDB.java</span></div><h1>SettingsAdminDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.ModuleInfo;
+
+/**
+ *	SettingsAdminDB.java - vykonava pracu s databazou, konkretne s tabulkou user_settings_admin
+ *
+ *	@Title        webjet7
+ *	@Company      Interway s.r.o. (www.interway.sk)
+ *	@Copyright    Interway s.r.o. (c) 2001-2010
+ *	@author       $Author: kmarton $
+ *	@version      $Revision: 1.0 $
+ * @created      Date: 02.07.2010 15:26:00
+ * @modified     $Date: 2010/07/03 08:34:21 $
+ */
+<span class="nc" id="L36">public class SettingsAdminDB</span>
+{
+	/**
+	 * Vrati nastavenia pouzivatela z tabulky user_settings_admin v tvare nazov nastavenia ako key a SettingsAdminBean ako value
+	 *
+	 * @param userId	identifikator pouzivatela
+	 *
+	 * @return
+	 */
+	public static Map&lt;String, SettingsAdminBean&gt; getSettings(int userId)
+	{
+<span class="fc" id="L47">		Map&lt;String, SettingsAdminBean&gt; settings = new TreeMap&lt;String, SettingsAdminBean&gt;();</span>
+
+<span class="fc" id="L49">   	StringBuilder sql = new StringBuilder();</span>
+<span class="fc" id="L50">		sql.append(&quot;SELECT * FROM user_settings_admin WHERE user_id = ? &quot;);</span>
+
+<span class="fc" id="L52">      List&lt;SettingsAdminBean&gt; settingsList = new ComplexQuery().setSql(sql.toString()).setParams(userId).list(new Mapper&lt;SettingsAdminBean&gt;()</span>
+<span class="fc" id="L53">      {</span>
+      	@Override
+         public SettingsAdminBean map(ResultSet rs) throws SQLException
+         {
+<span class="fc" id="L57">         	SettingsAdminBean setting = new SettingsAdminBean(rs.getInt(&quot;user_settings_admin_id&quot;), rs.getInt(&quot;user_id&quot;), DB.getDbString(rs, &quot;skey&quot;), DB.getDbString(rs, &quot;value&quot;));</span>
+
+<span class="fc" id="L59">         	return setting;</span>
+         }
+      });
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">      for (SettingsAdminBean setting : settingsList)</span>
+		{
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">      	if (setting.getSkey() == null)</span>
+<span class="nc" id="L66">				continue;</span>
+<span class="fc" id="L67">			settings.put(setting.getSkey(), setting);</span>
+<span class="fc" id="L68">		}</span>
+
+<span class="fc" id="L70">		return settings;</span>
+	}
+
+	/**
+    * Funkcia, ktora vymaze vsetky admin nastavenia pouzivatela
+    *
+    * @param userId identifikator pouzivatela
+    */
+   public static void deleteAdminSettings(int userId)
+   {
+<span class="nc" id="L80">   	new SimpleQuery().execute(&quot;DELETE FROM user_settings_admin WHERE user_id = ?&quot;, userId);</span>
+<span class="nc" id="L81">   }</span>
+
+	/**
+	 * Ulozi nastavenie pouzivatela do databazy
+	 *
+	 * @param userId		identifikator pouzivatela
+	 * @param settings	admin nastavenia pouzivatela ulozene v mape
+	 *
+	 * @return
+	 */
+	public static boolean setSettings(int userId, Map&lt;String, SettingsAdminBean&gt; settings)
+	{
+<span class="nc" id="L93">		boolean saveOk = false;</span>
+
+<span class="nc" id="L95">		SettingsAdminDB.deleteAdminSettings(userId);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			for (Entry&lt;String, SettingsAdminBean&gt; entry : settings.entrySet())</span>
+			{
+<span class="nc" id="L99">				SettingsAdminBean setting = entry.getValue();</span>
+<span class="nc bnc" id="L100" title="All 6 branches missed.">				if (setting == null || &quot;-&quot;.equals(entry.getKey()) || &quot;__delete&quot;.equals(setting.getValue()))</span>
+<span class="nc" id="L101">					continue;</span>
+<span class="nc" id="L102">				setting.setSkey(entry.getKey());</span>
+
+				try
+				{
+<span class="nc" id="L106">					new SimpleQuery().execute(&quot;INSERT INTO user_settings_admin (user_id, skey, value) VALUES (?, ?, ?)&quot;, userId, DB.prepareString(setting.getSkey(), 255), DB.prepareString(setting.getValue(), 4000));</span>
+<span class="nc" id="L107">					saveOk = true;</span>
+				}
+<span class="nc" id="L109">				catch (Exception e)</span>
+				{
+<span class="nc" id="L111">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L112">					saveOk = false;</span>
+<span class="nc" id="L113">				}</span>
+<span class="nc" id="L114">			}</span>
+
+<span class="nc" id="L116">		return saveOk;</span>
+	}
+
+	/**
+	 * Prida polozku(fieldset) do sidebaru editora na poziciu position pre pouzivatela s identifikatorom userId
+	 *
+	 * @param fieldset	pole, ktore chceme pridat do sidebaru
+	 * @param position	pozicia, na ktoru chceme pridat polozku
+	 * @param userId		identifikator pouzivatela, pre ktoreho akciu vykonavame
+	 *
+	 * @return true, ak sa operacia podari, inak false
+	 */
+	public static boolean addToEditorSidebar(String fieldset, int position, int userId)
+	{
+<span class="nc bnc" id="L130" title="All 6 branches missed.">		if (Tools.isEmpty(fieldset) || position &lt; 0 || userId &lt; 0)</span>
+<span class="nc" id="L131">			return false;</span>
+
+<span class="nc" id="L133">		Map&lt;String, SettingsAdminBean&gt; userAdminSettings = SettingsAdminDB.getSettings(userId);</span>
+<span class="nc" id="L134">		JSONObject sidebarJSON = new JSONObject();</span>
+
+		try
+		{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (userAdminSettings.get(&quot;sidebar_items&quot;) != null)</span>
+<span class="nc" id="L139">				sidebarJSON = new JSONObject(userAdminSettings.get(&quot;sidebar_items&quot;).getValue());</span>
+
+<span class="nc" id="L141">			sidebarJSON.put(fieldset, position);</span>
+<span class="nc" id="L142">			userAdminSettings.put(&quot;sidebar_items&quot;, new SettingsAdminBean(userId, &quot;sidebar_items&quot;, sidebarJSON.toString()));</span>
+		}
+<span class="nc" id="L144">		catch(Exception e)</span>
+		{
+<span class="nc" id="L146">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L147">		}</span>
+
+<span class="nc" id="L149">		return SettingsAdminDB.setSettings(userId, userAdminSettings);	//dolezite ulozit vsetky zmeny v nastaveniach spat do DB</span>
+	}
+
+	/**
+	 * Odstrani polozku(fieldset) zo sidebaru editora pre pouzivatela s identifikatorom userId
+	 *
+	 * @param fieldset	pole, ktore chceme pridat do sidebaru
+	 * @param userId		identifikator pouzivatela, pre ktoreho akciu vykonavame
+	 *
+	 * @return true, ak sa operacia podari, inak false
+	 */
+	public static boolean removeFromEditorSidebar(String fieldset, int userId)
+	{
+<span class="nc bnc" id="L162" title="All 4 branches missed.">		if (Tools.isEmpty(fieldset) || userId &lt; 0)</span>
+<span class="nc" id="L163">			return false;</span>
+
+<span class="nc" id="L165">		Map&lt;String, SettingsAdminBean&gt; userAdminSettings = SettingsAdminDB.getSettings(userId);</span>
+		JSONObject sidebarJSON;
+<span class="nc" id="L167">		int removedPosition = 0;</span>
+
+		try
+		{
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (userAdminSettings.get(&quot;sidebar_items&quot;) != null)</span>
+			{
+<span class="nc" id="L173">				sidebarJSON = new JSONObject(userAdminSettings.get(&quot;sidebar_items&quot;).getValue());</span>
+<span class="nc" id="L174">				removedPosition = sidebarJSON.getInt(fieldset);</span>
+<span class="nc" id="L175">				sidebarJSON.remove(fieldset);</span>
+
+				//uprava ostatnych pozicii podla odstranenej
+<span class="nc bnc" id="L178" title="All 2 branches missed.">				if (sidebarJSON.length() &gt; 0)</span>
+				{
+<span class="nc bnc" id="L180" title="All 2 branches missed.">   				for(String key : JSONObject.getNames(sidebarJSON))</span>
+   				{
+<span class="nc bnc" id="L182" title="All 2 branches missed.">   					if(sidebarJSON.getInt(key) &gt; removedPosition)</span>
+<span class="nc" id="L183">   						sidebarJSON.put(key, (sidebarJSON.getInt(key) -1));</span>
+   				}
+				}
+
+<span class="nc" id="L187">				userAdminSettings.put(&quot;sidebar_items&quot;, new SettingsAdminBean(userId, &quot;sidebar_items&quot;, sidebarJSON.toString()));</span>
+			}
+			else
+<span class="nc" id="L190">				return false;</span>
+
+		}
+<span class="nc" id="L193">		catch(Exception e)</span>
+		{
+<span class="nc" id="L195">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L196">		}</span>
+
+<span class="nc" id="L198">		return SettingsAdminDB.setSettings(userId, userAdminSettings);	//dolezite ulozit vsetky zmeny v nastaveniach spat do DB</span>
+	}
+
+	/**
+	 * Vrati vsetky polozky, ktore sa nachadzaju v sidebare pre pouzivatela s identifikatorom userId
+	 *
+	 * @param userId	identifikator pouzivatela
+	 *
+	 * @return Polozky v sidebare v notacii JSON, kde kluc je nazov polozky a hodnota je jej pozicia
+	 */
+	public static String getItemsEditorSidebar(int userId)
+	{
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (userId &lt; 0)</span>
+<span class="nc" id="L211">			return null;</span>
+
+<span class="nc" id="L213">		Map&lt;String, SettingsAdminBean&gt; userAdminSettings = SettingsAdminDB.getSettings(userId);</span>
+		JSONObject sidebarJSON;
+
+		try
+		{
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (userAdminSettings.get(&quot;sidebar_items&quot;) != null)</span>
+			{
+<span class="nc" id="L220">				sidebarJSON = new JSONObject(userAdminSettings.get(&quot;sidebar_items&quot;).getValue());</span>
+<span class="nc" id="L221">				return sidebarJSON.toString();</span>
+			}
+			else
+<span class="nc" id="L224">				return null;</span>
+
+		}
+<span class="nc" id="L227">		catch(Exception e)</span>
+		{
+<span class="nc" id="L229">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L230">			return null;</span>
+		}
+	}
+
+	/**
+	 * Metoda vrati povolene kategorie pre jednotlive moduly
+	 * @param userId userId
+	 * @param moduleItems zoznamModulov pre useredit
+	 * @return
+	 */
+	public static Map&lt;String, SettingsAdminBean&gt; getModuleCategoriesSetting(int userId, List&lt;ModuleInfo&gt; moduleItems)
+	{
+<span class="nc" id="L242">		Map&lt;String, SettingsAdminBean&gt; userAdminSettings = getSettings(userId);</span>
+<span class="nc" id="L243">		Map&lt;String,SettingsAdminBean&gt; categoriesSettings = new HashMap&lt;String, SettingsAdminBean&gt;();</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		for(ModuleInfo mi : moduleItems)</span>
+		{
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if(userAdminSettings.get(mi.getNameKey())!= null)</span>
+			{
+<span class="nc" id="L248">				categoriesSettings.put(mi.getNameKey(), userAdminSettings.get(mi.getNameKey()));</span>
+			}
+<span class="nc" id="L250">		}</span>
+
+<span class="nc" id="L252">		return categoriesSettings;</span>
+
+	}
+
+	/**
+	 * Skontroluje ci ma user pravo pristupovat k danej kategorii v module
+	 * @param group kategoria
+	 * @param user user
+	 * @param cmpName modul
+	 * @return
+	 */
+	public static boolean canUserAccess(String group, Identity user, String cmpName)
+	{
+<span class="nc" id="L265">		Map&lt;String,SettingsAdminBean&gt; settings = SettingsAdminDB.getSettings(user.getUserId());</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if(settings.get(cmpName) == null){</span>
+<span class="nc" id="L267">			return true;</span>
+		}
+		else{
+<span class="nc" id="L270">			return getAllowedCategories(settings,cmpName ).contains(group);</span>
+		}
+	}
+
+	/**
+	 * Ak existuje nastavenie pre dany cmpName tak z neho spravi zoznam kategorii
+	 * @param settings
+	 * @param cmpName
+	 * @return zoznam otrimovanych kategorii alebo null ak nastavenie v settingAdmin neexistuje
+	 */
+	public static List&lt;String&gt; getAllowedCategories(Map&lt;String, SettingsAdminBean&gt; settings, String cmpName)
+	{
+<span class="fc" id="L282">		List&lt;String&gt; allowed = null;</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">		if(settings.get(cmpName) == null)</span>
+<span class="fc" id="L284">			return null;</span>
+		else
+		{
+<span class="nc" id="L287">			allowed = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L288">			SettingsAdminBean setting = settings.get(cmpName);</span>
+<span class="nc" id="L289">			String[] categoriesArray = setting.getValue().trim().split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			for(String cat : categoriesArray)</span>
+			{
+<span class="nc" id="L292">				allowed.add(cat.trim());</span>
+			}
+		}
+<span class="nc" id="L295">		return allowed;</span>
+	}
+
+
+	/**
+	 * Meotda vyfiltruje list beanov podla povoloenych kategorii na zaklade propertyName. Ak je zoznam povolenych kategorii prazdny alebo null
+	 * nefiltruje sa.
+	 * @param &lt;T&gt; Cokolvek co sa da filtrovat podla nejakej skupiny
+	 * @param beans List objektov na filtrovanie
+	 * @param propertyName meno property so skupinou, kategoriou alebo cimkolvek podla coho sa ma filtrovat
+	 * @param allowedCategories zoznam povolenych kategorii
+	 * @return
+	 */
+	public static &lt;T&gt; List&lt;T&gt; filterBeansByUserAllowedCategories(List&lt;T&gt; beans,String propertyName, List&lt;String&gt; allowedCategories)
+	{
+<span class="nc" id="L310">		List&lt;T&gt; result = null;</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		if(allowedCategories != null)</span>
+		{
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			if(allowedCategories.size() &gt; 0)</span>
+			{
+				try
+				{
+<span class="nc" id="L317">					result = new ArrayList&lt;T&gt;(beans.size());</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">					for (T bean : beans)</span>
+					{
+<span class="nc bnc" id="L320" title="All 2 branches missed.">						if (allowedCategories.contains(BeanUtils.getProperty(bean, propertyName).trim()))</span>
+						{
+<span class="nc" id="L322">							result.add(bean);</span>
+						}
+<span class="nc" id="L324">					}</span>
+				}
+<span class="nc" id="L326">				catch (NoSuchMethodException e)</span>
+				{
+<span class="nc" id="L328">					Logger.debug(SettingsAdminDB.class, &quot;Unable to filter beans: &quot; + e.getMessage());</span>
+<span class="nc" id="L329">					result = beans;</span>
+				}
+<span class="nc" id="L331">				catch (IllegalAccessException e)</span>
+				{
+<span class="nc" id="L333">					Logger.debug(SettingsAdminDB.class, &quot;Unable to filter beans: &quot; + e.getMessage());</span>
+<span class="nc" id="L334">					result = beans;</span>
+				}
+<span class="nc" id="L336">				catch (InvocationTargetException e)</span>
+				{
+<span class="nc" id="L338">					Logger.debug(SettingsAdminDB.class, &quot;Unable to filter beans: &quot; + e.getMessage());</span>
+<span class="nc" id="L339">					result = beans;</span>
+<span class="nc" id="L340">				}</span>
+
+			}
+		}
+		else
+		{
+<span class="nc" id="L346">			result = beans;</span>
+		}
+<span class="nc" id="L348">		return result;</span>
+
+	}
+
+	/**
+	 *
+	 * @param &lt;T&gt; Cokolvek co sa da filtrovat podla nejakej skupiny
+	 * @param beans List objektov na filtrovanie
+	 * @param propertyName meno property so skupinou, kategoriou alebo cimkolvek podla coho sa ma filtrovat
+	 * @param userId id usera
+	 * @param cmpName meno prava pre komponentu
+	 * @return vyfiltrovany list objektov, ak nie su nastavene ziadne obmedzenia na kategorie alebo su prazdne vrati nevyfiltrovany zoznam
+	 */
+	public static &lt;T&gt; List&lt;T&gt; filterBeansByUserAllowedCategories(List&lt;T&gt; beans,String propertyName, int userId, String cmpName)
+	{
+<span class="nc" id="L363">		List&lt;String&gt; allowedCategories = getAllowedCategories(getSettings(userId), cmpName);</span>
+<span class="nc" id="L364">		return filterBeansByUserAllowedCategories(beans, propertyName, allowedCategories);</span>
+	}
+
+	/**
+	 *
+	 * @param &lt;T&gt; Cokolvek co sa da filtrovat podla nejakej skupiny
+	 * @param beans List objektov na filtrovanie
+	 * @param propertyName meno property so skupinou, kategoriou alebo cimkolvek podla coho sa ma filtrovat
+	 * @param user user
+	 * @param cmpName meno prava pre komponentu
+	 * @return vyfiltrovany list objektov, ak nie su nastavene ziadne obmedzenia na kategorie alebo su prazdne vrati nevyfiltrovany zoznam
+	 */
+	public static &lt;T&gt; List&lt;T&gt; filterBeansByUserAllowedCategories(List&lt;T&gt; beans,String propertyName, UserDetails user, String cmpName)
+	{
+<span class="nc" id="L378">		List&lt;String&gt; allowedCategories = getAllowedCategories(user.getAdminSettings(), cmpName);</span>
+<span class="nc" id="L379">		return filterBeansByUserAllowedCategories(beans, propertyName, allowedCategories);</span>
+	}
+
+	/**
+	 * zmeni existujuce, alebo vytvori nove nastavenie. Ak userSettingsId&gt;0 tak zmeni podla userSettingsId, inak podla userId a sKey
+	 *
+	 * @param setting
+	 * @return
+	 */
+	public static boolean setSetting(SettingsAdminBean setting)
+	{
+<span class="fc" id="L390">		boolean saveOk = false;</span>
+<span class="pc bpc" id="L391" title="4 of 6 branches missed.">		if(setting!=null &amp;&amp; (setting.getSkey()!=null || setting.getUserSettingsId()&gt;0))</span>
+		{
+			//ak nemame zadane userSettingsId, tak ho zistime z DB
+<span class="fc" id="L394">			SettingsAdminBean oldSetting = null;</span>
+<span class="pc bpc" id="L395" title="1 of 2 branches missed.">			if(setting.getUserSettingsId()&gt;0)</span>
+<span class="nc" id="L396">				oldSetting = setting;</span>
+			else
+<span class="fc" id="L398">				oldSetting = getSetting(setting.getUserSettingsId(), setting.getUserId(), setting.getSkey());</span>
+			try
+			{
+				//ak setting v DB neexistuje
+<span class="pc bpc" id="L402" title="2 of 4 branches missed.">				if(oldSetting!=null &amp;&amp; oldSetting.getUserSettingsId()&gt;0)</span>
+<span class="fc" id="L403">					new SimpleQuery().execute(&quot;UPDATE user_settings_admin SET user_id=?, skey=?, value=? WHERE user_settings_admin_id=?&quot;, setting.getUserId(), DB.prepareString(setting.getSkey(), 255), DB.prepareString(setting.getValue(), 4000), oldSetting.getUserSettingsId());</span>
+				else
+<span class="nc" id="L405">					new SimpleQuery().execute(&quot;INSERT INTO user_settings_admin (user_id, skey, value) VALUES (?, ?, ?)&quot;, setting.getUserId(), DB.prepareString(setting.getSkey(), 255), DB.prepareString(setting.getValue(), 4000));</span>
+<span class="fc" id="L406">				saveOk = true;</span>
+			}
+<span class="nc" id="L408">			catch (Exception e)</span>
+			{
+<span class="nc" id="L410">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L411">				saveOk = false;</span>
+<span class="fc" id="L412">			}</span>
+		}
+<span class="fc" id="L414">		return saveOk;</span>
+	}
+
+	/**
+	 * vymaze nastavenie z DB. Ak userSettingsId&gt;0 tak vymaze podla userSettingsId, inak podla userId a sKey
+	 *
+	 * @param setting
+	 * @return
+	 */
+	public static boolean deleteSetting(SettingsAdminBean setting)
+	{
+<span class="nc" id="L425">		boolean delOk = false;</span>
+<span class="nc bnc" id="L426" title="All 6 branches missed.">		if(setting!=null &amp;&amp; (setting.getSkey()!=null || setting.getUserSettingsId()&gt;0))</span>
+		{
+			try
+			{
+<span class="nc bnc" id="L430" title="All 2 branches missed.">				if(setting.getUserSettingsId()&gt;0)</span>
+<span class="nc" id="L431">					new SimpleQuery().execute(&quot;DELETE FROM user_settings_admin WHERE user_settings_admin_id=?&quot;, setting.getUserSettingsId());</span>
+				else
+<span class="nc" id="L433">					new SimpleQuery().execute(&quot;DELETE FROM user_settings_admin WHERE user_id=? AND skey=?&quot;, setting.getUserId(), DB.prepareString(setting.getSkey(), 255));</span>
+<span class="nc" id="L434">				delOk = true;</span>
+			}
+<span class="nc" id="L436">			catch (Exception e)</span>
+			{
+<span class="nc" id="L438">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L439">				delOk = false;</span>
+<span class="nc" id="L440">			}</span>
+		}
+<span class="nc" id="L442">		return delOk;</span>
+	}
+
+	/**
+	 * vrati SettingsAdminBean z DB. Ak userSettingsId&gt;0 tak najde podla userSettingsId, inak podla userId a sKey
+	 *
+	 * @param userSettingsId
+	 * @param userId
+	 * @param sKey
+	 * @return
+	 */
+	public static SettingsAdminBean getSetting(int userSettingsId, int userId, String sKey)
+	{
+<span class="fc" id="L455">		List&lt;SettingsAdminBean&gt; resultList = null;</span>
+
+		try
+		{
+<span class="fc" id="L459">			StringBuilder sql = new StringBuilder();</span>
+<span class="pc bpc" id="L460" title="1 of 2 branches missed.">			if(userSettingsId&gt;0)</span>
+			{
+<span class="nc" id="L462">				sql.append(&quot;SELECT * FROM user_settings_admin WHERE user_settings_admin_id = ? &quot;);</span>
+<span class="nc" id="L463">				resultList = new ComplexQuery().setSql(sql.toString()).setParams(userSettingsId).list(new Mapper&lt;SettingsAdminBean&gt;()</span>
+<span class="nc" id="L464">			      {</span>
+			      	@Override
+			         public SettingsAdminBean map(ResultSet rs) throws SQLException
+			         {
+<span class="nc" id="L468">			         	SettingsAdminBean setting = new SettingsAdminBean(rs.getInt(&quot;user_settings_admin_id&quot;), rs.getInt(&quot;user_id&quot;), DB.getDbString(rs, &quot;skey&quot;), DB.getDbString(rs, &quot;value&quot;));</span>
+<span class="nc" id="L469">			         	return setting;</span>
+			         }
+			      });
+			}
+			else
+			{
+<span class="fc" id="L475">				sql.append(&quot;SELECT * FROM user_settings_admin WHERE user_id = ? AND skey=?&quot;);</span>
+<span class="fc" id="L476">				resultList = new ComplexQuery().setSql(sql.toString()).setParams(userId, sKey).list(new Mapper&lt;SettingsAdminBean&gt;()</span>
+<span class="fc" id="L477">			      {</span>
+			      	@Override
+			         public SettingsAdminBean map(ResultSet rs) throws SQLException
+			         {
+<span class="fc" id="L481">			         	SettingsAdminBean setting = new SettingsAdminBean(rs.getInt(&quot;user_settings_admin_id&quot;), rs.getInt(&quot;user_id&quot;), DB.getDbString(rs, &quot;skey&quot;), DB.getDbString(rs, &quot;value&quot;));</span>
+<span class="fc" id="L482">			         	return setting;</span>
+			         }
+			      });
+			}
+
+		}
+<span class="nc" id="L488">		catch (Exception e)</span>
+		{
+<span class="nc" id="L490">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L491">		}</span>
+
+<span class="pc bpc" id="L493" title="2 of 4 branches missed.">		if(resultList!=null &amp;&amp; resultList.size()==1)</span>
+<span class="fc" id="L494">			return resultList.get(0);</span>
+		else
+<span class="nc" id="L496">			return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

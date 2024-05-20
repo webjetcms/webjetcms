@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractIwcmAttributeTagProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring.webjet_component.dialect</a> &gt; <span class="el_source">AbstractIwcmAttributeTagProcessor.java</span></div><h1>AbstractIwcmAttributeTagProcessor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring.webjet_component.dialect;
+
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.engine.AttributeName;
+import org.thymeleaf.model.IProcessableElementTag;
+import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
+import org.thymeleaf.processor.element.IElementTagStructureHandler;
+import org.thymeleaf.templatemode.TemplateMode;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * Abstraktna trieda pre Thymeleaf TagProcessor - spracovanie iwcm tagov
+ * spracovava len otvaraci tag, ignoruje jeho body
+ */
+public abstract class AbstractIwcmAttributeTagProcessor extends AbstractAttributeTagProcessor {
+
+    /**
+     * POZOR: tu nesmu byt ziadne private atributy, ktore su zavisle na requeste
+     * tato trieda vznikne len raz a je multithreadova, takze hodnoty by sa
+     * prepisovali
+     * preto je cela implementacia spravena cez staticke metody
+     */
+
+    protected AbstractIwcmAttributeTagProcessor(String dialectPrefix, String attrName, int precedence) {
+<span class="fc" id="L26">        super(</span>
+                TemplateMode.HTML, // This processor will apply only to HTML mode
+                dialectPrefix,     // Prefix to be applied to name for matching
+                null,              // No tag name: match any tag name
+                false,             // No prefix to be applied to tag name
+                attrName,         // Name of the attribute that will be matched
+                true,              // Apply dialect prefix to attribute name
+                precedence,        // Precedence (inside dialect's precedence)
+                true);             // Remove the matched attribute afterwards
+<span class="fc" id="L35">    }</span>
+
+    protected abstract void processTag(ITemplateContext context, IProcessableElementTag tag, String attributeValue, IElementTagStructureHandler structureHandler, HttpServletRequest request);
+
+    @Override
+    protected void doProcess(ITemplateContext iTemplateContext, IProcessableElementTag iProcessableElementTag, AttributeName attributeName, String attributeValue, IElementTagStructureHandler iElementTagStructureHandler) {
+<span class="fc" id="L41">        HttpServletRequest request = (HttpServletRequest) iTemplateContext.getVariable(&quot;request&quot;);</span>
+<span class="fc" id="L42">        processTag(iTemplateContext, iProcessableElementTag, attributeValue, iElementTagStructureHandler, request);</span>
+<span class="fc" id="L43">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

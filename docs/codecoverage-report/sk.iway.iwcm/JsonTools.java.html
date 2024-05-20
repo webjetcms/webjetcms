@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsonTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">JsonTools.java</span></div><h1>JsonTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ *  Zakladna praca s JSON objektami
+ */
+public class JsonTools
+{
+	private JsonTools() {
+		//private constructor
+	}
+
+	/**
+	 * Vycisti html kod od includov a inych balastov
+	 * @param html html kod
+	 * @param request request
+	 * @return
+	 * @author mhalas
+	 */
+	public static String prepare4Json(String html, HttpServletRequest request)
+	{
+<span class="pc bpc" id="L33" title="2 of 4 branches missed.">		if(html == null || request == null) throw new IllegalArgumentException(&quot;html nor request can't be null&quot;);</span>
+<span class="fc" id="L34">		html = html.replace(&quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;,&quot;&quot;);</span>
+<span class="fc" id="L35">		html = html.replaceAll(&quot;!INCLUDE.*?\\)!&quot;,&quot;&quot;);</span>
+<span class="fc" id="L36">		html = html.replaceAll(&quot;&lt;img[\\s\\S]*?src=[\&quot;'](\\/[\\s\\S]*?)[\&quot;'][\\s\\S]*?&gt;&quot;, &quot;&lt;img src=\&quot;&quot;+Tools.getBaseHref(request)+&quot;/thumb$1?w=320&amp;amp;h=480\&quot; thumb=\&quot;http://&quot;+Tools.getServerName(request)+&quot;/thumb$1?w=300&amp;amp;h=100\&quot; /&gt;&quot;);</span>
+<span class="fc" id="L37">		html = html.replaceAll(&quot;&lt;a[\\s\\S]*?name=['\&quot;]([\\s\\S]*?)['\&quot;].*&lt;[\\S]*?a&gt;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L38">		html = html.replaceAll(&quot;&lt;a[\\s\\S]*?href=['\&quot;](\\/[\\s\\S]*?)['\&quot;]&quot;, &quot;&lt;a href=\&quot;&quot;+Tools.getBaseHref(request)+&quot;$1\&quot;&quot;);</span>
+<span class="fc" id="L39">		html = html.replaceAll(&quot;&lt;object[\\s\\S]*?src=[\&quot;']http://www.youtube.com/v/([\\s\\S]*?)(&amp;[\\s\\S]*?)??[\&quot;'][\\s\\S]*?&gt;[\\s\\S]*?&lt;/object&gt;&quot;, &quot;&lt;youtube&gt;http://www.youtube.com/watch?v=$1&lt;/youtube&gt;&quot;);</span>
+<span class="fc" id="L40">		html = html.replaceAll(&quot;style=[\&quot;']([\\s\\S]*?)[\&quot;']&quot;, &quot;&quot;);</span>
+<span class="fc" id="L41">		return html;</span>
+	}
+
+	/**
+	 * Upravi retazec aby mohol byt bezpecne vlozeny do uvodzoviek vramci bezneho JSP vypisu &quot;premenna&quot;: &quot;hodnota&quot;
+	 * @param text
+	 * @return
+	 */
+	public static String escape(String text)
+	{
+<span class="nc" id="L51">		return Tools.replace(text, &quot;\&quot;&quot;, &quot;\\\&quot;&quot;);</span>
+	}
+
+	/**
+	 * Spravi z nested json objektu flat strukturu
+	 * @param object
+	 * @param flattened
+	 * @return
+	 */
+	public static JSONObject flatten(JSONObject object, JSONObject flattened){
+<span class="nc bnc" id="L61" title="All 2 branches missed.">	    if(flattened == null){</span>
+<span class="nc" id="L62">	        flattened = new JSONObject();</span>
+	    }
+<span class="nc" id="L64">	    Iterator&lt;?&gt; keys = object.keys();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">	    while(keys.hasNext()){</span>
+<span class="nc" id="L66">	        String key = (String)keys.next();</span>
+	        try {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">	            if(object.get(key) instanceof JSONObject){</span>
+<span class="nc" id="L69">	            	flatten(object.getJSONObject(key), flattened);</span>
+	            } else {
+<span class="nc" id="L71">	                flattened.put(key, object.get(key));</span>
+	            }
+<span class="nc" id="L73">	        } catch(JSONException e){</span>
+<span class="nc" id="L74">	           Logger.debug(JsonTools.class,e.getMessage());</span>
+<span class="nc" id="L75">	        }</span>
+<span class="nc" id="L76">	    }</span>
+<span class="nc" id="L77">	    return flattened;</span>
+	}
+
+	public static String objectToJSON(Object object) throws JsonProcessingException {
+<span class="fc" id="L81">        ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L82">        return mapper.writeValueAsString(object);</span>
+    }
+
+	/**
+	 * Zo zadaneho JSON retazca vytvori mapu kluc:hodnota pricom kluce zlozi aj do vnorenych atributov typu kluc.subkluc.tretiauroven:hodnota
+	 * @param json
+	 * @param baseKey
+	 * @param myMap
+	 * @return
+	 */
+	private static Map&lt;String, String&gt; getKeyValuesNested(JSONObject json, String baseKey, Map&lt;String,String&gt; myMap) {
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (myMap == null) myMap = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">		if (baseKey == null) baseKey = &quot;&quot;;</span>
+
+<span class="fc" id="L96">		int curLen =  json.length();</span>
+		Iterator&lt;String&gt; keys;
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if(curLen&gt;1) {</span>
+<span class="fc" id="L99">			keys = json.keys();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">			while(keys.hasNext()){</span>
+<span class="fc" id="L101">				String nextKeys = keys.next();</span>
+				try {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">					if(json.get(nextKeys) instanceof  JSONObject) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">						if(curLen&gt;1) {</span>
+<span class="nc" id="L105">							getKeyValuesNested(json.getJSONObject(nextKeys), baseKey+nextKeys+&quot;.&quot;, myMap);</span>
+						}
+					}
+					else{
+<span class="fc" id="L109">						Object ansKey =  json.get(nextKeys);</span>
+<span class="fc" id="L110">						myMap.put(baseKey+nextKeys,ansKey.toString());</span>
+					}
+				}
+<span class="nc" id="L113">				catch (Exception e) {</span>
+<span class="nc" id="L114">					Logger.error(JsonTools.class, e);</span>
+<span class="fc" id="L115">				}</span>
+<span class="fc" id="L116">			}</span>
+		}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		else if(curLen == 1) {</span>
+			try {
+				//Dont know what is purpose of this ...
+				//Yust adding has() control so it wont throu exception
+<span class="nc" id="L122">				String key = json.toString();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				if(json.has(key)) {</span>
+<span class="nc" id="L124">					Object ansKey = json.get(key);</span>
+<span class="nc" id="L125">					myMap.put(baseKey+json.toString(),ansKey.toString());</span>
+				}
+			}
+<span class="nc" id="L128">			catch (Exception e) {</span>
+<span class="nc" id="L129">				Logger.error(JsonTools.class, e);</span>
+<span class="nc" id="L130">			}</span>
+		}
+<span class="fc" id="L132">		return myMap;</span>
+	}
+
+	/**
+	 * Vrati hodnotu z JSON retazca podla zadaneho kluca
+	 * @param json
+	 * @param key - kluc vratane moznosti vnarania kluc.druhauroven.tretia
+	 * @return
+	 */
+	public static String getValue(String json, String key) {
+		try {
+<span class="fc" id="L143">			JSONObject jsondata = new JSONObject(json);</span>
+
+<span class="fc" id="L145">			Map&lt;String, String&gt; keyValues = getKeyValuesNested(jsondata, null, null);</span>
+
+<span class="fc" id="L147">			return keyValues.get(key);</span>
+<span class="nc" id="L148">		} catch (Exception e) {</span>
+<span class="nc" id="L149">			Logger.error(JsonTools.class, e);</span>
+		}
+<span class="nc" id="L151">		return null;</span>
+	}
+
+	/**
+	 * Vrati boolean hodnotu z JSON retazca podla zadaneho kluca
+	 * @param json
+	 * @param key - kluc vratane moznosti vnarania kluc.druhauroven.tretia
+	 * @return
+	 */
+	public static boolean getBooleanValue(String json, String key) {
+<span class="nc" id="L161">		String value = getValue(json, key);</span>
+<span class="nc" id="L162">		return &quot;true&quot;.equals(value);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

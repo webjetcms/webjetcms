@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsSecurityCheckerChain.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FsSecurityCheckerChain.java</span></div><h1>FsSecurityCheckerChain.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsSecurityChecker;
+import cn.bluejoe.elfinder.service.FsService;
+
+<span class="fc" id="L11">public class FsSecurityCheckerChain implements FsSecurityChecker</span>
+{
+<span class="fc" id="L13">	private static final FsSecurityChecker DEFAULT_SECURITY_CHECKER = new FsSecurityCheckForAll();</span>
+
+<span class="fc" id="L15">	List&lt;FsSecurityCheckFilterMapping&gt; _filterMappings = new ArrayList&lt;FsSecurityCheckFilterMapping&gt;();</span>
+
+	private FsSecurityChecker getChecker(FsService fsService, FsItem fsi) throws IOException
+	{
+<span class="fc" id="L19">		String hash = fsService.getHash(fsi);</span>
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">		for (FsSecurityCheckFilterMapping mapping : _filterMappings)</span>
+		{
+<span class="nc bnc" id="L22" title="All 2 branches missed.">			if (mapping.matches(hash))</span>
+			{
+<span class="nc" id="L24">				return mapping.getChecker();</span>
+			}
+<span class="nc" id="L26">		}</span>
+
+<span class="fc" id="L28">		return DEFAULT_SECURITY_CHECKER;</span>
+	}
+
+	public List&lt;FsSecurityCheckFilterMapping&gt; getFilterMappings()
+	{
+<span class="nc" id="L33">		return _filterMappings;</span>
+	}
+
+	@Override
+	public boolean isLocked(FsService fsService, FsItem fsi) throws IOException
+	{
+<span class="fc" id="L39">		return getChecker(fsService, fsi).isLocked(fsService, fsi);</span>
+	}
+
+	@Override
+	public boolean isReadable(FsService fsService, FsItem fsi) throws IOException
+	{
+<span class="fc" id="L45">		return getChecker(fsService, fsi).isReadable(fsService, fsi);</span>
+	}
+
+	@Override
+	public boolean isWritable(FsService fsService, FsItem fsi) throws IOException
+	{
+<span class="fc" id="L51">		return getChecker(fsService, fsi).isWritable(fsService, fsi);</span>
+	}
+
+	public void setFilterMappings(List&lt;FsSecurityCheckFilterMapping&gt; filterMappings)
+	{
+<span class="nc" id="L56">		_filterMappings = filterMappings;</span>
+<span class="nc" id="L57">	}</span>
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

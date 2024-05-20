@@ -97,6 +97,7 @@ Scenario('Over importovanie web stránok z Excel súboru', async ({ I, DT, DTE }
     I.say("Do all Excel import checks");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + folderId);
     DT.waitForLoader();
+    DT.waitForLoader();
 
     //Main imported folder
     I.jstreeClick("Aktuality");

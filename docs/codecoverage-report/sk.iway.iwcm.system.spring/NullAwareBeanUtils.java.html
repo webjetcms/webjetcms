@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NullAwareBeanUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">NullAwareBeanUtils.java</span></div><h1>NullAwareBeanUtils.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
+
+import java.util.*;
+
+public class NullAwareBeanUtils {
+
+    //privatny konstruktor, toto je utility trieda a neinstancuje sa
+    private NullAwareBeanUtils() {}
+
+    public static void copyProperties(Object source, Object target) throws BeansException {
+<span class="fc" id="L16">        List&lt;String&gt; alwaysCopy = null;</span>
+<span class="fc" id="L17">        copyProperties(source, target, alwaysCopy, (String[]) null);</span>
+<span class="fc" id="L18">    }</span>
+
+    /**
+     * Copies properties from one object to another
+     * @param source
+     * @destination
+     * @return
+     */
+    public static void copyProperties(Object source, Object destination, String... ignoreProperties){
+<span class="nc" id="L27">        List&lt;String&gt; alwaysCopy = null;</span>
+<span class="nc" id="L28">        copyProperties(source, destination, alwaysCopy, ignoreProperties);</span>
+<span class="nc" id="L29">    }</span>
+
+    /**
+     * Skopiruje atributy zo source objektu do destination
+     * @param source
+     * @param destination
+     * @param alwaysCopyProperties - zoznam properties, ktore sa skopiruju aj ked su Null (typicky Date property)
+     * @param ignoreProperties - zoznam properties, ktore sa ignoruju a nebudu sa kopirovat
+     */
+    public static void copyProperties(Object source, Object destination, List&lt;String&gt; alwaysCopyProperties, String... ignoreProperties){
+<span class="fc" id="L39">        List&lt;String&gt; ignore = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L40" title="3 of 4 branches missed.">        if (ignoreProperties != null &amp;&amp; ignoreProperties.length&gt;0) {</span>
+<span class="nc" id="L41">            ignore.addAll(Arrays.asList(ignoreProperties));</span>
+        }
+<span class="fc" id="L43">        ignore.addAll(getNullPropertyNames(source));</span>
+
+<span class="fc bfc" id="L45" title="All 4 branches covered.">        if (alwaysCopyProperties!=null &amp;&amp; alwaysCopyProperties.isEmpty()==false) {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            for (String property : alwaysCopyProperties) {</span>
+<span class="fc" id="L47">                ignore.remove(property);</span>
+<span class="fc" id="L48">            }</span>
+        }
+
+<span class="fc" id="L51">        BeanUtils.copyProperties(source, destination, ignore.toArray(new String[0]));</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Returns an {@link Collection} of null properties of an object
+     * @param source
+     * @return
+     */
+    private static Collection&lt;String&gt; getNullPropertyNames (Object source) {
+<span class="fc" id="L60">        final BeanWrapper src = new BeanWrapperImpl(source);</span>
+<span class="fc" id="L61">        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();</span>
+
+<span class="fc" id="L63">        Set&lt;String&gt; emptyNames = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for(java.beans.PropertyDescriptor pd : pds) {</span>
+<span class="fc" id="L65">            Object srcValue = null;</span>
+            try {
+<span class="fc" id="L67">                srcValue = src.getPropertyValue(pd.getName());</span>
+<span class="fc" id="L68">            } catch (Exception ex) {</span>
+                //property sa neda ziskat, asi nema getter, preskocime ju
+<span class="fc" id="L70">            }</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (srcValue == null) emptyNames.add(pd.getName());</span>
+        }
+
+<span class="fc" id="L74">        return emptyNames;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

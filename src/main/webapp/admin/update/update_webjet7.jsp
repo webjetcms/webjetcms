@@ -211,8 +211,7 @@ if (Constants.getBoolean("statEnableTablePartitioning")==false)
 
 		   actualViewId += viewIdStep;
 
-		   if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);
-		   else ps.setFetchSize(100);
+		   ps.setFetchSize(100);
 		   rs = ps.executeQuery();
 
 		   printLine(log, out, "Data readed. "+dt.getLastDiff()+" ms");
@@ -341,8 +340,7 @@ if (Constants.getBoolean("statWebJET7Converted")==false)
 
 	   //ORDER BY view_id ASC
 	   ps = db_conn.prepareStatement("SELECT * FROM stat_browser", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
-	   if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);
-	   else ps.setFetchSize(100);
+	   ps.setFetchSize(100);
 	   rs = ps.executeQuery();
 
 	   printLine(log, out, "Data readed. "+dt.getLastDiff()+" ms");
@@ -425,8 +423,7 @@ if (Constants.getBoolean("statWebJET7Converted")==false)
 
 	   //ORDER BY view_id ASC
 	   ps = db_conn.prepareStatement("SELECT * FROM stat_country", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
-	   if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);
-	   else ps.setFetchSize(100);
+	   ps.setFetchSize(100);
 	   rs = ps.executeQuery();
 
 	   printLine(log, out, "Data readed. "+dt.getLastDiff()+" ms");
@@ -642,7 +639,11 @@ if (Constants.getBoolean("statWebJET7Converted")==false)
 		}
 		catch (Exception ex)
 		{
-		   sk.iway.iwcm.Logger.error(ex);
+		   if (ex.getMessage().contains("does not exist")) {
+			//stat table doesnt exists, it's ok
+		   } else {
+			sk.iway.iwcm.Logger.error(ex);
+		   }
 		}
 		finally
 		{

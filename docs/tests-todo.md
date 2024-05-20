@@ -10,6 +10,64 @@
 - [ ] #39751-46 Galéria - test nahratia obrázka, jeho otočenia (overenie otočenia porovnaním screenshotu).
 - [ ] Media - test keď používateľ nemá práva na všetky média, že ide editovať médium v stránke a pridať nové.
 
+## PostgreSQL
+
+```
+available=
+cacheable=
+is_admin=
+authorized=
+publicable=
+
+TO_CHAR(
+OFFSET - check limit
+
+/usr/local/opt/postgresql@16/bin/pg_dump -h publish.services.npp.int-dev.iway -p 10082 -U postgres -b -c -f wjdump.sql postgres
+/usr/local/opt/postgresql@16/bin/psql -f wjdump.sql
+
+#boolean->smallint
+ALTER TABLE wj.groups_scheduler ALTER COLUMN menu_type drop default;
+ALTER TABLE wj.groups_scheduler ALTER menu_type TYPE SMALLINT
+   USING CASE WHEN menu_type THEN 1 ELSE 0 END;
+ALTER TABLE wj.groups_scheduler ALTER COLUMN menu_type SET default 1;
+
+#smallint->boolean
+ALTER TABLE wj.groups ALTER COLUMN hidden_in_admin drop default;
+ALTER TABLE wj.groups ALTER COLUMN hidden_in_admin TYPE boolean
+   USING CASE WHEN hidden_in_admin = 0 THEN FALSE
+        WHEN hidden_in_admin = 1 THEN TRUE
+        ELSE NULL
+   END;
+ALTER TABLE wj.groups ALTER COLUMN hidden_in_admin SET default null;
+
+
+PGSQL local install:
+This formula has created a default database cluster with:
+  initdb --locale=C -E UTF-8 /usr/local/var/postgresql@16
+For more details, read:
+  https://www.postgresql.org/docs/16/app-initdb.html
+
+postgresql@16 is keg-only, which means it was not symlinked into /usr/local,
+because this is an alternate version of another formula.
+
+If you need to have postgresql@16 first in your PATH, run:
+  echo 'export PATH="/usr/local/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+
+For compilers to find postgresql@16 you may need to set:
+  export LDFLAGS="-L/usr/local/opt/postgresql@16/lib"
+  export CPPFLAGS="-I/usr/local/opt/postgresql@16/include"
+
+To start postgresql@16 now and restart at login:
+  brew services start postgresql@16
+Or, if you don't want/need a background service you can just run:
+  LC_ALL="C" /usr/local/opt/postgresql@16/bin/postgres -D /usr/local/var/postgresql@16
+==> Summary
+🍺  /usr/local/Cellar/postgresql@16/16.1_3: 3,796 files, 67.4MB
+==> Running `brew cleanup postgresql@16`...
+Disable this behaviour by setting HOMEBREW_NO_INSTALL_CLEANUP.
+Hide these hints with HOMEBREW_NO_ENV_HINTS (see `man brew`).
+```
+
 ## Java 17
 
 https://gitlab.web.iway.local/webjet/webjet8v9/-/merge_requests/250/diffs?commit_id=a81b6e01ae4911519cd3c17c5c286a478234de1b
@@ -196,7 +254,7 @@ Hashtable ... EmailDB.
 
 ## Zmena SQL
 
-Po prekliknuti na Kos v domene webjet9 ziskat ID priecinka Kos a nastavit:
+Po kliknutí na Kôš v doméne webjet9 získa5 ID priečinka Kôš a nastaviť:
 
 ```
 update groups set parent_group_id=45428 where parent_group_id=4574;

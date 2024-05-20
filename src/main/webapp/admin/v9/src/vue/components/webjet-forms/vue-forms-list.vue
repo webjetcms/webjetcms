@@ -26,7 +26,7 @@
                         className: "dt-row-edit",
                         renderFormat : "dt-format-text",
                         renderFormatLinkTemplate : "javascript:;",
-                        renderFormatPrefix : "<i class=\"far fa-eye\"></i> ",
+                        renderFormatPrefix : "<i class=\"ti ti-eye\"></i> ",
 
                         editor: {
                             type: "textarea"
@@ -93,7 +93,7 @@
                 this.formsListTable.button().add(3, {
                     extends: 'remove',
                     editor: that.formsListTable.EDITOR,
-                    text: '<i class="far fa-box-archive"></i>',
+                    text: '<i class="ti ti-archive"></i>',
                     action: function (e, dt, node) {
                         //console.log("Rotate, e=",e," dt=",dt," node=",node);
                         that.formsListTable.executeAction("archiveForm");

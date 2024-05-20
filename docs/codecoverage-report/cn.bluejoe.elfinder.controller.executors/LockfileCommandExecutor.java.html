@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LockfileCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">LockfileCommandExecutor.java</span></div><h1>LockfileCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="nc" id="L20">public class LockfileCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+
+	private static final long EVICT_TIME_SEC = 60;
+
+<span class="nc" id="L25">	private static final Map&lt;String,LockedFileInfoHolder&gt; LOCKED_FILES = new ConcurrentHashMap&lt;String,LockedFileInfoHolder&gt;();//LinkedList&lt;LockedFileInfoHolder&gt;();</span>
+
+
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="nc" id="L32">		String result = &quot;ok&quot;;</span>
+<span class="nc" id="L33">		String target = request.getParameter(&quot;target&quot;);</span>
+
+<span class="nc" id="L35">		FsItemEx fsi = super.findItem(fsService, target);</span>
+
+		// skontrolujem prava aby neprihlaseny uzivatel nemohol hlupo zablokovat cely filesystem
+
+<span class="nc" id="L39">		lockFile(fsi);</span>
+
+<span class="nc" id="L41">		updateLockedFiles();</span>
+
+<span class="nc" id="L43">		json.put(&quot;result&quot;, result);</span>
+<span class="nc" id="L44">	}</span>
+
+<span class="nc" id="L46">	public static class LockedFileInfoHolder</span>
+	{
+		protected String file;
+<span class="nc" id="L49">		protected Map&lt;Integer,Long&gt; userIds = new ConcurrentHashMap&lt;Integer,Long&gt;();;</span>
+
+		public String getFile()
+		{
+<span class="nc" id="L53">			return file;</span>
+		}
+
+
+
+	}
+
+	private static void updateLockedFiles()
+	{
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for (LockedFileInfoHolder l : LOCKED_FILES.values())</span>
+		{
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (!l.userIds.isEmpty())</span>
+			{
+<span class="nc bnc" id="L66" title="All 2 branches missed.">				for (Integer i : l.userIds.keySet())</span>
+				{
+<span class="nc bnc" id="L68" title="All 2 branches missed.">					if ((l.userIds.get(i)+(EVICT_TIME_SEC*1000)-Tools.getNow())&lt;0)</span>
+					{
+<span class="nc" id="L70">						l.userIds.remove(i);</span>
+
+					}
+<span class="nc" id="L73">				}</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">				if (l.userIds.isEmpty()) LOCKED_FILES.remove(l.file);</span>
+			}
+<span class="nc" id="L76">		}</span>
+<span class="nc" id="L77">	}</span>
+
+	public static boolean checkAndLock(FsItemEx fsi)
+	{
+<span class="nc" id="L81">		updateLockedFiles();</span>
+		try
+		{
+<span class="nc" id="L84">			return lockFile(fsi);</span>
+		}
+<span class="nc" id="L86">		catch (Exception e)</span>
+		{
+<span class="nc" id="L88">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L89">			return false;</span>
+		}
+
+	}
+	public static LockedFileInfoHolder check(FsItemEx fsi) throws Exception
+	{
+<span class="nc" id="L95">		updateLockedFiles();</span>
+<span class="nc" id="L96">		LockedFileInfoHolder lockedFile = LOCKED_FILES.get(fsi.getPath());</span>
+<span class="nc" id="L97">		return lockedFile;</span>
+	}
+
+	public static void unlock(FsItemEx fsi) throws IOException
+	{
+<span class="nc" id="L102">		updateLockedFiles();</span>
+<span class="nc" id="L103">		FsItemEx parent = fsi.getParent();</span>
+<span class="nc" id="L104">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L105" title="All 6 branches missed.">		if (user!=null &amp;&amp; parent!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), parent.getPath()))</span>
+		{
+			// uzivatel mam pravo na zapis
+<span class="nc" id="L108">			LockedFileInfoHolder lockedFile = LOCKED_FILES.get(fsi.getPath());</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">			if (lockedFile!=null &amp;&amp; lockedFile.userIds.containsKey(user.getUserId()))</span>
+			{
+<span class="nc" id="L111">				lockedFile.userIds.remove(user.getUserId());</span>
+				//ak ho uz nikto needituje, odstranim holder
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (lockedFile.userIds.isEmpty())</span>
+<span class="nc" id="L114">					LOCKED_FILES.remove(fsi.getPath());</span>
+			}
+		}
+<span class="nc" id="L117">	}</span>
+
+	private static boolean lockFile(FsItemEx fsi) throws Exception
+	{
+<span class="nc" id="L121">		FsItemEx parent = fsi.getParent();</span>
+<span class="nc" id="L122">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L123" title="All 6 branches missed.">		if (user!=null &amp;&amp; parent!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), parent.getPath()))</span>
+		{
+			// uzivatel mam pravo na zapis
+<span class="nc" id="L126">			LockedFileInfoHolder lockedFile = LOCKED_FILES.get(fsi.getPath());</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (lockedFile==null)</span>
+			{
+<span class="nc" id="L129">				lockedFile = new LockedFileInfoHolder();</span>
+<span class="nc" id="L130">				lockedFile.file = fsi.getPath();</span>
+
+			}
+			//skontrolujem ci ho naozaj on edituje
+
+<span class="nc" id="L135">			lockedFile.userIds.put(user.getUserId(), Tools.getNow());</span>
+<span class="nc" id="L136">			LOCKED_FILES.put(fsi.getPath(), lockedFile);</span>
+<span class="nc" id="L137">			Logger.debug(LockfileCommandExecutor.class, &quot;Updating file lock for file:&quot;+fsi.getPath()+&quot; userId:&quot;+user.getUserId());</span>
+
+<span class="nc" id="L139">		}</span>
+		else
+		{
+<span class="nc" id="L142">			return false;</span>
+		}
+<span class="nc" id="L144">		return true;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -18,6 +18,7 @@ Scenario('Enum screenshots', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
     enumTypeNameA = "Test_A_" + randomNumber;
     enumTypeNameB = "Test_B_" + randomNumber;
+    let confLng = I.getConfLng();
 
     //Data table
     Document.screenshot("/redactor/apps/enumeration/dataTable_enumType.png");
@@ -67,8 +68,14 @@ Scenario('Enum screenshots', async ({I, DT, DTE, Document}) => {
     //Delete enumTypeNameB
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    }
 
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
 
@@ -104,8 +111,14 @@ Scenario('Enum screenshots', async ({I, DT, DTE, Document}) => {
 
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    } else if("en" === confLng) { 
+        I.click("Delete", "div.DTE_Action_Remove");
+        I.see("No matching records found");
+    }
 });
 
 function openEnumType(I, DTE, enumTypeName) {

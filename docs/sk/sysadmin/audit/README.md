@@ -1,10 +1,9 @@
 # Audit
 
-Audit je nástroj pre sledovanie zmien v systéme. Umožňuje zobraziť a filtrovať jednotlivé zaznamenané hodnoty.
+Aplikácia Audit je nástroj pre sledovanie zmien v systéme. Sekcia Audit -> Vyhľadávanie umožňuje zobraziť a filtrovať jednotlivé zaznamenané hodnoty.
+Filtrovanie je možné podľa typu auditných záznamov, času, používateľa atď.
 
-V menu položke Zoznam notifikácií je možné nastaviť notifikácie pri určitých udalostiach / chybách systému. Odporúčame nastaviť notifikáciu pre udalosti typu XSS.
-
-Menu položka WEB Stránky umožňuje zobraziť prehľad zmien vo všetkých web stránkach od všetkých autorov.
+![](audit-search.png)
 
 # Typy auditných záznamov
 

@@ -13,7 +13,6 @@ Scenario('editor locking hlasenia', ({ I, DT, DTE, Document }) => {
     I.click("Koľko nôh ma pavúk ?");
     DTE.waitForEditor("qaDataTable");
 
-    //Odhlás sa
     I.relogin('tester2');
 
     I.amOnPage("/apps/qa/admin/");

@@ -7,6 +7,7 @@ import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.UpdateAllQuery;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
@@ -261,7 +262,7 @@ public class MessageDB
 	public static void setMessagesRead(int createByUserId, HttpSession session,long timeTo)
 	{
 		UserDetails user = UsersDB.getCurrentUser(session);
-		new SimpleQuery().execute("UPDATE admin_message SET is_readed = 1 WHERE recipient_user_id = ? AND create_by_user_id = ?", user.getUserId(), createByUserId);
+		new SimpleQuery().execute("UPDATE admin_message SET is_readed = "+DB.getBooleanSql(true)+" WHERE recipient_user_id = ? AND create_by_user_id = ?", user.getUserId(), createByUserId);
 	}
 
 	public static void setMessageRead(HttpSession session,int messageId)
@@ -292,7 +293,7 @@ public class MessageDB
 			db_conn = DBPool.getConnection();
 			StringBuilder sql = new StringBuilder();
 			sql.append("SELECT create_by_user_id, COUNT(*) as POCET FROM admin_message ");
-			sql.append("WHERE recipient_user_id=? AND (is_readed = 0 OR is_readed IS NULL) ");
+			sql.append("WHERE recipient_user_id=? AND (is_readed = "+DB.getBooleanSql(false)+" OR is_readed IS NULL) ");
 			sql.append("GROUP BY create_by_user_id");
 			ps = db_conn.prepareStatement(sql.toString());
 			ps.setInt(1, user_id);

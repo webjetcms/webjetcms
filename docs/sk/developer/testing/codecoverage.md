@@ -14,7 +14,7 @@ Pre časť kódu, ktorá sa počas testov nevykonala odporúčame pridať ďalš
 
 ![](jacoco.png)
 
-Môžete si pozrieť [naposledy vygenerovaný stav pokrytia testami](http://docs.webjetcms.sk/v2022/developer/testing/codecoverage-report/index.html) (bez podrobného výpisu zdrojového kódu tried).
+Môžete si pozrieť [naposledy vygenerovaný stav pokrytia testami](http://docs.webjetcms.sk/latest/codecoverage-report/index.html).
 
 ## Použitie
 

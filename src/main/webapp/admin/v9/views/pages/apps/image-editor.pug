@@ -35,7 +35,7 @@ block content
                 $("#imageEditorButtons button.btn-primary").on("click", function() {
                     if (imageEditorInstance != null) {
                         imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
-                        $("#imageEditorButtons button.btn-primary i").attr("class", "fas fa-sync fa-spin");
+                        $("#imageEditorButtons button.btn-primary i").attr("class", "ti ti-loader-2 ti-spin"); //TODO: Overit ze sa animacia zobrazuje spravne
                     }
                 });
                 $("#imageEditorButtons button.btn-close-editor").on("click", function() {
@@ -147,8 +147,8 @@ block content
     <div id="imageEditorContainer">
         <div id="photoEditorContainer" class="dte-tab-autoheight"></div>
         <div id="imageEditorButtons">
-            <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="fal fa-times"></i> [[\#{button.cancel}]]</button>
-            <button class="btn btn-primary" tabindex="0"><i class="fal fa-check"></i> [[\#{button.save}]]</button>
+            <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> [[\#{button.cancel}]]</button>
+            <button class="btn btn-primary" tabindex="0"><i class="ti ti-check"></i> [[\#{button.save}]]</button>
         </div>
         input(id="DTE_Field_imageName" style="display: none")
     </div>

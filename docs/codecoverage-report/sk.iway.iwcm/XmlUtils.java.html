@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">XmlUtils.java</span></div><h1>XmlUtils.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Vector;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import org.xml.sax.InputSource;
+
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
+
+/**
+ *  XmlUtils.java - pomocne metody pre pracu s XML
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: kmarton $
+ *@version      $Revision: 1.6 $
+ *@created      Date: 27.2.2008 15:45:28
+ *@modified     $Date: 2010/02/11 13:55:35 $
+ */
+public class XmlUtils {
+
+<span class="nc" id="L47">	protected XmlUtils() {</span>
+		//utility class
+<span class="nc" id="L49">	}</span>
+
+	public static String getAttribute(Node node, String attrname) {
+<span class="nc bnc" id="L52" title="All 4 branches missed.">		if( node == null || attrname == null ) return null;</span>
+<span class="nc" id="L53">		NamedNodeMap ats = node.getAttributes();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if( ats == null ) return null;</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		for( int i = 0; i&lt; ats.getLength(); i++ ) {</span>
+<span class="nc" id="L56">			Node n = ats.item(i);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			if( attrname.equalsIgnoreCase(n.getNodeName()) ) return n.getNodeValue();</span>
+		}
+<span class="nc" id="L59">		return null;</span>
+	}
+
+
+
+	public static String getText(Node node, boolean concatenate)
+	{
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (node == null)</span>
+<span class="nc" id="L67">			return null;</span>
+<span class="fc" id="L68">		Vector&lt;Node&gt; nl = getChildNodes(node,Node.TEXT_NODE);</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">		if (nl.size()==0)</span>
+<span class="nc" id="L70">			return null;</span>
+
+<span class="fc" id="L72">		StringBuilder result = new StringBuilder();</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		for(int i=0;i&lt;nl.size()-1;i++)</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			result.append(((Text)nl.get(i)).getNodeValue()).append(concatenate ? ' ' : '\n');</span>
+<span class="fc" id="L75">		result.append(((Text)nl.get(nl.size()-1)).getNodeValue());</span>
+<span class="fc" id="L76">		return result.toString();</span>
+	}
+
+	/*
+		Gets a node's text or returns the defaultValue if the node doesn't have any text child
+	*/
+	  public static String getText(Node node) {
+<span class="fc" id="L83">		  return getText(node, null, true);</span>
+	  }
+
+
+	public static String getText(Node node, String defaultValue) {
+<span class="nc" id="L88">		String retVal = getText(node,null,true);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		return retVal == null ? defaultValue : retVal;</span>
+	}
+
+	public static String getText(Node node, String defaultValue, boolean concatenate) {
+<span class="fc" id="L93">		String retVal = getText(node, concatenate);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">		return retVal == null ? defaultValue : retVal;</span>
+	}
+
+	/*
+		Gets a node's CDATA child nodes (concatenated)
+	*/
+	public static String getCDATA(Node node)
+	{
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (node == null)</span>
+<span class="nc" id="L103">			return null;</span>
+<span class="nc" id="L104">		Vector&lt;Node&gt; nl = getChildNodes(node,Node.CDATA_SECTION_NODE);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (nl.size()==0)</span>
+<span class="nc" id="L106">			return null;</span>
+
+<span class="nc" id="L108">		StringBuilder result = new StringBuilder();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		for(int i=0;i&lt;nl.size();i++)</span>
+		{
+<span class="nc" id="L111">			result.append(((CDATASection)nl.get(i)).getNodeValue());</span>
+		}
+<span class="nc" id="L113">		return result.toString();</span>
+	}
+	/*
+		Appends a Text to a Node
+	*/
+	public static Text addText(Node node,String text)
+	{
+<span class="nc" id="L120">		Document doc = node.getOwnerDocument();</span>
+<span class="nc" id="L121">		Text tnode = doc.createTextNode(text);</span>
+<span class="nc" id="L122">		node.appendChild(tnode);</span>
+<span class="nc" id="L123">		return tnode;</span>
+	}
+	/*
+		Appends a CDATA to a Node
+	*/
+	public static void addCDATA(Node node,String text)
+	{
+<span class="nc" id="L130">		Document doc = node.getOwnerDocument();</span>
+<span class="nc" id="L131">		CDATASection cdata = doc.createCDATASection(text);</span>
+<span class="nc" id="L132">		node.appendChild(cdata);</span>
+<span class="nc" id="L133">	}</span>
+	/*
+		Removes the node's Text children and sets a new one
+	*/
+	public static Text setText(Node node,String text)
+	{
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (node==null) {</span>
+<span class="nc" id="L140">			return null;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		} else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {</span>
+<span class="nc" id="L142">			node.setNodeValue(text);</span>
+		}
+<span class="nc" id="L144">		Text tnode = addText(node,text);</span>
+<span class="nc" id="L145">		return tnode;</span>
+	}
+	/*
+		Removes the node's CDATA children and sets a new one
+	*/
+	public static void setCDATA(Node node,String text)
+	{
+<span class="nc" id="L152">		removeChildNodes(node,Node.CDATA_SECTION_NODE);</span>
+<span class="nc" id="L153">		addCDATA(node,text);</span>
+<span class="nc" id="L154">	}</span>
+
+	public static double getDouble(Node node, double defaultValue) {
+<span class="nc" id="L157">		String text = getText(node);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if(text == null) return defaultValue;</span>
+<span class="nc" id="L159">		return Double.parseDouble(text);</span>
+	}
+
+	public static int getInt(Node node, int defaultValue) {
+<span class="nc" id="L163">		String text = getText(node);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if(text == null) return defaultValue;</span>
+<span class="nc" id="L165">		return Integer.parseInt(text);</span>
+	}
+
+	/*
+		Get the node's childnodes with the specified type
+		// Result can be casted to a class implementing the type without ClassCastException
+	*/
+	public static Vector&lt;Node&gt; getChildNodes( Node parent, short type )
+	{
+		Node node;
+<span class="fc" id="L175">		Vector&lt;Node&gt; result  = new Vector&lt;&gt;();</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">		for( node = parent.getFirstChild(); node != null; node = node.getNextSibling()) {</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">			if( node.getNodeType() == type ) {</span>
+<span class="fc" id="L178">				result.add( node );</span>
+			}
+		}
+<span class="fc" id="L181">		return( result );</span>
+	}
+	/*
+		Removes the node's childnodes with the specified nodeType
+	*/
+	public static void removeChildNodes(Node node,short type)
+	{
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		if (node==null)</span>
+<span class="nc" id="L189">			return;</span>
+<span class="nc" id="L190">		NodeList nl = node.getChildNodes();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if ( nl == null )</span>
+<span class="nc" id="L192">			return;</span>
+<span class="nc" id="L193">		int i=0;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		while (i&lt;(nl=node.getChildNodes()).getLength())</span>
+		{
+<span class="nc" id="L196">			Node n = nl.item(i);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (n.getNodeType()==type)</span>
+			{
+<span class="nc" id="L199">				node.removeChild(n);</span>
+			}
+			else
+<span class="nc" id="L202">				i++;</span>
+<span class="nc" id="L203">		}</span>
+<span class="nc" id="L204">	}</span>
+
+	/*
+		Removes all the node's childnodes
+		Even the text nodes
+	*/
+	public static void removeAllChildren(Node node)
+	{
+		NodeList nl;
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		while ((nl=node.getChildNodes()).getLength()&gt;0)</span>
+<span class="nc" id="L214">			node.removeChild(nl.item(0));</span>
+<span class="nc" id="L215">	}</span>
+
+	/*
+		Gets the node's childnodes with the specified nodeName
+	*/
+	public static Vector&lt;Node&gt; getChildNodes(Node parent, String tagName) {
+<span class="fc" id="L221">		Vector&lt;Node&gt; result  = new Vector&lt;&gt;();</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">		if (parent == null) return result;</span>
+<span class="fc" id="L223">		NodeList nl = parent.getChildNodes();</span>
+<span class="fc" id="L224">		int length = nl.getLength();</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">		for (int i=0; i&lt;length; i++) {</span>
+<span class="fc" id="L226">			Node n = nl.item(i);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">			if (tagName.equals(n.getNodeName())) {</span>
+<span class="fc" id="L228">				result.add(n);</span>
+			}
+		}
+<span class="fc" id="L231">		return result;</span>
+	}
+	/*
+		Removes the node's childnodes with the specified nodeName
+	*/
+	public static Vector&lt;Node&gt; removeChildNodes(Node node,String name)
+	{
+<span class="nc" id="L238">		Vector&lt;Node&gt; nl = getChildNodes(node,name);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		for(int i=0;i&lt;nl.size();i++)</span>
+		{
+<span class="nc" id="L241">			node.removeChild(nl.get(i));</span>
+		}
+<span class="nc" id="L243">		return nl;</span>
+	}
+
+	/*
+		Selects the nodes from the NodeList which has attribute 'attributeName' with 'attributeValue'
+	*/
+	public static Vector&lt;Element&gt; getNodesWithAttribute(Node node,String attributeName,String attributeValue)
+	{
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if ( node == null )</span>
+<span class="nc" id="L252">			return new Vector&lt;&gt;();</span>
+		else
+<span class="nc" id="L254">			return getNodesWithAttribute(node.getChildNodes(),attributeName,attributeValue);</span>
+	}
+	/*
+		Selects the nodes from the NodeList which has attribute 'attributeName' with 'attributeValue'
+	*/
+	public static Vector&lt;Element&gt; getNodesWithAttribute(NodeList nl,String attributeName,String attributeValue)
+	{
+<span class="nc" id="L261">		Vector&lt;Element&gt; result  = new Vector&lt;&gt;();</span>
+		Element child;
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		for(int i=0;i&lt;nl.getLength();i++)</span>
+		{
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			if (nl.item(i).getNodeType()==Node.ELEMENT_NODE)</span>
+			{
+<span class="nc" id="L267">				child=(Element)nl.item(i);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">				if (attributeValue.equals(child.getAttribute(attributeName)))</span>
+<span class="nc" id="L269">					result.add(child);</span>
+			}
+		}
+<span class="nc" id="L272">		return result;</span>
+	}
+
+
+	/*
+		Swaps two nodes
+	*/
+	public static void swapNodes(Node aNode,Node bNode)
+	{
+<span class="nc" id="L281">		Node aParent = aNode.getParentNode();</span>
+<span class="nc" id="L282">		Node bParent = bNode.getParentNode();</span>
+<span class="nc" id="L283">		aParent.replaceChild(aNode,bNode);</span>
+<span class="nc" id="L284">		Node bNextSibling = bNode.getNextSibling();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (bNextSibling!=null)</span>
+<span class="nc" id="L286">			bParent.insertBefore(bNextSibling,aNode);</span>
+		else
+<span class="nc" id="L288">			bParent.appendChild(aNode);</span>
+<span class="nc" id="L289">	}</span>
+	/*
+		Gets the node's siblings with the same name
+	*/
+	public static Vector&lt;Node&gt; getSameNameSiblings(Node node)
+	{
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (node.getParentNode()!=null)</span>
+		{
+<span class="nc" id="L297">			return getChildNodes(node.getParentNode(),node.getNodeName());</span>
+		}
+<span class="nc" id="L299">		return new Vector&lt;&gt;();</span>
+	}
+
+	/*
+		Adds a new node with the specified tagName to the parent
+	*/
+	public static Element addNode(Node parent,String tagName)
+	{
+<span class="nc" id="L307">		Document doc = parent.getOwnerDocument();</span>
+<span class="nc" id="L308">		Element newNode = doc.createElement(tagName);</span>
+<span class="nc" id="L309">		parent.appendChild(newNode);</span>
+<span class="nc" id="L310">		return newNode;</span>
+	}
+	/*
+		Adds a new node with the specified tagName and value to the parent
+	*/
+	public static Element addNode(Node parent,String tagName,String value)
+	{
+<span class="nc" id="L317">		Element newNode = addNode(parent,tagName);</span>
+<span class="nc" id="L318">		setText(newNode,value);</span>
+<span class="nc" id="L319">		return newNode;</span>
+	}
+
+	/*
+		Searches for the node's childNodes with the specified name
+		and returns the first one if exists or null
+	*/
+	public static Node getFirstChild( Node parent, String tagName )
+	{
+		Node node;
+<span class="fc" id="L329">		Node result = null;</span>
+
+<span class="fc bfc" id="L331" title="All 4 branches covered.">		for( node = parent.getFirstChild(); ( node != null ) &amp;&amp; ( result == null ); node = node.getNextSibling())</span>
+		{
+<span class="fc bfc" id="L333" title="All 4 branches covered.">			if(( node.getNodeType() == Node.ELEMENT_NODE ) &amp;&amp; ( tagName.equals( node.getNodeName())))</span>
+			{
+<span class="fc" id="L335">				result = node;</span>
+			}
+		}
+
+<span class="fc" id="L339">		return( result );</span>
+	}
+
+	/*
+		Searches for the node's childNodes with the specified name
+		and returns the textValue if a node was found
+		if no node found or no text value exists returns an empty String
+	*/
+	public static String getFirstChildValue(Node node,String tagName)
+	{
+<span class="fc" id="L349">		String result = &quot;&quot;;</span>
+<span class="fc" id="L350">		Node childnode = getFirstChild(node,tagName);</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">		if (childnode!=null)</span>
+<span class="fc" id="L352">			result = XmlUtils.getText(childnode);</span>
+
+<span class="fc" id="L354">		return result;</span>
+	}
+
+
+	/*
+		Returns whether the node has child nodes with the type Node.TEXT_NODE or not
+	*/
+	public static boolean hasNonTextChild(Node node)
+	{
+<span class="nc" id="L363">		int childcount = node.getChildNodes().getLength();</span>
+<span class="nc" id="L364">		int textchildcount = XmlUtils.getChildNodes(node,Node.TEXT_NODE).size();</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		return (childcount!=textchildcount);</span>
+	}
+
+
+	public static Node createSimpleElement(Document doc, String name, boolean value) {
+<span class="nc" id="L370">		return createSimpleElement(doc, name, String.valueOf(value));</span>
+	}
+	public static Node createSimpleElement(Document doc, String name, int value) {
+<span class="nc" id="L373">		return createSimpleElement(doc, name, String.valueOf(value));</span>
+	}
+	public static Node createSimpleElement(Document doc, String name, double value) {
+<span class="nc" id="L376">		return createSimpleElement(doc, name, String.valueOf(value));</span>
+	}
+	public static Node createSimpleElement(Document doc, String name, String value) {
+<span class="nc" id="L379">		Element elem = doc.createElement(name);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">		if(value != null)</span>
+<span class="nc" id="L381">			elem.appendChild(doc.createTextNode(value));</span>
+<span class="nc" id="L382">		return elem;</span>
+	}
+
+	/**
+	 * Returns the value of the given node as a boolean
+	 */
+	public static boolean nodeToBoolean(Node node) {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		if(node == null) {</span>
+<span class="nc" id="L390">			return false;</span>
+			//throw new IllegalArgumentException(&quot;null node&quot;);
+		}
+		String value;
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if(node instanceof Attr) {</span>
+<span class="nc" id="L395">			Attr attr = (Attr)node;</span>
+<span class="nc" id="L396">			value = attr.getValue();</span>
+<span class="nc" id="L397">		} else {</span>
+<span class="nc" id="L398">			value = getText(node);</span>
+		}
+
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if(value == null) throw new IllegalArgumentException(&quot;could not convert &quot; + value + &quot; to boolean&quot;);</span>
+
+<span class="nc bnc" id="L403" title="All 2 branches missed.">		if(value.equals(&quot;true&quot;)) {</span>
+<span class="nc" id="L404">			return true;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">		} else if(value.equals(&quot;false&quot;)) {</span>
+<span class="nc" id="L406">			return false;</span>
+		} else {
+<span class="nc" id="L408">			throw new IllegalArgumentException(&quot;could not convert &quot; + value + &quot; to boolean&quot;);</span>
+		}
+	}
+
+	/** Adds an attribute with the specified name to the given element only if
+	 *  the &lt;code&gt;value&lt;/code&gt; parameter is not &lt;code&gt;null&lt;/code&gt;. */
+	public static void addAttr(Element parent, String name, String value) {
+<span class="nc bnc" id="L415" title="All 2 branches missed.">		if (value != null) {</span>
+<span class="nc" id="L416">			parent.setAttribute(name,value);</span>
+		}
+<span class="nc" id="L418">	}</span>
+
+	/*
+		@return the attribute value, or the specified defaultValue, if the node is not an instance
+		of Element, or the specified attribute doesn't exist
+	*/
+	public static String getAttribute(Node node,String attribute, String defaultValue) {
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		if (!(node instanceof Element))</span>
+<span class="nc" id="L426">			return defaultValue;</span>
+<span class="nc" id="L427">		String attrValue = ((Element)node).getAttribute(attribute);</span>
+<span class="nc bnc" id="L428" title="All 4 branches missed.">		return attrValue == null || &quot;&quot;.equals(attrValue) ? defaultValue : attrValue;</span>
+	}
+
+	/*
+		Returns the attribute value
+		searches the parents if no attribute found in the node
+	*/
+	public static String getAttributeUp(Node node,String attribute)
+	{
+<span class="nc bnc" id="L437" title="All 2 branches missed.">		if (!(node instanceof Element))</span>
+<span class="nc" id="L438">			return &quot;&quot;;</span>
+<span class="nc" id="L439">		Element element = (Element)node;</span>
+<span class="nc" id="L440">		String result = &quot;&quot;;</span>
+		do
+		{
+<span class="nc" id="L443">			result = element.getAttribute(attribute);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">			if (result!=null)</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if (result.length()&gt;0)</span>
+<span class="nc" id="L446">					return result;</span>
+
+<span class="nc" id="L448">			element=(Element)element.getParentNode();</span>
+<span class="nc bnc" id="L449" title="All 4 branches missed.">		} while ((element!=null) &amp;&amp; (element.getNodeType()!=Node.DOCUMENT_NODE)) ;</span>
+
+<span class="nc" id="L451">		return &quot;&quot;;</span>
+	}
+
+	public static boolean hasElementWithValue(Node parent,String tagName,String value)
+	{
+<span class="nc bnc" id="L456" title="All 2 branches missed.">		return getElementsWithValue(parent,tagName,value).size()&gt;0;</span>
+	}
+
+	public static Vector&lt;Node&gt; getElementsWithValue(Node parent,String tagName,String value)
+	{
+<span class="nc" id="L461">		Vector&lt;Node&gt; nl = new Vector&lt;&gt;();</span>
+<span class="nc bnc" id="L462" title="All 4 branches missed.">		if ((parent instanceof Element) &amp;&amp; (value!=null))</span>
+		{
+<span class="nc" id="L464">			NodeList elements = ((Element)parent).getElementsByTagName(tagName);</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">			for (int i=0;i&lt;elements.getLength();i++)</span>
+			{
+<span class="nc bnc" id="L467" title="All 2 branches missed.">				if (value.equals(XmlUtils.getText(elements.item(i))))</span>
+				{
+<span class="nc" id="L469">					nl.add(elements.item(i));</span>
+				}
+			}
+		}
+<span class="nc" id="L473">		return nl;</span>
+	}
+
+	protected static int getIntAttributeFromValue(Node node, String value,
+		int defaultValue) {
+<span class="nc" id="L478">		int res = defaultValue;</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">		if (value != null) {</span>
+			try {
+<span class="nc" id="L481">				res = Integer.parseInt(value);</span>
+			}
+<span class="nc" id="L483">			catch (NumberFormatException ne) {</span>
+<span class="nc" id="L484">			}</span>
+		}
+<span class="nc" id="L486">		return res;</span>
+	}
+
+	public static int getIntAttributeUp(Node node, String attribname,
+							int defaultValue) {
+<span class="nc" id="L491">		return getIntAttributeFromValue(node,</span>
+<span class="nc" id="L492">							  XmlUtils.getAttributeUp(node, attribname),</span>
+							  defaultValue);
+	}
+
+	public static int getIntAttribute(Node node, String attribname,
+							 int defaultValue) {
+<span class="nc" id="L498">		return getIntAttributeFromValue(node,</span>
+<span class="nc" id="L499">							  XmlUtils.getAttribute(node, attribname,</span>
+<span class="nc" id="L500">			Integer.toString(defaultValue)), defaultValue);</span>
+	}
+
+	protected static boolean getBooleanAttributeFromValue(Node node,
+		String value, boolean defaultValue) {
+<span class="nc" id="L505">		boolean res = defaultValue;</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">		if (value != null) {</span>
+<span class="nc" id="L507">			res = Boolean.parseBoolean(value);</span>
+		}
+<span class="nc" id="L509">		return res;</span>
+	}
+
+	public static boolean getBooleanAttributeUp(Node node, String attribname,
+								  boolean defaultValue) {
+<span class="nc" id="L514">		return getBooleanAttributeFromValue(node,</span>
+<span class="nc" id="L515">								XmlUtils.getAttributeUp(node,</span>
+			attribname), defaultValue);
+	}
+
+	public static boolean getBooleanAttribute(Node node, String attribname,
+								boolean defaultValue) {
+<span class="nc" id="L521">		return getBooleanAttributeFromValue(node,</span>
+<span class="nc" id="L522">								XmlUtils.getAttribute(node,</span>
+<span class="nc" id="L523">			attribname, Boolean.toString(defaultValue)), defaultValue);</span>
+	}
+
+	public static int getChildPos(Node parent, Node child) {
+<span class="nc bnc" id="L527" title="All 4 branches missed.">		if (parent == null || child == null)</span>
+<span class="nc" id="L528">			return -1;</span>
+<span class="nc" id="L529">		NodeList nl = parent.getChildNodes();</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">		if (nl != null)</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">			for (int i = 0; i &lt; nl.getLength(); i++)</span>
+<span class="nc bnc" id="L532" title="All 2 branches missed.">				if (nl.item(i) == child)</span>
+<span class="nc" id="L533">					return i;</span>
+<span class="nc" id="L534">		return -1;</span>
+	}
+
+
+	/**
+	 * recursively copies the source node to the destination
+	 */
+	public static void copyNode(final Node source, final Node dest) {
+<span class="nc" id="L542">		copyNode(source, dest, true);</span>
+<span class="nc" id="L543">	}</span>
+
+	/**
+	 * recursively copies the source node to the destination
+	 */
+	public static void copyNode(final Node source, final Node dest, boolean copyAttributes) {
+<span class="nc bnc" id="L549" title="All 2 branches missed.">		if(source instanceof Text) {</span>
+<span class="nc" id="L550">			dest.setNodeValue(source.getNodeValue());</span>
+<span class="nc" id="L551">			return;</span>
+		}
+
+<span class="nc" id="L554">		final NamedNodeMap attrs = source.getAttributes();</span>
+<span class="nc" id="L555">		final NodeList children = source.getChildNodes();</span>
+		Node attr;
+		Node child;
+		Node destChild;
+
+<span class="nc bnc" id="L560" title="All 4 branches missed.">		if(dest instanceof Element &amp;&amp; copyAttributes)</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">			for(int i=0, c=attrs.getLength(); i&lt;c; i++) {</span>
+<span class="nc" id="L562">				attr = attrs.item(i);</span>
+<span class="nc" id="L563">				addAttr((Element)dest, attr.getNodeName(), attr.getNodeValue());</span>
+			}
+
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		for(int i=0, c=children.getLength(); i&lt;c; i++) {</span>
+<span class="nc" id="L567">			child = children.item(i);</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">			if(child instanceof Text)</span>
+<span class="nc" id="L569">				addText(dest, child.getNodeValue());</span>
+			else {
+<span class="nc" id="L571">				destChild = addNode(dest, child.getNodeName());</span>
+<span class="nc" id="L572">				copyNode(child, destChild, copyAttributes);</span>
+			}
+		}
+<span class="nc" id="L575">	}</span>
+
+	public static Node getChildNodeByPath( final Node source, String path ) {
+<span class="nc bnc" id="L578" title="All 2 branches missed.">		if( Tools.isEmpty(path)) return null;</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">		if( path.charAt(0) == ('/') ) path = path.substring(1);</span>
+<span class="nc" id="L580">		int ps = path.indexOf('/');</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">		if( ps != -1 ) {</span>
+<span class="nc" id="L582">			String chstr = path.substring(0,ps);</span>
+<span class="nc" id="L583">			Node tch = getFirstChild( source, chstr);</span>
+<span class="nc bnc" id="L584" title="All 2 branches missed.">			if( tch != null ) {</span>
+<span class="nc" id="L585">				return getChildNodeByPath(tch,path.substring(ps+1));</span>
+			}
+<span class="nc" id="L587">		} else {</span>
+<span class="nc" id="L588">			return getFirstChild( source,path);</span>
+		}
+<span class="nc" id="L590">		return null;</span>
+	}
+
+	public static Vector&lt;Node&gt; getChildNodesByPath( final Node source, String path ) {
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">		if( path == null ) return null;</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">		if( path.charAt(0) == ('/') ) path = path.substring(1);</span>
+<span class="fc" id="L596">		int ps = path.indexOf('/');</span>
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">		if( ps != -1 ) {</span>
+<span class="nc" id="L598">			String chstr = path.substring(0,ps);</span>
+<span class="nc" id="L599">			Node tch = getFirstChild( source, chstr);</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">			if( tch != null ) {</span>
+<span class="nc" id="L601">				return getChildNodesByPath(tch,path.substring(ps+1));</span>
+			}
+<span class="nc" id="L603">		} else {</span>
+<span class="fc" id="L604">			return getChildNodes( source,path);</span>
+		}
+<span class="nc" id="L606">		return null;</span>
+	}
+
+	public static String normalizeAndPrint(String s) {
+<span class="nc bnc" id="L610" title="All 2 branches missed.">		if (s==null) return &quot;&quot;;</span>
+<span class="nc" id="L611">		int len = s.length();</span>
+<span class="nc" id="L612">		StringWriter sout = new StringWriter();</span>
+<span class="nc" id="L613">		PrintWriter pw = new PrintWriter(sout);</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">		for (int i = 0; i &lt; len; i++) {</span>
+<span class="nc" id="L615">			char c = s.charAt(i);</span>
+<span class="nc" id="L616">			normalizeAndPrint(pw,c,true);</span>
+		}
+<span class="nc" id="L618">		pw.flush();</span>
+<span class="nc" id="L619">		return sout.toString();</span>
+	} // normalizeAndPrint(String)
+
+	/** Normalizes and print the given character. */
+	protected static void normalizeAndPrint(PrintWriter fOut, char c, boolean fCanonical ) {
+<span class="nc bnc" id="L624" title="All 6 branches missed.">		switch (c) {</span>
+			case '&lt;': {
+<span class="nc" id="L626">				fOut.print(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L627">				break;</span>
+			}
+			case '&gt;': {
+<span class="nc" id="L630">				fOut.print(&quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L631">				break;</span>
+			}
+			case '&amp;': {
+<span class="nc" id="L634">				fOut.print(&quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L635">				break;</span>
+			}
+			case '&quot;': {
+<span class="nc" id="L638">				fOut.print(&quot;&amp;quot;&quot;);</span>
+<span class="nc" id="L639">				break;</span>
+			}
+			case '\r':
+			case '\n': { //NOSONAR
+<span class="nc bnc" id="L643" title="All 2 branches missed.">				if (fCanonical) {</span>
+<span class="nc" id="L644">					fOut.print(&quot;&amp;#&quot;);</span>
+<span class="nc" id="L645">					fOut.print(Integer.toString(c));</span>
+<span class="nc" id="L646">					fOut.print(';');</span>
+<span class="nc" id="L647">					break;</span>
+				}
+				// else, default print char
+			}
+			default: {
+<span class="nc" id="L652">				fOut.print(c);</span>
+			}
+		}
+
+<span class="nc" id="L656">	} // normalizeAndPrint(char)</span>
+
+
+	/**
+	 * Vrati objekt typu Document zo zadaneho URL (lokalne)
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	public static Document readDocument(String url) throws Exception
+	{
+<span class="nc" id="L667">		IwcmFile file = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">		if (file.exists())</span>
+		{
+<span class="nc" id="L670">			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();</span>
+			// to be compliant, completely disable DOCTYPE declaration:
+<span class="nc" id="L672">			docBuilderFactory.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);</span>
+<span class="nc" id="L673">			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();</span>
+
+<span class="nc" id="L675">			IwcmInputStream in = new IwcmInputStream(file);</span>
+<span class="nc" id="L676">			InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L677">			InputSource is = new InputSource(reader);</span>
+<span class="nc" id="L678">			is.setEncoding(&quot;utf-8&quot;);</span>
+
+<span class="nc" id="L680">			Document doc = docBuilder.parse(is);</span>
+
+<span class="nc" id="L682">			reader.close();</span>
+<span class="nc" id="L683">			in.close();</span>
+
+<span class="nc" id="L685">			return doc;</span>
+		}
+<span class="nc" id="L687">		return null;</span>
+	}
+
+	/**
+	 * Ulozi objekt typu Document na zadane URL (lokalne)
+	 * @param doc
+	 * @param url
+	 * @param encoding
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean saveDocument(Document doc, String url, String encoding) throws Exception
+	{
+<span class="nc" id="L700">		IwcmFile file = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">		if (file.exists())</span>
+		{
+<span class="nc" id="L703">			TransformerFactory xf = TransformerFactory.newInstance();</span>
+			// to be compliant, prohibit the use of all protocols by external entities:
+<span class="nc" id="L705">			xf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, &quot;&quot;);</span>
+<span class="nc" id="L706">			xf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, &quot;&quot;);</span>
+
+<span class="nc" id="L708">			xf.setAttribute(&quot;indent-number&quot;, Integer.valueOf(2));</span>
+
+<span class="nc" id="L710">			Transformer xformer = xf.newTransformer();</span>
+<span class="nc" id="L711">			xformer.setOutputProperty(OutputKeys.METHOD, &quot;xml&quot;);</span>
+<span class="nc" id="L712">			xformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="nc" id="L713">			xformer.setOutputProperty(OutputKeys.ENCODING, encoding);</span>
+
+<span class="nc" id="L715">			Result result = new StreamResult(new OutputStreamWriter(new IwcmOutputStream(file), encoding));</span>
+
+<span class="nc" id="L717">			xformer.transform(new DOMSource(doc), result);</span>
+<span class="nc" id="L718">			return true;</span>
+		}
+<span class="nc" id="L720">		return false;</span>
+	}
+
+	/**
+	 * Funkcia, ktora ziska text z xml tagu tagName v elemente el.
+	 *
+	 * @param tagName	Nazov tagu, z ktoreho chceme vytiahnut text
+	 * @param el		Element, v ktorom sa nachadza dany tag
+	 *
+	 * @return	Vrati text, ktory sa nachadza v danom retazci. Ak nastane hocijaka chyba, vrati prazdny retazec.
+	 *
+	 * @author kmarton
+	 */
+	public static String getTextFromNode(String tagName, Element el)
+	{
+<span class="nc" id="L735">		NodeList list = null;</span>
+		try
+		{
+<span class="nc" id="L738">   		NodeList item = el.getElementsByTagName(tagName);</span>
+<span class="nc" id="L739">   		Element element = (Element)item.item(0);</span>
+<span class="nc" id="L740">   		list = element.getChildNodes();</span>
+		}
+<span class="nc" id="L742">		catch (NullPointerException e)</span>
+		{
+<span class="nc" id="L744">			return &quot;&quot;;</span>
+<span class="nc" id="L745">		}</span>
+
+<span class="nc bnc" id="L747" title="All 2 branches missed.">		if (list.item(0) != null)</span>
+<span class="nc" id="L748">   		return (list.item(0)).getNodeValue().trim();</span>
+   	else
+<span class="nc" id="L750">   		return &quot;&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CryptoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.crypto</a> &gt; <span class="el_source">CryptoController.java</span></div><h1>CryptoController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.crypto;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+/**
+ * Zakladny controller pre spravu sifrovacich klucov
+ * [#26639]JPA - SIFROVANIE DAT
+ */
+@Controller
+@RequestMapping(&quot;/components/crypto/&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.isAdmin()&quot;)
+<span class="fc" id="L22">public class CryptoController</span>
+{
+   @GetMapping(&quot;admin/keymanagement&quot;)
+   public String generateKeys()
+   {
+<span class="fc" id="L27">      return &quot;/components/crypto/admin_keymanagement&quot;;</span>
+   }
+
+   @GetMapping(&quot;admin/keymanagement/generate&quot;)
+   public String generateKeys(Model model, HttpSession session)
+   {
+<span class="nc" id="L33">      Identity user = UsersDB.getCurrentUser(session);</span>
+      //npe na user neosetrujem, padne to do Exception a tam sa zaznamena chyba
+      try {
+<span class="nc" id="L36">         CryptoFactory cryptoFactory = new CryptoFactory();</span>
+<span class="nc" id="L37">         CryptoKeys generatedKeys = cryptoFactory.generateKeys(user.getLogin());</span>
+<span class="nc" id="L38">         model.addAttribute(&quot;generatedKeys&quot;, generatedKeys);</span>
+<span class="nc" id="L39">      } catch (Exception ex) {</span>
+<span class="nc" id="L40">         Logger.error(CryptoController.class, &quot;Error generating keys&quot;, ex);</span>
+<span class="nc" id="L41">         model.addAttribute(&quot;errorText&quot;, &quot;Error generating keys: &quot;+ex.getMessage());</span>
+<span class="nc" id="L42">         return &quot;/components/maybeError&quot;;</span>
+<span class="nc" id="L43">      }</span>
+<span class="nc" id="L44">      return &quot;/components/crypto/admin_keymanagement&quot;;</span>
+   }
+
+   /**
+    * Nastavy zadany kluc do session pouzivatela.
+    * @param key
+    * @param model
+    * @param request
+    * @return
+    */
+   @PostMapping(&quot;admin/keymanagement/setkey&quot;)
+   public String setKey(String key, Model model, HttpServletRequest request)
+   {
+<span class="fc" id="L57">      CryptoFactory cryptoFactory = new CryptoFactory();</span>
+<span class="fc" id="L58">      boolean success = cryptoFactory.setPrivateKeyToSession(key, request.getSession());</span>
+<span class="fc" id="L59">      model.addAttribute(&quot;keySetToSession&quot;, Boolean.valueOf(success));</span>
+<span class="fc" id="L60">      return &quot;/components/crypto/admin_keymanagement&quot;;</span>
+   }
+
+//   /**
+//    * Metoda ktora je mozna pouzit iba pri hybridnych klucoch. Z privatneho kluca mozem znova vygenerovat verejny kluc.
+//    * @param key
+//    * @param model
+//    * @return
+//    */
+//   @PostMapping(&quot;admin/keymanagement/generate/public&quot;)
+//   public String generateKeys(String key, Model model) {
+//      KeysetHandle privateKey = CryptoToolsV2.getInstance().loadPrivateKeyBase64(key);
+//      KeysetHandle publicKey = null;
+//      String prefix = CryptoFactory.getPrefix(key);
+//      try {
+//         publicKey = privateKey.getPublicKeysetHandle();
+//      } catch (Exception ex) {
+//         Logger.error(CryptoController.class, &quot;Error generating keys&quot;, ex);
+//         model.addAttribute(&quot;errorText&quot;, &quot;Error generating keys: &quot;+ex.getMessage());
+//         return &quot;/components/maybeError&quot;;
+//      }
+////      CryptoKeys generatedKeys = new CryptoKeys(null, prefix + &quot;:&quot; + CryptoToolsV2.getInstance().getKeyBase64(publicKey), prefix + &quot;:&quot; + CryptoToolsV2.getInstance().getKeyBase64(privateKey));
+////      model.addAttribute(&quot;generatedKeys&quot;, generatedKeys);
+//      return &quot;/components/crypto/admin_keymanagement&quot;;
+//   }
+
+   /*private boolean isCryptoAlg() {
+      return &quot;v2&quot;.equalsIgnoreCase(Constants.getString(&quot;cryptoAlg&quot;));
+   }*/
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

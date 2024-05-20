@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocEditorFields.java</span></div><h1>DocEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.struts.util.ResponseUtils;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
+import sk.iway.iwcm.editor.DocNoteBean;
+import sk.iway.iwcm.editor.DocNoteDB;
+import sk.iway.iwcm.editor.rest.DocHistoryDto;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.spirit.model.Media;
+/**
+ * Doplnkove data fieldy potrebne pre editor
+ */
+@Getter
+@Setter
+<span class="fc" id="L33">public class DocEditorFields extends BaseEditorFields {</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;webpages.icons.title&quot;,
+        hiddenEditor = true, hidden = false, visible = true, sortAfter = &quot;id&quot;, className = &quot;allow-html&quot;, orderable = false
+    )
+    private String statusIcons;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;editor.superior_directory&quot;,
+        tab = &quot;basic&quot;, visible = false, filter=false, sortAfter = &quot;externalLink&quot;, className = &quot;dt-tree-group&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.position_in_structure&quot;)
+                }
+            )
+        }
+    )
+    private GroupDetails groupDetails;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;editor.webpage_copy_in&quot;,
+        tab = &quot;basic&quot;, visible = false, filter=false, sortAfter = &quot;editorFields.groupDetails&quot;, className = &quot;dt-tree-group-array&quot;,
+        editor = { @DataTableColumnEditor( attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addWebpageCopy&quot;)
+        } )} )
+    private List&lt;GroupDetails&gt; groupCopyDetails;
+
+<span class="fc" id="L60">    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = &quot;wrap&quot;, title=&quot;editor.redactor_note&quot;,</span>
+        tab = &quot;basic&quot;, visible = false, filter=false, sortAfter = &quot;cacheable&quot;
+    )
+    private String redactorNote = &quot;&quot;;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;editor.access_restrictions_enable&quot;,
+        tab = &quot;access&quot;,
+        visible = false,
+        sortAfter = &quot;loggedShowInSitemap&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.access_restrictions&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+                }
+            )
+        }
+    )
+    private Integer[] permisions;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;editor.access_restrictions_enable_email&quot;,
+        tab = &quot;access&quot;,
+        visible = false,
+        sortAfter = &quot;editorFields.permisions&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;menu.email&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+                }
+            )
+        }
+    )
+    private Integer[] emails;
+
+<span class="fc" id="L97">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
+        tab = &quot;perex&quot;, hidden = true, sortAfter = &quot;publishStartDate&quot;,
+        editor = { @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;editor.public&quot;, value = &quot;true&quot;)
+            },
+            message = &quot;editor.public.tooltip&quot;
+        )
+    })
+    private boolean publishAfterStart = false;
+
+<span class="fc" id="L108">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
+        tab = &quot;perex&quot;, hidden = true, sortAfter = &quot;publishEndDate&quot;,
+        editor = { @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;editor.disableAfterEnd&quot;, value = &quot;true&quot;)
+            },
+            message = &quot;editor.disableAfterEnd.tooltip&quot;
+        )
+    })
+    private boolean disableAfterEnd = false;
+
+
+    //special anotation, create a Media table inside media tab of docEditor (load Media's are connected to concrete doc by docId)
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;media&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/media?docId={docId}&amp;groupId={groupId}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.spirit.model.Media&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-tabs&quot;, value = &quot;[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]&quot;)
+            }
+        )
+    })
+    private List&lt;Media&gt; media;
+
+    //special anotation, create a Media table inside media tab of docEditor (load Media's are connected to concrete doc by docId)
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;history&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/web-pages/history?docId={docId}&amp;groupId={groupId}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.editor.rest.DocHistoryDto&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;&quot;)
+            }
+        )
+    })
+    private List&lt;DocHistoryDto&gt; history;
+
+    //zoznam volnych poli
+    public List&lt;Field&gt; fieldsDefinition;
+
+    //zoznam CSS stylov
+    List&lt;Map&lt;String, String&gt;&gt; styleComboList;
+
+    //true - verejne publikovat
+    //false - ulozit pracovnu verziu do historie
+<span class="fc" id="L157">    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title=&quot;&quot;,tab=&quot;basic&quot;,hidden = true)</span>
+    boolean requestPublish=true;
+
+    //nastavuje rezim editora podla skupiny sablon
+<span class="fc" id="L161">    private String editingMode = &quot;&quot;;</span>
+<span class="fc" id="L162">    private String editingModeLink = &quot;&quot;;</span>
+<span class="fc" id="L163">    private String baseCssLink = &quot;&quot;;</span>
+
+    //atributy stranky
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;user.admin_edit.atrGroup&quot;,
+        tab = &quot;attributes&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+            }
+        )}
+    )
+    private String attrGroup;
+
+    @DataTableColumn(inputType = DataTableColumnType.ATTRS, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;attributes&quot;,
+        hidden = true
+    )
+    private List&lt;DocAtrDefEntity&gt; attrs;
+
+    /**
+     * Nastavi hodnoty atributov z DocDetails objektu
+     * @param doc
+     */
+    public void fromDocDetails(DocBasic doc, boolean loadSubQueries) {
+<span class="fc" id="L188">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L189">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L190">        GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (group != null) {</span>
+<span class="fc" id="L192">            groupDetails = group;</span>
+        }
+
+        //hlavna stranka adresara
+<span class="pc bpc" id="L196" title="1 of 6 branches missed.">        if (groupDetails != null &amp;&amp; doc.getDocId()&gt;0 &amp;&amp; groupDetails.getDefaultDocId()==doc.getDocId()) {</span>
+<span class="fc" id="L197">            addRowClass(&quot;is-default-page&quot;);</span>
+        }
+
+        //vypnute zobrazovanie
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (doc.isAvailable()==false) addRowClass(&quot;is-not-public&quot;);</span>
+<span class="fc" id="L202">        setDisableAfterEnd(doc.isDisableAfterEnd());</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (doc.isPublishAfterStart()) setPublishAfterStart(doc.isPublishAfterStart());</span>
+
+        //ikony
+<span class="pc bpc" id="L206" title="1 of 4 branches missed.">        if (group!=null &amp;&amp; group.getDefaultDocId()==doc.getDocId()) addStatusIcon(&quot;fas fa-star&quot;);</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (doc.isShowInMenu()) addStatusIcon(&quot;fas fa-map-marker-alt&quot;);</span>
+<span class="fc" id="L208">        else addStatusIcon(&quot;far fa-map-marker-alt-slash&quot;);</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon(&quot;fas fa-external-link-alt&quot;);</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        if (doc.isSearchable()==false) addStatusIcon(&quot;fas fa-eye-slash&quot;);</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon(&quot;fas fa-lock&quot;);</span>
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">        if (doc.getVirtualPath()!=null &amp;&amp; doc.getVirtualPath().contains(Constants.getString(&quot;ABTestingName&quot;))) addStatusIcon(&quot;fas fa-restroom&quot;);</span>
+
+<span class="fc" id="L214">        StringBuilder iconsHtml = new StringBuilder();</span>
+        //pridaj odkaz na zobrazenie stranky
+<span class="fc" id="L216">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L217">        String link = &quot;/showdoc.do?docid=&quot;+doc.getDocId();</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (doc instanceof DocHistory) {</span>
+            //v history je otocene docid a historyid
+<span class="fc" id="L220">            link = &quot;/showdoc.do?docid=&quot;+doc.getId()+&quot;&amp;historyId=&quot;+doc.getDocId();</span>
+        }
+<span class="fc" id="L222">        iconsHtml.append(&quot;&lt;a href=\&quot;&quot;+link+&quot;\&quot; target=\&quot;_blank\&quot; class=\&quot;preview-page-link\&quot; title=\&quot;&quot;+ResponseUtils.filter(prop.getText(&quot;history.showPage&quot;))+&quot;\&quot;&gt;&lt;i class=\&quot;far fa-eye\&quot;&gt;&lt;/i&gt;&lt;/a&gt; &quot;);</span>
+<span class="fc" id="L223">        iconsHtml.append(getStatusIconsHtml());</span>
+<span class="fc" id="L224">        statusIcons = iconsHtml.toString();</span>
+
+<span class="fc" id="L226">        int[] pp = Tools.getTokensInt(doc.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="fc" id="L227">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(pp);</span>
+<span class="fc" id="L228">        permisions = splitPermsEmails.get(0);</span>
+<span class="fc" id="L229">        emails = splitPermsEmails.get(1);</span>
+
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (loadSubQueries) {</span>
+<span class="fc" id="L232">            List&lt;Integer&gt; slaves = MultigroupMappingDB.getSlaveDocIds(doc.getDocId());</span>
+<span class="pc bpc" id="L233" title="1 of 4 branches missed.">            if (slaves != null &amp;&amp; slaves.size()&gt;0) {</span>
+<span class="fc" id="L234">                groupCopyDetails = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">                for (Integer docId : slaves) {</span>
+<span class="fc" id="L236">                    DocDetails slave = docDB.getBasicDocDetails(docId.intValue(), false);</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                    if (slave != null) {</span>
+<span class="fc" id="L238">                        group = groupsDB.getGroup(slave.getGroupId());</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                        if (group != null) {</span>
+<span class="fc" id="L240">                            groupCopyDetails.add(group);</span>
+                        }
+                    }
+<span class="fc" id="L243">                }</span>
+            }
+
+<span class="fc" id="L246">            DocNoteBean note = DocNoteDB.getInstance().getDocNote(doc.getDocId(), -1);</span>
+<span class="pc bpc" id="L247" title="1 of 4 branches missed.">            if (note != null &amp;&amp; Tools.isNotEmpty(note.getNote())) redactorNote = note.getNote();</span>
+
+            //definicia volnych poli
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">            if (doc.getTempId() &gt; 0)</span>
+            {
+                //nastavenie prefixu klucov podla skupiny sablon
+<span class="fc" id="L253">                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());</span>
+<span class="pc bpc" id="L254" title="3 of 6 branches missed.">                if (temp != null &amp;&amp; temp.getTemplatesGroupId()!=null &amp;&amp; temp.getTemplatesGroupId().longValue() &gt; 0) {</span>
+<span class="fc" id="L255">                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());</span>
+<span class="pc bpc" id="L256" title="2 of 4 branches missed.">                    if (tgb != null &amp;&amp; Tools.isNotEmpty(tgb.getKeyPrefix())) {</span>
+<span class="nc" id="L257">                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);</span>
+                    }
+<span class="pc bpc" id="L259" title="2 of 4 branches missed.">                    if (tgb != null &amp;&amp; group != null) {</span>
+                        //nastav typ editora
+<span class="fc" id="L261">                        setEditingMode(doc, temp, tgb, group, docDB);</span>
+                    }
+                }
+
+<span class="fc" id="L265">                RequestBean.addTextKeyPrefix(&quot;temp-&quot;+doc.getTempId(), false);</span>
+            }
+<span class="fc" id="L267">            fieldsDefinition = getFields(doc, &quot;editor&quot;, 'T');</span>
+
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">            if (doc instanceof DocDetails) {</span>
+<span class="fc" id="L270">                styleComboList = EditorService.getCssListJson(doc);</span>
+            }
+        }
+
+        //TODO: do DB modelu pridat
+        // - objectADocId-objectDDocId co su IDecka objektov v sablone
+        // - notLoggedNavbar
+        // - notLoggedSitemap
+        // - loggedShowInMenu
+        // - loggedNavbar
+        // - loggedSitemap
+        // - passwordProtected
+
+        //nastav editor URL
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">            if (Tools.isEmpty(doc.getEditorVirtualPath())) {</span>
+<span class="nc" id="L286">                int i = doc.getVirtualPath().lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">                if (i!=-1) {</span>
+<span class="nc" id="L288">                    String editorPath = doc.getVirtualPath().substring(i);</span>
+<span class="nc bnc" id="L289" title="All 4 branches missed.">                    if (&quot;/&quot;.equals(editorPath)==false &amp;&amp; editorPath.length()&gt;1) {</span>
+<span class="nc" id="L290">                        editorPath = editorPath.substring(1);</span>
+                    }
+<span class="nc" id="L292">                    doc.setEditorVirtualPath(editorPath);</span>
+                }
+<span class="nc" id="L294">            }</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        } else if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
+<span class="fc" id="L296">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+        } else {
+<span class="fc" id="L298">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+        }
+<span class="fc" id="L300">    }</span>
+
+    /**
+     * Nastavi rezim editacia (normal/pagebuilder) a linku pre iframe pagebuildera
+     * @param doc
+     * @param docDB
+     * @param temp
+     * @param tgb
+     * @param group
+     */
+    private void setEditingMode(DocBasic doc, TemplateDetails temp, TemplatesGroupBean tgb, GroupDetails group, DocDB docDB) {
+<span class="fc" id="L311">        editingMode = tgb.getInlineEditingMode();</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">        if (Tools.isNotEmpty(temp.getInlineEditingMode())) {</span>
+<span class="fc" id="L313">            editingMode = temp.getInlineEditingMode();</span>
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">            if (&quot;default&quot;.equals(editingMode)) editingMode = &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L317">        baseCssLink = &quot;/templates/&quot;+tgb.getDirectory();</span>
+
+        //ak sablona alebo forward obsahuje pboff, tak PageBuilder nebude dostupny
+<span class="pc bpc" id="L320" title="3 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBoff&quot;) || temp.getForward().contains(&quot;-pboff&quot;) || temp.getForward().contains(&quot;_pboff&quot;)) editingMode = &quot;&quot;;</span>
+
+        //ak sablona alebo forward obsahuje PBon, tak PageBuilder bude aktivovany
+<span class="pc bpc" id="L323" title="2 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBon&quot;) || temp.getForward().contains(&quot;-pbon&quot;) || temp.getForward().contains(&quot;_pbon&quot;)) editingMode = &quot;pageBuilder&quot;;</span>
+
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (Tools.isNotEmpty(editingMode)) {</span>
+<span class="fc" id="L326">            editingModeLink = doc.getVirtualPath();</span>
+
+<span class="pc bpc" id="L328" title="1 of 4 branches missed.">            if (doc.getDocId()&lt;1 || Tools.isEmpty(editingModeLink)) {</span>
+                //asi je to podstranka, otvor fejkovanu hlavnu stranku adresara
+<span class="fc" id="L330">                DocDetails groupDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">                if (groupDoc != null) {</span>
+<span class="fc" id="L332">                    editingModeLink = Tools.addParameterToUrlNoAmp(groupDoc.getVirtualPath(), &quot;inlineEditingNewPage&quot;, &quot;true&quot;);</span>
+                }
+            }
+
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(editingModeLink)) {</span>
+<span class="fc" id="L337">                editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;inlineEditorAdmin&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">                if (doc instanceof DocDetails) {</span>
+<span class="fc" id="L339">                    DocDetails docDocDetails = (DocDetails)doc;</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">                    if (docDocDetails.getHistoryId()&gt;0) {</span>
+<span class="fc" id="L341">                        editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;historyid&quot;, String.valueOf(docDocDetails.getHistoryId()));</span>
+                    }
+<span class="fc" id="L343">                }</span>
+            } else {
+                //nepodarilo sa najst stranku pre editaciu
+<span class="nc" id="L346">                editingMode = &quot;&quot;;</span>
+            }
+        }
+<span class="fc" id="L349">    }</span>
+
+    /**
+     * Nastavi hodnoty atributov nazad do DocDetails objektu
+     * @param doc
+     */
+    public void toDocDetails(DocDetails doc) {
+<span class="fc" id="L356">        doc.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));</span>
+
+<span class="fc" id="L358">        doc.setGroupId(groupDetails.getGroupId());</span>
+
+        //Nastav editorVirtualPath do virtualPath, aby sa vygenerovala cela cesta
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">        if(Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
+<span class="nc" id="L362">            doc.setVirtualPath(doc.getEditorVirtualPath());</span>
+        }
+
+        //Ak generateUrlFromTitle je true, vygeneruj hodnotu podla titulku nastavenim virtualPath na prazdnu hodnotu
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
+<span class="fc" id="L367">            doc.setVirtualPath(&quot;&quot;);</span>
+<span class="fc" id="L368">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+        }
+
+<span class="fc" id="L371">        doc.setPublishAfterStart(publishAfterStart);</span>
+<span class="fc" id="L372">        doc.setDisableAfterEnd(disableAfterEnd);</span>
+<span class="fc" id="L373">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

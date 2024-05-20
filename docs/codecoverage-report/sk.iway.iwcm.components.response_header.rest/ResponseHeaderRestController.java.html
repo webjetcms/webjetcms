@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResponseHeaderRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.response_header.rest</a> &gt; <span class="el_source">ResponseHeaderRestController.java</span></div><h1>ResponseHeaderRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.response_header.rest;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderEntity;
+import sk.iway.iwcm.components.response_header.jpa.ResponseHeaderRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/response-header&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_response-header')&quot;)
+@Datatable
+public class ResponseHeaderRestController extends DatatableRestControllerV2&lt;ResponseHeaderEntity, Long&gt; {
+
+    @Autowired
+    public ResponseHeaderRestController(ResponseHeaderRepository responseHeaderRepository) {
+<span class="fc" id="L24">        super(responseHeaderRepository);</span>
+<span class="fc" id="L25">    }</span>
+
+    @Override
+    public void beforeSave(ResponseHeaderEntity entity) {
+        //Set domain id
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if (entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+        //Set actual datetime of change
+<span class="fc" id="L33">        entity.setChangeDate(new Date());</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public void afterSave(ResponseHeaderEntity entity, ResponseHeaderEntity saved) {
+        //After change in table, delete cached response headers for this domain
+<span class="fc" id="L39">        ResponseHeaderService.deleteDomainCache();</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public void afterDelete(ResponseHeaderEntity entity, long id) {
+        //After change in table, delete cached response headers for this domain
+<span class="fc" id="L45">        ResponseHeaderService.deleteDomainCache();</span>
+<span class="fc" id="L46">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

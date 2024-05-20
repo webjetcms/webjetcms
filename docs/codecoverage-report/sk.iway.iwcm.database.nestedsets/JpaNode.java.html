@@ -1,0 +1,1146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.database.nestedsets</a> &gt; <span class="el_source">JpaNode.java</span></div><h1>JpaNode.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.database.nestedsets;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.persistence.Query;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;
+
+/**
+ * A decorator for a {@link NodeInfo} implementation that enriches it with the
+ * full API of a node in a nested set tree.
+ *
+ * @param &lt;T extends NodeInfo&gt; The wrapped entity type.
+ * @author Roman Borschel &lt;roman@code-factory.org&gt;
+ */
+@JsonSerialize(using = WrappedNodeSerializer.class)
+public class JpaNode&lt;T extends NodeInfo&gt; implements Node&lt;T&gt;
+{
+	private static final int PREV_SIBLING = 1;
+	private static final int FIRST_CHILD = 2;
+	private static final int NEXT_SIBLING = 3;
+	private static final int LAST_CHILD = 4;
+
+	/** The wrapped NodeInfo implementor. */
+	private final T node;
+	/** The type of the wrapped instance. */
+	private final Class&lt;T&gt; type;
+//	private CriteriaQuery&lt;T&gt; baseQuery;
+//	private Root&lt;T&gt; queryRoot;
+
+	/** The JpaNestedSetManager that manages this node. */
+	private final JpaNestedSetManager nsm;
+
+	/*
+	 * &quot;Caches&quot; of the tree state reachable from this node. These are cleared
+	 * whenever the node is rendered invalid due to tree modifications.
+	 */
+	private List&lt;Node&lt;T&gt;&gt; children;
+	private Node&lt;T&gt; parent;
+	private List&lt;Node&lt;T&gt;&gt; ancestors;
+	private List&lt;Node&lt;T&gt;&gt; descendants;
+<span class="nc" id="L55">	private int descendantDepth = 0;</span>
+
+	//MBO: nod bude operovat len s tym, co ma, nebude lozit do DB :)
+<span class="nc" id="L58">	private boolean offlineNode = false;</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public JpaNode(T node, JpaNestedSetManager nsm)
+<span class="nc" id="L62">	{</span>
+<span class="nc" id="L63">		this.node = node;</span>
+<span class="nc" id="L64">		this.nsm = nsm;</span>
+<span class="nc" id="L65">		this.type = (Class&lt;T&gt;) node.getClass();</span>
+<span class="nc" id="L66">	}</span>
+
+	@Override
+	public int getId()
+	{
+<span class="nc" id="L71">		return this.node.getId();</span>
+	}
+
+	@Override
+	public int getLeftValue()
+	{
+<span class="nc" id="L77">		return this.node.getLeftValue();</span>
+	}
+
+	@Override
+	public int getRightValue()
+	{
+<span class="nc" id="L83">		return this.node.getRightValue();</span>
+	}
+
+	@Override
+	public int getLevel()
+	{
+<span class="nc" id="L89">		return this.node.getLevel();</span>
+	}
+
+	@Override
+	public int getRootValue()
+	{
+<span class="nc" id="L95">		return this.node.getRootValue();</span>
+	}
+
+	@Override
+	public void setRootValue(int value)
+	{
+<span class="nc" id="L101">		this.node.setRootValue(value);</span>
+<span class="nc" id="L102">	}</span>
+
+	@Override
+	public void setLeftValue(int value)
+	{
+<span class="nc" id="L107">		this.node.setLeftValue(value);</span>
+<span class="nc" id="L108">	}</span>
+
+	@Override
+	public void setRightValue(int value)
+	{
+<span class="nc" id="L113">		this.node.setRightValue(value);</span>
+<span class="nc" id="L114">	}</span>
+
+	@Override
+	public void setLevel(int level)
+	{
+<span class="nc" id="L119">		this.node.setLevel(level);</span>
+<span class="nc" id="L120">	}</span>
+
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L125">		return &quot;[Left: &quot; + node.getLeftValue() + &quot;, Right: &quot;</span>
+<span class="nc" id="L126">				+ node.getRightValue() + &quot;, Level: &quot; + node.getLevel()</span>
+<span class="nc" id="L127">				+ &quot;, NodeInfo: &quot; + node.toString() + &quot;]&quot;;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean hasChildren()
+	{
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		return (getRightValue() - getLeftValue()) &gt; 1;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean hasParent()
+	{
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		return !isRoot();</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isValid()
+	{
+<span class="nc" id="L154">		return isValidNode(this);</span>
+	}
+
+	private boolean isValidNode(NodeInfo node)
+	{
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		return node != null &amp;&amp; node.getRightValue() &gt; node.getLeftValue();</span>
+	}
+
+//	/* public */private CriteriaQuery&lt;T&gt; getBaseQuery()
+//	{
+//		if (this.baseQuery == null)
+//		{
+//			this.baseQuery = nsm.getEntityManager().getCriteriaBuilder().createQuery(type);
+//			this.queryRoot = this.baseQuery.from(type);
+//		}
+//		return this.baseQuery;
+//	}
+
+	/**
+	 * Gets the number of children (direct descendants) of this node.
+	 *
+	 * @return The number of children of this node.
+	 */
+	public int getNumberOfChildren()
+	{
+<span class="nc" id="L179">		return getChildren().size();</span>
+	}
+
+	/**
+	 * Gets the number of descendants (children and their children etc.) of this
+	 * node.
+	 *
+	 * @return The number of descendants of this node.
+	 */
+	public int getNumberOfDescendants()
+	{
+<span class="nc" id="L190">		return (this.getRightValue() - this.getLeftValue() - 1) / 2;</span>
+	}
+
+	/**
+	 * Determines if this node is equal to another node.
+	 *
+	 * @return bool
+	 */
+	/*
+	 * public boolean isEqualTo(Node&lt;T&gt; node) { return ((this.getLeftValue() ==
+	 * node.getLeftValue()) &amp;&amp; (this.getRightValue() == node.getRightValue()) &amp;&amp;
+	 * (this.getRootValue() == node.getRootValue())); }
+	 */
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isRoot()
+	{
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		return getLeftValue() == 1;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @todo Better return an unmodifiable list instead?
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public List&lt;Node&lt;T&gt;&gt; getChildren()
+	{
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (this.children != null)</span>
+		{
+<span class="nc" id="L224">			return this.children;</span>
+		}
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		if (offlineNode)</span>
+		{
+<span class="nc" id="L228">			return Collections.EMPTY_LIST;</span>
+		}
+<span class="nc" id="L230">		return getDescendants(1);</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Node&lt;T&gt; getParent()
+	{
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if (isRoot())</span>
+		{
+<span class="nc" id="L241">			return null;</span>
+		}
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		if (this.parent != null)</span>
+		{
+<span class="nc" id="L245">			return this.parent;</span>
+		}
+
+<span class="nc" id="L248">		ReadAllQuery dbQuery = new ReadAllQuery(type);</span>
+<span class="nc" id="L249">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L251">		Expression where = builder.get(nsm.getConfig(this.type).getLeftFieldName()).lessThan(getLeftValue());</span>
+<span class="nc" id="L252">		where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getRightFieldName()).greaterThan(getRightValue()));</span>
+<span class="nc" id="L253">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L254">		dbQuery.addAscendingOrdering(nsm.getConfig(this.type).getRightFieldName());</span>
+<span class="nc" id="L255">		nsm.applyRootId(this.type, builder, where, getRootValue());</span>
+
+//		CriteriaBuilder cb = nsm.getEntityManager().getCriteriaBuilder();
+//		CriteriaQuery&lt;T&gt; cq = getBaseQuery();
+//		cq.where(
+//					cb.lt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getLeftFieldName()), getLeftValue()),
+//					cb.gt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getRightFieldName()), getRightValue())
+//					);
+//		cq.orderBy(cb.asc(queryRoot.get(nsm.getConfig(this.type).getRightFieldName())));
+//
+//		nsm.applyRootId(this.type, cq, getRootValue());
+
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L268">		List&lt;T&gt; result = nsm.getEntityManager().createQuery(dbQuery).getResultList();</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		if (result.isEmpty()) {</span>
+<span class="nc" id="L271">			return null;</span>
+		}
+
+<span class="nc" id="L274">		this.parent = nsm.getNode(result.get(0));</span>
+
+<span class="nc" id="L276">		return this.parent;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List&lt;Node&lt;T&gt;&gt; getDescendants()
+	{
+<span class="nc" id="L285">		return getDescendants(0);</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public List&lt;Node&lt;T&gt;&gt; getDescendants(int depth)
+	{
+<span class="nc bnc" id="L295" title="All 8 branches missed.">		if (this.descendants != null</span>
+				&amp;&amp; (depth == 0 &amp;&amp; this.descendantDepth == 0 || depth &lt;= this.descendantDepth))
+		{
+<span class="nc" id="L298">			return this.descendants;</span>
+		}
+
+<span class="nc" id="L301">		ReadAllQuery dbQuery = new ReadAllQuery(type);</span>
+<span class="nc" id="L302">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L304">		Expression where = builder.get(nsm.getConfig(this.type).getLeftFieldName()).greaterThan(getLeftValue());</span>
+<span class="nc" id="L305">		where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getRightFieldName()).lessThan(getRightValue()));</span>
+		//TODO: dorobit podmienku na level &lt;= this.level+depth
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (depth &gt; 0)</span>
+		{
+<span class="nc" id="L309">			where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getLevelFieldName()).lessThanEqual(getLevel() + depth));</span>
+		}
+<span class="nc" id="L311">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L312">		dbQuery.addAscendingOrdering(nsm.getConfig(this.type).getLeftFieldName());</span>
+<span class="nc" id="L313">		nsm.applyRootId(this.type, builder, where, getRootValue());</span>
+
+		// TODO: Fill this.children here also?
+//		CriteriaBuilder cb = nsm.getEntityManager().getCriteriaBuilder();
+//		CriteriaQuery&lt;T&gt; cq = getBaseQuery();
+//		Predicate wherePredicate = cb.and(
+//				cb.gt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getLeftFieldName()), getLeftValue()),
+//				cb.lt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getRightFieldName()), getRightValue()));
+//
+//		if (depth &gt; 0)
+//		{
+//			wherePredicate = cb.and(wherePredicate, cb.le(
+//					queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type)
+//							.getLevelFieldName()), getLevel() + depth));
+//		}
+//		cq.where(wherePredicate);
+//		cq.orderBy(cb.asc(queryRoot.get(nsm.getConfig(this.type)
+//				.getLeftFieldName())));
+//
+//		nsm.applyRootId(this.type, cq, getRootValue());
+
+<span class="nc" id="L334">		List&lt;Node&lt;T&gt;&gt; nodes = new ArrayList&lt;Node&lt;T&gt;&gt;();</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">		for (T n : (List&lt;T&gt;)nsm.getEntityManager().createQuery(dbQuery).getResultList())</span>
+		{
+<span class="nc" id="L337">			nodes.add(nsm.getNode(n));</span>
+<span class="nc" id="L338">		}</span>
+
+<span class="nc" id="L340">		this.descendants = nodes;</span>
+<span class="nc" id="L341">		this.descendantDepth = depth;</span>
+
+		/*
+		 * if (this.descendants.size() &gt; 0) {
+		 * this.nsm.buildTree(this.descendants, depth); }
+		 */
+
+<span class="nc" id="L348">		return this.descendants;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Node&lt;T&gt; addChild(T child)
+	{
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		if (child == this.node)</span>
+		{
+<span class="nc" id="L359">			throw new IllegalArgumentException(</span>
+					&quot;Cannot add node as child of itself.&quot;);
+		}
+
+<span class="nc" id="L363">		int newLeft = getRightValue();</span>
+<span class="nc" id="L364">		int newRight = getRightValue() + 1;</span>
+<span class="nc" id="L365">		int newRoot = getRootValue();</span>
+
+<span class="nc" id="L367">		shiftRLValues(newLeft, 0, 2, newRoot);</span>
+<span class="nc" id="L368">		child.setLevel(getLevel() + 1);</span>
+<span class="nc" id="L369">		child.setLeftValue(newLeft);</span>
+<span class="nc" id="L370">		child.setRightValue(newRight);</span>
+<span class="nc" id="L371">		child.setRootValue(newRoot);</span>
+<span class="nc" id="L372">		nsm.getEntityManager().persist(child);</span>
+
+<span class="nc" id="L374">		return this.nsm.getNode(child);</span>
+	}
+
+	/**
+	 * Inserts this node as the previous sibling of the given node.
+	 *
+	 * @return void
+	 */
+	private void insertAsPrevSiblingOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L386">			throw new IllegalArgumentException(</span>
+					&quot;Cannot add node as child of itself.&quot;);
+		}
+
+<span class="nc" id="L390">		int newLeft = dest.getLeftValue();</span>
+<span class="nc" id="L391">		int newRight = dest.getLeftValue() + 1;</span>
+<span class="nc" id="L392">		int newRoot = dest.getRootValue();</span>
+
+<span class="nc" id="L394">		shiftRLValues(newLeft, 0, 2, newRoot);</span>
+<span class="nc" id="L395">		setLevel(dest.getLevel());</span>
+<span class="nc" id="L396">		setLeftValue(newLeft);</span>
+<span class="nc" id="L397">		setRightValue(newRight);</span>
+<span class="nc" id="L398">		setRootValue(newRoot);</span>
+<span class="nc" id="L399">		nsm.getEntityManager().persist(this.node);</span>
+<span class="nc" id="L400">	}</span>
+
+	/**
+	 * Inserts this node as the next sibling of the given node.
+	 *
+	 * @return void
+	 */
+	private void insertAsNextSiblingOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L409" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L411">			throw new IllegalArgumentException(</span>
+					&quot;Cannot add node as child of itself.&quot;);
+		}
+
+<span class="nc" id="L415">		int newLeft = dest.getRightValue() + 1;</span>
+<span class="nc" id="L416">		int newRight = dest.getRightValue() + 2;</span>
+<span class="nc" id="L417">		int newRoot = dest.getRootValue();</span>
+
+<span class="nc" id="L419">		shiftRLValues(newLeft, 0, 2, newRoot);</span>
+<span class="nc" id="L420">		setLevel(dest.getLevel());</span>
+<span class="nc" id="L421">		setLeftValue(newLeft);</span>
+<span class="nc" id="L422">		setRightValue(newRight);</span>
+<span class="nc" id="L423">		setRootValue(newRoot);</span>
+<span class="nc" id="L424">		nsm.getEntityManager().persist(this.node);</span>
+<span class="nc" id="L425">	}</span>
+
+	/**
+	 * Inserts this node as the last child of the given node.
+	 *
+	 * @return void
+	 */
+	private void insertAsLastChildOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L436">			throw new IllegalArgumentException(</span>
+					&quot;Cannot add node as child of itself.&quot;);
+		}
+
+<span class="nc" id="L440">		int newLeft = dest.getRightValue();</span>
+<span class="nc" id="L441">		int newRight = dest.getRightValue() + 1;</span>
+<span class="nc" id="L442">		int newRoot = dest.getRootValue();</span>
+
+<span class="nc" id="L444">		shiftRLValues(newLeft, 0, 2, newRoot);</span>
+<span class="nc" id="L445">		setLevel(dest.getLevel() + 1);</span>
+<span class="nc" id="L446">		setLeftValue(newLeft);</span>
+<span class="nc" id="L447">		setRightValue(newRight);</span>
+<span class="nc" id="L448">		setRootValue(newRoot);</span>
+<span class="nc" id="L449">		nsm.getEntityManager().persist(this.node);</span>
+<span class="nc" id="L450">	}</span>
+
+	/**
+	 * Inserts this node as the first child of the given node.
+	 *
+	 * @return void
+	 */
+	private void insertAsFirstChildOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L459" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L461">			throw new IllegalArgumentException(</span>
+					&quot;Cannot add node as child of itself.&quot;);
+		}
+
+<span class="nc" id="L465">		int newLeft = dest.getLeftValue() + 1;</span>
+<span class="nc" id="L466">		int newRight = dest.getLeftValue() + 2;</span>
+<span class="nc" id="L467">		int newRoot = dest.getRootValue();</span>
+
+<span class="nc" id="L469">		shiftRLValues(newLeft, 0, 2, newRoot);</span>
+<span class="nc" id="L470">		setLevel(dest.getLevel());</span>
+<span class="nc" id="L471">		setLeftValue(newLeft);</span>
+<span class="nc" id="L472">		setRightValue(newRight);</span>
+<span class="nc" id="L473">		setRootValue(newRoot);</span>
+<span class="nc" id="L474">		nsm.getEntityManager().persist(this.node);</span>
+<span class="nc" id="L475">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void delete()
+	{
+		// TODO: Remove deleted nodes that are in-memory from
+		// JpaNestedSetManager.
+<span class="nc" id="L485">		int oldRoot = getRootValue();</span>
+<span class="nc" id="L486">		Configuration cfg = nsm.getConfig(this.type);</span>
+<span class="nc" id="L487">		String rootIdFieldName = cfg.getRootIdFieldName();</span>
+<span class="nc" id="L488">		String leftFieldName = cfg.getLeftFieldName();</span>
+<span class="nc" id="L489">		String rightFieldName = cfg.getRightFieldName();</span>
+<span class="nc" id="L490">		String entityName = cfg.getEntityName();</span>
+
+<span class="nc" id="L492">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L493">		sb.append(&quot;delete from &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L494">		.append(&quot; where n.&quot;).append(leftFieldName).append(&quot;&gt;= ?1&quot;)</span>
+<span class="nc" id="L495">		.append(&quot; and n.&quot;).append(rightFieldName).append(&quot;&lt;= ?2&quot;);</span>
+
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L499">			sb.append(&quot; and n.&quot;).append(rootIdFieldName).append(&quot;= ?3&quot;);</span>
+		}
+
+<span class="nc" id="L502">		Query q = nsm.getEntityManager().createQuery(sb.toString());</span>
+<span class="nc" id="L503">		q.setParameter(1, getLeftValue());</span>
+<span class="nc" id="L504">		q.setParameter(2, getRightValue());</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L507">			q.setParameter(3, oldRoot);</span>
+		}
+<span class="nc" id="L509">		q.executeUpdate();</span>
+
+		// Close gap in tree
+<span class="nc" id="L512">		int first = getRightValue() + 1;</span>
+<span class="nc" id="L513">		int delta = getLeftValue() - getRightValue() - 1;</span>
+<span class="nc" id="L514">		shiftRLValues(first, 0, delta, oldRoot);</span>
+
+		//nsm.removeNodes(getLeftValue(), getRightValue(), oldRoot);
+<span class="nc" id="L517">	}</span>
+
+	/**
+	 * Adds 'delta' to all Left and right values that are &gt;= 'first' and &lt;=
+	 * 'last'. 'delta' can also be negative. If 'last' is 0 it is skipped and
+	 * there is no upper bound.
+	 *
+	 * @param first
+	 *            The first left/right value (inclusive) of the nodes to shift.
+	 * @param last
+	 *            The last left/right value (inclusive) of the nodes to shift.
+	 * @param delta
+	 *            The offset by which to shift the left/right values (can be
+	 *            negative).
+	 * @param rootId
+	 *            The root/tree ID of the nodes to shift.
+	 */
+	private void shiftRLValues(int first, int last, int delta, int rootId)
+	{
+<span class="nc" id="L536">		Configuration cfg = nsm.getConfig(this.type);</span>
+<span class="nc" id="L537">		String rootIdFieldName = cfg.getRootIdFieldName();</span>
+<span class="nc" id="L538">		String leftFieldName = cfg.getLeftFieldName();</span>
+<span class="nc" id="L539">		String rightFieldName = cfg.getRightFieldName();</span>
+<span class="nc" id="L540">		String entityName = cfg.getEntityName();</span>
+
+		// Shift left values
+<span class="nc" id="L543">		StringBuilder sbLeft = new StringBuilder();</span>
+<span class="nc" id="L544">		sbLeft.append(&quot;update &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L545">		.append(&quot; set n.&quot;).append(leftFieldName).append(&quot; = n.&quot;)</span>
+<span class="nc" id="L546">		.append(leftFieldName).append(&quot; + ?1&quot;).append(&quot; where n.&quot;)</span>
+<span class="nc" id="L547">		.append(leftFieldName).append(&quot; &gt;= ?2&quot;);</span>
+
+<span class="nc bnc" id="L549" title="All 2 branches missed.">		if (last &gt; 0)</span>
+		{
+<span class="nc" id="L551">			sbLeft.append(&quot; and n.&quot;).append(leftFieldName).append(&quot; &lt;= ?3&quot;);</span>
+		}
+
+<span class="nc bnc" id="L554" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L556">			sbLeft.append(&quot; and n.&quot;).append(rootIdFieldName).append(&quot; = ?4&quot;);</span>
+		}
+
+<span class="nc" id="L559">		Query qLeft = nsm.getEntityManager().createQuery(sbLeft.toString());</span>
+<span class="nc" id="L560">		qLeft.setParameter(1, delta);</span>
+<span class="nc" id="L561">		qLeft.setParameter(2, first);</span>
+<span class="nc bnc" id="L562" title="All 2 branches missed.">		if (last &gt; 0)</span>
+		{
+<span class="nc" id="L564">			qLeft.setParameter(3, last);</span>
+		}
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L568">			qLeft.setParameter(4, rootId);</span>
+		}
+<span class="nc" id="L570">		qLeft.executeUpdate();</span>
+		//this.nsm.updateLeftValues(first, last, delta, rootId);
+
+		// Shift right values
+<span class="nc" id="L574">		StringBuilder sbRight = new StringBuilder();</span>
+<span class="nc" id="L575">		sbRight.append(&quot;update &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L576">		.append(&quot; set n.&quot;).append(rightFieldName).append(&quot; = n.&quot;)</span>
+<span class="nc" id="L577">		.append(rightFieldName).append(&quot; + ?1&quot;).append(&quot; where n.&quot;)</span>
+<span class="nc" id="L578">		.append(rightFieldName).append(&quot; &gt;= ?2&quot;);</span>
+
+<span class="nc bnc" id="L580" title="All 2 branches missed.">		if (last &gt; 0)</span>
+		{
+<span class="nc" id="L582">			sbRight.append(&quot; and n.&quot;).append(rightFieldName).append(&quot; &lt;= ?3&quot;);</span>
+		}
+
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L587">			sbRight.append(&quot; and n.&quot;).append(rootIdFieldName).append(&quot; = ?4&quot;);</span>
+		}
+
+<span class="nc" id="L590">		Query qRight = nsm.getEntityManager().createQuery(sbRight.toString());</span>
+<span class="nc" id="L591">		qRight.setParameter(1, delta);</span>
+<span class="nc" id="L592">		qRight.setParameter(2, first);</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">		if (last &gt; 0)</span>
+		{
+<span class="nc" id="L595">			qRight.setParameter(3, last);</span>
+		}
+<span class="nc bnc" id="L597" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L599">			qRight.setParameter(4, rootId);</span>
+		}
+<span class="nc" id="L601">		qRight.executeUpdate();</span>
+		//this.nsm.updateRightValues(first, last, delta, rootId);
+<span class="nc" id="L603">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public T unwrap()
+	{
+<span class="nc" id="L611">		return this.node;</span>
+	}
+
+	/**
+	 * Determines if the node is a leaf node.
+	 *
+	 * @return TRUE if the node is a leaf, FALSE otherwise.
+	 */
+	public boolean isLeaf()
+	{
+<span class="nc bnc" id="L621" title="All 2 branches missed.">		return (getRightValue() - getLeftValue()) == 1;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public Node&lt;T&gt; getFirstChild()
+	{
+<span class="nc bnc" id="L631" title="All 2 branches missed.">		if (this.children != null)</span>
+		{
+<span class="nc" id="L633">			return this.children.get(0);</span>
+		}
+
+<span class="nc" id="L636">		ReadAllQuery dbQuery = new ReadAllQuery(type);</span>
+<span class="nc" id="L637">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L639">		Expression where = builder.get(nsm.getConfig(this.type).getLeftFieldName()).equal(getLeftValue()+1);</span>
+		//where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getRightFieldName()).greaterThan(getRightValue()));
+<span class="nc" id="L641">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L642">		dbQuery.addAscendingOrdering(nsm.getConfig(this.type).getLeftFieldName());</span>
+<span class="nc" id="L643">		nsm.applyRootId(this.type, builder, where, getRootValue());</span>
+
+//
+//		CriteriaBuilder cb = nsm.getEntityManager().getCriteriaBuilder();
+//		CriteriaQuery&lt;T&gt; cq = getBaseQuery();
+//		cq.where(cb.equal(queryRoot.get(nsm.getConfig(this.type).getLeftFieldName()),getLeftValue() + 1));
+//
+//		nsm.applyRootId(this.type, cq, getRootValue());
+
+<span class="nc" id="L652">		return nsm.getNode((T)nsm.getEntityManager().createQuery(dbQuery).getSingleResult());</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public Node&lt;T&gt; getLastChild()
+	{
+<span class="nc bnc" id="L662" title="All 2 branches missed.">		if (this.children != null)</span>
+		{
+<span class="nc" id="L664">			return this.children.get(this.children.size() - 1);</span>
+		}
+
+<span class="nc" id="L667">		ReadAllQuery dbQuery = new ReadAllQuery(type);</span>
+<span class="nc" id="L668">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L670">		Expression where = builder.get(nsm.getConfig(this.type).getRightFieldName()).equal(getRightValue()-1);</span>
+		//where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getRightFieldName()).greaterThan(getRightValue()));
+<span class="nc" id="L672">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L673">		dbQuery.addDescendingOrdering(nsm.getConfig(this.type).getRightFieldName());</span>
+<span class="nc" id="L674">		nsm.applyRootId(this.type, builder, where, getRootValue());</span>
+
+//		CriteriaBuilder cb = nsm.getEntityManager().getCriteriaBuilder();
+//		CriteriaQuery&lt;T&gt; cq = getBaseQuery();
+//		cq.where(cb.equal(
+//				queryRoot.get(nsm.getConfig(this.type).getRightFieldName()),
+//				getRightValue() - 1));
+//
+//		nsm.applyRootId(this.type, cq, getRootValue());
+
+
+<span class="nc" id="L685">		return nsm.getNode((T)nsm.getEntityManager().createQuery(dbQuery).getSingleResult());</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@Override
+	public List&lt;Node&lt;T&gt;&gt; getAncestors()
+	{
+<span class="nc bnc" id="L695" title="All 2 branches missed.">		if (this.ancestors != null)</span>
+		{
+<span class="nc" id="L697">			return this.ancestors;</span>
+		}
+
+<span class="nc" id="L700">		ReadAllQuery dbQuery = new ReadAllQuery(type);</span>
+<span class="nc" id="L701">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L703">		Expression where = builder.get(nsm.getConfig(this.type).getLeftFieldName()).lessThan(getLeftValue());</span>
+<span class="nc" id="L704">		where = JpaDB.and(where, builder.get(nsm.getConfig(this.type).getRightFieldName()).greaterThan(getRightValue()));</span>
+<span class="nc" id="L705">		dbQuery.setSelectionCriteria(where);</span>
+<span class="nc" id="L706">		dbQuery.addAscendingOrdering(nsm.getConfig(this.type).getRightFieldName());</span>
+<span class="nc" id="L707">		nsm.applyRootId(this.type, builder, where, getRootValue());</span>
+
+//
+//		CriteriaBuilder cb = nsm.getEntityManager().getCriteriaBuilder();
+//		CriteriaQuery&lt;T&gt; cq = getBaseQuery();
+//		Predicate wherePredicate =
+//				cb.and(
+//						cb.lt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getLeftFieldName()), getLeftValue()),
+//						cb.gt(queryRoot.&lt;Number&gt; get(nsm.getConfig(this.type).getRightFieldName()), getRightValue())
+//						);
+//
+//		cq.where(wherePredicate);
+//		cq.orderBy(cb.asc(queryRoot.get(nsm.getConfig(this.type)
+//				.getLeftFieldName())));
+//
+//		nsm.applyRootId(this.type, cq, getRootValue());
+
+<span class="nc" id="L724">		List&lt;Node&lt;T&gt;&gt; nodes = new ArrayList&lt;Node&lt;T&gt;&gt;();</span>
+
+<span class="nc bnc" id="L726" title="All 2 branches missed.">		for (T n : (List&lt;T&gt;)nsm.getEntityManager().createQuery(dbQuery).getResultList())</span>
+		{
+<span class="nc" id="L728">			nodes.add(nsm.getNode(n));</span>
+<span class="nc" id="L729">		}</span>
+
+<span class="nc" id="L731">		this.ancestors = nodes;</span>
+
+<span class="nc" id="L733">		return this.ancestors;</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isDescendantOf(Node&lt;T&gt; subj)
+	{
+<span class="nc bnc" id="L742" title="All 2 branches missed.">		return ((getLeftValue() &gt; subj.getLeftValue())</span>
+<span class="nc bnc" id="L743" title="All 2 branches missed.">				&amp;&amp; (getRightValue() &lt; subj.getRightValue()) &amp;&amp; (getRootValue() == subj</span>
+<span class="nc bnc" id="L744" title="All 2 branches missed.">				.getRootValue()));</span>
+	}
+
+	public String getPath(String seperator)
+	{
+<span class="nc" id="L749">		StringBuilder path = new StringBuilder();</span>
+<span class="nc" id="L750">		List&lt;Node&lt;T&gt;&gt; ancestors = getAncestors();</span>
+<span class="nc bnc" id="L751" title="All 2 branches missed.">		for (Node&lt;T&gt; ancestor : ancestors)</span>
+		{
+<span class="nc" id="L753">			path.append(ancestor.toString()).append(seperator);</span>
+<span class="nc" id="L754">		}</span>
+
+<span class="nc" id="L756">		return path.toString();</span>
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void moveAsPrevSiblingOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L765" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L767">			throw new IllegalArgumentException(</span>
+					&quot;Cannot move node as previous sibling of itself&quot;);
+		}
+
+<span class="nc bnc" id="L771" title="All 2 branches missed.">		if (dest.getRootValue() != getRootValue())</span>
+		{
+<span class="nc" id="L773">			moveBetweenTrees(dest, dest.getLeftValue(), 1);</span>
+		} else
+		{
+			// Move within the tree
+<span class="nc" id="L777">			int oldLevel = getLevel();</span>
+<span class="nc" id="L778">			setLevel(dest.getLevel());</span>
+<span class="nc" id="L779">			updateNode(dest.getLeftValue(), getLevel() - oldLevel);</span>
+		}
+<span class="nc" id="L781">	}</span>
+
+	/**
+	 * move node's and its children to location 'destLeft' and update rest of
+	 * tree.
+	 *
+	 * @param destLeft destLeft destination left value
+	 * @param levelDiff
+	 */
+	private void updateNode(int destLeft, int levelDiff)
+	{
+<span class="nc" id="L792">		int left = getLeftValue();</span>
+<span class="nc" id="L793">		int right = getRightValue();</span>
+<span class="nc" id="L794">		int rootId = getRootValue();</span>
+<span class="nc" id="L795">		int treeSize = right - left + 1;</span>
+
+		// Make room in the new branch
+<span class="nc" id="L798">		shiftRLValues(destLeft, 0, treeSize, rootId);</span>
+
+<span class="nc bnc" id="L800" title="All 2 branches missed.">		if (left &gt;= destLeft)</span>
+		{ // src was shifted too?
+<span class="nc" id="L802">			left += treeSize;</span>
+<span class="nc" id="L803">			right += treeSize;</span>
+		}
+
+<span class="nc" id="L806">		String levelFieldName = nsm.getConfig(this.type).getLevelFieldName();</span>
+<span class="nc" id="L807">		String leftFieldName = nsm.getConfig(this.type).getLeftFieldName();</span>
+<span class="nc" id="L808">		String rightFieldName = nsm.getConfig(this.type).getRightFieldName();</span>
+<span class="nc" id="L809">		String rootIdFieldName = nsm.getConfig(this.type).getRootIdFieldName();</span>
+<span class="nc" id="L810">		String entityName = nsm.getConfig(this.type).getEntityName();</span>
+
+		// update level for descendants
+<span class="nc" id="L813">		StringBuilder updateQuery = new StringBuilder();</span>
+<span class="nc" id="L814">		updateQuery.append(&quot;update &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L815">		.append(&quot; set n.&quot;).append(levelFieldName).append(&quot; = n.&quot;)</span>
+<span class="nc" id="L816">		.append(levelFieldName).append(&quot; + ?1&quot;).append(&quot; where n.&quot;)</span>
+<span class="nc" id="L817">		.append(leftFieldName).append(&quot; &gt;= ?2&quot;).append(&quot; and n.&quot;)</span>
+<span class="nc" id="L818">		.append(rightFieldName).append(&quot; &lt;= ?3&quot;);</span>
+
+<span class="nc bnc" id="L820" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L822">			updateQuery.append(&quot; and n.&quot;).append(rootIdFieldName)</span>
+<span class="nc" id="L823">			.append(&quot; = ?4&quot;);</span>
+		}
+
+<span class="nc" id="L826">		Query q = nsm.getEntityManager().createQuery(updateQuery.toString());</span>
+<span class="nc" id="L827">		q.setParameter(1, levelDiff);</span>
+<span class="nc" id="L828">		q.setParameter(2, left);</span>
+<span class="nc" id="L829">		q.setParameter(3, right);</span>
+<span class="nc bnc" id="L830" title="All 2 branches missed.">		if (rootIdFieldName != null)</span>
+		{
+<span class="nc" id="L832">			q.setParameter(4, rootId);</span>
+		}
+<span class="nc" id="L834">		q.executeUpdate();</span>
+		//this.nsm.updateLevels(left, right, levelDiff, rootId);
+
+		// now there's enough room next to target to move the subtree
+<span class="nc" id="L838">		shiftRLValues(left, right, destLeft - left, rootId);</span>
+
+		// correct values after source (close gap in old tree)
+<span class="nc" id="L841">		shiftRLValues(right + 1, 0, -treeSize, rootId);</span>
+<span class="nc" id="L842">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void moveAsNextSiblingOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L850" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L852">			throw new IllegalArgumentException(</span>
+					&quot;Cannot move node as next sibling of itself&quot;);
+		}
+<span class="nc bnc" id="L855" title="All 2 branches missed.">		if (dest.getRootValue() != getRootValue())</span>
+		{
+<span class="nc" id="L857">			moveBetweenTrees(dest, dest.getRightValue() + 1, 3);</span>
+		} else
+		{
+			// Move within tree
+<span class="nc" id="L861">			int oldLevel = getLevel();</span>
+<span class="nc" id="L862">			setLevel(dest.getLevel());</span>
+<span class="nc" id="L863">			updateNode(dest.getRightValue() + 1, getLevel() - oldLevel);</span>
+		}
+<span class="nc" id="L865">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void moveAsFirstChildOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L873" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L875">			throw new IllegalArgumentException(</span>
+					&quot;Cannot move node as first child of itself&quot;);
+		}
+
+<span class="nc bnc" id="L879" title="All 2 branches missed.">		if (dest.getRootValue() != getRootValue())</span>
+		{
+<span class="nc" id="L881">			moveBetweenTrees(dest, dest.getLeftValue() + 1, 2);</span>
+		} else
+		{
+			// Move within tree
+<span class="nc" id="L885">			int oldLevel = getLevel();</span>
+<span class="nc" id="L886">			setLevel(dest.getLevel() + 1);</span>
+<span class="nc" id="L887">			updateNode(dest.getLeftValue() + 1, getLevel() - oldLevel);</span>
+		}
+<span class="nc" id="L889">	}</span>
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void moveAsLastChildOf(Node&lt;T&gt; dest)
+	{
+<span class="nc bnc" id="L897" title="All 2 branches missed.">		if (dest == this.node)</span>
+		{
+<span class="nc" id="L899">			throw new IllegalArgumentException(</span>
+					&quot;Cannot move node as first child of itself&quot;);
+		}
+
+<span class="nc bnc" id="L903" title="All 2 branches missed.">		if (dest.getRootValue() != getRootValue())</span>
+		{
+<span class="nc" id="L905">			moveBetweenTrees(dest, dest.getLeftValue() + 1, 4);</span>
+		} else
+		{
+			// Move within tree
+<span class="nc" id="L909">			int oldLevel = getLevel();</span>
+<span class="nc" id="L910">			setLevel(dest.getLevel() + 1);</span>
+<span class="nc" id="L911">			updateNode(dest.getRightValue(), getLevel() - oldLevel);</span>
+		}
+<span class="nc" id="L913">	}</span>
+
+	/**
+	 * Accomplishes moving of nodes between different trees. Used by the move*
+	 * methods if the root values of the two nodes are different.
+	 *
+	 * @param dest
+	 * @param newLeftValue
+	 * @param moveType
+	 */
+	private void moveBetweenTrees(Node&lt;T&gt; dest, int newLeftValue, int moveType)
+	{
+
+<span class="nc" id="L926">		Configuration cfg = nsm.getConfig(this.type);</span>
+<span class="nc" id="L927">		String leftFieldName = cfg.getLeftFieldName();</span>
+<span class="nc" id="L928">		String rightFieldName = cfg.getRightFieldName();</span>
+<span class="nc" id="L929">		String levelFieldName = cfg.getLevelFieldName();</span>
+<span class="nc" id="L930">		String rootIdFieldName = cfg.getRootIdFieldName();</span>
+<span class="nc" id="L931">		String entityName = cfg.getEntityName();</span>
+
+		// Move between trees: Detach from old tree &amp; insert into new tree
+<span class="nc" id="L934">		int newRoot = dest.getRootValue();</span>
+<span class="nc" id="L935">		int oldRoot = getRootValue();</span>
+<span class="nc" id="L936">		int oldLft = getLeftValue();</span>
+<span class="nc" id="L937">		int oldRgt = getRightValue();</span>
+<span class="nc" id="L938">		int oldLevel = getLevel();</span>
+
+		// Prepare target tree for insertion, make room
+<span class="nc" id="L941">		shiftRLValues(newLeftValue, 0, oldRgt - oldLft - 1, newRoot);</span>
+
+		// Set new root id for this node
+<span class="nc" id="L944">		setRootValue(newRoot);</span>
+		// $this -&gt; _node -&gt; save();
+		// Insert this node as a new node
+<span class="nc" id="L947">		setRightValue(0);</span>
+<span class="nc" id="L948">		setLeftValue(0);</span>
+
+<span class="nc bnc" id="L950" title="All 5 branches missed.">		switch (moveType) {</span>
+			case PREV_SIBLING:
+<span class="nc" id="L952">				insertAsPrevSiblingOf(dest);</span>
+<span class="nc" id="L953">				break;</span>
+			case FIRST_CHILD:
+<span class="nc" id="L955">				insertAsFirstChildOf(dest);</span>
+<span class="nc" id="L956">				break;</span>
+			case NEXT_SIBLING:
+<span class="nc" id="L958">				insertAsNextSiblingOf(dest);</span>
+<span class="nc" id="L959">				break;</span>
+			case LAST_CHILD:
+<span class="nc" id="L961">				insertAsLastChildOf(dest);</span>
+<span class="nc" id="L962">				break;</span>
+			default:
+<span class="nc" id="L964">				throw new IllegalArgumentException(&quot;Unknown move operation: &quot;</span>
+						+ moveType);
+		}
+
+		// int diff = oldRgt - oldLft;
+<span class="nc" id="L969">		setRightValue(getLeftValue() + (oldRgt - oldLft));</span>
+
+<span class="nc" id="L971">		int newLevel = getLevel();</span>
+<span class="nc" id="L972">		int levelDiff = newLevel - oldLevel;</span>
+
+		// Relocate descendants of the node
+<span class="nc" id="L975">		int diff = getLeftValue() - oldLft;</span>
+
+		// Update lft/rgt/root/level for all descendants
+<span class="nc" id="L978">		StringBuilder updateQuery = new StringBuilder();</span>
+<span class="nc" id="L979">		updateQuery.append(&quot;update &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L980">		.append(&quot; set n.&quot;).append(leftFieldName).append(&quot; = n.&quot;)</span>
+<span class="nc" id="L981">		.append(leftFieldName).append(&quot; + ?1&quot;).append(&quot;, n.&quot;)</span>
+<span class="nc" id="L982">		.append(rightFieldName).append(&quot; = n.&quot;).append(rightFieldName)</span>
+<span class="nc" id="L983">		.append(&quot; + ?2&quot;).append(&quot;, n.&quot;).append(levelFieldName)</span>
+<span class="nc" id="L984">		.append(&quot; = n.&quot;).append(levelFieldName).append(&quot; + ?3&quot;)</span>
+<span class="nc" id="L985">		.append(&quot;, n.&quot;).append(rootIdFieldName).append(&quot; = ?4&quot;)</span>
+<span class="nc" id="L986">		.append(&quot; where n.&quot;).append(leftFieldName).append(&quot; &gt; ?5&quot;)</span>
+<span class="nc" id="L987">		.append(&quot; and n.&quot;).append(rightFieldName).append(&quot; &lt; ?6&quot;)</span>
+<span class="nc" id="L988">		.append(&quot; and n.&quot;).append(rootIdFieldName).append(&quot; = ?7&quot;);</span>
+
+<span class="nc" id="L990">		Query q = nsm.getEntityManager().createQuery(updateQuery.toString());</span>
+<span class="nc" id="L991">		q.setParameter(1, diff);</span>
+<span class="nc" id="L992">		q.setParameter(2, diff);</span>
+<span class="nc" id="L993">		q.setParameter(3, levelDiff);</span>
+<span class="nc" id="L994">		q.setParameter(4, newRoot);</span>
+<span class="nc" id="L995">		q.setParameter(5, oldLft);</span>
+<span class="nc" id="L996">		q.setParameter(6, oldRgt);</span>
+<span class="nc" id="L997">		q.setParameter(7, oldRoot);</span>
+
+<span class="nc" id="L999">		q.executeUpdate();</span>
+
+		// Close gap in old tree
+<span class="nc" id="L1002">		int first = oldRgt + 1;</span>
+<span class="nc" id="L1003">		int delta = oldLft - oldRgt - 1;</span>
+<span class="nc" id="L1004">		shiftRLValues(first, 0, delta, oldRoot);</span>
+<span class="nc" id="L1005">	}</span>
+
+	/**
+	 * Makes this node a root node. Only used in multiple-root trees.
+	 *
+	 * @param newRootId
+	 */
+	public void makeRoot(int newRootId)
+	{
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">		if (isRoot())</span>
+		{
+<span class="nc" id="L1016">			return;</span>
+		}
+
+<span class="nc" id="L1019">		Configuration cfg = nsm.getConfig(this.type);</span>
+<span class="nc" id="L1020">		String leftFieldName = cfg.getLeftFieldName();</span>
+<span class="nc" id="L1021">		String rightFieldName = cfg.getRightFieldName();</span>
+<span class="nc" id="L1022">		String levelFieldName = cfg.getLevelFieldName();</span>
+<span class="nc" id="L1023">		String rootIdFieldName = cfg.getRootIdFieldName();</span>
+<span class="nc" id="L1024">		String entityName = cfg.getEntityName();</span>
+
+<span class="nc" id="L1026">		int oldRgt = getRightValue();</span>
+<span class="nc" id="L1027">		int oldLft = getLeftValue();</span>
+<span class="nc" id="L1028">		int oldRoot = getRootValue();</span>
+<span class="nc" id="L1029">		int oldLevel = getLevel();</span>
+
+		// Update descendants lft/rgt/root/level values
+<span class="nc" id="L1032">		int diff = 1 - oldLft;</span>
+<span class="nc" id="L1033">		int newRoot = newRootId;</span>
+
+<span class="nc" id="L1035">		StringBuilder updateQuery = new StringBuilder();</span>
+<span class="nc" id="L1036">		updateQuery.append(&quot;update &quot;).append(entityName).append(&quot; n&quot;)</span>
+<span class="nc" id="L1037">		.append(&quot; set n.&quot;).append(leftFieldName).append(&quot; = n.&quot;)</span>
+<span class="nc" id="L1038">		.append(leftFieldName).append(&quot; + ?1&quot;).append(&quot;, n.&quot;)</span>
+<span class="nc" id="L1039">		.append(rightFieldName).append(&quot; = n.&quot;).append(rightFieldName)</span>
+<span class="nc" id="L1040">		.append(&quot; + ?2&quot;).append(&quot;, n.&quot;).append(levelFieldName)</span>
+<span class="nc" id="L1041">		.append(&quot; = n.&quot;).append(levelFieldName).append(&quot; - ?3&quot;)</span>
+<span class="nc" id="L1042">		.append(&quot;, n.&quot;).append(rootIdFieldName).append(&quot; = ?4&quot;)</span>
+<span class="nc" id="L1043">		.append(&quot;where n.&quot;).append(leftFieldName).append(&quot; &gt; ?5&quot;)</span>
+<span class="nc" id="L1044">		.append(&quot; and n.&quot;).append(rightFieldName).append(&quot; &lt; ?6&quot;)</span>
+<span class="nc" id="L1045">		.append(&quot; and n.&quot;).append(rootIdFieldName).append(&quot; = ?7&quot;);</span>
+
+<span class="nc" id="L1047">		Query q = nsm.getEntityManager().createQuery(updateQuery.toString());</span>
+<span class="nc" id="L1048">		q.setParameter(1, diff);</span>
+<span class="nc" id="L1049">		q.setParameter(2, diff);</span>
+<span class="nc" id="L1050">		q.setParameter(3, oldLevel);</span>
+<span class="nc" id="L1051">		q.setParameter(4, newRoot);</span>
+<span class="nc" id="L1052">		q.setParameter(5, oldLft);</span>
+<span class="nc" id="L1053">		q.setParameter(6, oldRgt);</span>
+<span class="nc" id="L1054">		q.setParameter(7, oldRoot);</span>
+
+<span class="nc" id="L1056">		q.executeUpdate();</span>
+
+		// Detach from old tree (close gap in old tree)
+<span class="nc" id="L1059">		int first = oldRgt + 1;</span>
+<span class="nc" id="L1060">		int delta = oldLft - oldRgt - 1;</span>
+<span class="nc" id="L1061">		shiftRLValues(first, 0, delta, getRootValue());</span>
+
+		// Set new lft/rgt/root/level values for root node
+<span class="nc" id="L1064">		setLeftValue(1);</span>
+<span class="nc" id="L1065">		setRightValue(oldRgt - oldLft + 1);</span>
+<span class="nc" id="L1066">		setRootValue(newRootId);</span>
+<span class="nc" id="L1067">		setLevel(0);</span>
+<span class="nc" id="L1068">	}</span>
+
+	//
+	// Internal tree management methods used for preconstructing and
+	// invalidating the parts
+	// of a tree reachable directly from this node.
+	//
+
+	void invalidate()
+	{
+		// Clear all local caches of other nodes, so that they're re-evaluated.
+<span class="nc" id="L1079">		this.children = null;</span>
+<span class="nc" id="L1080">		this.parent = null;</span>
+<span class="nc" id="L1081">		this.ancestors = null;</span>
+<span class="nc" id="L1082">		this.descendants = null;</span>
+<span class="nc" id="L1083">		this.descendantDepth = 0;</span>
+<span class="nc" id="L1084">	}</span>
+
+	void internalAddChild(Node&lt;T&gt; child)
+	{
+<span class="nc bnc" id="L1088" title="All 2 branches missed.">		if (this.children == null)</span>
+		{
+<span class="nc" id="L1090">			this.children = new ArrayList&lt;Node&lt;T&gt;&gt;();</span>
+		}
+<span class="nc" id="L1092">		this.children.add(child);</span>
+<span class="nc" id="L1093">	}</span>
+
+	void internalSetParent(Node&lt;T&gt; parent)
+	{
+<span class="nc" id="L1097">		this.parent = parent;</span>
+<span class="nc" id="L1098">	}</span>
+
+	void internalAddDescendant(Node&lt;T&gt; descendant)
+	{
+<span class="nc bnc" id="L1102" title="All 2 branches missed.">		if (this.descendants == null)</span>
+		{
+<span class="nc" id="L1104">			this.descendants = new ArrayList&lt;Node&lt;T&gt;&gt;();</span>
+		}
+<span class="nc" id="L1106">		this.descendants.add(descendant);</span>
+<span class="nc" id="L1107">	}</span>
+
+	void internalSetAncestors(List&lt;Node&lt;T&gt;&gt; ancestors)
+	{
+<span class="nc" id="L1111">		this.ancestors = ancestors;</span>
+<span class="nc" id="L1112">	}</span>
+	public static class WrappedNodeSerializer extends StdSerializer&lt;JpaNode&lt;?&gt;&gt;
+	{
+
+		private static final long serialVersionUID = 1L;
+		public WrappedNodeSerializer()
+		{
+<span class="nc" id="L1119">			this(null);</span>
+<span class="nc" id="L1120">		}</span>
+		public WrappedNodeSerializer(Class&lt;JpaNode&lt;?&gt;&gt; clazz)
+		{
+<span class="nc" id="L1123">			super(clazz);</span>
+<span class="nc" id="L1124">		}</span>
+		@Override
+		public void serialize(JpaNode&lt;?&gt; value, JsonGenerator jgen, SerializerProvider arg2) throws IOException
+		{
+<span class="nc" id="L1128">			jgen.writeStartObject();</span>
+			//jgen.writeObject();
+//			jgen.writeObject( value.unwrap());
+<span class="nc" id="L1131">			jgen.writeObjectField(&quot;item&quot;, value.unwrap());</span>
+<span class="nc" id="L1132">			jgen.writeArrayFieldStart(&quot;children&quot;);</span>
+<span class="nc" id="L1133">			jgen.writeObject(value.getChildren());</span>
+<span class="nc" id="L1134">			jgen.writeEndArray();</span>
+<span class="nc" id="L1135">			jgen.writeEndObject();</span>
+<span class="nc" id="L1136">		}</span>
+
+
+	}
+
+	public void setOfflineNode(boolean offlineNode)
+	{
+<span class="nc" id="L1143">		this.offlineNode = offlineNode;</span>
+<span class="nc" id="L1144">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

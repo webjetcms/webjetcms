@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormResultsParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form</a> &gt; <span class="el_source">FormResultsParser.java</span></div><h1>FormResultsParser.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+import static sk.iway.iwcm.Tools.isInteger;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import sk.iway.iwcm.Logger;
+
+/**
+ *  FormResultsParser.java
+ *  
+ *  Parses !INCLUDE configuration supplied by form_results.jsp's config attribute.
+ *  Individual columns are separated by | character, whereas its attribute are separated by ~.  	
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 16.6.2010 15:32:28
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class FormResultsParser
+{
+	
+	String originalConfig;
+	List&lt;String&gt; columnNames;
+	Map&lt;String, String&gt; columnToLabels;
+	Map&lt;String, String&gt; columnToWidth;
+	
+	public FormResultsParser(String originalConfig) throws ParseException
+<span class="fc" id="L37">	{</span>
+<span class="fc" id="L38">		this.originalConfig = originalConfig;</span>
+<span class="fc" id="L39">		columnNames = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L40">		columnToLabels = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L41">		columnToWidth = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L42">		parse();</span>
+<span class="fc" id="L43">	}</span>
+
+	private void parse() throws ParseException
+	{
+<span class="fc" id="L47">		Logger.debug(FormResultsParser.class, &quot;Parsing: &quot;+originalConfig);</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		for (String columnConfig : originalConfig.split(&quot;[|]&quot;))</span>
+		{
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">			if (isEmpty(columnConfig)) continue;</span>
+<span class="fc" id="L51">			String[] properties = columnConfig.split(&quot;~&quot;);</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">			if (properties.length != 3)</span>
+<span class="nc" id="L53">				throw new ParseException(&quot;Column configuration malformed: 3 subparts expected: &quot;+columnConfig, originalConfig.indexOf(columnConfig));</span>
+<span class="fc" id="L54">			String columnName = properties[0].trim();</span>
+<span class="fc" id="L55">			columnNames.add(columnName);</span>
+<span class="fc" id="L56">			columnToLabels.put(columnName, properties[1].trim());</span>
+<span class="fc" id="L57">			columnToWidth.put(columnName, toCssWidth(properties[2].trim()));</span>
+		}
+<span class="fc" id="L59">		Logger.debug(FormResultsParser.class, &quot;Results of parsing: columnNames: &quot;+columnNames+&quot; columnLabels: &quot;+columnToLabels.values());</span>
+<span class="fc" id="L60">	}</span>
+
+	private String toCssWidth(String wildCard) throws ParseException
+	{
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if (&quot;*&quot;.equals(wildCard)) return &quot;auto&quot;;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">		if (isInteger(wildCard)) return wildCard+&quot;px&quot;;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (wildCard.endsWith(&quot;%&quot;)) return wildCard;</span>
+<span class="nc" id="L67">		throw new ParseException(&quot;Unknown column width: &quot;+wildCard, 0);</span>
+	}
+
+	public List&lt;String&gt; getColumnNames()
+	{
+<span class="fc" id="L72">		return new ArrayList&lt;String&gt;(columnNames);</span>
+	}
+	
+	public String getLabelFor(String column)
+	{
+<span class="fc" id="L77">		return columnToLabels.get(column);</span>
+	}
+	
+	public String getCssWidthFor(String column)
+	{
+<span class="fc" id="L82">		return columnToWidth.get(column);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

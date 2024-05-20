@@ -2,6 +2,8 @@ package sk.iway.iwcm.findexer;
 
 import java.util.StringTokenizer;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
@@ -37,7 +39,7 @@ public class PDF
 		{
 			IwcmInputStream is = new IwcmInputStream(fileName);
 
-			PDDocument pdfDocument = PDDocument.load(is, "");
+			PDDocument pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(is), "");
 	        try {
 	      	   /*
 	            if (pdfDocument.isEncrypted()) {

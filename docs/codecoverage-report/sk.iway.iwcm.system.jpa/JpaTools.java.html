@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">JpaTools.java</span></div><h1>JpaTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.internal.jpa.querydef.CompoundExpressionImpl;
+import org.eclipse.persistence.internal.jpa.querydef.PathImpl;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.jpa.JpaHelper;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import org.eclipse.persistence.queries.ReportQuery;
+import org.eclipse.persistence.queries.ReportQueryResult;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.DataSource;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.utils.Pair;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.criteria.Predicate;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *  JpaTools.java - podporne nastroje pre JPA
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: rusho $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.4.2010 15:33:13
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L45">public class JpaTools</span>
+{
+	/**
+	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
+	 *
+	 * @param dbName - nazov DB spojenia
+	 * @return EntityManager alebo null, ak pre DB spojenie neexistuje EntityManagerFactory
+	 */
+	public static EntityManager getEntityManager(String dbName)
+	{
+<span class="fc" id="L55">		return SetCharacterEncodingFilter.getEntityManager(dbName);</span>
+	}
+
+	/**
+	 * Vrati EntityManager pre defaultny nazov DB spojenia (&quot;iwcm&quot;)
+	 * @return an @EntityManager
+	 */
+	public static EntityManager getEntityManager()
+	{
+<span class="fc" id="L64">		return getEntityManager(&quot;iwcm&quot;);</span>
+	}
+
+
+	/**
+	 * Vrati JpaEntityManager pre zadany nazov DB spojenia.
+	 *
+	 * JpaEntityManager je EclipseLink-ove rozsirenie EntityManager-a, ktoreho funkcionalita je rozsirena oproti JPA specifikacii.
+	 * Metoda skonvertuje EntityManager, vrateny metodou getEntityManager(dbName).
+	 * @param dbName
+	 * @return
+	 */
+	public static JpaEntityManager getEclipseLinkEntityManager(String dbName)
+	{
+<span class="fc" id="L78">		return JpaHelper.getEntityManager(getEntityManager(dbName));</span>
+	}
+
+	/**
+	 * Vrati JpaEntityManager pre defaultny nazov DB spojenia (&quot;iwcm&quot;)
+	 *
+	 * JpaEntityManager je EclipseLink-ove rozsirenie EntityManager-a, ktoreho funkcionalita je rozsirena oproti JPA specifikacii.
+	 * Metoda skonvertuje EntityManager, vrateny metodou getEntityManager().
+	 * @return
+	 */
+	public static JpaEntityManager getEclipseLinkEntityManager()
+	{
+<span class="fc" id="L90">		return JpaHelper.getEntityManager(getEntityManager());</span>
+	}
+
+	/**
+	 * Vrati JpaEntityManager pre nazov DB spojenia ktory je nastaveny v danej classe cez anotaciu DataSource
+	 *
+	 * JpaEntityManager je EclipseLink-ove rozsirenie EntityManager-a, ktoreho funkcionalita je rozsirena oproti JPA specifikacii.
+	 * Metoda skonvertuje EntityManager, vrateny metodou getEntityManager().
+	 * @return
+	 */
+	public static JpaEntityManager getEclipseLinkEntityManager(Class&lt;?&gt; clazz)
+	{
+<span class="fc" id="L102">		String dbName = &quot;iwcm&quot;;</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (clazz.isAnnotationPresent(DataSource.class)) {</span>
+
+<span class="nc" id="L105">			Annotation annotation = clazz.getAnnotation(DataSource.class);</span>
+<span class="nc" id="L106">			DataSource dataSource = (DataSource) annotation;</span>
+<span class="nc" id="L107">			dbName = dataSource.name();</span>
+		}
+<span class="fc" id="L109">		return JpaHelper.getEntityManager(getEntityManager(dbName));</span>
+	}
+
+	public static List&lt;String&gt; getJpaClassNames(String rootUrl)
+	{
+<span class="fc" id="L114">		List&lt;String&gt; foundFiles = new ArrayList&lt;String&gt;();</span>
+
+<span class="fc" id="L116">		String basePackage = rootUrl;</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">		if (basePackage.startsWith(&quot;/WEB-INF/classes/&quot;)) basePackage = basePackage.substring(17);</span>
+<span class="fc" id="L118">		basePackage = basePackage.replace('/', '.');</span>
+
+<span class="fc" id="L120">		Logger.debug(JpaTools.class, &quot;getJpaClassNamesByAnnotation.basePackage=&quot;+basePackage);</span>
+
+<span class="fc" id="L122">		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(true);</span>
+<span class="fc" id="L123">		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));</span>
+<span class="fc" id="L124">		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Converter.class));</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">		for (BeanDefinition bd : scanner.findCandidateComponents(basePackage))</span>
+		{
+<span class="fc" id="L127">			Logger.debug(JpaTools.class, &quot;found class: &quot;+bd.getBeanClassName());</span>
+<span class="fc" id="L128">			foundFiles.add(bd.getBeanClassName());</span>
+<span class="fc" id="L129">		}</span>
+
+		//hladanie JpaInfo uz nepotrebujeme, kedze entity hladame podla anotacie a nie nazvu suboru
+
+<span class="fc" id="L133">		return foundFiles;</span>
+	}
+
+	/*
+	public static List&lt;String&gt; getJpaClassNames(String rootUrl)
+	{
+		List&lt;String&gt; foundFiles = new ArrayList&lt;String&gt;();
+		if (rootUrl.endsWith(&quot;/&quot;)== false)
+			rootUrl = rootUrl + &quot;/&quot;;
+
+		File rootDir = new File(Tools.getRealPath(rootUrl));
+		File files[] = rootDir.listFiles();
+		if(files==null)
+			return foundFiles;
+
+		File myFile;
+		int i;
+		for (i=0; i&lt;files.length; i++)
+		{
+			myFile = files[i];
+			if (myFile.isDirectory())
+			{
+				foundFiles.addAll(getJpaClassNames(rootUrl + myFile.getName() + &quot;/&quot;));
+			}
+			else
+			{
+				//nacitanie suboru
+				String filePath = rootUrl + myFile.getName();
+				filePath = filePath.replace('\\', '/');
+				if (filePath.startsWith(&quot;/WEB-INF/classes/&quot;) &amp;&amp; (filePath.endsWith(&quot;Entity.class&quot;) || filePath.endsWith(&quot;Bean.class&quot;) || filePath.endsWith(&quot;/Media.class&quot;)) &amp;&amp; filePath.endsWith(&quot;ActionBean.class&quot;)==false)
+				{
+					filePath = filePath.substring(17,filePath.length()-6).replace(&quot;/&quot;, &quot;.&quot;);
+					foundFiles.add(filePath);
+					Logger.debug(JpaTools.class, &quot;JPA: adding class: &quot; + filePath);
+				}
+				else if (filePath.startsWith(&quot;/WEB-INF/classes/&quot;) &amp;&amp; filePath.endsWith(&quot;JpaInfo.class&quot;))
+				{
+					filePath = filePath.substring(17,filePath.length()-6).replace(&quot;/&quot;, &quot;.&quot;);
+					Class&lt;? extends JpaInfo&gt; jpaInfoClass = null;
+					try
+					{
+						jpaInfoClass= ReflectUtil.findClass(filePath);
+					} catch (ClassNotFoundException e)
+					{
+
+						sk.iway.iwcm.Logger.error(e);
+					}//Class.forName(filePath)
+
+					if (jpaInfoClass!=null &amp;&amp; !jpaInfoClass.isInterface())
+					{
+						try
+						{
+							JpaInfo jpaInfo = jpaInfoClass.newInstance();
+							List&lt;String&gt; foundClasses = jpaInfo.getJpaClasses();
+							foundFiles.addAll(foundClasses);
+							Logger.debug(JpaTools.class, &quot;JPA: adding classes: &quot; + foundClasses);
+						}
+						catch (InstantiationException | IllegalAccessException e)
+						{
+							sk.iway.iwcm.Logger.error(e);
+						}
+					}
+					foundFiles.add(filePath);
+					Logger.debug(JpaTools.class, &quot;JPA: adding class: &quot; + filePath);
+				}
+			}
+		}
+
+		return foundFiles;
+	}*/
+
+
+    public static &lt;T&gt; List&lt;T&gt; findByMatchingProperty(Class&lt;T&gt; clazz, String propertyName, Object propertyValue)
+    {
+<span class="fc" id="L207">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+        try{
+<span class="fc" id="L209">            ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L210">            ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);</span>
+<span class="fc" id="L211">            Expression expr = builder.get(propertyName).equal(propertyValue);</span>
+<span class="fc" id="L212">            expr = applyDomainId(expr,builder,clazz);</span>
+<span class="fc" id="L213">            dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="fc" id="L215">            Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L216">            query.setHint(&quot;javax.persistence.cache.storeMode&quot;, &quot;REFRESH&quot;);</span>
+<span class="fc" id="L217">            List&lt;T&gt; records = JpaDB.getResultList(query);</span>
+<span class="fc" id="L218">            return records;</span>
+<span class="nc" id="L219">        }catch (Exception e) {</span>
+<span class="nc" id="L220">            sk.iway.iwcm.Logger.error(e);</span>
+        }finally{
+<span class="fc" id="L222">            em.close();</span>
+        }
+<span class="nc" id="L224">        throw new IllegalStateException(&quot;Query did not complete regularly&quot;);</span>
+    }
+
+	public static &lt;T&gt; T findFirstByMatchingProperty(Class&lt;T&gt; clazz, String propertyName, Object propertyValue)
+	{
+<span class="fc" id="L229">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try{
+<span class="fc" id="L231">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L232">			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);</span>
+<span class="fc" id="L233">			Expression expr = builder.get(propertyName).equal(propertyValue);</span>
+<span class="fc" id="L234">            expr = applyDomainId(expr,builder,clazz);</span>
+<span class="fc" id="L235">			dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="fc" id="L237">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L238">			query.setHint(&quot;javax.persistence.cache.storeMode&quot;, &quot;REFRESH&quot;);</span>
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L240">			List&lt;T&gt; records = query.setMaxResults(1).getResultList();</span>
+<span class="pc bpc" id="L241" title="1 of 4 branches missed.">			if (records == null || records.size() == 0)</span>
+<span class="fc" id="L242">				return null;</span>
+<span class="fc" id="L243">			return records.get(0);</span>
+<span class="nc" id="L244">		}catch (Exception e) {</span>
+<span class="nc" id="L245">			sk.iway.iwcm.Logger.error(e);</span>
+		}finally{
+<span class="fc" id="L247">			em.close();</span>
+		}
+<span class="nc" id="L249">		throw new IllegalStateException(&quot;Query did not complete normally&quot;);</span>
+	}
+
+	@SuppressWarnings(&quot;all&quot;)
+	@SafeVarargs
+	public static &lt;T&gt; List&lt;T&gt; findByProperties(Class&lt;T&gt; clazz, Pair&lt;String, ? extends Object&gt;...properties)
+	{
+<span class="fc" id="L256">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try{
+<span class="fc" id="L258">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L259">			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);</span>
+<span class="fc" id="L260">			Expression expr = propertiesToExpression(builder, properties);</span>
+<span class="fc" id="L261">            expr = applyDomainId(expr,builder,clazz);</span>
+<span class="fc" id="L262">			dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="fc" id="L264">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L265">			List&lt;T&gt; records = JpaDB.getResultList(query);</span>
+
+<span class="fc" id="L267">			return records;</span>
+<span class="nc" id="L268">		}catch (Exception e) {</span>
+<span class="nc" id="L269">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L270">		}finally{</span>
+			//em.close sa nesmie volat, pretoze to zavre threadLocal EM a dalej potom padne na inom citani, em zatvori SetCharacterEncodingFilter
+			//em.close();
+<span class="nc" id="L273">		}</span>
+<span class="nc" id="L274">		throw new IllegalStateException(&quot;Query did not complete normally&quot;);</span>
+	}
+
+    public static &lt;T&gt; PaginatedBean&lt;T&gt; findPaginatedAndSortedByProperties(Class&lt;T&gt; clazz, Expression filter, int page, int pageSize, String sortField, JpaSortOrderEnum sortOrder)
+    {
+<span class="nc" id="L279">        PaginatedBean&lt;T&gt; paginatedBean = new PaginatedBean&lt;&gt;();</span>
+<span class="nc" id="L280">        ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L281">        ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);</span>
+
+<span class="nc bnc" id="L283" title="All 4 branches missed.">        if (sortField != null &amp;&amp; sortOrder != null) {</span>
+<span class="nc bnc" id="L284" title="All 4 branches missed.">            if (sortOrder.equals(JpaSortOrderEnum.ASC) &amp;&amp; !sortField.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L285">                dbQuery.addAscendingOrdering(sortField);</span>
+            }
+<span class="nc bnc" id="L287" title="All 4 branches missed.">            if (sortOrder.equals(JpaSortOrderEnum.DESC) &amp;&amp; !sortField.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L288">                dbQuery.addDescendingOrdering(sortField);</span>
+            }
+        }
+
+<span class="nc" id="L292">        filter = applyDomainId(filter,builder,clazz);</span>
+<span class="nc" id="L293">        dbQuery.setSelectionCriteria(filter);</span>
+<span class="nc" id="L294">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+
+        try{
+<span class="nc" id="L297">            Query query = em.createQuery(dbQuery);</span>
+
+<span class="nc" id="L299">            ReportQuery totalNumberQuery = new ReportQuery(clazz, filter);</span>
+//            totalNumberQuery.addCount();
+<span class="nc" id="L301">			totalNumberQuery.addCount(&quot;COUNT&quot;, builder.distinct());</span>
+<span class="nc" id="L302">            ReportQueryResult res = (ReportQueryResult) em.createQuery(totalNumberQuery).getSingleResult();</span>
+<span class="nc" id="L303">            int total = (int) res.getByIndex(0);</span>
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            if (page &lt; 1) page = 1;</span>
+//            if (pageSize &lt; 1) pageSize = DEFAULT_COURSES_LIST_PAGE_SIZE;
+<span class="nc bnc" id="L307" title="All 2 branches missed.">            if (pageSize &lt; 1) pageSize = 10;</span>
+<span class="nc" id="L308">            int offset = pageSize * (page-1);</span>
+<span class="nc" id="L309">            paginatedBean.setPage(page);</span>
+<span class="nc" id="L310">            paginatedBean.setPageSize(pageSize);</span>
+<span class="nc" id="L311">            paginatedBean.setTotal(total);</span>
+
+<span class="nc" id="L313">            query.setFirstResult(offset);</span>
+<span class="nc" id="L314">            query.setMaxResults(pageSize);</span>
+<span class="nc" id="L315">            List&lt;T&gt; records = JpaDB.getResultList(query);</span>
+<span class="nc" id="L316">            paginatedBean.setData(records);</span>
+
+<span class="nc" id="L318">            return paginatedBean;</span>
+<span class="nc" id="L319">        } catch (Exception e) {</span>
+<span class="nc" id="L320">            sk.iway.iwcm.Logger.error(e);</span>
+        } finally{
+<span class="nc" id="L322">            em.close();</span>
+        }
+<span class="nc" id="L324">        throw new IllegalStateException(&quot;Query did not complete normally&quot;);</span>
+    }
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@SafeVarargs
+	public static &lt;T&gt; T findFirstByProperties(Class&lt;T&gt; clazz, Pair&lt;String, ? extends Object&gt;...properties)
+	{
+<span class="fc" id="L331">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try{
+<span class="fc" id="L333">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L334">			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);</span>
+<span class="fc" id="L335">			Expression expr = propertiesToExpression(builder, properties);</span>
+<span class="fc" id="L336">            expr = applyDomainId(expr,builder,clazz);</span>
+<span class="fc" id="L337">			dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="fc" id="L339">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L340">			List&lt;T&gt; records = query.setMaxResults(1).getResultList();</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">			if (records.size() == 0)</span>
+<span class="fc" id="L342">				return null;</span>
+<span class="fc" id="L343">			return records.get(0);</span>
+<span class="nc" id="L344">		}catch (Exception e) {</span>
+<span class="nc" id="L345">			sk.iway.iwcm.Logger.error(e);</span>
+		}finally{
+<span class="fc" id="L347">			em.close();</span>
+		}
+<span class="nc" id="L349">		throw new IllegalStateException(&quot;Query did not complete normally&quot;);</span>
+	}
+
+	public static &lt;T&gt; List&lt;T&gt; findBy(Class&lt;T&gt; clazz, Condition... conditions)
+	{
+<span class="fc" id="L354">		return findBy(clazz, (Integer) null, conditions);</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static &lt;T&gt; List&lt;T&gt; findBy(Class&lt;T&gt; clazz, Integer maxRows, Condition... conditions)
+	{
+<span class="fc" id="L360">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try {
+<span class="fc" id="L362">			ExpressionBuilder object = new ExpressionBuilder();</span>
+<span class="fc" id="L363">			ReadAllQuery query = new ReadAllQuery(clazz, object);</span>
+<span class="fc" id="L364">			Expression expr = null;</span>
+<span class="fc bfc" id="L365" title="All 2 branches covered.">			for (Condition condition : conditions)</span>
+			{
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">				if (null == condition) continue;</span>
+<span class="fc" id="L368">				Expression cond = condition.applyTo(object);</span>
+<span class="fc bfc" id="L369" title="All 4 branches covered.">				expr = (null == cond) ? expr : (null == expr) ? cond : expr.and(cond);</span>
+			}
+<span class="fc" id="L371">            expr = applyDomainId(expr,object,clazz);</span>
+<span class="fc" id="L372">			query.setSelectionCriteria(expr);</span>
+<span class="pc bpc" id="L373" title="1 of 2 branches missed.">			if (null != maxRows) query.setMaxRows(maxRows.intValue());</span>
+<span class="fc" id="L374">			return em.createQuery(query).getResultList();</span>
+<span class="nc" id="L375">		} catch (Exception e) {</span>
+<span class="nc" id="L376">			sk.iway.iwcm.Logger.error(e);</span>
+		} finally {
+<span class="fc" id="L378">			em.close();</span>
+		}
+<span class="nc" id="L380">		throw new IllegalStateException(&quot;Query did not complete normally&quot;);</span>
+	}
+
+
+	public static &lt;T&gt; void batchDelete(Class&lt;T&gt; clazz, int...ids)
+	{
+<span class="nc" id="L386">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try
+		{
+<span class="nc" id="L389">			em.getTransaction().begin();</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">			for (int id : ids)</span>
+			{
+<span class="nc" id="L392">				T toBeDeleted = em.getReference(clazz, covertPkToNumber(clazz, id));</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if(!canDeleteDomain(toBeDeleted.getClass(),toBeDeleted))</span>
+				{
+<span class="nc" id="L395">					return;</span>
+				}
+<span class="nc" id="L397">				em.remove(toBeDeleted);</span>
+			}
+
+<span class="nc" id="L400">			em.getTransaction().commit();</span>
+		}
+<span class="nc" id="L402">		catch(Exception e)</span>
+		{
+<span class="nc" id="L404">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="nc" id="L408">			em.close();</span>
+		}
+<span class="nc" id="L410">	}</span>
+
+	/**
+	 * Vymaze podla ID jeden objekt
+	 * @param clazz
+	 * @param id
+	 * @return true - ak vykonalo OK a false ak nastala vynimka
+	 */
+	public static &lt;T&gt; boolean  delete(Class &lt;T&gt; clazz,int id)
+	{
+<span class="nc" id="L420">		boolean result=false;</span>
+<span class="nc" id="L421">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+		try
+		{
+<span class="nc" id="L424">			em.getTransaction().begin();</span>
+<span class="nc" id="L425">			T toBeDeleted = em.getReference(clazz, covertPkToNumber(clazz, id));</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">			if(!canDeleteDomain(toBeDeleted.getClass(),toBeDeleted))</span>
+			{
+<span class="nc" id="L428">				return result;</span>
+			}
+<span class="nc" id="L430">			em.remove(toBeDeleted);</span>
+<span class="nc" id="L431">			em.getTransaction().commit();</span>
+<span class="nc" id="L432">			result = true;</span>
+		}
+<span class="nc" id="L434">		catch (Exception e)</span>
+		{
+<span class="nc" id="L436">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="nc" id="L440">			em.close();</span>
+		}
+
+<span class="nc" id="L443">		return result;</span>
+	}
+
+    /** Nepovolime zmazat zaznam mimo aktualnej domeny
+     *
+     * @param clazz
+     * @param o
+     * @return
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+	@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+	private static boolean canDeleteDomain(Class clazz, Object o) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
+    {
+<span class="nc bnc" id="L458" title="All 6 branches missed.">        if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+        {
+<span class="nc" id="L460">            Method method = clazz.getMethod(&quot;getDomainId&quot;);</span>
+<span class="nc" id="L461">            int domainIdDelete = (Integer) method.invoke(o);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">            if(CloudToolsForCore.getDomainId() != domainIdDelete)</span>
+            {
+<span class="nc" id="L464">                Logger.debug(JpaTools.class, &quot;Pokus o zmazanie zaznamu mimo domainId (&quot; + domainIdDelete + &quot;). Spravna domainId = &quot; + CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L465">                return false;</span>
+            }
+        }
+<span class="nc" id="L468">        return true;</span>
+    }
+
+	public static &lt;T&gt; List&lt;T&gt; getAll(Class&lt;T&gt; clazz)
+	{
+<span class="fc" id="L473">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);</span>
+<span class="fc" id="L474">        ExpressionBuilder object = new ExpressionBuilder();</span>
+<span class="fc" id="L475">		ReadAllQuery dbQuery = new ReadAllQuery(clazz, object);</span>
+<span class="fc" id="L476">        Expression expr = applyDomainId(null, object, clazz);</span>
+<span class="fc" id="L477">        dbQuery.setSelectionCriteria(expr);</span>
+<span class="fc" id="L478">		Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L479">		query.setHint(&quot;javax.persistence.cache.storeMode&quot;, &quot;REFRESH&quot;);</span>
+<span class="fc" id="L480">		List&lt;T&gt; records = JpaDB.getResultList(query);</span>
+
+<span class="fc" id="L482">		return records;</span>
+	}
+
+	/**
+	 * Urci, ci dane meno datasource je urcene pre JPA, je to len iwcm, alebo nazov obsahujuci jpa (je to takto kvoli rychlosti startu WJ a optimalizacii pamate)
+	 * @param name
+	 * @return
+	 */
+	public static boolean isJPADatasource(String name)
+	{
+<span class="pc bpc" id="L492" title="3 of 4 branches missed.">		if (&quot;iwcm&quot;.equals(name) || name.indexOf(&quot;jpa&quot;)!=-1) return true;</span>
+<span class="nc" id="L493">		return false;</span>
+	}
+
+	/**
+	 * Podmienka na vyhladanie objektov pomocou metody &quot;findBy&quot;.
+	 */
+	public interface Condition
+	{
+		/**
+		 * Vytvori podmienku pre testovany objekt.
+		 * Vysledna hodnota &quot;null&quot; znamena: tuto podmienku neberte do uvahy (cize automaticky ju splna kazdy objekt).
+		 *
+		 * @param object  vyraz vyjadrujuci testovany objekt
+		 * @return        kriterium pre testovany objekt, alebo null
+		 */
+		public Expression applyTo(Expression object);
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static Expression propertiesToExpression(ExpressionBuilder builder, Pair&lt;String, ? extends Object&gt;...properties) {
+<span class="fc" id="L513">	    Expression  expr = null;</span>
+<span class="fc bfc" id="L514" title="All 2 branches covered.">        for (Pair&lt;String, ? extends Object&gt; property : properties)</span>
+        {
+<span class="fc" id="L516">            Expression nestedProperty = null;</span>
+<span class="fc bfc" id="L517" title="All 2 branches covered.">            for (String subProperty : property.first.split(&quot;\\.&quot;)) {</span>
+<span class="fc bfc" id="L518" title="All 2 branches covered.">                nestedProperty = (nestedProperty == null) ? builder.get(subProperty) : nestedProperty.get(subProperty);</span>
+            }
+<span class="pc bpc" id="L520" title="1 of 2 branches missed.">			if (nestedProperty != null) {</span>
+<span class="fc" id="L521">				Expression newCondition = nestedProperty.equal(property.second);</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">				expr = (expr == null) ? newCondition : expr.and(newCondition) ;</span>
+			}
+        }
+<span class="fc" id="L525">        return expr;</span>
+    }
+
+	@SuppressWarnings(&quot;rawtypes&quot;)
+    private static Expression applyDomainId(Expression exprParam,ExpressionBuilder builderParam,Class clazz)
+    {
+<span class="fc" id="L531">        Expression expr = exprParam;</span>
+<span class="pc bpc" id="L532" title="1 of 6 branches missed.">        if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+        {
+
+<span class="fc" id="L535">            ExpressionBuilder builder = builderParam;</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">            if(expr == null)</span>
+            {
+<span class="nc" id="L538">                return builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+            }
+<span class="fc" id="L540">            return  expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+        }
+<span class="fc" id="L542">        return expr;</span>
+	 }
+
+	 /**
+	  * Ziska PK ako Long pre repository, alebo Integer pre standardne JPA
+	  * @param &lt;T&gt;
+	  * @param clazz
+	  * @param id
+	  * @return
+	  */
+	 public static &lt;T&gt; Number covertPkToNumber(Class&lt;T&gt; clazz, int id) {
+<span class="nc" id="L553">		Number n = null;</span>
+		//musime cez String, pretoze volanie isInstance z nejakeho dovodu vracalo false
+<span class="nc bnc" id="L555" title="All 2 branches missed.">		if (clazz.getSuperclass().toString().contains(&quot;ActiveRecordRepository&quot;)) n = Long.valueOf(id);</span>
+<span class="nc" id="L556">		else n = Integer.valueOf(id);</span>
+<span class="nc" id="L557">		return n;</span>
+	 }
+
+	 /**
+	  * Removes predicate for field name from predicates list
+	  * @param name
+	  * @param predicates
+	  */
+	 public static void removePredicateWithName(String name, List&lt;Predicate&gt; predicates) {
+		try {
+			//remove predicates with name groupId
+<span class="fc" id="L568">			List&lt;Predicate&gt; predicatesToRemove = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L569" title="All 2 branches covered.">			for (Predicate p : predicates) {</span>
+<span class="pc bpc" id="L570" title="1 of 2 branches missed.">				if (p instanceof CompoundExpressionImpl) {</span>
+<span class="fc" id="L571">					CompoundExpressionImpl predicate = (CompoundExpressionImpl) p;</span>
+<span class="pc bpc" id="L572" title="2 of 4 branches missed.">					if (predicate.getChildExpressions().size()&gt;0 &amp;&amp; predicate.getChildExpressions().get(0) instanceof PathImpl) {</span>
+						@SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L574">						PathImpl path = (PathImpl) predicate.getChildExpressions().get(0);</span>
+<span class="fc bfc" id="L575" title="All 2 branches covered.">						if (path.getCurrentNode().getName().equals(name)) {</span>
+<span class="fc" id="L576">							predicatesToRemove.add(predicate);</span>
+						}
+					}
+				}
+<span class="fc" id="L580">			}</span>
+<span class="fc" id="L581">			predicates.removeAll(predicatesToRemove);</span>
+<span class="nc" id="L582">		} catch (Exception e) {</span>
+<span class="nc" id="L583">			Logger.error(e);</span>
+<span class="fc" id="L584">		}</span>
+<span class="fc" id="L585">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

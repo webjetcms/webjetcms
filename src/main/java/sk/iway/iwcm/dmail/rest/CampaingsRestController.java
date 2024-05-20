@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
@@ -76,7 +77,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         DatatablePageImpl<CampaingsEntity> page;
 
-        page = new DatatablePageImpl<>(campaingsRepository.findAll(pageable));
+        page = new DatatablePageImpl<>( campaingsRepository.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable) );
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -101,7 +102,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             entity.setCountOfSentMails(0);
 
             //Delete previous temporaly saved emails
-            emailsRepository.deleteByCampainId((long)-user.getUserId());
+            emailsRepository.deleteByCampainIdAndDomainId((long)-user.getUserId(), CloudToolsForCore.getDomainId());
         } else {
             entity = campaingsRepository.getById(id);
         }
@@ -117,7 +118,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         if(target.isDelete() || Tools.isNotEmpty(target.getImportMode())) return;
 
         if(campaingsEntity.getEditorFields().getPageToSend() == null || campaingsEntity.getEditorFields().getPageToSend().getDocId() == -1) {
-            errors.rejectValue("errorField.editorFields.pageToSend", null, getProp().getText("components.dmail.campaigns.doc.error.not_null"));
+            errors.rejectValue("errorField.editorFields.pageToSend", "403", getProp().getText("components.dmail.campaigns.doc.error.not_null"));
         }
     }
 
@@ -125,7 +126,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 	public void beforeSave(CampaingsEntity entity) {
         Identity user = UsersDB.getCurrentUser(getRequest());
 
-        if(entity != null && entity.getId() != null && entity.getId().longValue() > 0) {
+        if(entity.getId() != null && entity.getId().longValue() > 0) {
             //Safety action - remove all unsubscribed emails from campaign (can happen)
             EmailDB.deleteUnsubscribedEmailsFromCampaign(entity.getId().intValue());
         }
@@ -154,11 +155,11 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         if (oldCampaignId == null || oldCampaignId.intValue() == -1) oldCampaignId = Long.valueOf(-userId);
 
         //update vykoname vzdy, co ked sa zmenil predmet, alebo odosielatel
-        emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), oldCampaignId);
+        emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), oldCampaignId, CloudToolsForCore.getDomainId());
 
         //Set count of recipients
-        saved.setCountOfRecipients(emailsRepository.getNumberOfCampaingEmails(saved.getId()));
-        saved.setCountOfSentMails(emailsRepository.getNumberOfSentEmails(saved.getId()));
+        saved.setCountOfRecipients(emailsRepository.getNumberOfCampaingEmails(saved.getId(), CloudToolsForCore.getDomainId()));
+        saved.setCountOfSentMails(emailsRepository.getNumberOfSentEmails(saved.getId(), CloudToolsForCore.getDomainId()));
         campaingsRepository.save(saved);
 
         //resetni sender
@@ -235,7 +236,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         }
 
         //Delete all emails under removed user group
-        emailsRepository.deleteCampainEmail(campainId, filteredUserIds);
+        emailsRepository.deleteCampainEmail(campainId, filteredUserIds, CloudToolsForCore.getDomainId());
     }
 
     //Add emails which belongs to certain user group and campain
@@ -245,7 +246,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
         Map<String, Integer> emailsTable = new Hashtable<>();
         if (entity.getId() != null && entity.getId().longValue()>0) {
-            for (String email : emailsRepository.getAllCampainEmails(getCampaignId(entity, getUser()))) {
+            for (String email : emailsRepository.getAllCampainEmails( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
                 emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);
             }
         }
@@ -272,6 +273,8 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
                 emailToAdd.setSubject(entity.getSubject());
                 emailToAdd.setUrl(entity.getUrl());
+
+                emailToAdd.setDomainId( CloudToolsForCore.getDomainId() );
 
                 //Save record in DB
                 emailsRepository.save(emailToAdd);
@@ -328,10 +331,10 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
     @Override
     public boolean beforeDelete(CampaingsEntity entity) {
 
-        Integer totalEmails = emailsRepository.getNumberOfCampaingEmails(entity.getId());
-        if (totalEmails != null && totalEmails.intValue()>0) {
+        Integer totalEmails = emailsRepository.getNumberOfCampaingEmails(entity.getId(), CloudToolsForCore.getDomainId());
+        if (totalEmails != null && totalEmails.intValue() > 0) {
             //delete all campiang dependencies
-            emailsRepository.deleteByCampainId(entity.getId());
+            emailsRepository.deleteByCampainIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId());
             statClicksRepository.deleteByCampainId(entity.getId());
         }
 

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pay24MerchantAccountBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.cloud.payments.pay24</a> &gt; <span class="el_source">Pay24MerchantAccountBean.java</span></div><h1>Pay24MerchantAccountBean.java</h1><pre class="source lang-java linenums">package sk.iway.cloud.payments.pay24;
+
+import java.io.Serializable;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecord;
+
+/**
+ *  Pay24lMerchantAccountBean.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2017
+ *@author       $Author: jeeff prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.5.2017 9:41:43
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+
+@Entity
+@Table(name=&quot;pay24_merchant_account&quot;)
+public class Pay24MerchantAccountBean extends ActiveRecord implements Serializable
+{
+	private static final long serialVersionUID = -1;
+<span class="nc" id="L40">	private static String LIVE_URL = &quot;https://admin.24-pay.eu/pay_gate/paygt&quot;;</span>
+<span class="nc" id="L41">	private static String TEST_URL = &quot;https://doxxsl-staging.24-pay.eu/pay_gate/paygt&quot;;</span>
+
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_pay24_merchant_account&quot;)
+	@TableGenerator(name=&quot;WJGen_pay24_merchant_account&quot;,pkColumnName=&quot;pay24_merchant_account&quot;)
+	@Column
+	private int id;
+	@Column(name=&quot;eshop_id&quot;)
+	private String eshopId;
+	@Column(name=&quot;pay_key&quot;)
+	private String key;
+	@Column
+	private String mid;
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+
+	@Override
+	public int getId()
+	{
+<span class="nc" id="L61">		return id;</span>
+	}
+
+	@Override
+	public void setId(int id)
+	{
+<span class="nc" id="L67">		this.id = id;</span>
+<span class="nc" id="L68">	}</span>
+
+	public static String getLiveUrl()
+	{
+<span class="nc" id="L72">		return LIVE_URL;</span>
+	}
+
+	public static String getTestUrl()
+	{
+<span class="nc" id="L77">		return TEST_URL;</span>
+	}
+
+	public Pay24MerchantAccountBean(String eshopId, String mid, String key)
+<span class="nc" id="L81">	{</span>
+<span class="nc" id="L82">		this.eshopId = eshopId;</span>
+<span class="nc" id="L83">		this.mid = mid;</span>
+<span class="nc" id="L84">		this.key = key;</span>
+<span class="nc" id="L85">	}</span>
+
+	/**Ak su vytvorene konstanty, urobi init z nich. Ak nie su, pouzije testovacie data.
+	 *
+	 */
+	public Pay24MerchantAccountBean()
+<span class="nc" id="L91">	{</span>
+
+<span class="nc" id="L93">	}</span>
+
+	public String getEshopId()
+	{
+<span class="nc" id="L97">		return eshopId;</span>
+	}
+
+	public void setEshopId(String eshopId)
+	{
+<span class="nc" id="L102">		this.eshopId = eshopId;</span>
+<span class="nc" id="L103">	}</span>
+
+	public String getKey()
+	{
+<span class="nc" id="L107">		return key;</span>
+	}
+
+	public void setKey(String key)
+	{
+<span class="nc" id="L112">		this.key = key;</span>
+<span class="nc" id="L113">	}</span>
+
+	public String getMid()
+	{
+<span class="nc" id="L117">		return mid;</span>
+	}
+
+	public void setMid(String mid)
+	{
+<span class="nc" id="L122">		this.mid = mid;</span>
+<span class="nc" id="L123">	}</span>
+
+	public int getDomainId()
+	{
+<span class="nc" id="L127">		return domainId;</span>
+	}
+
+	public void setDomainId(int domain_id)
+	{
+<span class="nc" id="L132">		this.domainId = domain_id;</span>
+<span class="nc" id="L133">	}</span>
+
+
+	@Override
+	public boolean equals(Object obj)
+	{
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (this == obj)</span>
+<span class="nc" id="L140">			return true;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (obj == null)</span>
+<span class="nc" id="L142">			return false;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (getClass() != obj.getClass())</span>
+<span class="nc" id="L144">			return false;</span>
+<span class="nc" id="L145">		Pay24MerchantAccountBean other = (Pay24MerchantAccountBean) obj;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (domainId != other.domainId)</span>
+<span class="nc" id="L147">			return false;</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		else if (eshopId != other.eshopId)</span>
+<span class="nc" id="L149">			return false;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (key == null)</span>
+		{
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (other.key != null)</span>
+<span class="nc" id="L153">				return false;</span>
+		}
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		else if (!key.equals(other.key))</span>
+<span class="nc" id="L156">			return false;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (mid == null)</span>
+		{
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (other.mid != null)</span>
+<span class="nc" id="L160">				return false;</span>
+		}
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		else if (!mid.equals(other.mid))</span>
+<span class="nc" id="L163">			return false;</span>
+<span class="nc" id="L164">		return true;</span>
+	}
+
+	public static boolean is24PayResponse(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		return !Tools.isAnyEmpty(request.getParameter(&quot;Amount&quot;), request.getParameter(&quot;Result&quot;));</span>
+	}
+
+	public static boolean isSuccess(HttpServletRequest request)
+	{
+<span class="nc" id="L174">		return &quot;OK&quot;.equals(request.getParameter(&quot;Result&quot;));</span>
+	}
+
+	public static double getAmount(HttpServletRequest request)
+	{
+<span class="nc" id="L179">		return Tools.getDoubleValue(request.getParameter(&quot;Amount&quot;), -1);</span>
+	}
+	//ak bude metoda generateSign vypisovat chybu napr: java.security.InvalidKeyException: Illegal key size
+	//je potrebne pridat JCE (Java Cryptography Extension) do JAVY
+
+	public static String generateSign(String message, String key, String iv)
+	{
+		try {
+<span class="nc" id="L187">			Logger.debug(Pay24MerchantAccountBean.class, &quot;message:&quot;+message+&quot;, key:&quot;+key+&quot;, iv:&quot;+iv);</span>
+			//bcprov is not provided by WebJET CMS Security.addProvider(new BouncyCastleProvider());
+<span class="nc" id="L189">			byte[] keyBytes = Hex.decodeHex(key.toCharArray());</span>
+<span class="nc" id="L190">			byte[] ivBytes = iv.getBytes();</span>
+<span class="nc" id="L191">			SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, &quot;AES&quot;);</span>
+<span class="nc" id="L192">			IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);</span>
+<span class="nc" id="L193">			Cipher encryptCipher = Cipher.getInstance(&quot;AES/CBC/PKCS7Padding&quot;);</span>
+<span class="nc" id="L194">			encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivSpec);</span>
+<span class="nc" id="L195">			byte[] sha1Hash = DigestUtils.sha1(message);</span>
+<span class="nc" id="L196">			byte[] encryptedData = encryptCipher.doFinal(sha1Hash);</span>
+<span class="nc" id="L197">			return Hex.encodeHexString(encryptedData).substring(0, 32);</span>
+<span class="nc" id="L198">		} catch (Exception e) {</span>
+<span class="nc" id="L199">			System.out.println(&quot;ERROR! &quot; + e.getMessage());</span>
+<span class="nc" id="L200">			e.printStackTrace();</span>
+<span class="nc" id="L201">			return null;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

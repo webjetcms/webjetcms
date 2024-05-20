@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsertScriptGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.insertScript</a> &gt; <span class="el_source">InsertScriptGroupBean.java</span></div><h1>InsertScriptGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.insertScript;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+
+import javax.persistence.*;
+import java.io.Serializable;
+
+
+/**
+ *  InsertScriptGroupBean.java - &gt;&gt;&gt;POPIS MA&lt;&lt;&lt;&lt;
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.09.2016 15:04:15
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;insert_script_gr&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INSERT_SCRIPT)
+public class InsertScriptGroupBean extends ActiveRecordRepository implements Serializable
+{
+	@JsonIgnore
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_insert_script_gr&quot;)
+	@TableGenerator(name=&quot;WJGen_insert_script_gr&quot;,pkColumnValue=&quot;insert_script_gr&quot;)
+	@Column(name=&quot;insert_script_gr_id&quot;)
+	private Long id;
+
+	@Column(name=&quot;group_id&quot;)
+	int groupId;
+
+	@Column(name=&quot;domain_id&quot;)
+	int domainId;
+
+	@ManyToOne
+	@JsonBackReference(value=&quot;insertScriptBeanGr&quot;)
+	@JoinColumn(name=&quot;insert_script&quot;)
+	private InsertScriptBean insertScriptBeanGr;
+
+<span class="fc" id="L55">	public InsertScriptGroupBean() {</span>
+
+<span class="fc" id="L57">    }</span>
+
+<span class="fc" id="L59">    public InsertScriptGroupBean(String path) {</span>
+<span class="fc" id="L60">        GroupDetails group = GroupsDB.getInstance().getCreateGroup(path);</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (group != null) groupId = group.getGroupId();</span>
+<span class="fc" id="L62">    }</span>
+
+    @JsonIgnore
+	public InsertScriptBean getInsertScript() {
+<span class="nc" id="L66">		return insertScriptBeanGr;</span>
+	}
+
+	public void setInsertScript(InsertScriptBean insertScriptBean) {
+<span class="nc" id="L70">		this.insertScriptBeanGr = insertScriptBean;</span>
+<span class="nc" id="L71">	}</span>
+
+	public Long getInsertScriptGrId()
+	{
+<span class="fc" id="L75">		return id;</span>
+	}
+
+	public void setInsertScriptGrId(Long insertScriptGrId)
+	{
+<span class="fc" id="L80">		this.id = insertScriptGrId;</span>
+<span class="fc" id="L81">	}</span>
+
+	@Override
+	public void setId(Long id)
+	{
+<span class="fc" id="L86">		setInsertScriptGrId(id);</span>
+<span class="fc" id="L87">	}</span>
+
+	@Override
+	public Long getId()
+	{
+<span class="fc" id="L92">		return getInsertScriptGrId();</span>
+	}
+
+	public int getGroupId()
+	{
+<span class="fc" id="L97">		return groupId;</span>
+	}
+
+	public void setGroupId(int groupId)
+	{
+<span class="fc" id="L102">		this.groupId = groupId;</span>
+<span class="fc" id="L103">	}</span>
+
+	public int getDomainId() {
+<span class="fc" id="L106">		return domainId;</span>
+	}
+
+	public void setDomainId(int domainId) {
+<span class="fc" id="L110">		this.domainId = domainId;</span>
+<span class="fc" id="L111">	}</span>
+
+	@Override
+	public boolean save()
+	{
+<span class="nc" id="L116">		this.domainId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L117">		return super.save();</span>
+	}
+
+	/**
+     * Vratenie cesty pre vue komponentu
+     * @return
+     */
+	@JsonProperty(access = Access.READ_ONLY)
+    public String getFullPath() {
+<span class="fc" id="L126">		GroupDetails grp = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">		if (grp != null) return grp.getFullPath();</span>
+<span class="fc" id="L128">		return &quot;&quot;;</span>
+	}
+
+	@JsonIgnore
+	public String toString() {
+<span class="fc" id="L133">		return &quot;InsertScriptGroupBean id=&quot;+getId()+&quot; path=&quot;+getFullPath();</span>
+	}
+}
+/*
+mysql
+
+CREATE TABLE insert_script_gr (
+insert_script_gr_id INT NOT NULL PRIMARY KEY,
+group_id INT,
+insert_script INT);
+INSERT INTO pkey_generator VALUES('insert_script_gr', 1 , 'insert_script_gr', 'insert_script_gr_id')
+
+mssql
+
+CREATE TABLE insert_script_gr (
+[insert_script_gr_id] [INT] NOT NULL PRIMARY KEY,
+group_id [INT],
+insert_script [INT]);
+INSERT INTO pkey_generator VALUES('insert_script_gr', 1 , 'insert_script_gr', 'insert_script_gr_id')
+
+oracle
+
+CREATE TABLE insert_script_gr (
+insert_script_gr_id INT NOT NULL PRIMARY KEY,
+group_id INTEGER,
+insert_script INTEGER);
+INSERT INTO pkey_generator VALUES('insert_script_gr', 1 , 'insert_script_gr', 'insert_script_gr_id')
+PKEY:
+INSERT INTO pkey_generator VALUES('insert_script_gr', 1 , 'insert_script_gr', 'insert_script_gr_id');
+ */
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

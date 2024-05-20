@@ -1697,7 +1697,7 @@ public class ReservationManager
 		try
 		{
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("UPDATE reservation SET accepted = 1 WHERE reservation_id = ?"
+			ps = db_conn.prepareStatement("UPDATE reservation SET accepted = "+DB.getBooleanSql(true)+" WHERE reservation_id = ?"
 						+ CloudToolsForCore.getDomainIdSqlWhere(true));
 			int psCounter = 1;
 			ps.setInt(psCounter++, reservationId);

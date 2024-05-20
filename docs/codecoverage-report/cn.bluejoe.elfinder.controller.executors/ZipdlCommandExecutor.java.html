@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ZipdlCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">ZipdlCommandExecutor.java</span></div><h1>ZipdlCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+
+/**
+ * Executor na stiahnutie viacerych suborov naraz
+ * https://hypweb.net/elFinder-nightly/demo/2.1/php/connector.minimal.php?cmd=zipdl&amp;download=1&amp;targets%5B%5D=l1_RG93bmxvYWRzL0V4YW1wbGUvbWFpbi5tY2UuanM&amp;targets%5B%5D=6005bd866a15f&amp;targets%5B%5D=Example-2.zip&amp;targets%5B%5D=application%2Fzip&amp;Example-2.zip
+ */
+<span class="nc" id="L19">public class ZipdlCommandExecutor extends AbstractCommandExecutor {</span>
+
+   @Override
+   public void execute(FsService fsService, HttpServletRequest request, HttpServletResponse response, ServletContext servletContext) throws Exception {
+<span class="nc" id="L23">      JSONObject json = new JSONObject();</span>
+
+<span class="nc" id="L25">      boolean download = &quot;1&quot;.equals(request.getParameter(&quot;download&quot;));</span>
+<span class="nc" id="L26">      String zipdlHashPrefix = &quot;zipdl_&quot;;</span>
+
+<span class="nc bnc" id="L28" title="All 2 branches missed.">      if (download) {</span>
+<span class="nc" id="L29">         String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+<span class="nc" id="L30">         String zipDlHash = null;</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">         for (String target : targets) {</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">            if (target.startsWith(zipdlHashPrefix)) {</span>
+<span class="nc" id="L33">               zipDlHash = target.substring(zipdlHashPrefix.length());</span>
+            }
+         }
+<span class="nc" id="L36">         FsItemEx zipFilePath = super.findItem(fsService, zipDlHash);</span>
+
+<span class="nc" id="L38">         String date = Tools.formatDateTimeSeconds(Tools.getNow());</span>
+<span class="nc" id="L39">         date = Tools.replace(date, &quot; &quot;, &quot;-&quot;);</span>
+<span class="nc" id="L40">         date = Tools.replace(date, &quot;.&quot;, &quot;-&quot;);</span>
+<span class="nc" id="L41">         date = Tools.replace(date, &quot;:&quot;, &quot;-&quot;);</span>
+<span class="nc" id="L42">         date = DocTools.removeChars(date);</span>
+
+<span class="nc" id="L44">         String fileName = &quot;download-&quot;+date+&quot;.zip&quot;;</span>
+<span class="nc" id="L45">         String mime = &quot;application/zip&quot;;</span>
+
+<span class="nc" id="L47">         response.setContentType(mime);</span>
+<span class="nc" id="L48">         response.setHeader(&quot;Content-Disposition&quot;,	&quot;attachments; &quot; + FileCommandExecutor.getAttachementFileName(fileName, request.getHeader(&quot;USER-AGENT&quot;)));</span>
+         //response.setHeader(&quot;Content-Location&quot;, fileUrlRelative);
+<span class="nc" id="L50">         response.setHeader(&quot;Content-Transfer-Encoding&quot;, &quot;binary&quot;);</span>
+
+<span class="nc" id="L52">         FileCommandExecutor.writeFsItemExToResponse(zipFilePath, response);</span>
+
+         //zmaz temp zip
+<span class="nc" id="L55">         zipFilePath.delete();</span>
+
+<span class="nc" id="L57">      } else {</span>
+<span class="nc" id="L58">         ArchiveCommandExecutor archive = new ArchiveCommandExecutor();</span>
+<span class="nc" id="L59">         FsItemEx zipFilePath = archive.executeZip(fsService, request, servletContext, json);</span>
+
+<span class="nc" id="L61">         response.getWriter().println(&quot;{\&quot;zipdl\&quot;:{\&quot;file\&quot;:\&quot;&quot;+zipdlHashPrefix+zipFilePath.getHash()+&quot;\&quot;}}&quot;);</span>
+      }
+<span class="nc" id="L63">   }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

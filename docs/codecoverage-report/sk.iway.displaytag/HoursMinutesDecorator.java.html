@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HoursMinutesDecorator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.displaytag</a> &gt; <span class="el_source">HoursMinutesDecorator.java</span></div><h1>HoursMinutesDecorator.java</h1><pre class="source lang-java linenums">package sk.iway.displaytag;
+
+import javax.servlet.jsp.PageContext;
+
+import org.displaytag.decorator.DisplaytagColumnDecorator;
+import org.displaytag.exception.DecoratorException;
+import org.displaytag.properties.MediaTypeEnum;
+
+/**
+ *  MinutesToHoursDecorator.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff Marián Halaš $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 24.8.2012 16:41:08
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L20">public class HoursMinutesDecorator implements DisplaytagColumnDecorator</span>
+{
+<span class="nc" id="L22">	private static int MINUTES_PER_HOUR = 60;</span>
+	
+	@Override
+	public Object decorate(Object columnValue, PageContext pageContext, MediaTypeEnum media) throws DecoratorException
+	{
+<span class="nc bnc" id="L27" title="All 2 branches missed.">		if(columnValue != null) </span>
+		{
+<span class="nc bnc" id="L29" title="All 2 branches missed.">			if(columnValue instanceof Integer)</span>
+			{
+<span class="nc" id="L31">				int minutes = (Integer)columnValue;</span>
+<span class="nc" id="L32">				String hoursPart = Integer.toString(minutes / MINUTES_PER_HOUR);</span>
+<span class="nc" id="L33">				String minutesPart = Integer.toString(minutes % MINUTES_PER_HOUR);</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">				if(hoursPart.length()==1)</span>
+<span class="nc" id="L35">					hoursPart=&quot;0&quot;+hoursPart;		</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">				if(minutesPart.length()==1)</span>
+<span class="nc" id="L37">					minutesPart=&quot;0&quot;+minutesPart;		</span>
+<span class="nc" id="L38">				return hoursPart+&quot;:&quot;+minutesPart;</span>
+				
+			}
+<span class="nc bnc" id="L41" title="All 2 branches missed.">			if(columnValue instanceof Long)</span>
+			{
+<span class="nc" id="L43">				long minutes = (Long)columnValue;</span>
+<span class="nc" id="L44">				String hoursPart = Long.toString(minutes / MINUTES_PER_HOUR);</span>
+<span class="nc" id="L45">				String minutesPart = Long.toString(minutes % MINUTES_PER_HOUR);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">				if(hoursPart.length()==1)</span>
+<span class="nc" id="L47">					hoursPart=&quot;0&quot;+hoursPart;		</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">				if(minutesPart.length()==1)</span>
+<span class="nc" id="L49">					minutesPart=&quot;0&quot;+minutesPart;		</span>
+<span class="nc" id="L50">				return hoursPart+&quot;:&quot;+minutesPart;</span>
+			}
+<span class="nc" id="L52">			return(columnValue.toString());</span>
+		}
+<span class="nc" id="L54">		return &quot;&amp;nbsp;&quot;;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

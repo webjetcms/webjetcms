@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorLockingRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable.editorlocking</a> &gt; <span class="el_source">EditorLockingRestController.java</span></div><h1>EditorLockingRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable.editorlocking;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.UserDto;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * RestCotroller pre prácu s editorLocking záznamami v Chache pamäti
+ *
+ * Pri editovaní záznamu sa uloží do Chache informácia o tom, kto upravuje aky záznam a v akej tabuľke.
+ * Súčasne sa vráti zoznam všetkých ostatných používateľov, ktorý práve edituju ten istý záznam.
+ * Po tom čo uživateľ uzavrie editor záznamu, jeho akcia sa vymaže z Cache pamäte.
+ */
+@RestController
+@RequestMapping(&quot;/admin/rest/editorlocking&quot;)
+@ResponseBody
+<span class="fc" id="L32">public class EditorLockingRestController {</span>
+
+    //nazov cachce objektu v pamäti
+    private static final String CACHE_PREFIX = &quot;editor.locking&quot;;
+    //dlžka expiracie v minutach, pre dany cache objekt
+    private static final int CACHE_EXPIRE_MINUTES = 2;
+
+    /**
+	 * Ulozi novy zaznam (EditorLockingBean) o tom kto prave edituje aky zazanm a v akej tabulke
+     * do Chache objektu v pamäti.
+	 *
+	 * @param entityId
+	 * @param tableUniqueId
+     * @param request
+	 * @return zoznam všetkych použivateľov (List&lt;UserDto&gt;), ktory prave edituju ten isty zaznam
+	 */
+    @GetMapping({ &quot;/open/{entityId}/{tableUniqueId}&quot; })
+    public List&lt;UserDto&gt; addEdit(
+        @PathVariable(&quot;entityId&quot;) int entityId,
+        @PathVariable(&quot;tableUniqueId&quot;) String tableUniqueId,
+        HttpServletRequest request) {
+
+<span class="fc" id="L54">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">            if (user == null) return new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L56">            int userId = user.getUserId();</span>
+
+<span class="fc" id="L58">            List&lt;EditorLockingBean&gt; editorLockingBeanList = getCacheList(tableUniqueId);</span>
+
+<span class="fc" id="L60">            boolean actionExist = false;</span>
+            //Zisti, či už existuje zaznam o tom, že aktualny použivateľ upravuje tento zaznam v tejto tabuľke
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            for(EditorLockingBean editAction : editorLockingBeanList) {</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                if(editAction.getEntityId() == entityId &amp;&amp;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                    editAction.getUserId() == userId) {</span>
+<span class="fc" id="L65">                        actionExist = true;</span>
+                        //Aktualizuj poslednu zmenu (musi byť aktualizovana PRED odstranenim editActions, ktore expirovali)
+<span class="fc" id="L67">                        editAction.setLastChange(new Date());</span>
+<span class="fc" id="L68">                        break;</span>
+                    }
+<span class="fc" id="L70">            }</span>
+
+            //Tento editActions zaznam nie je v liste, takže ho pridaj
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            if(!actionExist) {</span>
+                //Pridaj novo vytvoreny zaznam (EditorLockingBean) do listu
+<span class="fc" id="L75">                editorLockingBeanList.add(getNewEditRecord(entityId, userId));</span>
+            }
+
+            //Odstran editActions, ktore expirovali
+<span class="fc" id="L79">            removeExpiredEditActions(editorLockingBeanList);</span>
+
+            //Vrať list ostatnych použivateľov, ktory upravuju rovnaky zaznam v rovnakej tabuľke (ako aktualny poživateľ)
+<span class="fc" id="L82">            return getListOfOtherUsers(editorLockingBeanList, entityId, userId);</span>
+    }
+
+    /**
+	 * Vymaže z Cache objektu v pamäti zaznam o tom, že daný použivateľ edituje
+     * konkretny zaznam v konkretnej tabuľke.
+	 *
+	 * @param entityId
+	 * @param tableUniqueId
+     * @param request
+	 * @return
+	 */
+    @GetMapping({ &quot;/close/{entityId}/{tableUniqueId}&quot; })
+    public void removeEdit(
+        @PathVariable(&quot;entityId&quot;) int entityId,
+        @PathVariable(&quot;tableUniqueId&quot;) String tableUniqueId,
+        HttpServletRequest request) {
+
+<span class="fc" id="L100">        List&lt;EditorLockingBean&gt; editorLockingBeanList = getCacheList(tableUniqueId);</span>
+
+<span class="fc" id="L102">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (user == null) return;</span>
+<span class="fc" id="L104">        int userId = user.getUserId();</span>
+
+<span class="fc" id="L106">        Iterator&lt;EditorLockingBean&gt; i = editorLockingBeanList.iterator();</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        while (i.hasNext()) {</span>
+<span class="fc" id="L108">            EditorLockingBean next = i.next(); //Musi to byt zavolane pre akciou i.remove()</span>
+
+<span class="fc bfc" id="L110" title="All 4 branches covered.">            if(next.getEntityId() == entityId &amp;&amp; next.getUserId()==userId) {</span>
+<span class="fc" id="L111">                i.remove();</span>
+<span class="fc" id="L112">                break;</span>
+            }
+<span class="fc" id="L114">        }</span>
+<span class="fc" id="L115">    }</span>
+
+    /**
+	 * Vytvor a nastav novy EditorLockingBean objekt podla vstupnych parametrov.
+	 *
+	 * @param entityId
+     * @param request
+	 * @return vytvoreny a nastaveny objekt (EditorLockingBean)
+	 */
+    private EditorLockingBean getNewEditRecord(int entityId, int userId) {
+<span class="fc" id="L125">        EditorLockingBean newEdit = new EditorLockingBean();</span>
+<span class="fc" id="L126">        newEdit.setEntityId(entityId);</span>
+<span class="fc" id="L127">        newEdit.setLastChange(new Date());</span>
+<span class="fc" id="L128">        newEdit.setUserId(userId);</span>
+
+<span class="fc" id="L130">        return newEdit;</span>
+    }
+
+    /**
+	 * Prejdi zadany list (List&lt;EditorLockingBean&gt;), a dostran z neho EditorLockingBean objekty, ktore už expirovali.
+	 *
+	 * @param entityId
+	 * @param tableUniqueId
+     * @param request
+	 * @return list (List&lt;EditorLockingBean&gt;) s objektami, ktore ešte neexpirovali
+	 */
+    private void removeExpiredEditActions(List&lt;EditorLockingBean&gt; editorLockingBeanList) {
+        //Aktualny datum a čas v millisekundach
+<span class="fc" id="L143">        long now = new Date().getTime();</span>
+
+<span class="fc" id="L145">        Iterator&lt;EditorLockingBean&gt; i = editorLockingBeanList.iterator();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        while (i.hasNext()) {</span>
+            //Musi to byt zavolane pre akciou i.remove()
+<span class="fc" id="L148">            EditorLockingBean editAction = i.next();</span>
+
+            //Dokedy validne
+<span class="fc" id="L151">            long validUntil = editAction.getLastChange().getTime() + (60000 * CACHE_EXPIRE_MINUTES);</span>
+
+            //Ak editAction expirovala, odstraň ju
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if(now &gt;= validUntil) {</span>
+<span class="fc" id="L155">                i.remove();</span>
+            }
+<span class="fc" id="L157">        }</span>
+<span class="fc" id="L158">    }</span>
+
+    /**
+	 * Prejdi zadany list (List&lt;EditorLockingBean&gt;), a zisti kto každy upravuje ten isty zaznam v tej istej tabulke
+	 *
+	 * @param entityId
+     * @param userId
+	 * @return list (List&lt;UserDto&gt;) s ostatnymi pouzivatelmi ktory tento zaznam prave upravuju
+	 */
+    private List&lt;UserDto&gt; getListOfOtherUsers(List&lt;EditorLockingBean&gt; editorLockingBeanList, int entityId, int userId) {
+
+<span class="fc" id="L169">        List&lt;UserDto&gt; otherUsers = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for(EditorLockingBean editAction : editorLockingBeanList) {</span>
+<span class="fc bfc" id="L172" title="All 4 branches covered.">            if(editAction.getEntityId() == entityId &amp;&amp; editAction.getUserId() != userId) {</span>
+<span class="fc" id="L173">                UserDto otherUser = new UserDto(UsersDB.getUser(editAction.getUserId()));</span>
+<span class="fc" id="L174">                otherUsers.add(otherUser);</span>
+            }
+<span class="fc" id="L176">        }</span>
+
+<span class="fc" id="L178">        return otherUsers;</span>
+    }
+
+    /**
+     * Vrati z cache list EditorLockingBean pre zadane meno tabulky
+     * @param tableUniqueId
+     * @return
+     */
+    private List&lt;EditorLockingBean&gt; getCacheList(String tableUniqueId) {
+<span class="fc" id="L187">        Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L188">        String cacheKey = CACHE_PREFIX+&quot;-&quot;+tableUniqueId;</span>
+
+        //Ak editorlocking cacheBean už existuje, ziskaj lit zaznamov uprav (List&lt;EditorLockingBean&gt;)
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L192">        List&lt;EditorLockingBean&gt; editorLockingBeanList = (List&lt;EditorLockingBean&gt;) cache.getObject(cacheKey);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (editorLockingBeanList == null) {</span>
+<span class="fc" id="L194">            editorLockingBeanList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L195">            cache.setObject(cacheKey, editorLockingBeanList, CACHE_EXPIRE_MINUTES+5);</span>
+        } else {
+            //musime ho v cache obnovit, aby neexpiroval
+<span class="fc" id="L198">            cache.setObjectExpiryTime(cacheKey, Tools.getNow() + ((CACHE_EXPIRE_MINUTES+5)*60*1000));</span>
+        }
+<span class="fc" id="L200">        return editorLockingBeanList;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

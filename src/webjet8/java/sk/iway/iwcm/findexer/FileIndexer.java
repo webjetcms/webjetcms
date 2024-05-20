@@ -86,7 +86,7 @@ public class FileIndexer
 		disablePagesInDir(dirUrl);
 
 		if (dirUrl.contains("backup")) {
-			if (out != null) out.println(dirUrl+" is BACKUP, skipping</br>");
+			Logger.error(FileIndexer.class, dirUrl+" is BACKUP, skipping");
 			return;
 		}
 

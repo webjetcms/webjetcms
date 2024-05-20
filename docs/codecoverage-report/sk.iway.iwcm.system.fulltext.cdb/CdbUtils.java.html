@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CdbUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.cdb</a> &gt; <span class="el_source">CdbUtils.java</span></div><h1>CdbUtils.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.cdb;
+
+import java.io.UnsupportedEncodingException;
+import java.lang.ref.SoftReference;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
+import java.util.Arrays;
+
+/**
+ *
+ * Implementácia kódovania poľa znakov do poľa bajtov CdbUtils.java
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2011
+ * @author $Author: jeeff thaber $
+ * @version $Revision: 1.3 $
+ * @created Date: 5.5.2011 14:11:19
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+@SuppressWarnings({&quot;unused&quot;, &quot;unchecked&quot;, &quot;rawtypes&quot;})
+public class CdbUtils
+{
+	private CdbUtils()
+	{
+	}
+
+<span class="nc" id="L34">	public static final Charset cs = Charset.defaultCharset();</span>
+<span class="nc" id="L35">	private static ThreadLocal decoder = new ThreadLocal(); //NOSONAR</span>
+<span class="nc" id="L36">	private static ThreadLocal encoder = new ThreadLocal(); //NOSONAR</span>
+
+	private static Object deref(ThreadLocal tl)
+	{
+<span class="nc" id="L40">		SoftReference sr = (SoftReference) tl.get();</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (sr == null)</span>
+<span class="nc" id="L42">			return null;</span>
+<span class="nc" id="L43">		return sr.get();</span>
+	}
+
+	private static void set(ThreadLocal tl, Object ob)
+	{
+<span class="nc" id="L48">		tl.set(new SoftReference(ob));</span>
+<span class="nc" id="L49">	}</span>
+
+	private static byte[] safeTrim(byte[] ba, int len)
+	{
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (len == ba.length)</span>
+<span class="nc" id="L54">			return ba;</span>
+		else
+<span class="nc" id="L56">			return Arrays.copyOf(ba, len);</span>
+	}
+
+	  // Trim the given byte array to the given length
+   //
+   @SuppressWarnings(&quot;java:S3398&quot;)
+   private static byte[] safeTrim(byte[] ba, int len, Charset cs) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">	if (len == ba.length )</span>
+<span class="nc" id="L64">	    return ba;</span>
+       else
+<span class="nc" id="L66">           return Arrays.copyOf(ba, len);</span>
+   }
+
+
+	// Trim the given char array to the given length
+	//
+	@SuppressWarnings(&quot;java:S3398&quot;)
+	private static char[] safeTrim(char[] ca, int len, Charset cs)
+	{
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (len == ca.length)</span>
+<span class="nc" id="L76">			return ca;</span>
+		else
+<span class="nc" id="L78">			return Arrays.copyOf(ca, len);</span>
+	}
+
+	private static int scale(int len, float expansionFactor)
+	{
+		// We need to perform double, not float, arithmetic; otherwise
+		// we lose low order bits when len is larger than 2**24.
+<span class="nc" id="L85">		return (int) (len * (double) expansionFactor);</span>
+	}
+
+	public static byte[] encode(char[] ca, int off, int len)
+	{
+<span class="nc" id="L90">		StringEncoder se = (StringEncoder) deref(encoder);</span>
+<span class="nc" id="L91">		se = new StringEncoder(cs, cs.name());</span>
+<span class="nc" id="L92">		set(encoder, se);</span>
+<span class="nc" id="L93">		return se.encode(ca, off, len);</span>
+	}
+
+
+	public static char[] decode(byte[] ba)
+	{
+<span class="nc" id="L99">		StringDecoder sd = (StringDecoder) deref(decoder);</span>
+<span class="nc" id="L100">		sd = new StringDecoder(cs, cs.name());</span>
+<span class="nc" id="L101">		set(decoder, sd);</span>
+<span class="nc" id="L102">		return sd.decode(ba, 0, ba.length);</span>
+	}
+
+	public static char[] decode(byte[] ba, int off, int len)
+	{
+<span class="nc" id="L107">		StringDecoder sd = (StringDecoder) deref(decoder);</span>
+<span class="nc" id="L108">		sd = new StringDecoder(cs, cs.name());</span>
+<span class="nc" id="L109">		set(decoder, sd);</span>
+<span class="nc" id="L110">		return sd.decode(ba, off, len);</span>
+	}
+
+	// -- Decoding --
+	private static class StringDecoder
+	{
+		private final String requestedCharsetName;
+		private final Charset cs;
+		private final CharsetDecoder cd;
+
+		private StringDecoder(Charset cs, String rcn)
+<span class="nc" id="L121">		{</span>
+<span class="nc" id="L122">			this.requestedCharsetName = rcn;</span>
+<span class="nc" id="L123">			this.cs = cs;</span>
+<span class="nc" id="L124">			this.cd = cs.newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);</span>
+<span class="nc" id="L125">		}</span>
+
+		char[] decode(byte[] ba, int off, int len)
+		{
+<span class="nc" id="L129">			int en = scale(len, cd.maxCharsPerByte());</span>
+<span class="nc" id="L130">			char[] ca = new char[en];</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (len == 0)</span>
+<span class="nc" id="L132">				return ca;</span>
+<span class="nc" id="L133">			cd.reset();</span>
+<span class="nc" id="L134">			ByteBuffer bb = ByteBuffer.wrap(ba, off, len);</span>
+<span class="nc" id="L135">			CharBuffer cb = CharBuffer.wrap(ca);</span>
+			try
+			{
+<span class="nc" id="L138">				CoderResult cr = cd.decode(bb, cb, true);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				if (!cr.isUnderflow())</span>
+<span class="nc" id="L140">					cr.throwException();</span>
+<span class="nc" id="L141">				cr = cd.flush(cb);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (!cr.isUnderflow())</span>
+<span class="nc" id="L143">					cr.throwException();</span>
+			}
+<span class="nc" id="L145">			catch (CharacterCodingException x)</span>
+			{
+				// Substitution is always enabled,
+				// so this shouldn't happen
+<span class="nc" id="L149">				throw new Error(x);</span>
+<span class="nc" id="L150">			}</span>
+<span class="nc" id="L151">			return safeTrim(ca, cb.position(), cs);</span>
+		}
+	}
+
+	// -- Encoding --
+	private static class StringEncoder
+	{
+		private Charset cs;
+		private CharsetEncoder ce;
+		private final String requestedCharsetName;
+
+		private StringEncoder(Charset cs, String rcn)
+<span class="nc" id="L163">		{</span>
+<span class="nc" id="L164">			this.requestedCharsetName = rcn;</span>
+<span class="nc" id="L165">			this.cs = cs;</span>
+<span class="nc" id="L166">			this.ce = cs.newEncoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);</span>
+<span class="nc" id="L167">		}</span>
+
+		/*String charsetName()
+		{
+			if (cs instanceof HistoricallyNamedCharset)
+				return ((HistoricallyNamedCharset) cs).historicalName();
+			return cs.name();
+		}*/
+
+		final String requestedCharsetName()
+		{
+<span class="nc" id="L178">			return requestedCharsetName;</span>
+		}
+
+		byte[] encode(char[] ca, int off, int len)
+		{
+<span class="nc" id="L183">			int en = scale(len, ce.maxBytesPerChar());</span>
+<span class="nc" id="L184">			byte[] ba = new byte[en];</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			if (len == 0)</span>
+<span class="nc" id="L186">				return ba;</span>
+<span class="nc" id="L187">			ce.reset();</span>
+<span class="nc" id="L188">			ByteBuffer bb = ByteBuffer.wrap(ba);</span>
+<span class="nc" id="L189">			CharBuffer cb = CharBuffer.wrap(ca, off, len);</span>
+			try
+			{
+<span class="nc" id="L192">				CoderResult cr = ce.encode(cb, bb, true);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (!cr.isUnderflow())</span>
+<span class="nc" id="L194">					cr.throwException();</span>
+<span class="nc" id="L195">				cr = ce.flush(bb);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				if (!cr.isUnderflow())</span>
+<span class="nc" id="L197">					cr.throwException();</span>
+			}
+<span class="nc" id="L199">			catch (CharacterCodingException x)</span>
+			{
+				// Substitution is always enabled,
+				// so this shouldn't happen
+<span class="nc" id="L203">				throw new Error(x);</span>
+<span class="nc" id="L204">			}</span>
+<span class="nc" id="L205">			return safeTrim(ba, bb.position(), cs);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

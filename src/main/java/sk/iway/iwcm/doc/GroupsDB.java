@@ -10,6 +10,7 @@ import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
@@ -913,23 +914,13 @@ public class GroupsDB extends DB
 
 			if (InitServlet.isTypeCloud())
 			{
-				if (Tools.isEmpty(newGroup.getDomainName()))
-				{
-					newGroup.setDomainName(CloudToolsForCore.getDomainName());
-				}
+				newGroup.setDomainName(CloudToolsForCore.getDomainName());
 
-				if (newGroup.getParentGroupId()<1)
-				{
-					int domainId = CloudToolsForCore.getDomainId();
-					//test > 1 musi byt kvoli moznosti zalozit root group pre domenu (ak este neexistuje vrati sa 1)
-					if (domainId > 1 && domainId != newGroup.getGroupId()) newGroup.setParentGroupId(domainId);
-				}
-				else
+				if (newGroup.getParentGroupId()>1)
 				{
 					GroupDetails parentGroup = getGroup(newGroup.getParentGroupId());
 					if (parentGroup == null || parentGroup.getDomainName().equals(newGroup.getDomainName())==false)
 					{
-						newGroup.setDomainName(CloudToolsForCore.getDomainName());
 						newGroup.setParentGroupId(CloudToolsForCore.getDomainId());
 					}
 				}
@@ -940,8 +931,10 @@ public class GroupsDB extends DB
 			newGroup.setNavbar(Tools.replace(Tools.replace(newGroup.getNavbarName(), "\\", "-"), "/", "&#47;"));
 
 			//premenovanie nazvu hlavnej stranky Grupy, podla nazvu Grupy
-			if(Constants.getBoolean("syncGroupAndWebpageTitle") && newGroup.getDefaultDocId() > 0)
+			if(newGroup.getDefaultDocId() > 0 && GroupsService.canSyncTitle(newGroup)) {
 				changeDocTitle(newGroup);
+				DocDB.getInstance(true);
+			}
 
 			Logger.println(this,"GroupsDB.setGroup: " + newGroup.getGroupName());
 
@@ -3180,6 +3173,35 @@ public class GroupsDB extends DB
 	}
 
 	/**
+	 * Test if at least one groupId is editable by user
+	 * @param user
+	 * @param groupIds
+	 * @return
+	 */
+	public static boolean isGroupsEditable(UserDetails user, String groupIds) {
+		int[] groupIdsInt = Tools.getTokensInt(groupIds, ",");
+		return isGroupsEditable(user, groupIdsInt);
+	}
+
+	/**
+	 * Test if at least one groupId is editable by user
+	 * @param user
+	 * @param groupIds
+	 * @return
+	 */
+	public static boolean isGroupsEditable(UserDetails user, int[] groupIds) {
+		if (groupIds == null || groupIds.length==0) return true;
+
+		if (user == null) return false;
+
+		for (int groupId : groupIds) {
+			if (isGroupEditable(user, groupId)) return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Otestuje, ci zadany adresar je pouzivatelom nastaveny ako editovatelny (user.getEditableGroups)
 	 * @param user
 	 * @param groupId
@@ -3190,11 +3212,11 @@ public class GroupsDB extends DB
 		if (groupId < 1) return true;
 
 		if (user == null) return false;
-		if (user.getEditableGroups() != null && user.getEditableGroups().length() > 0)
+		if (Tools.isNotEmpty(user.getEditableGroups(true)))
 		{
 			GroupsDB groupsDB = GroupsDB.getInstance();
 			String parentGroups = "," + groupId + "," + groupsDB.getParents(groupId)+",";
-			StringTokenizer st = new StringTokenizer(user.getEditableGroups(), ",");
+			StringTokenizer st = new StringTokenizer(user.getEditableGroups(true), ",");
 			String id;
 			int i_id;
 			while (st.hasMoreTokens())

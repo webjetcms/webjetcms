@@ -17,7 +17,7 @@ import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.queries.ReadAllQuery;
 
 import sk.iway.iwcm.database.JpaDB;
-//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;
+import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;
 
 /**
  * A decorator for a {@link NodeInfo} implementation that enriches it with the
@@ -26,7 +26,7 @@ import sk.iway.iwcm.database.JpaDB;
  * @param <T extends NodeInfo> The wrapped entity type.
  * @author Roman Borschel <roman@code-factory.org>
  */
-@JsonSerialize //(using = WrappedNodeSerializer.class)
+@JsonSerialize(using = WrappedNodeSerializer.class)
 public class JpaNode<T extends NodeInfo> implements Node<T>
 {
 	private static final int PREV_SIBLING = 1;

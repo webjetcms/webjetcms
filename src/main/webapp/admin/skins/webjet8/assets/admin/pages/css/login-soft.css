@@ -187,6 +187,10 @@ div.password-strength-info {
   font-size: 13px;
 }
 
+.pull-right {
+  float: right;
+}
+
 @media (max-width: 1075px) {
   body.login .logo {
       display: none;

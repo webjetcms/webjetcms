@@ -19,7 +19,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/dmail/domain-limits")
-@PreAuthorize("@WebjetSecurityService.hasPermission('menuEmail')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_dmail_domainlimits')")
 @Datatable
 public class DomainLimitRestController extends DatatableRestControllerV2<DomainLimitBean, Long>{
 

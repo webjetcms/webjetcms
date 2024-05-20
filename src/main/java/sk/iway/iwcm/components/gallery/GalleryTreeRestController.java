@@ -231,7 +231,7 @@ public class GalleryTreeRestController extends JsTreeRestController<GalleryDimen
 
     private Optional<GalleryDimension> getGalleryDimensionFromDB(GalleryDimension item) {
         if (item.getId() != null && item.getId() > 0) {
-            return repository.findById(item.getId());
+            return repository.findFirstByIdAndDomainId(item.getId(), CloudToolsForCore.getDomainId());
         }
 
         if (Tools.isNotEmpty(item.getPath())) {

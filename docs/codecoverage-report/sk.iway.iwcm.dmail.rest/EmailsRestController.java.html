@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.rest</a> &gt; <span class="el_source">EmailsRestController.java</span></div><h1>EmailsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.rest;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.dmail.DmailUtil;
+import sk.iway.iwcm.dmail.Sender;
+import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
+import sk.iway.iwcm.dmail.jpa.CampaingsRepository;
+import sk.iway.iwcm.dmail.jpa.EmailsEntity;
+import sk.iway.iwcm.dmail.jpa.EmailsRepository;
+import sk.iway.iwcm.dmail.jpa.StatClicksRepository;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/dmail/emails&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuEmail')&quot;)
+@Datatable
+public class EmailsRestController extends DatatableRestControllerV2&lt;EmailsEntity, Long&gt; {
+
+    private final EmailsRepository emailsRepository;
+    private final CampaingsRepository campaingsRepository;
+    private final StatClicksRepository statClicksRepository;
+
+    @Autowired
+    public EmailsRestController(EmailsRepository emailsRepository, CampaingsRepository campaingsRepository, StatClicksRepository statClicksRepository) {
+<span class="fc" id="L46">        super(emailsRepository);</span>
+<span class="fc" id="L47">        this.emailsRepository = emailsRepository;</span>
+<span class="fc" id="L48">        this.campaingsRepository = campaingsRepository;</span>
+<span class="fc" id="L49">        this.statClicksRepository = statClicksRepository;</span>
+<span class="fc" id="L50">    }</span>
+
+    @Override
+    public Page&lt;EmailsEntity&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L55">        DatatablePageImpl&lt;EmailsEntity&gt; page = null;</span>
+
+<span class="fc" id="L57">        String selectType = getRequest().getParameter(&quot;selectType&quot;);</span>
+<span class="fc" id="L58">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (campainId&lt;1L) campainId = (long)-getUser().getUserId();</span>
+
+<span class="pc bpc" id="L61" title="2 of 4 branches missed.">        if(selectType != null &amp;&amp; !selectType.isEmpty()) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if(selectType.equals(&quot;recipients&quot;)) {</span>
+<span class="fc" id="L63">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainId(campainId, pageable));</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">            } else if(selectType.equals(&quot;opens&quot;)) {</span>
+<span class="fc" id="L65">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainIdAndSeenDateIsNotNull(campainId, pageable));</span>
+            }
+        } else {
+<span class="nc" id="L68">            page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAll(pageable));</span>
+        }
+
+<span class="fc" id="L71">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+
+<span class="fc" id="L73">        return page;</span>
+    }
+
+    @Override
+    public EmailsEntity editItem(EmailsEntity entity, long id) {
+        //In editor can be put more than one email adress
+<span class="fc" id="L79">        String[] emailsToInsert = Tools.getTokens(entity.getRecipientEmail(), &quot;, ;\n&quot;, true);</span>
+
+        //This is replacement for raw/hand insert of emails (not thru CSV/Excel)
+<span class="fc" id="L82">        Set&lt;String&gt; emailsTable = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L83">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
+
+<span class="fc" id="L85">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
+<span class="fc" id="L86">        CampaingsEntity campaign = null;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (campainId&gt;0L) campaign = campaingsRepository.getById(campainId);</span>
+
+        //Load allready pushed emails in DB
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (String email : emailsRepository.getAllCampainEmails(CampaingsRestController.getCampaignId(campaign, getUser()))) {</span>
+<span class="fc" id="L91">            emailsTable.add(email.toLowerCase());</span>
+<span class="fc" id="L92">        }</span>
+
+<span class="fc" id="L94">        EmailsEntity saved = null;</span>
+
+        //Check if emailsToInsert are valid
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        for(String recipientEmail : emailsToInsert) {</span>
+
+            //Get rid of white-spaces (for safety reason)
+<span class="fc" id="L100">            recipientEmail = recipientEmail.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
+
+            //Protection against unsubscribed email addresses
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) continue;</span>
+
+            //Email duplicity protection
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if(emailsTable.contains(recipientEmail.toLowerCase())) {</span>
+<span class="pc bpc" id="L107" title="3 of 6 branches missed.">                if (emailsToInsert.length==1 &amp;&amp; (entity.getId()!=null &amp;&amp; entity.getId()&gt;0)) {</span>
+                    //ak je v zozname len jeden email a uz ma v DB idecko, tak pokracuj, ulozime jeho zmeny
+                } else {
+                    continue;
+                }
+            }
+
+            EmailsEntity emailToInsert;
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (emailsToInsert.length==1) emailToInsert = entity;</span>
+<span class="fc" id="L116">            else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());</span>
+
+<span class="fc" id="L118">            boolean isValid = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (isValid) {</span>
+
+                //Save entity into DB
+<span class="fc bfc" id="L122" title="All 2 branches covered.">                if (saved == null) saved = emailsRepository.save(emailToInsert);</span>
+<span class="fc" id="L123">                else emailsRepository.save(emailToInsert);</span>
+
+                //Update emails table (because there can be duplicity in excel)
+<span class="fc" id="L126">                emailsTable.add(recipientEmail);</span>
+            } else {
+<span class="nc" id="L128">                addNotify(new NotifyBean(getProp().getText(&quot;datatables.error.title.js&quot;), getProp().getText(&quot;datatable.error.importRow&quot;, String.valueOf(getLastImportedRow().intValue()+1), &quot;`&quot;+recipientEmail)+&quot;` &quot;+getProp().getText(&quot;components.dmail.emailIsNotValid&quot;), NotifyType.ERROR));</span>
+            }
+        }
+
+<span class="fc" id="L132">        setForceReload(true);</span>
+
+<span class="fc" id="L134">        return saved;</span>
+    }
+
+    @Override
+    public EmailsEntity insertItem(EmailsEntity entity) {
+        //Insert item fn is override and dont save any entity
+        //Save step is allready made in beforeSave fn
+<span class="fc" id="L141">        return editItem(entity, -1);</span>
+    }
+
+    /**
+     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
+     * @param campaign
+     * @param loggedUserId
+     * @param entity
+     */
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
+
+        //trimni email adresu
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());</span>
+
+        //sprav lower case
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());</span>
+
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if(Tools.isEmail(entity.getRecipientEmail())==false) {</span>
+<span class="nc" id="L159">            return false;</span>
+        }
+
+        //Get email recipient(user) using email
+<span class="fc" id="L163">        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if(recipient == null) {</span>
+<span class="fc" id="L165">            entity.setRecipientUserId(-1);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(&quot;- -&quot;);</span>
+        }
+        else {
+<span class="fc" id="L169">            entity.setRecipientUserId(recipient.getUserId());</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(recipient.getFullName());</span>
+        }
+
+        //Set create values
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (campaign == null) {</span>
+<span class="fc" id="L175">            entity.setCampainId((long)-loggedUserId);</span>
+<span class="fc" id="L176">            entity.setUrl(&quot;&quot;);</span>
+<span class="fc" id="L177">            entity.setSubject(&quot;&quot;);</span>
+<span class="fc" id="L178">            entity.setSenderName(&quot;&quot;);</span>
+<span class="fc" id="L179">            entity.setSenderEmail(&quot;&quot;);</span>
+<span class="fc" id="L180">            entity.setCreatedByUserId(loggedUserId);</span>
+        } else {
+<span class="fc" id="L182">            entity.setCampainId(campaign.getId());</span>
+<span class="fc" id="L183">            entity.setUrl(campaign.getUrl());</span>
+<span class="fc" id="L184">            entity.setSubject(campaign.getSubject());</span>
+<span class="fc" id="L185">            entity.setSenderName(campaign.getSenderName());</span>
+<span class="fc" id="L186">            entity.setSenderEmail(campaign.getSenderEmail());</span>
+<span class="fc" id="L187">            entity.setCreatedByUserId(loggedUserId);</span>
+
+<span class="pc bpc" id="L189" title="1 of 4 branches missed.">            if (campaign.getId()==null || campaign.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L190">                entity.setCreatedByUserId(-loggedUserId);</span>
+            }
+        }
+
+<span class="fc" id="L194">        entity.setCreateDate(new Date());</span>
+<span class="fc" id="L195">        entity.setRetry(0);</span>
+
+<span class="pc bpc" id="L197" title="1 of 4 branches missed.">        if (entity.getId()==null || entity.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L198">            entity.setDisabled(true);</span>
+        }
+
+<span class="fc" id="L201">        return true;</span>
+    }
+
+    @Override
+    public boolean beforeDelete(EmailsEntity entity) {
+<span class="nc" id="L206">        statClicksRepository.deleteByEmailId(entity.getId());</span>
+<span class="nc" id="L207">        return true;</span>
+    }
+
+    @Override
+    public EmailsEntity processFromEntity(EmailsEntity entity, ProcessItemAction action) {
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (entity == null) return null;</span>
+
+<span class="fc" id="L215">        Prop prop = getProp();</span>
+<span class="fc" id="L216">        String keyPrefix = &quot;components.dmail.campaings.email.status.&quot;;</span>
+
+<span class="pc bpc" id="L218" title="2 of 6 branches missed.">        if (entity.getRetry()!=null &amp;&amp; entity.getSentDate()!=null &amp;&amp; entity.getRetry().intValue()&lt;0) entity.setStatus(prop.getText(keyPrefix+&quot;error&quot;));</span>
+<span class="pc bpc" id="L219" title="2 of 4 branches missed.">        else if(entity.getCreatedByUserId()!=null &amp;&amp; entity.getCreatedByUserId() &lt; 0) entity.setStatus(prop.getText(keyPrefix+&quot;temporal&quot;));</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        else if (Boolean.TRUE.equals(entity.getDisabled())) entity.setStatus(prop.getText(keyPrefix+&quot;disabled&quot;));</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">        else if (entity.getSentDate()!=null) entity.setStatus(prop.getText(keyPrefix+&quot;sent&quot;));</span>
+<span class="nc" id="L222">        else entity.setStatus(prop.getText(keyPrefix+&quot;saved&quot;));</span>
+
+<span class="fc" id="L224">        return entity;</span>
+    }
+
+    @Override
+    public boolean processAction(EmailsEntity entity, String action) {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (&quot;resend&quot;.equals(action)) {</span>
+            //Resend emails
+            try {
+<span class="nc" id="L232">                new SimpleQuery().execute(&quot;UPDATE emails SET sent_date = ?, retry = ?, disabled = ? WHERE email_id = ?&quot;,null, 0, false, entity.getId());</span>
+<span class="nc" id="L233">            } catch (Exception e) {</span>
+<span class="nc" id="L234">                Logger.error(EmailsRestController.class, e);</span>
+<span class="nc" id="L235">                return false;</span>
+<span class="nc" id="L236">            }</span>
+        }
+
+<span class="nc" id="L239">        Sender.resetSenderWait();</span>
+
+<span class="nc" id="L241">        return true;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

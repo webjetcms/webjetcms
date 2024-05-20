@@ -1,0 +1,1294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmFsDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">IwcmFsDB.java</span></div><h1>IwcmFsDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.SocketException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.sync.FileBean;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+
+/**
+ * IwcmFsDB.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.17 $
+ * @created Date: 24.6.2008 12:47:26
+ * @modified $Date: 2009/11/16 08:54:08 $
+ */
+public class IwcmFsDB
+{
+	/**
+	 * SQL pre zmenu deleted priznaku &lt;code&gt;UPDATE_FILE_FAT_SET_IS_DELETED_WHERE_FILE_FAT_ID&lt;/code&gt;
+	 */
+	private static final String UPDATE_DELETED_FLAG_SQL = &quot;update file_fat set is_deleted = ? where file_fat_id = ?  &quot;;
+	/**
+	 * Nazov stplca s ID vo fat tabulke &lt;code&gt;FILE_FAT_ID&lt;/code&gt;
+	 */
+	private static final String FAT_ID_COLUMN = &quot;file_fat_id&quot;;
+	private static Map&lt;String, Integer&gt; virtualPathToFatId ;
+	private static Map&lt;String, Long&gt; virtualPathToLastModified;
+	private static int cacheTimeInMinutes;
+	private static long nextRefreshTime;
+	private static boolean useDBStorage;
+	private static String dirsInDB;
+	//private static final boolean useVersioning;
+	private static String tempDir;
+	private static int blockSize;
+
+	static
+	{
+<span class="fc" id="L69">		init();</span>
+<span class="fc" id="L70">	}</span>
+
+	public static void init() {
+<span class="fc" id="L73">		cacheTimeInMinutes = Tools.getIntValue(Constants.getString(&quot;iwfs_timeInCache&quot;), 15);</span>
+<span class="fc" id="L74">		useDBStorage=Constants.getBoolean(&quot;iwfs_useDB&quot;);</span>
+<span class="fc" id="L75">		dirsInDB=Constants.getString(&quot;iwfs_dirsInDB&quot;);</span>
+		//useVersioning=Constants.getBoolean(&quot;iwfs_useVersioning&quot;);
+<span class="fc" id="L77">		tempDir=Constants.getString(&quot;iwfs_tempDir&quot;);</span>
+<span class="fc" id="L78">		blockSize=Tools.getIntValue(Constants.getString(&quot;iwfs_blockSize&quot;) , 1024*1024);</span>
+<span class="fc" id="L79">	}</span>
+
+	private  IwcmFsDB()
+	{
+	}
+
+	/**
+	 * ulozi hash tabuliek a do cache, fat_id a last modified pre kazdy subor v
+	 * db
+	 */
+	protected static synchronized void loadHashTables(boolean refresh)
+	{
+<span class="nc bnc" id="L91" title="All 8 branches missed.">		if (virtualPathToLastModified == null || virtualPathToFatId == null || refresh || nextRefreshTime &lt; System.currentTimeMillis())</span>
+		{
+<span class="nc" id="L93">			Logger.debug(IwcmFsDB.class, &quot;loading hashtables&quot;);</span>
+
+<span class="nc" id="L95">			Map&lt;String, Integer&gt; newVirtualPathToFatId = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L96">			Map&lt;String, Long&gt; newVirtualPathToLastModified = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L97">			Connection db_conn = null;</span>
+<span class="nc" id="L98">			PreparedStatement ps = null;</span>
+<span class="nc" id="L99">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L102">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L103">				ps = db_conn.prepareStatement(&quot;SELECT virtual_path, last_modified, file_fat_id FROM file_fat WHERE is_deleted = ? ORDER BY file_fat_id ASC&quot;);</span>
+<span class="nc" id="L104">				ps.setBoolean(1, false);</span>
+<span class="nc" id="L105">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L108">					newVirtualPathToFatId.put(rs.getString(&quot;virtual_path&quot;), rs.getInt(FAT_ID_COLUMN));</span>
+<span class="nc" id="L109">					newVirtualPathToLastModified.put(rs.getString(&quot;virtual_path&quot;), rs.getLong(&quot;last_modified&quot;));</span>
+				}
+<span class="nc" id="L111">				rs.close();</span>
+<span class="nc" id="L112">				ps.close();</span>
+<span class="nc" id="L113">				db_conn.close();</span>
+<span class="nc" id="L114">				rs = null;</span>
+<span class="nc" id="L115">				ps = null;</span>
+<span class="nc" id="L116">				db_conn = null;</span>
+
+<span class="nc" id="L118">				nextRefreshTime = System.currentTimeMillis() + (1000L * 60 * cacheTimeInMinutes);</span>
+
+<span class="nc" id="L120">				virtualPathToFatId = newVirtualPathToFatId;</span>
+<span class="nc" id="L121">				virtualPathToLastModified = newVirtualPathToLastModified;</span>
+			}
+<span class="nc" id="L123">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L125">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L132">						rs.close();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L134">						ps.close();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L136">						db_conn.close();</span>
+				}
+<span class="nc" id="L138">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L140">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L141">				}</span>
+			}
+		}
+<span class="nc" id="L144">	}</span>
+
+	/**
+	 * vrati tabulku s tabulku s casmi poslednej modifkacie vsetkych suborov,
+	 * kluc je virtualna cesta k suboru
+	 *
+	 * @return
+	 */
+	public static Map&lt;String, Long&gt; getModifiedTable()
+	{
+<span class="nc bnc" id="L154" title="All 4 branches missed.">		if (virtualPathToLastModified == null || nextRefreshTime &lt; System.currentTimeMillis())</span>
+		{
+<span class="nc" id="L156">			loadHashTables(false);</span>
+<span class="nc" id="L157">			return virtualPathToLastModified;</span>
+		}
+		else
+		{
+<span class="nc" id="L161">			return virtualPathToLastModified;</span>
+		}
+	}
+
+	/**
+	 * vrati tabulku s tabulku s fat_id vsetkych suborov , kluc je virtualna
+	 * cesta k suboru
+	 *
+	 * @return
+	 */
+	public static Map&lt;String, Integer&gt; getFatIdTable()
+	{
+<span class="nc bnc" id="L173" title="All 4 branches missed.">		if (virtualPathToFatId == null || nextRefreshTime &lt; System.currentTimeMillis())</span>
+		{
+<span class="nc" id="L175">			loadHashTables(false);</span>
+<span class="nc" id="L176">			return virtualPathToFatId;</span>
+		}
+		else
+		{
+<span class="nc" id="L180">			return virtualPathToFatId;</span>
+		}
+	}
+
+	/**
+	 * zapise subor z disku do Db storage
+	 *
+	 * @param file
+	 */
+	public static void writeFileToDB(File file)
+	{
+<span class="nc" id="L191">		writeFileToDB(file, file);</span>
+<span class="nc" id="L192">	}</span>
+
+	/**
+	 * zapise subor z databazy do OutputStreamu
+	 *
+	 * @param src
+	 * @param out
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] writeFileToOutputStream(File src, OutputStream out) throws FileNotFoundException
+	{
+<span class="nc" id="L203">		return writeFileToOutputStreamFromHistory(src, out, -1);</span>
+	}
+
+	/**
+	 * Zapise subor z databazy so zadanym fatIdHistory (ak je -1 zapise aktualnu verziu suboru)
+	 * @param src
+	 * @param out
+	 * @param fatIdHistory
+	 * @return
+	 * @throws FileNotFoundException
+	 */
+	public static byte[] writeFileToOutputStreamFromHistory(File src, OutputStream out, int fatIdHistory) throws FileNotFoundException
+	{
+<span class="nc" id="L216">		byte[] result=new byte[0];</span>
+
+<span class="nc" id="L218">		IwcmInputStream in = null;</span>
+<span class="nc" id="L219">		String virtualPath = getVirtualPath(src.getAbsolutePath());</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">		if (fatIdHistory != -1 &amp;&amp; getFatIdTable().get(virtualPath) == null)</span>
+<span class="nc" id="L221">			throw new FileNotFoundException(virtualPath);</span>
+		try
+		{
+<span class="nc" id="L224">			long length = -1;</span>
+
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (FileCache.useFileCache())</span>
+			{
+<span class="nc" id="L228">				length=new IwcmFile(src).length();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">				if (length&lt;=FileCache.getMaxFileSize())</span>
+				{
+<span class="nc" id="L231">					result = new byte[(int)length];</span>
+				}
+			}
+<span class="nc" id="L234">			in = new IwcmInputStream(src, fatIdHistory);</span>
+
+<span class="nc" id="L236">			byte[] buffer = new byte[64000];</span>
+<span class="nc" id="L237">			int bytesRead = 0;</span>
+<span class="nc" id="L238">			int bytesCopied = 0;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			while ((bytesRead = in.read(buffer, 0, 64000)) != -1)</span>
+			{
+				//Logger.debug(IwcmFsDB.class, &quot;writing &quot;+bytesRead);
+<span class="nc" id="L242">				out.write(buffer, 0, bytesRead);</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">				if (FileCache.useFileCache() &amp;&amp; length&lt;=FileCache.getMaxFileSize())</span>
+				{
+<span class="nc" id="L245">					System.arraycopy(buffer, 0, result, bytesCopied, bytesRead);</span>
+<span class="nc" id="L246">					bytesCopied+=bytesRead;</span>
+				}
+
+			}
+<span class="nc" id="L250">			out.flush();</span>
+<span class="nc" id="L251">			out.close();</span>
+<span class="nc" id="L252">			out = null;</span>
+<span class="nc" id="L253">			in.close();</span>
+<span class="nc" id="L254">			in = null;</span>
+		}
+<span class="nc" id="L256">		catch (SocketException e)</span>
+		{
+<span class="nc" id="L258">			Logger.error(IwcmFsDB.class, src.getAbsolutePath() + &quot;: &quot; + e.getMessage());</span>
+		}
+<span class="nc" id="L260">		catch (Exception e)</span>
+		{
+<span class="nc" id="L262">			Logger.error(IwcmFsDB.class, src.getAbsolutePath());</span>
+<span class="nc" id="L263">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L269" title="All 2 branches missed.">				if (out != null)</span>
+<span class="nc" id="L270">					out.close();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">				if (in != null)</span>
+<span class="nc" id="L272">					in.close();</span>
+			}
+<span class="nc" id="L274">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L276">			}</span>
+		}
+<span class="nc" id="L278">		return result;</span>
+	}
+
+	/**
+	 * Vytvori prazdny adresar v databaze podla nastavenej virtualPath
+	 *
+	 * @param virtualPath
+	 */
+	public static void createDirectory(String virtualPath)
+	{
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (getFatIdTable().get(virtualPath) != null)</span>
+		{
+<span class="nc" id="L290">			return;</span>
+		}
+<span class="nc" id="L292">		Connection db_conn = null;</span>
+<span class="nc" id="L293">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L296">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L297">			ps = db_conn</span>
+<span class="nc" id="L298">						.prepareStatement(&quot;insert into file_fat (file_fat_id,fsize,virtual_path,is_directory,depth,last_modified) values (?,?,?,?,?,?) &quot;);</span>
+<span class="nc" id="L299">			int fatId = PkeyGenerator.getNextValue(FAT_ID_COLUMN);</span>
+<span class="nc" id="L300">			ps.setInt(1, fatId);</span>
+<span class="nc" id="L301">			ps.setInt(2, 0);</span>
+<span class="nc" id="L302">			ps.setString(3, virtualPath);</span>
+<span class="nc" id="L303">			ps.setBoolean(4, true);</span>
+<span class="nc" id="L304">			ps.setInt(5, IwcmFsDB.getDepth(virtualPath));</span>
+<span class="nc" id="L305">			ps.setLong(6, 0);</span>
+<span class="nc" id="L306">			ps.execute();</span>
+<span class="nc" id="L307">			getFatIdTable().put(virtualPath, fatId);</span>
+<span class="nc" id="L308">			getModifiedTable().put(virtualPath, (long) 0);</span>
+<span class="nc" id="L309">			ClusterDB.addRefresh(IwcmFsDB.class);</span>
+<span class="nc" id="L310">			ps.close();</span>
+<span class="nc" id="L311">			db_conn.close();</span>
+<span class="nc" id="L312">			ps = null;</span>
+<span class="nc" id="L313">			db_conn = null;</span>
+		}
+<span class="nc" id="L315">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L317">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L323" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L324">					ps.close();</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L326">					db_conn.close();</span>
+			}
+<span class="nc" id="L328">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L330">			}</span>
+		}
+<span class="nc" id="L332">	}</span>
+
+	/**
+	 * vytvori prazdny adresar v db podla adresa na disku
+	 *
+	 * @param dir
+	 */
+	public static void writeDirectoryToDB(File dir)
+	{
+<span class="nc" id="L341">		createDirectory(getVirtualPath(dir.getAbsolutePath()));</span>
+<span class="nc" id="L342">	}</span>
+
+	/**
+	 * Zapise adresar s disku spolu zo subormi, ak je recursive true, zapise aj
+	 * podadresare so subormy.
+	 *
+	 * @param dir
+	 * @param recursive
+	 */
+	public static void writeDirectoryToDB(File dir, boolean recursive)
+	{
+<span class="nc" id="L353">		Logger.debug(IwcmFsDB.class, &quot;writing directory: &quot; + dir.getAbsolutePath());</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		if (dir.isDirectory())</span>
+		{
+<span class="nc" id="L356">			writeDirectoryToDB(dir);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			for (File f : dir.listFiles())</span>
+			{
+<span class="nc bnc" id="L359" title="All 4 branches missed.">				if (recursive &amp;&amp; f.isDirectory())</span>
+				{
+<span class="nc" id="L361">					writeDirectoryToDB(f, recursive);</span>
+				}
+<span class="nc bnc" id="L363" title="All 2 branches missed.">				else if (f.isDirectory())</span>
+<span class="nc" id="L364">					continue;</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (f.isFile())</span>
+				{
+<span class="nc" id="L367">					writeFileToDB(f);</span>
+				}
+			}
+		}
+		else
+		{
+<span class="nc" id="L373">			throw new RuntimeException(&quot;Not a directory&quot;);</span>
+		}
+<span class="nc" id="L375">	}</span>
+
+	/**
+	 * Zapise subor z databazy na disk
+	 *
+	 * @param f
+	 */
+	public static void writeFileToDisk(File f)
+	{
+<span class="nc" id="L384">		writeFileToDisk(f, f);</span>
+<span class="nc" id="L385">	}</span>
+
+	/**
+	 * Vrati virtualnu cestu
+	 *
+	 * @param realPath
+	 * @return
+	 */
+	public static String getVirtualPath(String realPath)
+	{
+<span class="pc bpc" id="L395" title="1 of 4 branches missed.">		if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
+		{
+<span class="fc" id="L397">			String domainVirtualPath = FilePathTools.getVirtualPathHellper(realPath);</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">			if (domainVirtualPath != null) return domainVirtualPath;</span>
+		}
+
+<span class="pc bpc" id="L401" title="1 of 4 branches missed.">		if (realPath == null || realPath.length() &lt; Tools.getRealPath(&quot;/&quot;).length())</span>
+		{
+<span class="fc" id="L403">			return &quot;/&quot;;</span>
+		}
+<span class="fc" id="L405">		String path = &quot;/&quot; + realPath.substring(Tools.getRealPath(&quot;/&quot;).length()).replace('\\', '/'); //NOSONAR</span>
+<span class="fc bfc" id="L406" title="All 4 branches covered.">		if (path.endsWith(&quot;/&quot;) &amp;&amp; !&quot;/&quot;.equals(path))</span>
+		{
+<span class="fc" id="L408">			path = path.substring(0, path.length() - 1);</span>
+		}
+<span class="fc" id="L410">		return path;</span>
+	}
+
+	/**
+	 * vrati hlbku v strome virtualnych adresarov
+	 *
+	 * @param virtualPath
+	 * @return
+	 */
+	public static int getDepth(String virtualPath)
+	{
+<span class="nc" id="L421">		int count = 0;</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		for (char c : virtualPath.toCharArray())</span>
+		{
+<span class="nc bnc" id="L424" title="All 2 branches missed.">			if (c == '/')</span>
+			{
+<span class="nc" id="L426">				count++;</span>
+			}
+		}
+<span class="nc" id="L429">		return count;</span>
+	}
+
+	/**
+	 * podla cesty zisti ci sa ma pouzit storage alebo nie.
+	 *
+	 * @param virtualPath
+	 *           virtualna cesta!
+	 * @return
+	 */
+	public static boolean useDBStorage(String virtualPath) //NOSONAR
+	{
+<span class="pc bpc" id="L441" title="1 of 2 branches missed.">		if (useDBStorage==false) return false;</span>
+
+<span class="nc bnc" id="L443" title="All 4 branches missed.">		if (virtualPath.startsWith(&quot;/admin&quot;) || virtualPath.endsWith(&quot;.jsp&quot;)) return false;</span>
+
+		// ak ano, tak este skontrolujeme ci aj dany adresar/subor
+<span class="nc" id="L446">		String dirs = dirsInDB;</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		for (String d : dirs.split(&quot;;&quot;))</span>
+		{
+<span class="nc bnc" id="L449" title="All 2 branches missed.">			if (d.endsWith(&quot;/&quot;))</span>
+			{
+<span class="nc bnc" id="L451" title="All 2 branches missed.">				if (virtualPath.startsWith(d.substring(0, d.length() - 1)))</span>
+				{
+<span class="nc" id="L453">					return true;</span>
+				}
+			}
+			else
+			{
+<span class="nc bnc" id="L458" title="All 2 branches missed.">				if (virtualPath.startsWith(d))</span>
+				{
+<span class="nc" id="L460">					return true;</span>
+				}
+			}
+		}
+<span class="nc" id="L464">		return false;</span>
+	}
+
+	/**
+	 * zisti ci sa ma pouzit storage
+	 *
+	 * @return
+	 */
+	public static boolean useDBStorage()
+	{
+<span class="fc" id="L474">		return useDBStorage;</span>
+	}
+
+	/**
+	 * Zapise obsah InputStreamu do file
+	 *
+	 * @param in
+	 *           vstupne data
+	 * @param file
+	 *           vystupny subor
+	 * @param size
+	 *           velkost vystupneho suboru
+	 */
+	public static void writeFiletoDest(InputStream in, File file, int size,boolean closeInStream)
+	{
+<span class="nc bnc" id="L489" title="All 2 branches missed.">		if (useDBStorage(getVirtualPath(file.getPath())))</span>
+		{
+<span class="nc" id="L491">			Logger.error(IwcmFsDB.class, &quot;writeFileToDest:&quot; + file.getPath());</span>
+<span class="nc" id="L492">			IwcmFile iwFile=new IwcmFile(file);</span>
+<span class="nc" id="L493">			iwFile.delete();</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">			if (!iwFile.getParentFile().exists())</span>
+			{
+<span class="nc" id="L496">				iwFile.mkdirs();</span>
+			}
+<span class="nc" id="L498">			Connection db_conn = null;</span>
+<span class="nc" id="L499">			PreparedStatement ps = null;</span>
+
+			try
+			{
+<span class="nc" id="L503">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L504">				ps = db_conn</span>
+<span class="nc" id="L505">							.prepareStatement(&quot;insert into file_fat (file_fat_id,fsize,virtual_path,depth,last_modified) values (?,?,?,?,?)&quot;);</span>
+<span class="nc" id="L506">				int fatId = PkeyGenerator.getNextValue(FAT_ID_COLUMN);</span>
+<span class="nc" id="L507">				ps.setInt(1, fatId);</span>
+<span class="nc" id="L508">				ps.setLong(2, size);</span>
+<span class="nc" id="L509">				ps.setString(3, getVirtualPath(file.getPath()));</span>
+<span class="nc" id="L510">				ps.setInt(4, IwcmFsDB.getDepth(getVirtualPath(file.getPath())));</span>
+<span class="nc" id="L511">				Date dt=new Date();</span>
+<span class="nc" id="L512">				ps.setLong(5,dt.getTime());</span>
+<span class="nc" id="L513">				ps.execute();</span>
+<span class="nc" id="L514">				ps.close();</span>
+<span class="nc" id="L515">				byte[] data = null;</span>
+<span class="nc" id="L516">				ps = db_conn.prepareStatement(&quot;insert into file_data (file_fat_id,data) values (?,?)&quot;);</span>
+<span class="nc" id="L517">				long numberOfBlocks = (long) Math.ceil((double) size / (double) getBlockSize());</span>
+<span class="nc bnc" id="L518" title="All 2 branches missed.">				for (int i = 0; i &lt; numberOfBlocks; i++)</span>
+				{
+<span class="nc" id="L520">					data = new byte[getBlockSize()];</span>
+<span class="nc" id="L521">					int bytesRead = 0;</span>
+<span class="nc" id="L522">					int bytesReadSum=0;</span>
+<span class="nc bnc" id="L523" title="All 4 branches missed.">					while (bytesRead != -1 &amp;&amp; bytesReadSum &lt; getBlockSize())</span>
+					{
+<span class="nc" id="L525">						bytesRead=in.read(data, bytesReadSum, getBlockSize()-bytesReadSum);</span>
+<span class="nc" id="L526">						bytesReadSum+=bytesRead;</span>
+					}
+<span class="nc" id="L528">					ps.setInt(1, fatId);</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">					if (i == numberOfBlocks - 1)</span>
+					{
+<span class="nc" id="L531">						byte[] tmp = new byte[(int) (getBlockSize() - (numberOfBlocks * getBlockSize() - size))];</span>
+<span class="nc" id="L532">						System.arraycopy(data,0, tmp, 0, tmp.length);</span>
+
+<span class="nc" id="L534">						ps.setBytes(2, tmp);</span>
+<span class="nc" id="L535">					}</span>
+					else
+<span class="nc" id="L537">						ps.setBytes(2, data);</span>
+<span class="nc" id="L538">					ps.execute();</span>
+<span class="nc" id="L539">					data = null;</span>
+				}
+<span class="nc" id="L541">				getFatIdTable().put(getVirtualPath(file.getPath()), fatId);</span>
+<span class="nc" id="L542">				getModifiedTable().put(getVirtualPath(file.getPath()), dt.getTime());</span>
+<span class="nc" id="L543">				ClusterDB.addRefresh(IwcmFsDB.class);</span>
+<span class="nc" id="L544">				ps.close();</span>
+<span class="nc" id="L545">				db_conn.close();</span>
+<span class="nc" id="L546">				ps = null;</span>
+<span class="nc" id="L547">				db_conn = null;</span>
+			}
+<span class="nc" id="L549">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L551">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L557" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L558">						ps.close();</span>
+<span class="nc bnc" id="L559" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L560">						db_conn.close();</span>
+				}
+<span class="nc" id="L562">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L564">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L565">				}</span>
+			}
+<span class="nc" id="L567">		}</span>
+		else
+		{
+			try
+			{
+<span class="nc" id="L572">				byte[] buffer = new byte[64000];</span>
+<span class="nc" id="L573">				int bytesRead = 0;</span>
+				//fos by malo subor vytvorit, mal som ale hlasene, ze to u klienta hadzalo FileNot FoundException preto som pridal implicitne vytvorenie suboru a adresara
+<span class="nc bnc" id="L575" title="All 2 branches missed.">				if (file.getParentFile().exists()==false)</span>
+				{
+<span class="nc" id="L577">					boolean created = file.getParentFile().mkdirs();</span>
+<span class="nc" id="L578">					Logger.debug(IwcmFsDB.class, &quot;Parent file doesn't exists, path=&quot;+file.getParentFile().getAbsolutePath()+&quot;, created=&quot;+created);</span>
+				}
+<span class="nc bnc" id="L580" title="All 2 branches missed.">				if (file.exists()==false)</span>
+				{
+<span class="nc" id="L582">					boolean created = file.createNewFile();</span>
+<span class="nc" id="L583">					Logger.debug(IwcmFsDB.class, &quot;File doesn't exists, path=&quot;+file.getAbsolutePath()+&quot;, creating=&quot;+created);</span>
+				}
+<span class="nc" id="L585">				FileOutputStream fos = new FileOutputStream(file);</span>
+<span class="nc bnc" id="L586" title="All 2 branches missed.">				while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1)</span>
+				{
+<span class="nc" id="L588">					fos.write(buffer, 0, bytesRead);</span>
+				}
+<span class="nc" id="L590">				fos.close();</span>
+
+				//ulozim subor aj do historie
+<span class="nc" id="L593">				IwcmFsDB.saveFileHistory(new IwcmFile(file), false);</span>
+			}
+<span class="nc" id="L595">			catch (Exception e)</span>
+			{
+<span class="nc" id="L597">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L598">			}</span>
+		}
+		try
+		{
+<span class="nc bnc" id="L602" title="All 2 branches missed.">			if (closeInStream) //pouziva sa napr. pri rozbalovani zipu ked sa zapisuju na disk subory, a input stream musi zostat otvoreny</span>
+			{
+<span class="nc" id="L604">			in.close();</span>
+			}
+		}
+<span class="nc" id="L607">		catch (Exception e)</span>
+		{
+<span class="nc" id="L609">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L610">		}</span>
+
+<span class="nc" id="L612">	}</span>
+
+	public static void writeFiletoDest(InputStream in, File file, int size)
+	{
+<span class="nc" id="L616">		writeFiletoDest(in, file, size,true);</span>
+<span class="nc" id="L617">	}</span>
+
+	public static void writeFileToDisk(InputStream in, File file, boolean closeInStream)
+	{
+		try
+		{
+<span class="fc" id="L623">			byte[] buffer = new byte[64000];</span>
+<span class="fc" id="L624">			int bytesRead = 0;</span>
+<span class="fc" id="L625">			FileOutputStream fos = new FileOutputStream(file);</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">			while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1)</span>
+			{
+<span class="fc" id="L628">				fos.write(buffer, 0, bytesRead);</span>
+			}
+<span class="fc" id="L630">			fos.close();</span>
+
+			//ulozim subor aj do historie
+<span class="fc" id="L633">			IwcmFsDB.saveFileHistory(new IwcmFile(file), false);</span>
+		}
+<span class="nc" id="L635">		catch (Exception e)</span>
+		{
+<span class="nc" id="L637">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L638">		}</span>
+		try
+		{
+<span class="pc bpc" id="L641" title="1 of 2 branches missed.">			if (closeInStream) //pouziva sa napr. pri rozbalovani zipu ked sa zapisuju na disk subory, a input stream musi zostat otvoreny</span>
+			{
+<span class="nc" id="L643">				in.close();</span>
+			}
+		}
+<span class="nc" id="L646">		catch (Exception e)</span>
+		{
+<span class="nc" id="L648">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L649">		}</span>
+<span class="fc" id="L650">	}</span>
+	/**
+	 * skopiruje subory iba v ramci databazy
+	 *
+	 * @param src
+	 * @param dest
+	 */
+	public static void copyTo(IwcmFile src, IwcmFile dest)
+	{
+<span class="nc bnc" id="L659" title="All 2 branches missed.">		if (useDBStorage(src.getVirtualPath()))</span>
+		{
+			try
+			{
+<span class="nc" id="L663">				InputStream in = new IwcmInputStream(src);</span>
+<span class="nc" id="L664">				String virtualPath = src.getVirtualPath();</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">				if (getFatIdTable().get(virtualPath) == null) {</span>
+<span class="nc" id="L666">					in.close();</span>
+<span class="nc" id="L667">					throw new FileNotFoundException(virtualPath);</span>
+				}
+<span class="nc" id="L669">				writeFiletoDest(in, new File(dest.getPath()), (int) src.length());</span>
+			}
+<span class="nc" id="L671">			catch (Exception e)</span>
+			{
+<span class="nc" id="L673">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L674">			}</span>
+		}
+<span class="nc" id="L676">	}</span>
+
+	/**
+	 * zmeni zadanu cestu na cestu v temp adresari
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static String getTempFilePath(String path) throws IOException
+	{
+<span class="nc" id="L686">		String tempDir = getTempDir();</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">		if (!tempDir.endsWith(File.separator))</span>
+		{
+<span class="nc" id="L689">			tempDir += File.separator;</span>
+		}
+<span class="nc bnc" id="L691" title="All 2 branches missed.">		if (!new File(tempDir).exists())</span>
+		{
+<span class="nc bnc" id="L693" title="All 2 branches missed.">			if(!(new File(tempDir).mkdirs()))</span>
+<span class="nc" id="L694">				throw new IOException(&quot;Unable to create dir: &quot;+tempDir);</span>
+		}
+<span class="nc" id="L696">		return tempDir + path.substring(path.lastIndexOf(File.separator) + 1, path.length());</span>
+	}
+
+	/**
+	 * Vrati temp adresar
+	 * @throws IOException
+	 */
+	public static String getTempDir() throws IOException
+	{
+<span class="nc" id="L705">		String result = Tools.getRealPath(&quot;/WEB-INF/tmp/&quot;);</span>
+<span class="nc bnc" id="L706" title="All 2 branches missed.">		if (Tools.isNotEmpty(tempDir))</span>
+		{
+<span class="nc bnc" id="L708" title="All 2 branches missed.">			if (tempDir.startsWith(&quot;/&quot;))</span>
+			{
+<span class="nc" id="L710">				result = Tools.getRealPath(tempDir);</span>
+			}
+			else
+			{
+<span class="nc" id="L714">				result = tempDir;</span>
+			}
+		}
+
+<span class="nc bnc" id="L718" title="All 2 branches missed.">		if (!new File(result).exists())</span>
+		{
+<span class="nc bnc" id="L720" title="All 2 branches missed.">			if(!(new File(result).mkdirs()))</span>
+<span class="nc" id="L721">				throw new IOException(&quot;Unable to create dir: &quot;+result);</span>
+		}
+<span class="nc" id="L723">		return result;</span>
+	}
+
+	/**
+	 * Zapise subor src z databazy na disk do outFile
+	 *
+	 * @param src
+	 * @param outFile
+	 */
+	public static void writeFileToDisk(File src, File outFile) {
+<span class="nc" id="L733">		writeFileToDisk(src, outFile, false);</span>
+<span class="nc" id="L734">	}</span>
+
+	/**
+	 * Zapise subor src z databazy na disk do outFile, ak je nastavene forceOwerwrite tak subor prepise bez ohladu na to, ci je novsi
+	 * @param src
+	 * @param outFile
+	 * @param forceOwerwrite
+	 */
+	public static void writeFileToDisk(File src, File outFile, boolean forceOwerwrite)
+	{
+<span class="nc bnc" id="L744" title="All 2 branches missed.">		if (useDBStorage(getVirtualPath(src.getPath())))</span>
+		{
+			try
+			{
+<span class="nc" id="L748">				byte[] buffer = new byte[getBlockSize()];</span>
+<span class="nc bnc" id="L749" title="All 2 branches missed.">				if(!outFile.getParentFile().exists())</span>
+<span class="nc bnc" id="L750" title="All 2 branches missed.">					if(!outFile.getParentFile().mkdir())</span>
+<span class="nc" id="L751">						throw new IOException(&quot;Unable to create dir: &quot;+outFile.getParentFile().getAbsolutePath());</span>
+<span class="nc bnc" id="L752" title="All 6 branches missed.">				if(outFile.exists() &amp;&amp; (outFile.lastModified() == src.lastModified()) &amp;&amp; forceOwerwrite == false)</span>
+				{
+					//do nothing
+				}
+				else
+				{
+<span class="nc bnc" id="L758" title="All 2 branches missed.">					if(!outFile.exists())</span>
+<span class="nc bnc" id="L759" title="All 2 branches missed.">						if(!outFile.createNewFile())</span>
+<span class="nc" id="L760">							throw new IOException(&quot;Unable to create file: &quot;+outFile.getAbsolutePath());</span>
+<span class="nc" id="L761">					InputStream in = new IwcmInputStream(src);</span>
+<span class="nc" id="L762">					int bytesRead = 0;</span>
+<span class="nc" id="L763">					FileOutputStream fos = new FileOutputStream(outFile);</span>
+<span class="nc bnc" id="L764" title="All 2 branches missed.">					while ((bytesRead = in.read(buffer, 0, getBlockSize())) != -1)</span>
+					{
+<span class="nc" id="L766">						fos.write(buffer, 0, bytesRead);</span>
+					}
+<span class="nc" id="L768">					in.close();</span>
+<span class="nc" id="L769">					fos.close();</span>
+
+					//jeeff: pretoze ak to tu nebolo, zapisalo, ale po restarte chcelo ulozit do DB!!!
+<span class="nc" id="L772">					outFile.setLastModified(src.lastModified()); //NOSONAR</span>
+				}
+				//getModifiedTable().put(getVirtualPath(src.getPath()), outFile.lastModified());
+			}
+<span class="nc" id="L776">			catch (Exception e)</span>
+			{
+<span class="nc" id="L778">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L779">			}</span>
+		}
+<span class="nc" id="L781">	}</span>
+
+	/**
+	 * zapise subor z disku (src) do Db storage s virtualnou cestou podla outFile
+	 *
+	 * @param src
+	 * @param outFile
+	 */
+	public static void writeFileToDB(File src, File outFile)
+	{
+<span class="nc" id="L791">			Logger.debug(IwcmFsDB.class, &quot;writeFileToDB2:&quot; + outFile.getPath());</span>
+<span class="nc" id="L792">			Connection db_conn = null;</span>
+<span class="nc" id="L793">			PreparedStatement ps = null;</span>
+
+<span class="nc" id="L795">			int fatId = -1;</span>
+			try
+			{
+<span class="nc" id="L798">				db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L799" title="All 2 branches missed.">				if (getFatIdTable().get(getVirtualPath(outFile.getPath())) != null)</span>
+				{
+<span class="nc" id="L801">					fatId = getFatIdTable().get(getVirtualPath(outFile.getPath()));</span>
+				}
+<span class="nc bnc" id="L803" title="All 2 branches missed.">				if (fatId &gt; 0)</span>
+				{
+<span class="nc bnc" id="L805" title="All 4 branches missed.">					if (IwcmFsDB.useVersioning() &amp;&amp; IwcmFsDB.useDBStorage())</span>
+					{
+<span class="nc" id="L807">						ps = db_conn.prepareStatement(&quot;update file_fat set is_deleted = ? where file_fat_id = ? &quot;); // nastavi sa priznak zmazaneho suboru</span>
+<span class="nc" id="L808">						ps.setBoolean(1, true);</span>
+<span class="nc" id="L809">						ps.setInt(2, IwcmFsDB.getFatIdTable().get(getVirtualPath(outFile.getPath())));</span>
+<span class="nc" id="L810">						ps.execute();</span>
+<span class="nc" id="L811">						ps.close();</span>
+					}
+					else
+					{
+<span class="nc" id="L815">						ps = db_conn.prepareStatement(&quot;delete from file_fat where file_fat_id = ? &quot;); //zmaze sa z tabuliek</span>
+<span class="nc" id="L816">						ps.setInt(1, IwcmFsDB.getFatIdTable().get(getVirtualPath(outFile.getPath())));</span>
+<span class="nc" id="L817">						ps.execute();</span>
+<span class="nc" id="L818">						ps.close();</span>
+<span class="nc" id="L819">						ps = db_conn.prepareStatement(&quot;delete from file_data where file_fat_id = ? &quot;);</span>
+<span class="nc" id="L820">						ps.setInt(1, IwcmFsDB.getFatIdTable().get(getVirtualPath(outFile.getPath())));</span>
+<span class="nc" id="L821">						ps.execute();</span>
+<span class="nc" id="L822">						ps.close();</span>
+					}
+				}
+<span class="nc" id="L825">				ps = db_conn</span>
+<span class="nc" id="L826">							.prepareStatement(&quot;insert into file_fat (file_fat_id,fsize,virtual_path,depth,last_modified) values (?,?,?,?,?)&quot;);</span>
+<span class="nc" id="L827">				fatId = PkeyGenerator.getNextValue(FAT_ID_COLUMN);</span>
+<span class="nc" id="L828">				ps.setInt(1, fatId);</span>
+<span class="nc" id="L829">				ps.setLong(2, src.length());</span>
+<span class="nc" id="L830">				ps.setString(3, getVirtualPath(outFile.getPath()));</span>
+<span class="nc" id="L831">				ps.setInt(4, IwcmFsDB.getDepth(getVirtualPath(outFile.getPath())));</span>
+<span class="nc" id="L832">				Date dt=new Date();</span>
+<span class="nc" id="L833">				ps.setLong(5,dt.getTime());</span>
+<span class="nc" id="L834">				ps.execute();</span>
+<span class="nc" id="L835">				ps.close();</span>
+<span class="nc" id="L836">				byte[] data = null;</span>
+<span class="nc" id="L837">				FileInputStream in = new FileInputStream(src);</span>
+<span class="nc" id="L838">				ps = db_conn.prepareStatement(&quot;insert into file_data (file_fat_id,data) values (?,?)&quot;);</span>
+<span class="nc" id="L839">				long numberOfBlocks = (long) Math.ceil((double) src.length() / (double) getBlockSize());</span>
+<span class="nc bnc" id="L840" title="All 2 branches missed.">				for (int i = 0; i &lt; numberOfBlocks; i++)</span>
+				{
+<span class="nc" id="L842">					data = new byte[getBlockSize()];</span>
+<span class="nc" id="L843">					in.read(data);</span>
+<span class="nc" id="L844">					ps.setInt(1, fatId);</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">					if (i == numberOfBlocks - 1)</span>
+					{
+<span class="nc" id="L847">						byte[] tmp = new byte[(int) (getBlockSize() - (numberOfBlocks * getBlockSize() - src.length()))];</span>
+<span class="nc" id="L848">						System.arraycopy(data, 0, tmp, 0, tmp.length);</span>
+
+<span class="nc" id="L850">						ps.setBytes(2, tmp);</span>
+<span class="nc" id="L851">					}</span>
+					else
+<span class="nc" id="L853">						ps.setBytes(2, data);</span>
+<span class="nc" id="L854">					ps.execute();</span>
+<span class="nc" id="L855">					data = null;</span>
+				}
+<span class="nc" id="L857">				getFatIdTable().put(getVirtualPath(outFile.getPath()), fatId);</span>
+<span class="nc" id="L858">				getModifiedTable().put(getVirtualPath(outFile.getPath()), dt.getTime());</span>
+<span class="nc" id="L859">				ClusterDB.addRefresh(IwcmFsDB.class);</span>
+<span class="nc" id="L860">				ps.close();</span>
+<span class="nc" id="L861">				in.close();</span>
+<span class="nc" id="L862">				db_conn.close();</span>
+<span class="nc" id="L863">				ps = null;</span>
+<span class="nc" id="L864">				db_conn = null;</span>
+			}
+<span class="nc" id="L866">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L868">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L874" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L875">						ps.close();</span>
+<span class="nc bnc" id="L876" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L877">						db_conn.close();</span>
+				}
+<span class="nc" id="L879">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L881">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L882">				}</span>
+			}
+<span class="nc" id="L884">	}</span>
+
+	/**
+	 * vrati velkost blokov do ktorych sa ukladaju subory,ak bol subor ulozeny s
+	 * inou velkostou ako je aktulne nastavena tak sa neprecita.
+	 *
+	 * @return
+	 */
+	public static int getBlockSize()
+	{
+<span class="nc" id="L894">		return blockSize;</span>
+	}
+
+	public static boolean manageVersions(String virtualPath, boolean rollback, boolean update)
+	{
+<span class="nc bnc" id="L899" title="All 2 branches missed.">		if (getFatIdTable().get(virtualPath) != null)</span>
+		{
+<span class="nc" id="L901">			Connection db_conn = null;</span>
+<span class="nc" id="L902">			PreparedStatement ps = null;</span>
+<span class="nc" id="L903">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L906">				TreeMap&lt;Integer, Boolean&gt; idDeletedTable = new TreeMap&lt;&gt;();</span>
+<span class="nc" id="L907">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L908">				String sql = &quot;select file_fat_id,is_deleted from file_fat where virtual_path = ? order by file_fat_id  desc&quot;;</span>
+<span class="nc" id="L909">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L910">				ps.setString(1, virtualPath);</span>
+<span class="nc" id="L911">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L914">					idDeletedTable.put(rs.getInt(FAT_ID_COLUMN), rs.getBoolean(&quot;is_deleted&quot;));</span>
+				}
+<span class="nc" id="L916">				rs.close();</span>
+<span class="nc" id="L917">				ps.close();</span>
+<span class="nc" id="L918">				Iterator&lt;Integer&gt; it = null;</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">				if (rollback)</span>
+				{
+<span class="nc" id="L921">					it = idDeletedTable.descendingKeySet().iterator();</span>
+				}
+				else
+				{
+
+<span class="nc" id="L926">						it = idDeletedTable.keySet().iterator();</span>
+
+				}
+<span class="nc" id="L929">				int newFatId = -1;</span>
+<span class="nc" id="L930">				int oldFatId = -1;</span>
+<span class="nc bnc" id="L931" title="All 2 branches missed.">				while (it.hasNext())</span>
+				{
+<span class="nc" id="L933">					int fatId = it.next();</span>
+<span class="nc bnc" id="L934" title="All 4 branches missed.">					if (!idDeletedTable.get(fatId).booleanValue() &amp;&amp; it.hasNext())</span>
+					{
+<span class="nc" id="L936">						oldFatId = fatId;</span>
+<span class="nc" id="L937">						newFatId = it.next();</span>
+					}
+<span class="nc" id="L939">				}</span>
+<span class="nc bnc" id="L940" title="All 4 branches missed.">				if (newFatId &lt; 0 || oldFatId &lt; 0)</span>
+				{
+<span class="nc" id="L942">					return false;</span>
+				}
+
+<span class="nc" id="L945">				ps = db_conn.prepareStatement(UPDATE_DELETED_FLAG_SQL);</span>
+<span class="nc" id="L946">				ps.setBoolean(1, true);</span>
+<span class="nc" id="L947">				ps.setInt(2, oldFatId);</span>
+<span class="nc" id="L948">				ps.execute();</span>
+<span class="nc" id="L949">				ps.close();</span>
+<span class="nc" id="L950">				ps = db_conn.prepareStatement(UPDATE_DELETED_FLAG_SQL);</span>
+<span class="nc" id="L951">				ps.setBoolean(1, false);</span>
+<span class="nc" id="L952">				ps.setInt(2, newFatId);</span>
+<span class="nc" id="L953">				ps.execute();</span>
+<span class="nc" id="L954">				getFatIdTable().put(virtualPath, newFatId);</span>
+<span class="nc" id="L955">				getModifiedTable().put(virtualPath, new Date().getTime());</span>
+<span class="nc" id="L956">				ClusterDB.addRefresh(IwcmFsDB.class);</span>
+<span class="nc" id="L957">				ps.close();</span>
+<span class="nc" id="L958">				db_conn.close();</span>
+<span class="nc" id="L959">				rs = null;</span>
+<span class="nc" id="L960">				ps = null;</span>
+<span class="nc" id="L961">				db_conn = null;</span>
+<span class="nc" id="L962">				return true;</span>
+			}
+<span class="nc" id="L964">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L966">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L972" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L973">						rs.close();</span>
+<span class="nc bnc" id="L974" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L975">						ps.close();</span>
+<span class="nc bnc" id="L976" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L977">						db_conn.close();</span>
+				}
+<span class="nc" id="L979">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L981">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L982">				}</span>
+			}
+		}
+<span class="nc" id="L985">		return false;</span>
+	}
+
+	/**
+	 * nahradi terajsiu verziu novsou verziou suboru ak existuje
+	 *
+	 * @param virtualPath
+	 * @return
+	 */
+	public static boolean update(String virtualPath)
+	{
+<span class="nc" id="L996">		return manageVersions(virtualPath, false, true);</span>
+	}
+
+	/**
+	 * nahradi terajsiu verziu starsou verziou.
+	 *
+	 * @param virtualPath
+	 * @return
+	 */
+	public static boolean rollback(String virtualPath)
+	{
+<span class="nc" id="L1007">		return manageVersions(virtualPath, true, false);</span>
+	}
+
+	/**
+	 * vrati ci sa ma pouzivat verzovanie suborov
+	 *
+	 * @return
+	 */
+	public static boolean useVersioning()
+	{
+<span class="fc" id="L1017">		return Constants.getBoolean(&quot;iwfs_useVersioning&quot;);</span>
+	}
+
+	/**
+	 * @deprecated - use AdminTools.getVersionList
+	 */
+	@Deprecated
+	public static List&lt;FileBean&gt;getVersionList(String virtualPath)
+	{
+<span class="nc" id="L1026">		return AdminTools.getVersionList(virtualPath);</span>
+	}
+
+	public static void replaceActualVersionWithHistory(String virtualPath,int historyFatId)
+	{
+<span class="nc" id="L1031">		int fatId=getFatIdTable().get(virtualPath);</span>
+
+<span class="nc bnc" id="L1033" title="All 2 branches missed.">		if (fatId==historyFatId) return;</span>
+
+<span class="nc" id="L1035">		Connection db_conn = null;</span>
+<span class="nc" id="L1036">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1039">			db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L1041">			ps = db_conn.prepareStatement(UPDATE_DELETED_FLAG_SQL);</span>
+<span class="nc" id="L1042">			ps.setBoolean(1, true);</span>
+<span class="nc" id="L1043">			ps.setInt(2, fatId);</span>
+<span class="nc" id="L1044">			ps.execute();</span>
+<span class="nc" id="L1045">			ps.close();</span>
+<span class="nc" id="L1046">			ps = db_conn.prepareStatement(UPDATE_DELETED_FLAG_SQL);</span>
+<span class="nc" id="L1047">			ps.setBoolean(1, false);</span>
+<span class="nc" id="L1048">			ps.setInt(2, historyFatId);</span>
+
+<span class="nc" id="L1050">			ps.execute();</span>
+
+<span class="nc" id="L1052">			getFatIdTable().put(virtualPath, historyFatId);</span>
+<span class="nc" id="L1053">			getModifiedTable().put(virtualPath, new Date().getTime());</span>
+<span class="nc" id="L1054">			ClusterDB.addRefresh(IwcmFsDB.class);</span>
+
+<span class="nc" id="L1056">			ps.close();</span>
+<span class="nc" id="L1057">			db_conn.close();</span>
+<span class="nc" id="L1058">			ps = null;</span>
+<span class="nc" id="L1059">			db_conn = null;</span>
+		}
+<span class="nc" id="L1061">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1063">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1070">					ps.close();</span>
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1072">					db_conn.close();</span>
+			}
+<span class="nc" id="L1074">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1076">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1077">			}</span>
+		}
+<span class="nc" id="L1079">	}</span>
+
+	public static void getInstance(boolean refresh)
+	{
+<span class="nc" id="L1083">		Logger.println(IwcmFsDB.class, &quot;getInstance(&quot;+refresh+&quot;)&quot;);</span>
+<span class="nc" id="L1084">		loadHashTables(true);</span>
+<span class="nc" id="L1085">	}</span>
+
+	/**
+	 * Aktualizacia hodnoty last modified
+	 * @param virtualPath
+	 * @param time
+	 * @return
+	 */
+	public static boolean updateLastModified(String virtualPath, long time)
+	{
+<span class="nc" id="L1095">		Long vpid = IwcmFsDB.getModifiedTable().get(virtualPath);</span>
+<span class="nc bnc" id="L1096" title="All 2 branches missed.">		if (vpid == null) return false;</span>
+
+<span class="nc" id="L1098">		Connection db_conn = null;</span>
+<span class="nc" id="L1099">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L1102">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1103">			ps = db_conn.prepareStatement(&quot;UPDATE file_fat SET last_modified=? WHERE file_fat_id=?&quot;);</span>
+<span class="nc" id="L1104">			ps.setLong(1, time);</span>
+<span class="nc" id="L1105">			ps.setLong(2, vpid.longValue());</span>
+<span class="nc" id="L1106">			int updated = ps.executeUpdate();</span>
+
+<span class="nc" id="L1108">			ps.close();</span>
+<span class="nc" id="L1109">			db_conn.close();</span>
+<span class="nc" id="L1110">			ps = null;</span>
+<span class="nc" id="L1111">			db_conn = null;</span>
+
+<span class="nc bnc" id="L1113" title="All 2 branches missed.">			if (updated &gt; 0) return true;</span>
+		}
+<span class="nc" id="L1115">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1117">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1124">					ps.close();</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1126">					db_conn.close();</span>
+			}
+<span class="nc" id="L1128">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1130">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1131">			}</span>
+		}
+
+<span class="nc" id="L1134">		return false;</span>
+	}
+
+	public static List&lt;IwcmFile&gt; listRecursively(IwcmFile dir)
+	{
+<span class="nc" id="L1139">		return listRecursively(dir, new IwcmFileFilter(){</span>
+			@Override
+<span class="nc" id="L1141">			public boolean accept(IwcmFile pathname){return true;}</span>
+		});
+	}
+
+	public static List&lt;IwcmFile&gt; listRecursively(IwcmFile dir, IwcmFileFilter filter)
+	{
+<span class="nc" id="L1147">		List&lt;IwcmFile&gt; resultList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1148" title="All 2 branches missed.">		if (!useDBStorage(dir.getVirtualPath()))</span>
+		{
+<span class="nc" id="L1150">			listRecursivelyInNormalFile(dir, resultList, filter);</span>
+		}
+		else
+		{
+<span class="nc" id="L1154">			listRecursivelyInDbStorage(dir, resultList, filter);</span>
+		}
+<span class="nc" id="L1156">		return resultList;</span>
+	}
+
+	private static void listRecursivelyInDbStorage(IwcmFile dir, List&lt;IwcmFile&gt; resultList, IwcmFileFilter filter)
+	{
+<span class="nc" id="L1161">		Connection db_conn = null;</span>
+<span class="nc" id="L1162">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1163">		ResultSet rs = null;</span>
+
+<span class="nc" id="L1165">		int count = IwcmFsDB.getDepth(dir.getVirtualPath());</span>
+		try
+		{
+<span class="nc" id="L1168">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1169">			String sql = &quot;select distinct virtual_path from file_fat where virtual_path like ? and depth &gt;= ? and is_deleted = ? order by virtual_path &quot;;</span>
+<span class="nc" id="L1170">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1171">			ps.setString(1, dir + &quot;%&quot;);</span>
+<span class="nc" id="L1172">			ps.setInt(2, count);</span>
+<span class="nc" id="L1173">			ps.setBoolean(3, false);</span>
+<span class="nc" id="L1174">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1177">					IwcmFile file = new IwcmFile(Tools.getRealPath(rs.getString(&quot;virtual_path&quot;)));</span>
+<span class="nc bnc" id="L1178" title="All 2 branches missed.">					if (filter.accept(file))</span>
+<span class="nc" id="L1179">						resultList.add(file);</span>
+<span class="nc" id="L1180">			}</span>
+<span class="nc" id="L1181">			rs.close();</span>
+<span class="nc" id="L1182">			ps.close();</span>
+<span class="nc" id="L1183">			db_conn.close();</span>
+<span class="nc" id="L1184">			rs = null;</span>
+<span class="nc" id="L1185">			ps = null;</span>
+<span class="nc" id="L1186">			db_conn = null;</span>
+		}
+<span class="nc" id="L1188">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1190">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1196" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1197">					rs.close();</span>
+<span class="nc bnc" id="L1198" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1199">					ps.close();</span>
+<span class="nc bnc" id="L1200" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1201">					db_conn.close();</span>
+			}
+<span class="nc" id="L1203">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1205">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L1206">			}</span>
+		}
+<span class="nc" id="L1208">	}</span>
+
+	private static void listRecursivelyInNormalFile(IwcmFile dir, List&lt;IwcmFile&gt; resultList, IwcmFileFilter filter)
+	{
+<span class="nc bnc" id="L1212" title="All 2 branches missed.">		for (IwcmFile file : dir.listFiles())</span>
+		{
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">			if (!filter.accept(file))</span>
+<span class="nc" id="L1215">				continue;</span>
+<span class="nc bnc" id="L1216" title="All 2 branches missed.">			if (file.isDirectory())</span>
+<span class="nc" id="L1217">				listRecursivelyInNormalFile(file, resultList, filter);</span>
+<span class="nc" id="L1218">			resultList.add(file);</span>
+		}
+<span class="nc" id="L1220">	}</span>
+
+	/**
+	 * Ulozi historiu suboru na file systeme, v pripade, ze nie je zapnute DBStorage
+	 * @param file
+	 * @return true if ok, else false
+	 */
+	public static boolean saveFileHistory(IwcmFile file, boolean deleted)
+	{
+<span class="pc bpc" id="L1229" title="1 of 4 branches missed.">		if (file == null || file.getVirtualPath()==null) return false;</span>
+
+<span class="pc bpc" id="L1231" title="3 of 4 branches missed.">		if(useVersioning() &amp;&amp; !useDBStorage(file.getVirtualPath()))	//ak je zapnute versiovanie a ak sa subor neuklada do db storage</span>
+		{
+<span class="nc" id="L1233">			String fileHistory = Constants.getString(&quot;fileHistoryPath&quot;);</span>
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">			if(fileHistory.charAt(fileHistory.length()-1) == '/')</span>
+			{
+<span class="nc" id="L1236">				fileHistory = fileHistory.substring(0, fileHistory.length()-1);	//odstranim /</span>
+			}
+<span class="nc" id="L1238">			String virtualPath = file.getVirtualPath();</span>
+
+			//imgcache nebudeme ukladat, nema to zmysel
+<span class="nc bnc" id="L1241" title="All 2 branches missed.">			if (virtualPath.contains(&quot;/WEB-INF/imgcache&quot;)) return false;</span>
+
+<span class="nc bnc" id="L1243" title="All 2 branches missed.">			if (virtualPath.indexOf(fileHistory) == -1)</span>
+			{ 	// kvoli zacykleniu - do historie neukladam subory zadresara historie
+<span class="nc" id="L1245">				FileHistoryBean fhb = new FileHistoryBean();</span>
+<span class="nc" id="L1246">				fhb.setChangeDate(new Date());</span>
+<span class="nc" id="L1247">				fhb.setFileUrl(virtualPath);</span>
+<span class="nc" id="L1248">				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc" id="L1249">				fhb.setUserId(rb.getUserId());</span>
+<span class="nc" id="L1250">				fhb.setDeleted(deleted);</span>
+<span class="nc" id="L1251">				fhb.setIpAddress(rb.getRemoteIP());</span>
+<span class="nc bnc" id="L1252" title="All 2 branches missed.">				if(!deleted)</span>
+				{
+<span class="nc" id="L1254">					fhb.setHistoryPath(fileHistory + getVirtualPath(file.getParent()) + &quot;/&quot;);</span>
+				}
+				// zapisanie zaznamu do historie - tabulka file_history
+<span class="nc" id="L1257">				boolean saveOk = new FileHistoryDB().save(fhb);</span>
+
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">				if (saveOk)</span>
+				{
+<span class="nc bnc" id="L1261" title="All 2 branches missed.">					if(!deleted)	//subor kopirujem iba v pripade, ze ide o jeho vytvorenie a editaciu, nie zmazanie</span>
+					{
+						// ulozim kopiu suboru pod /WEB-INF/filehistory/ alebo cestu
+						// urcenu konstantou
+<span class="nc" id="L1265">						String historyPath = fhb.getHistoryPath() + fhb.getId();</span>
+<span class="nc" id="L1266">						IwcmFile dest = new IwcmFile(Tools.getRealPath(historyPath));</span>
+<span class="nc" id="L1267">						boolean copyOk = FileTools.copyFile(file, dest);</span>
+<span class="nc bnc" id="L1268" title="All 2 branches missed.">						if (copyOk)</span>
+						{
+<span class="nc" id="L1270">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
+										+ historyPath + &quot; prebehlo uspesne!&quot;);
+<span class="nc" id="L1272">							return true;</span>
+						}
+						else
+						{
+<span class="nc" id="L1276">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
+										+ historyPath + &quot; nebolo uspesne!&quot;);
+<span class="nc" id="L1278">							return false;</span>
+						}
+					}
+<span class="nc" id="L1281">					return true;</span>
+				}
+				else
+				{
+<span class="nc" id="L1285">					Logger.debug(IwcmFile.class, &quot;Ukladanie zaznamu pre subor &quot; + virtualPath + &quot; sa nezdarilo!&quot;);</span>
+<span class="nc" id="L1286">					return false;</span>
+				}
+			}
+<span class="nc" id="L1289">			else return false;	//ak je to subor z historie preskocim a vratim hodnotu false</span>
+		}
+<span class="fc" id="L1291">		else return false;	//ak sa subor uklada do dbStorage preskocim a vratim hodnotu false</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

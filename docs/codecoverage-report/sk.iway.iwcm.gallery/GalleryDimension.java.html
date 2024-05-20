@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDimension.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">GalleryDimension.java</span></div><h1>GalleryDimension.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+
+import static sk.iway.iwcm.Tools.isEmpty;
+
+import java.util.Date;
+
+import sk.iway.iwcm.io.IwcmFile;
+
+/** 
+ * GalleryDimension.java - informacie o galerii
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: bhric $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 06.11.2009 11:19:42
+ *@modified     $Date: 2009/11/19 22:24:21 $
+*/
+public class GalleryDimension
+{
+  	private int galleryId;
+<span class="nc" id="L23">  	private String galleryPath = &quot;&quot;;</span>
+<span class="nc" id="L24">  	private String galleryName = &quot;&quot;;</span>
+<span class="nc" id="L25">  	private String galleryPerex = &quot;&quot;;</span>
+  	private Date galleryDate;
+<span class="nc" id="L27">  	private int galleryViews = 0;</span>
+<span class="nc" id="L28">  	private String author = &quot;&quot;;</span>
+<span class="nc" id="L29">  	private WatermarkSetup watermarkSetup = new WatermarkSetup();</span>
+
+	public GalleryDimension() 
+<span class="nc" id="L32">  	{</span>
+		//prazdny konstruktor
+<span class="nc" id="L34">  	}</span>
+  	
+  	public String getAuthor()
+	{
+<span class="nc" id="L38">		return author;</span>
+	}
+	public void setAuthor(String author)
+	{
+<span class="nc" id="L42">		this.author = author;</span>
+<span class="nc" id="L43">	}</span>
+	public int getGalleryId()
+   {
+<span class="nc" id="L46">   	return galleryId;</span>
+   }
+   public void setGalleryId(int galleryId)
+   {
+<span class="nc" id="L50">   	this.galleryId = galleryId;</span>
+<span class="nc" id="L51">   }</span>
+   public String getGalleryPath()
+   {
+<span class="nc" id="L54">   	return galleryPath;</span>
+   }
+   public void setGalleryPath(String galleryPath)
+   {
+<span class="nc" id="L58">   	this.galleryPath = galleryPath;</span>
+<span class="nc" id="L59">   }</span>
+   
+   public String getGalleryName()
+   {
+<span class="nc" id="L63">   	return galleryName;</span>
+   }
+   public void setGalleryName(String galleryName)
+   {
+<span class="nc" id="L67">   	this.galleryName = galleryName;</span>
+<span class="nc" id="L68">   }</span>
+   
+   public String getGalleryPerex()
+   {
+<span class="nc" id="L72">   	return galleryPerex;</span>
+   }
+   public void setGalleryPerex(String galleryPerex)
+   {
+<span class="nc" id="L76">   	this.galleryPerex = galleryPerex;</span>
+<span class="nc" id="L77">   }</span>
+
+	public Date getGalleryDate()
+	{
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		return galleryDate == null ? null : (Date) galleryDate.clone();</span>
+	}
+
+	public void setGalleryDate(Date galleryDate)
+	{
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		this.galleryDate = galleryDate == null ? null : (Date) galleryDate.clone();</span>
+<span class="nc" id="L87">	}</span>
+
+	public int getGalleryViews()
+	{
+<span class="nc" id="L91">		return galleryViews;</span>
+	}
+
+	public void setGalleryViews(int galleryViews)
+	{
+<span class="nc" id="L96">		this.galleryViews = galleryViews;</span>
+<span class="nc" id="L97">	}</span>
+	
+ 	public IwcmFile getWatermark()
+	{
+<span class="nc bnc" id="L101" title="All 2 branches missed."> 		if (isEmpty(watermarkSetup.getWatermark()))</span>
+<span class="nc" id="L102"> 			return null; </span>
+<span class="nc" id="L103">		return IwcmFile.fromVirtualPath(watermarkSetup.getWatermark());</span>
+	}
+
+	public String getWatermarkPlacement()
+	{
+<span class="nc" id="L108">		return watermarkSetup.getWatermarkPlacement();</span>
+	}
+
+	public int getWatermarkSaturation()
+	{
+<span class="nc" id="L113">		return watermarkSetup.getWatermarkSaturation();</span>
+	}
+
+	public void setWatermark(String watermark)
+	{
+<span class="nc" id="L118">		watermarkSetup.setWatermark(watermark);</span>
+<span class="nc" id="L119">	}</span>
+
+	public void setWatermarkPlacement(String watermarkPlacement)
+	{
+<span class="nc" id="L123">		watermarkSetup.setWatermarkPlacement(watermarkPlacement);</span>
+<span class="nc" id="L124">	}</span>
+
+	public void setWatermarkSaturation(int watermarkSaturation)
+	{
+<span class="nc" id="L128">		watermarkSetup.setWatermarkSaturation(watermarkSaturation);</span>
+<span class="nc" id="L129">	}</span>
+	
+	@Override
+	public String toString()
+	{
+<span class="nc" id="L134">		return &quot;GalleryDimension [galleryId=&quot; + galleryId + &quot;, galleryPath=&quot; + galleryPath + &quot;, galleryName=&quot; + galleryName</span>
+					+ &quot;, galleryPerex=&quot; + galleryPerex + &quot;, galleryDate=&quot; + galleryDate + &quot;, galleryViews=&quot; + galleryViews
+					+ &quot;, author=&quot; + author + &quot;, watermarkSetup=&quot; + watermarkSetup + &quot;]&quot;;
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

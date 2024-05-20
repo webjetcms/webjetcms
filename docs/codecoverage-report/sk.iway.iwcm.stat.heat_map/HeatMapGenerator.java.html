@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeatMapGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.heat_map</a> &gt; <span class="el_source">HeatMapGenerator.java</span></div><h1>HeatMapGenerator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.heat_map;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.LinearGradientPaint;
+import java.awt.MultipleGradientPaint;
+import java.awt.RadialGradientPaint;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageFilter;
+import java.awt.image.ImageProducer;
+import java.awt.image.LookupOp;
+import java.awt.image.LookupTable;
+import java.awt.image.RGBImageFilter;
+import java.awt.image.Raster;
+import java.awt.image.ShortLookupTable;
+import java.io.IOException;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmOutputStream;
+
+/**
+ *  HeatMapGenerator.java
+ *  
+ *  
+ *  	Generates a heat map image into a given file, created from data from given clicks.
+ *  	Called from {@link HeatMapDB}.
+ *  
+ *   Creating the image comes in 3 phases:
+ *   	1. Create a monochrome black and white image. Black and white is chosen so that multiple circles do NOT override each other. Instead, they add
+ *   		up in intensity 
+ *   	2. Create a gradient coloring table that maps shades of black and white into an appropriate color
+ *   	3. Use gradient transformation filter to create the colored image
+ *   	4. Transform black background to transparent black
+ *   
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 31.5.2010 14:22:02
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+class HeatMapGenerator
+{
+	private IwcmFile outFile;
+	List&lt;Click&gt; clicks;
+	private int xLimit;
+	private int yLimit;
+	private GeneratorSizeAdjustment sizeAdjustment;
+	
+	public HeatMapGenerator(List&lt;Click&gt; clicks, IwcmFile output)
+<span class="nc" id="L60">	{</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (clicks.size() == 0)</span>
+<span class="nc" id="L62">			throw new NoRecordException();</span>
+<span class="nc" id="L63">		outFile = output;</span>
+<span class="nc" id="L64">		this.clicks = clicks; </span>
+<span class="nc" id="L65">		this.sizeAdjustment = new LogarithmicDecreasingWithSizeAdjustment(this);</span>
+<span class="nc" id="L66">	}</span>
+
+	
+	public void generate() throws IOException
+	{
+<span class="nc" id="L71">		BufferedImage heatMap = createImageFromClicks();</span>
+<span class="nc" id="L72">		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;About to write heat map to &quot;+outFile.getAbsolutePath());</span>
+<span class="nc" id="L73">		outFile.getParentFile().mkdirs();</span>
+<span class="nc" id="L74">		ImageIO.write(heatMap, &quot;png&quot;, new IwcmOutputStream(outFile));</span>
+<span class="nc" id="L75">	}</span>
+
+
+	private BufferedImage createImageFromClicks()
+	{
+		// Jeeff decided the image should be generated using ALL the clicks, not by a statistical sample
+		//if (clicks.size() &gt; UPPER_CLICK_COUNT)
+		//	pickRandomOnes();
+	
+<span class="nc" id="L84">		inferOffset();</span>
+<span class="nc" id="L85">		return generateImage();</span>
+	}
+
+	
+	private void inferOffset()
+	{
+<span class="nc" id="L91">		xLimit = yLimit = 0;</span>
+		
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		for (Click click : clicks)</span>
+		{
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (click.x &gt; xLimit)</span>
+<span class="nc" id="L96">				xLimit = click.x;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (click.y &gt; yLimit)</span>
+<span class="nc" id="L98">				yLimit = click.y;</span>
+<span class="nc" id="L99">		}</span>
+<span class="nc" id="L100">	}</span>
+	
+	
+	public BufferedImage generateImage()
+	{
+		//adjust circle size to the number of clicks. THe bigger the number, the lower the circles radius
+<span class="nc" id="L106">		int CIRCLE_SIZE = sizeAdjustment.calculateCircleSize();</span>
+<span class="nc" id="L107">		xLimit += CIRCLE_SIZE / 2;</span>
+<span class="nc" id="L108">		yLimit += CIRCLE_SIZE / 2;</span>
+		
+<span class="nc" id="L110">		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;About to generate image from &quot;+clicks.size()+&quot; clicks&quot;);</span>
+<span class="nc" id="L111">		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, String.format(&quot;Size: [%d, %d]&quot;, xLimit, yLimit));</span>
+<span class="nc" id="L112">		BufferedImage monochromeImage = new BufferedImage(xLimit, yLimit, BufferedImage.TRANSLUCENT);</span>
+		
+		
+<span class="nc" id="L115">		BufferedImage gradientImage = createGradientImage();</span>
+<span class="nc" id="L116">		float ALPHA = .35f;</span>
+<span class="nc" id="L117">		LookupTable colorTable = createColorLookupTable(gradientImage, ALPHA);</span>
+<span class="nc" id="L118">		LookupOp colorOp = new LookupOp(colorTable, null);</span>
+		
+<span class="nc" id="L120">		Graphics2D graphics = (Graphics2D)monochromeImage.getGraphics();</span>
+<span class="nc" id="L121">		graphics.setColor(Color.WHITE);</span>
+<span class="nc" id="L122">		graphics.fillRect(0, 0, xLimit, yLimit);</span>
+<span class="nc" id="L123">		BufferedImage circle = createFadedCircleImage(CIRCLE_SIZE);</span>
+		//this causes multiple circles to combine with each other, instead of overriding
+<span class="nc" id="L125">		graphics.setComposite(BlendComposite.Multiply.derive(0.75f));</span>
+		
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		for (Click point : clicks)</span>
+		{
+<span class="nc" id="L129">			double x = ((Integer)point.x).doubleValue();</span>
+<span class="nc" id="L130">			double y = ((Integer)point.y).doubleValue();</span>
+
+<span class="nc" id="L132">			int xCoordinate = (int)x - CIRCLE_SIZE/2;</span>
+<span class="nc" id="L133">			int yCoordinate = (int)y - CIRCLE_SIZE/2;</span>
+<span class="nc" id="L134">			Logger.debug(HeatMapGenerator.class, &quot;drawing circle: x=&quot;+x+&quot; y=&quot;+y+&quot; size=&quot;+CIRCLE_SIZE);</span>
+<span class="nc" id="L135">			graphics.drawImage(circle, null, xCoordinate, yCoordinate);</span>
+<span class="nc" id="L136">		}</span>
+		
+<span class="nc" id="L138">		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;Crayoning image&quot;);</span>
+<span class="nc" id="L139">		BufferedImage heatMap = colorOp.filter(monochromeImage, null);</span>
+<span class="nc" id="L140">		heatMap = makeBlackTransparent(heatMap);</span>
+		
+<span class="nc" id="L142">		return heatMap;</span>
+	}
+
+	private BufferedImage makeBlackTransparent(BufferedImage heatMap)
+	{
+<span class="nc" id="L147">		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;Transforming background to alpha&quot;);</span>
+<span class="nc" id="L148">		ImageFilter filter = new RGBImageFilter() {</span>
+			@Override
+			public final int filterRGB(int x, int y, int rgb) {
+<span class="nc" id="L151">				Color original = new Color(rgb, true);</span>
+<span class="nc bnc" id="L152" title="All 6 branches missed.">				if (original.getRed() &lt; 10 &amp;&amp; original.getBlue() &lt; 10 &amp;&amp; original.getGreen() &lt; 10) {</span>
+					// Mark the alpha bits as zero - transparent
+<span class="nc" id="L154">					return 0x00FFFFFF &amp; rgb;</span>
+				} else {
+					// nothing to do
+<span class="nc" id="L157">					return rgb;</span>
+				}
+			}
+		};
+
+<span class="nc" id="L162">		ImageProducer ip = new FilteredImageSource(heatMap.getSource(), filter);</span>
+<span class="nc" id="L163">      return imageToBufferedImage(Toolkit.getDefaultToolkit().createImage(ip));</span>
+	}
+	
+	 private static BufferedImage imageToBufferedImage(Image image) {
+<span class="nc" id="L167">       BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);</span>
+<span class="nc" id="L168">       Graphics2D g2 = bufferedImage.createGraphics();</span>
+<span class="nc" id="L169">       g2.drawImage(image, 0, 0, null);</span>
+<span class="nc" id="L170">       g2.dispose();</span>
+
+<span class="nc" id="L172">       return bufferedImage;</span>
+   }
+
+
+	private BufferedImage createGradientImage()
+	{
+<span class="nc" id="L178">		Color trasnparentCyan = new Color(Color.CYAN.getRed(), Color.CYAN.getGreen(), Color.CYAN.getBlue(), Color.CYAN.getAlpha());</span>
+<span class="nc" id="L179">		Color[] colors = new Color[]{Color.RED.darker(), Color.ORANGE, Color.YELLOW, Color.GREEN.darker(), </span>
+					trasnparentCyan, Color.BLUE, new Color(0.0f, 0.0f, 0.2f, 0.1f)};
+<span class="nc" id="L181">		float[] fractions = new float[colors.length];</span>
+<span class="nc" id="L182">		float step = 1f / colors.length;</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		for (int i = 0; i &lt; colors.length; ++i) {</span>
+<span class="nc" id="L185">			fractions[i] = i * step;</span>
+<span class="nc" id="L186">			Logger.debug(HeatMapGenerator.class, &quot;fractions[i]=&quot;+fractions[i]);</span>
+		}
+
+<span class="nc" id="L189">		Dimension size = new Dimension(256, 10);</span>
+<span class="nc" id="L190">		LinearGradientPaint gradient = new LinearGradientPaint(</span>
+					0, 0, size.width, 1, fractions, colors,
+					MultipleGradientPaint.CycleMethod.REPEAT);
+
+<span class="nc" id="L194">		BufferedImage gradientImage = new BufferedImage(256, 10, BufferedImage.TRANSLUCENT);</span>
+<span class="nc" id="L195">		Graphics2D g = gradientImage.createGraphics();</span>
+
+<span class="nc" id="L197">		g.setPaint(gradient);</span>
+<span class="nc" id="L198">		g.fillRect(0, 0, size.width, size.height);</span>
+<span class="nc" id="L199">		g.dispose();</span>
+<span class="nc" id="L200">		Logger.debug(HeatMapGenerator.class, &quot;Heat map's gradient image ready&quot;);</span>
+		
+<span class="nc" id="L202">		return gradientImage;</span>
+	}
+	
+	private LookupTable createColorLookupTable(BufferedImage im, float alpha)
+	{
+<span class="nc" id="L207">		int tableSize = 256;</span>
+<span class="nc" id="L208">		Raster imageRaster = im.getData();</span>
+<span class="nc" id="L209">		double sampleStep = 1D * im.getWidth() / tableSize; // Sample pixels</span>
+																				// evenly
+<span class="nc" id="L211">		short[][] colorTable = new short[4][tableSize];</span>
+<span class="nc" id="L212">		int[] pixel = new int[1]; // Sample pixel</span>
+		Color c;
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		for (int i = 0; i &lt; tableSize; ++i)</span>
+		{
+<span class="nc" id="L216">			imageRaster.getDataElements((int) (i * sampleStep), 0, pixel);</span>
+<span class="nc" id="L217">			c = new Color(pixel[0]);</span>
+<span class="nc" id="L218">			colorTable[0][i] = (short) c.getRed();</span>
+<span class="nc" id="L219">			colorTable[1][i] = (short) c.getGreen();</span>
+<span class="nc" id="L220">			colorTable[2][i] = (short) c.getBlue();</span>
+<span class="nc" id="L221">			colorTable[3][i] = (short) (0xff);</span>
+		}
+<span class="nc" id="L223">		LookupTable lookupTable = new ShortLookupTable(0, colorTable);</span>
+<span class="nc" id="L224">		Logger.debug(HeatMapGenerator.class, &quot;Prepared heat maps' coloring lookup table&quot;);</span>
+<span class="nc" id="L225">		return lookupTable;</span>
+	}
+	
+	private BufferedImage createFadedCircleImage(int size)
+	{
+<span class="nc" id="L230">      BufferedImage im = new BufferedImage(size, size, BufferedImage.TRANSLUCENT); </span>
+<span class="nc" id="L231">      float radius = size / 2f;</span>
+      
+      //this limit will adjust fading to the number of clicks got as input
+<span class="nc" id="L234">      float fadeToLimit = sizeAdjustment.calculateMaximumAlphaForOneCircle();</span>
+//      fadeToLimit = 1.0f;
+<span class="nc" id="L236">      sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;Circle size: &quot;+size);</span>
+<span class="nc" id="L237">      sk.iway.iwcm.Logger.println(HeatMapGenerator.class, &quot;Circle fading: &quot;+fadeToLimit);</span>
+<span class="nc" id="L238">      RadialGradientPaint gradient = new RadialGradientPaint(</span>
+          radius, radius, radius, new float[] { 0f, fadeToLimit},
+          new Color[]{Color.BLACK, new Color(1.0f,1.0f,1.0f,1.0f) });
+
+<span class="nc" id="L242">      Graphics2D g = (Graphics2D) im.getGraphics();</span>
+
+<span class="nc" id="L244">      g.setPaint(gradient);</span>
+<span class="nc" id="L245">      g.fillRect(0, 0, size, size);</span>
+
+<span class="nc" id="L247">      g.dispose();</span>
+<span class="nc" id="L248">      Logger.debug(HeatMapGenerator.class, &quot;Created circle image for heat map&quot;);</span>
+      
+<span class="nc" id="L250">      return im;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationDataEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.model</a> &gt; <span class="el_source">EnumerationDataEditorFields.java</span></div><h1>EnumerationDataEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.model;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.editor.FieldType;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Getter
+@Setter
+<span class="fc" id="L23">public class EnumerationDataEditorFields {</span>
+
+    private List&lt;Field&gt; fieldsDefinition;
+
+<span class="fc" id="L27">    private static final Integer STRING_FIELDS_COUNT = 12;</span>
+    private static final String STRING_PREFIX = &quot;string&quot;;
+
+<span class="fc" id="L30">    private static final Integer DECIMAL_FIELDS_COUNT = 4;</span>
+    private static final String DECIMAL_PREFIX = &quot;decimal&quot;;
+
+<span class="fc" id="L33">    private static final Integer BOOLEAN_FIELDS_COUNT = 4;</span>
+    private static final String BOOLEAN_PREFIX = &quot;boolean&quot;;
+
+<span class="fc" id="L36">    private static final Integer DATE_FIELDS_COUNT = 4;</span>
+    private static final String DATE_PREFIX = &quot;date&quot;;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.enumerations.child_enumeration_type_name&quot;,
+        hidden = true
+    )
+    private Integer childEnumTypeId;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.enumerations.parent_enumeration_data_name&quot;,
+        hidden = true
+    )
+    private Integer parentEnumDataId;
+
+    public void fromEnumerationData(EnumerationDataBean entity, EnumerationTypeBean typeEntity) {
+<span class="fc" id="L54">        fieldsDefinition = new ArrayList&lt;&gt;();</span>
+
+        //Set default values
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        childEnumTypeId = entity.getChildEnumerationType() == null ? null : entity.getChildEnumerationType().getEnumerationTypeId();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        parentEnumDataId = entity.getParentEnumerationData() == null ? null : entity.getParentEnumerationData().getEnumerationDataId();</span>
+
+<span class="fc" id="L60">        prepareAndAddFields(STRING_PREFIX, STRING_FIELDS_COUNT, entity, typeEntity);</span>
+<span class="fc" id="L61">        prepareAndAddFields(DECIMAL_PREFIX, DECIMAL_FIELDS_COUNT, entity, typeEntity);</span>
+<span class="fc" id="L62">        prepareAndAddFields(BOOLEAN_PREFIX, BOOLEAN_FIELDS_COUNT, entity, typeEntity);</span>
+<span class="fc" id="L63">        prepareAndAddFields(DATE_PREFIX, DATE_FIELDS_COUNT, entity, typeEntity);</span>
+
+<span class="fc" id="L65">        entity.setEditorFields(this);</span>
+<span class="fc" id="L66">    }</span>
+
+    public void toEnumerationData(EnumerationDataBean entity, EnumerationTypeBean dataTypeEntity, EnumerationTypeRepository etr, EnumerationDataRepository edr, Prop prop) {
+        //If creating new enumeration data entity, set EnumerationTypeId
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if(entity.getType() == null) entity.setType(dataTypeEntity);</span>
+
+        /*Handle child enumeration type id*/
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        Integer newChildEnumTypeId = entity.getEditorFields().getChildEnumTypeId() == null ? -1 : entity.getEditorFields().getChildEnumTypeId();</span>
+
+        //FIX - entity.getChildEnumerationType will allways come like NULL from editor
+<span class="fc" id="L76">        Integer oldChildEnumTypeId = edr.getChildEnumTypeIdByEnumDataId(entity.getEnumerationDataId());</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        oldChildEnumTypeId = oldChildEnumTypeId == null ? -1 : oldChildEnumTypeId;</span>
+
+        //If not equal, aka childEnumType has changed
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if(!newChildEnumTypeId.equals(oldChildEnumTypeId)) {</span>
+            //BE permission check to set child enum type
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if(!dataTypeEntity.isAllowChildEnumerationType())</span>
+<span class="nc" id="L83">                throw new IllegalArgumentException(prop.getText(&quot;enum_data.set_childEnumTyp_notAllowed&quot;));</span>
+
+            //Check that selected type is not deleted (soft deleted, hidden)
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if(newChildEnumTypeId != -1) {</span>
+<span class="fc" id="L87">                boolean deleted = DatatableRestControllerV2.jpaToBoolean(etr.getHiddenByEnumTypeId(newChildEnumTypeId));</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">                if(deleted)</span>
+<span class="nc" id="L89">                    throw new IllegalArgumentException(prop.getText(&quot;enum_type.allready_deleted_error&quot;));</span>
+            }
+
+<span class="pc bpc" id="L92" title="2 of 4 branches missed.">            if(dataTypeEntity.getEnumerationTypeId() != null &amp;&amp; dataTypeEntity.getEnumerationTypeId().equals(newChildEnumTypeId)) {</span>
+                //Loop error, child type cant be same as actual type
+<span class="nc" id="L94">                throw new IllegalArgumentException(prop.getText(&quot;enum_type.on_himself_reference_error&quot;));</span>
+            }
+        }
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if(newChildEnumTypeId == -1) {</span>
+            //Nothing is selected
+<span class="fc" id="L100">            entity.setChildEnumerationType(null);</span>
+        } else {
+            //Select childEnumerationType
+<span class="fc" id="L103">            entity.setChildEnumerationType(etr.getByEnumId(newChildEnumTypeId));</span>
+        }
+
+        /*Handle parent enumeration data id*/
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        Integer newParentEnumDataId = entity.getEditorFields().getParentEnumDataId() == null ? -1 : entity.getEditorFields().getParentEnumDataId();</span>
+
+        //FIX - entity.getParentEnumerationData will allways come like NULL from editor
+<span class="fc" id="L110">        Integer oldParentEnumDataId = edr.getParentenumDataIdByEnumDataId(entity.getEnumerationDataId());</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        oldParentEnumDataId = oldParentEnumDataId == null ? -1 : oldParentEnumDataId;</span>
+
+        //If not equal, aka childEnumType has changed
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if(!newParentEnumDataId.equals(oldParentEnumDataId)) {</span>
+            //BE permission check to set parent enum data
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">            if(!dataTypeEntity.isAllowParentEnumerationData())</span>
+<span class="nc" id="L117">                throw new IllegalArgumentException(prop.getText(&quot;enum_data.set_parentEnumData_notAllowed&quot;));</span>
+
+            //Check if we want to set deleted option
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">            if(newParentEnumDataId != -1) {</span>
+<span class="fc" id="L121">                boolean deleted = DatatableRestControllerV2.jpaToBoolean(edr.getHiddenByEnumerationDataId(newParentEnumDataId));</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">                if(deleted)</span>
+<span class="nc" id="L123">                    throw new IllegalArgumentException(prop.getText(&quot;enum_data.allready_deleted_error&quot;));</span>
+            }
+        }
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if(newParentEnumDataId == -1) {</span>
+            //Nothing is selected
+<span class="fc" id="L129">            entity.setParentEnumerationData(null);</span>
+        } else {
+            //Select parentEnumerationdata
+<span class="fc" id="L132">            entity.setParentEnumerationData(edr.getEnumId(newParentEnumDataId));</span>
+        }
+<span class="fc" id="L134">    }</span>
+
+    private void prepareAndAddFields(String prefix, Integer count, EnumerationDataBean dataEntity, EnumerationTypeBean typeEntity) {
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        for(Integer i = 1; i &lt;= count; i++) {</span>
+            try {
+<span class="fc" id="L139">                BeanWrapper bwData = new BeanWrapperImpl(dataEntity);</span>
+<span class="fc" id="L140">                BeanWrapper bwType = new BeanWrapperImpl(typeEntity);</span>
+<span class="fc" id="L141">                String fieldValue = null;</span>
+<span class="fc" id="L142">                String label = (String)bwType.getPropertyValue(prefix + i + &quot;Name&quot;);</span>
+
+<span class="fc" id="L144">                Field newField = new Field();</span>
+<span class="fc" id="L145">                newField.setKey(i + &quot;&quot;);</span>
+<span class="fc" id="L146">                newField.setCustomPrefix(prefix);</span>
+
+<span class="pc bpc" id="L148" title="1 of 4 branches missed.">                if(label == null || label.isEmpty()) {</span>
+<span class="fc" id="L149">                    newField.setType(FieldType.NONE.name().toLowerCase());</span>
+                } else {
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                    if(prefix.equals(STRING_PREFIX)) {</span>
+<span class="fc" id="L152">                        fieldValue = (String)bwData.getPropertyValue(prefix + i);</span>
+<span class="fc" id="L153">                        newField.setType(FieldType.TEXT.name().toLowerCase());</span>
+<span class="fc" id="L154">                        newField.setLabel(label);</span>
+<span class="fc" id="L155">                        newField.setMaxlength(1024);</span>
+                    }
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                    else if(prefix.equals(DECIMAL_PREFIX)) {</span>
+<span class="fc" id="L158">                        BigDecimal tmpDecimal = (BigDecimal)bwData.getPropertyValue(prefix + i);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">                        fieldValue = tmpDecimal != null ? tmpDecimal.toString() : null;</span>
+<span class="fc" id="L160">                        newField.setType(FieldType.NUMBER.name().toLowerCase());</span>
+<span class="fc" id="L161">                        newField.setLabel(label);</span>
+<span class="fc" id="L162">                    }</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">                    else if(prefix.equals(BOOLEAN_PREFIX)) {</span>
+<span class="fc" id="L164">                        fieldValue = String.valueOf((boolean)bwData.getPropertyValue(prefix + i));</span>
+<span class="fc" id="L165">                        newField.setType(FieldType.BOOLEAN.name().toLowerCase());</span>
+<span class="fc" id="L166">                        newField.setLabel(label);</span>
+                    }
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                    else if(prefix.equals(DATE_PREFIX)) {</span>
+<span class="nc" id="L169">                        Date tmpDate = (Date)bwData.getPropertyValue(prefix + i);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                        fieldValue = tmpDate != null ? tmpDate.toString() : null;</span>
+<span class="nc" id="L171">                        newField.setType(FieldType.DATE.name().toLowerCase());</span>
+<span class="nc" id="L172">                        newField.setLabel(label);</span>
+                    }
+<span class="fc" id="L174">                    newField.setValue(fieldValue);</span>
+                }
+<span class="fc" id="L176">                fieldsDefinition.add(newField);</span>
+<span class="nc" id="L177">            } catch (Exception ex) {</span>
+<span class="nc" id="L178">                Logger.error(EnumerationDataEditorFields.class, ex);</span>
+<span class="fc" id="L179">            }</span>
+        }
+<span class="fc" id="L181">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

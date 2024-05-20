@@ -66,7 +66,7 @@
                         },
                         "render": function ( data, type, full ) {
                             //console.log("Render tools, data=", data);
-                            return `<a class="form-view" id="form-view-${data}" href="javascript:openFormHtml(${data})" title="${that.$preview}" data-toggle="tooltip"><i class="far fa-eye"></i></a>`;
+                            return `<a class="form-view" id="form-view-${data}" href="javascript:openFormHtml(${data})" title="${that.$preview}" data-toggle="tooltip"><i class="ti ti-eye"></i></a>`;
                         }
                     },
                     {
@@ -77,7 +77,7 @@
                         orderable: true,
                         "className" : "dt-row-edit cell-not-editable",
                         "renderFormatLinkTemplate" : "javascript:;",
-                        "renderFormatPrefix" : "<i class=\"far fa-pencil\"></i> ",
+                        "renderFormatPrefix" : "<i class=\"ti ti-pencil\"></i> ",
                         editor: {
                             type: "datetime",
                             attr: {
@@ -161,7 +161,7 @@
                         renderFormat: 'dt-format-text',
                         orderable: orderable,
                         defaultContent: "",
-                        className: "cell-not-editable",
+                        className: "cell-not-editable allow-html",
                         editor: {
                             type: 'text',
                             attr: {
@@ -551,7 +551,7 @@
                 if (window.formRestUrl.indexOf("archive")!=-1) divider = " buttons-divider"
                 //preview page
                 this.formDetailTable.button().add(4, {
-                    text: '<i class="far fa-eye"></i>',
+                    text: '<i class="ti ti-eye"></i>',
                     action: function (e, dt, node) {
                         let selectedRows = dt.rows({ selected: true }).data();
                         for (let i=0; i<selectedRows.length; i++) {
@@ -577,7 +577,7 @@
                     this.formDetailTable.button().add(5, {
                         extends: 'remove',
                         editor: that.formDetailTable.EDITOR,
-                        text: '<i class="far fa-box-archive"></i>',
+                        text: '<i class="ti ti-archive"></i>',
                         action: function (e, dt, node) {
                             //console.log("Rotate, e=",e," dt=",dt," node=",node);
                             that.formDetailTable.executeAction("archiveFormDetail");

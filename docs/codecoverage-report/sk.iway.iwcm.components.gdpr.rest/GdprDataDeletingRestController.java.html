@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GdprDataDeletingRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr.rest</a> &gt; <span class="el_source">GdprDataDeletingRestController.java</span></div><h1>GdprDataDeletingRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr.rest;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.gdpr.GdprDataDeleting;
+import sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/gdpr/data_deleting&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuGDPRDelete')&quot;)
+@Datatable
+public class GdprDataDeletingRestController extends DatatableRestControllerV2&lt;GdprDataDeletingEntity, Long&gt; {
+
+    private final HttpServletRequest request;
+
+    @Autowired
+    public GdprDataDeletingRestController(HttpServletRequest request) {
+<span class="fc" id="L35">        super(null);</span>
+<span class="fc" id="L36">        this.request = request;</span>
+<span class="fc" id="L37">    }</span>
+
+    //This page doesnt use repository or DB class, we will create 4 entities static (only two columns are from DB)
+    @Override
+    public Page&lt;GdprDataDeletingEntity&gt; getAllItems(Pageable pageable) {
+
+<span class="nc" id="L43">        List&lt;GdprDataDeletingEntity&gt; items =  new ArrayList&lt;&gt;();</span>
+
+        //Fill items list with 4 fix created items
+
+<span class="nc" id="L47">        items.add(getDataDeleteEntityById(1));</span>
+<span class="nc" id="L48">        items.add(getDataDeleteEntityById(2));</span>
+<span class="nc" id="L49">        items.add(getDataDeleteEntityById(3));</span>
+<span class="nc" id="L50">        items.add(getDataDeleteEntityById(4));</span>
+
+<span class="nc" id="L52">        DatatablePageImpl&lt;GdprDataDeletingEntity&gt; page = new DatatablePageImpl&lt;&gt;(items);</span>
+<span class="nc" id="L53">        return page;</span>
+    }
+
+    @Override
+    public GdprDataDeletingEntity getOneItem(long id) {
+<span class="nc" id="L58">        return getDataDeleteEntityById((int) id);</span>
+    }
+
+    //Only statTime column can be changed (every entity use different method to update value)
+    @Override
+    public GdprDataDeletingEntity editItem(GdprDataDeletingEntity entity, long id) {
+
+<span class="nc" id="L65">        String newStatTimeString = &quot;&quot;;</span>
+<span class="nc" id="L66">        Prop prop = getProp();</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if(id == 1) {</span>
+
+<span class="nc" id="L70">            ConfDB.setName(&quot;gdprDeleteUserAfterDays&quot;, entity.getStatTime() + &quot;&quot;);</span>
+<span class="nc" id="L71">            newStatTimeString = entity.getStatTime() + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } else if(id == 2) {</span>
+
+<span class="nc" id="L74">            ConfDB.setName(&quot;gdprDeleteEmailsAfterDays&quot;, entity.getStatTime() + &quot;&quot;);</span>
+<span class="nc" id="L75">            newStatTimeString = entity.getStatTime() + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        } else if(id == 3) {</span>
+
+<span class="nc" id="L78">            ConfDB.setName(&quot;gdprDeleteFormDataAfterDays&quot;, entity.getStatTime() + &quot;&quot;);</span>
+<span class="nc" id="L79">            newStatTimeString = entity.getStatTime() + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        } else if(id == 4) {</span>
+
+<span class="nc" id="L82">            ConfDB.setName(&quot;gdprDeleteUserBasketOrdersAfterYears&quot;, entity.getStatTime() + &quot;&quot;);</span>
+<span class="nc" id="L83">            newStatTimeString = entity.getStatTime() + &quot; &quot; + prop.getText(&quot;components.gdpr.rokov&quot;);</span>
+        }
+
+<span class="nc" id="L86">        entity = getDataDeleteEntityById((int) id);</span>
+<span class="nc" id="L87">        entity.setStatTimeString(newStatTimeString);</span>
+
+<span class="nc" id="L89">        return entity;</span>
+    }
+
+    @Override
+    public boolean processAction(GdprDataDeletingEntity entity, String action) {
+
+        //Custom delete (on front end its look like normal delete button)
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if(action.equals(&quot;customDataDelete&quot;)) {</span>
+
+<span class="nc" id="L98">            Long id = entity.getId();</span>
+<span class="nc" id="L99">            GdprDataDeleting gdprdd = GdprDataDeleting.getInstance(request);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if(id == 1) {</span>
+
+<span class="nc" id="L103">                gdprdd.deleteUnusedUsers();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            } else if(id == 2) {</span>
+
+<span class="nc" id="L106">                gdprdd.deleteSendedEmails();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            }else if(id == 3) {</span>
+
+<span class="nc" id="L109">                gdprdd.deleteOldFormData();</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            } else if(id == 4) {</span>
+
+<span class="nc" id="L112">                gdprdd.deleteOldBasketOrders();</span>
+            }
+        }
+
+<span class="nc" id="L116">        return true;</span>
+    }
+
+    //Depending on id from 1 to 4 will create entity, fill its column and return it
+    GdprDataDeletingEntity getDataDeleteEntityById(int id) {
+
+<span class="nc" id="L122">        GdprDataDeletingEntity entity = new GdprDataDeletingEntity();</span>
+<span class="nc" id="L123">        GdprDataDeleting gdprdd = GdprDataDeleting.getInstance(request);</span>
+<span class="nc" id="L124">        Prop prop = getProp();</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if(id == 1) {</span>
+
+<span class="nc" id="L128">            entity.setId(Long.valueOf(1));</span>
+<span class="nc" id="L129">            entity.setType(prop.getText(&quot;components.gdpr.type.users&quot;));</span>
+<span class="nc" id="L130">            entity.setStatTime(Constants.getInt(&quot;gdprDeleteUserAfterDays&quot;));</span>
+<span class="nc" id="L131">            entity.setStatTimeString(Constants.getInt(&quot;gdprDeleteUserAfterDays&quot;) + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;));</span>
+<span class="nc" id="L132">            entity.setRecordCnt(GdprDataDeleting.getUnusedUsers().size());</span>
+<span class="nc" id="L133">            entity.setAction(prop.getText(&quot;components.gdpr.admin_gdpr_data_deleting.zmazat_uzivatelov_za_dane_obdobie&quot;));</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        } else if(id == 2) {</span>
+
+<span class="nc" id="L136">            entity.setId(Long.valueOf(2));</span>
+<span class="nc" id="L137">            entity.setType(prop.getText(&quot;components.gdpr.type.emails&quot;));</span>
+<span class="nc" id="L138">            entity.setStatTime(Constants.getInt(&quot;gdprDeleteEmailsAfterDays&quot;));</span>
+<span class="nc" id="L139">            entity.setStatTimeString(Constants.getInt(&quot;gdprDeleteEmailsAfterDays&quot;) + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;));</span>
+<span class="nc" id="L140">            entity.setRecordCnt(gdprdd.getSendedEmailsCount());</span>
+<span class="nc" id="L141">            entity.setAction(prop.getText(&quot;components.gdpr.admin_gdpr_data_deleting.zmazat_vsetky_odoslane_emaily&quot;));</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        } else if(id == 3) {</span>
+
+<span class="nc" id="L144">            entity.setId(Long.valueOf(3));</span>
+<span class="nc" id="L145">            entity.setType(prop.getText(&quot;components.gdpr.type.forms&quot;));</span>
+<span class="nc" id="L146">            entity.setStatTime(Constants.getInt(&quot;gdprDeleteFormDataAfterDays&quot;));</span>
+<span class="nc" id="L147">            entity.setStatTimeString(Constants.getInt(&quot;gdprDeleteFormDataAfterDays&quot;) + &quot; &quot; + prop.getText(&quot;welcome.statBackTime.days&quot;));</span>
+<span class="nc" id="L148">            entity.setRecordCnt(gdprdd.getOldFormDataCount());</span>
+<span class="nc" id="L149">            entity.setAction(prop.getText(&quot;components.gdpr.admin_gdpr_data_deleting.zmazat_data_vo_formularoch_za_dane_obdobie&quot;));</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        } else if(id == 4) {</span>
+
+<span class="nc" id="L152">            entity.setId(Long.valueOf(4));</span>
+<span class="nc" id="L153">            entity.setType(prop.getText(&quot;components.gdpr.type.eshop&quot;));</span>
+<span class="nc" id="L154">            entity.setStatTime(Constants.getInt(&quot;gdprDeleteUserBasketOrdersAfterYears&quot;));</span>
+<span class="nc" id="L155">            entity.setStatTimeString(Constants.getInt(&quot;gdprDeleteUserBasketOrdersAfterYears&quot;) + &quot; &quot; + prop.getText(&quot;components.gdpr.rokov&quot;));</span>
+<span class="nc" id="L156">            entity.setRecordCnt((int)gdprdd.getOldBasketOrdersCount());</span>
+<span class="nc" id="L157">            entity.setAction(prop.getText(&quot;components.gdpr.admin_gdpr_data_deleting.zmazat_objednavky_z_modulu_elektorincky_obchod_za_dane_obdobie&quot;));</span>
+        }
+
+<span class="nc" id="L160">        return entity;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

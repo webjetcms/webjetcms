@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SettingsBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">SettingsBean.java</span></div><h1>SettingsBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
+
+/**
+ *  SettingsBean.java - riadok tabulky user_settings
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 26.11.2008 15:26:00
+ *@modified     $Date: 2008/12/11 08:34:21 $
+ */
+<span class="nc" id="L17">public class SettingsBean implements Serializable</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 1914378986017022300L;
+	private int userSettingsId;
+	private int userId;
+	private String skey;
+	private String svalue1;
+	private String svalue2;
+	private String svalue3;
+	private String svalue4;
+	private int sint1;
+	private int sint2;
+	private int sint3;
+	private int sint4;
+	private Timestamp sdate;
+	public int getUserSettingsId()
+	{
+<span class="nc" id="L37">		return userSettingsId;</span>
+	}
+	public void setUserSettingsId(int userSettingsId)
+	{
+<span class="nc" id="L41">		this.userSettingsId = userSettingsId;</span>
+<span class="nc" id="L42">	}</span>
+	public int getUserId()
+	{
+<span class="nc" id="L45">		return userId;</span>
+	}
+	public void setUserId(int userId)
+	{
+<span class="nc" id="L49">		this.userId = userId;</span>
+<span class="nc" id="L50">	}</span>
+	public String getSkey()
+	{
+<span class="nc" id="L53">		return skey;</span>
+	}
+	public void setSkey(String skey)
+	{
+<span class="nc" id="L57">		this.skey = skey;</span>
+<span class="nc" id="L58">	}</span>
+	public String getSvalue1()
+	{
+<span class="nc" id="L61">		return svalue1;</span>
+	}
+	public void setSvalue1(String svalue1)
+	{
+<span class="nc" id="L65">		this.svalue1 = svalue1;</span>
+<span class="nc" id="L66">	}</span>
+	public String getSvalue2()
+	{
+<span class="nc" id="L69">		return svalue2;</span>
+	}
+	public void setSvalue2(String svalue2)
+	{
+<span class="nc" id="L73">		this.svalue2 = svalue2;</span>
+<span class="nc" id="L74">	}</span>
+	public String getSvalue3()
+	{
+<span class="nc" id="L77">		return svalue3;</span>
+	}
+	public void setSvalue3(String svalue3)
+	{
+<span class="nc" id="L81">		this.svalue3 = svalue3;</span>
+<span class="nc" id="L82">	}</span>
+	public String getSvalue4()
+	{
+<span class="nc" id="L85">		return svalue4;</span>
+	}
+	public void setSvalue4(String svalue4)
+	{
+<span class="nc" id="L89">		this.svalue4 = svalue4;</span>
+<span class="nc" id="L90">	}</span>
+	public int getSint1()
+	{
+<span class="nc" id="L93">		return sint1;</span>
+	}
+	public void setSint1(int sint1)
+	{
+<span class="nc" id="L97">		this.sint1 = sint1;</span>
+<span class="nc" id="L98">	}</span>
+	public int getSint2()
+	{
+<span class="nc" id="L101">		return sint2;</span>
+	}
+	public void setSint2(int sint2)
+	{
+<span class="nc" id="L105">		this.sint2 = sint2;</span>
+<span class="nc" id="L106">	}</span>
+	public int getSint3()
+	{
+<span class="nc" id="L109">		return sint3;</span>
+	}
+	public void setSint3(int sint3)
+	{
+<span class="nc" id="L113">		this.sint3 = sint3;</span>
+<span class="nc" id="L114">	}</span>
+	public int getSint4()
+	{
+<span class="nc" id="L117">		return sint4;</span>
+	}
+	public void setSint4(int sint4)
+	{
+<span class="nc" id="L121">		this.sint4 = sint4;</span>
+<span class="nc" id="L122">	}</span>
+	public Timestamp getSdate()
+	{
+<span class="nc" id="L125">		return sdate;</span>
+	}
+	public void setSdate(Timestamp sdate)
+	{
+<span class="nc" id="L129">		this.sdate = sdate;</span>
+<span class="nc" id="L130">	}</span>
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

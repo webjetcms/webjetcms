@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalyzerFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">AnalyzerFactory.java</span></div><h1>AnalyzerFactory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+
+import org.apache.lucene.util.Version;
+
+import sk.iway.iwcm.Logger;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.cz.CzechAnalyzer;
+import org.apache.lucene.analysis.de.GermanAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+
+public class AnalyzerFactory {
+
+
+   private AnalyzerFactory() {
+      //private konstruktor, je to len factory trieda so statickymi metodami
+   }
+
+   /**
+    * Vrati analyzer pre zadany jazyk
+    * @param matchVersion
+    * @param language
+    * @return
+    */
+   public static Analyzer getAnalyzer(Version matchVersion, String language) {
+<span class="fc" id="L26">      Logger.debug(AnalyzerFactory.class, &quot;getAnalyzer(&quot;+language+&quot;)&quot;);</span>
+
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">      if (&quot;en&quot;.equals(language)) return new EnglishAnalyzer(matchVersion);</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">      else if (&quot;cz&quot;.equals(language)) return new CzechAnalyzer(matchVersion);</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">      else if (&quot;de&quot;.equals(language)) return new GermanAnalyzer(matchVersion);</span>
+
+      //defaultne vrat SK analyzer
+<span class="fc" id="L33">      return new CustomAnalyzer(matchVersion, language);</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

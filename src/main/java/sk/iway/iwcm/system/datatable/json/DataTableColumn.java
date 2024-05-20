@@ -386,7 +386,7 @@ public class DataTableColumn {
             addClassName("dt-row-edit");
             renderFormat = "dt-format-text";
             renderFormatLinkTemplate = "javascript:;";
-            renderFormatPrefix = "<i class=\"far fa-pencil\"></i> ";
+            renderFormatPrefix = "<i class=\"ti ti-pencil\"></i> ";
 
             if (editor == null) {
                 editor = new DataTableColumnEditor();

@@ -40,7 +40,11 @@ Scenario('frontend', ({ I, Document }) => {
 Scenario('admin-with-upload', ({ I, Document }) => {
     I.amOnPage("/apps/contact/admin/upload/");
 
-    I.click("Potvrdiť");
+    if("sk" === I.getConfLng()) {
+        I.click("Potvrdiť");
+    } else if("en" === I.getConfLng()) { 
+        I.click("Submit");
+    }
 
     //cela stranka
     Document.screenshot("/custom-apps/spring-mvc/admin-upload.png");

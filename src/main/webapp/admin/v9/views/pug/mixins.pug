@@ -21,7 +21,7 @@ mixin breadcrumb(id,tabs,backLink=false,setTitle=true)
             if backLink
                 li.nav-item
                     a.nav-link.back-link(href=`${backLink[0]}`)
-                        i.fal.fa-chevron-left
+                        i.ti.ti-chevron-left
                         |   #{backLink[1]}
 
             each tab, index in tabs

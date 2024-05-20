@@ -20,6 +20,8 @@ Ak sa na webe používa ```Google Tag Manager``` k vkladaniu skriptov a sledovac
 ```javascript
     gtag('consent', 'default', {
         'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
         'analytics_storage': 'denied'
     });
 ```
@@ -29,6 +31,8 @@ Ide o východiskové nastavenie. Pri načítaní stránky sa nastaví na ```deni
 **V princípe platí, že**
 
 - ```ad_storage``` = WebJET marketingová kategória ```cookies```
+- ```ad_user_data``` = WebJET marketingová kategória ```cookies```
+- ```ad_personalization``` = WebJET marketingová kategória ```cookies```
 - ```analytics_storage``` = WebJET štatistická kategória ```cookies```
 
 **Upozornenie:** predvolené nastavenie súhlasov musí byť v kóde ešte pred vloženým ```GTM```.
@@ -42,8 +46,11 @@ Kód vyššie by mal byť samozrejme doplnený aj o WebJET kategórie ```cookies
 ```javascript
     gtag('consent', 'default', {
         'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
         'analytics_storage': 'denied',
-        'preferencne': 'denied'
+        'preferencne': 'denied',
+        'nutne': 'granted'
     });
 ```
 
@@ -65,6 +72,10 @@ V rámci ```gtag update``` stačí vložiť len tie kategórie, ktoré sa zmenil
 ```DataLayer``` push je event kvôli ```GTM```, aby sa vedeli spustiť nástroje priamo pri udelení súhlasu a nemuselo sa čakať na obnovenie stránky.
 
 Aktualizáciu údajov automaticky vykonáva aplikácia ```GDPR Cookies``` aj aplikácia ```Cookiebar```.
+
+## Definovanie súhlasov, ak návštevník potvrdil svoje voľby
+
+`Consent default` - kategórie (okrem `nutne`) sú vždy nastavené na `denied`, aj napriek tomu, že ide o opakovanú návštevu a návštevník predtým povolil jednotlivé kategórie. No v takomto prípade hneď za definovaním `consent default` nasleduje v kóde `consent update` (bez DataLayer push eventu - ten sa posiela len pri interagovaní s cookies lištou).
 
 ## Modelový príklad
 

@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BlendComposite.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.heat_map</a> &gt; <span class="el_source">BlendComposite.java</span></div><h1>BlendComposite.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.heat_map;
+
+import java.awt.Composite;
+import java.awt.CompositeContext;
+import java.awt.RenderingHints;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+
+public final class BlendComposite implements Composite {
+<span class="nc" id="L12">    public enum BlendingMode {</span>
+<span class="nc" id="L13">        NORMAL,</span>
+<span class="nc" id="L14">        AVERAGE,</span>
+<span class="nc" id="L15">        MULTIPLY,</span>
+<span class="nc" id="L16">        SCREEN,</span>
+<span class="nc" id="L17">        DARKEN,</span>
+<span class="nc" id="L18">        LIGHTEN,</span>
+<span class="nc" id="L19">        OVERLAY,</span>
+<span class="nc" id="L20">        HARD_LIGHT,</span>
+<span class="nc" id="L21">        SOFT_LIGHT,</span>
+<span class="nc" id="L22">        DIFFERENCE,</span>
+<span class="nc" id="L23">        NEGATION,</span>
+<span class="nc" id="L24">        EXCLUSION,</span>
+<span class="nc" id="L25">        COLOR_DODGE,</span>
+<span class="nc" id="L26">        INVERSE_COLOR_DODGE,</span>
+<span class="nc" id="L27">        SOFT_DODGE,</span>
+<span class="nc" id="L28">        COLOR_BURN,</span>
+<span class="nc" id="L29">        INVERSE_COLOR_BURN,</span>
+<span class="nc" id="L30">        SOFT_BURN,</span>
+<span class="nc" id="L31">        REFLECT,</span>
+<span class="nc" id="L32">        GLOW,</span>
+<span class="nc" id="L33">        FREEZE,</span>
+<span class="nc" id="L34">        HEAT,</span>
+<span class="nc" id="L35">        ADD,</span>
+<span class="nc" id="L36">        SUBTRACT,</span>
+<span class="nc" id="L37">        STAMP,</span>
+<span class="nc" id="L38">        RED,</span>
+<span class="nc" id="L39">        GREEN,</span>
+<span class="nc" id="L40">        BLUE,</span>
+<span class="nc" id="L41">        HUE,</span>
+<span class="nc" id="L42">        SATURATION,</span>
+<span class="nc" id="L43">        COLOR,</span>
+<span class="nc" id="L44">        LUMINOSITY</span>
+    }
+
+<span class="nc" id="L47">    public static final BlendComposite Normal = new BlendComposite(BlendingMode.NORMAL);</span>
+<span class="nc" id="L48">    public static final BlendComposite Average = new BlendComposite(BlendingMode.AVERAGE);</span>
+<span class="nc" id="L49">    public static final BlendComposite Multiply = new BlendComposite(BlendingMode.MULTIPLY);</span>
+<span class="nc" id="L50">    public static final BlendComposite Screen = new BlendComposite(BlendingMode.SCREEN);</span>
+<span class="nc" id="L51">    public static final BlendComposite Darken = new BlendComposite(BlendingMode.DARKEN);</span>
+<span class="nc" id="L52">    public static final BlendComposite Lighten = new BlendComposite(BlendingMode.LIGHTEN);</span>
+<span class="nc" id="L53">    public static final BlendComposite Overlay = new BlendComposite(BlendingMode.OVERLAY);</span>
+<span class="nc" id="L54">    public static final BlendComposite HardLight = new BlendComposite(BlendingMode.HARD_LIGHT);</span>
+<span class="nc" id="L55">    public static final BlendComposite SoftLight = new BlendComposite(BlendingMode.SOFT_LIGHT);</span>
+<span class="nc" id="L56">    public static final BlendComposite Difference = new BlendComposite(BlendingMode.DIFFERENCE);</span>
+<span class="nc" id="L57">    public static final BlendComposite Negation = new BlendComposite(BlendingMode.NEGATION);</span>
+<span class="nc" id="L58">    public static final BlendComposite Exclusion = new BlendComposite(BlendingMode.EXCLUSION);</span>
+<span class="nc" id="L59">    public static final BlendComposite ColorDodge = new BlendComposite(BlendingMode.COLOR_DODGE);</span>
+<span class="nc" id="L60">    public static final BlendComposite InverseColorDodge = new BlendComposite(BlendingMode.INVERSE_COLOR_DODGE);</span>
+<span class="nc" id="L61">    public static final BlendComposite SoftDodge = new BlendComposite(BlendingMode.SOFT_DODGE);</span>
+<span class="nc" id="L62">    public static final BlendComposite ColorBurn = new BlendComposite(BlendingMode.COLOR_BURN);</span>
+<span class="nc" id="L63">    public static final BlendComposite InverseColorBurn = new BlendComposite(BlendingMode.INVERSE_COLOR_BURN);</span>
+<span class="nc" id="L64">    public static final BlendComposite SoftBurn = new BlendComposite(BlendingMode.SOFT_BURN);</span>
+<span class="nc" id="L65">    public static final BlendComposite Reflect = new BlendComposite(BlendingMode.REFLECT);</span>
+<span class="nc" id="L66">    public static final BlendComposite Glow = new BlendComposite(BlendingMode.GLOW);</span>
+<span class="nc" id="L67">    public static final BlendComposite Freeze = new BlendComposite(BlendingMode.FREEZE);</span>
+<span class="nc" id="L68">    public static final BlendComposite Heat = new BlendComposite(BlendingMode.HEAT);</span>
+<span class="nc" id="L69">    public static final BlendComposite Add = new BlendComposite(BlendingMode.ADD);</span>
+<span class="nc" id="L70">    public static final BlendComposite Subtract = new BlendComposite(BlendingMode.SUBTRACT);</span>
+<span class="nc" id="L71">    public static final BlendComposite Stamp = new BlendComposite(BlendingMode.STAMP);</span>
+<span class="nc" id="L72">    public static final BlendComposite Red = new BlendComposite(BlendingMode.RED);</span>
+<span class="nc" id="L73">    public static final BlendComposite Green = new BlendComposite(BlendingMode.GREEN);</span>
+<span class="nc" id="L74">    public static final BlendComposite Blue = new BlendComposite(BlendingMode.BLUE);</span>
+<span class="nc" id="L75">    public static final BlendComposite Hue = new BlendComposite(BlendingMode.HUE);</span>
+<span class="nc" id="L76">    public static final BlendComposite Saturation = new BlendComposite(BlendingMode.SATURATION);</span>
+<span class="nc" id="L77">    public static final BlendComposite Color = new BlendComposite(BlendingMode.COLOR);</span>
+<span class="nc" id="L78">    public static final BlendComposite Luminosity = new BlendComposite(BlendingMode.LUMINOSITY);</span>
+
+    private float alpha;
+    private BlendingMode mode;
+
+    private BlendComposite(BlendingMode mode) {
+<span class="nc" id="L84">        this(mode, 1.0f);</span>
+<span class="nc" id="L85">    }</span>
+
+<span class="nc" id="L87">    private BlendComposite(BlendingMode mode, float alpha) {</span>
+<span class="nc" id="L88">        this.mode = mode;</span>
+<span class="nc" id="L89">        setAlpha(alpha);</span>
+<span class="nc" id="L90">    }</span>
+
+    public static BlendComposite getInstance(BlendingMode mode) {
+<span class="nc" id="L93">        return new BlendComposite(mode);</span>
+    }
+
+    public static BlendComposite getInstance(BlendingMode mode, float alpha) {
+<span class="nc" id="L97">        return new BlendComposite(mode, alpha);</span>
+    }
+
+    public BlendComposite derive(BlendingMode mode) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        return this.mode == mode ? this : new BlendComposite(mode, getAlpha());</span>
+    }
+
+    public BlendComposite derive(float alpha) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        return this.alpha == alpha ? this : new BlendComposite(getMode(), alpha);</span>
+    }
+
+    public float getAlpha() {
+<span class="nc" id="L109">        return alpha;</span>
+    }
+
+    public BlendingMode getMode() {
+<span class="nc" id="L113">        return mode;</span>
+    }
+
+    private void setAlpha(float alpha) {
+<span class="nc bnc" id="L117" title="All 4 branches missed.">        if (alpha &lt; 0.0f || alpha &gt; 1.0f) {</span>
+<span class="nc" id="L118">            throw new IllegalArgumentException(</span>
+                    &quot;alpha must be comprised between 0.0f and 1.0f&quot;);
+        }
+
+<span class="nc" id="L122">        this.alpha = alpha;</span>
+<span class="nc" id="L123">    }</span>
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L127">        return Float.floatToIntBits(alpha) * 31 + mode.ordinal();</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (!(obj instanceof BlendComposite)) {</span>
+<span class="nc" id="L133">            return false;</span>
+        }
+
+<span class="nc" id="L136">        BlendComposite bc = (BlendComposite) obj;</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (mode != bc.mode) {</span>
+<span class="nc" id="L139">            return false;</span>
+        }
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        return alpha == bc.alpha;</span>
+    }
+    @Override
+    public CompositeContext createContext(ColorModel srcColorModel,
+                                          ColorModel dstColorModel,
+                                          RenderingHints hints) {
+<span class="nc" id="L148">        return new BlendingContext(this);</span>
+    }
+
+    private static final class BlendingContext implements CompositeContext {
+        private final Blender blender;
+        private final BlendComposite composite;
+
+<span class="nc" id="L155">        private BlendingContext(BlendComposite composite) {</span>
+<span class="nc" id="L156">            this.composite = composite;</span>
+<span class="nc" id="L157">            this.blender = Blender.getBlenderFor(composite);</span>
+<span class="nc" id="L158">        }</span>
+        @Override
+        public void dispose() {
+<span class="nc" id="L161">        }</span>
+
+        @Override
+		public void compose(Raster src, Raster dstIn, WritableRaster dstOut) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (src.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                dstIn.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                dstOut.getSampleModel().getDataType() != DataBuffer.TYPE_INT) {</span>
+<span class="nc" id="L168">                throw new IllegalStateException(</span>
+                        &quot;Source and destination must store pixels as INT.&quot;);
+            }
+
+<span class="nc" id="L172">            int width = Math.min(src.getWidth(), dstIn.getWidth());</span>
+<span class="nc" id="L173">            int height = Math.min(src.getHeight(), dstIn.getHeight());</span>
+
+<span class="nc" id="L175">            float alpha = composite.getAlpha();</span>
+
+<span class="nc" id="L177">            int[] srcPixel = new int[4];</span>
+<span class="nc" id="L178">            int[] dstPixel = new int[4];</span>
+<span class="nc" id="L179">            int[] srcPixels = new int[width];</span>
+<span class="nc" id="L180">            int[] dstPixels = new int[width];</span>
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc" id="L183">                src.getDataElements(0, y, width, 1, srcPixels);</span>
+<span class="nc" id="L184">                dstIn.getDataElements(0, y, width, 1, dstPixels);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                for (int x = 0; x &lt; width; x++) {</span>
+                    // pixels are stored as INT_ARGB
+                    // our arrays are [R, G, B, A]
+<span class="nc" id="L188">                    int pixel = srcPixels[x];</span>
+<span class="nc" id="L189">                    srcPixel[0] = (pixel &gt;&gt; 16) &amp; 0xFF;</span>
+<span class="nc" id="L190">                    srcPixel[1] = (pixel &gt;&gt;  8) &amp; 0xFF;</span>
+<span class="nc" id="L191">                    srcPixel[2] = (pixel      ) &amp; 0xFF;</span>
+<span class="nc" id="L192">                    srcPixel[3] = (pixel &gt;&gt; 24) &amp; 0xFF;</span>
+
+<span class="nc" id="L194">                    pixel = dstPixels[x];</span>
+<span class="nc" id="L195">                    dstPixel[0] = (pixel &gt;&gt; 16) &amp; 0xFF;</span>
+<span class="nc" id="L196">                    dstPixel[1] = (pixel &gt;&gt;  8) &amp; 0xFF;</span>
+<span class="nc" id="L197">                    dstPixel[2] = (pixel      ) &amp; 0xFF;</span>
+<span class="nc" id="L198">                    dstPixel[3] = (pixel &gt;&gt; 24) &amp; 0xFF;</span>
+
+<span class="nc" id="L200">                    int[] result = blender.blend(srcPixel, dstPixel);</span>
+
+                    // mixes the result with the opacity
+<span class="nc" id="L203">                    dstPixels[x] = ((int) (dstPixel[3] + (result[3] - dstPixel[3]) * alpha) &amp; 0xFF) &lt;&lt; 24 |</span>
+                                   ((int) (dstPixel[0] + (result[0] - dstPixel[0]) * alpha) &amp; 0xFF) &lt;&lt; 16 |
+                                   ((int) (dstPixel[1] + (result[1] - dstPixel[1]) * alpha) &amp; 0xFF) &lt;&lt;  8 |
+                                    (int) (dstPixel[2] + (result[2] - dstPixel[2]) * alpha) &amp; 0xFF;
+                }
+<span class="nc" id="L208">                dstOut.setDataElements(0, y, width, 1, dstPixels);</span>
+            }
+<span class="nc" id="L210">        }</span>
+    }
+
+    private static abstract class Blender {
+        public abstract int[] blend(int[] src, int[] dst);
+
+        private static void RGBtoHSL(int r, int g, int b, float[] hsl) {
+<span class="nc" id="L217">            float var_R = (r / 255f);</span>
+<span class="nc" id="L218">            float var_G = (g / 255f);</span>
+<span class="nc" id="L219">            float var_B = (b / 255f);</span>
+
+            float var_Min;
+            float var_Max;
+            float del_Max;
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (var_R &gt; var_G) {</span>
+<span class="nc" id="L226">                var_Min = var_G;</span>
+<span class="nc" id="L227">                var_Max = var_R;</span>
+            } else {
+<span class="nc" id="L229">                var_Min = var_R;</span>
+<span class="nc" id="L230">                var_Max = var_G;</span>
+            }
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            if (var_B &gt; var_Max) {</span>
+<span class="nc" id="L233">                var_Max = var_B;</span>
+            }
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            if (var_B &lt; var_Min) {</span>
+<span class="nc" id="L236">                var_Min = var_B;</span>
+            }
+
+<span class="nc" id="L239">            del_Max = var_Max - var_Min;</span>
+
+            float H, S, L;
+<span class="nc" id="L242">            L = (var_Max + var_Min) / 2f;</span>
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">            if (del_Max - 0.01f &lt;= 0.0f) {</span>
+<span class="nc" id="L245">                H = 0;</span>
+<span class="nc" id="L246">                S = 0;</span>
+            } else {
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                if (L &lt; 0.5f) {</span>
+<span class="nc" id="L249">                    S = del_Max / (var_Max + var_Min);</span>
+                } else {
+<span class="nc" id="L251">                    S = del_Max / (2 - var_Max - var_Min);</span>
+                }
+
+<span class="nc" id="L254">                float del_R = (((var_Max - var_R) / 6f) + (del_Max / 2f)) / del_Max;</span>
+<span class="nc" id="L255">                float del_G = (((var_Max - var_G) / 6f) + (del_Max / 2f)) / del_Max;</span>
+<span class="nc" id="L256">                float del_B = (((var_Max - var_B) / 6f) + (del_Max / 2f)) / del_Max;</span>
+
+<span class="nc bnc" id="L258" title="All 2 branches missed.">                if (var_R == var_Max) {</span>
+<span class="nc" id="L259">                    H = del_B - del_G;</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">                } else if (var_G == var_Max) {</span>
+<span class="nc" id="L261">                    H = (1 / 3f) + del_R - del_B;</span>
+                } else {
+<span class="nc" id="L263">                    H = (2 / 3f) + del_G - del_R;</span>
+                }
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                if (H &lt; 0) {</span>
+<span class="nc" id="L266">                    H += 1;</span>
+                }
+<span class="nc bnc" id="L268" title="All 2 branches missed.">                if (H &gt; 1) {</span>
+<span class="nc" id="L269">                    H -= 1;</span>
+                }
+            }
+
+<span class="nc" id="L273">            hsl[0] = H;</span>
+<span class="nc" id="L274">            hsl[1] = S;</span>
+<span class="nc" id="L275">            hsl[2] = L;</span>
+<span class="nc" id="L276">        }</span>
+
+        private static void HSLtoRGB(float h, float s, float l, int[] rgb) {
+            int R, G, B;
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            if (s - 0.01f &lt;= 0.0f) {</span>
+<span class="nc" id="L282">                R = (int) (l * 255.0f);</span>
+<span class="nc" id="L283">                G = (int) (l * 255.0f);</span>
+<span class="nc" id="L284">                B = (int) (l * 255.0f);</span>
+            } else {
+                float var_1, var_2;
+<span class="nc bnc" id="L287" title="All 2 branches missed.">                if (l &lt; 0.5f) {</span>
+<span class="nc" id="L288">                    var_2 = l * (1 + s);</span>
+                } else {
+<span class="nc" id="L290">                    var_2 = (l + s) - (s * l);</span>
+                }
+<span class="nc" id="L292">                var_1 = 2 * l - var_2;</span>
+
+<span class="nc" id="L294">                R = (int) (255.0f * hue2RGB(var_1, var_2, h + (1.0f / 3.0f)));</span>
+<span class="nc" id="L295">                G = (int) (255.0f * hue2RGB(var_1, var_2, h));</span>
+<span class="nc" id="L296">                B = (int) (255.0f * hue2RGB(var_1, var_2, h - (1.0f / 3.0f)));</span>
+            }
+
+<span class="nc" id="L299">            rgb[0] = R;</span>
+<span class="nc" id="L300">            rgb[1] = G;</span>
+<span class="nc" id="L301">            rgb[2] = B;</span>
+<span class="nc" id="L302">        }</span>
+
+        private static float hue2RGB(float v1, float v2, float vH) {
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            if (vH &lt; 0.0f) {</span>
+<span class="nc" id="L306">                vH += 1.0f;</span>
+            }
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            if (vH &gt; 1.0f) {</span>
+<span class="nc" id="L309">                vH -= 1.0f;</span>
+            }
+<span class="nc bnc" id="L311" title="All 2 branches missed.">            if ((6.0f * vH) &lt; 1.0f) {</span>
+<span class="nc" id="L312">                return (v1 + (v2 - v1) * 6.0f * vH);</span>
+            }
+<span class="nc bnc" id="L314" title="All 2 branches missed.">            if ((2.0f * vH) &lt; 1.0f) {</span>
+<span class="nc" id="L315">                return (v2);</span>
+            }
+<span class="nc bnc" id="L317" title="All 2 branches missed.">            if ((3.0f * vH) &lt; 2.0f) {</span>
+<span class="nc" id="L318">                return (v1 + (v2 - v1) * ((2.0f / 3.0f) - vH) * 6.0f);</span>
+            }
+<span class="nc" id="L320">            return (v1);</span>
+        }
+
+        public static Blender getBlenderFor(BlendComposite composite) {
+<span class="nc bnc" id="L324" title="All 33 branches missed.">            switch (composite.getMode()) {</span>
+                case NORMAL:
+<span class="nc" id="L326">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L329">                            return src;</span>
+                        }
+                    };
+                case ADD:
+<span class="nc" id="L333">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L336">                            return new int[] {</span>
+<span class="nc" id="L337">                                Math.min(255, src[0] + dst[0]),</span>
+<span class="nc" id="L338">                                Math.min(255, src[1] + dst[1]),</span>
+<span class="nc" id="L339">                                Math.min(255, src[2] + dst[2]),</span>
+<span class="nc" id="L340">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case AVERAGE:
+<span class="nc" id="L345">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L348">                            return new int[] {</span>
+                                (src[0] + dst[0]) &gt;&gt;&gt; 1,
+                                (src[1] + dst[1]) &gt;&gt;&gt; 1,
+                                (src[2] + dst[2]) &gt;&gt;&gt; 1,
+<span class="nc" id="L352">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case BLUE:
+<span class="nc" id="L357">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L360">                            return new int[] {</span>
+                                dst[0],
+                                src[1],
+                                dst[2],
+<span class="nc" id="L364">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case COLOR:
+<span class="nc" id="L369">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L372">                            float[] srcHSL = new float[3];</span>
+<span class="nc" id="L373">                            RGBtoHSL(src[0], src[1], src[2], srcHSL);</span>
+<span class="nc" id="L374">                            float[] dstHSL = new float[3];</span>
+<span class="nc" id="L375">                            RGBtoHSL(dst[0], dst[1], dst[2], dstHSL);</span>
+
+<span class="nc" id="L377">                            int[] result = new int[4];</span>
+<span class="nc" id="L378">                            HSLtoRGB(srcHSL[0], srcHSL[1], dstHSL[2], result);</span>
+<span class="nc" id="L379">                            result[3] = Math.min(255, src[3] + dst[3]);</span>
+
+<span class="nc" id="L381">                            return result;</span>
+                        }
+                    };
+                case COLOR_BURN:
+<span class="nc" id="L385">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L388">                            return new int[] {</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                                src[0] == 0 ? 0 :</span>
+<span class="nc" id="L390">                                    Math.max(0, 255 - (((255 - dst[0]) &lt;&lt; 8) / src[0])),</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">                                src[1] == 0 ? 0 :</span>
+<span class="nc" id="L392">                                    Math.max(0, 255 - (((255 - dst[1]) &lt;&lt; 8) / src[1])),</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                                src[2] == 0 ? 0 :</span>
+<span class="nc" id="L394">                                    Math.max(0, 255 - (((255 - dst[2]) &lt;&lt; 8) / src[2])),</span>
+<span class="nc" id="L395">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case COLOR_DODGE:
+<span class="nc" id="L400">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L403">                            return new int[] {</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">                                src[0] == 255 ? 255 :</span>
+<span class="nc" id="L405">                                    Math.min((dst[0] &lt;&lt; 8) / (255 - src[0]), 255),</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">                                src[1] == 255 ? 255 :</span>
+<span class="nc" id="L407">                                    Math.min((dst[1] &lt;&lt; 8) / (255 - src[1]), 255),</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">                                src[2] == 255 ? 255 :</span>
+<span class="nc" id="L409">                                    Math.min((dst[2] &lt;&lt; 8) / (255 - src[2]), 255),</span>
+<span class="nc" id="L410">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case DARKEN:
+<span class="nc" id="L415">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L418">                            return new int[] {</span>
+<span class="nc" id="L419">                                Math.min(src[0], dst[0]),</span>
+<span class="nc" id="L420">                                Math.min(src[1], dst[1]),</span>
+<span class="nc" id="L421">                                Math.min(src[2], dst[2]),</span>
+<span class="nc" id="L422">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case DIFFERENCE:
+<span class="nc" id="L427">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L430">                            return new int[] {</span>
+<span class="nc" id="L431">                                Math.abs(dst[0] - src[0]),</span>
+<span class="nc" id="L432">                                Math.abs(dst[1] - src[1]),</span>
+<span class="nc" id="L433">                                Math.abs(dst[2] - src[2]),</span>
+<span class="nc" id="L434">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case EXCLUSION:
+<span class="nc" id="L439">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L442">                            return new int[] {</span>
+                                dst[0] + src[0] - (dst[0] * src[0] &gt;&gt; 7),
+                                dst[1] + src[1] - (dst[1] * src[1] &gt;&gt; 7),
+                                dst[2] + src[2] - (dst[2] * src[2] &gt;&gt; 7),
+<span class="nc" id="L446">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case FREEZE:
+<span class="nc" id="L451">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L454">                            return new int[] {</span>
+<span class="nc bnc" id="L455" title="All 2 branches missed.">                                src[0] == 0 ? 0 : Math.max(0, 255 - (255 - dst[0]) * (255 - dst[0]) / src[0]),</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">                                src[1] == 0 ? 0 : Math.max(0, 255 - (255 - dst[1]) * (255 - dst[1]) / src[1]),</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">                                src[2] == 0 ? 0 : Math.max(0, 255 - (255 - dst[2]) * (255 - dst[2]) / src[2]),</span>
+<span class="nc" id="L458">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case GLOW:
+<span class="nc" id="L463">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L466">                            return new int[] {</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">                                dst[0] == 255 ? 255 : Math.min(255, src[0] * src[0] / (255 - dst[0])),</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">                                dst[1] == 255 ? 255 : Math.min(255, src[1] * src[1] / (255 - dst[1])),</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">                                dst[2] == 255 ? 255 : Math.min(255, src[2] * src[2] / (255 - dst[2])),</span>
+<span class="nc" id="L470">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case GREEN:
+<span class="nc" id="L475">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L478">                            return new int[] {</span>
+                                dst[0],
+                                dst[1],
+                                src[2],
+<span class="nc" id="L482">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case HARD_LIGHT:
+<span class="nc" id="L487">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L490">                            return new int[] {</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">                                src[0] &lt; 128 ? dst[0] * src[0] &gt;&gt; 7 :</span>
+<span class="nc" id="L492">                                    255 - ((255 - src[0]) * (255 - dst[0]) &gt;&gt; 7),</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">                                src[1] &lt; 128 ? dst[1] * src[1] &gt;&gt; 7 :</span>
+<span class="nc" id="L494">                                    255 - ((255 - src[1]) * (255 - dst[1]) &gt;&gt; 7),</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">                                src[2] &lt; 128 ? dst[2] * src[2] &gt;&gt; 7 :</span>
+<span class="nc" id="L496">                                    255 - ((255 - src[2]) * (255 - dst[2]) &gt;&gt; 7),</span>
+<span class="nc" id="L497">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case HEAT:
+<span class="nc" id="L502">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L505">                            return new int[] {</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                                dst[0] == 0 ? 0 : Math.max(0, 255 - (255 - src[0]) * (255 - src[0]) / dst[0]),</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">                                dst[1] == 0 ? 0 : Math.max(0, 255 - (255 - src[1]) * (255 - src[1]) / dst[1]),</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">                                dst[2] == 0 ? 0 : Math.max(0, 255 - (255 - src[2]) * (255 - src[2]) / dst[2]),</span>
+<span class="nc" id="L509">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case HUE:
+<span class="nc" id="L514">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L517">                            float[] srcHSL = new float[3];</span>
+<span class="nc" id="L518">                            RGBtoHSL(src[0], src[1], src[2], srcHSL);</span>
+<span class="nc" id="L519">                            float[] dstHSL = new float[3];</span>
+<span class="nc" id="L520">                            RGBtoHSL(dst[0], dst[1], dst[2], dstHSL);</span>
+
+<span class="nc" id="L522">                            int[] result = new int[4];</span>
+<span class="nc" id="L523">                            HSLtoRGB(srcHSL[0], dstHSL[1], dstHSL[2], result);</span>
+<span class="nc" id="L524">                            result[3] = Math.min(255, src[3] + dst[3]);</span>
+
+<span class="nc" id="L526">                            return result;</span>
+                        }
+                    };
+                case INVERSE_COLOR_BURN:
+<span class="nc" id="L530">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L533">                            return new int[] {</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">                                dst[0] == 0 ? 0 :</span>
+<span class="nc" id="L535">                                    Math.max(0, 255 - (((255 - src[0]) &lt;&lt; 8) / dst[0])),</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">                                dst[1] == 0 ? 0 :</span>
+<span class="nc" id="L537">                                    Math.max(0, 255 - (((255 - src[1]) &lt;&lt; 8) / dst[1])),</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">                                dst[2] == 0 ? 0 :</span>
+<span class="nc" id="L539">                                    Math.max(0, 255 - (((255 - src[2]) &lt;&lt; 8) / dst[2])),</span>
+<span class="nc" id="L540">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case INVERSE_COLOR_DODGE:
+<span class="nc" id="L545">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L548">                            return new int[] {</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">                                dst[0] == 255 ? 255 :</span>
+<span class="nc" id="L550">                                    Math.min((src[0] &lt;&lt; 8) / (255 - dst[0]), 255),</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">                                dst[1] == 255 ? 255 :</span>
+<span class="nc" id="L552">                                    Math.min((src[1] &lt;&lt; 8) / (255 - dst[1]), 255),</span>
+<span class="nc bnc" id="L553" title="All 2 branches missed.">                                dst[2] == 255 ? 255 :</span>
+<span class="nc" id="L554">                                    Math.min((src[2] &lt;&lt; 8) / (255 - dst[2]), 255),</span>
+<span class="nc" id="L555">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case LIGHTEN:
+<span class="nc" id="L560">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L563">                            return new int[] {</span>
+<span class="nc" id="L564">                                Math.max(src[0], dst[0]),</span>
+<span class="nc" id="L565">                                Math.max(src[1], dst[1]),</span>
+<span class="nc" id="L566">                                Math.max(src[2], dst[2]),</span>
+<span class="nc" id="L567">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case LUMINOSITY:
+<span class="nc" id="L572">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L575">                            float[] srcHSL = new float[3];</span>
+<span class="nc" id="L576">                            RGBtoHSL(src[0], src[1], src[2], srcHSL);</span>
+<span class="nc" id="L577">                            float[] dstHSL = new float[3];</span>
+<span class="nc" id="L578">                            RGBtoHSL(dst[0], dst[1], dst[2], dstHSL);</span>
+
+<span class="nc" id="L580">                            int[] result = new int[4];</span>
+<span class="nc" id="L581">                            HSLtoRGB(dstHSL[0], dstHSL[1], srcHSL[2], result);</span>
+<span class="nc" id="L582">                            result[3] = Math.min(255, src[3] + dst[3]);</span>
+
+<span class="nc" id="L584">                            return result;</span>
+                        }
+                    };
+                case MULTIPLY:
+<span class="nc" id="L588">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L591">                            return new int[] {</span>
+                                (src[0] * dst[0]) &gt;&gt; 8,
+                                (src[1] * dst[1]) &gt;&gt; 8,
+                                (src[2] * dst[2]) &gt;&gt; 8,
+<span class="nc" id="L595">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case NEGATION:
+<span class="nc" id="L600">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L603">                            return new int[] {</span>
+<span class="nc" id="L604">                                255 - Math.abs(255 - dst[0] - src[0]),</span>
+<span class="nc" id="L605">                                255 - Math.abs(255 - dst[1] - src[1]),</span>
+<span class="nc" id="L606">                                255 - Math.abs(255 - dst[2] - src[2]),</span>
+<span class="nc" id="L607">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case OVERLAY:
+<span class="nc" id="L612">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L615">                            return new int[] {</span>
+<span class="nc bnc" id="L616" title="All 2 branches missed.">                                dst[0] &lt; 128 ? dst[0] * src[0] &gt;&gt; 7 :</span>
+<span class="nc" id="L617">                                    255 - ((255 - dst[0]) * (255 - src[0]) &gt;&gt; 7),</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">                                dst[1] &lt; 128 ? dst[1] * src[1] &gt;&gt; 7 :</span>
+<span class="nc" id="L619">                                    255 - ((255 - dst[1]) * (255 - src[1]) &gt;&gt; 7),</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">                                dst[2] &lt; 128 ? dst[2] * src[2] &gt;&gt; 7 :</span>
+<span class="nc" id="L621">                                    255 - ((255 - dst[2]) * (255 - src[2]) &gt;&gt; 7),</span>
+<span class="nc" id="L622">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case RED:
+<span class="nc" id="L627">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L630">                            return new int[] {</span>
+                                src[0],
+                                dst[1],
+                                dst[2],
+<span class="nc" id="L634">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case REFLECT:
+<span class="nc" id="L639">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L642">                            return new int[] {</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">                                src[0] == 255 ? 255 : Math.min(255, dst[0] * dst[0] / (255 - src[0])),</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">                                src[1] == 255 ? 255 : Math.min(255, dst[1] * dst[1] / (255 - src[1])),</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">                                src[2] == 255 ? 255 : Math.min(255, dst[2] * dst[2] / (255 - src[2])),</span>
+<span class="nc" id="L646">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case SATURATION:
+<span class="nc" id="L651">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L654">                            float[] srcHSL = new float[3];</span>
+<span class="nc" id="L655">                            RGBtoHSL(src[0], src[1], src[2], srcHSL);</span>
+<span class="nc" id="L656">                            float[] dstHSL = new float[3];</span>
+<span class="nc" id="L657">                            RGBtoHSL(dst[0], dst[1], dst[2], dstHSL);</span>
+
+<span class="nc" id="L659">                            int[] result = new int[4];</span>
+<span class="nc" id="L660">                            HSLtoRGB(dstHSL[0], srcHSL[1], dstHSL[2], result);</span>
+<span class="nc" id="L661">                            result[3] = Math.min(255, src[3] + dst[3]);</span>
+
+<span class="nc" id="L663">                            return result;</span>
+                        }
+                    };
+                case SCREEN:
+<span class="nc" id="L667">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L670">                            return new int[] {</span>
+                                255 - ((255 - src[0]) * (255 - dst[0]) &gt;&gt; 8),
+                                255 - ((255 - src[1]) * (255 - dst[1]) &gt;&gt; 8),
+                                255 - ((255 - src[2]) * (255 - dst[2]) &gt;&gt; 8),
+<span class="nc" id="L674">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case SOFT_BURN:
+<span class="nc" id="L679">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L682">                            return new int[] {</span>
+<span class="nc bnc" id="L683" title="All 2 branches missed.">                                dst[0] + src[0] &lt; 256 ?</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">	                                (dst[0] == 255 ? 255 :</span>
+<span class="nc" id="L685">                                        Math.min(255, (src[0] &lt;&lt; 7) / (255 - dst[0]))) :</span>
+<span class="nc" id="L686">                                            Math.max(0, 255 - (((255 - dst[0]) &lt;&lt; 7) / src[0])),</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">                                dst[1] + src[1] &lt; 256 ?</span>
+<span class="nc bnc" id="L688" title="All 2 branches missed.">	                                (dst[1] == 255 ? 255 :</span>
+<span class="nc" id="L689">                                        Math.min(255, (src[1] &lt;&lt; 7) / (255 - dst[1]))) :</span>
+<span class="nc" id="L690">                                            Math.max(0, 255 - (((255 - dst[1]) &lt;&lt; 7) / src[1])),</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">                                dst[2] + src[2] &lt; 256 ?</span>
+<span class="nc bnc" id="L692" title="All 2 branches missed.">	                                (dst[2] == 255 ? 255 :</span>
+<span class="nc" id="L693">                                        Math.min(255, (src[2] &lt;&lt; 7) / (255 - dst[2]))) :</span>
+<span class="nc" id="L694">                                            Math.max(0, 255 - (((255 - dst[2]) &lt;&lt; 7) / src[2])),</span>
+<span class="nc" id="L695">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case SOFT_DODGE:
+<span class="nc" id="L700">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L703">                            return new int[] {</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">                                dst[0] + src[0] &lt; 256 ?</span>
+<span class="nc bnc" id="L705" title="All 2 branches missed.">                                    (src[0] == 255 ? 255 :</span>
+<span class="nc" id="L706">                                        Math.min(255, (dst[0] &lt;&lt; 7) / (255 - src[0]))) :</span>
+<span class="nc" id="L707">                                            Math.max(0, 255 - (((255 - src[0]) &lt;&lt; 7) / dst[0])),</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">                                dst[1] + src[1] &lt; 256 ?</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">                                    (src[1] == 255 ? 255 :</span>
+<span class="nc" id="L710">                                        Math.min(255, (dst[1] &lt;&lt; 7) / (255 - src[1]))) :</span>
+<span class="nc" id="L711">                                            Math.max(0, 255 - (((255 - src[1]) &lt;&lt; 7) / dst[1])),</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">                                dst[2] + src[2] &lt; 256 ?</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">                                    (src[2] == 255 ? 255 :</span>
+<span class="nc" id="L714">                                        Math.min(255, (dst[2] &lt;&lt; 7) / (255 - src[2]))) :</span>
+<span class="nc" id="L715">                                            Math.max(0, 255 - (((255 - src[2]) &lt;&lt; 7) / dst[2])),</span>
+<span class="nc" id="L716">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case SOFT_LIGHT:
+<span class="nc" id="L721">                    break;</span>
+                case STAMP:
+<span class="nc" id="L723">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L726">                            return new int[] {</span>
+<span class="nc" id="L727">                                Math.max(0, Math.min(255, dst[0] + 2 * src[0] - 256)),</span>
+<span class="nc" id="L728">                                Math.max(0, Math.min(255, dst[1] + 2 * src[1] - 256)),</span>
+<span class="nc" id="L729">                                Math.max(0, Math.min(255, dst[2] + 2 * src[2] - 256)),</span>
+<span class="nc" id="L730">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+                case SUBTRACT:
+<span class="nc" id="L735">                    return new Blender() {</span>
+                        @Override
+                        public int[] blend(int[] src, int[] dst) {
+<span class="nc" id="L738">                            return new int[] {</span>
+<span class="nc" id="L739">                                Math.max(0, src[0] + dst[0] - 256),</span>
+<span class="nc" id="L740">                                Math.max(0, src[1] + dst[1] - 256),</span>
+<span class="nc" id="L741">                                Math.max(0, src[2] + dst[2] - 256),</span>
+<span class="nc" id="L742">                                Math.min(255, src[3] + dst[3])</span>
+                            };
+                        }
+                    };
+            }
+<span class="nc" id="L747">            throw new IllegalArgumentException(&quot;Blender not implement for &quot; +</span>
+<span class="nc" id="L748">                                               composite.getMode().name());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

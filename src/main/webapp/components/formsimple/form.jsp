@@ -301,7 +301,8 @@ PageParams pageParams = new PageParams(request);
 
 String json = pageParams.getValue("editorData", "W10=");
 //System.out.println("---------- DECODED: "+URLDecoder.decode(StringUtils.newStringUtf8(Base64.decodeBase64(json)), "UTF-8"));
-JSONArray itemsList = new JSONArray(URLDecoder.decode(StringUtils.newStringUtf8(Base64.decodeBase64(json)), "UTF-8"));
+String jsonDecoded = URLDecoder.decode(StringUtils.newStringUtf8(Base64.decodeBase64(json)), "UTF-8");
+JSONArray itemsList = new JSONArray(jsonDecoded);
 
 String formName = sanitizeFieldId(pageParams.getValue("formName", ""));
 
@@ -345,6 +346,8 @@ Set<String> firstTimeHeadingSet = new HashSet<String>();
 out.print(replaceFields(prop.getText("components.formsimple.form.start"), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
 if (rowView) out.println("<div class=\"row\">");
 
+
+boolean containsWysiwyg = false;
 for(int i = 0; i < itemsList.length(); i++)
 {
     JSONObject item = itemsList.getJSONObject(i);
@@ -360,6 +363,7 @@ for(int i = 0; i < itemsList.length(); i++)
     }
 
     String html = replaceFields(input, formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop);
+    if (html.contains("formsimple-wysiwyg")) containsWysiwyg = true;
     if (html.contains("!INCLUDE"))
     {
         %><iwcm:write><%=html%></iwcm:write><%
@@ -377,5 +381,22 @@ if (isEmailRender)
 {
     if(attributes.get("emailTextAfter") != null) out.print("<br/>"+ResponseUtils.filter(attributes.get("emailTextAfter")).replaceAll("\\n", "<br/>")+"<br/>");
     out.print("<!-- formmail crop form end -->");
+} else {
+   if (containsWysiwyg) {
+      %>
+         <%@include file="/components/_common/cleditor/jquery.cleditor.js.jsp" %>
+         <script type="text/javascript">
+			$(document).ready(function() {
+				window.setTimeout(function() {
+               $("textarea.formsimple-wysiwyg").cleditor({
+                  width      : "100%",
+                  controls   : "bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext",
+                  bodyStyle  : "font: 11px  Arial, Helvetica, sans-serif;"
+               });
+            }, 1000);
+			});
+         </script>
+      <%
+   }
 }
 %>

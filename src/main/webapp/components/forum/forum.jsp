@@ -1,5 +1,5 @@
 <%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -25,6 +25,16 @@
 
 	if(docId == 0)
 		return;
+
+	//disable forum for blog main page
+	if (pageParams.getBooleanValue("isBlog", false)==true)
+	{
+		DocDetails doc = (DocDetails)request.getAttribute("docDetailsOriginal");
+		if (doc == null) doc = (DocDetails)request.getAttribute("docDetails");
+		GroupDetails group = (GroupDetails)request.getAttribute("pageGroupDetails");
+		//out.println(group.getDefaultDocId() + " " + doc.getDocId());
+		if (group != null && doc != null && group.getDefaultDocId()==doc.getDocId()) return;
+	}
 
 	boolean isAjaxCall = request.getAttribute("docDetails")==null;
 	if(isAjaxCall)

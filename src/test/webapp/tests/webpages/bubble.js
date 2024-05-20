@@ -6,6 +6,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('editacia kde nie su listy - najskor editor', async ({I, DTE, DT}) => {
+    I.relogin("admin");
     I.amOnPage("/admin/v9/webpages/media/");
     DT.filter("mediaLink", "/files/cennik.pdf");
 

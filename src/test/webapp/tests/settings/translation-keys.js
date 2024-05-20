@@ -25,6 +25,7 @@ Scenario('zakladne testy', async ({ I, DataTables }) =>{
             I.fillField('#DTE_Field_fieldB', value2);
             I.fillField('#DTE_Field_fieldC', value3);
         },
+        skipSwitchDomain: true
     });
     testingData = options.testingData;
 });

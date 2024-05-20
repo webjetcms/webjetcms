@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestDump.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.helpers</a> &gt; <span class="el_source">RequestDump.java</span></div><h1>RequestDump.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.helpers;
+
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+
+/**
+ *  RequestDump.java
+ *
+ *		Serves ar {@link HttpServletRequest}.toString()
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 7.4.2011 16:00:54
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class RequestDump
+{
+	HttpServletRequest request;
+	private String lineSeparator;
+	
+	public RequestDump(HttpServletRequest request)
+<span class="nc" id="L31">	{</span>
+<span class="nc" id="L32">		this.request = request;</span>
+<span class="nc" id="L33">	}</span>
+	
+	
+	public String printParameters()
+	{
+<span class="nc" id="L38">		StringBuilder message = new StringBuilder();</span>
+<span class="nc" id="L39">		message.append(&quot;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		for (Object paramAsObject : request.getParameterMap().keySet())</span>
+<span class="nc" id="L41">			message.</span>
+<span class="nc" id="L42">				append(&quot;&lt;li&gt;&quot;).</span>
+<span class="nc" id="L43">				append(paramAsObject).</span>
+<span class="nc" id="L44">				append('=').</span>
+<span class="nc" id="L45">				append(request.getParameter(paramAsObject.toString())).</span>
+<span class="nc" id="L46">				append(&quot;&lt;/li&gt;&quot;);</span>
+		
+<span class="nc" id="L48">		message.append(&quot;&lt;/ul&gt;&quot;);</span>
+<span class="nc" id="L49">		return message.toString();</span>
+	}
+	
+	public String printAttributes()
+	{
+<span class="nc" id="L54">		StringBuilder message = new StringBuilder();</span>
+<span class="nc" id="L55">		message.append(&quot;&lt;ul&gt;&quot;);</span>
+<span class="nc" id="L56">		Enumeration&lt;String&gt; attributes = request.getAttributeNames();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		while(attributes.hasMoreElements())</span>
+		{
+<span class="nc" id="L59">			String attribute = attributes.nextElement();</span>
+<span class="nc" id="L60">			message.</span>
+<span class="nc" id="L61">				append(&quot;&lt;li&gt;&quot;).</span>
+<span class="nc" id="L62">				append(attribute).</span>
+<span class="nc" id="L63">				append('=').</span>
+<span class="nc" id="L64">				append(request.getAttribute(attribute)).</span>
+<span class="nc" id="L65">				append(&quot;&lt;/li&gt;&quot;);</span>
+<span class="nc" id="L66">		}</span>
+<span class="nc" id="L67">		message.append(&quot;&lt;/ul&gt;&quot;);</span>
+<span class="nc" id="L68">		return message.toString();</span>
+	}
+	
+	public String completeRequestReport()
+	{
+<span class="nc" id="L73">		lineSeparator = &quot;\n&quot;;</span>
+<span class="nc" id="L74">		return createReport();</span>
+	}
+	
+	public String completeRequestReportAsHtml()
+	{
+<span class="nc" id="L79">		lineSeparator = &quot;&lt;br /&gt;&quot;;</span>
+<span class="nc" id="L80">		return createReport();</span>
+	}
+
+	private String createReport()
+	{
+<span class="nc" id="L85">		StringBuilder report = new StringBuilder();</span>
+<span class="nc" id="L86">		appendPathInfoTo(report);</span>
+<span class="nc" id="L87">		appendUserInfoTo(report);</span>
+<span class="nc" id="L88">		appendHeadersTo(report);</span>
+<span class="nc" id="L89">		appendParametersTo(report);</span>
+<span class="nc" id="L90">		appendAttributesTo(report);</span>
+<span class="nc" id="L91">		appendSessionAttributesTo(report);</span>
+<span class="nc" id="L92">		return report.toString();</span>
+	}
+
+	private void appendPathInfoTo(StringBuilder report)
+	{
+<span class="nc" id="L97">		report.append(Tools.getRequestedLink(request)).append(lineSeparator);</span>
+<span class="nc" id="L98">	}</span>
+
+	private void appendUserInfoTo(StringBuilder report)
+	{
+<span class="nc" id="L102">		Identity user = new RequestHelper(request).getUser();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (user == null)</span>
+<span class="nc" id="L104">			report.append(lineSeparator).append(&quot;User not logged in&quot;).append(lineSeparator);</span>
+		else
+<span class="nc" id="L106">			report.append(lineSeparator).append(&quot;User: &quot;).append(user).append(lineSeparator);</span>
+<span class="nc" id="L107">	}</span>
+
+	private void appendHeadersTo(StringBuilder report)
+	{
+<span class="nc" id="L111">		List&lt;String&gt; headerNames = Collections.list(request.getHeaderNames());</span>
+<span class="nc" id="L112">		report.append(lineSeparator).append(&quot;Request headers: &quot;).append(lineSeparator);</span>
+		
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		for (String header : headerNames)</span>
+<span class="nc" id="L115">			report.append(header).append(&quot; = &quot;).append(request.getHeader(header)).append(lineSeparator);</span>
+<span class="nc" id="L116">	}</span>
+
+	private void appendParametersTo(StringBuilder report)
+	{
+<span class="nc" id="L120">		List&lt;String&gt; parameterNames = Collections.list(request.getParameterNames());</span>
+<span class="nc" id="L121">		report.append(lineSeparator).append(&quot;Request parameters: &quot;).append(lineSeparator);</span>
+		
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		for (String parameterName : parameterNames)</span>
+<span class="nc" id="L124">			report.append(parameterName).append(&quot; = &quot;).append(request.getParameter(parameterName)).append(lineSeparator);</span>
+<span class="nc" id="L125">	}</span>
+
+	private void appendAttributesTo(StringBuilder report)
+	{
+<span class="nc" id="L129">		List&lt;String&gt; attributeNames = Collections.list(request.getAttributeNames());</span>
+<span class="nc" id="L130">		report.append(lineSeparator).append(&quot;Request attributes: &quot;).append(lineSeparator);</span>
+		
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		for (String attributeName : attributeNames)</span>
+<span class="nc" id="L133">			report.append(attributeName).append(&quot; = &quot;).append(request.getAttribute(attributeName)).append(lineSeparator);</span>
+<span class="nc" id="L134">	}</span>
+
+	private void appendSessionAttributesTo(StringBuilder report)
+	{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if(request.getSession() == null) return;</span>
+<span class="nc" id="L139">		List&lt;String&gt; attributeNames = Collections.list(request.getSession().getAttributeNames());</span>
+<span class="nc" id="L140">		report.append(lineSeparator).append(&quot;Session attributes: &quot;).append(lineSeparator);</span>
+		
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		for (String attributeName : attributeNames)</span>
+<span class="nc" id="L143">			report.append(attributeName).append(&quot; = &quot;).append(request.getSession().getAttribute(attributeName)).append(lineSeparator);</span>
+<span class="nc" id="L144">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

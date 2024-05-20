@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GdprModule.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr</a> &gt; <span class="el_source">GdprModule.java</span></div><h1>GdprModule.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.gdpr.model.DocumentsDB;
+import sk.iway.iwcm.components.gdpr.model.FormsDB;
+import sk.iway.iwcm.components.gdpr.model.ForumDB;
+import sk.iway.iwcm.components.gdpr.model.GdprDB;
+import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
+import sk.iway.iwcm.components.gdpr.model.QuestionsAnswersDB;
+import sk.iway.iwcm.i18n.Prop;
+
+<span class="fc" id="L20">public enum GdprModule {</span>
+<span class="fc" id="L21">    WEB_STRANKY,</span>
+<span class="fc" id="L22">    FORMULARE,</span>
+<span class="fc" id="L23">    QA,</span>
+<span class="fc" id="L24">    FORUM;</span>
+
+    @Override
+    public String toString() {
+<span class="pc bpc" id="L28" title="3 of 4 branches missed.">        String lng = (SetCharacterEncodingFilter.getCurrentRequestBean() != null &amp;&amp; SetCharacterEncodingFilter.getCurrentRequestBean().getLng() != null) ? SetCharacterEncodingFilter.getCurrentRequestBean().getLng() : &quot;sk&quot;;</span>
+<span class="fc" id="L29">        Prop prop = Prop.getInstance(lng);</span>
+<span class="fc" id="L30">        return prop.getText(&quot;components.gdpr.module.&quot;+this.name().toLowerCase());</span>
+    }
+
+    public String getDisabledItemName() {
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (this.equals(WEB_STRANKY)) {</span>
+<span class="nc" id="L35">            return &quot;menuWebpages&quot;;</span>
+        }
+
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (this.equals(FORMULARE)) {</span>
+<span class="nc" id="L39">            return &quot;cmp_form&quot;;</span>
+        }
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (this.equals(QA)) {</span>
+<span class="nc" id="L43">            return &quot;menuQa&quot;;</span>
+        }
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (this.equals(FORUM)) {</span>
+<span class="nc" id="L47">            return &quot;cmp_diskusia&quot;;</span>
+        }
+
+<span class="nc" id="L50">        throw new IllegalArgumentException(&quot;No Disabled Item Name for GdprModule &quot; + this.name());</span>
+    }
+
+    public GdprDB getDB() {
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (this.equals(WEB_STRANKY)) {</span>
+<span class="fc" id="L55">            return DocumentsDB.getInstance();</span>
+        }
+
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (this.equals(FORMULARE)) {</span>
+<span class="fc" id="L59">            return FormsDB.getInstance();</span>
+        }
+
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (this.equals(QA)) {</span>
+<span class="fc" id="L63">            return QuestionsAnswersDB.getInstance();</span>
+        }
+
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (this.equals(FORUM)) {</span>
+<span class="fc" id="L67">            return ForumDB.getInstance();</span>
+        }
+
+<span class="nc" id="L70">        throw new IllegalArgumentException(&quot;No DB class for GdprModule &quot; + this.name());</span>
+    }
+
+    public static String getText(List&lt;GdprRegExpBean&gt; regexps, List&lt;String&gt; texts) {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        int prepend = Constants.getInt(&quot;gdprPrependCharacters&quot;) != -1 ? Constants.getInt(&quot;gdprPrependCharacters&quot;) : 30;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        int append = Constants.getInt(&quot;gdprAppendCharacters&quot;) != -1 ? Constants.getInt(&quot;gdprAppendCharacters&quot;) : 30;</span>
+<span class="fc" id="L76">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="fc" id="L78">        int wordBegin = -1;</span>
+<span class="fc" id="L79">        int wordEnd = -1;</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (GdprRegExpBean regexp : regexps) {</span>
+
+//            if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Tools.isNotEmpty(regexp) &amp;&amp; regexp.length() &gt; 4)
+//                regexp = regexp.substring(2,regexp.length()-2);
+
+<span class="fc" id="L86">            Pattern pattern = Pattern.compile(regexp.getRegexpValue(), Pattern.CASE_INSENSITIVE);</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            for (String text : texts) {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">                if (Tools.isEmpty(text)) {</span>
+<span class="fc" id="L90">                    continue;</span>
+                }
+
+<span class="fc" id="L93">                Matcher matcher = pattern.matcher(text);</span>
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                while (matcher.find()) {</span>
+<span class="fc" id="L96">                    wordBegin = matcher.start();</span>
+<span class="fc" id="L97">                    int start = wordBegin - prepend;</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                    if (start &lt; 0) {</span>
+<span class="fc" id="L99">                        start = 0;</span>
+                    }
+
+<span class="fc" id="L102">                    wordEnd = matcher.end();</span>
+                   // wordEnd += append;
+<span class="fc" id="L104">                    int end = wordEnd + append ;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">                    if (end &gt; text.length()) {</span>
+<span class="fc" id="L106">                        end = text.length();</span>
+                    }
+
+<span class="pc bpc" id="L109" title="1 of 4 branches missed.">                    if(wordEnd &gt; wordBegin &amp;&amp; wordBegin &gt; 0)</span>
+                    {
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                        if (start &gt; 0)</span>
+                        {
+<span class="fc" id="L113">                            sb.append(&quot;...&quot;);</span>
+                        }
+
+                        //sb.append(text.substring(start, end));
+<span class="fc" id="L117">                        sb.append(ResponseUtils.filter(text.substring(start, wordBegin )));</span>
+<span class="fc" id="L118">                        sb.append(&quot;&lt;span title=\&quot;&quot;).append(regexp.getRegexpName()).append(&quot;\&quot; class=\&quot;yellow_color\&quot;&gt;&quot;).append(ResponseUtils.filter(text.substring(wordBegin , wordEnd)));</span>
+<span class="fc" id="L119">                        sb.append(&quot;&lt;/span&gt;&quot;).append(ResponseUtils.filter(text.substring(wordEnd, end)));</span>
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                        if (end &lt; text.length())</span>
+                        {
+<span class="fc" id="L123">                            sb.append(&quot;...&lt;br&gt;&quot;);</span>
+                        }
+                    }
+<span class="fc" id="L126">                }</span>
+<span class="fc" id="L127">            }</span>
+<span class="fc" id="L128">        }</span>
+
+<span class="fc" id="L130">        return sb.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

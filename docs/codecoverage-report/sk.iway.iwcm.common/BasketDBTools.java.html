@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketDBTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">BasketDBTools.java</span></div><h1>BasketDBTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+
+<span class="nc" id="L10">public class BasketDBTools {</span>
+
+    /**
+     * Funkcia vrati z requestu zobrazovanu menu, ak sa v requeste nenachadza, vrati default z Constants.getString(&quot;basketDisplayCurrency&quot;)
+     * v pripade cloudu kontroluje nastavenia root grupy fieldC az potom berie basketDisplayCurrency
+     * @param request
+     * @return
+     */
+    public static String getDisplayCurrency(HttpServletRequest request)
+    {
+<span class="nc" id="L20">        String curr = &quot;&quot;;</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">        if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+        {
+<span class="nc" id="L23">            int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
+<span class="nc" id="L24">            GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+
+<span class="nc bnc" id="L26" title="All 4 branches missed.">            if (rootGroup != null &amp;&amp; Tools.isNotEmpty(rootGroup.getFieldC()))</span>
+            {
+<span class="nc" id="L28">                curr = CloudToolsForCore.getValue(rootGroup.getFieldC(), &quot;curr&quot;);</span>
+            }
+<span class="nc bnc" id="L30" title="All 2 branches missed.">            if (Tools.isEmpty(curr)) curr = Constants.getString(&quot;basketDisplayCurrency&quot;);</span>
+<span class="nc" id="L31">        }</span>
+        else
+        {
+
+<span class="nc" id="L35">            String reqCurr = (String)request.getAttribute(&quot;displayCurrency&quot;);</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            if (Tools.isNotEmpty(reqCurr))</span>
+<span class="nc" id="L37">                return reqCurr;</span>
+
+<span class="nc" id="L39">            curr = Constants.getString(&quot;basketDisplayCurrency&quot;);</span>
+        }
+<span class="nc" id="L41">        return curr;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

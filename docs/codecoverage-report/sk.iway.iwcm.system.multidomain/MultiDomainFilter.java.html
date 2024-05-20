@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultiDomainFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.multidomain</a> &gt; <span class="el_source">MultiDomainFilter.java</span></div><h1>MultiDomainFilter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.multidomain;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Hashtable;
+import java.util.Map;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.io.FileCache;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  MultiDomainFilter.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.11 $
+ *@created      Date: 24.10.2008 13:48:14
+ *@modified     $Date: 2010/01/26 14:09:53 $
+ */
+<span class="nc" id="L38">public class MultiDomainFilter implements Filter</span>
+{
+<span class="fc" id="L40">	private static Map&lt;String, String&gt; domainMapping = null;</span>
+<span class="fc" id="L41">	private static String[] MULTI_DIRS_LAZY = null; //NOSONAR</span>
+
+	@Override
+	public void init(FilterConfig config) throws ServletException
+	{
+		//
+<span class="nc" id="L47">	}</span>
+
+	public static String[] getMultiDirs()
+	{
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (MULTI_DIRS_LAZY == null)</span>
+		{
+<span class="nc" id="L53">			MULTI_DIRS_LAZY = Constants.getString(&quot;multiDomainFolders&quot;).split(&quot;,&quot;);</span>
+		}
+		//toto tu kvoli performance nechcem - return MULTI_DIRS_LAZY == null ? null : MULTI_DIRS_LAZY.clone();
+<span class="nc" id="L56">		return MULTI_DIRS_LAZY;</span>
+	}
+
+	/**
+	 * Vykona premapovanie suboru na domenovu verziu, napr. http://interway.sk/images/logo.gif zmeni na http://interway.sk/images/interway/logo.gif
+	 */
+	 @Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+	{
+<span class="nc" id="L65">      HttpServletRequest req = (HttpServletRequest)request;</span>
+<span class="nc" id="L66">      String path = req.getRequestURI();</span>
+
+<span class="nc" id="L68">      String domainAlias = getDomainAlias(DocDB.getDomain(req));</span>
+<span class="nc" id="L69">      String rewrite = rewriteUrlToLocal(path, domainAlias);</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">      if (path.startsWith(&quot;/files/&quot;)==false)</span>
+	   {
+      	//test pre VUB
+<span class="nc" id="L74">         boolean useDbStorage = IwcmFsDB.useDBStorage(rewrite);</span>
+<span class="nc" id="L75">         Integer fatId = null;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">         if (useDbStorage) fatId = IwcmFsDB.getFatIdTable().get(rewrite);</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">         if (useDbStorage &amp;&amp; fatId != null)// ak existuje v storage</span>
+   		{
+<span class="nc" id="L79">   			String mimeType = Constants.getServletContext().getMimeType(rewrite.toLowerCase());</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">   			if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="nc" id="L81">   			response.setContentType(mimeType);</span>
+
+<span class="nc" id="L83">            PathFilter.setDownloadHeaders(rewrite, req, (HttpServletResponse)response);</span>
+<span class="nc" id="L84">   			PathFilter.setStaticContentHeaders(rewrite, UsersDB.getCurrentUser(req), req, (HttpServletResponse)response);</span>
+
+<span class="nc" id="L86">   			byte[] data = null;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">   			if (FileCache.useFileCache()) data = FileCache.getObject(rewrite, fatId.intValue());</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">   			if (data != null)</span>
+   			{
+<span class="nc" id="L90">   				response.setContentLength(data.length);</span>
+
+<span class="nc" id="L92">   				 OutputStream out=response.getOutputStream();</span>
+<span class="nc" id="L93">   				 out.write(data);</span>
+<span class="nc" id="L94">   				 out.flush();</span>
+<span class="nc" id="L95">   				 out.close();</span>
+<span class="nc" id="L96">   			}</span>
+   			else
+   			{
+<span class="nc" id="L99">   				File file = new File(Tools.getRealPath(rewrite));</span>
+
+<span class="nc" id="L101">   				IwcmFile iwcmFile = new IwcmFile(file);</span>
+
+<span class="nc" id="L103">   				response.setContentLength((int)iwcmFile.length());</span>
+
+<span class="nc" id="L105">   				data = IwcmFsDB.writeFileToOutputStream(file, response.getOutputStream());</span>
+<span class="nc bnc" id="L106" title="All 4 branches missed.">   				if (data.length &gt; 0 &amp;&amp; FileCache.useFileCache())</span>
+   				{
+<span class="nc" id="L108">   					FileCache.setObject(rewrite, data);</span>
+   				}
+   			}
+
+<span class="nc" id="L112">   			return;</span>
+   		}
+ 	   }
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">      if (path.startsWith(&quot;/images/gallery/user/&quot;))</span>
+      {
+      	//otestuj ci existuje rewrite subor (pretoze defaultne sa user fotka nahrava do /images/gallery/user bez ohladu na domenu)
+<span class="nc" id="L119">      	IwcmFile f = new IwcmFile(Tools.getRealPath(rewrite));</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">      	if (f.exists()==false)</span>
+      	{
+<span class="nc" id="L122">      		rewrite = path;</span>
+      	}
+      }
+
+<span class="nc bnc" id="L126" title="All 4 branches missed.">   	if (Tools.isNotEmpty(domainAlias) &amp;&amp; path.equals(rewrite)==false)</span>
+   	{
+      	//Logger.debug(MultiDomainFilter.class, &quot;rewrite=&quot;+rewrite);
+
+<span class="nc" id="L130">      	WrappedRequest wRequest = new WrappedRequest(req, rewrite);</span>
+
+         //wRequest.getRequestDispatcher(wRequest.getServletPath()).forward(wRequest, response);
+<span class="nc" id="L133">         chain.doFilter(wRequest, response);</span>
+
+<span class="nc" id="L135">         return;</span>
+   	}
+<span class="nc" id="L137">     	chain.doFilter(request, response);</span>
+<span class="nc" id="L138">	}</span>
+
+	@Override
+	public void destroy() {
+		//
+<span class="nc" id="L143">	}</span>
+
+
+	/**
+	 * Prepise URL na cestu k lokalnemu suboru (alebo ponech tak, ak to nie je multidomain)
+	 * @param path
+	 * @param req
+	 * @return
+	 */
+	public static String rewriteUrlToLocal(String path, HttpServletRequest req)
+	{
+<span class="nc" id="L154">		return rewriteUrlToLocal(path, getDomainAlias(DocDB.getDomain(req)));</span>
+	}
+
+	/**
+	 * Prepise URL na cestu k lokalnemu suboru (alebo ponech tak, ak to nie je multidomain)
+	 * @param path
+	 * @param domainAlias
+	 * @return
+	 */
+	public static String rewriteUrlToLocal(String path, String domainAlias)
+	{
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(domainAlias))</span>
+   	{
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			for (String dir : getMultiDirs())</span>
+	      {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		      if (path.startsWith(&quot;/&quot;+dir+&quot;/&quot;))</span>
+		      {
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		      	if (path.startsWith(&quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;)==false &amp;&amp; path.startsWith(&quot;/&quot;+dir))</span>
+	      		{
+<span class="nc" id="L173">		      		return &quot;/&quot;+dir+&quot;/&quot;+domainAlias+path.substring(dir.length()+1);</span>
+	      		}
+
+		      }
+	      }
+   	}
+<span class="fc" id="L179">		return path;</span>
+	}
+
+	/**
+	 * Prepise URL v zadanom texte na vonkajsie hodnoty (bez domain aliasov)
+	 * @param text
+	 * @param request
+	 * @return
+	 */
+	public static String fixDomainPaths(String text, HttpServletRequest request)
+	{
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">		if (Tools.isEmpty(text)) return text;</span>
+
+<span class="fc" id="L192">		String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(domainAlias))</span>
+		{
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			for (String dir : getMultiDirs())</span>
+			{
+<span class="nc" id="L197">				text = Tools.replace(text, &quot;\&quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;\&quot;/&quot;+dir+&quot;/&quot;);</span>
+<span class="nc" id="L198">				text = Tools.replace(text, &quot;'/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;'/&quot;+dir+&quot;/&quot;);</span>
+<span class="nc" id="L199">				text = Tools.replace(text, &quot;(/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;(/&quot;+dir+&quot;/&quot;);</span>
+
+				//toto akceptuje len String so zaciatocnym URL (chcem replace URL)
+<span class="nc bnc" id="L202" title="All 2 branches missed.">				if (text.startsWith(&quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;))</span>
+				{
+<span class="nc" id="L204">					text = Tools.replace(text, &quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;/&quot;+dir+&quot;/&quot;);</span>
+				}
+			}
+		}
+<span class="fc" id="L208">		return text;</span>
+	}
+
+	/**
+	 * Prepise URL v zadanom texte na vonkajsie hodnoty (bez domain aliasov)
+	 * @param text
+	 * @param request
+	 * @return
+	 */
+	public static StringBuilder fixDomainPaths(StringBuilder text, HttpServletRequest request)
+	{
+<span class="fc bfc" id="L219" title="All 2 branches covered.">		if (Tools.isEmpty(text)) return text;</span>
+
+<span class="fc" id="L221">		String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(domainAlias))</span>
+		{
+<span class="nc bnc" id="L224" title="All 2 branches missed.">			for (String dir : getMultiDirs())</span>
+			{
+<span class="nc" id="L226">				text = Tools.replace(text, &quot;\&quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;\&quot;/&quot;+dir+&quot;/&quot;);</span>
+<span class="nc" id="L227">				text = Tools.replace(text, &quot;'/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;'/&quot;+dir+&quot;/&quot;);</span>
+<span class="nc" id="L228">				text = Tools.replace(text, &quot;(/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;(/&quot;+dir+&quot;/&quot;);</span>
+
+				//toto akceptuje len String so zaciatocnym URL (chcem replace URL)
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if (text.toString().startsWith(&quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;))</span>
+				{
+<span class="nc" id="L233">					text = Tools.replace(text, &quot;/&quot;+dir+&quot;/&quot;+domainAlias+&quot;/&quot;, &quot;/&quot;+dir+&quot;/&quot;);</span>
+				}
+			}
+		}
+<span class="fc" id="L237">		return text;</span>
+	}
+
+	/**
+	 * Vrati alias pre zadanu domenu (aby sa pri vyvoji dali ukladat obrazky do adresarov)
+	 * aliasy su v konfiguracii ako kluc domainAlias:DOMENA
+	 * @param domain
+	 * @return
+	 */
+	public static String getDomainAlias(String domain)
+	{
+<span class="fc bfc" id="L248" title="All 2 branches covered.">		if (domainMapping == null)</span>
+		{
+<span class="fc" id="L250">			domainMapping = new Hashtable&lt;&gt;();</span>
+		}
+<span class="fc" id="L252">		String alias = domainMapping.get(domain);</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">		if (alias == null)</span>
+		{
+<span class="fc" id="L255">			alias = Constants.getString(&quot;multiDomainAlias:&quot;+domain);</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">			if (alias == null) alias = &quot;&quot;;</span>
+<span class="fc" id="L257">			domainMapping.put(domain, alias);</span>
+		}
+<span class="fc" id="L259">		return alias;</span>
+	}
+
+	/**
+	 * Vymaze hash tabulku aliasov (pri zmene konfiguracie)
+	 */
+	public static void clearDomainAlias()
+	{
+<span class="nc" id="L267">		domainMapping = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L268">	}</span>
+
+<span class="nc" id="L270">	public static void clearDomainFolders() { MULTI_DIRS_LAZY = null; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -29,7 +29,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
 @RequestMapping("/admin/rest/stat/top")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat|cmp_abtesting')")
 @Datatable
 public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
     private static final int MAX_SIZE = 100;

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsonObjectGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.json</a> &gt; <span class="el_source">JsonObjectGenerator.java</span></div><h1>JsonObjectGenerator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.json;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.utils.Pair;
+
+/**
+ * Zjednodusuje generovanie zlozitejsich Json objektov
+ *
+ *
+ * @author mbocko
+ *
+ */
+<span class="nc" id="L24">public class JsonObjectGenerator</span>
+{
+
+	private ObjectFormaterFactory formatFactory;
+
+	public JsonObjectGenerator setObjectFormaterFactory(ObjectFormaterFactory factory)
+	{
+<span class="nc" id="L31">		this.formatFactory = factory;</span>
+<span class="nc" id="L32">		return this;</span>
+	}
+
+
+	public JsonObjectGenerator addObject(JSONObject json, String objectName, Object bean, String attrs)
+	{
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		if (bean!=null)</span>
+		{
+<span class="nc bnc" id="L40" title="All 2 branches missed.">			if (bean instanceof Collection)</span>
+			{
+<span class="nc" id="L42">				return addArrayOfObjects(json, objectName, (Collection&lt;?&gt;)bean, attrs);</span>
+			}
+<span class="nc" id="L44">			JSONObject jsonObj = new JSONObject();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			if (Tools.isEmpty(attrs))</span>
+			{
+				//chcem vlozit objekt ako celok
+				try
+				{
+<span class="nc" id="L50">					putToObjectRecursive(json, objectName, formatFactory.format(bean));</span>
+				}
+<span class="nc" id="L52">				catch (JSONException e){	sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L53">				return this;</span>
+			}
+<span class="nc" id="L55">			Pair&lt;String,String&gt;[] attributes = parseTokens(attrs);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">			for (Pair&lt;String,String&gt;attribute : attributes)</span>
+			{
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				if (attribute.first.contains(&quot;{&quot;))</span>
+				{
+<span class="nc" id="L61">					String attrName = attribute.first.substring(0,attribute.first.indexOf(&quot;{&quot;));</span>
+					try
+					{
+<span class="nc" id="L64">						Object propertyValue = PropertyUtils.getProperty(bean, attrName);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">						if (propertyValue!=null)</span>
+						{
+<span class="nc bnc" id="L67" title="All 2 branches missed.">							if (propertyValue instanceof Collection)</span>
+							{
+<span class="nc" id="L69">								String collectionItemAttributes = attribute.first.substring(attribute.first.indexOf(&quot;{&quot;)+1,attribute.first.lastIndexOf(&quot;}&quot;));</span>
+<span class="nc" id="L70">								addArrayOfObjects(jsonObj, attrName, (Collection&lt;?&gt;)propertyValue, collectionItemAttributes);</span>
+<span class="nc" id="L71">							}</span>
+							else
+							{
+<span class="nc" id="L74">								String itemAttributes = attribute.first.substring(attribute.first.indexOf(&quot;{&quot;)+1,attribute.first.lastIndexOf(&quot;}&quot;));</span>
+<span class="nc" id="L75">								addObject(jsonObj, attrName, propertyValue, itemAttributes);</span>
+							}
+						}
+					}
+<span class="nc" id="L79">					catch (IllegalAccessException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L80">					catch (InvocationTargetException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L81">					catch (NoSuchMethodException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L82">				}</span>
+				else
+				{
+					try
+					{
+<span class="nc" id="L87">						Object propertyValue = PropertyUtils.getProperty(bean, attribute.first);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">						if (propertyValue!=null)</span>
+						{
+
+<span class="nc" id="L91">							jsonObj.put(attribute.second, formatFactory.format(propertyValue));</span>
+						}
+					}
+<span class="nc" id="L94">					catch (IllegalAccessException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L95">					catch (InvocationTargetException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L96">					catch (NoSuchMethodException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L97">					catch (JSONException e) {sk.iway.iwcm.Logger.error(e);}</span>
+				}
+			}
+			try
+			{
+<span class="nc" id="L102">				putToObjectRecursive(json, objectName, jsonObj);</span>
+			}
+<span class="nc" id="L104">			catch (JSONException e)</span>
+			{
+<span class="nc" id="L106">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L107">			}</span>
+		}
+<span class="nc" id="L109">		return this;</span>
+	}
+
+	private void putToObjectRecursive(JSONObject json, String objectName, Object objectToInsert) throws JSONException
+	{
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (objectName.indexOf(&quot;.&quot;)!=-1)</span>
+		{
+<span class="nc" id="L116">			String key = objectName.substring(0, objectName.indexOf(&quot;.&quot;));</span>
+<span class="nc" id="L117">			JSONObject parentJson = null;</span>
+			try
+			{
+<span class="nc" id="L120">				parentJson = json.getJSONObject(key);</span>
+			}
+<span class="nc" id="L122">			catch(JSONException e)</span>
+<span class="nc" id="L123">			{}</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (parentJson==null)</span>
+			{
+<span class="nc" id="L126">				parentJson = new JSONObject();</span>
+<span class="nc" id="L127">				json.put(key, parentJson);</span>
+			}
+<span class="nc" id="L129">			putToObjectRecursive(parentJson, Tools.replace(objectName, key+&quot;.&quot;, &quot;&quot;), objectToInsert);</span>
+<span class="nc" id="L130">		}</span>
+		else
+		{
+<span class="nc" id="L133">			json.put(objectName, objectToInsert);</span>
+		}
+<span class="nc" id="L135">	}</span>
+
+	public JsonObjectGenerator addArrayOfObjects(JSONObject json, String arrayName, Collection&lt;?&gt; collection, String attrs)
+	{
+<span class="nc bnc" id="L139" title="All 4 branches missed.">		if (collection!=null &amp;&amp; attrs!=null)</span>
+		{
+<span class="nc" id="L141">			Pair&lt;String,String&gt;[] attributes = parseTokens(attrs);</span>
+<span class="nc" id="L142">			JSONArray jsonArray = new JSONArray();</span>
+<span class="nc" id="L143">			Iterator&lt;?&gt; it = collection.iterator();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			while (it.hasNext())</span>
+			{
+<span class="nc" id="L146">				Object item = it.next();</span>
+<span class="nc" id="L147">				putToArray(jsonArray, item, attributes);</span>
+<span class="nc" id="L148">			}</span>
+			try
+			{
+				//json.put(arrayName, jsonArray);
+<span class="nc" id="L152">				putToObjectRecursive(json, arrayName, jsonArray);</span>
+			}
+<span class="nc" id="L154">			catch (JSONException e)</span>
+			{
+<span class="nc" id="L156">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L157">			}</span>
+
+		}
+<span class="nc" id="L160">		return this;</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private void putToArray(JSONArray array, Object bean, Pair&lt;String,String&gt;...attributes)
+	{
+<span class="nc" id="L166">		JSONObject jsonObj = new JSONObject();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		for (Pair&lt;String,String&gt; attribute : attributes)</span>
+		{
+<span class="nc" id="L169">			String attrName = attribute.first;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (attribute.first.contains(&quot;{&quot;))</span>
+			{
+<span class="nc" id="L172">				attrName = attribute.first.substring(0,attribute.first.indexOf(&quot;{&quot;));</span>
+
+				try
+				{
+<span class="nc" id="L176">					Object propertyValue = PropertyUtils.getProperty(bean, attrName);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					if (propertyValue!=null)</span>
+					{
+<span class="nc bnc" id="L179" title="All 2 branches missed.">						if (propertyValue instanceof Collection)</span>
+						{
+<span class="nc" id="L181">							String collectionAttributes = attribute.first.substring(attribute.first.indexOf(&quot;{&quot;)+1,attribute.first.lastIndexOf(&quot;}&quot;));</span>
+<span class="nc" id="L182">							addArrayOfObjects(jsonObj, attrName, (Collection&lt;?&gt;)propertyValue, collectionAttributes);</span>
+<span class="nc" id="L183">						}</span>
+						else
+						{
+<span class="nc" id="L186">							String itemAttributes = attribute.first.substring(attribute.first.indexOf(&quot;{&quot;)+1,attribute.first.lastIndexOf(&quot;}&quot;));</span>
+<span class="nc" id="L187">							addObject(jsonObj, attrName, propertyValue, itemAttributes);</span>
+						}
+
+
+					}
+				}
+<span class="nc" id="L193">				catch (IllegalAccessException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L194">				catch (InvocationTargetException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L195">				catch (NoSuchMethodException e) {sk.iway.iwcm.Logger.error(e); }</span>
+			}
+			else
+			{
+
+				try
+				{
+<span class="nc" id="L202">					Object propertyValue = PropertyUtils.getProperty(bean, attribute.first);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">					if (propertyValue!=null)</span>
+					{
+<span class="nc" id="L205">						jsonObj.put(attribute.second,  formatFactory.format(propertyValue));</span>
+					}
+				}
+<span class="nc" id="L208">				catch (IllegalAccessException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L209">				catch (InvocationTargetException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L210">				catch (NoSuchMethodException e) {sk.iway.iwcm.Logger.error(e); }</span>
+<span class="nc" id="L211">				catch (JSONException e) {sk.iway.iwcm.Logger.error(e);}</span>
+
+			}
+		}
+<span class="nc" id="L215">		array.put(jsonObj);</span>
+
+<span class="nc" id="L217">	}</span>
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private Pair&lt;String,String&gt;[] parseTokens(String toParse)
+	{
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (toParse==null) return null;</span>
+<span class="nc" id="L223">		char[] charArray = toParse.toCharArray();</span>
+<span class="nc" id="L224">		List&lt;Pair&lt;String,String&gt;&gt; resultList = new ArrayList&lt;Pair&lt;String,String&gt;&gt;();</span>
+<span class="nc" id="L225">		StringBuilder beanPropertyName = new StringBuilder();</span>
+<span class="nc" id="L226">		StringBuilder jsonPropertyName = null;</span>
+		//String jsonPropNameString = &quot;&quot;;
+<span class="nc" id="L228">		int deepStatus = 0;</span>
+<span class="nc" id="L229">		boolean propertyName=false;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		for (int i =0; i&lt;charArray.length; i++)</span>
+		{
+<span class="nc" id="L232">			char ch = charArray[i];</span>
+
+<span class="nc bnc" id="L234" title="All 4 branches missed.">			if (ch == ',' &amp;&amp; deepStatus==0)</span>
+			{
+				//resultList.add(beanPropertyName.toString());
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				if (jsonPropertyName!=null) resultList.add(Pair.of(beanPropertyName.toString(), jsonPropertyName.toString()));</span>
+<span class="nc" id="L238">				else resultList.add(Pair.of(beanPropertyName.toString(), beanPropertyName.toString()));</span>
+<span class="nc" id="L239">				beanPropertyName = new StringBuilder();</span>
+<span class="nc" id="L240">				jsonPropertyName=null;</span>
+			}
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			else if (ch == ' ') continue;</span>
+			else
+			{
+<span class="nc bnc" id="L245" title="All 2 branches missed.">				if (ch == '{') deepStatus++;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">				else if (ch == '}') deepStatus--;</span>
+
+<span class="nc bnc" id="L248" title="All 4 branches missed.">				if (ch == '(' &amp;&amp; deepStatus==0)</span>
+				{
+<span class="nc" id="L250">					propertyName=true;</span>
+<span class="nc" id="L251">					continue;</span>
+				}
+<span class="nc bnc" id="L253" title="All 4 branches missed.">				else if (ch == ')' &amp;&amp; deepStatus==0)</span>
+				{
+<span class="nc" id="L255">					propertyName=false;</span>
+					//jsonPropNameString = jsonPropertyName.toString();
+					//skoncila definicia json pola, ale ak som nahodou na konci stringu, musim korektne ukoncit cyklus
+<span class="nc bnc" id="L258" title="All 2 branches missed.">					if (i==charArray.length-1)</span>
+					{
+						//ak som na konci stringu
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						if (jsonPropertyName!=null) resultList.add(Pair.of(beanPropertyName.toString(), jsonPropertyName.toString()));</span>
+<span class="nc" id="L262">						else resultList.add(Pair.of(beanPropertyName.toString(), beanPropertyName.toString()));</span>
+					}
+					continue;
+				}
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				if (propertyName)</span>
+				{
+<span class="nc bnc" id="L269" title="All 2 branches missed.">					if (jsonPropertyName==null) jsonPropertyName=new StringBuilder();</span>
+<span class="nc" id="L270">					jsonPropertyName.append(ch);</span>
+				}
+				else
+				{
+<span class="nc" id="L274">					beanPropertyName.append(ch);</span>
+				}
+			}
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (i==charArray.length-1)</span>
+			{
+				//ak som na konci stringu
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (jsonPropertyName!=null) resultList.add(Pair.of(beanPropertyName.toString(), jsonPropertyName.toString()));</span>
+<span class="nc" id="L281">				else resultList.add(Pair.of(beanPropertyName.toString(), beanPropertyName.toString()));</span>
+			}
+		}
+<span class="nc" id="L284">		return resultList.toArray(new Pair[]{});</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

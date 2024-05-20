@@ -15,8 +15,6 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 @Repository
 public interface DocForumRepository extends DomainIdRepository<DocForumEntity, Long> {
 
-    List<DocForumEntity> findAllByDomainId(Integer domainId);
-
     @Transactional
     @Modifying
     @Query(value = "UPDATE document_forum SET stat_replies = stat_replies+1, stat_last_post = ?1 WHERE forum_id = ?2 AND parent_id = -1 AND domain_id = ?3", nativeQuery=true)

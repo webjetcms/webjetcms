@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BetterForEachTEI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.tags</a> &gt; <span class="el_source">BetterForEachTEI.java</span></div><h1>BetterForEachTEI.java</h1><pre class="source lang-java linenums">package sk.iway.tags;
+
+import javax.servlet.jsp.tagext.TagData;
+import javax.servlet.jsp.tagext.VariableInfo;
+
+import org.apache.taglibs.standard.tei.ForEachTEI;
+
+
+/**
+ * 
+ *  BetterForEachTagExtraInfo.java
+ *
+ *	TEI - Tag extra info trieda k vylepsenemu c:forEach tagu, umoznuje exponovat premennu pod 
+ *		jej nazvom (atribut var) a typom (atribut type, alebo ako java.lang.Object)
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2015
+ *@author 		mbocko
+ *@version      7
+ *@created      1.3.2015 19:57:29
+ */
+<span class="fc" id="L23">public class BetterForEachTEI extends ForEachTEI</span>
+{
+	@Override
+	public VariableInfo[] getVariableInfo(TagData data)
+	{
+<span class="fc" id="L28">		VariableInfo[] variables = new VariableInfo[2];</span>
+
+<span class="fc" id="L30">		int counter = 0;</span>
+
+<span class="fc" id="L32">		String var = data.getAttributeString(&quot;var&quot;);</span>
+<span class="fc" id="L33">		String type = data.getAttributeString(&quot;type&quot;);</span>
+
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if (var != null) </span>
+		{
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">			if (type == null) </span>
+			{
+<span class="nc" id="L39">				type = &quot;java.lang.Object&quot;;</span>
+			}
+
+<span class="fc" id="L42">			variables[(counter++)] = new VariableInfo( data.getAttributeString(&quot;var&quot;), type, true, 0);</span>
+		}
+
+<span class="fc" id="L45">		String varStatus = data.getAttributeString(&quot;varStatus&quot;);</span>
+
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">		if (varStatus != null)</span>
+<span class="nc" id="L48">			variables[(counter++)] = new VariableInfo(varStatus, &quot;javax.servlet.jsp.jstl.core.LoopTagStatus&quot;, true, 0);</span>
+		VariableInfo[] result;
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">		if (counter &gt; 0) </span>
+		{
+<span class="fc" id="L52">			result = new VariableInfo[counter];</span>
+<span class="fc" id="L53">			System.arraycopy(variables, 0, result, 0, counter);</span>
+		} 
+		else 
+		{
+<span class="nc" id="L57">			result = new VariableInfo[0];</span>
+		}
+
+<span class="fc" id="L60">		return result;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

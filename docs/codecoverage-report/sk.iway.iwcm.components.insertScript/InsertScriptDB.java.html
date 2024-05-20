@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsertScriptDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.insertScript</a> &gt; <span class="el_source">InsertScriptDB.java</span></div><h1>InsertScriptDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.insertScript; //NOSONAR
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Query;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.jpa.JpaTools.Condition;
+
+/**
+ *  InsertScriptDB.java
+ *
+ *	DAO class for manipulating with InsertScriptBean
+ *
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.09.2016 14:46:14
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@SuppressWarnings(&quot;java:S127&quot;)
+public class InsertScriptDB extends JpaDB&lt;InsertScriptBean&gt;
+{
+	private static InsertScriptDB instance;
+<span class="fc" id="L49">	private static String cachePrefix = &quot;InsertScript.&quot;;</span>
+	public InsertScriptDB()
+	{
+<span class="fc" id="L52">		super(InsertScriptBean.class);</span>
+<span class="fc" id="L53">	}</span>
+
+	public static InsertScriptDB getInstance()
+	{
+<span class="fc bfc" id="L57" title="All 2 branches covered.">		if(instance == null)</span>
+<span class="fc" id="L58">			instance = new InsertScriptDB();</span>
+
+<span class="fc" id="L60">		return instance;</span>
+	}
+
+	@SuppressWarnings(&quot;java:S1871&quot;)
+	public List&lt;InsertScriptBean&gt; filter(String name, String position, String scriptBody, int docId, int groupId, Date validFrom, Date validTo)
+	{
+		//skontrolovat vypis a pridat ku conditions listu cez hash table
+
+<span class="fc" id="L68">		List&lt;Condition&gt; conditions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L69">		conditions.add(JpaDB.filterSubstring(&quot;name&quot;, name));</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">		if (position!=null) {</span>
+<span class="pc bpc" id="L71" title="3 of 6 branches missed.">			if (position.startsWith(&quot;^&quot;) &amp;&amp; position.endsWith(&quot;$&quot;) &amp;&amp; position.length()&gt;2) {</span>
+<span class="fc" id="L72">				conditions.add(JpaDB.filterEquals(&quot;position&quot;, position.substring(1, position.length()-1)));</span>
+			} else {
+<span class="nc" id="L74">				conditions.add(JpaDB.filterSubstring(&quot;position&quot;, position));</span>
+			}
+		}
+
+<span class="fc" id="L78">		conditions.add(JpaDB.filterSubstring(&quot;script_body&quot;, scriptBody));</span>
+//		conditions.add(InsertScriptDB.filterBetween(&quot;valid_from&quot;, validFrom, null));
+//		conditions.add(InsertScriptDB.filterBetween(&quot;valid_to&quot;, null, validTo));
+<span class="fc" id="L81">		conditions.add(JpaDB.filterEquals(&quot;domain_id&quot;, CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L82">		List&lt;InsertScriptBean&gt; insertScriptList = JpaTools.findBy(InsertScriptBean.class, conditions.toArray(new Condition[]{}));</span>
+
+		try {
+
+<span class="fc" id="L86">			Date validFromBeanDate = null;</span>
+<span class="fc" id="L87">        	Date validToBeanDate = null;</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">			for(int i=0;i&lt;insertScriptList.size();i++)</span>
+			{
+<span class="fc" id="L91">				validFromBeanDate = insertScriptList.get(i).getValidFrom();</span>
+<span class="fc" id="L92">				validToBeanDate = insertScriptList.get(i).getValidTo();</span>
+				//ak mame vo filtri zadany len datum platnosti od a nemame datum do
+<span class="pc bpc" id="L94" title="2 of 4 branches missed.">				if(validFrom != null &amp;&amp; validTo == null)</span>
+				{
+					//mazeme tie zaznamy ktore: maju datum zaciatku pred datumom vo filtri a zaroven nemaju zadany konec platnosti alebo ho maju zadany ale je pred datumom zaciatku z filtra
+<span class="nc bnc" id="L97" title="All 8 branches missed.">					if(validFromBeanDate != null &amp;&amp; validFromBeanDate.getTime() &lt; validFrom.getTime() &amp;&amp; (validToBeanDate == null || validToBeanDate.getTime() &lt; validFrom.getTime()))</span>
+					{
+<span class="nc" id="L99">						insertScriptList.remove(i);</span>
+<span class="nc" id="L100">						i--;</span>
+					}//mazeme tie ktorym konci platnost pred datumom z filtru
+<span class="nc bnc" id="L102" title="All 6 branches missed.">					else if(validFromBeanDate == null &amp;&amp; validToBeanDate != null &amp;&amp; validFrom.getTime() &gt; validToBeanDate.getTime())</span>
+					{
+<span class="nc" id="L104">						insertScriptList.remove(i);</span>
+<span class="nc" id="L105">						i--;</span>
+					}
+
+				}
+<span class="pc bpc" id="L109" title="2 of 4 branches missed.">				else if(validTo != null &amp;&amp; validFrom == null)</span>
+				{
+<span class="nc bnc" id="L111" title="All 10 branches missed.">					if(validFromBeanDate != null &amp;&amp; validFromBeanDate.getTime() &gt; validTo.getTime() || (validFromBeanDate == null &amp;&amp; validToBeanDate != null &amp;&amp; validToBeanDate.getTime() &gt; validTo.getTime()))</span>
+					{
+<span class="nc" id="L113">						insertScriptList.remove(i);</span>
+<span class="nc" id="L114">						i--;</span>
+					}
+				}
+<span class="pc bpc" id="L117" title="2 of 4 branches missed.">				else if (validFrom != null &amp;&amp; validTo != null)</span>
+				{
+<span class="pc bpc" id="L119" title="1 of 4 branches missed.">					if(validFromBeanDate != null &amp;&amp; validFromBeanDate.getTime() &gt; validTo.getTime())</span>
+					{
+<span class="nc" id="L121">						insertScriptList.remove(i);</span>
+<span class="nc" id="L122">						i--;</span>
+					}
+<span class="fc bfc" id="L124" title="All 4 branches covered.">					else if(validToBeanDate != null &amp;&amp; validToBeanDate.getTime() &lt; validFrom.getTime())</span>
+					{
+<span class="fc" id="L126">						insertScriptList.remove(i);</span>
+<span class="fc" id="L127">						i--;</span>
+					}
+				}
+
+			}
+
+<span class="nc" id="L133">		} catch (Exception ex) {</span>
+<span class="nc" id="L134">			Logger.error(InsertScriptDB.class, ex);</span>
+<span class="fc" id="L135">		}</span>
+
+<span class="fc" id="L137">		List&lt;InsertScriptBean&gt; insertScriptListFilterdByDocsAndGroups = filterByDocAndGroupId(insertScriptList, docId, groupId);</span>
+
+<span class="fc" id="L139">		return insertScriptListFilterdByDocsAndGroups;</span>
+		//return intersection(insertScriptListFilterdByDocsAndGroups, insertScriptList);
+	}
+
+	private static List&lt;InsertScriptBean&gt; filterByDocAndGroupId(List&lt;InsertScriptBean&gt; insertScriptList, int docId, int groupId)
+	{
+<span class="pc bpc" id="L145" title="3 of 4 branches missed.">		if(docId == -1 &amp;&amp; groupId == -1) return insertScriptList;</span>
+
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		if(groupId == -1)</span>
+		{
+<span class="nc" id="L149">			DocDetails dd = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if(dd != null) groupId = dd.getGroupId();</span>
+		}
+
+<span class="fc" id="L153">		Set&lt;InsertScriptBean&gt; hs = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L154">		List&lt;GroupDetails&gt; parentGroups = null;</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">		if (groupId &gt; 0) parentGroups = GroupsDB.getParentGroupsCached(groupId);</span>
+
+<span class="fc bfc" id="L157" title="All 2 branches covered.">		for(InsertScriptBean isb : insertScriptList)</span>
+		{
+			//ak je prazdne groups aj docs pridaj (zobrazuje sa vsade)
+<span class="pc bpc" id="L160" title="2 of 8 branches missed.">			if ((isb.getDocIds()==null || isb.getDocIds().isEmpty()) &amp;&amp; (isb.getGroupIds()==null || isb.getGroupIds().isEmpty()))</span>
+			{
+<span class="fc" id="L162">				hs.add(isb);</span>
+			}
+			else
+			{
+<span class="pc bpc" id="L166" title="3 of 6 branches missed.">				if (isb.getGroupIds()!=null &amp;&amp; isb.getGroupIds().isEmpty()==false &amp;&amp; parentGroups!=null)</span>
+				{
+					// pre adresare
+<span class="fc bfc" id="L169" title="All 2 branches covered.">					for(GroupDetails gd:parentGroups)</span>
+					{
+<span class="fc bfc" id="L171" title="All 2 branches covered.">						for(InsertScriptGroupBean isgb:isb.getGroupIds())</span>
+						{
+<span class="fc bfc" id="L173" title="All 2 branches covered.">							if(isgb.getGroupId() == gd.getGroupId()) hs.add(isb);</span>
+<span class="fc" id="L174">						}</span>
+<span class="fc" id="L175">					}</span>
+				}
+<span class="pc bpc" id="L177" title="1 of 4 branches missed.">				if (isb.getDocIds()!=null &amp;&amp; isb.getDocIds().isEmpty()==false)</span>
+				{
+<span class="fc bfc" id="L179" title="All 2 branches covered.">					for(InsertScriptDocBean isdb:isb.getDocIds())</span>
+					{
+<span class="pc bpc" id="L181" title="1 of 4 branches missed.">						if(isdb.getDocId() == docId || docId == -1) hs.add(isb);</span>
+<span class="fc" id="L182">					}</span>
+				}
+			}
+<span class="fc" id="L185">		}</span>
+
+<span class="fc" id="L187">		insertScriptList.clear();</span>
+<span class="fc" id="L188">		insertScriptList.addAll(hs);</span>
+<span class="fc" id="L189">		return insertScriptList;</span>
+	}
+
+	public List&lt;InsertScriptBean&gt; findByCreateDate(Date createDate)
+	{
+<span class="nc" id="L194">		return JpaTools.findByMatchingProperty(InsertScriptBean.class, &quot;createDate&quot;, createDate);</span>
+	}
+
+	public List&lt;InsertScriptBean&gt; findByDomainId(int domainId)
+	{
+<span class="nc" id="L199">		return JpaTools.findByMatchingProperty(InsertScriptBean.class, &quot;domainId&quot;, domainId);</span>
+	}
+
+	public InsertScriptBean findFirstByCreateDate(Date createDate)
+	{
+<span class="nc" id="L204">		return JpaTools.findFirstByMatchingProperty(InsertScriptBean.class, &quot;createDate&quot;, createDate);</span>
+	}
+	public List&lt;InsertScriptBean&gt; findByUser(int user)
+	{
+<span class="nc" id="L208">		return JpaTools.findByMatchingProperty(InsertScriptBean.class, &quot;user&quot;, user);</span>
+	}
+
+	public InsertScriptBean findFirstByUser(int user)
+	{
+<span class="nc" id="L213">		return JpaTools.findFirstByMatchingProperty(InsertScriptBean.class, &quot;user&quot;, user);</span>
+	}
+	public List&lt;InsertScriptBean&gt; findByScriptBody(String scriptBody)
+	{
+<span class="nc" id="L217">		return JpaTools.findByMatchingProperty(InsertScriptBean.class, &quot;scriptBody&quot;, scriptBody);</span>
+	}
+
+	public InsertScriptBean findFirstByScriptBody(String scriptBody)
+	{
+<span class="nc" id="L222">		return JpaTools.findFirstByMatchingProperty(InsertScriptBean.class, &quot;scriptBody&quot;, scriptBody);</span>
+	}
+
+	/** Cached
+	 *
+	 * @param position
+	 * @param onlyActive - true(porovnava podla validFrom a validTo) / false (neporovnava)
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public List&lt;InsertScriptBean&gt; findByPosition(String position, boolean onlyActive)
+	{
+<span class="nc" id="L234">		String cacheKey = getCacheKey(position, onlyActive);</span>
+<span class="nc" id="L235">		List&lt;InsertScriptBean&gt; isbList = null;</span>
+		//pre admina budeme vzdy mat cisty zoznam (bez cachovania)
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (RequestBean.isAdminLogged()==false) isbList = (List&lt;InsertScriptBean&gt;) Cache.getInstance().getObject(cacheKey);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if(isbList == null)</span>
+		{
+<span class="nc" id="L240">			JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L241">			isbList = new LinkedList&lt;&gt;();</span>
+			try
+			{
+<span class="nc" id="L244">				ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L245">				ReadAllQuery dbQuery = new ReadAllQuery(InsertScriptBean.class, builder);</span>
+<span class="nc" id="L246">				Expression expr = builder.get(&quot;position&quot;).equal(position);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				if(onlyActive)</span>
+				{
+<span class="nc" id="L249">					expr = expr.and(builder.get(&quot;validFrom&quot;).lessThan(new Date()).or(builder.get(&quot;validFrom&quot;).equal(null)));</span>
+<span class="nc" id="L250">					expr = expr.and(builder.get(&quot;validTo&quot;).greaterThan(new Date()).or(builder.get(&quot;validTo&quot;).equal(null)));</span>
+				}
+<span class="nc" id="L252">				dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="nc" id="L254">				Expression expr1 = builder.get(&quot;changeDate&quot;);</span>
+<span class="nc" id="L255">				List&lt;Expression&gt; expressions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L256">				expressions.add(expr1);</span>
+
+<span class="nc" id="L258">				dbQuery.addAscendingOrdering(&quot;id&quot;);</span>
+
+<span class="nc" id="L260">				Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L261">				isbList = JpaDB.getResultList(query);</span>
+			}
+<span class="nc" id="L263">			catch (Exception e) {</span>
+				//nevypiseme, asi neexistuje dana pozicia, len to potom plni logy, sk.iway.iwcm.Logger.error(e);
+			}
+			finally{
+<span class="nc" id="L267">				em.close();</span>
+			}
+
+			//musime setnut cache, aby sa nam to stale nedotazovalo do DB
+<span class="nc" id="L271">			LinkedList&lt;InsertScriptBean&gt; isbListCopy = new LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if (isbList!=null) isbListCopy.addAll(isbList);</span>
+<span class="nc" id="L273">			Cache.getInstance().setObject(cacheKey, isbListCopy, getCacheInMinutes());</span>
+		}
+
+		//musime takto, aby nam niekto z vonku nemenil cache objekty (co by nam menil)
+<span class="nc" id="L277">		List&lt;InsertScriptBean&gt; retList = new LinkedList&lt;&gt;();</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		if (isbList!=null) retList.addAll(isbList);</span>
+
+<span class="nc" id="L280">		return retList;</span>
+	}
+
+	public List&lt;InsertScriptBean&gt; findByPositionSubString(String position)
+	{
+<span class="nc" id="L285">		List&lt;Condition&gt; conditions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L286">		conditions.add(JpaDB.filterSubstring(&quot;position&quot;, position));</span>
+<span class="nc" id="L287">		return  JpaTools.findBy(InsertScriptBean.class, conditions.toArray(new Condition[]{}));</span>
+	}
+
+	public static String getCacheKey(String position, boolean onlyActive)
+	{
+<span class="nc" id="L292">		return cachePrefix+&quot;findByPosition(&quot;+position+&quot;,&quot;+onlyActive+&quot;)&quot;;</span>
+	}
+
+	public static String getCachePrefix()
+	{
+<span class="nc" id="L297">		return cachePrefix;</span>
+	}
+
+	public static void deleteCache()
+	{
+<span class="nc" id="L302">		Cache.getInstance().removeObjectStartsWithName(cachePrefix);</span>
+<span class="nc" id="L303">		ClusterDB.addRefresh(&quot;sk.iway.iwcm.Cache-&quot; + cachePrefix);</span>
+<span class="nc" id="L304">	}</span>
+
+	public static int getCacheInMinutes()
+	{
+<span class="nc" id="L308">		return Constants.getInt(&quot;insertScriptCacheMinutes&quot;);</span>
+	}
+	//return JpaTools.findByMatchingProperty(InsertScriptBean.class, &quot;position&quot;, position);
+
+	public InsertScriptBean findFirstByPosition(int position)
+	{
+<span class="nc" id="L314">		return JpaTools.findFirstByMatchingProperty(InsertScriptBean.class, &quot;position&quot;, position);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

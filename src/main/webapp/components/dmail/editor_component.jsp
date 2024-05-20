@@ -110,10 +110,10 @@
 				<div class="col-sm-4 text-right"><label for="emailBodyIdId"><iwcm:text key="components.dmail.email_docid"/>:</label></div>
 				<div class="col-sm-8">
 					<div class="input-group">
-						<input type="text" name="emailBodyId" id="emailBodyIdId" size="40" value="<%=pageParams.getIntValue("emailBodyId", -1)%>" />
+						<input type="text" name="emailBodyId" id="emailBodyIdId" size="40" value="<%=pageParams.getIntValue("emailBodyId", -1)%>" class="form-control" style="max-width: 268px;" />
 						<span class="input-group-btn">
 							<span onclick="popup('/admin/user_adddoc.jsp', 450, 340);" class="input-group-addon btn green">
-								<i class="fa fa-link"></i>
+								<i class="ti ti-focus-2"></i>
 							</span>
 						</span>
 					</div>

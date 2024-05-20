@@ -1,0 +1,81 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/blog";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.blog.jpa.BloggerBean")})]*/ '';
+</script>
+<script type="text/javascript">
+    var bloggerDataTable;
+
+    window.domReady.add(function () {
+
+        WJ.breadcrumb({
+            id: "blog",
+            tabs: [
+                {
+                    url: '/apps/blog/admin/',
+                    title: '[[#{components.blog.articles.title}]]',
+                    active: false
+                },
+                {
+                    url: '/apps/blog/admin/bloggers/',
+                    title: '[[#{components.blog.admin.blogers}]]',
+                    active: true
+                }
+            ]
+        });
+
+        bloggerDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "bloggerDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+        //Import must be hidden-it's not entity under repo
+        bloggerDataTable.hideButton("import");
+        bloggerDataTable.hideButton("remove");
+        bloggerDataTable.hideButton("duplicate");
+
+        bloggerDataTable.EDITOR.on('open', function (e, mode, action) {
+            $("#editorAppDTE_Field_editableGroups > section > div.form-group").css("display", "block");
+
+            //Disable login on edit
+            if("edit" === action) {
+                bloggerDataTable.EDITOR.field("login").disable();
+            } else if("create" == action) {
+                bloggerDataTable.EDITOR.field("login").enable();
+            }
+        });
+
+        if (WJ.hasPermission("cmp_stat")) {
+            //show stat
+            bloggerDataTable.button().add(4, {
+                text: '<i class="ti ti-chart-line"></i>',
+                action: function (e, dt, node) {
+                    let selectedRows = dt.rows({ selected: true }).data();
+                    for (const element of selectedRows)
+                        window.open("/apps/stat/admin/logon-user-details/?userId=" + element.id);
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary buttons-divider buttons-history-preview',
+                attr: {
+                    title : WJ.translate("components.blog.user_logon_stat.js"),
+                    'data-toggle': 'tooltip'
+                }
+            });
+        }
+
+    });
+    </script>
+
+    <style>
+        .DTE_Action_Edit {
+           .btn-vue-jstree-item-edit { display: none; }
+           .btn-vue-jstree-item-remove { display: none; }
+           section > div.form-group { display: none; }
+        }
+    </style>
+
+    <table id="bloggerDataTable" class="datatableInit table"></table>

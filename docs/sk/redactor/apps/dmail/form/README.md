@@ -27,6 +27,13 @@ Pre odhlásenie môžete do emailu priamo vytvoriť odkaz na stránku s odhláse
 
 ```<a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>```
 
+Pri odosielaní emailu sa automaticky nastaví hlavička emailu pre odhlásenie [List-Unsubscribe=One-Click](https://support.google.com/a/answer/81126#subscriptions) v podporovaných email klientoch. Odkaz na odhlásenie je nastavený podľa domény adresy stránky odosielaného emailu, v prípade potreby je možné doménu zmeniť nastavením konf. premennej `dmailListUnsubscribeBaseHref`. Pre zobrazenie priameho tlačidla na odhlásenie v email klientovi musí email/vaša doména spĺňať viacero kritérií (tieto kritéria odporúčame nastaviť aj pre lepšiu doručiteľnosť emailov):
+
+- Nastavené [DKIM](https://www.dkim.org) kľúče domény s platným [SPF](https://sk.wikipedia.org/wiki/Sender_Policy_Framework) záznamom. Odporúčame použiť na odosielanie [Amazon SES](../../../../install/config/README.md#nastavenie-amazon-ses) a `DKIM` nastaviť tam, automaticky sa nastaví aj `SPF`.
+- Nastavený [DMARC](https://dmarc.org) záznam. V DNS vytvorte nový `TXT` záznam pre doménu `_dmarc.vasadomena.sk` s hodnotou minimálne `v=DMARC1; p=none; sp=none`.
+
+Naviac v schránke `gmail` sa tlačidlo na odhlásenie zobrazí len v prípade, že vás ako odosielateľa zaradí do kategórie hromadných emailov.
+
 ## Email s textom na prihlásenie / odhlásenie
 
 Ak potrebujete modifikovať text emailu, ktorý je zaslaný pre potvrdenie prihlásenia / odhlásenia môžete modifikovať štandardný HTML kód v konfigurácii systému v časti Editácia textov. Kľúče s textami sú ```dmail.subscribe.bodyNew``` pre prihlásenie a ```dmail.unsubscribe.bodyNew``` pre odhlásenie.

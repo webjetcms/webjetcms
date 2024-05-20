@@ -19,6 +19,13 @@ Odosielanie emailov kampane vykonáva na pozadí tzv. ```Sender```. Ten pracuje 
 - Z odpovedi SMTP servera sa vyhodnotí, či je email odoslaný úspešne (okrem stavového kódu je možné nastaviť doplnkové chybové odpovede v konf. premennej ```dmailBadEmailSmtpReplyStatuses```)
 - Ak je odoslanie neúspešné zmaže sa v databáze dátum odoslania emailu a odosielanie sa zastaví na čas nastavený v konf. premennej ```dmailSleepTimeAfterException```.
 
+## Správne nastavenie
+
+Pre korektne odoslaný hromadný email je potrebné mať správne nastavený emailový server:
+
+- Nastavené [DKIM](https://www.dkim.org) kľúče domény s platným [SPF](https://sk.wikipedia.org/wiki/Sender_Policy_Framework) záznamom. Odporúčame použiť na odosielanie [Amazon SES](../../../../install/config/README.md#nastavenie-amazon-ses) a `DKIM` nastaviť tam, automaticky sa nastaví aj `SPF`.
+- Nastavený [DMARC](https://dmarc.org) záznam. V DNS vytvorte nový `TXT` záznam pre doménu `_dmarc.vasadomena.sk` s hodnotou minimálne `v=DMARC1; p=none; sp=none`.
+
 ## Prečo odoslanie trvá dlho
 
 Ak sa vám zdá, že odosielanie trvá príliš dlho, toto sú možné dôvody:

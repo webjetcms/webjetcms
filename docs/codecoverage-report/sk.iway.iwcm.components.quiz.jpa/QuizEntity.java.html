@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.jpa</a> &gt; <span class="el_source">QuizEntity.java</span></div><h1>QuizEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.jpa;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;quiz&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
+<span class="fc" id="L37">public class QuizEntity implements Serializable {</span>
+
+    @Id
+    @Column(name = &quot;id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_quiz&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;name&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;components.quiz.name&quot;,
+        tab = &quot;main&quot;
+    )
+    @Size(max = 255)
+    private String name;
+
+    @Column(name = &quot;quiz_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.quiz.option_type&quot;,
+        tab = &quot;main&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.type.right_answer&quot;, value = &quot;0&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.type.rated_answer&quot;, value = &quot;1&quot;)
+				}
+			)
+		}
+    )
+    @Size(max = 20)
+    private String quizType;
+
+    @Column(name = &quot;domain_id&quot;)
+	private Integer domainId;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;questions&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/quiz/question?quizId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.quiz.jpa.QuizQuestionEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;)
+            }
+        )
+    })
+    @JsonIgnore
+    @JsonManagedReference(value=&quot;quiz&quot;)
+    @OneToMany(mappedBy = &quot;quiz&quot;, fetch = FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval = true)
+	@OrderBy(&quot;position ASC&quot;)
+	private List&lt;QuizQuestionEntity&gt; quizQuestions;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;results&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/quiz/result?quizId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.quiz.jpa.QuizResultEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;)
+            }
+        )
+    })
+    @JsonIgnore
+    @JsonManagedReference(value=&quot;quiz&quot;)
+    @OneToMany(mappedBy = &quot;quiz&quot;, fetch = FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval = true)
+	@OrderBy(&quot;position ASC&quot;)
+	private List&lt;QuizResultEntity&gt; quizResults;
+
+    @JsonIgnore
+    @JsonManagedReference(value=&quot;quiz&quot;)
+    @OneToMany(mappedBy = &quot;quiz&quot;, fetch = FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval = true)
+	private List&lt;QuizAnswerEntity&gt; quizAnswers;
+
+    public QuizType getQuizTypeEnum() {
+<span class="fc" id="L115">        return QuizType.getQuizType(quizType);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

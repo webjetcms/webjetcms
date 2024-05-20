@@ -62,7 +62,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 						}
 					</script>
 					<div class="actual-domain" id="actualDomainNameDiv" <% if (userDomains.size()<1) out.print("style='display: none;'"); %>>
-						<i class="far fa-browser"></i>
+						<i class="ti ti-browser"></i>
 						<select  name="actualDomainNameSelect" id="actualDomainNameSelectId" style="color: #000;" onchange="changeDomain();">
 						<c:forEach items="${userDomains}" var="domain">
 							<option value="${domain}" <c:if test="${domain == actualDomain}">selected="selected"</c:if>>${domain}</option>
@@ -94,45 +94,45 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 			<ul class="nav navbar-nav pull-right">
 
 				<li class="dropdown helper">
-					<a href="javascript:m_click_help()"><i class="far fa-question-circle"></i><iwcm:text key="menu.top.help"/></a>
+					<a href="javascript:m_click_help()"><i class="ti ti-help"></i><iwcm:text key="menu.top.help"/></a>
 				</li>
 
 				<li class="dropdown" style="padding-right: 1px;">
 					<a class="btn btn-sm btn-outline-secondary js-search-toggler" href="/admin/searchall.jsp">
-						<i class="far fa-search"></i>
+						<i class="ti ti-search fs-6"></i>
 					</a>
 				</li>
 
 				<!-- BEGIN USER LOGIN DROPDOWN -->
 				<li class="dropdown user">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown" data-close-others="true">
-						<i class="far fa-address-card"></i>
+						<i class="ti ti-id"></i>
 						<span class="username">
 							 <bean:write name="iwcm_useriwcm" property="fullName"/>
 						</span>
-						<i class="fa fa-angle-down"></i>
+						<i class="ti ti-chevron-down"></i>
 					</a>
 					<ul class="dropdown-menu">
 						<li style="display: none;">
 							<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
-								<i class="fa fa-user"></i> <iwcm:text key="components.forum.bb.profile"/>
+								<i class="ti ti-user"></i> <iwcm:text key="components.forum.bb.profile"/>
 							</a>
 						</li>
 						<li>
 							<a href="javascript:openPopupDialogFromLeftMenu('/admin/2factorauth.jsp?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
-								<i class="fa fa-phone"></i> <iwcm:text key="user.gauth.title"/>
+								<i class="ti ti-device-mobile-message"></i> <iwcm:text key="user.gauth.title"/>
 							</a>
 						</li>
 						<iwcm:menu name="cmp_crypto">
 						<li>
 							<a href="javascript:openPopupDialogFromLeftMenu('/components/crypto/admin/keymanagement');">
-								<i class="fa fa-key"></i> <iwcm:text key="admin.keymanagement.title"/>
+								<i class="ti ti-key"></i> <iwcm:text key="admin.keymanagement.title"/>
 							</a>
 						</li>
 						</iwcm:menu>
 						<li>
 							<a href="<%=Constants.getString("adminLogoffLink") %>">
-								<i class="icon-logout"></i> <iwcm:text key="menu.logout"/>
+								<i class="ti ti-logout"></i> <iwcm:text key="menu.logout"/>
 							</a>
 						</li>
 					</ul>
@@ -140,7 +140,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 
 	            <li class="dropdown dropdown-quick-sidebar-toggler">
 	                <a class="dropdown-toggle" href="/logoff.do?forward=/admin/index.jsp">
-						<i class="far fa-sign-out"></i>
+						<i class="ti ti-logout"></i>
 	                </a>
 	            </li>
 

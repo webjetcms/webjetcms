@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestaurantMenuMealsEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.restaurant_menu.jpa</a> &gt; <span class="el_source">RestaurantMenuMealsEditorFields.java</span></div><h1>RestaurantMenuMealsEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.restaurant_menu.jpa;
+
+import java.util.Arrays;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class RestaurantMenuMealsEditorFields {
+    
+<span class="fc" id="L20">    public RestaurantMenuMealsEditorFields(){</span>
+        //konstruktor
+<span class="fc" id="L22">    }</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.MULTISELECT, 
+        title = &quot;components.restaurant_menu.alergens&quot;,
+        renderFormat = &quot;dt-format-select&quot;,
+        orderable = false,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) 
+            }) 
+        }
+    )
+    private Integer[] alergensArr;
+
+    public void fromRestaurantMenuMealsEntity(RestaurantMenuMealsEntity originalEntity) {
+<span class="fc" id="L38">        alergensArr = Arrays.stream( Tools.getTokensInt(originalEntity.getAlergens(), &quot;,&quot;) ).boxed().toArray( Integer[]::new );</span>
+
+<span class="fc" id="L40">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L41">    }</span>
+
+    public void toRestaurantMenuMealsEntity(RestaurantMenuMealsEntity originalEntity) {
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if(originalEntity.getEditorFields() == null) return;</span>
+
+<span class="fc" id="L46">        String alergensStr = &quot;&quot;;</span>
+<span class="pc bpc" id="L47" title="3 of 4 branches missed.">        if(!(alergensArr.length == 1 &amp;&amp; alergensArr[0] == null)) { //Hadnle situation when arr has only 1 elemnt NULL (nothing is selected)</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">            for(int alergenNumber : alergensArr) {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                if(Tools.isAnyEmpty(alergensStr)) alergensStr = alergenNumber + &quot;&quot;;</span>
+                else {
+<span class="nc" id="L51">                    alergensStr += &quot;,&quot; + alergenNumber;</span>
+                }
+            }
+        }
+<span class="fc" id="L55">        originalEntity.setAlergens(alergensStr);</span>
+<span class="fc" id="L56">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

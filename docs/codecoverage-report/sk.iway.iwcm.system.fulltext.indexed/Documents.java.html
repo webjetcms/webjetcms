@@ -1,0 +1,749 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Documents.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.indexed</a> &gt; <span class="el_source">Documents.java</span></div><h1>Documents.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.indexed;
+
+import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
+import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.Transformer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.NumericField;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.util.Version;
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
+
+import sk.iway.Html2Text;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.system.fulltext.FulltextSearch;
+import sk.iway.iwcm.system.fulltext.lucene.AnalyzerFactory;
+import sk.iway.iwcm.system.fulltext.lucene.IndexSearcherBuilder;
+import sk.iway.iwcm.system.fulltext.lucene.IndexingMapper;
+import sk.iway.iwcm.system.fulltext.lucene.Lemmas;
+import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
+
+/**
+ * Documents.java
+ *
+ *@Title webjet7
+ *@Company Interway s.r.o. (www.interway.sk)
+ *@Copyright Interway s.r.o. (c) 2001-2011
+ *@author $Author: jeeff thaber $
+ *@version $Revision: 1.3 $
+ *@created Date: 6.4.2011 18:04:19
+ *@modified $Date: 2004/08/16 06:26:11 $
+ */
+public class Documents extends Indexed
+{
+<span class="fc" id="L71">	private static final String SELECTING_SQL = &quot;SELECT * FROM documents WHERE available=&quot;+DB.getBooleanSql(true)+&quot; and searchable=&quot;+DB.getBooleanSql(true);</span>
+<span class="fc" id="L72">	private static final String TOTAL_SQL = &quot;SELECT count(doc_id) FROM documents WHERE available=&quot;+DB.getBooleanSql(true)+&quot; and searchable=&quot;+DB.getBooleanSql(true);</span>
+	private String language;
+	private Collection&lt;String&gt; paths;
+
+	/**
+	 *
+	 */
+	public Documents(final String language)
+<span class="fc" id="L80">	{</span>
+<span class="fc" id="L81">		this.language = language;</span>
+<span class="fc" id="L82">		final GroupsDB gdb = GroupsDB.getInstance();</span>
+<span class="fc" id="L83">		final String defaultLanguage = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc" id="L84">		Collection&lt;String&gt; newPaths = CollectionUtils.collect(GroupsDB.getRootGroups(), new Transformer&lt;GroupDetails, String&gt;()</span>
+<span class="fc" id="L85">		{</span>
+			@Override
+			public String transform(GroupDetails gd)
+			{
+<span class="fc bfc" id="L89" title="All 2 branches covered.">				if (&quot;system&quot;.equals(DB.internationalToEnglish(gd.getGroupName().toLowerCase())))</span>
+<span class="fc" id="L90">					return null;</span>
+
+<span class="fc" id="L92">				TemplateDetails template = TemplatesDB.getInstance().getTemplate(gd.getTempId());</span>
+<span class="fc" id="L93">				String tempLng = defaultLanguage;</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">				if (template != null) tempLng = template.getLng();</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">				if (Tools.isEmpty(tempLng)) tempLng = &quot;sk&quot;;</span>
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">				if (language.equals(tempLng))</span>
+<span class="fc" id="L98">					return gdb.getGroupNamePath(gd.getGroupId());</span>
+
+<span class="nc" id="L100">				return null;</span>
+			}
+		});
+<span class="fc" id="L103">		this.paths = CollectionUtils.select(newPaths, new Predicate&lt;String&gt;()</span>
+<span class="fc" id="L104">		{</span>
+			@Override
+			public boolean evaluate(String path)
+			{
+<span class="fc bfc" id="L108" title="All 2 branches covered.">				if (path != null)</span>
+<span class="fc" id="L109">					return true;</span>
+<span class="fc" id="L110">				return false;</span>
+			}
+		});
+<span class="fc" id="L113">	}</span>
+
+	public static String parseHeadings(String html) {
+
+<span class="nc" id="L117">		StringBuilder headings = new StringBuilder();</span>
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		if (html != null &amp;&amp; html.length()&lt;30000000) {</span>
+<span class="nc" id="L119">			org.jsoup.nodes.Document jsoup = Jsoup.parse(html);</span>
+<span class="nc" id="L120">			Elements htags = jsoup.select(&quot;h1, h2, h3, h4, h5, h6&quot;);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			for (String heading : htags.eachText()) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (headings.length()&gt;0) headings.append(&quot; &quot;);</span>
+<span class="nc" id="L123">				headings.append(heading);</span>
+<span class="nc" id="L124">			}</span>
+		}
+<span class="nc" id="L126">		return headings.toString();</span>
+	}
+
+	/**
+     * Vrati Document na zaklade dodaneho ResultSet
+     *
+     * @param rs
+     * @throws SQLException
+     */
+    public static Document toLuceneDocument(ResultSet rs, String language) throws SQLException
+    {
+<span class="nc" id="L137">        Document document = new Document();</span>
+        try
+        {
+<span class="nc" id="L140">            int docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L141">            Logger.debug(Documents.class, &quot;toLuceneDocument, docid=&quot;+docId);</span>
+
+<span class="nc" id="L143">				int groupId = rs.getInt(&quot;group_id&quot;);</span>
+<span class="nc" id="L144">				int tempId = rs.getInt(&quot;temp_id&quot;);</span>
+
+<span class="nc" id="L146">				String docLng = getDocumentLanguage(groupId, tempId);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				if (language.equals(docLng)==false)</span>
+				{
+<span class="nc" id="L149">					Logger.debug(Documents.class, docId+&quot; nesedi jazyk doc=&quot;+docLng+&quot; indexed language=&quot;+language);</span>
+<span class="nc" id="L150">					return null;</span>
+				}
+
+<span class="nc" id="L153">            DocDB docDB = DocDB.getInstance();</span>
+
+<span class="nc" id="L155">            document.add(new Field(&quot;doc_id&quot;, nvl(rs.getString(&quot;doc_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L156">            Field title = new Field(&quot;title&quot;, nvl(rs.getString(&quot;title&quot;))+&quot; &quot;+Lemmas.get(language, nvl(rs.getString(&quot;title&quot;))), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);</span>
+<span class="nc" id="L157">            title.setBoost(10.0f);</span>
+<span class="nc" id="L158">            document.add(title);</span>
+
+            //doplnit to co sa pridava do DataASC - fulltextIncludeKeywords a fulltextIncludePerex a fulltextIncludeAttributes
+<span class="nc" id="L161">            String dataDB = rs.getString(&quot;data&quot;);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (dataDB != null) Logger.debug(Documents.class, &quot;toLuceneDocument, dataDB size = &quot;+dataDB.length());</span>
+<span class="nc" id="L163">            else Logger.debug(Documents.class, &quot;toLuceneDocument, dataDB is null&quot;);</span>
+
+				//vykonaj !DOC_TITLE! znacky v texte
+<span class="nc" id="L166">				dataDB = Tools.replace(dataDB, &quot;!DOC_TITLE!&quot;, nvl(rs.getString(&quot;title&quot;)));</span>
+
+            String plainText;
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (dataDB.length()&lt;2000000) plainText = SearchTools.htmlToPlain(dataDB);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            else if (dataDB.length()&lt;30000000) plainText = Html2Text.html2text(dataDB);</span>
+<span class="nc" id="L171">            else plainText = dataDB;</span>
+
+<span class="nc" id="L173">            DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc" id="L174">            EditorForm ef = new EditorForm(doc);</span>
+
+<span class="nc" id="L176">            String data = EditorDB.getDataAsc(plainText, ef, true);</span>
+
+<span class="nc" id="L178">            String htmlData = SearchTools.htmlToPlain(rs.getString(&quot;html_data&quot;));</span>
+
+<span class="nc" id="L180">				Field headings = new Field(&quot;headings&quot;, Lemmas.get(language, parseHeadings(dataDB)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);</span>
+<span class="nc" id="L181">				headings.setBoost(5.0f);</span>
+
+<span class="nc" id="L183">				document.add(headings);</span>
+<span class="nc" id="L184">            document.add(new Field(&quot;data&quot;, nvl(data), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));</span>
+<span class="nc" id="L185">            document.add(new Field(&quot;external_link&quot;, nvl(rs.getString(&quot;external_link&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L186">            document.add(new Field(&quot;date_created&quot;, nvl(dateToLucene(rs.getTimestamp(&quot;date_created&quot;))), Field.Store.YES, Field.Index.ANALYZED));</span>
+
+<span class="nc" id="L188">            Timestamp publishStart = rs.getTimestamp(&quot;publish_start&quot;);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (publishStart == null) publishStart = rs.getTimestamp(&quot;date_created&quot;);</span>
+
+<span class="nc" id="L191">            document.add(new Field(&quot;publish_start&quot;, nvl(dateToLucene(publishStart)), Field.Store.YES,	Field.Index.ANALYZED));</span>
+<span class="nc" id="L192">            document.add(new Field(&quot;publish_end&quot;, nvl(dateToLucene(rs.getTimestamp(&quot;publish_end&quot;))), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L193">            document.add(new NumericField(&quot;author_id&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;author_id&quot;)));</span>
+<span class="nc" id="L194">            document.add(new NumericField(&quot;group_id&quot;, Field.Store.NO, true).setIntValue(rs.getInt(&quot;group_id&quot;)));</span>
+<span class="nc" id="L195">            document.add(new NumericField(&quot;temp_id&quot;, Field.Store.NO, true).setIntValue(rs.getInt(&quot;temp_id&quot;)));</span>
+<span class="nc" id="L196">            document.add(new Field(&quot;file_name&quot;, nvl(GroupsDB.getInstance().getGroupNamePath(rs.getInt(&quot;group_id&quot;))), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L197">            document.add(new NumericField(&quot;sort_priority&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;sort_priority&quot;))); //store.yes potrebujeme kvoli sortovaniu</span>
+<span class="nc" id="L198">            addMultiValueField(rs.getString(&quot;password_protected&quot;), &quot;password_protected&quot;, document);</span>
+<span class="nc" id="L199">            document.add(new Field(&quot;html_head&quot;, nvl(rs.getString(&quot;html_head&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L200">            document.add(new Field(&quot;html_data&quot;, nvl(htmlData), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L201">            document.add(new Field(&quot;perex_place&quot;, nvl(rs.getString(&quot;perex_place&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L202">            document.add(new Field(&quot;perex_image&quot;, nvl(rs.getString(&quot;perex_image&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L203">            addStringValueField(rs.getString(&quot;perex_group&quot;), &quot;perex_group&quot;, document);</span>
+<span class="nc" id="L204">            document.add(new Field(&quot;event_date&quot;, nvl(dateToLucene(rs.getTimestamp(&quot;event_date&quot;))), Field.Store.YES, Field.Index.ANALYZED));</span>
+
+<span class="nc" id="L206">            document.add(new Field(&quot;field_a&quot;, nvl(rs.getString(&quot;field_a&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L207">            document.add(new Field(&quot;field_b&quot;, nvl(rs.getString(&quot;field_b&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L208">            document.add(new Field(&quot;field_c&quot;, nvl(rs.getString(&quot;field_c&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="nc" id="L209">            document.add(new Field(&quot;field_d&quot;, nvl(rs.getString(&quot;field_d&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L210">            document.add(new Field(&quot;field_e&quot;, nvl(rs.getString(&quot;field_e&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L211">            document.add(new Field(&quot;field_f&quot;, nvl(rs.getString(&quot;field_f&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L212">            document.add(new Field(&quot;field_g&quot;, nvl(rs.getString(&quot;field_g&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L213">            document.add(new Field(&quot;field_h&quot;, nvl(rs.getString(&quot;field_h&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L214">            document.add(new Field(&quot;field_i&quot;, nvl(rs.getString(&quot;field_i&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L215">            document.add(new Field(&quot;field_j&quot;, nvl(rs.getString(&quot;field_j&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L216">            document.add(new Field(&quot;field_k&quot;, nvl(rs.getString(&quot;field_k&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L217">            document.add(new Field(&quot;field_l&quot;, nvl(rs.getString(&quot;field_l&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L218">				document.add(new Field(&quot;field_m&quot;, nvl(rs.getString(&quot;field_m&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L219">				document.add(new Field(&quot;field_n&quot;, nvl(rs.getString(&quot;field_n&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L220">				document.add(new Field(&quot;field_o&quot;, nvl(rs.getString(&quot;field_o&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L221">				document.add(new Field(&quot;field_p&quot;, nvl(rs.getString(&quot;field_p&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L222">				document.add(new Field(&quot;field_q&quot;, nvl(rs.getString(&quot;field_q&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L223">				document.add(new Field(&quot;field_r&quot;, nvl(rs.getString(&quot;field_r&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L224">				document.add(new Field(&quot;field_s&quot;, nvl(rs.getString(&quot;field_s&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L225">				document.add(new Field(&quot;field_t&quot;, nvl(rs.getString(&quot;field_t&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+
+<span class="nc" id="L227">            document.add(typeField(&quot;documents&quot;));</span>
+<span class="nc" id="L228">            String url = DocDB.getInstance().getDocLink(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L229">            document.add(urlField(url));</span>
+
+<span class="nc" id="L231">            Logger.debug(Documents.class, &quot;toLuceneDocument DONE, docid=&quot;+rs.getString(&quot;doc_id&quot;));</span>
+        }
+<span class="nc" id="L233">        catch (Exception e)</span>
+        {
+<span class="nc" id="L235">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L236">        }</span>
+<span class="nc" id="L237">        return document;</span>
+    }
+
+	public static void addMultiValueField(String value, String name, Document document) throws SQLException
+    {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">        if (Tools.isNotEmpty(value))</span>
+        {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">            for (String part : value.split(&quot;,&quot;))</span>
+            {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">                if (Tools.isNotEmpty(part))</span>
+                {
+<span class="nc" id="L248">                    document.add(new NumericField(name, Field.Store.YES, true).setIntValue(Integer.parseInt(part)));</span>
+                }
+            }
+        }
+        else
+        {
+            //document.add(new Field(name, LuceneUtils.EMPTY, Field.Store.YES, Field.Index.ANALYZED));
+            //jeeff: nemozeme kombinovat numeric a non numeric fieldy, zle to potom hlada
+<span class="nc" id="L256">            document.add(new NumericField(name, Field.Store.YES, true).setIntValue(0));</span>
+        }
+<span class="nc" id="L258">    }</span>
+
+	private static void addStringValueField(String value, String name, Document document) throws SQLException
+    {
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        if (Tools.isNotEmpty(value))</span>
+        {
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            for (String part : value.split(&quot;,&quot;))</span>
+            {
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                if (Tools.isNotEmpty(part))</span>
+                {
+<span class="nc" id="L268">                    document.add(new Field(name, part, Field.Store.YES, Field.Index.ANALYZED));</span>
+                }
+            }
+        }
+        else
+        {
+<span class="nc" id="L274">            document.add(new Field(name, LuceneUtils.EMPTY, Field.Store.YES, Field.Index.ANALYZED));</span>
+        }
+<span class="nc" id="L276">    }</span>
+
+	public static Field typeField(String indexed){
+<span class="nc" id="L279">        return new Field(&quot;type&quot;,indexed,Field.Store.YES,</span>
+                    Field.Index.ANALYZED);
+    }
+
+	public static Field urlField(String url){
+<span class="nc" id="L284">        return new Field(&quot;url&quot;,nvl(url),Field.Store.YES,</span>
+                    Field.Index.NO);
+    }
+
+	@Override
+	public String language()
+	{
+<span class="fc" id="L291">		return this.language;</span>
+	}
+
+<span class="fc" id="L294">	private ExecutorService executor = Executors.newFixedThreadPool(5);// indexWriter umoznuje pristup max 5 vlakien naraz, opravene je to az v 4.0</span>
+<span class="fc" id="L295">	private BlockingQueue&lt;Document&gt; queue = new LinkedBlockingQueue&lt;Document&gt;(50);</span>
+<span class="fc" id="L296">	private WriterThread save = new WriterThread();</span>
+
+	static final class DocumentsIndexingMapper extends IndexingMapper {
+
+		private Documents documents;
+
+		/**
+		 * @param writer
+		 */
+		public DocumentsIndexingMapper(IndexWriter writer, Documents documents, Writer log)
+		{
+<span class="nc" id="L307">			super(writer,log);</span>
+<span class="nc" id="L308">			this.documents = documents;</span>
+<span class="nc" id="L309">			documents.save.setIndexed(documents);</span>
+<span class="nc" id="L310">			documents.save.setQueue(documents.queue);</span>
+<span class="nc" id="L311">			documents.save.setWriter(writer);</span>
+<span class="nc" id="L312">			documents.save.setLog(log);</span>
+<span class="nc" id="L313">		}</span>
+
+		@Override
+		public Void map(ResultSet rs) throws SQLException
+		{
+			try
+			{
+<span class="nc" id="L320">				final Document document = toLuceneDocument(rs, documents.language);</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">				if (document != null) documents.queue.put(document);</span>
+<span class="nc" id="L322">				documents.executor.execute(documents.save);</span>
+			}
+<span class="nc" id="L324">			catch (SQLException e)</span>
+			{
+<span class="nc" id="L326">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+<span class="nc" id="L328">			catch (InterruptedException e)</span>
+			{
+<span class="nc" id="L330">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L331">			}</span>
+<span class="nc" id="L332">			return null;</span>
+		}
+	}
+
+<span class="fc" id="L336">	final static class WriterThread implements Runnable {</span>
+
+		private IndexWriter writer;
+		private BlockingQueue&lt;Document&gt; queue;
+		private Indexed indexed;
+		private Writer log;
+
+
+
+		/**
+		 * @param indexed The indexed to set.
+		 */
+		public void setIndexed(Indexed indexed)
+		{
+<span class="nc" id="L350">			this.indexed = indexed;</span>
+<span class="nc" id="L351">		}</span>
+
+
+		/**
+		 * @param log The log to set.
+		 */
+		public void setLog(Writer log)
+		{
+<span class="nc" id="L359">			this.log = log;</span>
+<span class="nc" id="L360">		}</span>
+
+		/**
+		 * @param writer The writer to set.
+		 */
+		public void setWriter(IndexWriter writer)
+		{
+<span class="nc" id="L367">			this.writer = writer;</span>
+<span class="nc" id="L368">		}</span>
+
+		/**
+		 * @param queue The queue to set.
+		 */
+		public void setQueue(BlockingQueue&lt;Document&gt; queue)
+		{
+<span class="nc" id="L375">			this.queue = queue;</span>
+<span class="nc" id="L376">		}</span>
+
+<span class="fc" id="L378">		int count = 0;</span>
+		@Override
+		public void run()
+		{
+			try
+			{
+<span class="nc" id="L384">				Thread.currentThread().setName(&quot;Documents&quot;);</span>
+<span class="nc" id="L385">				Document document = queue.poll(100, TimeUnit.MILLISECONDS);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (document != null)</span>
+				{
+<span class="nc" id="L388">					writer.addDocument(document);</span>
+<span class="nc" id="L389">					count++;</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">					if (count % 100 == 0)</span>
+					{
+<span class="nc" id="L392">						FulltextSearch.log(Documents.class, &quot;Indexed &quot; + count + &quot; documents, last doc_id=&quot;+document.get(&quot;doc_id&quot;)+&quot; title=&quot;+document.get(&quot;title&quot;), log);</span>
+					}
+				}
+			}
+<span class="nc" id="L396">			catch (CorruptIndexException e)</span>
+			{
+<span class="nc" id="L398">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+<span class="nc" id="L400">			catch (IOException e)</span>
+			{
+<span class="nc" id="L402">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+<span class="nc" id="L404">			catch (InterruptedException e)</span>
+			{
+<span class="nc" id="L406">				sk.iway.iwcm.Logger.error(e);</span>
+			}
+			finally{
+<span class="nc" id="L409">				indexed.proccessed();</span>
+			}
+<span class="nc" id="L411">		}</span>
+	}
+
+
+	@Override
+	public IndexingMapper mapper(IndexWriter writer,Writer log)
+	{
+<span class="nc" id="L418">		return new DocumentsIndexingMapper(writer, this,log);</span>
+	}
+
+	private String pathsLikeString()
+	{
+<span class="nc" id="L423">		StringBuilder pathsLike = new StringBuilder();</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">		if (paths.size() &gt; 0)</span>
+		{
+<span class="nc" id="L426">			String prefix = &quot; AND ( &quot;;</span>
+<span class="nc" id="L427">			pathsLike.append(prefix);</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">			for (String p : paths)</span>
+			{
+				// not the first
+<span class="nc bnc" id="L431" title="All 2 branches missed.">				if (pathsLike.length() != prefix.length())</span>
+				{
+<span class="nc" id="L433">					pathsLike.append(&quot; OR &quot;);</span>
+				}
+<span class="nc" id="L435">				pathsLike.append(&quot; file_name like '&quot;);</span>
+<span class="nc" id="L436">				pathsLike.append(p);</span>
+<span class="nc" id="L437">				pathsLike.append(&quot;%'&quot;);</span>
+<span class="nc" id="L438">			}</span>
+<span class="nc" id="L439">			pathsLike.append(&quot; ) &quot;);</span>
+		}
+<span class="nc" id="L441">		return pathsLike.toString();</span>
+	}
+
+	/* THA verzia
+	private static Document toLuceneDocument(ResultSet rs) throws SQLException
+	{
+		Document document = new Document();
+		try
+		{
+			DocDB docDB = DocDB.getInstance();
+			document.add(new Field(&quot;doc_id&quot;, nvl(rs.getString(&quot;doc_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new NumericField(&quot;temp_id&quot;, Field.Store.NO, true).setIntValue(rs.getInt(&quot;temp_id&quot;)));
+			document.add(new NumericField(&quot;sort_priority&quot;, Field.Store.NO, true).setIntValue(rs.getInt(&quot;sort_priority&quot;)));
+			document.add(new NumericField(&quot;group_id&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;group_id&quot;)));
+			document.add(new Field(&quot;html_head&quot;, nvl(rs.getString(&quot;html_head&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+
+			//doplnit to co sa pridava do DataASC - fulltextIncludeKeywords a fulltextIncludePerex a fulltextIncludeAttributes
+
+			StringBuilder data = new StringBuilder(rs.getString(&quot;data&quot;));
+
+			String perexGroup = rs.getString(&quot;perex_group&quot;);
+			if (Constants.getBoolean(&quot;fulltextIncludeKeywords&quot;) &amp;&amp; Tools.isNotEmpty(perexGroup))
+			{
+				String perexGroupIds[] = Tools.getTokens(perexGroup, &quot;,&quot;);
+				if (perexGroupIds != null)
+				{
+					String keywords = null;
+					for (String keyword : perexGroupIds)
+					{
+						keyword = docDB.convertPerexGroupIdToName(Tools.getIntValue(keyword, -1));
+						if (Tools.isEmpty(keyword) || keyword.startsWith(&quot;#&quot;)) continue;
+						if (keywords == null) keywords = keyword;
+						else keywords += &quot;, &quot;+keyword;
+					}
+					if (Tools.isNotEmpty(keywords))
+					{
+						data.append(&quot; &quot;).append(DB.internationalToEnglish(keywords).trim().toLowerCase());
+					}
+				}
+			}
+
+			String htmlData = SearchAction.htmlToPlain(rs.getString(&quot;html_data&quot;));
+			if (Constants.getBoolean(&quot;fulltextIncludePerex&quot;))
+			{
+				data.append(&quot; &quot;).append(htmlData);
+			}
+
+			//ak treba dopln atributy
+			if (Constants.getBoolean(&quot;fulltextIncludeAttributes&quot;))
+			{
+				try
+				{
+					List&lt;AtrBean&gt; attrs = AtrDB.getAtributes(rs.getInt(&quot;doc_id&quot;), null, null);	//ziskam vsetky atributy pre danu stranku
+					if (attrs != null &amp;&amp; attrs.size() &gt; 0)
+					{
+						String attributes = null;
+						for (AtrBean attr : attrs)
+						{
+							if (attr == null) continue;
+							if(Tools.isNotEmpty(attr.getAtrName()) &amp;&amp; Tools.isNotEmpty(attr.getValueString()))
+							{
+								if (attributes == null) attributes = attr.getAtrName() + &quot;=&quot; + attr.getValueString();
+								else attributes += &quot;, &quot;+attr.getAtrName() + &quot;=&quot; + attr.getValueString();
+							}
+						}
+
+						if (Tools.isNotEmpty(attributes))
+						{
+							data.append(&quot; &quot;).append(DB.internationalToEnglish(attributes).trim().toLowerCase());
+						}
+					}
+				} catch (Exception ex) {}
+			}
+
+			document.add(new Field(&quot;data&quot;, nvl(data.toString()), Field.Store.YES, Field.Index.ANALYZED,
+						TermVector.WITH_POSITIONS_OFFSETS));
+			document.add(new Field(&quot;html_data&quot;, nvl(htmlData), Field.Store.YES,
+						Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_a&quot;, nvl(rs.getString(&quot;field_a&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_b&quot;, nvl(rs.getString(&quot;field_b&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_c&quot;, nvl(rs.getString(&quot;field_c&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_d&quot;, nvl(rs.getString(&quot;field_d&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_e&quot;, nvl(rs.getString(&quot;field_e&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_f&quot;, nvl(rs.getString(&quot;field_f&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_g&quot;, nvl(rs.getString(&quot;field_g&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_h&quot;, nvl(rs.getString(&quot;field_h&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_i&quot;, nvl(rs.getString(&quot;field_i&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_j&quot;, nvl(rs.getString(&quot;field_j&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_k&quot;, nvl(rs.getString(&quot;field_k&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;field_l&quot;, nvl(rs.getString(&quot;field_l&quot;)), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;publish_start&quot;, nvl(dateToLucene(rs.getDate(&quot;publish_start&quot;))), Field.Store.YES,	Field.Index.ANALYZED));
+			document.add(new Field(&quot;publish_end&quot;, nvl(dateToLucene(rs.getDate(&quot;publish_end&quot;))), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;perex_place&quot;, nvl(rs.getString(&quot;perex_place&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			Field title = new Field(&quot;title&quot;, nvl(rs.getString(&quot;title&quot;)), Field.Store.YES, Field.Index.ANALYZED, TermVector.WITH_POSITIONS_OFFSETS);
+			title.setBoost(2.0f);
+			document.add(title);
+			document.add(new Field(&quot;date_created&quot;, nvl(dateToLucene(rs.getDate(&quot;date_created&quot;))), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field(&quot;file_name&quot;, nvl(GroupsDB.getInstance().getGroupNamePath(rs.getInt(&quot;group_id&quot;))), Field.Store.NO, Field.Index.ANALYZED));
+			document.add(new Field(&quot;external_link&quot;, nvl(rs.getString(&quot;external_link&quot;)), Field.Store.YES, Field.Index.ANALYZED));
+			addMultiValueField(rs.getString(&quot;password_protected&quot;), &quot;password_protected&quot;, document);
+			addStringValueField(rs.getString(&quot;perex_group&quot;), &quot;perex_group&quot;, document);
+			document.add(typeField(&quot;documents&quot;));
+			String url = DocDB.getInstance().getDocLink(rs.getInt(&quot;doc_id&quot;));
+			document.add(urlField(url));
+		}
+		catch (Exception e){
+			sk.iway.iwcm.Logger.error(e);
+		}
+		return document;
+	}
+	*/
+
+
+<span class="fc" id="L554">	static int  count = 0;</span>
+	@Override
+	public String sql()
+	{
+<span class="nc" id="L558">		return SELECTING_SQL + pathsLikeString();</span>
+	}
+
+	@Override
+	public String name()
+	{
+<span class="nc" id="L564">		return &quot;documents&quot;;</span>
+	}
+
+
+	@Override
+	public int numberOfDocuments()
+	{
+<span class="nc" id="L571">		return new SimpleQuery().forInt(TOTAL_SQL + pathsLikeString());</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see sk.iway.iwcm.system.fulltext.Indexed#close()
+	 */
+	@Override
+	public void close()
+	{
+<span class="nc" id="L582">		executor.shutdownNow();</span>
+<span class="nc" id="L583">	}</span>
+
+	/**
+	 * Obnovi v indexe dokument
+	 *
+	 * @param docId
+	 */
+	public static void updateSingleDocument(int docId)
+	{
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
+		{
+<span class="nc" id="L594">			Connection db_conn = null;</span>
+<span class="nc" id="L595">			PreparedStatement ps = null;</span>
+<span class="nc" id="L596">			ResultSet rs = null;</span>
+<span class="nc" id="L597">			IndexWriter writer = null;</span>
+			try
+			{
+<span class="nc" id="L600">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L601">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE doc_id = ? &quot;);</span>
+<span class="nc" id="L602">				ps.setInt(1, docId);</span>
+<span class="nc" id="L603">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L606">					int groupId = rs.getInt(&quot;group_id&quot;);</span>
+<span class="nc" id="L607">					int tempId = rs.getInt(&quot;temp_id&quot;);</span>
+<span class="nc" id="L608">					String lng = getDocumentLanguage(groupId, tempId);</span>
+
+<span class="nc" id="L610">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
+<span class="nc" id="L611">					config.setOpenMode(OpenMode.APPEND);</span>
+<span class="nc" id="L612">					writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
+<span class="nc bnc" id="L613" title="All 4 branches missed.">					if(rs.getBoolean(&quot;available&quot;) == false || rs.getBoolean(&quot;searchable&quot;) == false)</span>
+					{
+<span class="nc" id="L615">						writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+					}
+					else
+					{
+<span class="nc" id="L619">						Document luceneDoc = toLuceneDocument(rs, lng);</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">						if (luceneDoc == null) writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+<span class="nc" id="L621">						else writer.updateDocument(new Term(&quot;doc_id&quot;, Integer.toString(docId)), luceneDoc);</span>
+					}
+<span class="nc" id="L623">					writer.commit();</span>
+<span class="nc" id="L624">					writer.close();</span>
+<span class="nc" id="L625">					writer = null;</span>
+<span class="nc" id="L626">					IndexSearcherBuilder.refresh();</span>
+				}
+<span class="nc" id="L628">				rs.close();</span>
+<span class="nc" id="L629">				ps.close();</span>
+<span class="nc" id="L630">				db_conn.close();</span>
+<span class="nc" id="L631">				rs = null;</span>
+<span class="nc" id="L632">				ps = null;</span>
+<span class="nc" id="L633">				db_conn = null;</span>
+			}
+<span class="nc" id="L635">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L637">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L643" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L644">						rs.close();</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L646">						ps.close();</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L648">						db_conn.close();</span>
+				}
+<span class="nc" id="L650">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L652">				}</span>
+				try
+				{
+<span class="nc bnc" id="L655" title="All 2 branches missed.">					if (writer != null) writer.close();</span>
+				}
+<span class="nc" id="L657">				catch (Exception e)</span>
+				{
+<span class="nc" id="L659">				}</span>
+			}
+		}
+
+
+<span class="fc" id="L664">	}</span>
+
+	/**
+	 * Zmaze dokument z indexu
+	 *
+	 * @param docId
+	 */
+	public static void deleteSingleDocument(int docId)
+	{
+<span class="pc bpc" id="L673" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
+		{
+<span class="nc" id="L675">			Connection db_conn = null;</span>
+<span class="nc" id="L676">			PreparedStatement ps = null;</span>
+<span class="nc" id="L677">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L680">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L681">				ps = db_conn.prepareStatement(&quot;select * from documents where doc_id = ? &quot;);</span>
+<span class="nc" id="L682">				ps.setInt(1, docId);</span>
+<span class="nc" id="L683">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L686">					int tempId = GroupsDB.getInstance().getGroup(rs.getInt(&quot;group_id&quot;)).getTempId();</span>
+<span class="nc" id="L687">					String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();</span>
+<span class="nc" id="L688">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
+<span class="nc" id="L689">					config.setOpenMode(OpenMode.APPEND);</span>
+<span class="nc" id="L690">					IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
+<span class="nc" id="L691">					writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+<span class="nc" id="L692">					writer.commit();</span>
+<span class="nc" id="L693">					writer.close();</span>
+<span class="nc" id="L694">					IndexSearcherBuilder.refresh();</span>
+<span class="nc" id="L695">				}</span>
+<span class="nc" id="L696">				rs.close();</span>
+<span class="nc" id="L697">				ps.close();</span>
+<span class="nc" id="L698">				db_conn.close();</span>
+<span class="nc" id="L699">				rs = null;</span>
+<span class="nc" id="L700">				ps = null;</span>
+<span class="nc" id="L701">				db_conn = null;</span>
+			}
+<span class="nc" id="L703">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L705">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L711" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L712">						rs.close();</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L714">						ps.close();</span>
+<span class="nc bnc" id="L715" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L716">						db_conn.close();</span>
+				}
+<span class="nc" id="L718">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L720">				}</span>
+			}
+		}
+<span class="fc" id="L723">	}</span>
+
+	/**
+	 * Vrati jazyk dokumentu pre zadane id priecinku a sablony
+	 * @param groupId
+	 * @param tempId
+	 * @return
+	 */
+	private static String getDocumentLanguage(int groupId, int tempId)
+	{
+<span class="nc" id="L733">		GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="nc" id="L734">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);</span>
+<span class="nc bnc" id="L735" title="All 4 branches missed.">		if (group != null &amp;&amp; Tools.isNotEmpty(group.getLng()))</span>
+		{
+<span class="nc" id="L737">			return group.getLng();</span>
+		}
+<span class="nc bnc" id="L739" title="All 4 branches missed.">		if (temp != null &amp;&amp; Tools.isNotEmpty(temp.getLng()))</span>
+		{
+<span class="nc" id="L741">			return temp.getLng();</span>
+		}
+<span class="nc" id="L743">		String defaultLanguage = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="nc bnc" id="L744" title="All 2 branches missed.">		if (Tools.isEmpty(defaultLanguage)) defaultLanguage = &quot;sk&quot;;</span>
+
+<span class="nc" id="L746">		return defaultLanguage;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

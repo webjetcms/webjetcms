@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pay24MerchantAccountActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.cloud.payments.pay24</a> &gt; <span class="el_source">Pay24MerchantAccountActionBean.java</span></div><h1>Pay24MerchantAccountActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.cloud.payments.pay24;
+
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+
+/**
+ *  Pay24MerchantAccountActionBean.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2017
+ *@author       $Author: jeeff prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 15.5.2017 8:28:57
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class Pay24MerchantAccountActionBean extends WebJETActionBean
+{
+//	@ValidateNestedProperties({
+//	      @Validate(field=&quot;eshopId&quot;, required=true),
+//	      @Validate(field=&quot;key&quot;, required=true),
+//	      @Validate(field=&quot;domainId&quot;, required=true)
+//	    })
+<span class="nc" id="L32">	private Pay24MerchantAccountBean account = new Pay24MerchantAccountBean();</span>
+	public Pay24MerchantAccountActionBean()
+<span class="nc" id="L34">	{</span>
+<span class="nc" id="L35">		account = getAccount(false);</span>
+<span class="nc" id="L36">	}</span>
+	
+	@DefaultHandler
+	public Resolution defaultHandler()
+	{
+<span class="nc" id="L41">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+	}
+	
+	@Override
+	public void setContext(net.sourceforge.stripes.action.ActionBeanContext context) {
+<span class="nc" id="L46">		this.context = context;</span>
+		
+<span class="nc" id="L48">		Pay24MerchantAccountBean byDomain = new JpaDB&lt;Pay24MerchantAccountBean&gt;(Pay24MerchantAccountBean.class).findFirst(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if(byDomain != null) this.account = byDomain;</span>
+<span class="nc" id="L50">	};</span>
+	
+	public Resolution save()
+	{
+<span class="nc" id="L54">		Identity user = getCurrentUser();</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">		if (user == null || user.isDisabledItem(&quot;anyPremiumService&quot;))</span>
+		{
+<span class="nc" id="L57">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);			</span>
+		}
+		
+		//set correct domain_id (if somebody tries to use fake one)
+<span class="nc" id="L61">		account.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L62">		boolean saveok=account.save();</span>
+<span class="nc" id="L63">		getRequest().setAttribute(&quot;pay24Saveok&quot;, saveok);</span>
+<span class="nc" id="L64">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+	}
+	
+	public Pay24MerchantAccountBean getAccount()
+	{
+<span class="nc" id="L69">		return account;</span>
+	}
+	
+	/** Inicializacia platobnej brany. 
+	 * 
+	 * @param testGateway - ak je true, vytvori testovaciu branu, ak je false, pokusi sa vytvorit ostru/live platobnu branu.
+	 */
+	public Pay24MerchantAccountBean getAccount(boolean isTestGateway)
+	{
+<span class="nc bnc" id="L78" title="All 4 branches missed.">		if(!isTestGateway &amp;&amp; !Tools.isAnyEmpty(Constants.getString(&quot;24payEshopId&quot;), Constants.getString(&quot;24payKey&quot;), Constants.getString(&quot;24payMid&quot;)))</span>
+		{	//ostra platba webjet (nie cloud)
+<span class="nc" id="L80">			account.setEshopId(Constants.getString(&quot;24payEshopId&quot;));</span>
+<span class="nc" id="L81">			account.setMid(Constants.getString(&quot;24payMid&quot;));</span>
+<span class="nc" id="L82">			account.setKey(Constants.getString(&quot;24payKey&quot;)); </span>
+		}
+		else
+		{	//testovacie data
+<span class="nc" id="L86">			account.setEshopId(&quot;11111111&quot;);</span>
+<span class="nc" id="L87">			account.setMid(&quot;demoOMED&quot;);</span>
+<span class="nc" id="L88">			account.setKey(&quot;1234567812345678123456781234567812345678123456781234567812345678&quot;);</span>
+		}
+
+<span class="nc bnc" id="L91" title="All 4 branches missed.">		if(!isTestGateway &amp;&amp; InitServlet.isTypeCloud() )</span>
+		{	//ostra platba webjet cloud
+<span class="nc" id="L93">			Pay24MerchantAccountBean byDomain = new JpaDB&lt;Pay24MerchantAccountBean&gt;(Pay24MerchantAccountBean.class).findFirst(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if(byDomain != null) </span>
+			{
+<span class="nc" id="L96">				account.setEshopId(byDomain.getEshopId());</span>
+<span class="nc" id="L97">				account.setMid(byDomain.getMid());</span>
+<span class="nc" id="L98">				account.setKey(byDomain.getKey()); </span>
+			}
+		}
+<span class="nc" id="L101">		account.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L102">		return account;</span>
+	}
+
+	public void setAccount(Pay24MerchantAccountBean account)
+	{
+<span class="nc" id="L107">		this.account = account;</span>
+<span class="nc" id="L108">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

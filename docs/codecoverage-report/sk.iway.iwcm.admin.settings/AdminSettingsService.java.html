@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminSettingsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.settings</a> &gt; <span class="el_source">AdminSettingsService.java</span></div><h1>AdminSettingsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.settings;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.SettingsAdminBean;
+import sk.iway.iwcm.users.SettingsAdminDB;
+import sk.iway.iwcm.users.UserDetails;
+
+/**
+ * Podporna trieda pre ziskanie udajov ulozenych v admin_settings tabulke ako (JSON) hodnoty
+ */
+public class AdminSettingsService {
+
+    private UserDetails user;
+    private Map&lt;String, SettingsAdminBean&gt; settings;
+
+<span class="nc" id="L20">    public AdminSettingsService() {</span>
+<span class="nc" id="L21">        settings = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L22">        user = null;</span>
+<span class="nc" id="L23">    }</span>
+
+<span class="fc" id="L25">    public AdminSettingsService(UserDetails user) {</span>
+<span class="fc" id="L26">        setUser(user);</span>
+<span class="fc" id="L27">    }</span>
+
+    public void setUser(UserDetails user) {
+<span class="fc" id="L30">        this.user = user;</span>
+<span class="fc" id="L31">        settings = user.getAdminSettings();</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Vrati String hodnotu nastaveni pouzivatela so zadanym klucom
+     * @param key
+     * @return
+     */
+    public String getValue(String key) {
+<span class="fc" id="L40">        SettingsAdminBean s = settings.get(key);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (s == null) return null;</span>
+
+<span class="fc" id="L43">        return s.getValue();</span>
+    }
+
+    /**
+     * Vrati hodnotu z JSON objektu v zadanom kluci a zadanej JSON ceste (napr. kluc.druhy.treti)
+     * @param key
+     * @param jsonPath
+     * @return
+     */
+    public String getJsonValue(String key, String jsonPath) {
+
+<span class="fc" id="L54">        String json = getValue(key);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (json == null) return null;</span>
+
+<span class="fc" id="L57">        return JsonTools.getValue(json, jsonPath);</span>
+    }
+
+    /**
+     * Vrati boolean hodnotu z JSON objektu v zadanom kluci a zadanej JSON ceste (napr. kluc.druhy.treti)
+     * @param key
+     * @param jsonPath
+     * @return
+     */
+    public boolean getJsonBooleanValue(String key, String jsonPath) {
+<span class="fc" id="L67">        String value = getJsonValue(key, jsonPath);</span>
+<span class="fc" id="L68">        return &quot;true&quot;.equals(value);</span>
+    }
+
+    /**
+     * Vrati cislo (alebo -1 ak sa nejedna o cislo) z JSON objektu v zadanom kluci
+     * a zadanej JSON ceste (napr. kluc.druhy.treti)
+     * @param key
+     * @param jsonPath
+     * @return
+     */
+    public int getJsonIntValue(String key, String jsonPath) {
+<span class="nc" id="L79">        String value = getJsonValue(key, jsonPath);</span>
+<span class="nc" id="L80">        return Tools.getIntValue(value, -1);</span>
+    }
+
+    /**
+     * Ulozi nastavenia pouzivatela so zadanym klucom a hodnotou
+     * @param key
+     * @param value
+     * @return
+     */
+    public boolean saveSettings(String key, String value) {
+<span class="fc" id="L90">        SettingsAdminBean bean = new SettingsAdminBean(user.getUserId(), key, value);</span>
+<span class="fc" id="L91">        boolean saveok = SettingsAdminDB.setSetting(bean);</span>
+        //aby sa pri requeste reloadli z DB
+<span class="fc" id="L93">        user.setAdminSettings(null);</span>
+
+<span class="fc" id="L95">        return saveok;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

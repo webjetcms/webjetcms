@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetAuthentificationProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">WebjetAuthentificationProvider.java</span></div><h1>WebjetAuthentificationProvider.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.spring.components.SpringContext;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="fc" id="L33">public class WebjetAuthentificationProvider implements AuthenticationProvider</span>
+{
+
+	@Override
+	public Authentication authenticate(Authentication auth) throws AuthenticationException {
+<span class="nc" id="L38">		Logger.debug(WebjetAuthentificationProvider.class, &quot;WebjetAuthentificationProvider - authenticate - &quot; + auth.getPrincipal());</span>
+
+<span class="nc" id="L40">        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="nc" id="L41">        HttpServletRequest request = attr.getRequest();</span>
+<span class="nc" id="L42">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="nc" id="L44">		boolean isLogonBlocked = LogonTools.isLoginBlocked(request);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (isLogonBlocked)</span>
+        {
+<span class="nc" id="L47">           Logger.debug(WebjetAuthentificationProvider.class, &quot;Bad credentials - logon blocked timeout - &quot; + auth.getPrincipal());</span>
+<span class="nc" id="L48">           throw new BadCredentialsException(&quot;Bad credentials - logon blocked timeout&quot;);</span>
+        }
+
+<span class="nc" id="L51">		UserDetails user = null;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;emailAuthentification&quot;))</span>
+		{
+<span class="nc" id="L54">			user = UsersDB.getUserByEmail(String.valueOf(auth.getPrincipal()), 1);</span>
+
+            //pre admina ziskajme udaje aj ked je nastavene email prihlasovanie (ak sa user nenajde), niekedy moze byt email neznamy a nedalo by sa vobec prihlasit
+<span class="nc bnc" id="L57" title="All 4 branches missed.">            if (user == null &amp;&amp; &quot;admin&quot;.equalsIgnoreCase(String.valueOf(auth.getPrincipal()))) {</span>
+<span class="nc" id="L58">                user = UsersDB.getUser(String.valueOf(auth.getPrincipal()));</span>
+            }
+
+		} else {
+<span class="nc" id="L62">			user = UsersDB.getUser(String.valueOf(auth.getPrincipal()));</span>
+		}
+
+<span class="nc" id="L65">        Identity adminIdentity = null;</span>
+
+<span class="nc" id="L67">		String url = request.getRequestURI();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (url.startsWith(&quot;/admin&quot;))</span>
+        {
+<span class="nc" id="L70">            adminIdentity = new Identity();</span>
+<span class="nc" id="L71">            Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L72">            String forward = LogonTools.logon((String)auth.getPrincipal(), (String) auth.getCredentials(), adminIdentity, errors, request, prop);</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">            if (errors.get(&quot;ERROR_KEY&quot;)==null &amp;&amp; &quot;logon_ok_admin&quot;.equals(forward))</span>
+            {
+<span class="nc" id="L75">                adminIdentity.setValid(true);</span>
+<span class="nc" id="L76">                return LogonTools.setUserToSession(request.getSession(), adminIdentity);</span>
+            }
+<span class="nc" id="L78">        }</span>
+        else
+        {
+<span class="nc" id="L81">            List&lt;String&gt; errorKeys = LogonTools.logonUser(request, (String) auth.getPrincipal(), (String) auth.getCredentials());</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">		    if (errorKeys==null || errorKeys.isEmpty())</span>
+            {
+                //get user from session, it cab be set by logonUser method (eg. in BasicLdapLogon)
+<span class="nc" id="L85">                Identity identity = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                if (identity == null)</span>
+                {
+                    //was not set, use user from DB
+<span class="nc" id="L89">                    identity = new Identity(user);</span>
+                }
+
+<span class="nc" id="L92">                return LogonTools.setUserToSession(request.getSession(), identity);</span>
+            }
+            else
+            {
+<span class="nc" id="L96">                StringBuilder message = new StringBuilder();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                for (String key : errorKeys)</span>
+                {
+<span class="nc" id="L99">                    message.append(prop.getText(key));</span>
+<span class="nc" id="L100">                }</span>
+
+<span class="nc" id="L102">                throw new BadCredentialsException(message.toString());</span>
+            }
+        }
+
+<span class="nc" id="L106">        user = UsersDB.getCurrentUser(request);// getUser(userId);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (user != null)</span>
+        {
+<span class="nc" id="L109">            return LogonTools.setUserToSession(request.getSession(), new Identity(user));</span>
+        }
+
+<span class="nc" id="L112">		throw new BadCredentialsException(&quot;Bad credentials&quot;);</span>
+	}
+
+	public static Authentication authenticate(Identity user)
+    {
+<span class="pc bpc" id="L117" title="2 of 4 branches missed.">        if (user != null &amp;&amp; user.isAuthorized())</span>
+        {
+<span class="fc" id="L119">            List&lt;GrantedAuthority&gt; grantedAuths = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            for (String groupName : Tools.getTokens(user.getUserGroupsNames(), &quot;,&quot;))</span>
+            {
+<span class="fc" id="L122">                groupName = WebjetSecurityService.normalizeUserGroupName(groupName);</span>
+<span class="fc" id="L123">                grantedAuths.add(new SimpleGrantedAuthority(&quot;ROLE_Group_&quot; + groupName));</span>
+            }
+
+<span class="fc" id="L126">            Identity i = new Identity(user);</span>
+            //i.isEnabledItem(name)
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (user.isAdmin())</span>
+            {
+<span class="fc" id="L131">                grantedAuths.add(new SimpleGrantedAuthority(&quot;ROLE_Group_admin&quot;));</span>
+            }
+
+<span class="fc bfc" id="L134" title="All 2 branches covered.">            for (ModuleInfo mod : Modules.getInstance().getAvailableModules())</span>
+            {
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">                if (i.isDisabledItem(mod.getItemKey())==false &amp;&amp; user.isDisabledItem(mod.getItemKey())==false) {</span>
+<span class="fc" id="L137">                    String itemKey = WebjetSecurityService.normalizeUserGroupName(mod.getItemKey());</span>
+<span class="fc" id="L138">                    grantedAuths.add(new SimpleGrantedAuthority(&quot;ROLE_Permission_&quot; + itemKey));</span>
+                }
+
+                //ries aj submenu
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                if (mod.getSubmenus()!=null)</span>
+                {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">                    for (ModuleInfo submod : mod.getSubmenus())</span>
+                    {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                        if (Tools.isEmpty(submod.getItemKey())) continue;</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                        if (i.isDisabledItem(submod.getItemKey())) continue;</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">                        if (user.isDisabledItem(submod.getItemKey())) continue;</span>
+
+<span class="fc" id="L150">                        String itemKey = WebjetSecurityService.normalizeUserGroupName(submod.getItemKey());</span>
+<span class="fc" id="L151">                        grantedAuths.add(new SimpleGrantedAuthority(&quot;ROLE_Permission_&quot; + itemKey));</span>
+<span class="fc" id="L152">                    }</span>
+                }
+<span class="fc" id="L154">            }</span>
+
+            /*
+             Pridanie custom pravidiel per project.
+             priklad hodnoty customSpringAuthenticate=SiovSecurityService
+             @See pre priklad sk/iway/siov_kolaboracny/cooperation/service/SiovSecurityService.java
+             */
+            try {
+<span class="fc" id="L162">                String customSpringAuthenticate = Constants.getString(&quot;customSpringAuthenticate&quot;);</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(customSpringAuthenticate)) {</span>
+<span class="nc" id="L164">                    WebjetAuthentificationInterface webjetAuthentificationInterface = SpringContext.getApplicationContext().getBean(customSpringAuthenticate, WebjetAuthentificationInterface.class);</span>
+<span class="nc" id="L165">                    grantedAuths.addAll(webjetAuthentificationInterface.create(user));</span>
+                }
+<span class="nc" id="L167">            } catch (Exception e) {</span>
+<span class="nc" id="L168">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L169">            }</span>
+
+<span class="fc" id="L171">            Authentication auth = new UsernamePasswordAuthenticationToken(</span>
+<span class="fc" id="L172">                    user.getLogin(),</span>
+                    &quot;password&quot;,
+                    grantedAuths);
+<span class="fc" id="L175">            return auth;</span>
+        }
+<span class="nc" id="L177">        return null;</span>
+    }
+
+	 @Override
+	public boolean supports(Class&lt;?&gt; authentication)
+	{
+<span class="nc" id="L183">		 Logger.debug(WebjetAuthentificationProvider.class, &quot;WebjetAuthentificationProvider - supports - &quot; + authentication.getName());</span>
+<span class="nc" id="L184">		 return authentication.equals(UsernamePasswordAuthenticationToken.class);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

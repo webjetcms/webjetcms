@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UrlRedirectBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">UrlRedirectBean.java</span></div><h1>UrlRedirectBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ *  UrlRedirectBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.04.2010 16:43:36
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;url_redirect&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_REDIRECT_UPDATE)
+<span class="fc" id="L44">public class UrlRedirectBean extends ActiveRecordRepository implements Serializable</span>
+{
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_url_redirect&quot;)
+	@TableGenerator(name=&quot;WJGen_url_redirect&quot;,pkColumnValue=&quot;url_redirect&quot;)
+	@Column(name=&quot;url_redirect_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title = &quot;components.redirect.label.id&quot;
+    )
+	private Long urlRedirectId;
+
+	@Column(name=&quot;insert_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title =&quot;components.redirect.admin_list.datum_vlozenia&quot;,
+		sortAfter = &quot;publishDate&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+                }
+            )
+        }
+    )
+	Date insertDate;
+
+	@Column(name=&quot;old_url&quot;)
+	@NotBlank
+	@Size(max=255)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;components.redirect.admin_list.stare_url&quot;,
+		sortAfter = &quot;urlRedirectId&quot;
+    )
+	String oldUrl;
+
+	@Column(name=&quot;redirect_code&quot;,nullable=false)
+	@NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT_NUMBER,
+        title = &quot;components.redirect.admin_list.presmerovaci_kod&quot;,
+		sortAfter = &quot;newUrl&quot;,
+		defaultValue = &quot;302&quot;
+    )
+	Integer redirectCode;
+
+	@Column(name=&quot;domain_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;groupedit.domain&quot;,
+        perms = &quot;multiDomain&quot;,
+		sortAfter = &quot;redirectCode&quot;,
+		defaultValue = &quot;{currentDomain}&quot;
+    )
+	String domainName;
+
+	@Column(name=&quot;new_url&quot;)
+	@NotBlank
+	@Size(max=255)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;components.redirect.admin_list.nove_url&quot;,
+		sortAfter = &quot;oldUrl&quot;
+    )
+	String newUrl;
+
+	@Column(name=&quot;publish_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;components.redirect.admin_list.publish_date&quot;,
+		sortAfter = &quot;domainName&quot;,
+        editor = {
+            @DataTableColumnEditor(
+				message=&quot;components.redirect.publishDateNote&quot;
+			)
+        }
+    )
+	Date publishDate;
+
+	public Long getUrlRedirectId() {
+<span class="fc" id="L129">		return urlRedirectId;</span>
+	}
+
+	public void setUrlRedirectId(Long urlRedirectId) {
+<span class="fc" id="L133">		this.urlRedirectId = urlRedirectId;</span>
+<span class="fc" id="L134">	}</span>
+
+	public Date getInsertDate()
+	{
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">		return insertDate == null ? null : (Date) insertDate.clone();</span>
+	}
+
+	public void setInsertDate(Date insertDate)
+	{
+<span class="fc bfc" id="L143" title="All 2 branches covered.">		this.insertDate = insertDate == null ? null : (Date) insertDate.clone();</span>
+<span class="fc" id="L144">	}</span>
+
+	public String getOldUrl()
+	{
+<span class="fc" id="L148">		return oldUrl;</span>
+	}
+
+	public void setOldUrl(String oldUrl)
+	{
+<span class="fc" id="L153">		this.oldUrl = oldUrl;</span>
+<span class="fc" id="L154">	}</span>
+
+	public Integer getRedirectCode()
+	{
+<span class="fc" id="L158">		return redirectCode;</span>
+	}
+
+	public void setRedirectCode(Integer redirectCode)
+	{
+<span class="fc" id="L163">		this.redirectCode = redirectCode;</span>
+<span class="fc" id="L164">	}</span>
+
+	public String getDomainName()
+	{
+<span class="fc" id="L168">		return domainName;</span>
+	}
+
+	public void setDomainName(String domainName)
+	{
+<span class="fc" id="L173">		this.domainName = domainName;</span>
+<span class="fc" id="L174">	}</span>
+
+	public String getNewUrl()
+	{
+<span class="fc" id="L178">		return newUrl;</span>
+	}
+
+	public void setNewUrl(String newUrl)
+	{
+<span class="fc" id="L183">		this.newUrl = newUrl;</span>
+<span class="fc" id="L184">	}</span>
+
+	@Override
+	public Long getId()
+	{
+<span class="fc" id="L189">		return getUrlRedirectId();</span>
+	}
+
+	@Override
+	public void setId(Long id)
+	{
+<span class="fc" id="L195">		setUrlRedirectId(id);</span>
+<span class="fc" id="L196">	}</span>
+
+	public Date getPublishDate() {
+<span class="fc" id="L199">		return publishDate;</span>
+	}
+
+	public void setPublishDate(Date publishDate) {
+<span class="fc" id="L203">		this.publishDate = publishDate;</span>
+<span class="fc" id="L204">	}</span>
+
+	@JsonIgnore
+	public String getPublishTime() {
+<span class="fc" id="L208">		return Tools.formatTime(this.getPublishDate());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizResultEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.jpa</a> &gt; <span class="el_source">QuizResultEntity.java</span></div><h1>QuizResultEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.jpa;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.validation.constraints.Min;
+
+import com.drew.lang.annotations.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Entity
+@Table(name = &quot;quiz_results&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
+<span class="fc" id="L31">public class QuizResultEntity implements Serializable {</span>
+    
+    @Id
+    @Column(name = &quot;id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_quiz_results&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;score_from&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.result.score_from&quot;
+    )
+    @Min(0)
+    @NotNull
+	private Integer scoreFrom;
+
+    @Column(name = &quot;score_to&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.result.score_to&quot;
+    )
+    @Min(0)
+	private Integer scoreTo;
+
+    @Column(name = &quot;description&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = &quot;components.quiz.result.description&quot;
+    )
+    private String description;
+
+    @Column(name = &quot;quiz_id&quot;)
+    @DataTableColumn( inputType = DataTableColumnType.HIDDEN )
+    private Integer quizId;
+
+    @ManyToOne
+    @JoinColumn(name=&quot;quiz_id&quot;, insertable=false, updatable=false)
+    @JsonIgnore
+	private QuizEntity quiz;
+
+    @Column(name = &quot;sort_order&quot;)
+    @DataTableColumn( inputType = DataTableColumnType.NUMBER, title = &quot;components.quiz.position&quot;)
+	private Integer position;
+
+    public int getSortOrder() {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        return position == null ? 0 : position;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

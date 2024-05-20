@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">UploadCommandExecutor.java</span></div><h1>UploadCommandExecutor.java</h1><pre class="source lang-java linenums">
+package cn.bluejoe.elfinder.controller.executors;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItem;
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.editor.UploadFileAction;
+import sk.iway.iwcm.editor.UploadFileForm;
+import sk.iway.iwcm.findexer.FileIndexer;
+import sk.iway.iwcm.findexer.ResultBean;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.gallery.VideoConvert;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.metadata.MetadataCleaner;
+import sk.iway.iwcm.users.UsersDB;
+
+@SuppressWarnings(&quot;java:S116&quot;)
+<span class="nc" id="L48">public class UploadCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+
+	/**
+	 * Odstranenie adresara z cesty k suboru pri uploade na windows z IE (ie bug)
+	 */
+	private static String fixFileNameDirPath(String fileName)
+	{
+		try
+		{
+<span class="nc" id="L58">			int lomka = fileName.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">			if (lomka &gt; 0) fileName = fileName.substring(lomka+1);</span>
+<span class="nc" id="L60">			lomka = fileName.lastIndexOf(&quot;\\&quot;);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (lomka &gt; 0) fileName = fileName.substring(lomka+1);</span>
+		}
+<span class="nc" id="L63">		catch (Exception e)</span>
+		{
+<span class="nc" id="L65">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L66">		}</span>
+
+<span class="nc" id="L68">		fileName = Tools.replace(fileName, &quot;..&quot;, &quot;.&quot;);</span>
+
+<span class="nc" id="L70">		return fileName;</span>
+	}
+
+	private String getFilename(String filepath) {
+<span class="nc" id="L74">		int lomka = filepath.lastIndexOf(&quot;/&quot;);</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (lomka &gt; -1) {</span>
+<span class="nc" id="L77">			return filepath.substring(lomka + 1);</span>
+		}
+
+<span class="nc" id="L80">		return filepath;</span>
+	}
+
+	private String getDirectory(String filepath)
+	{
+<span class="nc" id="L85">		int lomka = filepath.lastIndexOf(&quot;/&quot;);</span>
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (lomka &gt; 0) {</span>
+<span class="nc" id="L88">			return filepath.substring(0, lomka);</span>
+		}
+
+<span class="nc" id="L91">		return &quot;&quot;;</span>
+	}
+
+	private FsItemEx fileItemExFromDirectory(FsItemEx itemEx, String directory) throws IOException
+	{
+<span class="nc" id="L96">		String[] directoriesArray = Tools.getTokens(directory, &quot;/&quot;);</span>
+<span class="nc" id="L97">		return new FsItemEx(itemEx, directoriesArray[0]);</span>
+	}
+
+	// large file will be splitted into many parts
+	class Part
+	{
+		long _start;
+		long _size;
+		FileItem _content;
+
+		public Part(long start, long size, FileItem fileItem)
+<span class="nc" id="L108">		{</span>
+<span class="nc" id="L109">			super();</span>
+<span class="nc" id="L110">			this._start = start;</span>
+<span class="nc" id="L111">			this._size = size;</span>
+<span class="nc" id="L112">			this._content = fileItem;</span>
+<span class="nc" id="L113">		}</span>
+	}
+
+	// a large file with many parts
+	static class Parts
+	{
+		public static synchronized Parts getOrCreate(
+				HttpServletRequest request, String chunkId, String fileName,
+				long total, long totalSize)
+		{
+			//chunkId is not an unique number for files uploaded in one upload form
+<span class="nc" id="L124">			String key = String.format(&quot;chunk_%s_%s&quot;, chunkId, fileName);</span>
+			// stores chunks in application context
+<span class="nc" id="L126">			Parts parts = (Parts) request.getServletContext().getAttribute(key);</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (parts == null)</span>
+			{
+<span class="nc" id="L130">				parts = new Parts(chunkId, fileName, total, totalSize);</span>
+<span class="nc" id="L131">				request.getServletContext().setAttribute(key, parts);</span>
+			}
+
+<span class="nc" id="L134">			return parts;</span>
+		}
+
+		private String _chunkId;
+		// number of parts
+		private long _numberOfParts;
+		private long _totalSize;
+
+		private String _fileName;
+
+		// all chunks
+<span class="nc" id="L145">		Map&lt;Long, Part&gt; _parts = new HashMap&lt;&gt;();</span>
+
+		public Parts(String chunkId, String fileName, long numberOfParts,
+				long totalSize)
+<span class="nc" id="L149">		{</span>
+<span class="nc" id="L150">			_chunkId = chunkId;</span>
+<span class="nc" id="L151">			_fileName = fileName;</span>
+<span class="nc" id="L152">			_numberOfParts = numberOfParts;</span>
+<span class="nc" id="L153">			_totalSize = totalSize;</span>
+<span class="nc" id="L154">		}</span>
+
+		public synchronized void addPart(long partIndex, Part part)
+		{
+<span class="nc" id="L158">			_parts.put(partIndex, part);</span>
+<span class="nc" id="L159">		}</span>
+
+		public boolean isReady()
+		{
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			return _parts.size() == _numberOfParts;</span>
+		}
+
+		public InputStream openInputStream() throws IOException //NOSONAR
+		{
+<span class="nc" id="L168">			return new InputStream()</span>
+<span class="nc" id="L169">			{</span>
+<span class="nc" id="L170">				long partIndex = 0;</span>
+<span class="nc" id="L171">				Part part = _parts.get(partIndex);</span>
+<span class="nc" id="L172">				InputStream is = part._content.getInputStream();</span>
+
+				@Override
+				public int read() throws IOException
+				{
+					while (true)
+					{
+						// current part is not read completely
+<span class="nc" id="L180">						int c = is.read();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">						if (c != -1)</span>
+						{
+<span class="nc" id="L183">							return c;</span>
+						}
+
+						// next part?
+<span class="nc bnc" id="L187" title="All 2 branches missed.">						if (partIndex == _numberOfParts - 1)</span>
+						{
+<span class="nc" id="L189">							is.close();</span>
+<span class="nc" id="L190">							return -1;</span>
+						}
+
+<span class="nc" id="L193">						part = _parts.get(++partIndex);</span>
+<span class="nc" id="L194">						is.close();</span>
+<span class="nc" id="L195">						is = part._content.getInputStream();</span>
+<span class="nc" id="L196">					}</span>
+				}
+
+				@Override
+				public int read(byte[] buffer, int start, int bufferSize) throws IOException
+				{
+					while (true)
+					{
+						// current part is not read completely
+<span class="nc" id="L205">						int c = is.read(buffer, start, bufferSize);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">						if (c != -1)</span>
+						{
+<span class="nc" id="L208">							return c;</span>
+						}
+
+						// next part?
+<span class="nc bnc" id="L212" title="All 2 branches missed.">						if (partIndex == _numberOfParts - 1)</span>
+						{
+<span class="nc" id="L214">							is.close();</span>
+<span class="nc" id="L215">							return -1;</span>
+						}
+
+<span class="nc" id="L218">						part = _parts.get(++partIndex);</span>
+<span class="nc" id="L219">						is.close();</span>
+<span class="nc" id="L220">						is = part._content.getInputStream();</span>
+<span class="nc" id="L221">					}</span>
+				}
+			};
+		}
+
+		public void checkParts() throws IOException
+		{
+<span class="nc" id="L228">			long totalSize = 0;</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			for (long i = 0; i &lt; _numberOfParts; i++)</span>
+			{
+<span class="nc" id="L232">				Part part = _parts.get(i);</span>
+<span class="nc" id="L233">				totalSize += part._size;</span>
+			}
+
+<span class="nc bnc" id="L236" title="All 2 branches missed.">			if (totalSize != _totalSize)</span>
+<span class="nc" id="L237">				throw new IOException(String.format(</span>
+						&quot;invalid file size: excepted %d, but is %d&quot;,
+<span class="nc" id="L239">						_totalSize, totalSize));</span>
+<span class="nc" id="L240">		}</span>
+
+		public void removeFromApplicationContext(HttpServletRequest request)
+		{
+<span class="nc" id="L244">			String key = String.format(&quot;chunk_%s_%s&quot;, _chunkId, _fileName);</span>
+<span class="nc" id="L245">			request.getServletContext().removeAttribute(key);</span>
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			for (long i = 0; i &lt; _numberOfParts; i++)</span>
+			{
+<span class="nc" id="L249">				_parts.get(i)._content.delete();</span>
+			}
+<span class="nc" id="L251">		}</span>
+	}
+
+	interface FileWriter
+	{
+		FsItemEx createAndSave(String fileName, InputStream is, long size)
+				throws IOException;
+	}
+
+	@SuppressWarnings(&quot;java:S1075&quot;)
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L266">		Map&lt;String,FileItem&gt; filesMap = (Map&lt;String,FileItem&gt;) request.getAttribute(&quot;MultipartWrapper.files&quot;);</span>
+		//List&lt;FileItem&gt; files = new ArrayList&lt;FileItem&gt;(filesMap.values());
+<span class="nc" id="L268">		final List&lt;FsItemEx&gt; added = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L270">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="nc" id="L271">		String[] renames = request.getParameterValues(&quot;renames[]&quot;);</span>
+
+<span class="nc" id="L273">		final FsItemEx dir = super.findItem(fsService, target);</span>
+<span class="nc" id="L274">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L275">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+
+<span class="nc" id="L277">		final List&lt;String&gt; notUploaded = new ArrayList&lt;&gt;();</span>
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L279">		List&lt;String&gt; notUploadedSession = (List&lt;String&gt;) request.getAttribute(&quot;MultipartWrapper.notUploaded&quot;);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (notUploadedSession != null) notUploaded.addAll(notUploadedSession) ;</span>
+
+		List&lt;String&gt; uploadPaths;
+
+<span class="nc bnc" id="L284" title="All 6 branches missed.">		if (user != null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) &amp;&amp; filesMap != null)</span>
+		{
+<span class="nc" id="L286">			uploadPaths = Tools.getStringListValue(request.getParameterValues(&quot;upload_path[]&quot;));</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			if (uploadPaths.size() &gt; 0) {</span>
+<span class="nc" id="L288">				uploadPaths = new ArrayList&lt;&gt;(uploadPaths);</span>
+			}
+
+<span class="nc bnc" id="L291" title="All 4 branches missed.">			if (renames != null &amp;&amp; renames.length &gt; 0) {</span>
+<span class="nc" id="L292">				String path = dir.getPath();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">				for (String rename : renames) {</span>
+<span class="nc" id="L294">					File file = new File(Tools.getRealPath(path + &quot;/&quot; + rename));</span>
+
+<span class="nc bnc" id="L296" title="All 2 branches missed.">					if (file.exists()) {</span>
+<span class="nc" id="L297">						int i = 1;</span>
+
+<span class="nc" id="L299">						File fileTo = null;</span>
+						do {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">							String filename = rename.contains(&quot;.&quot;) ? rename.substring(0, rename.lastIndexOf(&quot;.&quot;)) + &quot;-&quot; + (i++) + rename.substring(rename.lastIndexOf(&quot;.&quot;), rename.length()) : rename + &quot;-&quot; + (i++);</span>
+<span class="nc" id="L302">							fileTo = new File(Tools.getRealPath(path + &quot;/&quot; + filename));</span>
+						}
+<span class="nc bnc" id="L304" title="All 2 branches missed.">						while (fileTo.exists());</span>
+<span class="nc" id="L305">						file.renameTo(fileTo); //NOSONAR</span>
+
+<span class="nc" id="L307">						FsItemEx fsItem = new FsItemEx(dir, fileTo.getName());</span>
+<span class="nc" id="L308">						added.add(fsItem);</span>
+					}
+				}
+			}
+
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			for (Entry&lt;String, FileItem&gt; entry : filesMap.entrySet())</span>
+			{
+<span class="nc" id="L315">				String filepath = entry.getKey();</span>
+<span class="nc" id="L316">				FileItem fi = entry.getValue();</span>
+<span class="nc" id="L317">				String directory = getDirectory(filepath);</span>
+<span class="nc" id="L318">				String fileName = getFilename(filepath);</span>
+<span class="nc" id="L319">				fileName = fixFileNameDirPath(fileName);</span>
+
+				//wj8 - elfinder - kontrola prav pre typy suborov (#20592)
+<span class="nc" id="L322">				String uploadType = &quot;file&quot;;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">				if(dir.getPath().startsWith(&quot;/images&quot;)) uploadType = &quot;image&quot;;</span>
+
+<span class="nc bnc" id="L325" title="All 6 branches missed.">				if (dir.getPath().startsWith(&quot;/files&quot;) || dir.getPath().startsWith(&quot;/images&quot;) || dir.getPath().startsWith(&quot;/shared&quot;))</span>
+				{
+<span class="nc" id="L327">					fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L328">					fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
+
+<span class="nc" id="L330">					directory = DB.internationalToEnglish(directory);</span>
+<span class="nc" id="L331">					directory = DocTools.removeCharsDir(directory, true).toLowerCase();</span>
+				}
+
+<span class="nc" id="L334">				String realPathDir = Tools.getRealPath(dir.getPath());</span>
+<span class="nc" id="L335">				File file = new File(realPathDir);</span>
+
+				// is not update
+<span class="nc bnc" id="L338" title="All 4 branches missed.">				if (!file.exists() || !file.isFile()) {</span>
+<span class="nc" id="L339">					realPathDir = Tools.getRealPath(dir.getPath() + directory + &quot;/&quot; + fileName);</span>
+<span class="nc" id="L340">					file = new File(realPathDir);</span>
+				}
+
+<span class="nc" id="L343">				final File newFile = file;</span>
+				//fi.write(newFile);
+<span class="nc" id="L345">				final String uploadTypeFinal = uploadType;</span>
+<span class="nc" id="L346">				final String directoryFinal = directory;</span>
+
+<span class="nc" id="L348">				FileWriter fw = new FileWriter()</span>
+<span class="nc" id="L349">				{</span>
+					@Override
+					public FsItemEx createAndSave(String fileName, InputStream is, long size)
+							throws IOException
+					{
+<span class="nc bnc" id="L354" title="All 2 branches missed.">						if (fileName.startsWith(&quot;/&quot;)) fileName = fileName.substring(1);</span>
+<span class="nc" id="L355">						fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L356">						fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
+<span class="nc" id="L357">						fileName = Tools.replace(fileName, &quot;/&quot;, &quot;&quot;+File.separatorChar);</span>
+
+<span class="nc" id="L359">						boolean isAllowedForUpload = UploadFileTools.isFileAllowed(uploadTypeFinal, fileName, size, user, request);</span>
+
+<span class="nc bnc" id="L361" title="All 2 branches missed.">						if (isAllowedForUpload)</span>
+						{
+							// fis.getName() returns full path such as 'C:\temp\abc.txt' in
+							// IE10
+							// while returns 'abc.txt' in Chrome
+							// see
+							// https://github.com/bluejoe2008/elfinder-2.x-servlet/issues/22
+							//java.nio.file.Path p = java.nio.file.Paths.get(fileName);
+<span class="nc" id="L369">							FsItemEx newFileEx = new FsItemEx(dir, fileName);</span>
+
+							/*
+							 * String fileName = fis.getName(); FsItemEx newFile = new
+							 * FsItemEx(dir, fileName);
+							 */
+							//newFileEx.createFile();
+							//newFile.writeStream(is);
+
+<span class="nc" id="L378">							File fileToSave = new File(newFile.getParentFile()+File.separator+fileName);</span>
+<span class="nc" id="L379">							IwcmFsDB.writeFiletoDest(is, fileToSave, (int)size, true);</span>
+
+<span class="nc" id="L381">							Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload, path=&quot;+dir.getPath()+directoryFinal+&quot;/&quot;+fileName, -1, -1);</span>
+
+							//if (filter.accepts(newFile))
+<span class="nc" id="L384">								added.add(newFileEx);</span>
+
+<span class="nc" id="L386">							return newFileEx;</span>
+						}
+						else
+						{
+<span class="nc" id="L390">							notUploaded.add(fileName);</span>
+<span class="nc" id="L391">							return null;</span>
+						}
+					}
+				};
+
+				// chunked upload
+<span class="nc bnc" id="L397" title="All 2 branches missed.">				if (request.getParameter(&quot;cid&quot;) != null)</span>
+				{
+<span class="nc" id="L399">					processChunkUpload(request, filesMap, fw);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">					if (added.size() &gt; 0)</span>
+					{
+<span class="nc" id="L402">						FsItemEx newFileEx = added.get(added.size()-1);</span>
+<span class="nc" id="L403">						fileName = newFileEx.getName();</span>
+<span class="nc" id="L404">					}</span>
+				}
+				else
+				{
+<span class="nc" id="L408">					boolean isAllowedForUpload = UploadFileTools.isFileAllowed(uploadType, fileName, fi.getSize(), user, request);</span>
+
+<span class="nc bnc" id="L410" title="All 2 branches missed.">					if (isAllowedForUpload)</span>
+					{
+<span class="nc" id="L412">						IwcmFsDB.writeFiletoDest(fi.getInputStream(), newFile, (int)fi.getSize(), true);</span>
+
+<span class="nc" id="L414">						Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;elfinder upload, path=&quot;+dir.getPath()+directory+&quot;/&quot;+fileName, -1, -1);</span>
+					}
+					else
+					{
+<span class="nc" id="L418">						notUploaded.add(fileName);</span>
+					}
+				}
+
+<span class="nc" id="L422">				IwcmFile newFileIwcm = new IwcmFile(newFile);</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">				if (newFileIwcm.exists()) {</span>
+<span class="nc" id="L424">					fi.delete();</span>
+<span class="nc" id="L425">					FsItemEx fsItem = new FsItemEx(dir, fileName);</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">					if (!dir.isFolder()) {</span>
+<span class="nc" id="L427">						fsItem = dir;</span>
+					}
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">					if (Tools.isEmpty(directory)) {</span>
+<span class="nc" id="L431">						added.add(fsItem);</span>
+					}
+					else {
+<span class="nc" id="L434">						FsItemEx itemDirectory = fileItemExFromDirectory(dir, directory);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">						if (!added.contains(itemDirectory)) {</span>
+<span class="nc" id="L436">							added.add(itemDirectory);</span>
+						}
+					}
+				}
+
+				//TODO: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
+
+				//kvoli chunked uploadu musime zrekonstruovat nanovo
+<span class="nc" id="L444">				newFileIwcm = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+&quot;/&quot;+fileName));</span>
+
+				//vycisti metadata
+<span class="nc" id="L447">				MetadataCleaner.removeMetadata(newFileIwcm);</span>
+
+				//ak je treba, aplikujem vodotlac na obrazky
+<span class="nc" id="L450">				GalleryDB.applyWatermarkOnUpload(newFileIwcm);</span>
+
+				// ak je to povolene, pokusime sa skonvertovat CMYK obrazok na RGB
+<span class="nc" id="L453">				ImageTools.convertCmykToRgb(newFileIwcm.getAbsolutePath());</span>
+
+				//ak je to JPG obrazok, skusime ziskat datum vytvorenia fotografie na zaklade EXIF metadat
+<span class="nc" id="L456">				Date dateCreated = GalleryDB.getExifDateOriginal(newFileIwcm);</span>
+
+<span class="nc bnc" id="L458" title="All 2 branches missed.">				if (VideoConvert.isVideoFile(fileName))</span>
+				{
+<span class="nc bnc" id="L460" title="All 2 branches missed.">					if (fileName.endsWith(&quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;))==false)</span>
+					{
+						//nie je to mp4, treba skonvertovat
+<span class="nc" id="L463">						UploadFileForm my_form = new UploadFileForm();</span>
+<span class="nc" id="L464">						my_form.setBitRate(Constants.getInt(&quot;defaultVideoBitrate&quot;));</span>
+<span class="nc" id="L465">						my_form.setVideoWidth(Constants.getInt(&quot;defaultVideoWidth&quot;));</span>
+<span class="nc" id="L466">						my_form.setVideoHeight(Constants.getInt(&quot;defaultVideoHeight&quot;));</span>
+<span class="nc" id="L467">						my_form.setKeepOriginalVideo(false);</span>
+
+						//zmaz povodny added mpg subor
+<span class="nc bnc" id="L470" title="All 2 branches missed.">						for (FsItemEx item : added)</span>
+						{
+<span class="nc bnc" id="L472" title="All 2 branches missed.">							if (item.getPath().endsWith(fileName))</span>
+							{
+<span class="nc" id="L474">								added.remove(item);</span>
+<span class="nc" id="L475">								break;</span>
+							}
+<span class="nc" id="L477">						}</span>
+
+<span class="nc" id="L479">						String fileURL = VideoConvert.convert(my_form, newFileIwcm.getVirtualPath(), request);</span>
+<span class="nc" id="L480">						Logger.debug(this.getClass(), &quot;Converted video: &quot;+fileURL);</span>
+<span class="nc bnc" id="L481" title="All 4 branches missed.">						if (Tools.isNotEmpty(fileURL) &amp;&amp; fileURL.lastIndexOf(&quot;/&quot;)&gt;1)</span>
+						{
+<span class="nc" id="L483">							String videoFileName = fileURL.substring(fileURL.lastIndexOf(&quot;/&quot;) + 1);</span>
+<span class="nc" id="L484">							added.add(new FsItemEx(dir, videoFileName));</span>
+<span class="nc" id="L485">							added.add(new FsItemEx(dir, Tools.replace(videoFileName, &quot;.&quot;+Constants.getString(&quot;defaultVideoFormat&quot;), &quot;.jpg&quot;)));</span>
+						}
+<span class="nc" id="L487">					}</span>
+					else
+					{
+						//pre mp4 vytvorime len screenshot
+<span class="nc" id="L491">						String image = VideoConvert.makeScreenshot(newFileIwcm.getAbsolutePath(), null);</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">						if (image != null)</span>
+                        {
+<span class="nc" id="L494">                            String imageFilename = new IwcmFile(image).getName();</span>
+
+<span class="nc bnc" id="L496" title="All 2 branches missed.">                            if (Tools.isEmpty(directory))</span>
+                            {
+<span class="nc" id="L498">                                added.add(new FsItemEx(dir, imageFilename));</span>
+                            }
+                        }
+					}
+				}
+
+<span class="nc bnc" id="L504" title="All 2 branches missed.">				if (FileTools.isImage(newFileIwcm.getName())) {</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {</span>
+						//we must replace o_ file because it will be used in resize process instead of new file
+<span class="nc" id="L507">						IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+&quot;/o_&quot;+fileName));</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">						if (orig.exists()) {</span>
+<span class="nc" id="L509">							FileTools.copyFile(newFileIwcm, orig);</span>
+						}
+
+<span class="nc" id="L512">						GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);</span>
+<span class="nc" id="L513">						added.add(new FsItemEx(dir, &quot;s_&quot;+fileName));</span>
+<span class="nc" id="L514">						added.add(new FsItemEx(dir, &quot;o_&quot;+fileName));</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">					} else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;)) {</span>
+<span class="nc" id="L516">						GalleryDB.setImage(dir.getPath()+directory, fileName);</span>
+					}
+
+					//zapise datum vytvorenia fotografie (ak vieme ziskat)
+<span class="nc bnc" id="L520" title="All 2 branches missed.">					if (dateCreated != null) {</span>
+<span class="nc" id="L521">						GalleryDB.setUploadDateImage(dir.getPath()+directory, fileName, dateCreated.getTime());</span>
+					}
+				}
+
+				//ak existuje adresar files, treba indexovat
+<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (FileIndexer.isFileIndexerConfigured())</span>
+				{
+<span class="nc" id="L528">					List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L529">					FileIndexer.indexFile(dir.getPath() + directory + &quot;/&quot; + fileName, indexedFiles, request);</span>
+				}
+
+<span class="nc" id="L532">				UploadFileAction.reflectionLoader(request, user, dir.getPath() + directory + &quot;/&quot; + fileName);</span>
+<span class="nc" id="L533">			}</span>
+		}
+		else
+		{
+<span class="nc" id="L537">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.upload.error&quot;));</span>
+		}
+<span class="nc" id="L539">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+
+
+<span class="nc bnc" id="L542" title="All 4 branches missed.">		if (notUploaded != null &amp;&amp; notUploaded.size()&gt;0)</span>
+		{
+<span class="nc" id="L544">			String fileNames = notUploaded.toString();</span>
+<span class="nc" id="L545">			json.put(&quot;error&quot;, prop.getText(&quot;admin.dragdropupload.forbidden&quot;, fileNames));</span>
+		}
+<span class="nc" id="L547">	}</span>
+
+	private void processChunkUpload(HttpServletRequest request, Map&lt;String,FileItem&gt; filesMap, FileWriter fw)
+				throws NumberFormatException, IOException
+		{
+			// cid : unique id of chunked uploading file
+<span class="nc" id="L553">			String cid = request.getParameter(&quot;cid&quot;);</span>
+			// solr-5.5.2.tgz.48_65.part
+<span class="nc" id="L555">			String chunk = request.getParameter(&quot;chunk&quot;);</span>
+
+			// 100270176,2088962,136813192
+<span class="nc" id="L558">			String range = request.getParameter(&quot;range&quot;);</span>
+<span class="nc" id="L559">			String[] tokens = range.split(&quot;,&quot;);</span>
+
+<span class="nc" id="L561">			Logger.debug(UploadCommandExecutor.class, &quot;chunk=&quot;+chunk+&quot; range=&quot;+range+&quot; cid=&quot;+cid);</span>
+
+<span class="nc" id="L563">			Matcher m = Pattern.compile(&quot;(.*)\\.([0-9]+)\\_([0-9]+)\\.part&quot;) //NOSONAR</span>
+<span class="nc" id="L564">					.matcher(chunk);</span>
+
+<span class="nc bnc" id="L566" title="All 2 branches missed.">			if (m.find())</span>
+			{
+<span class="nc" id="L568">				String fileName = m.group(1);</span>
+<span class="nc" id="L569">				String uploadPath = request.getParameter(&quot;upload_path[]&quot;);</span>
+<span class="nc bnc" id="L570" title="All 4 branches missed.">				if (Tools.isNotEmpty(uploadPath) &amp;&amp; uploadPath.startsWith(&quot;/&quot;))</span>
+				{
+<span class="nc" id="L572">					fileName = uploadPath;</span>
+				}
+<span class="nc" id="L574">				long index = Long.parseLong(m.group(2));</span>
+<span class="nc" id="L575">				long total = Long.parseLong(m.group(3));</span>
+
+<span class="nc" id="L577">				Parts parts = Parts.getOrCreate(request, cid, fileName, total + 1,</span>
+<span class="nc" id="L578">						Long.parseLong(tokens[2]));</span>
+
+<span class="nc" id="L580">				long start = Long.parseLong(tokens[0]);</span>
+<span class="nc" id="L581">				long size = Long.parseLong(tokens[1]);</span>
+
+<span class="nc" id="L583">				Logger.debug(UploadCommandExecutor.class, String.format(&quot;uploaded part(%d/%d) of file: %s&quot;,</span>
+<span class="nc" id="L584">						index, total, fileName));</span>
+
+<span class="nc" id="L586">				parts.addPart(index, new Part(start, size, filesMap.get(&quot;upload[]&quot;)));</span>
+<span class="nc" id="L587">				Logger.debug(UploadCommandExecutor.class, String.format(&quot;&gt;&gt;&gt;&gt;%d&quot;, parts._parts.size()));</span>
+<span class="nc bnc" id="L588" title="All 2 branches missed.">				if (parts.isReady())</span>
+				{
+<span class="nc" id="L590">					parts.checkParts();</span>
+
+<span class="nc" id="L592">					Logger.debug(UploadCommandExecutor.class, String.format(&quot;file is uploadded completely: %s&quot;,</span>
+							fileName));
+
+<span class="nc" id="L595">					long totalSize = 0;</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">					for (long i = 0; i &lt; parts._numberOfParts; i++)</span>
+					{
+<span class="nc" id="L598">						totalSize += parts._parts.get(i)._content.getSize();</span>
+					}
+
+<span class="nc" id="L601">					fw.createAndSave(fileName, parts.openInputStream(), totalSize);</span>
+
+					// remove from application context
+<span class="nc" id="L604">					parts.removeFromApplicationContext(request);</span>
+				}
+			}
+<span class="nc" id="L607">		}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

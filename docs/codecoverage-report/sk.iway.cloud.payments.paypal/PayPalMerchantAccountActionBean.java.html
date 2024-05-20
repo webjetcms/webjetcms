@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PayPalMerchantAccountActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.cloud.payments.paypal</a> &gt; <span class="el_source">PayPalMerchantAccountActionBean.java</span></div><h1>PayPalMerchantAccountActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.cloud.payments.paypal;
+
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.validation.Validate;
+import net.sourceforge.stripes.validation.ValidateNestedProperties;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+
+/**
+ *  PayPalMerchantAccountActionBean.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2014
+ *@author       $Author: jeeff mhalas $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 25.9.2014 10:28:40
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L24">public class PayPalMerchantAccountActionBean extends WebJETActionBean</span>
+{
+<span class="nc" id="L26">	@ValidateNestedProperties({</span>
+      @Validate(field=&quot;user&quot;, required=true),
+      @Validate(field=&quot;pwd&quot;, required=true),
+      @Validate(field=&quot;signature&quot;, required=true)
+    })
+	private PayPalMerchantAccountBean account = new PayPalMerchantAccountBean();
+	
+	@Override
+	public void setContext(net.sourceforge.stripes.action.ActionBeanContext context) {
+<span class="nc" id="L35">		this.context = context;</span>
+		
+		//TO DO: check for xss attack
+		
+		//find if this domain has already defined paypal info, if yes load it
+<span class="nc" id="L40">		PayPalMerchantAccountBean byDomain = new JpaDB&lt;PayPalMerchantAccountBean&gt;(PayPalMerchantAccountBean.class).findFirst(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if(byDomain != null) this.account = byDomain;</span>
+<span class="nc" id="L42">	};</span>
+	
+	@DefaultHandler
+	public Resolution defaultHandler()
+	{
+<span class="nc" id="L47">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+	}
+	
+	public Resolution save()
+	{
+<span class="nc" id="L52">		Identity user = getCurrentUser();</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">		if (user == null || user.isDisabledItem(&quot;anyPremiumService&quot;))</span>
+		{
+<span class="nc" id="L55">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);			</span>
+		}
+		
+		//set correct domain_id (if somebody tries to use fake one)
+<span class="nc" id="L59">		account.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L60">		boolean saveok=account.save();</span>
+<span class="nc" id="L61">		getRequest().setAttribute(&quot;paypalSaveok&quot;, saveok);</span>
+<span class="nc" id="L62">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+	}
+
+	public PayPalMerchantAccountBean getAccount()
+	{
+<span class="nc" id="L67">		return account;</span>
+	}
+
+	public void setAccount(PayPalMerchantAccountBean account)
+	{
+<span class="nc" id="L72">		this.account = account;</span>
+<span class="nc" id="L73">	}</span>
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

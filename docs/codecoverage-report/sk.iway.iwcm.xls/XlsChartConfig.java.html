@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XlsChartConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.xls</a> &gt; <span class="el_source">XlsChartConfig.java</span></div><h1>XlsChartConfig.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.xls;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  XlsChartConfig.java - trieda s konfiguraciou grafu
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 7.10.2005 13:58:41
+ *@modified     $Date: 2005/12/06 16:38:51 $
+ */
+public class XlsChartConfig
+{
+<span class="nc" id="L20">	int width = 550;</span>
+<span class="nc" id="L21">	int height = 300;</span>
+	
+<span class="nc" id="L23">	String title = &quot;&quot;;</span>
+<span class="nc" id="L24">	String xAxisLabel = &quot;&quot;;</span>
+<span class="nc" id="L25">	String yAxisLabel = &quot;&quot;;</span>
+	
+<span class="nc" id="L27">	String graphMode = &quot;line&quot;;</span>
+<span class="nc" id="L28">	int sheetIndex = 0;</span>
+	
+<span class="nc" id="L30">	String xlsUrl = null;</span>
+<span class="nc" id="L31">	String templateUrl = null;</span>
+	
+<span class="nc" id="L33">	int titleRowIndex = -1;</span>
+<span class="nc" id="L34">	int startRowIndex = -1;</span>
+<span class="nc" id="L35">	int endRowIndex = -1;</span>
+	//poradie stlpca, kde sa zacinaju data (zvycajne 0 bunka)
+<span class="nc" id="L37">	int startColumn = 0;</span>
+	
+<span class="nc" id="L39">	int pieColumnLegend = -1;</span>
+<span class="nc" id="L40">	int pieColumnData = -1;</span>
+<span class="nc" id="L41">	String pieLabelGenerator = &quot;{0} - {2}&quot;;</span>
+	
+<span class="nc" id="L43">	private int maxLegendCharLength = -1;</span>
+	
+<span class="nc" id="L45">	String cacheImagePath = &quot;/images/cache/xlscart/&quot;;</span>
+	
+	public XlsChartConfig()
+<span class="nc" id="L48">	{</span>
+		
+<span class="nc" id="L50">	}</span>
+	
+	public XlsChartConfig(HttpServletRequest request)
+<span class="nc" id="L53">	{</span>
+<span class="nc" id="L54">		width = Tools.getIntValue(request.getParameter(&quot;width&quot;), 550);</span>
+<span class="nc" id="L55">		height = Tools.getIntValue(request.getParameter(&quot;height&quot;), 300);</span>
+		
+<span class="nc" id="L57">		title = &quot;&quot;;</span>
+<span class="nc" id="L58">		xAxisLabel = &quot;&quot;;</span>
+<span class="nc" id="L59">		yAxisLabel = &quot;&quot;;</span>
+		
+<span class="nc" id="L61">		graphMode = request.getParameter(&quot;graphMode&quot;);</span>
+<span class="nc" id="L62">		sheetIndex = Tools.getIntValue(request.getParameter(&quot;sheetIndex&quot;), 0);</span>
+		
+<span class="nc" id="L64">		xlsUrl = request.getParameter(&quot;xlsUrl&quot;);</span>
+		
+<span class="nc" id="L66">		titleRowIndex = Tools.getIntValue(request.getParameter(&quot;titleRow&quot;), -1);</span>
+<span class="nc" id="L67">		startRowIndex = Tools.getIntValue(request.getParameter(&quot;startRow&quot;), -1);</span>
+<span class="nc" id="L68">		endRowIndex = Tools.getIntValue(request.getParameter(&quot;endRow&quot;), -1);</span>
+<span class="nc" id="L69">	}</span>
+
+	public int getEndRowIndex()
+	{
+<span class="nc" id="L73">		return endRowIndex;</span>
+	}
+
+	public void setEndRowIndex(int endRowIndex)
+	{
+<span class="nc" id="L78">		this.endRowIndex = endRowIndex;</span>
+<span class="nc" id="L79">	}</span>
+
+	public String getXlsUrl()
+	{
+<span class="nc" id="L83">		return xlsUrl;</span>
+	}
+
+	public void setXlsUrl(String fileUrl)
+	{
+<span class="nc" id="L88">		this.xlsUrl = fileUrl;</span>
+<span class="nc" id="L89">	}</span>
+
+	public String getGraphMode()
+	{
+<span class="nc" id="L93">		return graphMode;</span>
+	}
+
+	public void setGraphMode(String graphMode)
+	{
+<span class="nc" id="L98">		this.graphMode = graphMode;</span>
+<span class="nc" id="L99">	}</span>
+
+	public int getHeight()
+	{
+<span class="nc" id="L103">		return height;</span>
+	}
+
+	public void setHeight(int height)
+	{
+<span class="nc" id="L108">		this.height = height;</span>
+<span class="nc" id="L109">	}</span>
+
+	public int getSheetIndex()
+	{
+<span class="nc" id="L113">		return sheetIndex;</span>
+	}
+
+	public void setSheetIndex(int sheetIndex)
+	{
+<span class="nc" id="L118">		this.sheetIndex = sheetIndex;</span>
+<span class="nc" id="L119">	}</span>
+
+	public int getStartRowIndex()
+	{
+<span class="nc" id="L123">		return startRowIndex;</span>
+	}
+
+	public void setStartRowIndex(int startRowIndex)
+	{
+<span class="nc" id="L128">		this.startRowIndex = startRowIndex;</span>
+<span class="nc" id="L129">	}</span>
+
+	public String getTitle()
+	{
+<span class="nc" id="L133">		return title;</span>
+	}
+
+	public void setTitle(String title)
+	{
+<span class="nc" id="L138">		this.title = title;</span>
+<span class="nc" id="L139">	}</span>
+
+	public int getTitleRowIndex()
+	{
+<span class="nc bnc" id="L143" title="All 4 branches missed.">		if (titleRowIndex &lt; 0 &amp;&amp; startRowIndex &gt; 0)</span>
+		{
+<span class="nc" id="L145">			titleRowIndex = startRowIndex - 1;</span>
+		}
+<span class="nc" id="L147">		return titleRowIndex;</span>
+	}
+
+	public void setTitleRowIndex(int titleRowIndex)
+	{
+<span class="nc" id="L152">		this.titleRowIndex = titleRowIndex;</span>
+<span class="nc" id="L153">	}</span>
+
+	public int getWidth()
+	{
+<span class="nc" id="L157">		return width;</span>
+	}
+
+	public void setWidth(int width)
+	{
+<span class="nc" id="L162">		this.width = width;</span>
+<span class="nc" id="L163">	}</span>
+
+	public String getXAxisLabel()
+	{
+<span class="nc" id="L167">		return xAxisLabel;</span>
+	}
+
+	public void setXAxisLabel(String axisLabel)
+	{
+<span class="nc" id="L172">		xAxisLabel = axisLabel;</span>
+<span class="nc" id="L173">	}</span>
+
+	public String getYAxisLabel()
+	{
+<span class="nc" id="L177">		return yAxisLabel;</span>
+	}
+
+	public void setYAxisLabel(String axisLabel)
+	{
+<span class="nc" id="L182">		yAxisLabel = axisLabel;</span>
+<span class="nc" id="L183">	}</span>
+
+	public String getTemplateUrl()
+	{
+<span class="nc" id="L187">		return templateUrl;</span>
+	}
+
+	public void setTemplateUrl(String templateUrl)
+	{
+<span class="nc" id="L192">		this.templateUrl = templateUrl;</span>
+<span class="nc" id="L193">	}</span>
+
+	public String getCacheImagePath()
+	{
+<span class="nc" id="L197">		return cacheImagePath;</span>
+	}
+
+	public void setCacheImagePath(String cacheImagePath)
+	{
+<span class="nc" id="L202">		this.cacheImagePath = cacheImagePath;</span>
+<span class="nc" id="L203">	}</span>
+
+	public int getPieColumnData()
+	{
+<span class="nc" id="L207">		return pieColumnData;</span>
+	}
+
+	public void setPieColumnData(int pieColumnData)
+	{
+<span class="nc" id="L212">		this.pieColumnData = pieColumnData;</span>
+<span class="nc" id="L213">	}</span>
+
+	public int getPieColumnLegend()
+	{
+<span class="nc" id="L217">		return pieColumnLegend;</span>
+	}
+
+	public void setPieColumnLegend(int pieColumnLegend)
+	{
+<span class="nc" id="L222">		this.pieColumnLegend = pieColumnLegend;</span>
+<span class="nc" id="L223">	}</span>
+
+	public int getStartColumn()
+	{
+<span class="nc" id="L227">		return startColumn;</span>
+	}
+
+	public void setStartColumn(int startColumn)
+	{
+<span class="nc" id="L232">		this.startColumn = startColumn;</span>
+<span class="nc" id="L233">	}</span>
+
+	public String getPieLabelGenerator()
+	{
+<span class="nc" id="L237">		return pieLabelGenerator;</span>
+	}
+
+	public void setPieLabelGenerator(String pieLabelGenerator)
+	{
+<span class="nc" id="L242">		this.pieLabelGenerator = pieLabelGenerator;</span>
+<span class="nc" id="L243">	}</span>
+
+	public int getMaxLegendCharLength()
+	{
+<span class="nc" id="L247">		return maxLegendCharLength;</span>
+	}
+
+	public void setMaxLegendCharLength(int maxLegendCharLength)
+	{
+<span class="nc" id="L252">		this.maxLegendCharLength = maxLegendCharLength;</span>
+<span class="nc" id="L253">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

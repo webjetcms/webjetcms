@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailCampainBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailCampainBean.java</span></div><h1>EmailCampainBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.util.Date;
+
+/**
+ *  EmailCampainBean.java - riadok tabulky emails_campain
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2007
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 10.10.2007 12:38:40
+ *@modified     $Date: 2007/10/17 07:34:59 $
+ */
+<span class="nc" id="L16">public class EmailCampainBean</span>
+{
+	private int emailsCampainId;
+	private String senderName;
+	private String senderEmail;
+	private String subject;
+	private String url;
+	private int createdByUserId;
+<span class="nc" id="L24">	private Date createDate = null;</span>
+	private int countOfRecipients;
+	private int countOfSentEmails;
+<span class="nc" id="L27">	private Date lastSentDate = null;</span>
+	private String userGroups;
+	
+<span class="nc" id="L30">	private Date sendAt = null;</span>
+	private String attachments;
+	private String ccEmail;
+	private String bccEmail;
+	private String replyTo;
+	
+	public int getEmailsCampainId()
+	{
+<span class="nc" id="L38">		return emailsCampainId;</span>
+	}
+	public void setEmailsCampainId(int emailsCampainId)
+	{
+<span class="nc" id="L42">		this.emailsCampainId = emailsCampainId;</span>
+<span class="nc" id="L43">	}</span>
+	public String getSenderName()
+	{
+<span class="nc" id="L46">		return senderName;</span>
+	}
+	public void setSenderName(String senderName)
+	{
+<span class="nc" id="L50">		this.senderName = senderName;</span>
+<span class="nc" id="L51">	}</span>
+	public String getSenderEmail()
+	{
+<span class="nc" id="L54">		return senderEmail;</span>
+	}
+	public void setSenderEmail(String senderEmail)
+	{
+<span class="nc" id="L58">		this.senderEmail = senderEmail;</span>
+<span class="nc" id="L59">	}</span>
+	public String getSubject()
+	{
+<span class="nc" id="L62">		return subject;</span>
+	}
+	public void setSubject(String subject)
+	{
+<span class="nc" id="L66">		this.subject = subject;</span>
+<span class="nc" id="L67">	}</span>
+	public String getUrl()
+	{
+<span class="nc" id="L70">		return url;</span>
+	}
+	public void setUrl(String url)
+	{
+<span class="nc" id="L74">		this.url = url;</span>
+<span class="nc" id="L75">	}</span>
+	public int getCreatedByUserId()
+	{
+<span class="nc" id="L78">		return createdByUserId;</span>
+	}
+	public void setCreatedByUserId(int createdByUserId)
+	{
+<span class="nc" id="L82">		this.createdByUserId = createdByUserId;</span>
+<span class="nc" id="L83">	}</span>
+	public Date getCreateDate()
+	{
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		return createDate == null ? null : (Date) createDate.clone();</span>
+	}
+	public void setCreateDate(Date createDate)
+	{
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		this.createDate = createDate == null ? null : (Date) createDate.clone();</span>
+<span class="nc" id="L91">	}</span>
+	public int getCountOfRecipients()
+	{
+<span class="nc" id="L94">		return countOfRecipients;</span>
+	}
+	public void setCountOfRecipients(int countOfRecipients)
+	{
+<span class="nc" id="L98">		this.countOfRecipients = countOfRecipients;</span>
+<span class="nc" id="L99">	}</span>
+	public int getCountOfSentEmails()
+	{
+<span class="nc" id="L102">		return countOfSentEmails;</span>
+	}
+	public void setCountOfSentEmails(int countOfSentEmails)
+	{
+<span class="nc" id="L106">		this.countOfSentEmails = countOfSentEmails;</span>
+<span class="nc" id="L107">	}</span>
+	public Date getLastSentDate()
+	{
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		return lastSentDate == null ? null : (Date) lastSentDate.clone();</span>
+	}
+	public void setLastSentDate(Date lastSentDate)
+	{
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		this.lastSentDate = lastSentDate == null ? null : (Date) lastSentDate.clone();</span>
+<span class="nc" id="L115">	}</span>
+	public String getUserGroups()
+	{
+<span class="nc" id="L118">		return userGroups;</span>
+	}
+	public void setUserGroups(String userGroups)
+	{
+<span class="nc" id="L122">		this.userGroups = userGroups;</span>
+<span class="nc" id="L123">	}</span>
+	public String getAttachments()
+	{
+<span class="nc" id="L126">		return attachments;</span>
+	}
+	public void setAttachments(String attachments)
+	{
+<span class="nc" id="L130">		this.attachments = attachments;</span>
+<span class="nc" id="L131">	}</span>
+	public String getCcEmail()
+	{
+<span class="nc" id="L134">		return ccEmail;</span>
+	}
+	public void setCcEmail(String ccEmail)
+	{
+<span class="nc" id="L138">		this.ccEmail = ccEmail;</span>
+<span class="nc" id="L139">	}</span>
+	public String getBccEmail()
+	{
+<span class="nc" id="L142">		return bccEmail;</span>
+	}
+	public void setBccEmail(String bccEmail)
+	{
+<span class="nc" id="L146">		this.bccEmail = bccEmail;</span>
+<span class="nc" id="L147">	}</span>
+	public String getReplyTo()
+	{
+<span class="nc" id="L150">		return replyTo;</span>
+	}
+	public void setReplyTo(String replyTo)
+	{
+<span class="nc" id="L154">		this.replyTo = replyTo;</span>
+<span class="nc" id="L155">	}</span>
+	public Date getSendAt()
+	{
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		return sendAt == null ? null : (Date) sendAt.clone();</span>
+	}
+	public void setSendAt(Date sendAt)
+	{
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		this.sendAt = sendAt == null ? null : (Date) sendAt.clone();</span>
+<span class="nc" id="L163">	}</span>
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

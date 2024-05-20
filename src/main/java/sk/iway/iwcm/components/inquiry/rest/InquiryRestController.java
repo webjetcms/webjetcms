@@ -48,7 +48,9 @@ public class InquiryRestController extends DatatableRestControllerV2<InquiryEnti
 
             entity = new InquiryEntity();
             processFromEntity(entity, ProcessItemAction.CREATE);
-        } else entity = inquiryRepository.getById(id);
+        } else {
+            entity = inquiryRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+        }
         return entity;
     }
 

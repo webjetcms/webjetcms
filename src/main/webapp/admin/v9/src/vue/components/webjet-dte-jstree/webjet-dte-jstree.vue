@@ -20,7 +20,7 @@
         </div>
         <div v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" v-bind:class="{'dt-tree-container-no-margin-top': data.length<1}" class="form-group row">
             <div class="col-12">
-                <button @mouseup="toggleModals" class="btn btn-outline-secondary btn-vue-jstree-add"><i class="far fa-plus"></i> <span v-text="addButtonText"/></button>
+                <button @mouseup="toggleModals" class="btn btn-outline-secondary btn-vue-jstree-add"><i class="ti ti-plus"></i> <span v-text="addButtonText"/></button>
             </div>
         </div>
         <transition name="fade">
@@ -174,7 +174,7 @@
             },
             _validateGroupPageClick(that, data) {
                 //If group is marked with this icon (no permitted group) after click on it, nothing happens - sekjurity
-                if(data.node.icon !== undefined && "fas fa-folder-times" == data.node.icon) {
+                if(data.node.icon !== undefined && "ti ti-folder-x" == data.node.icon) {
                     return false;
                 }
 

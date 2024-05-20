@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.monitoring</a> &gt; <span class="el_source">MonitoringDB.java</span></div><h1>MonitoringDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.monitoring;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.stripes.SyncDirAction;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
+
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ *  MonitoringDB.java
+ *
+ *		Serializes and deserializes monitoring statistics
+ *		into/from table cluster_monitoring, using {@link XMLEncoder}.
+ *
+ *		This is done if and only if server runs in cluster configuration.
+ *		Otherwise it makes no sense to persist this data, as we can take
+ *		them directly from memory. Persisting this data allows us
+ *		to monitor execution times on any other node, even if that
+ *		node lacks administration interface.
+ *
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 27.7.2010 14:32:19
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L45">public class MonitoringDB</span>
+{
+	private static final String insert = &quot;INSERT INTO cluster_monitoring(node, type, content, created_at) VALUES(?, ?, ?, ?)&quot;;
+	public static final String TYPE_SQL = &quot;sql&quot;;
+	public static final String TYPE_COMPONENT = &quot;component&quot;;
+	public static final String TYPE_DOCUMENT = &quot;document&quot;;
+
+	/**
+	 * Refresh called by {@link ClusterRefresher}
+	 */
+	public static void getInstance(boolean refresh)
+	{
+<span class="nc" id="L57">		writeStatsToSharedTable();</span>
+<span class="nc" id="L58">	}</span>
+
+	/**
+	 * Writes snapshot of stats into cluster_monitoring table
+	 */
+	public static void writeStatsToSharedTable()
+	{
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">		if (!Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;)) return;</span>
+
+<span class="fc" id="L67">		eraseMyStats();</span>
+<span class="fc" id="L68">		writeSqlStats();</span>
+<span class="fc" id="L69">		writeComponentStats();</span>
+<span class="fc" id="L70">		writeDocumentStats();</span>
+<span class="fc" id="L71">		sk.iway.iwcm.Logger.println(MonitoringDB.class, &quot;Persisting performance stats done&quot;);</span>
+<span class="fc" id="L72">	}</span>
+
+	private static void eraseMyStats()
+	{
+<span class="fc" id="L76">		new SimpleQuery().execute(&quot;DELETE FROM cluster_monitoring WHERE node = ? AND (type = ? OR type = ? OR type = ?)&quot;, myNode(), TYPE_SQL, TYPE_COMPONENT, TYPE_DOCUMENT);</span>
+<span class="fc" id="L77">		Logger.debug(MonitoringDB.class, String.format(&quot;Erased performance stats for %s&quot;, myNode()));</span>
+<span class="fc" id="L78">	}</span>
+
+	private static void writeSqlStats()
+	{
+<span class="fc" id="L82">		new SimpleQuery().execute(insert, myNode(), TYPE_SQL, serialize(ExecutionTimeMonitor.statsForSqls()), now());</span>
+<span class="fc" id="L83">		Logger.debug(MonitoringDB.class, String.format(&quot;Persisted SQL performance stats for %s&quot;, myNode()));</span>
+<span class="fc" id="L84">	}</span>
+
+	private static void writeComponentStats()
+	{
+<span class="fc" id="L88">		new SimpleQuery().execute(insert, myNode(), TYPE_COMPONENT, serialize(ExecutionTimeMonitor.statsForComponents()), now());</span>
+<span class="fc" id="L89">		Logger.debug(MonitoringDB.class, String.format(&quot;Persisted component performance stats for %s&quot;, myNode()));</span>
+<span class="fc" id="L90">	}</span>
+
+	private static void writeDocumentStats()
+	{
+<span class="fc" id="L94">		new SimpleQuery().execute(insert, myNode(), TYPE_DOCUMENT, serialize(ExecutionTimeMonitor.statsForDocuments()), now());</span>
+<span class="fc" id="L95">		Logger.debug(MonitoringDB.class, String.format(&quot;Persisted URL performance stats for %s&quot;, myNode()));</span>
+<span class="fc" id="L96">	}</span>
+
+	private static Timestamp now()
+	{
+<span class="fc" id="L100">		return new Timestamp(System.currentTimeMillis());</span>
+	}
+
+	private static String myNode()
+	{
+<span class="fc" id="L105">		return Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+	}
+
+	private static String serialize(List&lt;ExecutionEntry&gt; stats)
+	{
+<span class="fc" id="L110">		ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L111">		XMLEncoder encoder = new XMLEncoder(out);</span>
+<span class="fc" id="L112">		encoder.writeObject(stats);</span>
+<span class="fc" id="L113">		encoder.close();</span>
+<span class="fc" id="L114">		String content = new String(out.toByteArray(), 0, out.size());</span>
+<span class="fc" id="L115">		return content.replaceAll(&quot;version=\&quot;[0-9.-]+\&quot;&quot;, &quot;version=\&quot;1.0\&quot;&quot;);</span>
+	}
+
+
+	public static List&lt;ExecutionEntry&gt; getSqlStatsFor(String node)
+	{
+<span class="fc" id="L121">		return readStatsFromDb(node, TYPE_SQL);</span>
+	}
+
+	public static List&lt;ExecutionEntry&gt; getComponentStatsFor(String node)
+	{
+<span class="fc" id="L126">		return readStatsFromDb(node, TYPE_COMPONENT);</span>
+	}
+
+	public static List&lt;ExecutionEntry&gt; getDocumentStatsFor(String node)
+	{
+<span class="fc" id="L131">		return readStatsFromDb(node, TYPE_DOCUMENT);</span>
+	}
+
+	private static List&lt;ExecutionEntry&gt; readStatsFromDb(String node, String type)
+	{
+<span class="fc" id="L136">		Logger.println(MonitoringDB.class, String.format(&quot;Request to read %s performance stats of %s&quot;, type, node));</span>
+<span class="fc" id="L137">		ComplexQuery query = new ComplexQuery().setSql(&quot;SELECT content FROM cluster_monitoring WHERE node = ? AND type = ?&quot;).setParams(node, type);</span>
+<span class="fc" id="L138">		List&lt;String&gt; content = query.list(new Mapper&lt;String&gt;(){</span>
+			@Override
+			public String map(ResultSet rs) throws SQLException{
+<span class="fc" id="L141">				return rs.getString(1);</span>
+			}
+		});
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">		if (content.size() == 0)</span>
+		{
+<span class="fc" id="L147">			Logger.println(MonitoringDB.class, &quot;There are no such stats&quot;);</span>
+<span class="fc" id="L148">			return Collections.emptyList();</span>
+		}
+
+		try {
+<span class="fc" id="L152">			return deserialize(content.get(0));</span>
+		}
+<span class="nc" id="L154">		catch (IOException e) {</span>
+<span class="nc" id="L155">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+
+<span class="nc" id="L158">		return Collections.emptyList();</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	private static List&lt;ExecutionEntry&gt; deserialize(String content) throws IOException {
+		//Bug FIX, our ExecutionEntry is in different package than original one
+		//We need to replace old package with new one
+<span class="fc" id="L165">		content = content.replace(&quot;sk.iway.iwcm.system.monitoring.ExecutionEntry&quot;, &quot;sk.iway.iwcm.components.monitoring.jpa.ExecutionEntry&quot;);</span>
+
+<span class="fc" id="L167">		InputStream in = new ByteArrayInputStream(content.getBytes());</span>
+<span class="fc" id="L168">		InputStream in2 = SyncDirAction.checkXmlForAttack(in);</span>
+<span class="fc" id="L169">		XMLDecoder decoder = new XMLDecoder(in2);</span>
+<span class="fc" id="L170">		List&lt;ExecutionEntry&gt; records = (List&lt;ExecutionEntry&gt;)decoder.readObject();</span>
+<span class="fc" id="L171">		decoder.close();</span>
+<span class="pc" id="L172">		try { in.close(); } catch (Exception ex) {};</span>
+<span class="pc" id="L173">		try { in2.close(); } catch (Exception ex) {};</span>
+<span class="fc" id="L174">		Logger.println(MonitoringDB.class, String.format(&quot;Node stats contains %d records&quot;, records.size()));</span>
+<span class="fc" id="L175">		return records;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

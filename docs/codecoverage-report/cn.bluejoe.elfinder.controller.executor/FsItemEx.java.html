@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsItemEx.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executor</a> &gt; <span class="el_source">FsItemEx.java</span></div><h1>FsItemEx.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executor;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsService;
+import cn.bluejoe.elfinder.service.FsVolume;
+
+public class FsItemEx
+{
+	private FsItem _f;
+
+	private FsService _s;
+
+	private FsVolume _v;
+
+	public FsItemEx(FsItem fsi, FsService fsService)
+<span class="fc" id="L22">	{</span>
+<span class="fc" id="L23">		_f = fsi;</span>
+<span class="fc" id="L24">		_v = fsi.getVolume();</span>
+<span class="fc" id="L25">		_s = fsService;</span>
+<span class="fc" id="L26">	}</span>
+
+	public FsItemEx(FsItemEx parent, String name) throws IOException
+<span class="nc" id="L29">	{</span>
+<span class="nc" id="L30">		_v = parent._v;</span>
+<span class="nc" id="L31">		_s = parent._s;</span>
+<span class="nc" id="L32">		_f = _v.fromPath(_v.getPath(parent._f) + &quot;/&quot; + name);</span>
+<span class="nc" id="L33">	}</span>
+
+	public FsItemEx createChild(String name) throws IOException
+	{
+<span class="nc" id="L37">		return new FsItemEx(this, name);</span>
+	}
+
+	public void createFile() throws IOException
+	{
+<span class="nc" id="L42">		_v.createFile(_f);</span>
+<span class="nc" id="L43">	}</span>
+
+	public void createFolder() throws IOException
+	{
+<span class="nc" id="L47">		_v.createFolder(_f);</span>
+<span class="nc" id="L48">	}</span>
+
+	public boolean delete() throws IOException
+	{
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (_v.isFolder(_f))</span>
+		{
+<span class="nc" id="L54">			return _v.deleteFolder(_f);</span>
+		}
+		else
+		{
+<span class="nc" id="L58">			return _v.deleteFile(_f);</span>
+		}
+	}
+
+	public void deleteFile() throws IOException
+	{
+<span class="nc" id="L64">		_v.deleteFile(_f);</span>
+<span class="nc" id="L65">	}</span>
+
+	public void deleteFolder() throws IOException
+	{
+<span class="nc" id="L69">		_v.deleteFolder(_f);</span>
+<span class="nc" id="L70">	}</span>
+
+	public boolean exists()
+	{
+<span class="nc" id="L74">		return _v.exists(_f);</span>
+	}
+
+	public String getHash() throws IOException
+	{
+<span class="fc" id="L79">		return _s.getHash(_f);</span>
+	}
+
+	public long getLastModified()
+	{
+<span class="fc" id="L84">		return _v.getLastModified(_f);</span>
+	}
+
+	public String getMimeType()
+	{
+<span class="fc" id="L89">		return _v.getMimeType(_f);</span>
+	}
+
+	public String getName()
+	{
+<span class="fc" id="L94">		return _v.getName(_f);</span>
+	}
+
+	public FsItemEx getParent()
+	{
+<span class="fc" id="L99">		return new FsItemEx(_v.getParent(_f), _s);</span>
+	}
+
+	public String getPath() throws IOException
+	{
+<span class="fc" id="L104">		return _v.getPath(_f);</span>
+	}
+
+	public long getSize()
+	{
+<span class="fc" id="L109">		return _v.getSize(_f);</span>
+	}
+
+	public String getVolumeId()
+	{
+<span class="fc" id="L114">		return _s.getVolumeId(_v);</span>
+	}
+
+	public String getVolumnName()
+	{
+<span class="fc" id="L119">		return _v.getName();</span>
+	}
+
+	public boolean hasChildFolder()
+	{
+<span class="fc" id="L124">		return _v.hasChildFolder(_f);</span>
+	}
+
+	public boolean isFolder()
+	{
+<span class="fc" id="L129">		return _v.isFolder(_f);</span>
+	}
+
+	public boolean isLocked(FsItemEx fsi) throws IOException
+	{
+<span class="fc" id="L134">		return _s.getSecurityChecker().isLocked(_s, _f);</span>
+	}
+
+	public boolean isReadable(FsItemEx fsi) throws IOException
+	{
+<span class="fc" id="L139">		return _s.getSecurityChecker().isReadable(_s, _f);</span>
+	}
+
+	public boolean isRoot()
+	{
+<span class="fc" id="L144">		return _v.isRoot(_f);</span>
+	}
+
+	public boolean isWritable(FsItemEx fsi) throws IOException
+	{
+<span class="fc" id="L149">		return _s.getSecurityChecker().isWritable(_s, _f);</span>
+	}
+
+	public List&lt;FsItemEx&gt; listChildren()
+	{
+<span class="fc" id="L154">		List&lt;FsItemEx&gt; list = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">		for (FsItem child : _v.listChildren(_f))</span>
+		{
+<span class="fc" id="L157">			list.add(new FsItemEx(child, _s));</span>
+		}
+<span class="fc" id="L159">		return list;</span>
+	}
+
+	public InputStream openInputStream() throws IOException
+	{
+<span class="fc" id="L164">		return _v.openInputStream(_f);</span>
+	}
+
+	public OutputStream openOutputStream() throws IOException
+	{
+<span class="nc" id="L169">		return _v.openOutputStream(_f);</span>
+	}
+
+	public void renameTo(FsItemEx dst) throws IOException
+	{
+<span class="nc" id="L174">		_v.rename(_f, dst._f);</span>
+<span class="nc" id="L175">	}</span>
+
+	/**
+	 * JEEFF / WEBJET pridany getter na service
+	 * @return
+	 */
+	public FsService getService()
+	{
+<span class="fc" id="L183">		return _s;</span>
+	}
+
+	/**
+	 * JEEFF / WEBJET vrati volume pre dane fsi
+	 * @return
+	 */
+	public FsVolume getVolume()
+	{
+<span class="fc" id="L192">		return _v;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="nc" id="L197">		return &quot;FsItemEx [_f=&quot; + _f + &quot;]&quot;;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

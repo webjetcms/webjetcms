@@ -103,7 +103,10 @@ export const dataTableInit = options => {
     DATA.src = options.src;
     DATA.fields = []; //polia pre DT editor
     DATA.serverSide = options.serverSide ? options.serverSide : false;
-    DATA.tabsFolders = options.tabs ? options.tabs : [];
+    DATA.tabsFolders = options.tabs ? options.tabs : [
+        //always show basic tab
+        { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true }
+    ];
     DATA.url = options.url;
     DATA.editorId = options.editorId ? options.editorId : "id";
     DATA.onXhr = options.onXhr ? options.onXhr : null;
@@ -128,7 +131,7 @@ export const dataTableInit = options => {
     DATA.perms = (typeof options.perms !== "undefined") ? options.perms : null;
     DATA.lastExportColumnName = (typeof options.lastExportColumnName !== "undefined") ? options.lastExportColumnName : null;
     DATA.byIdExportColumnName = (typeof options.byIdExportColumnName !== "undefined") ? options.byIdExportColumnName : null;
-    DATA.editorButtons = options.editorButtons ? options.editorButtons : '<i class="fal fa-check"></i> ' + WJ.translate('button.save');
+    DATA.editorButtons = options.editorButtons ? options.editorButtons : '<i class="ti ti-check"></i> ' + WJ.translate('button.save');
     DATA.keyboardSave = (typeof options.keyboardSave !== "undefined") ? options.keyboardSave : true;
     DATA.stateSave = (typeof options.stateSave !== "undefined") ? options.stateSave : true;
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
@@ -207,7 +210,7 @@ export const dataTableInit = options => {
         noneSelectedText: '\xa0' //nbsp
     };
 
-    const MAXIMIZE_HTML = '<div class="maximize"><i class="fas fa-window-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i><i class="fas fa-window-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></div>';
+    const MAXIMIZE_HTML = '<div class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></div>';
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -668,13 +671,12 @@ export const dataTableInit = options => {
             var headerHeight = $("div.ly-header").outerHeight();
             var breadcrumbHeight = $("div.md-breadcrumb").outerHeight();
             if ($("html").hasClass("in-iframe-show-table")) breadcrumbHeight = -18; //finta aby sa nam tam standardne vosiel o riadok viac, 18 kvoli galerii
-            var dtToolbarRowHeight = 60;
+            var dtToolbarRowHeight = 48;
             var dtScrollHeadHeight = 66;
-            var dtFooterHeight = 60;
+            var dtFooterHeight = 48;
 
             if ($(window).width()<1200) {
                 headerHeight = 0;
-                dtToolbarRowHeight = 50;
                 dtFooterHeight = 38;
             }
 
@@ -996,7 +998,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="far fa-times-circle"></i>')
+                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-circle-x"></i>')
             }
             dom.close.on('click', function () {
                 dte.close('icon');
@@ -1195,7 +1197,7 @@ export const dataTableInit = options => {
 
         //funkcia pre enable/disable tlacitka iba ked je nieco selectnute
         $.fn.dataTable.Buttons.showIfRowSelected = function (button, dt) {
-            dt.on('select.dt.DT deselect.dt.DT', function () {
+            dt.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
                 button.enable(dt.rows({selected: true}).any());
             });
 
@@ -1204,7 +1206,7 @@ export const dataTableInit = options => {
 
         //funkcia pre enable/disable tlacitka ked nie je nic oznacene
         $.fn.dataTable.Buttons.showIfRowUnselected = function (button, dt) {
-            dt.on('select.dt.DT deselect.dt.DT', function () {
+            dt.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
                 button.enable(!dt.rows({selected: true}).any());
             });
 
@@ -1287,17 +1289,17 @@ export const dataTableInit = options => {
                 create: {
                     button: WJ.translate('button.add'),
                     title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
-                    submit: '<i class="fal fa-check"></i> ' + WJ.translate('button.add')
+                    submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.add')
                 },
                 edit: {
                     button: WJ.translate('button.edit'),
                     title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.edit') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
-                    submit: '<i class="fal fa-check"></i> ' + WJ.translate('button.save')
+                    submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.save')
                 },
                 remove: {
                     button: WJ.translate('button.delete'),
                     title: '<clas="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
-                    submit: '<i class="fal fa-check"></i> ' + WJ.translate('button.delete'),
+                    submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.delete'),
                     confirm: {
                         _: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.files.js') + '</h5></div></div>',
                         1: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.file.js') + '</h5></div></div>'
@@ -1338,9 +1340,9 @@ export const dataTableInit = options => {
                     today:    WJ.translate('datatables.calendar.today.js')
                 },
                 multi: {
-                    title: '<i class="far fa-pencil"></i> ' + WJ.translate('datatables.values.edit.title.js'),
+                    title: '<i class="ti ti-pencil"></i> ' + WJ.translate('datatables.values.edit.title.js'),
                     info: WJ.translate('datatables.values.edit.info.js'),
-                    restore: '<i class="far fa-redo"></i> ' + WJ.translate('datatables.values.edit.restore.js')
+                    restore: '<i class="ti ti-reload"></i> ' + WJ.translate('datatables.values.edit.restore.js')
                 }
             }
         })
@@ -1682,7 +1684,7 @@ export const dataTableInit = options => {
                             tooltipText = WJ.parseMarkdown(tooltipText);
                             tooltipText = WJ.escapeHtml(tooltipText);
                             //console.log("Tooltiptext parsed=", tooltipText);
-                            $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="far fa-info-circle"></i></button></div>');
+                            $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>');
                         }
 
                         $(el).hide();
@@ -1711,7 +1713,7 @@ export const dataTableInit = options => {
                 }
 
                 $('#' + DATA.id + '_modal .DTE_Form_Buttons').find(".btn").addClass("btn-primary");
-                $('#' + DATA.id + '_modal .DTE_Form_Buttons').prepend('<span class="buttons-footer-left"><button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="far fa-question-circle"></i>' + WJ.translate('button.help') + '</button></span> <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="fal fa-times"></i> ' + WJ.translate('button.cancel') + '</button>');
+                $('#' + DATA.id + '_modal .DTE_Form_Buttons').prepend('<span class="buttons-footer-left"><button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="ti ti-help me-1"></i>' + WJ.translate('button.help') + '</button></span> <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> ' + WJ.translate('button.cancel') + '</button>');
 
                 //nastav checkboxy, toto treba pri kazdom otvoreni, pretoze sa nam menia moznosti select boxov
                 $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
@@ -1931,7 +1933,7 @@ export const dataTableInit = options => {
         if (hasPermission("create")) {
             buttonsList.push({
                 extend: "create",
-                text: "<i class='far fa-plus'></i>",
+                text: "<i class='ti ti-plus'></i>",
                 className: 'btn-success buttons-divider',
                 editor: EDITOR,
                 attr: {
@@ -1944,7 +1946,7 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 extend: editButtonExtends,
-                text: "<i class='far fa-pencil'></i>",
+                text: "<i class='ti ti-pencil'></i>",
                 editor: EDITOR,
                 className: 'btn-warning',
                 attr: {
@@ -1957,7 +1959,7 @@ export const dataTableInit = options => {
         if (hasPermission("create") && hasPermission("duplicate")) {
             buttonsList.push({
                 extend: 'selected',
-                text: "<i class='far fa-copy'></i>",
+                text: "<i class='ti ti-copy'></i>",
                 editor: EDITOR,
                 className: 'btn-duplicate',
                 attr: {
@@ -1982,7 +1984,7 @@ export const dataTableInit = options => {
                                     EDITOR
                                     .edit( TABLE.rows( {selected: true} ).indexes(), {
                                         title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
-                                        buttons: '<i class="fal fa-check"></i> ' + WJ.translate('button.duplicate')
+                                        buttons: '<i class="ti ti-check"></i> ' + WJ.translate('button.duplicate')
                                     } )
                                     .mode( 'create' );
                                     $("#"+EDITOR.TABLE.DATA.id+"_modal").attr("data-action", "duplicate");
@@ -1995,7 +1997,7 @@ export const dataTableInit = options => {
                         EDITOR
                             .edit( TABLE.rows( {selected: true} ).indexes(), {
                                 title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
-                                buttons: '<i class="fal fa-check"></i> ' + WJ.translate('button.duplicate')
+                                buttons: '<i class="ti ti-check"></i> ' + WJ.translate('button.duplicate')
                             } )
                             .mode( 'create' );
                             $("#"+EDITOR.TABLE.DATA.id+"_modal").attr("data-action", "duplicate");
@@ -2006,7 +2008,7 @@ export const dataTableInit = options => {
         if (hasPermission("remove")) {
             buttonsList.push({
                 extend: "remove",
-                text: "<i class='far fa-trash-alt'></i>",
+                text: "<i class='ti ti-trash'></i>",
                 editor: EDITOR,
                 className: 'btn-danger buttons-divider',
                 attr: {
@@ -2016,130 +2018,7 @@ export const dataTableInit = options => {
                 }
             });
         }
-        buttonsList.push({
-            name: "reload",
-            text: "<i class='fa-duotone fa-rotate'></i>",
-            editor: EDITOR,
-            className: 'btn-outline-secondary buttons-refresh',
-            attr: {
-                title: WJ.translate('datatables.button.reload.js'),
-                "data-toggle": "tooltip",
-                "data-dtbtn": "reload"
-            },
-            action: function (e, dt, node, config) {
-                dt.ajax.reload();
-            }
-        });
-        buttonsList.push({
-            text: "<i class='far fa-upload'></i>",
-            className: 'btn-outline-secondary btn-export-dialog',
-            attr: {
-                title: WJ.translate('datatables.button.export.js'),
-                "data-dtbtn": "export"
-            },
-            action: function () {
-                window.datatableExportModal.tableId = TABLE.DATA.id;
-                //nastav title exportu podla title stranky
-                var title = document.title;
-                var pipe = title.indexOf(" | ");
-                if (pipe > 0) title = title.substring(0, pipe);
-                title = title.toLowerCase();
-                title = title + "-" + moment().format("YYYYMMDD-HHmmss");
-                title = title.replace(/\./gi, "_").replace(/:/gi, "_").replace(/ /gi, "-");
-                //export modal je staticky, potrebuje vediet aku tabulku exportujeme
-                $("#datatableExportModal input.dt-settings-filename").val(title);
-                //prepni na prvy tab
-                $("#pills-export-basic-tab")[0].click();
-                //inicializuj pdfmake kniznicu
-                if (createPdfMake) {
-                    createPdfMake().then(module => {
-                        window.pdfMake = module;
-                        createPdfFonts().then(module => {
-                            const pdfFonts = module;
-                            window.pdfMake.vfs = pdfFonts.pdfMake.vfs;
-                        });
-                    });
-                }
-                //console.log("serverSide=", DATA.serverSide);
-                if (DATA.serverSide===false) {
-                    //schovaj nepodporovane moznosti
-                    $("#datatablesExportWhichData").hide();
-                    $("#datatablesExportSortOrder").hide();
-                    $("#dt-settings-extend1").prop("checked", true);
-                    $("#dt-settings-page1").prop("checked", true);
-                    $("#pills-export-advanced-tab").hide();
-                }
 
-                if (DATA.lastExportColumnName != null) $("#exportLastExportOption").show();
-                else $("#exportLastExportOption").hide();
-
-                if (DATA.byIdExportColumnName != null) $("#exportByIdExportOption").show();
-                else $("#exportByIdExportOption").hide();
-
-                var exportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("datatableExportModal"), {
-                    keyboard: false
-                });
-                exportModal.show();
-                $(exportModal._backdrop._element).css("z-index", $("#datatableExportModal").css("z-index")-1);
-            }
-        });
-        if (hasPermission("create") || hasPermission("edit")) {
-            buttonsList.push({
-                text: "<i class='far fa-download'></i>",
-                className: 'btn-outline-secondary  btn-import-dialog buttons-divider',
-                attr: {
-                    title: WJ.translate('datatables.button.import.js'),
-                    "data-dtbtn": "import"
-                },
-                action: function () {
-                    window.datatableImportModal.tableId = TABLE.DATA.id;
-                    //nastav importu aktualnu datatable
-                    window.datatableImportModal.TABLE = TABLE;
-                    var select = document.getElementById("dt-settings-update-by-column");
-                    select.options.length = 0;
-
-                    //pridaj ID option
-                    var option = new Option("ID", "id");
-                    select.options[select.options.length] = option;
-
-                    //pridaj optiony podla columns definicie editora
-                    DATA.fields.forEach((col, index) => {
-                        //console.log("col=", col, "index: ", index);
-
-                        let data = col.data;
-                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-updateByColumn"] != "undefined") {
-                            //tu nastavujeme iny stlpec pre parovanie v importe, pretoze to moze byt v editorFields.login, ale hladat a parovat budeme podla login atributu
-                            data = col.attr["data-dt-import-updateByColumn"];
-                        }
-                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-hidden"] == "true") {
-                            //toto nechceme zobrazovat v moznosti parovania importu
-                            return;
-                        }
-
-                        //skip non exportable columns
-                        if(typeof col.className != "undefined" && col.className.indexOf("not-export") != -1) return;
-
-                        //editorFields.nieco nemozeme pouzit, lebo podla toho nevieme hladat
-                        if (data.indexOf(".")!=-1) return;
-                        //hidden fieldy tiez nezobrazime pre moznost vyhladania
-                        if ("hidden"===col.type) return;
-
-                        //ako label davame povodne col.data (lebo tak to moze byt v xls ako editorFields.login) ale value (napr. login) je pripadne upravena hodnota z data-dt-import-updateByColumn
-                        var option = new Option(col.label+" - "+col.data, data);
-                        select.options[select.options.length] = option;
-                    });
-                    $(select).selectpicker('refresh');
-                    $("#datatableImportModal div.DTE_Form_Error").text("");
-
-                    var importModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("datatableImportModal"), {
-                        keyboard: false
-                    });
-                    importModal.show();
-                    $(importModal._backdrop._element).css("z-index", $("#datatableImportModal").css("z-index")-1);
-                    //console.log("Import modal=", importModal);
-                }
-            });
-        }
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
@@ -2163,9 +2042,11 @@ export const dataTableInit = options => {
                 }
             });
         }
+
+        //RIGHT SIDE, floated right, so REVERSE ORDER
         buttonsList.push({
             extend: 'collection',
-            text: '<i class="far fa-wrench"></i>',
+            text: '<i class="ti ti-adjustments-horizontal"></i>',
             className: 'btn-outline-secondary buttons-settings',
             attr: {
                 title: WJ.translate('datatables.button.settings.js'),
@@ -2175,7 +2056,7 @@ export const dataTableInit = options => {
             buttons: [
                 {
                     extend: 'colvis',
-                    text: '<i class="far fa-grip-lines-vertical"></i> ' + WJ.translate('datatables.button.cellvisibility.js'),
+                    text: '<i class="ti ti-columns"></i> ' + WJ.translate('datatables.button.cellvisibility.js'),
                     autoClose: false,
                     attr: {
                         title: WJ.translate('datatables.button.cellvisibility.js'),
@@ -2229,7 +2110,7 @@ export const dataTableInit = options => {
                         let tooltipText = "";
                         if (DATA.columns[idx]?.editor?.message) tooltipText =  DATA.columns[idx].editor.message;
                         if (typeof tooltipText != "undefined" && tooltipText != "") {
-                            tooltipHtml = `<span class="btn btn-link btn-tooltip" data-toggle="tooltip" title="${tooltipText}"><i class="far fa-info-circle"></i></span>`;
+                            tooltipHtml = `<span class="btn btn-link btn-tooltip" data-toggle="tooltip" title="${tooltipText}"><i class="ti ti-info-circle"></i></span>`;
                         }
 
                         let colvisLastHeadline = window.colvisLastHeadline;
@@ -2253,19 +2134,19 @@ export const dataTableInit = options => {
                     postfixButtons: [
                         {
                             extend: 'colvisGroup',
-                            text: '<i class="far fa-check-square"></i> ' + WJ.translate('datatables.button.show_all.js'),
+                            text: '<i class="ti ti-square-check"></i> ' + WJ.translate('datatables.button.show_all.js'),
                             show: ':hidden',
                             className: 'colvis-postfix btn-outline-secondary'
                         },
                         {
                             extend: 'colvisGroup',
-                            text: '<i class="far fa-square"></i> ' + WJ.translate('datatables.button.hide_all.js'),
+                            text: '<i class="ti ti-square"></i> ' + WJ.translate('datatables.button.hide_all.js'),
                             hide: ':visible:not(.test)',
                             className: 'colvis-postfix btn-outline-secondary'
                         },
                         {
                             extend: 'colvisRestore',
-                            text: '<i class="far fa-redo"></i> ' + WJ.translate('datatables.button.restore.js'),
+                            text: '<i class="ti ti-refresh"></i> ' + WJ.translate('datatables.button.restore.js'),
                             className: 'colvis-postfix btn-outline-secondary dt-close-modal',
                             action: function(e, dt, node, config) {
                                 //console.log("Colvis restore, TABLE=", TABLE, "this=", this, "dt=", dt);
@@ -2274,7 +2155,7 @@ export const dataTableInit = options => {
                             }
                         },
                         {
-                            text: '<i class="far fa-check"></i> ' + WJ.translate('button.save'),
+                            text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
                             className: 'colvis-postfix btn-primary dt-close-modal',
                             action: function(e, dt, node, config) {
                                 window.dataTableCellVisibilityService.buildConfigDataFromObject(dt.editor().TABLE);
@@ -2283,7 +2164,7 @@ export const dataTableInit = options => {
                             }
                         },
                         {
-                            text: '<i class="fal fa-times"></i> ' + WJ.translate('button.cancel'),
+                            text: '<i class="ti ti-x"></i> ' + WJ.translate('button.cancel'),
                             className: 'colvis-postfix btn btn-outline-secondary dt-close-modal'
                         }
                     ]
@@ -2291,7 +2172,7 @@ export const dataTableInit = options => {
                 {
                     name: "pageLengthMenu",
                     extend: 'pageLength',
-                    text: '<i class="far fa-grip-lines"></i> ' + WJ.translate('datatables.button.pagelength.js'),
+                    text: '<i class="ti ti-layout-rows"></i> ' + WJ.translate('datatables.button.pagelength.js'),
                     autoClose: false,
                     attr: {
                         title: WJ.translate('datatables.button.pagelength.js'),
@@ -2304,17 +2185,145 @@ export const dataTableInit = options => {
                             tag: 'div'
                         },
                         {
-                            text: '<i class="far fa-check"></i> ' + WJ.translate('button.save'),
+                            text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
                             className: 'btn-primary dt-close-modal'
                         },
                         {
-                            text: '<i class="fal fa-times"></i> ' + WJ.translate('button.cancel'),
+                            text: '<i class="ti ti-x"></i> ' + WJ.translate('button.cancel'),
                             className: 'btn btn-outline-secondary dt-close-modal'
                         }
                     ]
                 },
             ]
         });
+
+        buttonsList.push({
+            name: "reload",
+            text: "<i class='ti ti-refresh'></i>",
+            editor: EDITOR,
+            className: 'btn-outline-secondary buttons-refresh buttons-right',
+            attr: {
+                title: WJ.translate('datatables.button.reload.js'),
+                "data-toggle": "tooltip",
+                "data-dtbtn": "reload"
+            },
+            action: function (e, dt, node, config) {
+                dt.ajax.reload();
+            }
+        });
+
+        if (hasPermission("create") || hasPermission("edit")) {
+            buttonsList.push({
+                text: "<i class='ti ti-download'></i>",
+                className: 'btn-outline-secondary  btn-import-dialog buttons-divider buttons-right',
+                attr: {
+                    title: WJ.translate('datatables.button.import.js'),
+                    "data-dtbtn": "import"
+                },
+                action: function () {
+                    window.datatableImportModal.tableId = TABLE.DATA.id;
+                    //nastav importu aktualnu datatable
+                    window.datatableImportModal.TABLE = TABLE;
+                    var select = document.getElementById("dt-settings-update-by-column");
+                    select.options.length = 0;
+
+                    //pridaj ID option
+                    var option = new Option("ID", "id");
+                    select.options[select.options.length] = option;
+
+                    //pridaj optiony podla columns definicie editora
+                    DATA.fields.forEach((col, index) => {
+                        //console.log("col=", col, "index: ", index);
+
+                        let data = col.data;
+                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-updateByColumn"] != "undefined") {
+                            //tu nastavujeme iny stlpec pre parovanie v importe, pretoze to moze byt v editorFields.login, ale hladat a parovat budeme podla login atributu
+                            data = col.attr["data-dt-import-updateByColumn"];
+                        }
+                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-hidden"] == "true") {
+                            //toto nechceme zobrazovat v moznosti parovania importu
+                            return;
+                        }
+
+                        //skip non exportable columns
+                        if(typeof col.className != "undefined" && col.className.indexOf("not-export") != -1) return;
+
+                        //editorFields.nieco nemozeme pouzit, lebo podla toho nevieme hladat
+                        if (data.indexOf(".")!=-1) return;
+                        //hidden fieldy tiez nezobrazime pre moznost vyhladania
+                        if ("hidden"===col.type) return;
+
+                        //ako label davame povodne col.data (lebo tak to moze byt v xls ako editorFields.login) ale value (napr. login) je pripadne upravena hodnota z data-dt-import-updateByColumn
+                        var option = new Option(col.label+" - "+col.data, data);
+                        select.options[select.options.length] = option;
+                    });
+                    $(select).selectpicker('refresh');
+                    $("#datatableImportModal div.DTE_Form_Error").text("");
+
+                    var importModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("datatableImportModal"), {
+                        keyboard: false
+                    });
+                    importModal.show();
+                    $(importModal._backdrop._element).css("z-index", $("#datatableImportModal").css("z-index")-1);
+                    //console.log("Import modal=", importModal);
+                }
+            });
+        }
+
+        buttonsList.push({
+            text: "<i class='ti ti-upload'></i>",
+            className: 'btn-outline-secondary btn-export-dialog buttons-right',
+            attr: {
+                title: WJ.translate('datatables.button.export.js'),
+                "data-dtbtn": "export"
+            },
+            action: function () {
+                window.datatableExportModal.tableId = TABLE.DATA.id;
+                //nastav title exportu podla title stranky
+                var title = document.title;
+                var pipe = title.indexOf(" | ");
+                if (pipe > 0) title = title.substring(0, pipe);
+                title = title.toLowerCase();
+                title = title + "-" + moment().format("YYYYMMDD-HHmmss");
+                title = title.replace(/\./gi, "_").replace(/:/gi, "_").replace(/ /gi, "-");
+                //export modal je staticky, potrebuje vediet aku tabulku exportujeme
+                $("#datatableExportModal input.dt-settings-filename").val(title);
+                //prepni na prvy tab
+                $("#pills-export-basic-tab")[0].click();
+                //inicializuj pdfmake kniznicu
+                if (createPdfMake) {
+                    createPdfMake().then(module => {
+                        window.pdfMake = module;
+                        createPdfFonts().then(module => {
+                            const pdfFonts = module;
+                            window.pdfMake.vfs = pdfFonts.pdfMake.vfs;
+                        });
+                    });
+                }
+                //console.log("serverSide=", DATA.serverSide);
+                if (DATA.serverSide===false) {
+                    //schovaj nepodporovane moznosti
+                    $("#datatablesExportWhichData").hide();
+                    $("#datatablesExportSortOrder").hide();
+                    $("#dt-settings-extend1").prop("checked", true);
+                    $("#dt-settings-page1").prop("checked", true);
+                    $("#pills-export-advanced-tab").hide();
+                }
+
+                if (DATA.lastExportColumnName != null) $("#exportLastExportOption").show();
+                else $("#exportLastExportOption").hide();
+
+                if (DATA.byIdExportColumnName != null) $("#exportByIdExportOption").show();
+                else $("#exportByIdExportOption").hide();
+
+                var exportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("datatableExportModal"), {
+                    keyboard: false
+                });
+                exportModal.show();
+                $(exportModal._backdrop._element).css("z-index", $("#datatableExportModal").css("z-index")-1);
+            }
+        });
+
 
         //console.log("buttonsList=", buttonsList);
 
@@ -2369,10 +2378,10 @@ export const dataTableInit = options => {
                 sSearch: WJ.translate('datatables.defaults.search.js') + ':',
                 sZeroRecords: WJ.translate('datatables.defaults.zero_records.js'),
                 oPaginate: {
-                    sFirst: '<i class="far fa-angle-double-left"></i>',
-                    sLast: '<i class="far fa-angle-double-right"></i>',
-                    sNext: '<i class="far fa-angle-right"></i>',
-                    sPrevious: '<i class="far fa-angle-left"></i>'
+                    sFirst: '<i class="ti ti-chevrons-left"></i>',
+                    sLast: '<i class="ti ti-chevrons-right"></i>',
+                    sNext: '<i class="ti ti-chevron-right"></i>',
+                    sPrevious: '<i class="ti ti-chevron-left"></i>'
                 },
                 oAria: {
                     sSortAscending: WJ.translate('datatables.defaults.sort.asc.js'),
@@ -2670,22 +2679,22 @@ export const dataTableInit = options => {
             var inputGroupAfter = `
 
                             <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-${fieldName}" type="submit">
-                                <i class="far fa-search"></i>
+                                <i class="ti ti-search"></i>
                             </button>
 
                     </div>
                 </form>`;
             var html = `
                     <select class="filter-input-prepend">
-                        <option value="contains" selected data-content="<i class=\'far fa-arrows-h\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
-                        <option value="startwith" data-content="<i class=\'far fa-arrow-from-left\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
-                        <option value="endwith" data-content="<i class=\'far fa-arrow-from-right\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
-                        <option value="equals" data-content="<i class=\'far fa-equals\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="far fa-arrow-from-right"></i> ${WJ.translate('datatables.select.equals.js')}</option>`;
+                        <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
+                        <option value="startwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
+                        <option value="endwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
+                        <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="ti ti-arrow-bar-left"></i> ${WJ.translate('datatables.select.equals.js')}</option>`;
             //regex nie je dobre podporovany v Spring data, takze sa nemoze pouzit pri server side
             //regex disabled, most tables are server side
             /*if (DATA.serverSide === false) {
                 html += `
-                        <option value="regex" data-content="<i class=\'far fa-brackets\'></i><small>${WJ.translate('datatables.select.regex.js')}</small>"><i class="far fa-brackets"></i> ${WJ.translate('datatables.select.regex.js')}</option>`;
+                        <option value="regex" data-content="<i class=\'ti ti-brackets\'></i><small>${WJ.translate('datatables.select.regex.js')}</small>"><i class="ti ti-brackets"></i> ${WJ.translate('datatables.select.regex.js')}</option>`;
             }*/
             html += `
                     </select>
@@ -2694,7 +2703,7 @@ export const dataTableInit = options => {
             if ($(this).hasClass("dt-format-selector")) {
                 html = `
                 <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
-                    <i class="far fa-check-square"></i>
+                    <i class="ti ti-square-check"></i>
                 </button>
                 <input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
                 `;
@@ -2772,7 +2781,7 @@ export const dataTableInit = options => {
                 html += '</select>';
             }
 
-            // var popOver = '<a class="btn btn-sm btn-outline-secondary row-menu" data-placement="bottom" data-content="" role="button"><i class="far fa-ellipsis-v"></i></a>';
+            // var popOver = '<a class="btn btn-sm btn-outline-secondary row-menu" data-placement="bottom" data-content="" role="button"><i class="ti ti-dots-vertical"></i></a>';
 
             var filterHtml = inputGroupBefore + html + inputGroupAfter;
             //console.log("filter["+i+"] typeof=", typeof DATA.columns[i].filter);
@@ -3229,14 +3238,14 @@ export const dataTableInit = options => {
                             focus: null,
                             buttons: [
                                 {
-                                    text: "<i class='far fa-check'></i>",
+                                    text: "<i class='ti ti-check'></i>",
                                     className: 'btn btn-primary',
                                     action: function () {
                                         this.submit();
                                     }
                                 },
                                 {
-                                    text: "<i class='far fa-times'></i>",
+                                    text: "<i class='ti ti-x'></i>",
                                     className: 'btn btn-outline-secondary',
                                     action: function () {
                                         this.close();
@@ -3636,6 +3645,19 @@ export const dataTableInit = options => {
             } catch (e) {}
         }
     } );
+
+    TABLE.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
+        var anySelected = TABLE.rows({selected: true}).any();
+        //change select-all icon depending on selected rows
+        var icon = $("#"+DATA.id+"_wrapper div.dataTables_scrollHead table thead th.dt-format-selector button.buttons-select-all i.ti");
+        if (anySelected) {
+            icon.removeClass("ti-square-check");
+            icon.addClass("ti-square");
+        } else {
+            icon.removeClass("ti-square");
+            icon.addClass("ti-square-check")
+        }
+    });
 
     window.addEventListener("WJ.DTE.opened", function() {
         dtWJ.resizeTabContent(EDITOR);

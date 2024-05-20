@@ -74,7 +74,7 @@ export default {
         }
         &__more {
             position: absolute;
-            right: 5px;
+            right: -1px;
             top: 10px;
 
             i {

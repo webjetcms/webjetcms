@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">RequestBean.java</span></div><h1>RequestBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.context.ApplicationContext;
+
+/**
+ *  RequestBean.java - drzi zakladne info z requestu, uklada sa do hash tabulky podla thread ID
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.5 $
+ *@created      Date: 16.12.2008 10:28:07
+ *@modified     $Date: 2010/02/09 08:31:11 $
+ */
+<span class="fc" id="L29">public class RequestBean</span>
+{
+	private int userId;
+	private String remoteIP;
+	private String remoteHost;
+	private String baseHref;
+	private String lng;
+	private String url;
+	private String queryString;
+	private String userAgent;
+	private String domain;
+	private String httpProtocol;
+	private String serverName;
+	private int httpPort;
+	private String sessionId;
+	private String cryptoPrivateKey;
+<span class="fc" id="L45">	private boolean isUserAdmin = false;</span>
+<span class="fc" id="L46">	private Map&lt;String, String[]&gt; parameters = new HashMap&lt;&gt;();</span>
+	private String headerOrigin;
+<span class="fc" id="L48">	private List&lt;String&gt; allowedParameters = new LinkedList&lt;&gt;();</span>
+
+	private List&lt;String&gt; errors;
+
+	private HttpServletRequest request;
+	private String referrer;
+
+<span class="fc" id="L55">	private List&lt;String&gt; textKeyPrefixes = null;</span>
+
+	private ApplicationContext springContext;
+
+	//umoznuje prenasat atributy podobne ako request.set/getAttribute
+	private Map&lt;String, Object&gt; attributes;
+
+	private int docId;
+	private int groupId;
+
+	public int getUserId()
+	{
+<span class="fc" id="L67">		return userId;</span>
+	}
+	public void setUserId(int userId)
+	{
+<span class="fc" id="L71">		this.userId = userId;</span>
+<span class="fc" id="L72">	}</span>
+	public String getRemoteIP()
+	{
+<span class="fc" id="L75">		return remoteIP;</span>
+	}
+	public void setRemoteIP(String remoteIP)
+	{
+<span class="fc" id="L79">		this.remoteIP = remoteIP;</span>
+<span class="fc" id="L80">	}</span>
+	public String getRemoteHost()
+	{
+<span class="fc" id="L83">		return remoteHost;</span>
+	}
+	public void setRemoteHost(String remoteHost)
+	{
+<span class="fc" id="L87">		this.remoteHost = remoteHost;</span>
+<span class="fc" id="L88">	}</span>
+	public String getBaseHref()
+	{
+<span class="fc" id="L91">		return baseHref;</span>
+	}
+	public void setBaseHref(String baseHref)
+	{
+<span class="fc" id="L95">		this.baseHref = baseHref;</span>
+<span class="fc" id="L96">	}</span>
+	public String getLng()
+	{
+<span class="fc" id="L99">		return lng;</span>
+	}
+	public void setLng(String lng)
+	{
+<span class="fc" id="L103">		this.lng = lng;</span>
+<span class="fc" id="L104">	}</span>
+	public String getUrl()
+	{
+<span class="fc" id="L107">		return url;</span>
+	}
+	public void setUrl(String url)
+	{
+<span class="fc" id="L111">		this.url = url;</span>
+<span class="fc" id="L112">	}</span>
+	public String getQueryString()
+	{
+<span class="fc" id="L115">		return queryString;</span>
+	}
+	public void setQueryString(String queryString)
+	{
+<span class="fc" id="L119">		this.queryString = queryString;</span>
+<span class="fc" id="L120">	}</span>
+	public String getUserAgent()
+	{
+<span class="fc" id="L123">		return userAgent;</span>
+	}
+	public void setUserAgent(String userAgent)
+	{
+<span class="fc" id="L127">		this.userAgent = userAgent;</span>
+<span class="fc" id="L128">	}</span>
+	public String getDomain()
+	{
+<span class="fc" id="L131">		return domain;</span>
+	}
+	public void setDomain(String domain)
+	{
+<span class="fc" id="L135">		this.domain = domain;</span>
+<span class="fc" id="L136">	}</span>
+	public String getSessionId()
+	{
+<span class="nc" id="L139">		return sessionId;</span>
+	}
+	public void setSessionId(String sessionId)
+	{
+<span class="fc" id="L143">		this.sessionId = sessionId;</span>
+<span class="fc" id="L144">	}</span>
+<span class="fc" id="L145">	public String getCryptoPrivateKey() { return cryptoPrivateKey; }</span>
+<span class="fc" id="L146">	public void setCryptoPrivateKey(String cryptoPrivateKey) { this.cryptoPrivateKey = cryptoPrivateKey; }</span>
+
+    /**
+	 * Ziska HTTP request, nenastavi sa tam ale automaticky ale len pre urcite pripady, vid SetCharacterEncodingFilter
+	 * @return
+	 */
+	public HttpServletRequest getRequest()
+	{
+<span class="fc" id="L154">		return request;</span>
+	}
+	public void setRequest(HttpServletRequest request)
+	{
+<span class="fc" id="L158">		this.request = request;</span>
+<span class="fc" id="L159">	}</span>
+
+	public boolean isUserAdmin()
+	{
+<span class="fc" id="L163">		return isUserAdmin;</span>
+	}
+	public void setUserAdmin(boolean isUserAdmin)
+	{
+<span class="fc" id="L167">		this.isUserAdmin = isUserAdmin;</span>
+<span class="fc" id="L168">	}</span>
+
+	public Map&lt;String, String[]&gt; getParameters() {
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		if (allowedParameters != null &amp;&amp; allowedParameters.size() &gt; 0) {</span>
+<span class="nc" id="L172">			parameters = parameters.entrySet().stream().filter(x -&gt; allowedParameters.contains(x.getKey())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));</span>
+		}
+
+<span class="nc" id="L175">		return parameters;</span>
+	}
+
+	protected Map&lt;String, String[]&gt; getAllParameters() {
+<span class="fc" id="L179">		return parameters;</span>
+	}
+
+	public void setParameters(Map&lt;String, String[]&gt; parameters) {
+<span class="fc" id="L183">		LinkedHashMap&lt;String, String[]&gt; map = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L184">		map.putAll(parameters);</span>
+<span class="fc" id="L185">		this.parameters = map;</span>
+<span class="fc" id="L186">	}</span>
+
+	public Enumeration&lt;String&gt; getParameterNames()
+	{
+<span class="nc" id="L190">		return Collections.enumeration(getParameters().keySet());</span>
+	}
+
+	public String getParameter(String parameter)
+	{
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">		if (getAllParameters().containsKey(parameter)) {</span>
+<span class="nc" id="L196">			return getAllParameters().get(parameter)[0];</span>
+		}
+
+<span class="fc" id="L199">		return null;</span>
+	}
+
+	public String[] getParameterValues(String parameter)
+	{
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (getAllParameters().containsKey(parameter)) {</span>
+<span class="nc" id="L205">			return getAllParameters().get(parameter);</span>
+		}
+
+<span class="nc" id="L208">		return null;</span>
+	}
+
+	public boolean hasParameter(String key)
+	{
+<span class="nc" id="L213">		return getAllParameters().containsKey(key);</span>
+
+	}
+
+	public String getReferrer() {
+<span class="nc" id="L218">		return referrer;</span>
+	}
+
+	public void setReferrer(String referrer) {
+<span class="fc" id="L222">		this.referrer = referrer;</span>
+<span class="fc" id="L223">	}</span>
+
+	public List&lt;String&gt; getAllowedParameters() {
+<span class="fc" id="L226">		return allowedParameters;</span>
+	}
+
+	public void setAllowedParameters(List&lt;String&gt; allowedParameters) {
+<span class="fc" id="L230">		this.allowedParameters = allowedParameters;</span>
+<span class="fc" id="L231">	}</span>
+
+	public static void addAllowedParameter(String allowedParameter) {
+<span class="fc" id="L234">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">		if (requestBean != null) {</span>
+<span class="fc" id="L236">			List&lt;String&gt; parameters = requestBean.getAllowedParameters();</span>
+<span class="fc" id="L237">			parameters.add(allowedParameter);</span>
+<span class="fc" id="L238">			requestBean.setAllowedParameters(parameters);</span>
+		}
+<span class="fc" id="L240">	}</span>
+
+	public static boolean hasAllowedParameters() {
+<span class="nc" id="L243">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		if (requestBean != null) {</span>
+<span class="nc bnc" id="L245" title="All 4 branches missed.">			return requestBean.getAllowedParameters() != null &amp;&amp; !requestBean.getAllowedParameters().isEmpty();</span>
+		}
+
+<span class="nc" id="L248">		return false;</span>
+	}
+
+	public static void addParameter(String key, String value) {
+<span class="fc" id="L252">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">		if (requestBean != null) {</span>
+<span class="fc" id="L254">			Map&lt;String, String[]&gt; parameters = requestBean.getAllParameters();</span>
+<span class="fc" id="L255">			String[] val = parameters.get(key);</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">			if (val != null) {</span>
+<span class="fc" id="L257">				List&lt;String&gt; strings = new ArrayList&lt;&gt;(Arrays.asList(val));</span>
+<span class="fc" id="L258">				strings.add(value);</span>
+<span class="fc" id="L259">				val = strings.toArray(new String[0]);</span>
+<span class="fc" id="L260">			}</span>
+			else {
+<span class="fc" id="L262">				val = new String[]{value};</span>
+			}
+
+<span class="fc" id="L265">			parameters.put(key, val);</span>
+<span class="fc" id="L266">			requestBean.setParameters(parameters);</span>
+		}
+<span class="fc" id="L268">	}</span>
+
+	public static void addParameter(String key, String[] value) {
+<span class="fc" id="L271">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">		if (requestBean != null) {</span>
+<span class="fc" id="L273">			Map&lt;String, String[]&gt; parameters = requestBean.getAllParameters();</span>
+<span class="fc" id="L274">			parameters.put(key, value);</span>
+<span class="fc" id="L275">			requestBean.setParameters(parameters);</span>
+		}
+<span class="fc" id="L277">	}</span>
+
+	public static void addError(String error) {
+<span class="fc" id="L280">		addError(error, true);</span>
+<span class="fc" id="L281">	}</span>
+
+	public static void addError(String error, boolean addToEnd) {
+<span class="fc" id="L284">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">		if (requestBean != null) {</span>
+<span class="fc" id="L286">			List&lt;String&gt; errors = requestBean.getErrors();</span>
+
+<span class="fc bfc" id="L288" title="All 2 branches covered.">			if (errors == null) {</span>
+<span class="fc" id="L289">				errors = new ArrayList&lt;&gt;();</span>
+			}
+<span class="fc bfc" id="L291" title="All 2 branches covered.">			if (addToEnd) errors.add(error);</span>
+<span class="fc" id="L292">			else errors.add(0, error);</span>
+
+<span class="fc" id="L294">			requestBean.setErrors(errors);</span>
+		}
+<span class="fc" id="L296">	}</span>
+
+	public List&lt;String&gt; getErrors() {
+<span class="fc" id="L299">		return errors;</span>
+	}
+
+	public void setErrors(List&lt;String&gt; errors) {
+<span class="fc" id="L303">		this.errors = errors;</span>
+<span class="fc" id="L304">	}</span>
+
+	public String getErrorsString()
+	{
+<span class="fc" id="L308">		return Tools.join(getErrors(), &quot;,&quot;);</span>
+	}
+
+	/**
+	 * Umozni nastavit atribut vramci requestu podobne ako request.setAttribute
+	 * @param key
+	 * @param value
+	 */
+	public static void setAttribute(String key, Object value) {
+<span class="fc" id="L317">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">		if (rb == null) return;</span>
+
+<span class="fc bfc" id="L320" title="All 2 branches covered.">		if (rb.attributes==null) rb.attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L321">		rb.attributes.put(key, value);</span>
+<span class="fc" id="L322">	}</span>
+
+	/**
+	 * Umozni ziskat atribut vramci requestu podobne ako request.setAttribute
+	 * @param key
+	 * @return
+	 */
+	public static Object getAttribute(String key) {
+<span class="fc" id="L330">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">		if (rb == null) return null;</span>
+
+<span class="fc bfc" id="L333" title="All 2 branches covered.">		if (rb.attributes == null) return null;</span>
+<span class="fc" id="L334">		return rb.attributes.get(key);</span>
+	}
+
+    /**
+     * Prida prefix pre textove kluce, nasledne sa hlada preklad podla prefixu (posledny v zozname ma najvacsiu prioritu)
+     * @param prefix
+     * @param addToLastPosition
+     */
+    public static void addTextKeyPrefix(String prefix, boolean addToLastPosition) {
+<span class="fc" id="L343">        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">        if (requestBean != null) {</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">            if (requestBean.textKeyPrefixes==null) requestBean.textKeyPrefixes = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">            if (addToLastPosition) requestBean.textKeyPrefixes.add(prefix);</span>
+<span class="fc" id="L347">            else requestBean.textKeyPrefixes.add(0, prefix);</span>
+        }
+
+<span class="fc" id="L350">    }</span>
+
+    /**
+     * Vrati zoznam prefixov pre textove kluce
+     * @return
+     */
+    public static List&lt;String&gt; getTextKeyPrefixes() {
+<span class="fc" id="L357">        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">        if (requestBean != null) return requestBean.textKeyPrefixes;</span>
+
+<span class="fc" id="L360">        return null;</span>
+    }
+
+	public ApplicationContext getSpringContext() {
+<span class="fc" id="L364">		return springContext;</span>
+	}
+
+	public void setSpringContext(ApplicationContext springContext) {
+<span class="fc" id="L368">		this.springContext = springContext;</span>
+<span class="fc" id="L369">	}</span>
+
+	public &lt;T&gt; T getSpringBean(String name, Class&lt;T&gt; clazz) {
+<span class="pc bpc" id="L372" title="2 of 4 branches missed.">        if (springContext == null || !springContext.containsBean(name)) {</span>
+<span class="nc" id="L373">            return null;</span>
+        }
+
+<span class="fc" id="L376">        return springContext.getBean(name, clazz);</span>
+    }
+
+	/**
+	 * Staticka metoda pre zistenie, ci je prihlaseny admin
+	 * @return
+	 */
+	public static boolean isAdminLogged()
+	 {
+<span class="nc" id="L385">		 RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">		 if (requestBean != null) {</span>
+<span class="nc" id="L387">			 return requestBean.isUserAdmin;</span>
+		 }
+<span class="nc" id="L389">		 return false;</span>
+	 }
+	/**
+	 * Vrati protokol/schemu pouziteho HTTP requestu
+	 * @return
+	 */
+	public String getHttpProtocol() {
+<span class="fc" id="L396">		return httpProtocol;</span>
+	}
+	public void setHttpProtocol(String httpProtocol) {
+<span class="fc" id="L399">		this.httpProtocol = httpProtocol;</span>
+<span class="fc" id="L400">	}</span>
+	/**
+	 * Vrati port HTTP pripojenia
+	 */
+	public int getHttpPort() {
+<span class="fc" id="L405">		return httpPort;</span>
+	}
+	public void setHttpPort(int httpPort) {
+<span class="fc" id="L408">		this.httpPort = httpPort;</span>
+<span class="fc" id="L409">	}</span>
+	/**
+	 * Vrati request.getServerName(), moze byt odlisne od getDomain,
+	 * ktora berie do uvahy aj nastavenu domenu stranky
+	 * @return
+	 */
+	public String getServerName() {
+<span class="fc" id="L416">		return serverName;</span>
+	}
+	public void setServerName(String serverName) {
+<span class="fc" id="L419">		this.serverName = serverName;</span>
+<span class="fc" id="L420">	}</span>
+
+	/**
+	 * Vrati hodnotu HTTP hlavicky origin
+	 * @return
+	 */
+	public String getHeaderOrigin() {
+<span class="fc" id="L427">		return headerOrigin;</span>
+	}
+	public void setHeaderOrigin(String headerOrigin) {
+<span class="fc" id="L430">		this.headerOrigin = headerOrigin;</span>
+<span class="fc" id="L431">	}</span>
+	public int getDocId() {
+<span class="fc" id="L433">		return docId;</span>
+	}
+	public void setDocId(int docId) {
+<span class="fc" id="L436">		this.docId = docId;</span>
+<span class="fc" id="L437">	}</span>
+	public int getGroupId() {
+<span class="fc" id="L439">		return groupId;</span>
+	}
+	public void setGroupId(int groupId) {
+<span class="fc" id="L442">		this.groupId = groupId;</span>
+<span class="fc" id="L443">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

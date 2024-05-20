@@ -22,7 +22,7 @@ block content
             cronTable.button().add(4, {
                 extends: 'edit',
                 editor: cronTable.EDITOR,
-                text: '<i class="fas fa-play"></i>',
+                text: '<i class="ti ti-player-play"></i>',
                 action: function (e, dt, node) {
                     cronTable.executeAction("play", false, "[[\#{components.cron_task.run.areYouSure}]]");
                 },

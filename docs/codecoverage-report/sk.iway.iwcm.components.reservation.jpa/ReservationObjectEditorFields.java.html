@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationObjectEditorFields.java</span></div><h1>ReservationObjectEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+
+@Getter
+@Setter
+public class ReservationObjectEditorFields implements Serializable {
+    
+<span class="fc" id="L22">    public ReservationObjectEditorFields() {}</span>
+
+    //With this columns we inform that we want add/change password
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;reservation.reservation_object.set_password&quot;,
+        tab = &quot;advanced&quot;,
+        sortAfter = &quot;emailAccepter&quot;,
+        visible = false
+    )
+    private Boolean addPassword;
+
+    //This column yust inform if password is set
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;reservation.reservation_object.is_set_password&quot;,
+        tab = &quot;advanced&quot;,
+        sortAfter = &quot;emailAccepter&quot;,
+        hiddenEditor = true
+    )
+    private Boolean isPassword;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.reservation.admin_addObject.pass&quot;,
+        visible = false,
+        tab = &quot;advanced&quot;
+    )
+    private String newPassword;
+    
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.reservation.admin_addObject.pass.repeat&quot;,
+        visible = false,
+        tab = &quot;advanced&quot;
+    )
+    private String passwordCheck;
+
+    //Reservation time for MONDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.mo&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;reservation.reservation_object.choose_days_tilte&quot;),
+                }
+            )
+        }
+    )
+    private Boolean chooseDayA;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromA;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToA;
+
+    //Reservation time for TUESDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.tu&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayB;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromB;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToB;
+
+    //Reservation time for WEDNESDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.we&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayC;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromC;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToC;
+
+    //Reservation time for THURSDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.th&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayD;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromD;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToD;
+
+    //Reservation time for FRIDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.fr&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayE;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromE;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToE;
+
+    //Reservation time for SATURDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.sa&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayF;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromF;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToF;
+
+    //Reservation time for SUNDAY
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;dayfull.su&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Boolean chooseDayG;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_from&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeFromG;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;components.reservation.reservation_objects.date_to&quot;,
+        visible = false,
+        tab = &quot;chooseDays&quot;
+    )
+    private Date reservationTimeToG;
+
+    //special anotation, create a ReservationObjectPrice table inside specialPrice tab
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;specialPrice&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/reservation/reservation_object_price?objectId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;)
+            }
+        )
+    })
+    private List&lt;ReservationObjectPriceEntity&gt; objectPrices;
+
+    public void fromReservationObjectEntity(ReservationObjectEntity originalEntity, ProcessItemAction action, List&lt;ReservationObjectTimesEntity&gt; reservationObjectTimesEntities) {
+
+        //Most of fields are visible only in editor, so we need them only if action is &quot;EDIT/CREATE&quot;
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        if(action != ProcessItemAction.GETALL) {</span>
+<span class="pc bpc" id="L260" title="1 of 4 branches missed.">            if(originalEntity.getId() == null || originalEntity.getId() == -1) { </span>
+
+                //Set default values of ReservationObjectEntity for new entity
+<span class="fc" id="L263">                originalEntity.setMaxReservations(1);</span>
+<span class="fc" id="L264">                originalEntity.setCancelTimeBefor(0);</span>
+<span class="fc" id="L265">                originalEntity.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(8, 0));</span>
+<span class="fc" id="L266">                originalEntity.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(16, 0));</span>
+<span class="fc" id="L267">                originalEntity.setTimeUnit(30);</span>
+<span class="fc" id="L268">                originalEntity.setPriceForHour(0.0);</span>
+<span class="fc" id="L269">                originalEntity.setPriceForDay(0.0);</span>
+            }
+
+            //IF reservationObjectTimesEntities is null (or empty) set default values, else set vaules from list (load values from DB)
+<span class="fc bfc" id="L273" title="All 4 branches covered.">            if(reservationObjectTimesEntities == null || reservationObjectTimesEntities.size() == 0)</span>
+<span class="fc" id="L274">                setReservationObjectTimesDefault();</span>
+            else
+<span class="fc" id="L276">                setReservationObjectTimes(reservationObjectTimesEntities);</span>
+        }
+
+<span class="fc bfc" id="L279" title="All 4 branches covered.">        isPassword = (originalEntity.getPassword() == null || originalEntity.getPassword().isEmpty()) ? false : true;</span>
+
+<span class="fc" id="L281">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L282">    }</span>
+
+    //Not beautiful but fastest way to set default values
+    private void setReservationObjectTimesDefault() {
+<span class="fc" id="L286">        Date defaultTimeFrom = DefaultTimeValueConverter.getValidTimeValue(8, 0);</span>
+<span class="fc" id="L287">        Date defaultTimeTo = DefaultTimeValueConverter.getValidTimeValue(16, 0);</span>
+
+<span class="fc" id="L289">        reservationTimeFromA = defaultTimeFrom;</span>
+<span class="fc" id="L290">        reservationTimeToA = defaultTimeTo;        </span>
+        
+<span class="fc" id="L292">        reservationTimeFromB = defaultTimeFrom;</span>
+<span class="fc" id="L293">        reservationTimeToB = defaultTimeTo;</span>
+
+<span class="fc" id="L295">        reservationTimeFromC = defaultTimeFrom;</span>
+<span class="fc" id="L296">        reservationTimeToC = defaultTimeTo;</span>
+
+<span class="fc" id="L298">        reservationTimeFromD = defaultTimeFrom;</span>
+<span class="fc" id="L299">        reservationTimeToD = defaultTimeTo;</span>
+                
+<span class="fc" id="L301">        reservationTimeFromE = defaultTimeFrom;</span>
+<span class="fc" id="L302">        reservationTimeToE = defaultTimeTo;</span>
+                
+<span class="fc" id="L304">        reservationTimeFromF = defaultTimeFrom;</span>
+<span class="fc" id="L305">        reservationTimeToF = defaultTimeTo;</span>
+                
+<span class="fc" id="L307">        reservationTimeFromG = defaultTimeFrom;</span>
+<span class="fc" id="L308">        reservationTimeToG = defaultTimeTo;</span>
+<span class="fc" id="L309">    }</span>
+
+    private void setReservationObjectTimes(List&lt;ReservationObjectTimesEntity&gt; entities) {
+        //First set default values
+<span class="fc" id="L313">        setReservationObjectTimesDefault();</span>
+
+<span class="pc bpc" id="L315" title="2 of 4 branches missed.">        if(entities == null || entities.size() &lt; 1) return;</span>
+
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        for(ReservationObjectTimesEntity entity : entities) {</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">            if(entity.getDay() == 1) {</span>
+                //Monday
+<span class="fc" id="L320">                chooseDayA = true;</span>
+<span class="fc" id="L321">                reservationTimeFromA = entity.getTimeFrom();</span>
+<span class="fc" id="L322">                reservationTimeToA = entity.getTimeTo();</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">            } else if(entity.getDay() == 2) {</span>
+                //Tuesday
+<span class="fc" id="L325">                chooseDayB = true;</span>
+<span class="fc" id="L326">                reservationTimeFromB = entity.getTimeFrom();</span>
+<span class="fc" id="L327">                reservationTimeToB = entity.getTimeTo();</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">            } else if(entity.getDay() == 3) {</span>
+                //Wednesday
+<span class="fc" id="L330">                chooseDayC = true;</span>
+<span class="fc" id="L331">                reservationTimeFromC = entity.getTimeFrom();</span>
+<span class="fc" id="L332">                reservationTimeToC = entity.getTimeTo();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            } else if(entity.getDay() == 4) {</span>
+                //Thursday
+<span class="nc" id="L335">                chooseDayD = true;</span>
+<span class="nc" id="L336">                reservationTimeFromD = entity.getTimeFrom();</span>
+<span class="nc" id="L337">                reservationTimeToD = entity.getTimeTo();</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            } else if(entity.getDay() == 5) {</span>
+                //Friday
+<span class="nc" id="L340">                chooseDayE = true;</span>
+<span class="nc" id="L341">                reservationTimeFromE = entity.getTimeFrom();</span>
+<span class="nc" id="L342">                reservationTimeToE = entity.getTimeTo();</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">            } else if(entity.getDay() == 6) {</span>
+                //Saturday
+<span class="nc" id="L345">                chooseDayF = true;</span>
+<span class="nc" id="L346">                reservationTimeFromF = entity.getTimeFrom();</span>
+<span class="nc" id="L347">                reservationTimeToF = entity.getTimeTo();</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">            } else if(entity.getDay() == 7) {</span>
+                //Sunday
+<span class="nc" id="L350">                chooseDayG = true;</span>
+<span class="nc" id="L351">                reservationTimeFromG = entity.getTimeFrom();</span>
+<span class="nc" id="L352">                reservationTimeToG = entity.getTimeTo();</span>
+            }
+<span class="fc" id="L354">        }</span>
+<span class="fc" id="L355">    }</span>
+
+    public void toReservationObjectEntity(ReservationObjectEntity originalEntity, ProcessItemAction action, ReservationObjectTimesRepository rotr) {
+        //Its important to set domain id
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        if(originalEntity.getDomainId() == null ) originalEntity.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+        //Update reseravtion object times (bind to this ReservationObject entity)
+<span class="fc bfc" id="L362" title="All 2 branches covered.">        if(action != ProcessItemAction.CREATE)</span>
+<span class="fc" id="L363">            updateReservationObjectTimesInDB(originalEntity, rotr);</span>
+
+        //Set password
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        if(addPassword) </span>
+<span class="fc" id="L367">            originalEntity.setPassword(newPassword);</span>
+
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">        if(originalEntity.getMustAccepted() == false)</span>
+<span class="fc" id="L370">            originalEntity.setEmailAccepter(&quot;&quot;);</span>
+<span class="fc" id="L371">    }</span>
+
+    private List&lt;Boolean&gt; getChooseDayStats() {
+<span class="fc" id="L374">        List&lt;Boolean&gt; chooseDayStatus = new ArrayList&lt;&gt;();</span>
+        //Monday to Sunday
+<span class="fc" id="L376">        chooseDayStatus.add(0, getChooseDayA());</span>
+<span class="fc" id="L377">        chooseDayStatus.add(1, getChooseDayB());</span>
+<span class="fc" id="L378">        chooseDayStatus.add(2, getChooseDayC());</span>
+<span class="fc" id="L379">        chooseDayStatus.add(3, getChooseDayD());</span>
+<span class="fc" id="L380">        chooseDayStatus.add(4, getChooseDayE());</span>
+<span class="fc" id="L381">        chooseDayStatus.add(5, getChooseDayF());</span>
+<span class="fc" id="L382">        chooseDayStatus.add(6, getChooseDayG());</span>
+<span class="fc" id="L383">        return chooseDayStatus;</span>
+    }
+
+    private void updateReservationObjectTimesInDB(ReservationObjectEntity originalEntity, ReservationObjectTimesRepository rotr) {
+        //Status about which day has set specific time reservation (actualy from originalEntity)
+<span class="fc" id="L388">        List&lt;Boolean&gt; chooseDaysStatus = getChooseDayStats();</span>
+
+<span class="fc bfc" id="L390" title="All 2 branches covered.">        for(int i = 0; i &lt; chooseDaysStatus.size(); i++) {</span>
+<span class="fc" id="L391">            Boolean chooseDayStatus = chooseDaysStatus.get(i);</span>
+<span class="fc" id="L392">            boolean isInDB = false;</span>
+<span class="fc" id="L393">            ReservationObjectTimesEntity timeEntity = null;</span>
+
+            //Try find if this day is saved in DB (e.g. i=0 its monday)
+<span class="pc bpc" id="L396" title="2 of 4 branches missed.">            if(originalEntity.getId() != null &amp;&amp; originalEntity.getId() != -1) {</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">                for(ReservationObjectTimesEntity entity : rotr.findAllByObjectIdAndDomainId(originalEntity.getId().intValue(), CloudToolsForCore.getDomainId())) {</span>
+                    //i+1 because in list we start from 0, and in DB we start from 1
+<span class="fc bfc" id="L399" title="All 2 branches covered.">                    if(entity.getDay() == i + 1) { </span>
+<span class="fc" id="L400">                        isInDB = true;</span>
+<span class="fc" id="L401">                        timeEntity = entity;</span>
+<span class="fc" id="L402">                        break;</span>
+                    }
+<span class="fc" id="L404">                }</span>
+            }
+
+            //Need to delete from DB
+<span class="pc bpc" id="L408" title="1 of 6 branches missed.">            if(chooseDayStatus == false &amp;&amp; isInDB &amp;&amp; timeEntity != null) rotr.deleteById(timeEntity.getId());</span>
+
+            //Need to add new record to DB, OR update time values
+<span class="fc bfc" id="L411" title="All 2 branches covered.">            if(chooseDayStatus == true)</span>
+<span class="fc" id="L412">                rotr.save(convertToReservationObjectTimes(i+1, originalEntity, timeEntity));</span>
+        }
+<span class="fc" id="L414">    }</span>
+
+    private ReservationObjectTimesEntity convertToReservationObjectTimes(int day, ReservationObjectEntity reservationObject, ReservationObjectTimesEntity timeEntity) {
+<span class="fc" id="L417">        Date timeFrom = null;</span>
+<span class="fc" id="L418">        Date timeTo = null;</span>
+<span class="fc" id="L419">        ReservationObjectEditorFields roef = reservationObject.getEditorFields();</span>
+
+<span class="pc bpc" id="L421" title="1 of 2 branches missed.">        if(timeEntity == null) {</span>
+            //If match entity if null (not saved in DB), create new entity and set needed columns
+<span class="fc" id="L423">            timeEntity = new ReservationObjectTimesEntity();</span>
+<span class="fc" id="L424">            timeEntity.setDay(day);</span>
+<span class="fc" id="L425">            timeEntity.setDomainId(reservationObject.getDomainId());</span>
+<span class="fc" id="L426">            timeEntity.setObjectId(reservationObject.getId().intValue());</span>
+        }
+
+        //Update time values
+<span class="fc bfc" id="L430" title="All 2 branches covered.">        if(day == 1) { </span>
+<span class="fc" id="L431">            timeFrom = roef.getReservationTimeFromA();</span>
+<span class="fc" id="L432">            timeTo = roef.getReservationTimeToA();</span>
+<span class="fc bfc" id="L433" title="All 2 branches covered.">        } else if(day == 2) { </span>
+<span class="fc" id="L434">            timeFrom = roef.getReservationTimeFromB();</span>
+<span class="fc" id="L435">            timeTo = roef.getReservationTimeToB();</span>
+<span class="fc bfc" id="L436" title="All 2 branches covered.">        } else if(day == 3) { </span>
+<span class="fc" id="L437">            timeFrom = roef.getReservationTimeFromC();</span>
+<span class="fc" id="L438">            timeTo = roef.getReservationTimeToC();</span>
+<span class="pc bpc" id="L439" title="1 of 2 branches missed.">        } else if(day == 4) { </span>
+<span class="fc" id="L440">            timeFrom = roef.getReservationTimeFromD();</span>
+<span class="fc" id="L441">            timeTo = roef.getReservationTimeToD();</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">        } else if(day == 5) { </span>
+<span class="nc" id="L443">            timeFrom = roef.getReservationTimeFromE();</span>
+<span class="nc" id="L444">            timeTo = roef.getReservationTimeToE();</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">        } else if(day == 6) { </span>
+<span class="nc" id="L446">            timeFrom = roef.getReservationTimeFromF();</span>
+<span class="nc" id="L447">            timeTo = roef.getReservationTimeToF();</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">        } else if(day == 7) { </span>
+<span class="nc" id="L449">            timeFrom = roef.getReservationTimeFromG();</span>
+<span class="nc" id="L450">            timeTo = roef.getReservationTimeToG();</span>
+        }
+
+<span class="fc" id="L453">        timeEntity.setTimeFrom(DefaultTimeValueConverter.getValidTimeValue(timeFrom));</span>
+<span class="fc" id="L454">        timeEntity.setTimeTo(DefaultTimeValueConverter.getValidTimeValue(timeTo));</span>
+
+<span class="fc" id="L456">        return timeEntity;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

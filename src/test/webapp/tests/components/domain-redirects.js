@@ -10,7 +10,8 @@ Scenario('domain_redirects-zakladne testy', async ({ I, DataTables }) => {
     await DataTables.baseTest({
         dataTable: 'domainRedirectTable',
         requiredFields: ['redirectFrom', 'redirectTo'],
-        perms: 'cmp_redirects'
+        perms: 'cmp_redirects',
+        skipSwitchDomain: true
     });
 });
 

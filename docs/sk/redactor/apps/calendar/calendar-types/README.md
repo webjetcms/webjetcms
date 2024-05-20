@@ -6,6 +6,8 @@
 
  Upozornenie: v názve typu udalosti nepoužívajte znak `,` alebo `+`.
 
- Okrem názvu typu udalosti je možné nastaviť aj schvaľovateľa. Ak je zadaný, po vytvorení novej udalosti v danom type sa udalosť nezačne zobrazovať ihneď na web stránke, ale čaká na jej schválenie zvoleným schvalovateľom.
+# Schvaľovanie
+
+ Okrem názvu typu udalosti je možné [nastaviť aj schvaľovateľa](../non-approved-events/README.md). Ak je zadaný, po vytvorení novej udalosti v danom type sa udalosť nezačne zobrazovať ihneď na web stránke, ale čaká na jej schválenie zvoleným schvalovateľom.
 
  ![](editor.png)

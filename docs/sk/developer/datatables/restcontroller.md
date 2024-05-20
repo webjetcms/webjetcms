@@ -842,6 +842,20 @@ Ak vám nestačí jednoduchá validácia môžete implementovať metódu ```vali
     }
 ```
 
+Ak potrebujete špeciálne kontrolovať práva (napr. pri web stránkach povolenie na priečinky) môžete implementovať metódu `public boolean checkItemPerms(T entity, Long id)`. Metóda sa štandardne volá pri operáciach editácia/vytvorenie/zmazanie/vykonanie akcie/získanie záznamu:
+
+```java
+    @Override
+    public boolean checkItemPerms(MediaGroupBean entity, Long id) {
+        if (InitServlet.isTypeCloud() && entity.getId() != null && entity.getId().longValue()>0) {
+            if (GroupsDB.isGroupsEditable(getUser(), entity.getAvailableGroups())==false) return false;
+            MediaGroupBean old = getOneItem(entity.getId());
+            if (old != null && GroupsDB.isGroupsEditable(getUser(), old.getAvailableGroups())==false) return false;
+        }
+        return true;
+    }
+```
+
 ## Vyvolanie chyby
 
 Programovo kontrolované chyby je potrebné ošetriť preťažením metódy ```validateEditor``` (viď príklad vyššie), kde môžete vykonať validácie pred uložením záznamu. Z parametra ```target.getAction()``` (DatatableRequest)  môžete identifikovať typ akcie. POZOR: validateEditor sa volá aj pre vymazanie, môžete ho testovať ako ```if ("remove".equals(target.getAction()) ...```.
@@ -865,5 +879,60 @@ public boolean beforeDelete(ConfPreparedEntity entity) {
 
     throwError("admin.cong_editor.youCanOnlyDeleteFutureRecords");
     return false;
+}
+```
+
+## Rozširujúce verzie
+
+Pre špeciálne prípady existujú rozširujúce triedy.
+
+### DatatableRestControllerAvailableGroups.java
+
+Trieda implementuje kontrolu práv pre aplikácie, ktorých práva sú založené na štruktúre web stránok (používateľovi sa majú zobraziť len záznamy, ktoré vyhovujú jemu nastaveným právam na stromovú štruktúru), prípadne sa používajú v MultiWeb inštalácii. Príkladom je nastavenie média skupín, kde je potrebné filtrovať skupiny médií podľa práv používateľa na štruktúru web stránok. Ak používateľ má napr. právo len na priečinok "/Slovensky/Novinky" majú sa zobraziť len skupiny ktoré sa majú nastavené zobrazenie v tomto priečinku (a prípadne všetky bez obmedzení).
+
+Základné použitie je podobné ako štandardný `DatatableRestControllerV2`, ale do konštruktora je potrebné zadať aj meno stĺpca s ID hodnotou a meno stĺpca so zoznamom práv na štruktúru web stránok:
+
+```java
+@RestController
+@Datatable
+@RequestMapping("/admin/rest/media-group")
+@PreAuthorize("@WebjetSecurityService.hasPermission('editor_edit_media_group')")
+public class MediaGroupRestController extends DatatableRestControllerAvailableGroups<MediaGroupBean, Long> {
+
+    @Autowired
+    public MediaGroupRestController(MediaGroupRepository mediaGroupRepository) {
+        super(mediaGroupRepository, "id", "availableGroups");
+    }
+
+}
+```
+
+trieda `DatatableRestControllerAvailableGroups` v metóde `public boolean checkItemPerms(T entity, Long id)` kontroluje práva na aktuálnu aj pôvodnú entitu, aby nebolo možné modifikovať existujúce entity, na ktoré používateľ nemá práva.
+
+```java
+public abstract class DatatableRestControllerAvailableGroups<T, ID extends Serializable> extends DatatableRestControllerV2<T, ID> {
+    ...
+    @Override
+    public boolean checkItemPerms(T entity, Long id) {
+
+        BeanWrapperImpl bw = new BeanWrapperImpl(entity);
+        Number entityId = (Number) bw.getPropertyValue(idColumnName);
+        String availableGroups = (String) bw.getPropertyValue(availableGroupsColumnName);
+
+        if ((InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) && entityId != null && entityId.longValue()>0) {
+            //if it's empty AND it's NOT multiweb then it is available for all domains
+            if (InitServlet.isTypeCloud()==false && Tools.isEmpty(availableGroups)) return true;
+
+            if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;
+            T old = getOneItem(entityId.longValue());
+            if (old != null) {
+                //check also if original entity is editable, you can't just remove perms and edit entity which not belongs to you
+                BeanWrapperImpl bwOld = new BeanWrapperImpl(old);
+                availableGroups = (String) bwOld.getPropertyValue(availableGroupsColumnName);
+                if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;
+            }
+        }
+        return true;
+    }
 }
 ```

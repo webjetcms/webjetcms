@@ -6,12 +6,12 @@
     color: #63697A;
     font-size: 15px;
 }
-.jstree .fa-lock,
-.jstree .fa-external-link {
+.jstree .ti-lock,
+.jstree .ti-external-link {
     margin-right: 4px;
 }
 
-.jstree .is-not-public .fa-eye-slash {
+.jstree .is-not-public .ti-eye-off {
     color: $danger;
     margin-right: 4px;
 }
@@ -20,9 +20,7 @@
   font-weight: bold;
 }
 
-.jstree .fal,
-.jstree .far,
-.jstree .fas {
+.jstree .ti {
     width: 1.25em;
 }
 
@@ -66,7 +64,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
   font-size: 14px;
   i.jstree-icon {
     background-image: none;
-    font-family: $fa-font-name;
+    font-family: $ti-font-name-filled;
     font-weight: 400;
     font-style: normal;
     font-variant: normal;
@@ -498,6 +496,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
   width: 30px;
   height: 30px;
   line-height: 30px;
+  font-size: 19px;
 }
 .jstree-default.jstree-rtl .jstree-node {
   margin-right: 30px;
@@ -523,7 +522,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
 //   new
     background-image: none;
     position: relative;
-    font-family: $fa-font-name;
+    font-family: $ti-font-name-filled;
     font-weight: 600;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
@@ -533,7 +532,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
     line-height: 1;
     font-size: 18px;
     &::before {
-        content: "\f0d7";
+        content: $ti-icon-caret-down-filled;
         color: #B3B8C7;
         position: absolute;
         top: 50%;
@@ -554,7 +553,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
     background-image: none;
 
     position: relative;
-    font-family: $fa-font-name;
+    font-family: $ti-font-name-filled;
     font-weight: 600;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
@@ -564,7 +563,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
     line-height: 1;
     font-size: 18px;
     &::before {
-        content: "\f0da";
+        content: $ti-icon-caret-right-filled;
         color: #b1b6c5;
         position: absolute;
         top: 50%;

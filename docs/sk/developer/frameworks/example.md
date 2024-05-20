@@ -157,7 +157,7 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
 }
 ```
 
-Repozitár a JPA bean odporúčam mať v rovnakom package. Aby WebJET inicializoval JPA repozitár je následne potrebné ešte pridať package do [sk.iway.webjet.v9.JpaDBConfig.java](../../../src/main/java/sk/iway/webjet/v9/JpaDBConfig.java) do anotácie ```@EnableJpaRepositories``` **a zároveň do** ```emf.setPackagesToScan```. Samotná JPA beana sa inicializuje pri štarte WebJETu, ak ju máte v inom package ako ak.iway.iwcm.components alebo sk.iway.iwcm.system a JPA vám nefunguje pridajte v administrácii WebJETu v Nastavenia->Konfigurácia novú premennú s názvom `jpaAddPackages` a hodnotou package vašej JPA beany.
+Repozitár a JPA bean odporúčam mať v rovnakom package. Aby WebJET inicializoval JPA repozitár je následne potrebné ešte pridať package do [sk.iway.webjet.v9.JpaDBConfig.java](../../../src/main/java/sk/iway/webjet/v9/JpaDBConfig.java) do anotácie ```@EnableJpaRepositories```, **a zároveň do**, ```emf.setPackagesToScan```. Samotná JPA beana sa inicializuje pri štarte WebJETu, ak ju máte v inom package ako ak.iway.iwcm.components alebo sk.iway.iwcm.system a JPA vám nefunguje pridajte v administrácii WebJETu v Nastavenia->Konfigurácia novú premennú s názvom `jpaAddPackages` a hodnotou package vašej JPA beany.
 
 ## Rest služba
 

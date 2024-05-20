@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.HTMLElementName;
-import net.htmlparser.jericho.MasonTagTypes;
-import net.htmlparser.jericho.MicrosoftTagTypes;
-import net.htmlparser.jericho.Source;
+import sk.iway.Html2Text;
 
 @SuppressWarnings("java:S1659")
 public class SeoTools
@@ -29,44 +25,42 @@ public class SeoTools
 	 */
 	public static List<Density> getKeywordDensityTable(String html, String [] keywords){
 
-		MicrosoftTagTypes.register();
-		MasonTagTypes.register();
-		Source source=new Source(html);
+		Html2Text html2Text = new Html2Text(html);
 
-		List<Element> h1Elements = source.getAllElements(HTMLElementName.H1);
-		List<Element> h2Elements = source.getAllElements(HTMLElementName.H2);
-		List<Element> h3Elements = source.getAllElements(HTMLElementName.H3);
-		List<Element> strongElements = source.getAllElements(HTMLElementName.STRONG);
-		List<Element> italicElements = source.getAllElements(HTMLElementName.EM);
-		List<Element> linkElements = source.getAllElements(HTMLElementName.A);
+		List<String> h1Elements = html2Text.getTextByElement("h1");
+		List<String> h2Elements = html2Text.getTextByElement("h2");
+		List<String> h3Elements = html2Text.getTextByElement("h3");
+		List<String> strongElements = html2Text.getTextByElement("strong,b");
+		List<String> italicElements = html2Text.getTextByElement("i,em");
+		List<String> linkElements = html2Text.getTextByElement("a");
 
 		List<Density> keywordDensityList = new ArrayList<>();
 		for(String keyword : keywords){
 			keyword = keyword.toLowerCase();
 			Density keywordDensity = new Density(keyword);
 
-			for(Element e : h1Elements){
-				keywordDensity.incrementH1(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : h1Elements){
+				keywordDensity.incrementH1(countOccurences(e.toLowerCase(), keyword));
 			}
 
-			for(Element e : h2Elements){
-				keywordDensity.incrementH2(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : h2Elements){
+				keywordDensity.incrementH2(countOccurences(e.toLowerCase(), keyword));
 			}
 
-			for(Element e : h3Elements){
-				keywordDensity.incrementH3(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : h3Elements){
+				keywordDensity.incrementH3(countOccurences(e.toLowerCase(), keyword));
 			}
 
-			for(Element e : strongElements){
-				keywordDensity.incrementStrong(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : strongElements){
+				keywordDensity.incrementStrong(countOccurences(e.toLowerCase(), keyword));
 			}
 
-			for(Element e : italicElements){
-				keywordDensity.incrementItalics(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : italicElements){
+				keywordDensity.incrementItalics(countOccurences(e.toLowerCase(), keyword));
 			}
 
-			for(Element e : linkElements){
-				keywordDensity.incrementLink(countOccurences(e.toString().toLowerCase(), keyword));
+			for(String e : linkElements){
+				keywordDensity.incrementLink(countOccurences(e.toLowerCase(), keyword));
 			}
 
 

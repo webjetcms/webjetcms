@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">StatService.java</span></div><h1>StatService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatTableDB;
+import sk.iway.iwcm.stat.jpa.SearchEnginesDTO;
+
+/**
+ * Main goal of this Service is help with extended filters that all Stat section pages contains and to reduce dudplicity codes.
+ */
+public class StatService {
+
+    private static final int MAX_ROWS = 100;
+    private static final int MAX_BAR_COLUMNS = 10;
+
+    private StatService() {
+        //it's just tools class
+    }
+
+    /**
+     * Function will set default range into dateRangeArr. Default range is 1 month.
+     * @param dateRangeArr - [0] dateFrom, [1] dateTo
+     * @param statType - type of stat, can be days, weeks, months
+     */
+    private static void setDefaultRange(Date [] dateRangeArr, String statType) {
+<span class="fc" id="L36">        Calendar cal = Calendar.getInstance();</span>
+
+        //If date to is not set, set it
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if(dateRangeArr[1] == null) {</span>
+<span class="fc" id="L40">            cal.setTime(new Date());</span>
+<span class="fc" id="L41">            dateRangeArr[1] = cal.getTime(); //To NOW</span>
+        } else {
+            //Use allready preapred dateTo
+<span class="fc" id="L44">            cal.setTime(dateRangeArr[1]);</span>
+        }
+
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">        if(Tools.isNotEmpty(statType) &amp;&amp; &quot;months&quot;.equals(statType)) {</span>
+            //Stat type is set to months, set default range 6 month
+<span class="nc" id="L49">            cal.add(Calendar.MONTH, -6); //From 6 month's ago</span>
+        } else {
+            //Stat type is not set OR its days/weeks, set default range 1 month
+<span class="fc" id="L52">            cal.add(Calendar.MONTH, -1); //From 1 month ago</span>
+        }
+
+<span class="fc" id="L55">        dateRangeArr[0] = cal.getTime();</span>
+<span class="fc" id="L56">    }</span>
+
+    public static Date[] processDateRangeString(String stringRange) {
+<span class="fc" id="L59">        return processDateRangeString(stringRange, null);</span>
+    }
+
+    /**
+     * Function will handle String on input and retun array of 2 Date values. This values represent date range from-to.
+     * In case of input that contain &quot;daterange:&quot; prefix (added by date picker), function can handle this prefix.
+     * If input is empty 1 month range is returned.
+     * If input contain two values in milliseconds separeted by &quot;-&quot;, this values will be used for date range.
+     * If input contain only one value without &quot;-&quot;, this value will represent dateFrom, dateTo will be computed and range
+     * will be 1 month.
+     * If input contain only one value that start with &quot;-&quot;, this represent dateTo, dateFrom will be computed and range
+     * will be 1 month.
+     * Any other input will be clasified as invalid and default 1 month range will be returned.
+     * @param stringRange  string of milliseconds represent date
+     * @return array with 2 Date values
+     */
+    public static Date[] processDateRangeString(String stringRange, String statType) {
+        //Represent dateFrom, dateTo
+<span class="fc" id="L77">        Date [] dateRangeArr = {null, null};</span>
+
+        //Remove prefix &quot;daterange:&quot; is is there
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if(stringRange != null)</span>
+<span class="fc" id="L81">            stringRange =  stringRange.replaceFirst(&quot;^daterange:&quot;, &quot;&quot;);</span>
+<span class="fc" id="L82">        else stringRange = &quot;&quot;;</span>
+
+        String stringTo;
+        String stringFrom;
+<span class="fc" id="L86">        Calendar cal = Calendar.getInstance();</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if(stringRange.contains(&quot;-&quot;)) {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if(stringRange.startsWith(&quot;-&quot;)) {</span>
+                //We have only set dateTo
+<span class="fc" id="L91">                stringTo = stringRange.split(&quot;-&quot;)[1];</span>
+
+                //First check if its valid string
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                if(Tools.isEmpty(stringTo)) {</span>
+                    //String is no valid, set default month range
+<span class="nc" id="L96">                    setDefaultRange(dateRangeArr, statType);</span>
+                } else {
+                    //We have set only dateTo
+<span class="fc" id="L99">                    cal.setTimeInMillis(Long.parseLong(stringTo));</span>
+<span class="fc" id="L100">                    dateRangeArr[1] = cal.getTime();</span>
+
+                    //dateFrom set at default range
+<span class="fc" id="L103">                    setDefaultRange(dateRangeArr, statType);</span>
+                }
+            } else {
+                //We have set both dateFrom and dateTo
+<span class="fc" id="L107">                stringFrom = stringRange.split(&quot;-&quot;)[0];</span>
+<span class="fc" id="L108">                cal.setTimeInMillis(Long.parseLong(stringFrom));</span>
+<span class="fc" id="L109">                dateRangeArr[0] = cal.getTime();</span>
+
+<span class="fc" id="L111">                stringTo = stringRange.split(&quot;-&quot;)[1];</span>
+<span class="fc" id="L112">                cal.setTimeInMillis(Long.parseLong(stringTo));</span>
+<span class="fc" id="L113">                dateRangeArr[1] = cal.getTime();</span>
+            }
+        } else {
+            //We have set only dateFrom
+<span class="fc" id="L117">            stringFrom = stringRange;</span>
+
+            //First check if its valid string
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            if(Tools.isEmpty(stringFrom)) {</span>
+                //String is no valid, set default range
+<span class="fc" id="L122">                setDefaultRange(dateRangeArr, statType);</span>
+            } else {
+                //Range is dateFrom - now
+<span class="fc" id="L125">                cal.setTimeInMillis(Long.parseLong(stringFrom));</span>
+<span class="fc" id="L126">                dateRangeArr[0] = cal.getTime();</span>
+<span class="fc" id="L127">                dateRangeArr[1] = new Date(); //To actual date</span>
+            }
+        }
+
+        //align dateRangeArr[0] to start of day
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if(dateRangeArr[0] != null) {</span>
+<span class="fc" id="L133">            cal.setTime(dateRangeArr[0]);</span>
+<span class="pc bpc" id="L134" title="2 of 6 branches missed.">            if (cal.get(Calendar.HOUR_OF_DAY)==0 &amp;&amp; cal.get(Calendar.MINUTE)==0 &amp;&amp; cal.get(Calendar.SECOND)==0) {</span>
+<span class="fc" id="L135">                cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L136">                cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L137">                cal.set(Calendar.SECOND, 0);</span>
+            }
+
+<span class="fc" id="L140">            dateRangeArr[0] = cal.getTime();</span>
+        }
+
+        //align dateRangeArr[1] to end of day
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if(dateRangeArr[1] != null) {</span>
+<span class="fc" id="L145">            cal.setTime(dateRangeArr[1]);</span>
+<span class="pc bpc" id="L146" title="2 of 6 branches missed.">            if (cal.get(Calendar.HOUR_OF_DAY)==0 &amp;&amp; cal.get(Calendar.MINUTE)==0 &amp;&amp; cal.get(Calendar.SECOND)==0) {</span>
+<span class="fc" id="L147">                cal.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="fc" id="L148">                cal.set(Calendar.MINUTE, 59);</span>
+<span class="fc" id="L149">                cal.set(Calendar.SECOND, 59);</span>
+            }
+
+<span class="fc" id="L152">            dateRangeArr[1] = cal.getTime();</span>
+        }
+
+<span class="fc" id="L155">        return dateRangeArr;</span>
+    }
+
+    /**
+     * Function is case-insensitive, and if input string value is equal to one of ChartType enum, this enum value
+     * will be returned. If input is null/empty/or does not match any of ChartType values, function will return
+     * NOT_CHART enum value as default value.
+     * @param chartType String value that represent one of ChartTzpe enum values
+     * @return ChartType enum value
+     */
+    public static ChartType stringToChartTypeEnum(String chartType) {
+<span class="fc bfc" id="L166" title="All 4 branches covered.">        if(chartType == null || chartType.equalsIgnoreCase(&quot;notChart&quot;))</span>
+<span class="fc" id="L167">            return ChartType.NOT_CHART;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        else if(&quot;pie&quot;.equalsIgnoreCase(chartType))</span>
+<span class="fc" id="L169">            return ChartType.PIE;</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        else if(&quot;line&quot;.equalsIgnoreCase(chartType))</span>
+<span class="fc" id="L171">            return ChartType.LINE;</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        else if(&quot;bar&quot;.equalsIgnoreCase(chartType))</span>
+<span class="fc" id="L173">            return ChartType.BAR;</span>
+<span class="fc" id="L174">        else return ChartType.NOT_CHART;</span>
+    }
+
+    /**
+     * Function handle Map of parameters returned by Overrided searchItem and use them for creating new
+     * FilterHeaderDto variable (where this handled params are set). If any param is not found in map, default value will be set.
+     *  Default values are defined by FilterHeaderDto itself.
+     * Because not every class has same name for date range value (mostly refered as dayDate), there is option use input parameter
+     * specialDateName and set what param we want find in map, that repsent dayDate. If specialDateName isnt set, function will
+     * use default param name dayDate.
+     * @param params map of params return by overrided function searchItem
+     * @param specialDateName name of param that is in map and represent date range param dayDate
+     * @return FilterHeaderDto variable that contain handled params
+     */
+    public static FilterHeaderDto processMapToStatFilter(Map&lt;String, String&gt; params, String specialDateName) {
+<span class="fc" id="L189">        FilterHeaderDto filter = new FilterHeaderDto();</span>
+<span class="fc" id="L190">        String stringRange = &quot;&quot;;</span>
+
+        //Check if we want to look for special named date variable
+<span class="fc" id="L193">        String searchDate = &quot;&quot;;</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if(specialDateName != null) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            if(!specialDateName.startsWith(&quot;search&quot;)) searchDate = &quot;search&quot; + specialDateName;</span>
+<span class="nc" id="L196">            else searchDate = specialDateName;</span>
+        } else {
+<span class="fc" id="L198">            searchDate = &quot;searchDayDate&quot;;</span>
+        }
+
+        //Get params from map
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
+
+            //In specific case, FE returned value as String &quot;undefined&quot;
+<span class="fc" id="L205">            String value = entry.getValue();</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">            if(&quot;undefined&quot;.equals(value)) value = &quot;&quot;;</span>
+
+<span class="fc bfc" id="L208" title="All 2 branches covered.">            if(entry.getKey().equalsIgnoreCase(searchDate)) {</span>
+<span class="fc" id="L209">                stringRange = value;</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">            } else if(&quot;searchRootDir&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L211">                String rootGroupIdString = value;</span>
+<span class="fc" id="L212">                filter.setRootGroupId(Tools.getIntValue(rootGroupIdString, -1));</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            } else if(&quot;searchFilterBotsOut&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L214">                String filterBotsOutString = value;</span>
+<span class="fc" id="L215">                filter.setFilterBotsOut(Boolean.parseBoolean(filterBotsOutString));</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">            }  else if(&quot;chartType&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L217">                String chartTypString = value;</span>
+<span class="fc" id="L218">                filter.setChartType(stringToChartTypeEnum(chartTypString));</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            } else if(&quot;searchUrl&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L220">                filter.setUrl(value);</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">            } else if(&quot;searchEngine&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L222">                filter.setSearchEngineName(value);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            } else if(&quot;searchWebPage&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L224">                String webPageIdString = value;</span>
+<span class="fc" id="L225">                filter.setWebPageId(Tools.getIntValue(webPageIdString, -1));</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            } else if(&quot;statType&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L227">                filter.setStatType( value );</span>
+            }
+<span class="fc" id="L229">        }</span>
+
+        //Process dateString
+<span class="fc" id="L232">        Date[] dateRange = processDateRangeString(stringRange, filter.getStatType());</span>
+
+        //Set date range into filter
+<span class="fc" id="L235">        filter.setDateFrom(dateRange[0]);</span>
+<span class="fc" id="L236">        filter.setDateTo(dateRange[1]);</span>
+
+<span class="fc" id="L238">        return filter;</span>
+    }
+
+    /**
+     * Function handle parameters from request and use them for creating new FilterHeaderDto variable (where thi handled params are set).
+     * If any param is not found in map, default value will be set. Default values are defined by FilterHeaderDto itself.
+     * Because not every class has same name for date range value (mostly refered as dayDate), there is option use input parameter
+     * specialDateName and set what param we want find in map, that repsent dayDate. If specialDateName isnt set, function will
+     * use default param name dayDate.
+     * @param request request that contain params to handle
+     * @param specialDateName name of param that is in map and represent date range param dayDate
+     * @return  FilterHeaderDto variable that contain handled params
+     */
+    public static FilterHeaderDto processRequestToStatFilter(HttpServletRequest request, String specialDateName) {
+<span class="fc" id="L252">        FilterHeaderDto filter = new FilterHeaderDto();</span>
+
+        //Check if we want to look for special named date variable
+<span class="fc" id="L255">        String searchDate = &quot;&quot;;</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        if(specialDateName != null)</span>
+<span class="nc" id="L257">            searchDate = specialDateName;</span>
+        else {
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">            if (Tools.getStringValue(request.getParameter(&quot;searchdayDate&quot;), null) != null) searchDate = &quot;searchdayDate&quot;;</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">            else if (Tools.getStringValue(request.getParameter(&quot;searchDayDate&quot;), null) != null) searchDate = &quot;searchDayDate&quot;;</span>
+<span class="fc" id="L261">            else searchDate = &quot;dayDate&quot;;</span>
+        }
+
+        //Process dateString
+<span class="fc" id="L265">        Date[] dateRange = processDateRangeString(request.getParameter(searchDate));</span>
+
+        //Set date range into filter
+<span class="fc" id="L268">        filter.setDateFrom(dateRange[0]);</span>
+<span class="fc" id="L269">        filter.setDateTo(dateRange[1]);</span>
+
+        //Set rootGroupId with query
+<span class="fc" id="L272">        filter.setRootGroupId(Tools.getIntValue(request.getParameter(&quot;searchRootDir&quot;), -1));</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">        if(filter.getRootGroupId() == -1)</span>
+<span class="fc" id="L274">            filter.setRootGroupId(Tools.getIntValue(request.getParameter(&quot;rootDir&quot;), -1));</span>
+
+        //Set filter bots out
+<span class="fc" id="L277">        filter.setFilterBotsOut(Tools.getBooleanValue(request.getParameter(&quot;searchFilterBotsOut&quot;), false));</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        if(Boolean.FALSE.equals(filter.getFilterBotsOut()))</span>
+<span class="fc" id="L279">            filter.setFilterBotsOut(Tools.getBooleanValue(request.getParameter(&quot;filterBotsOut&quot;), false));</span>
+
+        //Set chart type
+<span class="fc" id="L282">        String chartType = Tools.getStringValue(request.getParameter(&quot;searchChartType&quot;), &quot;notChart&quot;);</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">        if(&quot;notChart&quot;.equals(chartType)) chartType = Tools.getStringValue(request.getParameter(&quot;chartType&quot;), &quot;notChart&quot;);</span>
+
+<span class="fc" id="L285">        filter.setChartType(stringToChartTypeEnum(chartType));</span>
+
+        //Set url
+<span class="fc" id="L288">        filter.setUrl(Tools.getStringValue(request.getParameter(&quot;searchUrl&quot;), &quot;&quot;));</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        if(&quot;&quot;.equals( filter.getUrl() ))</span>
+<span class="fc" id="L290">            filter.setUrl(Tools.getStringValue(request.getParameter(&quot;url&quot;), &quot;&quot;));</span>
+
+        //Set search engine name
+<span class="fc" id="L293">        filter.setSearchEngineName(Tools.getStringValue(request.getParameter(&quot;searchEngine&quot;), &quot;&quot;));</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if(&quot;&quot;.equals( filter.getSearchEngineName() ))</span>
+<span class="fc" id="L295">            filter.setSearchEngineName(Tools.getStringValue(request.getParameter(&quot;engine&quot;), &quot;&quot;));</span>
+
+        //Set web page id
+<span class="fc" id="L298">        filter.setWebPageId(Tools.getIntValue(request.getParameter(&quot;searchWebPage&quot;), -1));</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        if(filter.getWebPageId() == -1)</span>
+<span class="fc" id="L300">            filter.setWebPageId(Tools.getIntValue(request.getParameter(&quot;webPage&quot;), -1));</span>
+
+        //Set stat type
+<span class="fc" id="L303">        filter.setStatType( Tools.getStringValue(request.getParameter(&quot;searchStatType&quot;), &quot;days&quot;) );</span>
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">        if(&quot;days&quot;.equals( filter.getStatType() ))</span>
+<span class="fc" id="L305">            filter.setStatType( Tools.getStringValue(request.getParameter(&quot;statType&quot;), &quot;days&quot;) );</span>
+
+<span class="fc" id="L307">        return filter;</span>
+    }
+
+    public static List&lt;SearchEnginesDTO&gt; getSearchEnginesTableData(FilterHeaderDto filter) {
+        List&lt;Column&gt; columns;
+
+<span class="fc" id="L313">        updateFilter(filter);</span>
+
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        if(filter.getChartType() == ChartType.PIE)</span>
+<span class="fc" id="L316">            columns = StatTableDB.getSearchEnginesCount(MAX_ROWS,  filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());</span>
+        else
+<span class="fc" id="L318">            columns = StatTableDB.getSearchEnginesQuery(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());</span>
+
+<span class="fc" id="L320">        return columnsToItems(columns, filter.getChartType());</span>
+    }
+
+    public static List&lt;SearchEnginesDTO&gt; getSearchEnginesPieChartData(Date from, Date to, String rootGroupIdQuery) {
+<span class="nc" id="L324">        List&lt;Column&gt; columns = StatTableDB.getSearchEnginesCount(MAX_ROWS, from, to, rootGroupIdQuery);</span>
+<span class="nc" id="L325">        return columnsToItems(columns, ChartType.PIE);</span>
+    }
+
+    private static FilterHeaderDto updateFilter(FilterHeaderDto filter) {
+<span class="fc bfc" id="L329" title="All 2 branches covered.">        if(!filter.getSearchEngineName().isEmpty())</span>
+<span class="fc" id="L330">            filter.setRootGroupIdQuery(filter.getRootGroupIdQuery() + &quot; AND s.server='&quot; + filter.getSearchEngineName() + &quot;' &quot;);</span>
+
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">        if(filter.getWebPageId() != -1)</span>
+<span class="nc" id="L333">            filter.setRootGroupIdQuery(filter.getRootGroupIdQuery() + &quot; AND s.doc_id = '&quot; + filter.getWebPageId() + &quot;' &quot;);</span>
+
+<span class="fc" id="L335">        filter.setRootGroupIdQuery(filter.getRootGroupIdQuery());</span>
+<span class="fc" id="L336">        return filter;</span>
+    }
+
+    private static List&lt;SearchEnginesDTO&gt; columnsToItems(List&lt;Column&gt; columns, ChartType chartType) {
+<span class="fc" id="L340">        List&lt;SearchEnginesDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L341">        int order = 1;</span>
+
+<span class="fc bfc" id="L343" title="All 2 branches covered.">        if(chartType == ChartType.PIE) {</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">            for(Column column : columns) {</span>
+<span class="fc" id="L345">                SearchEnginesDTO item = new SearchEnginesDTO();</span>
+<span class="fc" id="L346">                item.setOrder(order);</span>
+<span class="fc" id="L347">                item.setAccesCount(column.getIntColumn2());</span>
+<span class="fc" id="L348">                item.setServerName(column.getColumn1());</span>
+<span class="fc" id="L349">                items.add(item);</span>
+<span class="fc" id="L350">                order++;</span>
+<span class="fc" id="L351">            }</span>
+        } else {
+            //Compute sum of all visits
+<span class="fc" id="L354">            int sum = 0;</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">            for(Column column : columns) {</span>
+<span class="fc" id="L356">                sum += column.getIntColumn1();</span>
+<span class="fc" id="L357">            }</span>
+
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">            if (sum &gt; 0) {</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">                for(Column column : columns) {</span>
+<span class="fc" id="L361">                    SearchEnginesDTO item = new SearchEnginesDTO();</span>
+<span class="fc" id="L362">                    item.setOrder(order);</span>
+<span class="fc" id="L363">                    item.setQueryCount(column.getIntColumn1());</span>
+<span class="fc" id="L364">                    item.setQueryName(column.getColumn2());</span>
+<span class="fc" id="L365">                    item.setPercentage((double) item.getQueryCount() * 100 / sum);</span>
+<span class="fc" id="L366">                    items.add(item);</span>
+
+<span class="fc bfc" id="L368" title="All 4 branches covered.">                    if(chartType == ChartType.BAR &amp;&amp; order &gt;= MAX_BAR_COLUMNS) break;</span>
+
+<span class="fc" id="L370">                    order++;</span>
+<span class="fc" id="L371">                }</span>
+            }
+        }
+<span class="fc" id="L374">        return items;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

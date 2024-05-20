@@ -78,10 +78,10 @@ public class ComplexQuery
 		{
 			if(MAX_SIZE != null && MAX_SIZE > 0) {
 				if(sql.toUpperCase().startsWith("SELECT")) {
-					if (Constants.DB_TYPE == Constants.DB_MYSQL) {
+					if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) {
 						//Using LIMIT
-						if(!sql.toUpperCase().contains("LIMIT")) 
-							sql += " LIMIT 0," + MAX_SIZE;
+						if(!sql.toUpperCase().contains("LIMIT"))
+							sql += " LIMIT " + MAX_SIZE;
 					} else if(Constants.DB_TYPE == Constants.DB_MSSQL) {
 						//Using TOP
 						if(!sql.toUpperCase().contains("TOP"))
@@ -100,18 +100,14 @@ public class ComplexQuery
 				DBPool.setTransactionIsolationReadUNCommited(db_conn);
 				ps = db_conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
-				if (Constants.DB_TYPE==Constants.DB_MYSQL) ps.setFetchSize(Integer.MIN_VALUE);
-			   else ps.setFetchSize(1);
+				ps.setFetchSize(1);
 			}
 			else
 			{
 				ps = db_conn.prepareStatement(sql);
 			}
 
-			for (int index = 0; index < params.length; index++)
-			{
-				ps.setObject(index+1, params[index]);
-			}
+			SimpleQuery.bindParameters(ps, params);
 
 			rs = ps.executeQuery();
 			Logger.debug(ComplexQuery.class, "list: Executed query: "+sql);

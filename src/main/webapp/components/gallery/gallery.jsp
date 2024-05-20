@@ -148,7 +148,7 @@ $(document).ready(function()
 
 <div id="thumbs${webjet_gallery_counter}" class="thumbs clearfix">
 	<ul>
-		<iwcm:forEach items="${galleryActionBean.photoList}" var="image" type="sk.iway.iwcm.gallery.GalleryBean"><li><%
+		<c:forEach items="${galleryActionBean.photoList}" var="image"><%sk.iway.iwcm.gallery.GalleryBean image = (sk.iway.iwcm.gallery.GalleryBean)pageContext.getAttribute("image");%><li><%
 					JSONObject title = new JSONObject();
 					title.put("shortDescription", galleryActionBean.isShortDescription() ? image.getShortDescription() : "");
 					title.put("longDescription", galleryActionBean.isLongDescription() ? image.getLongDescription() : "");
@@ -160,7 +160,7 @@ $(document).ready(function()
 						<div class="galleryShortDescription"><%= image.getShortDescription() %></div>
 					</c:if>
 				</a>
-			</li></iwcm:forEach>
+			</li></c:forEach>
 	</ul>
 </div>
 

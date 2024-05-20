@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PkeyGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">PkeyGenerator.java</span></div><h1>PkeyGenerator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+
+/**
+ *  PkeyGenerator.java
+ *
+ *@Title        webjet
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.13 $
+ *@created      Date: 28.9.2004 15:17:37
+ *@modified     $Date: 2008/12/11 08:57:49 $
+ */
+public class PkeyGenerator
+{
+	private static final String CONTEXT_NAME = &quot;sk.iway.iwcm.PkeyGenerator&quot;;
+	private Map&lt;String, PkeyBean&gt; generators;
+<span class="fc" id="L32">	private static Random random = new Random();</span>
+
+	/**
+	 * Ziskanie instancie
+	 * @return
+	 */
+	public static PkeyGenerator getInstance()
+	{
+<span class="fc" id="L40">		return(getInstance(false));</span>
+	}
+
+	/**
+	 * Ziskanie instancie
+	 * @param forceRefresh - ak je true, nacitaju sa stavy z DB
+	 * @return
+	 */
+	public static PkeyGenerator getInstance(boolean forceRefresh)
+	{
+		//		try to get it from server space
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">		if (forceRefresh == false)</span>
+		{
+<span class="fc bfc" id="L53" title="All 2 branches covered.">			if (Constants.getServletContext().getAttribute(CONTEXT_NAME) != null)</span>
+			{
+<span class="fc" id="L55">				PkeyGenerator pkgen = (PkeyGenerator) Constants.getServletContext().getAttribute(CONTEXT_NAME);</span>
+<span class="fc" id="L56">				return (pkgen);</span>
+			}
+		}
+<span class="fc" id="L59">		return (new PkeyGenerator());</span>
+	}
+
+	/**
+	 * Konstruktor, nacita hodnoty z databazy
+	 *
+	 */
+   private PkeyGenerator()
+<span class="fc" id="L67">   {</span>
+<span class="fc" id="L68">   	generators = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L69">      pkeyReloadAll();</span>
+<span class="fc" id="L70">      Constants.getServletContext().setAttribute(CONTEXT_NAME, this);</span>
+<span class="fc" id="L71">   }</span>
+
+   /**
+    * Ziska aktualnu maximalnu hodnotu v danej tabulke
+    * @param table_name
+    * @param key_name
+    * @return
+    */
+   private long getMaxValue(String table_name, String key_name)
+	{
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">		if (Tools.isEmpty(table_name) || Tools.isEmpty(key_name))</span>
+		{
+<span class="fc" id="L83">			return -1;</span>
+		}
+
+<span class="fc" id="L86">		String sql = &quot;SELECT MAX(&quot; + key_name + &quot;) FROM &quot; + table_name;</span>
+		try{
+<span class="fc" id="L88">			return new ComplexQuery().setSql(sql).singleResult(new Mapper&lt;Long&gt;(){</span>
+				@Override
+				public Long map(ResultSet rs) throws SQLException{
+<span class="fc" id="L91">					return Long.valueOf(rs.getLong(1));</span>
+				}
+<span class="fc" id="L93">			}).longValue();</span>
+		}
+<span class="fc" id="L95">		catch (Exception e)</span>
+		{
+<span class="fc" id="L97">			Logger.error(PkeyGenerator.class, &quot;Error executing PkeyGenerator max value, sql=&quot; +sql+&quot; error=&quot;+e.getMessage());</span>
+<span class="fc" id="L98">			return -1;</span>
+		}
+	}
+
+   /**
+    * Nastavi maximalnu hodnotu v tabulke pkey_generator, pouziva sa iba pri inicializacii
+    * @param p
+    * @param value
+    * @return
+    */
+   private synchronized boolean setMaxValue(PkeyBean p, long value)
+	{
+   	try{
+<span class="fc" id="L111">   		new SimpleQuery().execute(&quot;UPDATE pkey_generator SET value=? WHERE name=?&quot;, value, p.getName());</span>
+<span class="fc" id="L112">   		return true;</span>
+<span class="nc" id="L113">   	}catch (Exception e) {</span>
+<span class="nc" id="L114">   		sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L115">   		return false;</span>
+		}
+	}
+
+   /**
+    * Inicializacia klucov
+    *
+    */
+   private void pkeyReloadAll()
+	{
+<span class="fc" id="L125">   	List&lt;PkeyBean&gt; pkeys = new ComplexQuery().setSql(&quot;SELECT * FROM pkey_generator&quot;).list(new Mapper&lt;PkeyBean&gt;()</span>
+<span class="fc" id="L126">		{</span>
+   		@Override
+			public PkeyBean map(ResultSet rs) throws SQLException
+			{
+<span class="fc" id="L130">				PkeyBean p = new PkeyBean();</span>
+<span class="fc" id="L131">				p.setName(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="fc" id="L132">				p.setValue(rs.getLong(&quot;value&quot;));</span>
+<span class="fc" id="L133">				p.setTableName(DB.getDbString(rs, &quot;table_name&quot;));</span>
+<span class="fc" id="L134">				p.setTablePkeyName(DB.getDbString(rs, &quot;table_pkey_name&quot;));</span>
+				//nastav maximalnu hodnotu na 0, aby sa to pri prvom pouziti fetchlo
+<span class="fc" id="L136">				p.setMaxValue(0);</span>
+<span class="fc" id="L137">				return p;</span>
+			}
+		});
+
+<span class="fc bfc" id="L141" title="All 2 branches covered.">   	for (PkeyBean p : pkeys)</span>
+		{
+   		//uloz ho
+<span class="fc" id="L144">   		generators.put(p.getName(), p);</span>
+<span class="fc" id="L145">   		Logger.println(this,&quot;PkeyGenerator:&quot; + p.toString());</span>
+<span class="fc" id="L146">		}</span>
+<span class="fc" id="L147">	}</span>
+
+   private PkeyBean getPkeyBean(String name)
+   {
+<span class="fc" id="L151">   	PkeyBean p = generators.get(name);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">   	if (p == null)</span>
+   	{
+<span class="fc" id="L154">   		Logger.error(this,&quot;PkeyGenerator: is null - &quot; + name);</span>
+   	}
+<span class="fc" id="L156">   	return(p);</span>
+   }
+
+   /**
+    * Znova nacitanie kluca z DB (alokacia rozsahu)
+    * @param keyName
+    */
+   private void allocate(PkeyBean p)
+	{
+<span class="fc" id="L165">   	int INCREMENT = Constants.getInt(&quot;pkeyGenIncrement&quot;);</span>
+
+		//este nebol inicializovany, skus ziskat max hodnotu z DB a opravit tabulku
+<span class="fc bfc" id="L168" title="All 2 branches covered.">		if (p.getMaxValue()==0)</span>
+		{
+<span class="fc" id="L170">			long maxv = getMaxValue(p.getTableName(), p.getTablePkeyName());</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">			if (p.getValue() &lt; maxv)</span>
+			{
+				//uloz novu maximalnu hodnotu do databazy
+<span class="fc" id="L174">				setMaxValue(p, maxv);</span>
+			}
+		}
+
+		try
+		{
+<span class="fc" id="L180">			long value = -1;</span>
+<span class="fc" id="L181">			Connection db_conn = DBPool.getConnection();</span>
+			try
+			{
+<span class="fc" id="L184">				PreparedStatement ps = db_conn.prepareStatement(&quot;UPDATE pkey_generator SET value=value+&quot;+(Constants.getInt(&quot;pkeyGenBlockSize&quot;) * INCREMENT)+&quot; WHERE name=?&quot;);</span>
+				try
+				{
+<span class="fc" id="L187">					ps.setString(1, p.getName());</span>
+<span class="fc" id="L188">					ps.execute();</span>
+<span class="fc" id="L189">					ps.close();</span>
+
+<span class="fc" id="L191">					ps = db_conn.prepareStatement(&quot;SELECT max(value) AS value FROM pkey_generator WHERE name=?&quot;);</span>
+<span class="fc" id="L192">					ps.setString(1, p.getName());</span>
+<span class="fc" id="L193">					ResultSet rs = ps.executeQuery();</span>
+					try
+					{
+<span class="fc bfc" id="L196" title="All 2 branches covered.">						while (rs.next())</span>
+						{
+<span class="fc" id="L198">							value = rs.getLong(&quot;value&quot;);</span>
+						}
+					}
+<span class="fc" id="L201">					finally { rs.close(); }</span>
+				}
+<span class="fc" id="L203">				finally { ps.close(); }</span>
+			}
+<span class="fc" id="L205">			finally { db_conn.close(); }</span>
+
+<span class="fc" id="L207">			p.setMaxValue(value);</span>
+<span class="fc" id="L208">			p.setValue(value - (Constants.getInt(&quot;pkeyGenBlockSize&quot;) * INCREMENT));</span>
+
+			//zaokruhli hodnotu podla incrementu a offsetu
+			//int newValue = (((keyName.getValue() / INCREMENT) + 1) * INCREMENT) + INCREMENT_OFFSET;
+<span class="fc" id="L212">			long newValue = ((((p.getValue()-1) / INCREMENT) ) * INCREMENT) + 1; //NOSONAR</span>
+<span class="fc" id="L213">			Logger.debug(this,&quot;ZAOKRUHLENE: &quot; + p.getValue() + &quot;-&gt;&quot; + newValue);</span>
+<span class="fc" id="L214">			p.setValue(newValue);</span>
+
+<span class="fc" id="L216">			Logger.debug(this,&quot;PkeyGenerator ALLOCATE:&quot; + p.toString());</span>
+		}
+<span class="nc" id="L218">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L220">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L221">		}</span>
+<span class="fc" id="L222">	}</span>
+
+   /**
+    * Ziskanie dalsej hodnoty kluca
+    * @param keyName
+    * @return
+    */
+	public static synchronized int getNextValue(String keyName)
+	{
+<span class="fc" id="L231">		return (int) getNextValueAsLong(keyName);</span>
+	}
+
+	public static synchronized long getNextValueAsLong(String keyName)
+	{
+<span class="fc" id="L236">		long value = 1;</span>
+<span class="fc" id="L237">		PkeyGenerator pkGen = PkeyGenerator.getInstance();</span>
+<span class="fc" id="L238">		int INCREMENT_OFFSET = Constants.getInt(&quot;pkeyGenOffset&quot;);</span>
+		try
+		{
+<span class="fc" id="L241">			PkeyBean p = pkGen.getPkeyBean(keyName);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">			if (p == null)</span>
+			{
+<span class="fc" id="L244">				createNewRecord(keyName);</span>
+<span class="fc" id="L245">				PkeyGenerator pkg = PkeyGenerator.getInstance();</span>
+<span class="fc" id="L246">				pkg.pkeyReloadAll();</span>
+<span class="fc" id="L247">				return getNextValueAsLong(keyName);</span>
+			}
+<span class="fc" id="L249">			int INCREMENT = Constants.getInt(&quot;pkeyGenIncrement&quot;);</span>
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">			if ((p.getValue()+INCREMENT+INCREMENT_OFFSET) &gt; p.getMaxValue())</span>
+			{
+				//alokuj dalsi rozsah
+<span class="fc" id="L254">				pkGen.allocate(p);</span>
+			}
+
+			//ziskaj nasledujucu hodnotu - pri starte (inicializacii) sa zabezpeci
+			//presne nastavenie podla INCREMENTU, takze tu staci zvysovat
+<span class="fc" id="L259">			value = p.getValue();</span>
+			//jeeff: toto je zle, hodnotu mozeme navysovat len o INCREMENT a OFFSET pridavat len k navratovej hodnote!!
+			//value += INCREMENT + INCREMENT_OFFSET;
+<span class="fc" id="L262">			value += INCREMENT;</span>
+<span class="fc" id="L263">			p.setValue(value);</span>
+
+			//uloz to naspat do Hashtabulky (? je to treba ?)
+<span class="fc" id="L266">			pkGen.generators.put(keyName, p);</span>
+
+<span class="fc" id="L268">			Logger.debug(PkeyGenerator.class,&quot;PkeyGenerator NEXT:&quot; + p.toString());</span>
+		}
+<span class="nc" id="L270">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L272">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L273">		}</span>
+<span class="fc" id="L274">		return(value + INCREMENT_OFFSET);</span>
+	}
+
+	private static void createNewRecord(String keyName)
+	{
+<span class="fc" id="L279">		Logger.debug(PkeyGenerator.class,&quot;PkeyGenerator NEXT is NULL&quot;);</span>
+
+		//Este neexistuje zaznam v tabulke, vytvor a nacitaj
+<span class="fc" id="L282">		Connection db_conn = null;</span>
+<span class="fc" id="L283">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="fc" id="L286">			int i = 1;</span>
+<span class="fc" id="L287">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L288">			ps = db_conn.prepareStatement(&quot;INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES (?, 1, ?, ?)&quot;);</span>
+<span class="fc" id="L289">			ps.setString(i++, keyName);</span>
+<span class="fc" id="L290">			ps.setString(i++, keyName);</span>
+<span class="fc" id="L291">			ps.setString(i++, keyName+&quot;_id&quot;);</span>
+<span class="fc" id="L292">			ps.execute();</span>
+<span class="fc" id="L293">			ps.close();</span>
+<span class="fc" id="L294">			ps = null;</span>
+		}
+<span class="nc" id="L296">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L298">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L305">					db_conn.close();</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L307">					ps.close();</span>
+			}
+<span class="nc" id="L309">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L311">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L312">			}</span>
+		}
+<span class="fc" id="L314">	}</span>
+
+	public static String getUniqueKey()
+	{
+<span class="fc" id="L318">		Object o = new Object();</span>
+<span class="fc" id="L319">		String key = Tools.getNow() + &quot;1552&quot; + o.hashCode() + (random.nextInt(Integer.MAX_VALUE));</span>
+
+<span class="fc" id="L321">		byte[] defaultBytes = key.getBytes();</span>
+		try
+		{
+<span class="fc" id="L324">			MessageDigest algorithm = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="fc" id="L325">			algorithm.reset();</span>
+<span class="fc" id="L326">			algorithm.update(defaultBytes);</span>
+<span class="fc" id="L327">			byte[] messageDigest = algorithm.digest();</span>
+
+<span class="fc" id="L329">			StringBuilder hexString = new StringBuilder();</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">			for (int i=0;i&lt;messageDigest.length;i++)</span>
+			{
+<span class="fc" id="L332">				hexString.append(Integer.toHexString(0xFF &amp; messageDigest[i])); //NOSONAR</span>
+			}
+
+<span class="fc" id="L335">			Logger.debug(PkeyGenerator.class, &quot;getUniqueKey: key=&quot;+key+&quot; hex=&quot;+hexString.toString());</span>
+
+<span class="fc" id="L337">			key = hexString.toString();</span>
+		}
+<span class="nc" id="L339">		catch(Exception e)</span>
+		{
+<span class="nc" id="L341">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L342">		}</span>
+
+<span class="fc" id="L344">		return key;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

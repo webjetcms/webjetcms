@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationDataBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.model</a> &gt; <span class="el_source">EnumerationDataBean.java</span></div><h1>EnumerationDataBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.model;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name = &quot;enumeration_data&quot;)
+//@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorValue( &quot;default&quot; )
+
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_UPDATEDB)
+<span class="fc" id="L39">public class EnumerationDataBean extends ActiveRecordRepository implements Serializable {</span>
+
+    private static final long serialVersionUID = -1L;
+
+    @Id
+    @GeneratedValue(generator = &quot;WJGen_enumeration_data&quot;)
+    @TableGenerator(name = &quot;WJGen_enumeration_data&quot;, pkColumnValue = &quot;enumeration_data&quot;)
+    @Column(name = &quot;enumeration_data_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title=&quot;ID&quot;
+    )
+    private Long id;
+
+    @Column (name = &quot;sort_priority&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER,
+        className = &quot;dt-row-edit&quot;,
+        title = &quot;components.enumerations.sort_priority&quot;,
+        renderFormatLinkTemplate = &quot;javascript:;&quot;)
+    private int sortPriority;
+
+    @Column(name = &quot;string1&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string1;
+
+    @Column(name = &quot;string2&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string2;
+
+    @Column(name = &quot;string3&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string3;
+
+    @Column(name = &quot;string4&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string4;
+
+    @Column(name = &quot;string5&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string5;
+
+    @Column(name = &quot;string6&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string6;
+
+    @Column(name = &quot;string7&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string7;
+
+    @Column(name = &quot;string8&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string8;
+
+    @Column(name = &quot;string9&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string9;
+
+    @Column(name = &quot;string10&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string10;
+
+    @Column(name = &quot;string11&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string11;
+
+    @Column(name = &quot;string12&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT)
+    private String string12;
+
+<span class="fc" id="L108">    @Column(name = &quot;decimal1&quot;)</span>
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+<span class="fc" id="L110">    private BigDecimal decimal1 = BigDecimal.valueOf(0);</span>
+
+<span class="fc" id="L112">    @Column(name = &quot;decimal2&quot;)</span>
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+<span class="fc" id="L114">    private BigDecimal decimal2 = BigDecimal.valueOf(0);</span>
+
+<span class="fc" id="L116">    @Column(name = &quot;decimal3&quot;)</span>
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+<span class="fc" id="L118">    private BigDecimal decimal3 = BigDecimal.valueOf(0);</span>
+
+<span class="fc" id="L120">    @Column(name = &quot;decimal4&quot;)</span>
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+<span class="fc" id="L122">    private BigDecimal decimal4 = BigDecimal.valueOf(0);</span>
+
+    @Column (name = &quot;boolean1&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN)
+    private boolean boolean1;
+
+    @Column (name = &quot;boolean2&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN)
+    private boolean boolean2;
+
+    @Column (name = &quot;boolean3&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN)
+    private boolean boolean3;
+
+    @Column (name = &quot;boolean4&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN)
+    private boolean boolean4;
+
+    // pomocna premenna aby som v spring data mohol vyhladavat podla typeId (autokupa)
+    @Column(name = &quot;enumeration_type_id&quot;, insertable=false, updatable=false)
+    private Integer typeId;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column (name= &quot;date1&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.DATE)
+    private Date date1;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column (name = &quot;date2&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.DATE)
+    private Date date2;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column (name = &quot;date3&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.DATE)
+    private Date date3;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column (name = &quot;date4&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.DATE)
+    private Date date4;
+
+    @Column (name = &quot;hidden&quot;)
+    private boolean hidden;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;enumeration_type_id&quot;)
+    private EnumerationTypeBean type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;child_enumeration_type_id&quot;)
+    private EnumerationTypeBean childEnumerationType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name= &quot;parent_enumeration_data_id&quot;)
+    private EnumerationDataBean parentEnumerationData;
+
+    //Bind editor fields
+<span class="fc" id="L180">    @Transient</span>
+    @DataTableColumnNested
+    private transient EnumerationDataEditorFields editorFields = null;
+
+    @Override
+    public Long getId() {
+<span class="fc" id="L186">        return id;</span>
+    }
+
+    @Override
+    public void setId(Long id) {
+<span class="fc" id="L191">        this.id = id;</span>
+<span class="fc" id="L192">    }</span>
+
+    public Integer getTypeId() {
+<span class="fc" id="L195">        return typeId;</span>
+    }
+
+    public int getEnumerationDataId() {
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if(id == null) return 0;</span>
+<span class="fc" id="L200">        return id.intValue();</span>
+    }
+
+    public void setEnumerationDataId(int enumerationDataId) {
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (enumerationDataId==0) this.id = null;</span>
+<span class="fc" id="L205">        else this.id = Long.valueOf(enumerationDataId);</span>
+<span class="fc" id="L206">    }</span>
+
+    public EnumerationTypeBean getType() {
+<span class="fc" id="L209">        return type;</span>
+    }
+
+    public void setType(EnumerationTypeBean type) {
+<span class="fc" id="L213">        this.type = type;</span>
+<span class="fc" id="L214">    }</span>
+
+    public String getString1() {
+<span class="fc" id="L217">        return string1;</span>
+    }
+
+    public void setString1(String string1) {
+<span class="fc" id="L221">        this.string1 = string1;</span>
+<span class="fc" id="L222">    }</span>
+
+    public String getString2() {
+<span class="fc" id="L225">        return string2;</span>
+    }
+
+    public void setString2(String string2) {
+<span class="fc" id="L229">        this.string2 = string2;</span>
+<span class="fc" id="L230">    }</span>
+
+    public String getString3() {
+<span class="fc" id="L233">        return string3;</span>
+    }
+
+    public void setString3(String string3) {
+<span class="fc" id="L237">        this.string3 = string3;</span>
+<span class="fc" id="L238">    }</span>
+
+    public BigDecimal getDecimal1() {
+<span class="fc" id="L241">        return decimal1;</span>
+    }
+
+    public void setDecimal1(BigDecimal decimal1) {
+<span class="fc" id="L245">        this.decimal1 = decimal1;</span>
+<span class="fc" id="L246">    }</span>
+
+    public BigDecimal getDecimal2() {
+<span class="fc" id="L249">        return decimal2;</span>
+    }
+
+    public void setDecimal2(BigDecimal decimal2) {
+<span class="fc" id="L253">        this.decimal2 = decimal2;</span>
+<span class="fc" id="L254">    }</span>
+
+    public BigDecimal getDecimal3() {
+<span class="fc" id="L257">        return decimal3;</span>
+    }
+
+    public void setDecimal3(BigDecimal decimal3) {
+<span class="fc" id="L261">        this.decimal3 = decimal3;</span>
+<span class="fc" id="L262">    }</span>
+
+    public BigDecimal getDecimal4() {
+<span class="fc" id="L265">        return decimal4;</span>
+    }
+
+    public void setDecimal4(BigDecimal decimal4) {
+<span class="fc" id="L269">        this.decimal4 = decimal4;</span>
+<span class="fc" id="L270">    }</span>
+
+    public String getString4() {
+<span class="fc" id="L273">        return string4;</span>
+    }
+
+    public void setString4(String string4) {
+<span class="fc" id="L277">        this.string4 = string4;</span>
+<span class="fc" id="L278">    }</span>
+
+    public boolean isBoolean1() {
+<span class="fc" id="L281">        return boolean1;</span>
+    }
+
+    public void setBoolean1(boolean boolean1) {
+<span class="fc" id="L285">        this.boolean1 = boolean1;</span>
+<span class="fc" id="L286">    }</span>
+
+    public boolean isBoolean2() {
+<span class="fc" id="L289">        return boolean2;</span>
+    }
+
+    public void setBoolean2(boolean boolean2) {
+<span class="fc" id="L293">        this.boolean2 = boolean2;</span>
+<span class="fc" id="L294">    }</span>
+
+    public boolean isBoolean3() {
+<span class="fc" id="L297">        return boolean3;</span>
+    }
+
+    public void setBoolean3(boolean boolean3) {
+<span class="fc" id="L301">        this.boolean3 = boolean3;</span>
+<span class="fc" id="L302">    }</span>
+
+    public boolean isBoolean4() {
+<span class="fc" id="L305">        return boolean4;</span>
+    }
+
+    public void setBoolean4(boolean boolean4) {
+<span class="fc" id="L309">        this.boolean4 = boolean4;</span>
+<span class="fc" id="L310">    }</span>
+
+    public int getSortPriority() {
+<span class="fc" id="L313">        return sortPriority;</span>
+    }
+
+    public void setSortPriority(int sortPriority) {
+<span class="fc" id="L317">        this.sortPriority = sortPriority;</span>
+<span class="fc" id="L318">    }</span>
+
+    public boolean isHidden() {
+<span class="fc" id="L321">        return hidden;</span>
+    }
+
+    public void setHidden(boolean hidden) {
+<span class="fc" id="L325">        this.hidden = hidden;</span>
+<span class="fc" id="L326">    }</span>
+
+    public EnumerationTypeBean getChildEnumerationType() {
+<span class="fc" id="L329">        return childEnumerationType;</span>
+    }
+
+    public void setChildEnumerationType(EnumerationTypeBean childEnumerationType) {
+<span class="fc" id="L333">        this.childEnumerationType = childEnumerationType;</span>
+<span class="fc" id="L334">    }</span>
+
+    public String getString5() {
+<span class="fc" id="L337">        return string5;</span>
+    }
+
+    public void setString5(String string5) {
+<span class="fc" id="L341">        this.string5 = string5;</span>
+<span class="fc" id="L342">    }</span>
+
+    public String getString6() {
+<span class="fc" id="L345">        return string6;</span>
+    }
+
+    public void setString6(String string6) {
+<span class="fc" id="L349">        this.string6 = string6;</span>
+<span class="fc" id="L350">    }</span>
+
+    public Date getDate1() {
+<span class="fc" id="L353">        return date1;</span>
+    }
+
+    public void setDate1(Date date1) {
+<span class="fc" id="L357">        this.date1 = date1;</span>
+<span class="fc" id="L358">    }</span>
+
+    public Date getDate2() {
+<span class="fc" id="L361">        return date2;</span>
+    }
+
+    public void setDate2(Date date2) {
+<span class="fc" id="L365">        this.date2 = date2;</span>
+<span class="fc" id="L366">    }</span>
+
+    public Date getDate3() {
+<span class="fc" id="L369">        return date3;</span>
+    }
+
+    public void setDate3(Date date3) {
+<span class="fc" id="L373">        this.date3 = date3;</span>
+<span class="fc" id="L374">    }</span>
+
+    public Date getDate4() {
+<span class="fc" id="L377">        return date4;</span>
+    }
+
+    public void setDate4(Date date4) {
+<span class="fc" id="L381">        this.date4 = date4;</span>
+<span class="fc" id="L382">    }</span>
+
+    public String getDate1Str() {
+<span class="fc" id="L385">        return Tools.formatDateTimeSeconds(this.date1);</span>
+    }
+
+    public String getDate2Str() {
+<span class="fc" id="L389">        return Tools.formatDateTimeSeconds(this.date2);</span>
+    }
+
+    public String getDate3Str() {
+<span class="fc" id="L393">        return Tools.formatDateTimeSeconds(this.date3);</span>
+    }
+
+    public String getDate4Str() {
+<span class="fc" id="L397">        return Tools.formatDateTimeSeconds(this.date4);</span>
+    }
+
+    public EnumerationDataBean getParentEnumerationData() {
+<span class="fc" id="L401">        return parentEnumerationData;</span>
+    }
+
+    public void setParentEnumerationData(EnumerationDataBean parentEnumerationData) {
+<span class="fc" id="L405">        this.parentEnumerationData = parentEnumerationData;</span>
+<span class="fc" id="L406">    }</span>
+
+    public String getString7() {
+<span class="fc" id="L409">        return string7;</span>
+    }
+
+    public void setString7(String string7) {
+<span class="fc" id="L413">        this.string7 = string7;</span>
+<span class="fc" id="L414">    }</span>
+
+    public String getString8() {
+<span class="fc" id="L417">        return string8;</span>
+    }
+
+    public void setString8(String string8) {
+<span class="fc" id="L421">        this.string8 = string8;</span>
+<span class="fc" id="L422">    }</span>
+
+    public String getString9() {
+<span class="fc" id="L425">        return string9;</span>
+    }
+
+    public void setString9(String string9) {
+<span class="fc" id="L429">        this.string9 = string9;</span>
+<span class="fc" id="L430">    }</span>
+
+    public String getString10() {
+<span class="fc" id="L433">        return string10;</span>
+    }
+
+    public void setString10(String string10) {
+<span class="fc" id="L437">        this.string10 = string10;</span>
+<span class="fc" id="L438">    }</span>
+
+    public String getString11() {
+<span class="fc" id="L441">        return string11;</span>
+    }
+
+    public void setString11(String string11) {
+<span class="fc" id="L445">        this.string11 = string11;</span>
+<span class="fc" id="L446">    }</span>
+
+    public String getString12() {
+<span class="fc" id="L449">        return string12;</span>
+    }
+
+    public void setString12(String string12) {
+<span class="fc" id="L453">        this.string12 = string12;</span>
+<span class="fc" id="L454">    }</span>
+
+    public EnumerationDataEditorFields getEditorFields() {
+<span class="fc" id="L457">        return this.editorFields;</span>
+    }
+
+    public void setEditorFields(EnumerationDataEditorFields editorFields) {
+<span class="fc" id="L461">        this.editorFields = editorFields;</span>
+<span class="fc" id="L462">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

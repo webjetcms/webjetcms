@@ -103,6 +103,8 @@ Scenario('Template merge', ({I, DT, DTE}) => {
     //Create group with doc and use oldTemplate
         I.say("Create group with doc and use oldTemplate");
         I.amOnPage("/admin/v9/webpages/web-pages-list/?groupId=0");
+        I.jstreeReset();
+
         I.waitForElement("button.buttons-create", 10, containerTree);
         I.click("button.buttons-create", containerTree);
         DTE.waitForEditor("groups-datatable");
@@ -113,6 +115,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.click("#DTE_Field_groupName");
         I.fillField("#DTE_Field_groupName", groupDocName);
         I.click("#DTE_Field_navbarName");
+        I.groupSetRootParent();
         I.wait(1);
 
         I.say("Setting template");
@@ -247,6 +250,15 @@ Scenario('Filter templates by domainName/groups', ({I, DT, Document}) => {
     DT.filter("tempName", "Newsletter");
     I.see("Newsletter EN");
     I.see("Záznamy 1 až 1 z 1");
+
+    Document.switchDomain("mirroring.tau27.iway.sk");
+
+    DT.filter("tempName", "Microsite");
+    I.see("Microsite - yellow");
+    I.dontSee("Microsite - blue");
+    DT.filter("tempName", "Newsletter");
+    I.dontSee("Newsletter EN");
+    I.see("Záznamy 0 až 0 z 0");
 });
 
 Scenario('odhlasenie', ({ I }) => {

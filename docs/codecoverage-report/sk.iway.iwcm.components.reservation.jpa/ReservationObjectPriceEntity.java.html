@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectPriceEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationObjectPriceEntity.java</span></div><h1>ReservationObjectPriceEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.validation.constraints.NotNull;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;reservation_object_price&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION_PRICE)
+<span class="fc" id="L29">public class ReservationObjectPriceEntity implements Serializable {</span>
+    
+    @Id
+    @GeneratedValue(generator = &quot;WJGen_reservation_object_price&quot;)
+    @TableGenerator(name = &quot;WJGen_reservation_object_price&quot;, pkColumnValue = &quot;reservation_object_price&quot;)
+    @Column(name = &quot;object_price_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;object_id&quot;)
+    @NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER, 
+        title = &quot;reservation.reservation_object_price.reservation_object_id&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+                }
+            )
+        }
+    )
+    private Integer objectId;
+
+    @Column(name = &quot;datum_od&quot;)
+    @NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE, 
+        title=&quot;components.reservation.reservation_list.date_from2&quot;)
+    Date dateFrom;
+
+    @Column(name = &quot;datum_do&quot;)
+    @NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE, 
+        title=&quot;components.reservation.reservation_list.date_to2&quot;)
+    Date dateTo;
+
+    @Column(name = &quot;cena&quot;)
+    @NotNull
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER, 
+        title = &quot;reservation.reservation_object_price.price&quot;)
+    Double price;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

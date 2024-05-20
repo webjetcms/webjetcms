@@ -564,7 +564,11 @@ public class TagToken {
 	         if (cssType==null) cssType = name;
 	         if (cssType!=null)
 	         {
-					ret = "<span class='form-control emailInput-"+cssType.toLowerCase()+"'";
+					String htmlClasses = getAttribute("class");
+
+					ret = "<span class='form-control emailInput-"+cssType.toLowerCase();
+					if (htmlClasses!=null && htmlClasses.contains("formsimple-wysiwyg")) ret += " formsimple-wysiwyg";
+					ret += "'";
 					if ("textarea".equalsIgnoreCase(cssType)) ret += " style='height: auto;'";
 					ret += ">";
 	         }

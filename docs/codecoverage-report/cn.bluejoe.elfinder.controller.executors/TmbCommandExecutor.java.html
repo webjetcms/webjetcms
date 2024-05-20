@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TmbCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">TmbCommandExecutor.java</span></div><h1>TmbCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+
+<span class="nc" id="L11">public class TmbCommandExecutor extends AbstractCommandExecutor</span>
+{
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, HttpServletResponse response,
+			ServletContext servletContext) throws Exception
+	{
+<span class="nc" id="L17">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="nc" id="L18">		FsItemEx fsi = super.findItem(fsService, target);</span>
+		
+<span class="nc" id="L20">		int width = fsService.getServiceConfig().getTmbWidth();</span>
+		
+<span class="nc" id="L22">		String virtualPath = sk.iway.iwcm.system.elfinder.FsService.getVirtualPath(fsi);</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">		if (virtualPath.startsWith(&quot;/&quot;)==false) virtualPath = &quot;/&quot;+virtualPath;</span>
+		
+		//JEEFF: preposleme na thumb server
+<span class="nc" id="L26">		response.setStatus(302);</span>
+<span class="nc" id="L27">		response.setHeader(&quot;Location&quot;, &quot;/thumb&quot;+virtualPath+&quot;?w=&quot;+width);</span>
+		
+		/*
+		InputStream is = fsi.openInputStream();
+		BufferedImage image = ImageIO.read(is);
+		int width = fsService.getServiceConfig().getTmbWidth();
+		ResampleOp rop = new ResampleOp(DimensionConstrain.createMaxDimension(width, -1));
+		rop.setNumberOfThreads(4);
+		BufferedImage b = rop.filter(image, null);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageIO.write(b, &quot;png&quot;, baos);
+		byte[] bytesOut = baos.toByteArray();
+		is.close();
+
+		response.setHeader(&quot;Last-Modified&quot;, DateUtils.addDays(Calendar.getInstance().getTime(), 2 * 360).toGMTString());
+		response.setHeader(&quot;Expires&quot;, DateUtils.addDays(Calendar.getInstance().getTime(), 2 * 360).toGMTString());
+
+		ImageIO.write(b, &quot;png&quot;, response.getOutputStream());
+		*/
+<span class="nc" id="L46">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

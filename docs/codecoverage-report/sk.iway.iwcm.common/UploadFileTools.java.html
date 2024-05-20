@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadFileTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">UploadFileTools.java</span></div><h1>UploadFileTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+
+public class UploadFileTools {
+
+    private UploadFileTools() {
+        //utility class
+    }
+
+    private static String clearVirtualPath(String virtualPath)
+    {
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        if (virtualPath.endsWith(&quot;.html&quot;)) {</span>
+<span class="nc" id="L25">            virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(&quot;.html&quot;));</span>
+        }
+
+<span class="nc" id="L28">        return virtualPath;</span>
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k &quot;Aktualna stranka&quot;
+     * @param docId
+     * @param groupId
+     * @param prefix
+     * @return
+     * @deprecated pouzit {@link #getPageUploadSubDir(int, int, String, String)}
+     */
+    @Deprecated
+    public static String getPageUploadSubDir(int docId, int groupId, String prefix) {
+<span class="nc" id="L41">        return getPageUploadSubDir(docId, groupId, null, prefix);</span>
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k &quot;Aktualna stranka&quot;
+     * @param docId
+     * @param groupId
+     * @param newPageTitle - nazov novej web stranky, pouzije sa ak docId&lt;1
+     * @param prefix
+     * @return
+     */
+    public static String getPageUploadSubDir(int docId, int groupId, String newPageTitle, String prefix)
+    {
+<span class="fc" id="L54">        StringBuilder path = new StringBuilder();</span>
+<span class="pc bpc" id="L55" title="3 of 4 branches missed.">        if (Constants.getBoolean(&quot;galleryUploadDirVirtualPath&quot;) &amp;&amp; docId &gt; 0)</span>
+        {
+<span class="nc" id="L57">            String virtualPath = DocDB.getURLFromDocId(docId, null);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (Tools.isNotEmpty(virtualPath))</span>
+            {
+<span class="nc" id="L60">                virtualPath = clearVirtualPath(virtualPath);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                if (Tools.isNotEmpty(prefix))</span>
+<span class="nc" id="L62">                    path.append(prefix);</span>
+<span class="nc" id="L63">                path.append(virtualPath);</span>
+<span class="nc" id="L64">                return path.toString();</span>
+            }
+        }
+
+<span class="fc" id="L68">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(prefix))</span>
+        {
+<span class="fc" id="L72">            path.append(prefix);</span>
+        }
+
+<span class="fc" id="L75">        String domainAlias = AdminTools.getDomainNameFileAliasAppend();</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(domainAlias))</span>
+        {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (prefix.startsWith(&quot;/images/gallery&quot;)) {</span>
+<span class="nc" id="L79">                path.setLength(0);</span>
+<span class="nc" id="L80">                path.append(&quot;/images&quot;+domainAlias+prefix.substring(&quot;/images&quot;.length()));</span>
+            } else {
+<span class="nc" id="L82">                path.append(domainAlias);</span>
+            }
+        }
+
+<span class="fc" id="L86">        path.append(groupsDB.getURLPath(groupId));</span>
+
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (path.length() == 0) {</span>
+<span class="nc" id="L89">            path.append(&quot;/&quot;);</span>
+        }
+
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;elfinderCreateFolderForPages&quot;))</span>
+        {
+<span class="fc" id="L94">            String pageUrlName = null;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (docId &gt; 0) {</span>
+<span class="fc" id="L96">                GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="fc" id="L97">                DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L98" title="2 of 6 branches missed.">                if (doc != null &amp;&amp; group != null &amp;&amp; group.getDefaultDocId()!=doc.getDocId())</span>
+                {
+<span class="fc" id="L100">                    String url = doc.getVirtualPath();</span>
+<span class="pc bpc" id="L101" title="2 of 4 branches missed.">                    if (Tools.isNotEmpty(url) &amp;&amp; url.length()&gt;5)</span>
+                    {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                        if (url.endsWith(&quot;/&quot;))</span>
+                        {
+<span class="nc" id="L105">                            int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                            if (predposlednaLomka&gt;1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);</span>
+<span class="nc" id="L107">                        }</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                        else if (url.endsWith(&quot;.html&quot;))</span>
+                        {
+<span class="fc" id="L110">                            int poslednaLomka = url.lastIndexOf(&quot;/&quot;);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                            if (poslednaLomka&gt;1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);</span>
+                        }
+                    }
+
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                    if (Tools.isEmpty(pageUrlName))</span>
+                    {
+<span class="nc" id="L117">                        pageUrlName = DocTools.removeChars(doc.getTitle(), true);</span>
+                    }
+                }
+<span class="fc" id="L120">            } else {</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                if (Tools.isNotEmpty(newPageTitle)) {</span>
+<span class="fc" id="L122">                    pageUrlName = DocTools.removeChars(newPageTitle, true);</span>
+                }
+            }
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (Tools.isNotEmpty(pageUrlName)) {</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">                if (path.toString().endsWith(&quot;/&quot;)==false) path.append(&quot;/&quot;);</span>
+<span class="fc" id="L128">                path.append(pageUrlName);</span>
+            }
+        }
+
+<span class="fc" id="L132">        path = new StringBuilder(DocTools.removeCharsDir(path.toString(), true).toLowerCase());</span>
+
+        // #18512 vratenie cesty len do urcitej hlbky
+<span class="fc" id="L135">        int maxDeep = Constants.getInt(&quot;editorUploadActualPageMaxDeep&quot;);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (StringUtils.countMatches(path.toString(), &quot;/&quot;) &gt; maxDeep) {</span>
+<span class="fc" id="L137">            path.substring(0, StringUtils.ordinalIndexOf(path.toString(), &quot;/&quot;, maxDeep + 1));</span>
+        }
+
+<span class="pc bpc" id="L140" title="2 of 4 branches missed.">        if (path.length()&gt;3 &amp;&amp; path.charAt(path.length()-1)=='/') {</span>
+            //odstrank koncove lomitko (3 hodiny debugovania zacykleneho otvarania priecinka ked group mal nastavene /sk/)
+<span class="nc" id="L142">            path.deleteCharAt(path.length()-1);</span>
+        }
+
+<span class="fc" id="L145">        return path.toString();</span>
+    }
+
+    public static boolean isFileAllowed(String uploadType, String fileName, long fileSize, Identity user, HttpServletRequest request)
+    {
+<span class="fc" id="L150">        request.removeAttribute(&quot;permissionDenied&quot;);</span>
+
+<span class="pc bpc" id="L152" title="3 of 6 branches missed.">        if (user == null || user.isDisabledItem(&quot;menuFbrowser&quot;) || request.getRequestURI().contains(&quot;/admin/upload/chunk&quot;))</span>
+        {
+            //#32245 pentesty ING Bank
+            //ak user nema povolene subory, stale je dostupny elfinder napr. v banneroch a teoreticky moze nahrat skodlivy subor
+            //zakazeme mu upload skodlivych suborov, nie je dovod aby takyto subor vedel nahrat
+<span class="fc" id="L157">            String ext = FileTools.getFileExtension(fileName);</span>
+<span class="pc bpc" id="L158" title="5 of 10 branches missed.">            if (ext.equals(&quot;jsp&quot;) || ext.equals(&quot;php&quot;) || ext.equals(&quot;class&quot;) || ext.equals(&quot;jar&quot;) || FileBrowserTools.hasForbiddenSymbol(fileName))</span>
+            {
+<span class="nc" id="L160">                request.setAttribute(&quot;permissionDenied&quot;, &quot;fileType&quot;);</span>
+<span class="nc" id="L161">                return false;</span>
+            }
+        }
+
+<span class="fc" id="L165">        int uploadMaxSize = getUploadMaxSize(user, uploadType);</span>
+<span class="fc" id="L166">        String uploadFileTypes = getUploadFileTypes(user, uploadType);</span>
+
+<span class="pc bpc" id="L168" title="3 of 4 branches missed.">        if (uploadMaxSize &gt; 0 &amp;&amp; fileSize &gt; uploadMaxSize)</span>
+        {
+<span class="nc" id="L170">            request.setAttribute(&quot;permissionDenied&quot;, &quot;fileSize&quot;);</span>
+<span class="nc" id="L171">            return false;</span>
+        }
+
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (FileBrowserTools.hasForbiddenSymbol(fileName)) {</span>
+<span class="nc" id="L175">            return false;</span>
+        }
+
+<span class="pc bpc" id="L178" title="3 of 4 branches missed.">        if (Tools.isEmpty(uploadFileTypes) || &quot;*&quot;.equals(uploadFileTypes)) return true;</span>
+
+<span class="nc" id="L180">        fileName = fileName.toLowerCase();</span>
+
+<span class="nc" id="L182">        String[] exts = Tools.getTokens(uploadFileTypes, &quot;,&quot;, true);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        for (String ext : exts)</span>
+        {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (fileName.endsWith(&quot;.&quot;+ext)) return true;</span>
+        }
+
+<span class="nc" id="L188">        request.setAttribute(&quot;permissionDenied&quot;, &quot;fileType&quot;);</span>
+
+<span class="nc" id="L190">        return false;</span>
+    }
+
+
+    /**
+     * Vrati ciarkou oddeleny zoznam pripon suborov, ktore pouzivatel moze na server nahrat
+     * @param user
+     * @param type - image, alebo file
+     * @return - gif,png,jpg,swf
+     */
+    public static String getUploadFileTypes(Identity user, String type)
+    {
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (user == null) return &quot;aaaaa&quot;;</span>
+
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (user.isEnabledItem(&quot;editor_unlimited_upload&quot;)) return &quot;&quot;;</span>
+
+<span class="nc" id="L206">        String uploadFileTypes = &quot;&quot;;</span>
+
+<span class="nc" id="L208">        String prefix = &quot;Default&quot;;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (user.isDisabledItem(&quot;editorMiniEdit&quot;)==false) prefix = &quot;Basic&quot;;</span>
+        //RZA: pri drag&amp;drope obrazka v editore je type &quot;ckeditor&quot;
+<span class="nc bnc" id="L211" title="All 4 branches missed.">        if (&quot;image&quot;.equalsIgnoreCase(type) || &quot;ckeditor&quot;.equalsIgnoreCase(type))</span>
+        {
+<span class="nc" id="L213">            uploadFileTypes = Constants.getString(&quot;FCKConfig.UploadFileTypes[&quot;+prefix+&quot;][image]&quot;);</span>
+        }
+        else
+        {
+<span class="nc" id="L217">            uploadFileTypes = Constants.getString(&quot;FCKConfig.UploadFileTypes[&quot;+prefix+&quot;][file]&quot;);</span>
+        }
+
+<span class="nc" id="L220">        return uploadFileTypes;</span>
+    }
+
+    /**
+     * Vrati limit na velkost suboru, ktory moze pouzivatel na server nahrat
+     * @param user
+     * @param type - image, alebo file
+     * @return - velkost suboru v B
+     */
+    public static int getUploadMaxSize(Identity user, String type)
+    {
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if (user == null) return 0;</span>
+
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        if (user.isEnabledItem(&quot;editor_unlimited_upload&quot;)) return 0;</span>
+
+<span class="nc" id="L235">        int limit = 0;</span>
+<span class="nc" id="L236">        String limitStr = &quot;&quot;;</span>
+
+<span class="nc" id="L238">        String prefix = &quot;Default&quot;;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">        if (user.isDisabledItem(&quot;editorMiniEdit&quot;)==false) prefix = &quot;Basic&quot;;</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (&quot;image&quot;.equalsIgnoreCase(type))</span>
+<span class="nc" id="L241">            limitStr = Constants.getString(&quot;FCKConfig.UploadMaxSize[&quot;+prefix+&quot;][image]&quot;);</span>
+        else
+<span class="nc" id="L243">            limitStr = Constants.getString(&quot;FCKConfig.UploadMaxSize[&quot;+prefix+&quot;][file]&quot;);</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if(Tools.isNotEmpty(limitStr))</span>
+        {
+            //ak je zadana hodnota napr. 2*1024
+<span class="nc bnc" id="L248" title="All 2 branches missed.">            if(limitStr.indexOf('*') != -1)</span>
+            {
+<span class="nc" id="L250">                String[] limitStrArray = Tools.getTokens(limitStr, &quot;*&quot;);</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">                if(limitStrArray != null &amp;&amp; limitStrArray.length &gt; 0)</span>
+                {
+<span class="nc" id="L253">                    limit = 1;</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                    for(String limitStrValue : limitStrArray)</span>
+<span class="nc" id="L255">                        limit *= Tools.getIntValue(limitStrValue, 1);</span>
+                }
+<span class="nc" id="L257">            }</span>
+            else
+            {
+<span class="nc" id="L260">                limit = Tools.getIntValue(limitStr, 0);</span>
+            }
+        }
+
+<span class="nc" id="L264">        return limit * 1024;</span>
+    }
+
+    /**
+     * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k &quot;Aktualna stranka&quot;
+     * @param docId
+     * @param groupId
+     * @return
+     */
+    public static String getPageUploadSubDir(int docId, int groupId)
+    {
+<span class="nc" id="L275">        return getPageUploadSubDir(docId, groupId, null, null);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -14,16 +14,16 @@ export function typeJsTree() {
             conf._search = $('<input class="form-control"/>').appendTo(conf._searchForm);
             conf._searchForm.append(
                     '<button class="btn btn-sm btn-outline-secondary btn-search">' +
-                        '<i class="fa fa-search"></i>' +
+                        '<i class="ti ti-search"></i>' +
                     '</button>' +
                     '<button class="btn btn-sm btn-outline-secondary btn-clear" style="display: none;">' +
-                        '<i class="fa fa-times"></i>' +
+                        '<i class="ti ti-circle-x"></i>' +
                     '</button>' +
                     '<button class="btn btn-sm btn-outline-secondary btn-select-all">' +
-                        '<i class="far fa-check-square"></i>' +
+                        '<i class="ti ti-checkbox"></i>' +
                     '</button>' +
                     '<button class="btn btn-sm btn-outline-secondary btn-deselect-all">' +
-                        '<i class="far fa-square"></i>' +
+                        '<i class="ti ti-square"></i>' +
                     '</button>'
             );
             conf._searchForm.on('click', '.btn-search', () => {

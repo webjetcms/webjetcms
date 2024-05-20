@@ -5,21 +5,25 @@ Before(({ I, login }) => {
 });
 
 Scenario('monitoring', ({ I, Document }) => {
-    I.amOnPage("/admin/v9/settings/server-monitoring/");
+    I.amOnPage("/apps/server_monitoring/admin/");
     I.wait(120);
     Document.screenshot("/sysadmin/monitoring/actual.png", 1360, 1000);
 
-    I.amOnPage("/admin/v9/settings/server-monitoring-records/");
+    I.amOnPage("/apps/server_monitoring/admin/records/");
     Document.screenshot("/sysadmin/monitoring/historical.png", 1360, 1000);
 });
 
-Scenario('monitoring - node based', ({ I, DT, DTE, Document }) => {
+Scenario('monitoring - node based', ({ I, Document }) => {
     I.amOnPage("/apps/server_monitoring/admin/sql/");
 
     //
     Document.screenshot("/sysadmin/monitoring/sql.png", 700, 500);
 
-    I.click(locate("button.dropdown-toggle.bootstrap-select").withAttr({ title: 'SW88 (Aktuálny uzol)' }));
+    if("en" === I.getConfLng()) { 
+        I.click(locate("button.dropdown-toggle.bootstrap-select").withAttr({ title: 'SW88 (Current node)' }));
+    } else { //default SK
+        I.click(locate("button.dropdown-toggle.bootstrap-select").withAttr({ title: 'SW88 (Aktuálny uzol)' }));
+    }
 
     //Select options
     Document.screenshotElement("div.dropdown-menu.show" ,"/sysadmin/monitoring/select-options.png");

@@ -155,7 +155,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public List<T> findItemBy(String propertyName, T original) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
 
 		//musime spravit najskor kopiu obj, aby sme na nej mohli zavolat processToEntity bez posahania povodnej entity
-		T obj = (T)original.getClass().newInstance();
+		T obj = (T)original.getClass().getDeclaredConstructor().newInstance();
 		NullAwareBeanUtils.copyProperties(original, obj);
 		processToEntity(obj, ProcessItemAction.EDIT);
 
@@ -177,7 +177,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		raq.setSelectionCriteria(exp);
 
 		Query query = entityManager.createQuery(raq);
-		List<T> list = (List<T>) query.getResultList();
+		List<T> list = query.getResultList();
 		for (T entity : list) {
 			processFromEntity(entity, ProcessItemAction.FIND);
 		}
@@ -208,7 +208,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	private List<T> editItemByColumn(T entity, String updateByColumn) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
 		// ziskame list entit, ktore obsahuju v stlpci updateByColumn rovnaku hodnotu ako entita
 		String idColumnName = getIdColumnName(entity);
-		if ("id".equalsIgnoreCase(updateByColumn)) updateByColumn = idColumnName;
+		if ("id".equalsIgnoreCase(updateByColumn) && idColumnName!=null) updateByColumn = idColumnName;
 
 		List<T> itemsBy = findItemBy(updateByColumn, entity);
 		if (itemsBy.isEmpty()) {
@@ -254,6 +254,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//failsafe
 				}
 			}
+
+			checkItemPermsThrows(entity, id);
 
 			T saved = editItem(entity, id);
 			afterSave(entity, saved);
@@ -526,7 +528,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			if (pageable != null) page = repo.findAll(exampleQuery, pageable);
 			else page = new DatatablePageImpl<>(repo.findAll(exampleQuery));
 		} else {
-			Specification<T> spec  = getSearchConditions(searchProperties, params);
+			Specification<T> spec  = getSearchConditions(searchProperties, params, search);
 			if (pageable != null) page = ((JpaSpecificationExecutor<T>)repo).findAll(spec, pageable);
 			else page = new DatatablePageImpl<>(((JpaSpecificationExecutor<T>)repo).findAll(spec));
 		}
@@ -552,8 +554,34 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	/*************************** BEZPECNOST A VALIDACIA ****************************/
 
+	/**
+	 * Validate access to this rest controller, this is not per row/entity check
+	 * @param request
+	 * @return
+	 */
 	public boolean checkAccessAllowed(HttpServletRequest request) {
 		return true;
+	}
+
+	/**
+	 * Check item perms, it's called with every save/delete/getOne action
+	 * @param entity - current entity
+	 * @param id - entity ID
+	 * @param errors
+	 * @return false if permissions is not allowed
+	 */
+	public boolean checkItemPerms(T entity, Long id) {
+		return true;
+	}
+
+	/**
+	 * Check and throws exception if item is not allowed to edit
+	 * @param entity
+	 * @param id
+	 */
+	private void checkItemPermsThrows(T entity, Long id) {
+		boolean valid = checkItemPerms(entity, id);
+		if (valid==false) throwConstraintViolation(getProp().getText("components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu"));
 	}
 
 	/**
@@ -691,7 +719,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @throws IllegalAccessException
 	 */
 	@InitBinder
-	protected void initBinder(HttpServletRequest request, WebDataBinder binder) throws IllegalAccessException
+	protected void initBinder(HttpServletRequest request, WebDataBinder binder)
 	{
 		String requestURI = request.getRequestURI();
 		if (requestURI.endsWith("/editor")) {
@@ -758,13 +786,48 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		}
 	}
 
+
+    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class<?> initialClass, String fieldName) throws NoSuchFieldException {
+        java.lang.reflect.Field field = null;
+        int failsafe=0;
+        Class<?> targetClass = initialClass;
+        while (targetClass != null && failsafe++<15) {
+            try {
+                field = targetClass.getDeclaredField(fieldName);
+                if(field != null) return field;
+            } catch (NoSuchFieldException e) {}
+            // Field not found in current class, continue to superclass
+            targetClass = targetClass.getSuperclass();
+        }
+
+       throw new NoSuchFieldException("Field " + fieldName + " not found in class " + initialClass + " or in super classes");
+    }
+
+	private static boolean isFieldType(Class<?> initialClass, String fieldNam, DataTableColumnType type) {
+		boolean isProvidedType = false;
+		try {
+			java.lang.reflect.Field field = getDeclaredFiledRecursive(initialClass, fieldNam);
+			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
+				DataTableColumnType[] inputType = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).inputType();
+
+				//Check if field inputType is equal with provided inputType
+				if(inputType != null && inputType.length > 0)
+					isProvidedType = inputType[0].equals(type);
+			}
+		} catch(Exception e) {
+			//Do nothing
+		}
+
+		return isProvidedType;
+	}
+
 	/**
 	 * Vytvori zoznam predikatov pre vyhladavanie
 	 * @param properties - ocisteny zoznam params o atributy, ktore sa nechachadzaju v T
 	 * @param example - kompletny zoznam request parametrov, vratane pagingu
 	 * @return
 	 */
-	protected Specification<T> getSearchConditions(Map<String, String> properties, Map<String, String> params) {
+	protected Specification<T> getSearchConditions(Map<String, String> properties, Map<String, String> params, T entity) {
 		return (Specification<T>) (root, query, builder) -> {
 			final List<Predicate> predicates = new ArrayList<>();
 
@@ -778,7 +841,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				if (value.startsWith("daterange:")) {
 					Timestamp from = null;
 					Timestamp to = null;
-					String values[] = Tools.getTokens(value.substring(value.indexOf(":")+1), "-");
+					String[] values = Tools.getTokens(value.substring(value.indexOf(":")+1), "-");
 					if (values.length==2) {
 						from = new Timestamp(Tools.getLongValue(values[0], 0));
 						to = new Timestamp(Tools.getLongValue(values[1], 0));
@@ -788,15 +851,29 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						else from = new Timestamp(Tools.getLongValue(values[0], 0));
 					}
 
-					/*jeeff: uz netreba, do filtrov som pridal aj HH:mm:ss, takze sa to da presne nastavit
-					if (to != null) {
-						//to nam pride vo formate 2.6.2020 ale mysli sa do konca dna, je potrebne pridat 24 hodin
+					//Ak sa jedna o DATETIME, ta žiadnu úpravu nespravíme (používateľ nech si časovú zložku nastaví sám)
+					//Ak sa jedná o DATE, tak nastavíme časovú zložku FROM na 00:00:00 a TO na 23:59:59
+					boolean isDate = isFieldType(entity.getClass(), field, DataTableColumnType.DATE);
+
+					if(isDate && from != null) {
 						Calendar cal = Calendar.getInstance();
-						cal.setTimeInMillis(to.getTime());
-						cal.add(Calendar.DATE, 1);
-						to = new Timestamp(cal.getTimeInMillis());
+						cal.setTime(from);
+						cal.set(Calendar.HOUR_OF_DAY, 0);
+						cal.set(Calendar.MINUTE, 0);
+						cal.set(Calendar.SECOND, 0);
+						from = new Timestamp( cal.getTimeInMillis() );
 					}
-					*/
+
+					if(isDate && to != null) {
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(to);
+						//set to begining of next day because we will use lessThan
+						cal.add(Calendar.DATE, 1);
+						cal.set(Calendar.HOUR_OF_DAY, 0);
+						cal.set(Calendar.MINUTE, 0);
+						cal.set(Calendar.SECOND, 0);
+						to = new Timestamp( cal.getTimeInMillis() );
+					}
 
 					sk.iway.iwcm.Logger.debug(DatatableRestControllerV2.class, "Daterange from="+Tools.formatDateTimeSeconds(from)+" to="+Tools.formatDateTimeSeconds(to)+" original="+value);
 
@@ -805,7 +882,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				} else if (value.startsWith("range:")) {
 					BigDecimal from = null;
 					BigDecimal to = null;
-					String values[] = Tools.getTokens(value.substring(value.indexOf(":")+1), "-");
+					String[] values = Tools.getTokens(value.substring(value.indexOf(":")+1), "-");
 					if (values.length==2) {
 						from = Tools.getBigDecimalValue(values[0], "0");
 						to = Tools.getBigDecimalValue(values[1], "0");
@@ -852,6 +929,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 								if (Constants.DB_TYPE==Constants.DB_ORACLE && isJpaLowerField(field)) {
 									predicates.add(builder.like(builder.lower(root.get(field)), value.toLowerCase()));
+								} else if (Constants.DB_TYPE==Constants.DB_PGSQL) {
+									predicates.add(builder.like(builder.lower(builder.function("unaccent", String.class, root.get(field))), DB.internationalToEnglish(value).toLowerCase()));
 								} else {
 									predicates.add(builder.like(root.get(field), value));
 								}
@@ -870,7 +949,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			return builder.and(predicates.toArray(new Predicate[predicates.size()]));
 		};
-	};
+	}
 
 	/**
 	 * Doplnenie pecialneho vyhladavanie, interne vola:
@@ -984,7 +1063,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		DatatableResponse<T> response = new DatatableResponse<>();
 
 		if (datatableRequest.isDeleteOldData()) {
-			//TODO: je potrebne sa zamysliet nad bezpecnostou, zatial schovane aj v UI
+			//je potrebne sa zamysliet nad bezpecnostou, zatial schovane aj v UI
 			//repo.deleteAll();
 		}
 
@@ -1117,6 +1196,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 
 				beforeSave(entity);
+				checkItemPermsThrows(entity, id);
 
 				try {
 					ResponseEntity<T> re = add(entity); //This method throws ConstraintViolationException
@@ -1133,6 +1213,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			} else if (datatableRequest.isUpdate()) {
 				beforeSave(entity);
+				checkItemPermsThrows(entity, id);
 
 				ResponseEntity<T> re=null;
 				// Ak updatujeme na zaklade stlpca v DB
@@ -1154,6 +1235,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			} else if (datatableRequest.isDelete()) {
 				//delete(id, datatableRequest.getData().get(id));
+				checkItemPermsThrows(entity, id);
 				boolean deleted = deleteItem(datatableRequest.getData().get(id), id);
 				if (deleted == false) {
 					throwError("editor.delete_error");
@@ -1227,6 +1309,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			//id==-1 je v situacii ked sa nic neselectne, napr. pre refresh akciu
 			if (id != -1) entity = getOneItem(id);
 			if (entity != null || id==-1) {
+				checkItemPermsThrows(entity, id);
 				boolean success = processAction(entity, action);
 				if (success == false) {
 					response.setError(getProp().getText("datatable.error.unknown") + ": id=" + id);
@@ -1246,6 +1329,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public T getOne(@PathVariable("id") long id) {
 		clearThreadData();
 		T result = getOneItem(id);
+		checkItemPermsThrows(result, id);
 		addNotifyToEditorFields(result);
 		return result;
 	}
@@ -1261,6 +1345,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			addImportedColumnError(violations);
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
+			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
 			return new ResponseEntity<>(newT, null, HttpStatus.CREATED);
 		}
@@ -1274,6 +1359,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (!violations.isEmpty()) {
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
+			checkItemPermsThrows(entity, id);
 			T one = this.editItem(entity, id);
 			return ResponseEntity.ok(one);
 		}
@@ -1285,6 +1371,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public ResponseEntity delete(@PathVariable("id") long id, @RequestBody T entity) {
 		clearThreadData();
 		Map<String, Object> result = new HashMap<>();
+		checkItemPermsThrows(entity, id);
 
 		boolean deleted = this.deleteItem(entity, id);
 		result.put("result", deleted);

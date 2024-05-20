@@ -31,6 +31,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.editor.UploadFileAction;
@@ -268,7 +269,7 @@ public class MultipleFileUploadAction extends HttpServlet
 										//musim dat do session prihlaseneho uzivatela, kvoli flash session bug
 										boolean userInSessionExists = request.getSession().getAttribute(Constants.USER_KEY) != null;
 										if (userInSessionExists==false) LogonTools.setUserToSession(request.getSession(), new Identity(user));
-										FileIndexer.indexFile(dir + "/" + fileName, indexedFiles, request);
+										FileIndexerTools.indexFile(dir + "/" + fileName, indexedFiles, request);
 										if (userInSessionExists==false) request.getSession().removeAttribute(Constants.USER_KEY);
 									}
 									//MetadataCleaner.removeMetadata(f);

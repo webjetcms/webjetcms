@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SporoPayInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">SporoPayInformation.java</span></div><h1>SporoPayInformation.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+
+/**
+ *  SporoPayInformation.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jraska $
+ *@version      $Revision: 1.6 $
+ *@created      Date: 26.8.2009 14:13:15
+ *@modified     $Date: 2009/12/11 14:51:53 $
+ */
+public class SporoPayInformation extends PaymentInformation
+{
+
+	private String accountPrefix;
+	
+	private String accountId;
+	
+	private StringBuilder form;
+	
+	public SporoPayInformation()
+<span class="nc" id="L30">	{</span>
+		//nacitaj konfiguracne hodnoty do fieldov
+<span class="nc" id="L32">		accountId = Constants.getString(&quot;basketPaymentSporoPayAccount&quot;);</span>
+<span class="nc" id="L33">		accountPrefix = Constants.getString(&quot;basketPaymentSporoPayAccountPrefix&quot;);</span>
+<span class="nc" id="L34">		key = getDecrypredKey(Constants.getString(&quot;basketPaymentSporoPayKey&quot;));</span>
+<span class="nc" id="L35">		constantSymbol = Constants.getInt(&quot;basketPaymentSporoPayConstantSymbol&quot;);</span>
+<span class="nc" id="L36">	}</span>
+	
+	@Override
+	public String getUrlString()
+	{
+<span class="nc" id="L41">		String confUrl = Constants.getString(&quot;basketPaymentSporoPayUrl&quot;);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if(Tools.isNotEmpty(confUrl))</span>
+<span class="nc" id="L43">			return confUrl;</span>
+		else
+<span class="nc" id="L45">			return &quot;https://ib.slsp.sk/epayment/epayment/epayment.xml&quot;;</span>
+		//return &quot;http://epaymentsimulator.monogram.sk/SLSP_SporoPay.aspx&quot;;
+	}
+	
+	@Override
+	public boolean hasOwnForm()
+	{
+<span class="nc" id="L52">		return true;</span>
+	}
+	
+	@Override
+	public String generateForm(Payment payment, HttpServletRequest request)
+	{
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (request.getAttribute(&quot;RURL&quot;) == null)</span>
+<span class="nc" id="L59">			throw new IllegalStateException(&quot;Supply return URL, please: request.setAttribute('RURL',...).&quot;+</span>
+				&quot;RURL is an URL address of a page to which a user will be redirected after the payment is finished&quot;);
+		
+<span class="nc" id="L62">		String returnUrl = request.getAttribute(&quot;RURL&quot;).toString();</span>
+<span class="nc" id="L63">		form = new StringBuilder(&quot;&lt;form method='get' action='&quot;+getUrlString()+&quot;' name='payForm'/&gt;&quot;).</span>
+<span class="nc" id="L64">			append(&quot;&lt;INPUT NAME='pu_predcislo' TYPE='hidden' VALUE='&quot;+prependLeadingZeros(accountPrefix, 6)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L65">			append(&quot;&lt;INPUT NAME='pu_cislo' TYPE='hidden' VALUE='&quot;+prependLeadingZeros(accountId, 10)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L66">			append(&quot;&lt;INPUT NAME='pu_kbanky' TYPE='hidden' VALUE='0900' /&gt;&quot;).</span>
+<span class="nc" id="L67">			append(&quot;&lt;INPUT NAME='suma' TYPE='hidden' VALUE='&quot;+payment.getAmountString()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L68">			append(&quot;&lt;INPUT NAME='mena' TYPE='hidden' VALUE='EUR' /&gt;&quot;).</span>
+<span class="nc" id="L69">			append(&quot;&lt;INPUT NAME='vs' TYPE='hidden' VALUE='&quot;+prependLeadingZeros(payment.getVariableSymbol(), 10)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L70">			append(&quot;&lt;INPUT NAME='ss' TYPE='hidden' VALUE='&quot;+prependLeadingZeros(payment.getSpecificSymbol(), 10)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L71">			append(&quot;&lt;INPUT NAME='url' TYPE='hidden' VALUE='&quot;+returnUrl+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L72">			append(&quot;&lt;INPUT NAME='param' TYPE='hidden' VALUE='id=&quot;+payment.getVariableSymbol()+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L73">			append(&quot;&lt;INPUT NAME='sign1' TYPE='hidden' VALUE='&quot;+generateOutcomingSign(payment, request)+&quot;' /&gt;&quot;).</span>
+<span class="nc" id="L74">			append(&quot;&lt;/form&gt;&quot;);</span>
+		
+<span class="nc" id="L76">		return form.toString();</span>
+	}
+	
+	private String prependLeadingZeros(String symbolToPrepend, int totalLength)
+	{
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (int i = symbolToPrepend.length(); i &lt; totalLength ;i++)</span>
+<span class="nc" id="L82">			symbolToPrepend = &quot;0&quot; + symbolToPrepend;</span>
+<span class="nc" id="L83">		return symbolToPrepend;</span>
+	}
+	
+	private String generateOutcomingSign(Payment payment, HttpServletRequest request)
+	{
+<span class="nc" id="L88">		StringBuilder toHash = new StringBuilder().</span>
+<span class="nc" id="L89">			append(prependLeadingZeros(accountPrefix, 6)).</span>
+<span class="nc" id="L90">			append(';').append(prependLeadingZeros(accountId, 10)).</span>
+<span class="nc" id="L91">			append(&quot;;0900&quot;).</span>
+<span class="nc" id="L92">			append(';').append(payment.getAmountString()).</span>
+<span class="nc" id="L93">			append(&quot;;EUR&quot;).</span>
+<span class="nc" id="L94">			append(';').append(prependLeadingZeros(payment.getVariableSymbol(), 10)).</span>
+<span class="nc" id="L95">			append(';').append(prependLeadingZeros(payment.getSpecificSymbol(), 10)).</span>
+<span class="nc" id="L96">			append(';').append(request.getAttribute(&quot;RURL&quot;)).</span>
+<span class="nc" id="L97">			append(';').append(&quot;id=&quot;+payment.getVariableSymbol());</span>
+		
+<span class="nc" id="L99">		return TripleDesHashCalculator.calculateHash(toHash.toString(), key);</span>
+	}
+
+	
+	@Override
+	public boolean validateBankResponce(HttpServletRequest request) throws Exception
+	{
+<span class="nc" id="L106">		return new SporoPayReponseValidator(request).validate();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

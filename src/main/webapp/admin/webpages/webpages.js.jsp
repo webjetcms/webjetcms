@@ -232,10 +232,10 @@ var groupslistTable = function () {
 							   var title = full.title;
 								//tools
 								var tools = '<a href="/showdoc.do?docid='+data+'" target="_blank"><span class="glyphicon glyphicon-eye-open" aria-hidden="true" title="<iwcm:text key="components.qa.show_page"/>"></span></a>';
-								tools += '<div class="task-config webSiteSettings"><div class="task-config-btn btn-group"><a class="btn btn-xs default" href="#" data-toggle="dropdown" data-hover="dropdown" data-close-others="true"><i class="fa fa-cog"></i><i class="fa fa-angle-down"></i></a><ul class="dropdown-menu pull-left" style="min-width: 160px;">';
+								tools += '<div class="task-config webSiteSettings"><div class="task-config-btn btn-group"><a class="btn btn-xs default" href="#" data-toggle="dropdown" data-hover="dropdown" data-close-others="true"><i class="ti ti-settings"></i><i class="ti ti-chevron-down"></i></a><ul class="dropdown-menu pull-left" style="min-width: 160px;">';
 								tools += '   <li><a href="/apps/stat/admin/top-details/?docId='+data+'&title='+title+'" title="<iwcm:text key="menu.stat"/>"><i class="fa fa-bar-chart-o"></i></a></li>';
 								tools += '   <li><a href="javascript:editWebPage('+data+', -1, -1)" title="<iwcm:text key="components.wiki.editPage"/>"><i class="fa fa-file-text"></i></a></li>';
-								tools += '   <li><a href="javascript:void(0)" onclick="window.open(\'/admin/dochistory.jsp?docid='+data+'\',\''+title+'\',\'width=600,height=400\')"  title="<iwcm:text key="components.data.deleting.documentHistory"/>"><i class="fa fa-clock-o"></i></a></li>';
+								tools += '   <li><a href="javascript:void(0)" onclick="window.open(\'/admin/dochistory.jsp?docid='+data+'\',\''+title+'\',\'width=600,height=400\')"  title="<iwcm:text key="components.data.deleting.documentHistory"/>"><i class="ti ti-clock-o"></i></a></li>';
 								tools += '   <li><a href="javascript:void(0)" onclick="jstreeDeleteDocByDocId('+full.groupId+', '+data+')" title="<iwcm:text key="components.user.perms.deletePage"/>"><i class="fa fa-trash-o"></i></a></li>';
 								tools += '</ul></div></div>';
 								  return tools;
@@ -481,7 +481,7 @@ var groupslistTable = function () {
 					sortable: true,
 						render: function ( data, type, full, meta ){
 					if(data.isAvailable == true){
-							var html = '<i class="fa fa-check-circle availableLabel" aria-hidden="true"> <span>true</span></i>';
+							var html = '<i class="ti ti-circle-check availableLabel" aria-hidden="true"> <span>true</span></i>';
 					}else{
 						var html = '<i class="fa fa-ban notAvailable availableLabel" aria-hidden="true"> <span>false</span> </i>';
 
@@ -515,7 +515,7 @@ var groupslistTable = function () {
 					sortable: true,
 						render: function ( data, type, full, meta ) {
 						if(data.isShowOnHomepage == true){
-							var html = '<i class="fa fa-check-circle showOnHomepage" aria-hidden="true"> <span></span></i>';
+							var html = '<i class="ti ti-circle-check showOnHomepage" aria-hidden="true"> <span></span></i>';
 						}else{
 							var html = '<i class="fa fa-ban notAvailable showOnHomepage" aria-hidden="true"> <span></span> </i>';
 

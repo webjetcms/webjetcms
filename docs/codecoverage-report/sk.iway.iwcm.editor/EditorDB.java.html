@@ -1,0 +1,3068 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">EditorDB.java</span></div><h1>EditorDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts.upload.FormFile;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.AtrBean;
+import sk.iway.iwcm.doc.AtrDB;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.HistoryDB;
+import sk.iway.iwcm.doc.MultigroupMapping;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.doc.XmlExport;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.spirit.MediaDB;
+import sk.iway.spirit.model.Media;
+
+/**
+ *  EditorDB.java - praca s EditorForm
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.40 $
+ *@created      Date: 7.8.2006 14:21:53
+ *@modified     $Date: 2010/02/09 08:44:18 $
+ */
+public class EditorDB
+{
+<span class="fc" id="L76">	public static String RENDER_DATA_SEPARATOR = &quot;\n\n-----------------------------------------------------------------\n\n&quot;; //NOSONAR</span>
+
+<span class="nc" id="L78">	protected EditorDB() {</span>
+		//utility class
+<span class="nc" id="L80">	}</span>
+
+	/**
+	 * Ziska editor form pre zadany adresar a zadany nazov stranky (ak uz existuje predvyplni sa)
+	 * @param request
+	 * @param title
+	 * @param group_id
+	 * @return
+	 */
+	public static EditorForm getEditorForm(HttpServletRequest request, String title, int group_id)
+	{
+<span class="nc" id="L91">		List&lt;DocDetails&gt; docs = DocDB.getInstance().getBasicDocDetailsByGroup(group_id, DocDB.ORDER_ID);</span>
+<span class="nc" id="L92">		int docId = -1;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		for (DocDetails doc : docs)</span>
+		{
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (doc.getTitle().equalsIgnoreCase(title))</span>
+			{
+<span class="nc" id="L97">				docId = doc.getDocId();</span>
+<span class="nc" id="L98">				break;</span>
+			}
+<span class="nc" id="L100">		}</span>
+
+<span class="nc" id="L102">		EditorForm ef = getEditorForm(request, docId, -1, group_id);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (docId &lt; 1)</span>
+		{
+<span class="nc" id="L105">			ef.setTitle(title);</span>
+<span class="nc" id="L106">			ef.setNavbar(title);</span>
+		}
+<span class="nc" id="L108">		return ef;</span>
+	}
+
+	/**
+	 * Ziska editor form pre zadany adresar a so zadanym docId / historyId
+	 * @param request
+	 * @param doc_id docId alebo -1
+	 * @param historyId historyId alebo -1
+	 * @param group_id - id adresara
+	 * @return
+	 */
+	public static EditorForm getEditorForm(HttpServletRequest request, int doc_id, int historyId, int group_id)
+	{
+<span class="fc" id="L121">		Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+<span class="fc" id="L123">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L124">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L125">		GroupDetails parentGroup = groupsDB.getGroup(group_id);</span>
+
+<span class="fc" id="L127">		int docIdOriginal = doc_id;</span>
+		DocDetails doc;
+		//moznost nacitat slave data
+<span class="pc bpc" id="L130" title="3 of 4 branches missed.">		int masterId = (request.getAttribute(&quot;keepSlave&quot;) != null &amp;&amp; &quot;true&quot;.equals(request.getAttribute(&quot;keepSlave&quot;))) ? 0 : MultigroupMappingDB.getMasterDocId(doc_id);</span>
+<span class="fc" id="L131">		int lastDoc_id = doc_id;</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">		if(masterId&gt;0)</span>
+		{
+<span class="nc" id="L134">			doc_id = masterId;</span>
+		}
+
+<span class="fc" id="L137">		GroupDetails group = groupsDB.getGroup(group_id);</span>
+<span class="pc bpc" id="L138" title="2 of 6 branches missed.">		if (group!=null &amp;&amp; doc_id == -1 &amp;&amp; group.getNewPageDocIdTemplate()&gt;0)</span>
+		{
+			//je potrebne pouzit sablonu namiesto -1
+<span class="nc" id="L141">			doc_id = -group.getNewPageDocIdTemplate();</span>
+		}
+
+		//sablona nemoze byt -1 (to je blank page)
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">		if (doc_id &lt; 0 &amp;&amp; historyId &lt; 0)</span>
+		{
+			//ak je to admin
+<span class="fc" id="L148">			doc = null;</span>
+
+			try
+			{
+				//-1 je cisty dokument
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">				if (doc_id &lt; -1)</span>
+				{
+<span class="nc" id="L155">					doc = docDB.getDoc(-doc_id, -1, false);</span>
+<span class="nc" id="L156">					doc.setDocId(-1);</span>
+				}
+<span class="fc" id="L158">				doc_id = -1;</span>
+			}
+<span class="nc" id="L160">			catch (Exception ex)</span>
+			{
+
+<span class="fc" id="L163">			}</span>
+
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">			if (doc == null)</span>
+			{
+<span class="fc" id="L167">				doc = new DocDetails();</span>
+<span class="fc" id="L168">				doc.setDocId(-1);</span>
+<span class="fc" id="L169">				doc.setGroupId(group_id);</span>
+<span class="fc" id="L170">				doc.setData(&quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;);</span>
+
+				//TODO: ak je to prva stranka v adresari, setni meno rovnake ako nazov adresara
+
+<span class="fc" id="L174">				doc.setTitle(prop.getText(&quot;editor.newDocumentName&quot;));</span>
+
+<span class="fc" id="L176">				doc.setSearchable(true);</span>
+<span class="fc" id="L177">				doc.setAvailable(Constants.getBoolean(&quot;editorNewDocDefaultAvailableChecked&quot;));</span>
+<span class="fc" id="L178">				doc.setShowInMenu(true);</span>
+
+<span class="fc" id="L180">				doc.setSortPriority(10);</span>
+
+<span class="fc" id="L182">				doc.setNavbar(&quot;&quot;);</span>
+			}
+			else
+			{
+				//nastav grupu na aktualne vybratu
+<span class="nc" id="L187">				doc.setDocId(-1);</span>
+<span class="nc" id="L188">				doc.setGroupId(group_id);</span>
+<span class="nc" id="L189">				doc.setTitle(prop.getText(&quot;editor.newDocumentName&quot;));</span>
+<span class="nc" id="L190">				doc.setNavbar(&quot;&quot;);</span>
+<span class="nc" id="L191">				doc.setVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L192">				doc.setExternalLink(&quot;&quot;);</span>
+
+<span class="nc" id="L194">				doc.setEventDateString(&quot;&quot;);</span>
+<span class="nc" id="L195">				doc.setEventTimeString(&quot;&quot;);</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;editorNewDocDefaultAvailableChecked&quot;)==false) doc.setAvailable(false);</span>
+			}
+
+			/*List temps = tempDB.getTemplates();
+			Iterator iter = temps.iterator();
+			if (iter.hasNext())
+			{
+				temp = (TemplateDetails) iter.next();
+				if (temp != null)
+				{
+					if (
+					doc.setTempId(temp.getTempId());
+					doc.setTempName(temp.getTempName());
+				}
+			}*/
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">			if (group!=null)</span>
+			{
+<span class="fc" id="L214">				doc.setTempId(group.getTempId());</span>
+			}
+
+			//zisti maximalnu prioritu a zvys o 10
+
+<span class="fc" id="L219">			doc.setSortPriority(0);</span>
+<span class="fc" id="L220">			boolean dirIsEmpty = true;</span>
+<span class="fc" id="L221">			int maxP = DocDB.getMaxSortPriorityInGroup(group_id);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">			if(maxP&gt;0) {</span>
+<span class="nc" id="L223">				doc.setSortPriority(maxP);</span>
+<span class="nc" id="L224">				dirIsEmpty = false;</span>
+			}
+
+<span class="pc bpc" id="L227" title="2 of 4 branches missed.">			if (Constants.getBoolean(&quot;sortPriorityIncremental&quot;) &amp;&amp; parentGroup!=null)</span>
+			{
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">				if (maxP &lt; parentGroup.getSortPriority())</span>
+				{
+					//-10 lebo sa nam to o par riadkov nizsie navysi o 10
+<span class="fc" id="L232">					maxP = parentGroup.getSortPriority() - 10;</span>
+<span class="fc" id="L233">					doc.setSortPriority(maxP);</span>
+				}
+			}
+
+
+<span class="pc bpc" id="L238" title="2 of 4 branches missed.">			if (dirIsEmpty &amp;&amp; group!=null)</span>
+			{
+<span class="fc" id="L240">				doc.setTitle(group.getGroupName());</span>
+<span class="fc" id="L241">				doc.setNavbar(group.getNavbarName());</span>
+			}
+
+<span class="fc" id="L244">			doc.setSortPriority(doc.getSortPriority()+10);</span>
+<span class="fc" id="L245">		}</span>
+		else
+		{
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">			if (historyId &gt; 0)</span>
+			{
+<span class="nc" id="L250">				doc = docDB.getDoc(-1, historyId, false);</span>
+			}
+			else
+			{
+<span class="fc" id="L254">				doc = docDB.getDoc(doc_id, -1, false);</span>
+				//ziskaj zoznam dokumentov v history
+<span class="fc" id="L256">				HistoryDB historyDB = new HistoryDB(DBPool.getDBName(request));</span>
+<span class="fc" id="L257">				List&lt;DocDetails&gt; history = historyDB.getHistory(doc_id, false, true);</span>
+<span class="pc bpc" id="L258" title="1 of 4 branches missed.">				if (history != null &amp;&amp; history.size() &gt; 0)</span>
+				{
+<span class="fc" id="L260">					request.getSession().setAttribute(&quot;docHistory&quot;, history);</span>
+				}
+<span class="pc bpc" id="L262" title="1 of 4 branches missed.">				if(history == null || history.isEmpty()) {</span>
+<span class="fc" id="L263">					request.getSession().removeAttribute(&quot;docHistory&quot;);</span>
+				}
+			}
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">			if (doc == null)</span>
+			{
+<span class="nc" id="L268">				request.setAttribute(&quot;err_msg&quot;, &quot;Pozadovana stranka neexistuje 2&quot;);</span>
+<span class="nc" id="L269">				return(null);</span>
+				//TODO: osetri return (mapping.findForward(&quot;error&quot;));
+			}
+			else
+			{
+				//ak nacitavam slave clanok a chcem zachovat sort priority, tak NEnacitavam sort priority mastra
+<span class="fc" id="L275">				boolean multiGroupkeepSortPriority = Constants.getBoolean(&quot;multiGroupKeepSortPriority&quot;);</span>
+<span class="pc bpc" id="L276" title="2 of 4 branches missed.">				if(multiGroupkeepSortPriority &amp;&amp; masterId &gt; 0)</span>
+				{
+<span class="nc" id="L278">					DocDetails slave = docDB.getBasicDocDetails(docIdOriginal, false);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					if(slave != null) doc.setSortPriority(slave.getSortPriority());</span>
+				}
+			}
+		}
+
+		EditorForm editorForm;
+<span class="fc" id="L285">		editorForm = (EditorForm)request.getAttribute(&quot;editorForm&quot;);</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">		if (editorForm == null)</span>
+		{
+<span class="fc" id="L288">			editorForm = new EditorForm();</span>
+		}
+
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		if (request != null) {</span>
+<span class="fc" id="L292">			editorForm.setHistoryId(historyId);</span>
+
+<span class="fc" id="L294">			String domainName = DocDB.getDomain(request);</span>
+<span class="fc" id="L295">			GroupDetails editorGroup = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="pc bpc" id="L296" title="2 of 4 branches missed.">			if (editorGroup != null &amp;&amp; Tools.isNotEmpty(editorGroup.getDomainName())) domainName = editorGroup.getDomainName();</span>
+<span class="fc" id="L297">			editorForm.setDomainName(domainName);</span>
+<span class="fc" id="L298">			request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, domainName);</span>
+
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">			editorForm.setRefreshCss(request.getParameter(&quot;refreshCss&quot;) != null);</span>
+<span class="fc" id="L301">			editorForm.setDocAtrs(remapDocAttrs(doc_id, request));</span>
+<span class="fc" id="L302">			editorForm.setMedia(getMedia(doc_id, request));</span>
+<span class="fc" id="L303">			editorForm.setContextPath(request.getContextPath());</span>
+		}
+
+		//set editorForm
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">		if (doc_id == 0)</span>
+		{
+<span class="nc" id="L309">			editorForm.setRecode(false);</span>
+			try
+			{
+<span class="nc" id="L312">				int temp_id = Integer.parseInt(request.getParameter(&quot;tempid&quot;));</span>
+<span class="nc" id="L313">				editorForm.setTempId(temp_id);</span>
+			}
+<span class="nc" id="L315">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L317">			}</span>
+<span class="nc" id="L318">			editorForm.setRecode(true);</span>
+		}
+		else
+		{
+
+
+<span class="fc" id="L324">			String pubToZero = request.getParameter(&quot;pubToZero&quot;);</span>
+<span class="pc bpc" id="L325" title="5 of 6 branches missed.">			if ((pubToZero!=null) &amp;&amp; (!pubToZero.equals(&quot;&quot;)) &amp;&amp; ((Integer.parseInt(pubToZero))==1) )</span>
+			{
+<span class="nc" id="L327">				String historyIdFromParameter = request.getParameter(&quot;historyid&quot;);</span>
+<span class="nc" id="L328">				editorForm.setPublicableToZero(Integer.parseInt(historyIdFromParameter));</span>
+<span class="nc" id="L329">			}</span>
+			else
+			{
+<span class="fc" id="L332">				editorForm.setPublicableToZero(-1);</span>
+			}
+
+			//data is allready recoded to windows1250 code page
+<span class="fc" id="L336">			editorForm.setRecode(false);</span>
+
+<span class="fc" id="L338">			editorForm.setDocId(doc.getDocId());</span>
+<span class="fc" id="L339">			editorForm.setTitle(doc.getTitle());</span>
+<span class="fc" id="L340">			editorForm.setData(doc.getData());</span>
+<span class="fc" id="L341">			editorForm.setExternalLink(doc.getExternalLink());</span>
+<span class="fc" id="L342">			editorForm.setVirtualPath(doc.getVirtualPath());</span>
+<span class="fc" id="L343">			editorForm.setNavbar(doc.getNavbar());</span>
+<span class="fc" id="L344">			editorForm.setDateCreated(doc.getDateCreatedString());</span>
+<span class="fc" id="L345">			editorForm.setPublishStart(doc.getPublishStartString());</span>
+<span class="fc" id="L346">			editorForm.setPublishStartTime(doc.getPublishStartTimeString());</span>
+<span class="fc" id="L347">			editorForm.setPublishEnd(doc.getPublishEndString());</span>
+<span class="fc" id="L348">			editorForm.setPublishEndTime(doc.getPublishEndTimeString());</span>
+<span class="fc" id="L349">			editorForm.setGroupId(doc.getGroupId());</span>
+<span class="fc" id="L350">			editorForm.setGroupName(groupsDB.getPath(editorForm.getGroupId()));</span>
+<span class="fc" id="L351">			editorForm.setTempId(doc.getTempId());</span>
+<span class="fc" id="L352">			editorForm.setSearchable(doc.isSearchable());</span>
+<span class="fc" id="L353">			editorForm.setAvailable(doc.isAvailable());</span>
+<span class="fc" id="L354">			editorForm.setShowInMenu(doc.isShowInMenu());</span>
+<span class="fc" id="L355">			editorForm.setPasswordProtectedString(doc.getPasswordProtected());</span>
+<span class="fc" id="L356">			editorForm.setCacheable(doc.isCacheable());</span>
+<span class="fc" id="L357">			editorForm.setFileName(doc.getFileName());</span>
+<span class="fc" id="L358">			editorForm.setSortPriority(doc.getSortPriority());</span>
+<span class="fc" id="L359">			editorForm.setHeaderDocId(doc.getHeaderDocId());</span>
+<span class="fc" id="L360">			editorForm.setFooterDocId(doc.getFooterDocId());</span>
+<span class="fc" id="L361">			editorForm.setMenuDocId(doc.getMenuDocId());</span>
+<span class="fc" id="L362">			editorForm.setRightMenuDocId(doc.getRightMenuDocId());</span>
+<span class="fc" id="L363">			editorForm.setHtmlHead(doc.getHtmlHead());</span>
+<span class="fc" id="L364">			editorForm.setHtmlData(doc.getHtmlData());</span>
+<span class="fc" id="L365">			editorForm.setPerexPlace(doc.getPerexPlace());</span>
+<span class="fc" id="L366">			editorForm.setPerexImage(doc.getPerexImage());</span>
+<span class="fc" id="L367">			editorForm.setPerexGroupString(doc.getPerexGroupIdsString());</span>
+<span class="fc" id="L368">			editorForm.setEventDate(doc.getEventDateString());</span>
+<span class="fc" id="L369">			editorForm.setEventTime(doc.getEventTimeString());</span>
+
+<span class="fc" id="L371">			editorForm.setFieldA(doc.getFieldA());</span>
+<span class="fc" id="L372">			editorForm.setFieldB(doc.getFieldB());</span>
+<span class="fc" id="L373">			editorForm.setFieldC(doc.getFieldC());</span>
+<span class="fc" id="L374">			editorForm.setFieldD(doc.getFieldD());</span>
+<span class="fc" id="L375">			editorForm.setFieldE(doc.getFieldE());</span>
+<span class="fc" id="L376">			editorForm.setFieldF(doc.getFieldF());</span>
+<span class="fc" id="L377">			editorForm.setFieldG(doc.getFieldG());</span>
+<span class="fc" id="L378">			editorForm.setFieldH(doc.getFieldH());</span>
+<span class="fc" id="L379">			editorForm.setFieldI(doc.getFieldI());</span>
+<span class="fc" id="L380">			editorForm.setFieldJ(doc.getFieldJ());</span>
+<span class="fc" id="L381">			editorForm.setFieldK(doc.getFieldK());</span>
+<span class="fc" id="L382">			editorForm.setFieldL(doc.getFieldL());</span>
+
+<span class="fc" id="L384">			editorForm.setDisableAfterEnd(doc.isDisableAfterEnd());</span>
+
+<span class="fc" id="L386">			editorForm.setFieldM(doc.getFieldM());</span>
+<span class="fc" id="L387">			editorForm.setFieldN(doc.getFieldN());</span>
+<span class="fc" id="L388">			editorForm.setFieldO(doc.getFieldO());</span>
+<span class="fc" id="L389">			editorForm.setFieldP(doc.getFieldP());</span>
+<span class="fc" id="L390">			editorForm.setFieldQ(doc.getFieldQ());</span>
+<span class="fc" id="L391">			editorForm.setFieldR(doc.getFieldR());</span>
+<span class="fc" id="L392">			editorForm.setFieldS(doc.getFieldS());</span>
+<span class="fc" id="L393">			editorForm.setFieldT(doc.getFieldT());</span>
+
+			// nastavime lastDoc_id a Dalsie adresare
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">			editorForm.setLastDocId(historyId &gt; 0 ? doc.getDocId() : lastDoc_id);</span>
+
+
+<span class="fc" id="L399">			editorForm.setRequireSsl(doc.isRequireSsl());</span>
+
+<span class="fc" id="L401">			editorForm.setRecode(true);</span>
+
+<span class="fc" id="L403">			editorForm.setPublicable(doc.isPublicable());</span>
+
+<span class="fc" id="L405">			editorForm.setNote(DocNoteDB.getInstance().getNoteText(doc_id, historyId));</span>
+		}
+
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(request))</span>
+		{
+			//do editoru nahrame texty s pridanymi linkami
+<span class="nc" id="L411">			editorForm.setData(ContextFilter.addContextPath(request.getContextPath(), editorForm.getData()));</span>
+		}
+
+<span class="fc" id="L414">		return(editorForm);</span>
+	}
+
+	private static List&lt;Map&lt;String, Object&gt;&gt; remapDocAttrs(int docId, HttpServletRequest request) {
+<span class="fc" id="L418">		List&lt;List&lt;AtrBean&gt;&gt; atrs = AtrDB.getAtributes(docId, request);</span>
+<span class="fc" id="L419">		List&lt;Map&lt;String, Object&gt;&gt; docAtrs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">		for (List&lt;AtrBean&gt; group : atrs) {</span>
+<span class="fc bfc" id="L421" title="All 2 branches covered.">			for (AtrBean atr : group) {</span>
+<span class="fc" id="L422">				Map&lt;String, Object&gt; obj = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L424">				obj.put(&quot;atrId&quot;, atr.getAtrId());</span>
+<span class="fc" id="L425">				obj.put(&quot;type&quot;, atr.getAtrType());</span>
+<span class="fc" id="L426">				obj.put(&quot;value&quot;, atr.getValue());</span>
+
+<span class="fc" id="L428">				docAtrs.add(obj);</span>
+<span class="fc" id="L429">			}</span>
+<span class="fc" id="L430">		}</span>
+
+<span class="fc" id="L432">		return docAtrs;</span>
+	}
+
+	private static List&lt;Map&lt;String, Object&gt;&gt; getMedia(int mediaFkId, HttpServletRequest request) {
+		List&lt;Media&gt; media;
+<span class="fc" id="L437">		String mediaFkTableName = &quot;documents&quot;;</span>
+<span class="fc" id="L438">		Identity currUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">		if (mediaFkId == -1) {</span>
+<span class="fc" id="L440">			media = MediaDB.getMedia(request.getSession(), &quot;documents_temp&quot;, currUser.getUserId(), null, 0, false);</span>
+		} else {
+<span class="fc" id="L442">			media = MediaDB.getMedia(request.getSession(), mediaFkTableName, mediaFkId, null, 0, false);</span>
+		}
+
+<span class="fc" id="L445">		List&lt;Map&lt;String, Object&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L447" title="All 2 branches covered.">		for (Media media1 : media) {</span>
+<span class="fc" id="L448">			Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L450">			row.put(&quot;id&quot;, media1.getMediaId());</span>
+<span class="fc" id="L451">			row.put(&quot;title&quot;, media1.getMediaTitleSk());</span>
+<span class="fc" id="L452">			row.put(&quot;group&quot;, media1.getMediaGroup());</span>
+<span class="fc" id="L453">			row.put(&quot;link_url&quot;, media1.getMediaLink());</span>
+<span class="fc" id="L454">			row.put(&quot;thumbLink&quot;, media1.getMediaThumbLink());</span>
+<span class="fc" id="L455">			row.put(&quot;order&quot;, media1.getMediaSortOrder());</span>
+
+<span class="fc" id="L457">			result.add(row);</span>
+<span class="fc" id="L458">		}</span>
+
+
+<span class="fc" id="L461">		return result;</span>
+	}
+
+	/**
+	 * nahradim nepovolane znaky medzerami
+	 * @param text
+	 * @return
+	 */
+	public static String escapeInvalidCharacters(String text)
+	{
+<span class="nc" id="L471">		return escapeInvalidCharacters(text, null);</span>
+	}
+
+	public static String escapeInvalidCharacters(String text, HttpSession session)
+	{
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		if(Tools.isEmpty(text)) return text;</span>
+
+<span class="nc" id="L478">		String editorInvalidCharactersInDecFormat = Constants.getString(&quot;editorInvalidCharactersInDecFormat&quot;);</span>
+<span class="nc" id="L479">		int[] charsForEscape = null;</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">		if(Tools.isNotEmpty(editorInvalidCharactersInDecFormat)) charsForEscape = Tools.getTokensInt(editorInvalidCharactersInDecFormat, &quot;,&quot;);</span>
+
+<span class="nc" id="L482">		StringBuilder sb = new StringBuilder(&quot;&quot;);</span>
+<span class="nc" id="L483">		char[] textCharArry = text.toCharArray();</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">		if(textCharArry != null)</span>
+		{
+<span class="nc" id="L486">			boolean wasAppend = false;</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			for(char znak : textCharArry)</span>
+			{
+				//Logger.debug(EditorDB.class, znak+&quot; is:&quot;+Character.isBmpCodePoint(znak)+&quot; high=&quot;+Character.isHighSurrogate(znak));
+				//if(Character.isISOControl(znak) == false &amp;&amp; Character.isBmpCodePoint(znak)) sb.append(znak);
+<span class="nc" id="L491">				wasAppend = false;</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">				if(charsForEscape != null)</span>
+				{
+<span class="nc bnc" id="L494" title="All 2 branches missed.">					for(int charForEscape : charsForEscape)</span>
+					{
+<span class="nc bnc" id="L496" title="All 2 branches missed.">						if(charForEscape == (znak))</span>
+						{
+<span class="nc" id="L498">							sb.append(&quot; &quot;);</span>
+<span class="nc" id="L499">							wasAppend = true;</span>
+<span class="nc" id="L500">							break;</span>
+						}
+					}
+				}
+
+<span class="nc bnc" id="L505" title="All 4 branches missed.">				if (session != null &amp;&amp; Character.isHighSurrogate(znak))</span>
+				{
+<span class="nc" id="L507">					session.setAttribute(&quot;cssError&quot;, &quot;Ukladany text obsahuje specialne znaky, ktore nie je mozne ulozit do databazy, boli nahradene prazdnym znakom. Skontrolujte ulozeny text znova nacitanim stranky do editora.&quot;);</span>
+				}
+
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if(!wasAppend)</span>
+				{
+<span class="nc bnc" id="L512" title="All 4 branches missed.">					if(Character.isISOControl(znak) == false &amp;&amp; Character.isHighSurrogate(znak)==false) sb.append(znak);</span>
+<span class="nc" id="L513">					else sb.append(&quot; &quot;);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L518">		return sb.toString();</span>
+	}
+
+	/**
+	 * Ulozi EditorForm do databazy vratane vsetkych akcii spojenych s ulozenim web stranky (schvalovanie, nastavenie adresara...)
+	 * @param my_form
+	 * @param request
+	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
+	 */
+	public static int saveEditorForm(EditorForm my_form, HttpServletRequest request)
+	{
+<span class="fc" id="L529">		HttpSession session = request.getSession();</span>
+
+<span class="fc" id="L531">		DebugTimer dt = new DebugTimer(&quot;EditorDB.save&quot;);</span>
+
+		UserDetails user;
+
+		//publishEvent(EditorBeforeSaveEvent.class, my_form);
+<span class="fc" id="L536">		(new WebjetEvent&lt;&gt;(my_form, WebjetEventType.ON_START)).publishEvent();</span>
+
+<span class="pc bpc" id="L538" title="1 of 2 branches missed.">		if (my_form.getApproveHistoryId()&lt;1)</span>
+		{
+			//user je autor dokumentu
+<span class="fc" id="L541">			user = UsersDB.getUser(my_form.getAuthorId());</span>
+		}
+		else
+		{
+			//user je schvalovatel
+<span class="nc" id="L546">			user = UsersDB.getCurrentUser(request);</span>
+		}
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">		if (user == null)</span>
+		{
+<span class="nc" id="L550">			Logger.error(EditorDB.class, &quot;Nemozem ulozit stranku - nema zadaneho autora zmeny&quot;);</span>
+			//hmm, to je nejaky problem
+<span class="nc" id="L552">			return(-2);</span>
+		}
+
+<span class="pc bpc" id="L555" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;editorEscapeInvalidCharacters&quot;))</span>
+		{
+<span class="nc" id="L557">			my_form.setTitle(escapeInvalidCharacters(my_form.getTitle(), session));</span>
+<span class="nc" id="L558">			my_form.setData(escapeInvalidCharacters(my_form.getData(), session));</span>
+<span class="nc" id="L559">			my_form.setHtmlData(escapeInvalidCharacters(my_form.getHtmlData(), session));</span>
+		}
+
+		//Logger.println(this,&quot;DB_ENCODING=&quot;+Constants.DB_ENCODING);
+		//Logger.println(this,&quot;DB_ENCODING_RECODE=&quot;+Constants.DB_ENCODING_RECODE);
+
+<span class="fc" id="L565">		String iwcm_DOC_PATH = Tools.getRealPath(&quot;/WEB-INF/docs_html&quot;);</span>
+<span class="pc bpc" id="L566" title="1 of 2 branches missed.">		if (iwcm_DOC_PATH!=null)</span>
+		{
+<span class="fc" id="L568">			iwcm_DOC_PATH = iwcm_DOC_PATH.replace('/', File.separatorChar);</span>
+		}
+
+<span class="fc" id="L571">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L572">		DocDB docDB = DocDB.getInstance();</span>
+
+		//cloud - aby nebolo mozne premenovat Header / Footer
+
+<span class="fc" id="L576">		DocDetails existing = CloudToolsForCore.isPossibleToChangeDoc(my_form.getDocId());</span>
+<span class="pc bpc" id="L577" title="1 of 2 branches missed.">		if (existing != null)</span>
+		{
+			//nemozeme menit title ani groupid
+<span class="nc" id="L580">			my_form.setTitle(existing.getTitle());</span>
+<span class="nc" id="L581">			my_form.setGroupId(existing.getGroupId());</span>
+		}
+
+		//kvoli Oracle, on nedokaze mat v DB prazdny string a potom to padalo
+<span class="pc bpc" id="L585" title="1 of 2 branches missed.">		if (Tools.isEmpty(my_form.getTitle())) my_form.setTitle(&quot;new web page&quot;);</span>
+<span class="pc bpc" id="L586" title="1 of 2 branches missed.">		if (Tools.isEmpty(my_form.getNavbar())) my_form.setNavbar(my_form.getTitle());</span>
+
+<span class="fc" id="L588">		String domain = groupsDB.getDomain(my_form.getGroupId());</span>
+
+<span class="fc" id="L590">		my_form.setTitle(DB.prepareString(my_form.getTitle(), 255));</span>
+
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">		if (Tools.isEmpty(my_form.getData()))</span>
+		{
+			//aby v Oracle nepadalo na NULL v data stlpci
+<span class="nc" id="L595">			my_form.setData(&quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;);</span>
+		}
+
+		//nastav virtual path
+<span class="fc" id="L599">		setVirtualPath(my_form);</span>
+
+<span class="fc" id="L601">		dt.diff(&quot;after virtual path&quot;);</span>
+
+<span class="fc" id="L603">		Prop properties = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+		//koli approve
+		/*if (my_form.getAuthorId() &gt; 0)
+		{
+			author_id = my_form.getAuthorId();
+		}
+		*/
+
+<span class="fc" id="L612">		nonBreakingSpaceReplacement(my_form);</span>
+
+<span class="pc bpc" id="L614" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(request))</span>
+		{
+			//data nechceme mat ulozene s context linkami (tie nam prida filter, ak treba)
+<span class="nc" id="L617">			my_form.setData(ContextFilter.removeContextPath(request.getContextPath(), my_form.getData()));</span>
+		}
+
+<span class="fc" id="L620">		String data = my_form.getData().trim();</span>
+
+<span class="fc" id="L622">		FormFile file = my_form.getTheFile();</span>
+<span class="fc" id="L623">		int history_id = -1;</span>
+<span class="pc bpc" id="L624" title="1 of 2 branches missed.">		if (file != null)</span>
+		{
+			//retrieve the file name
+<span class="nc" id="L627">			String fileName = file.getFileName().trim();</span>
+			//Logger.println(this,&quot;we have a file name=&quot;+fileName+&quot; content type=&quot;+file.getContentType());
+
+			try
+			{
+<span class="nc bnc" id="L632" title="All 8 branches missed.">				if (fileName != null &amp;&amp; fileName.length() &gt; 1 &amp;&amp; (file.getContentType().equalsIgnoreCase(&quot;text/html&quot;) || file.getContentType().equalsIgnoreCase(&quot;text/plain&quot;)))</span>
+				{
+<span class="nc" id="L634">					BufferedInputStream buffReader = new BufferedInputStream(file.getInputStream());</span>
+<span class="nc" id="L635">					int bytesRead = 0;</span>
+<span class="nc" id="L636">					byte[] buffer = new byte[8192];</span>
+					//Logger.println(this,&quot;read begin&quot;);
+<span class="nc" id="L638">					data = &quot;&quot;;</span>
+<span class="nc" id="L639">					StringBuilder dataBuffer = new StringBuilder();</span>
+					String append;
+<span class="nc bnc" id="L641" title="All 2 branches missed.">					while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)</span>
+					{
+<span class="nc" id="L643">						append = new String(buffer, 0, bytesRead);</span>
+<span class="nc" id="L644">						dataBuffer.append(append);</span>
+						//Logger.println(this,&quot;read: &quot; + bytesRead);
+					}
+					//Logger.println(this,&quot;read end&quot;);
+<span class="nc" id="L648">					data = dataBuffer.toString();</span>
+<span class="nc" id="L649">					buffReader.close();</span>
+<span class="nc" id="L650">					file.destroy();</span>
+				}
+			}
+<span class="nc" id="L653">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L655">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L656">			}</span>
+		}
+
+<span class="fc" id="L659">		data = getCleanBody(data);</span>
+
+<span class="fc" id="L661">		dt.diff(&quot;after getCleanBody&quot;);</span>
+
+<span class="fc" id="L663">		String data_asc = getDataAsc(data, my_form, false, request);</span>
+
+<span class="fc" id="L665">		dt.diff(&quot;after getDataAsc&quot;);</span>
+
+<span class="fc" id="L667">		long l_now = (new java.util.Date()).getTime();</span>
+<span class="fc" id="L668">		java.sql.Date now = new java.sql.Date(l_now);</span>
+
+<span class="fc" id="L670">		boolean requestPublish = false;</span>
+<span class="pc bpc" id="L671" title="1 of 2 branches missed.">		if (my_form.getPublish().equals(&quot;1&quot;))</span>
+		{
+<span class="fc" id="L673">			requestPublish = true;</span>
+			//my_form.setAvailable(true);
+		}
+
+<span class="pc bpc" id="L677" title="1 of 4 branches missed.">		if (my_form.getDocId() &lt; 1 &amp;&amp; requestPublish == false)</span>
+		{
+			//nove stranky, ktore neziadaju o schvalenie rovno zadisabluj
+<span class="nc" id="L680">			my_form.setAvailable(false);</span>
+		}
+
+		/*String approveByUsers = null;
+		String approveByUsersId = null;
+		String approveByUsersEmail = null;*/
+
+<span class="fc" id="L687">		boolean isNewPage = false;</span>
+
+		//zoznam schvalovatelov
+<span class="fc" id="L690">		Map&lt;Integer, UserDetails&gt; approveByTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L691">		Map&lt;Integer, UserDetails&gt; approveByTableLevel2 = new Hashtable&lt;&gt;();</span>
+		//zoznam, komu ide info o zmene stranky
+<span class="fc" id="L693">		Map&lt;Integer, UserDetails&gt; notifyTable = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L695">		java.sql.Connection db_conn = null;</span>
+<span class="fc" id="L696">		PreparedStatement ps = null;</span>
+<span class="fc" id="L697">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L700">			db_conn = DBPool.getConnection();</span>
+			String sql;
+			String sql_check;
+			// zisti, ci v historii na ten isty datum a cas nema byt nieco vypublikovane
+
+<span class="pc bpc" id="L705" title="1 of 2 branches missed.">			if (requestPublish)</span>
+			{
+<span class="fc" id="L707">				boolean finished = false;</span>
+<span class="fc" id="L708">				int currentGroupId = my_form.getGroupId();</span>
+<span class="fc" id="L709">				int depth = 0;</span>
+<span class="fc" id="L710">				int max_depth = 30;</span>
+				GroupDetails group;
+
+				UserDetails u;
+				int mode;
+<span class="fc" id="L715">				boolean isSelfApprove = false;</span>
+				//ak bude true znamena to, ze ma user self approve na root folder
+<span class="fc" id="L717">				boolean isSelfApproveRoot = false;</span>
+<span class="fc" id="L718">				boolean publish = true;</span>
+
+<span class="pc bpc" id="L720" title="1 of 2 branches missed.">				while (finished == false)</span>
+				{
+<span class="fc" id="L722">					group = groupsDB.getGroup(currentGroupId);</span>
+<span class="fc bfc" id="L723" title="All 2 branches covered.">					if (group == null)</span>
+					{
+						//group doesn't exist
+<span class="fc" id="L726">						finished = true;</span>
+<span class="fc" id="L727">						break;</span>
+					}
+<span class="fc" id="L729">					depth++;</span>
+<span class="pc bpc" id="L730" title="1 of 2 branches missed.">					if (depth &gt; max_depth)</span>
+					{
+<span class="nc" id="L732">						finished = true;</span>
+<span class="nc" id="L733">						break;</span>
+					}
+					//we are on the root group
+<span class="pc bpc" id="L736" title="1 of 2 branches missed.">					if (currentGroupId == 0)</span>
+					{
+<span class="nc" id="L738">						finished = true;</span>
+<span class="nc" id="L739">						break;</span>
+					}
+<span class="fc" id="L741">					currentGroupId = group.getParentGroupId();</span>
+
+
+<span class="fc" id="L744">					ps = db_conn.prepareStatement(&quot;SELECT a.*, u.title as u_title, u.first_name, u.last_name, u.email, u.user_id FROM groups_approve a,  users u WHERE a.user_id=u.user_id AND a.group_id=? AND u.is_admin=&quot;+DB.getBooleanSql(true)+&quot; AND u.authorized=&quot;+DB.getBooleanSql(true));</span>
+<span class="fc" id="L745">					ps.setInt(1, group.getGroupId());</span>
+<span class="fc" id="L746">					rs = ps.executeQuery();</span>
+					//zoznam schvalovatelov
+<span class="fc" id="L748">					Map&lt;Integer, UserDetails&gt; approveByTableGroup = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L749">					Map&lt;Integer, UserDetails&gt; approveByTableLevel2Group = new Hashtable&lt;&gt;();</span>
+					//zoznam, komu ide info o zmene stranky
+<span class="fc" id="L751">					Map&lt;Integer, UserDetails&gt; notifyTableGroup = new Hashtable&lt;&gt;();</span>
+<span class="fc bfc" id="L752" title="All 2 branches covered.">					while (rs.next())</span>
+					{
+						//ak som ja ten co moze schvalovat, tak to netreba ani robit
+<span class="fc" id="L755">						u = new UserDetails();</span>
+<span class="fc" id="L756">						u.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="fc" id="L757">						u.setTitle(DB.getDbString(rs, &quot;u_title&quot;));</span>
+<span class="fc" id="L758">						u.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="fc" id="L759">						u.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+<span class="fc" id="L760">						u.setEmail(DB.getDbString(rs, &quot;email&quot;));</span>
+
+<span class="fc" id="L762">						mode = rs.getInt(&quot;approve_mode&quot;);</span>
+
+<span class="pc bpc" id="L764" title="1 of 2 branches missed.">						if (u.getUserId() == user.getUserId())</span>
+						{
+							//vynimka pre tych ktory maju self approve na root (aka interway user)
+<span class="nc bnc" id="L767" title="All 2 branches missed.">							if (group.getParentGroupId()&lt;1) isSelfApproveRoot = true;</span>
+							//ak ma user leve2 prava, tiez dole neriesme
+<span class="nc bnc" id="L769" title="All 2 branches missed.">							if (mode == UsersDB.APPROVE_LEVEL2) isSelfApproveRoot = true;</span>
+<span class="nc" id="L770">							isSelfApprove = true;</span>
+						}
+
+<span class="pc bpc" id="L773" title="1 of 2 branches missed.">						if (mode == UsersDB.APPROVE_LEVEL2)</span>
+						{
+							//schvalovanie
+<span class="nc" id="L776">							approveByTableLevel2Group.put(Integer.valueOf(u.getUserId()), u);</span>
+						}
+<span class="pc bpc" id="L778" title="1 of 2 branches missed.">						else if (mode == UsersDB.APPROVE_APPROVE)</span>
+						{
+							//schvalovanie
+<span class="nc" id="L781">							approveByTableGroup.put(Integer.valueOf(u.getUserId()), u);</span>
+<span class="nc" id="L782">							publish = false;</span>
+						}
+<span class="pc bpc" id="L784" title="2 of 4 branches missed.">						else if (mode == UsersDB.APPROVE_NOTIFY &amp;&amp; u.getUserId()!=user.getUserId())</span>
+						{
+							//notifikacia
+<span class="fc" id="L787">							notifyTableGroup.put(Integer.valueOf(u.getUserId()), u);</span>
+						}
+						else
+						{
+							//nejde mu ziadne info, je to self approve alebo LEVEL2
+						}
+					}
+<span class="fc" id="L794">					rs.close();</span>
+<span class="fc" id="L795">					ps.close();</span>
+
+					//pouzivame system best match
+<span class="pc bpc" id="L798" title="1 of 2 branches missed.">					if (approveByTable.size()==0)</span>
+					{
+<span class="fc" id="L800">						approveByTable.putAll(approveByTableGroup);</span>
+					}
+					//pouzivame system best match
+<span class="pc bpc" id="L803" title="1 of 2 branches missed.">					if (approveByTableLevel2.size()==0)</span>
+					{
+<span class="fc" id="L805">						approveByTableLevel2.putAll(approveByTableLevel2Group);</span>
+					}
+					//notify davame vsetkym
+<span class="fc" id="L808">					notifyTable.putAll(notifyTableGroup);</span>
+<span class="fc" id="L809">				}</span>
+
+<span class="pc bpc" id="L811" title="4 of 6 branches missed.">				if (isSelfApproveRoot==false &amp;&amp; isSelfApprove &amp;&amp; approveByTableLevel2.size()&gt;0)</span>
+				{
+					//na adresar ma user self approve, existuje ale level2 approver, takze to musi ist na neho
+<span class="nc" id="L814">					isSelfApprove = false;</span>
+<span class="nc" id="L815">					publish = false;</span>
+<span class="nc" id="L816">					approveByTable = approveByTableLevel2;</span>
+				}
+
+<span class="pc bpc" id="L819" title="1 of 2 branches missed.">				if (isSelfApprove)</span>
+				{
+<span class="nc" id="L821">					approveByTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L822">					publish = true;</span>
+				}
+
+<span class="pc bpc" id="L825" title="3 of 4 branches missed.">				if (!publish &amp;&amp; requestPublish)</span>
+				{
+					//ak nemame povolene schvalenie a je ziadost o publikaciu, tak to zrus
+<span class="nc" id="L828">					requestPublish = false;</span>
+				}
+			}
+
+<span class="fc" id="L832">			dt.diff(&quot;after requestPublish&quot;);</span>
+
+<span class="pc bpc" id="L834" title="2 of 4 branches missed.">			if (requestPublish &amp;&amp; my_form.isPublicable())</span>
+			{
+				//je zaskrtnuty checkbox publicable a kliknute na Publikuj, takze sa to nemoze publikovat
+<span class="nc" id="L837">				requestPublish = false;</span>
+
+			}
+
+			//over si virtual path
+<span class="pc bpc" id="L842" title="2 of 4 branches missed.">			if (my_form.getVirtualPath()!=null &amp;&amp; my_form.getVirtualPath().trim().length()&gt;0)</span>
+			{
+				//Logger.println(this,&quot;my_form.getVirtualPath=&quot;+my_form.getVirtualPath());
+
+<span class="fc" id="L846">				int docIdFromVP = docDB.getVirtualPathDocId(my_form.getVirtualPath(), domain);</span>
+<span class="pc bpc" id="L847" title="1 of 4 branches missed.">				if (docIdFromVP &gt; 0 &amp;&amp; docIdFromVP != my_form.getDocId())</span>
+				{
+					//Logger.println(this,&quot;docIdFromVP=&quot;+docIdFromVP+&quot; my_form.getDocId()=&quot;+my_form.getDocId());
+					//zadany VirtualPath je uz pouzity!!!
+<span class="nc" id="L851">					DocDetails vpDocDetails = docDB.getDoc(docIdFromVP, -1, false);</span>
+<span class="nc bnc" id="L852" title="All 4 branches missed.">					if (vpDocDetails!=null &amp;&amp; vpDocDetails.getVirtualPath().equals(my_form.getVirtualPath()))</span>
+					{
+<span class="nc" id="L854">						session.setAttribute(&quot;allreadyUsedVirtualPathDocId&quot;, Integer.toString(docIdFromVP));</span>
+<span class="nc bnc" id="L855" title="All 2 branches missed.">						if (my_form.getDocId() &gt; 0)</span>
+						{
+<span class="nc" id="L857">							DocDetails doc = docDB.getDoc(my_form.getDocId(), -1, false);</span>
+							//nastav povodnu hodnotu
+<span class="nc" id="L859">							my_form.setVirtualPath(doc.getVirtualPath());</span>
+<span class="nc" id="L860">						}</span>
+						else
+						{
+<span class="nc" id="L863">							my_form.setVirtualPath(&quot;&quot;);</span>
+						}
+					}
+				}
+			}
+
+<span class="fc" id="L869">			dt.diff(&quot;after virtualPath check&quot;);</span>
+
+<span class="fc bfc" id="L871" title="All 2 branches covered.">			if (my_form.getDocId() &lt; 1)</span>
+			{
+<span class="fc" id="L873">				isNewPage = true;</span>
+
+<span class="fc" id="L875">				request.setAttribute(&quot;editorForm.saveAsNew&quot;, &quot;true&quot;);</span>
+
+<span class="fc" id="L877">				sql = &quot;INSERT INTO documents (title, data, data_asc, external_link, navbar, date_created, &quot; +</span>
+						&quot;publish_start, publish_end, author_id, group_id, temp_id, searchable, available, &quot; +
+						&quot;cacheable, sort_priority, header_doc_id, footer_doc_id, menu_doc_id, password_protected, html_head, &quot;+
+						&quot;html_data, perex_place, perex_image, perex_group, show_in_menu, event_date, virtual_path, right_menu_doc_id,&quot; +
+						&quot;field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, &quot; +
+						&quot;field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl, file_name, root_group_l1, root_group_l2, root_group_l3)&quot; +
+						&quot;VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
+
+<span class="pc bpc" id="L885" title="1 of 2 branches missed.">				if (requestPublish == false)</span>
+				{
+<span class="nc" id="L887">					my_form.setAvailable(false);</span>
+				}
+
+<span class="fc" id="L890">				String publishDocData = null;</span>
+<span class="fc" id="L891">				long time = DB.getTimestamp(my_form.getPublishStart(), my_form.getPublishStartTime());</span>
+<span class="pc bpc" id="L892" title="1 of 2 branches missed.">				if (time != 0)</span>
+				{
+					//ak sa to ma vypublikovat az po aktualnom case, zrus available
+<span class="pc bpc" id="L895" title="1 of 2 branches missed.">					if (time &gt; now.getTime())</span>
+					{
+<span class="nc bnc" id="L897" title="All 2 branches missed.">						if (my_form.isPublicable())</span>
+						{
+<span class="nc" id="L899">							my_form.setAvailable(false);</span>
+<span class="nc" id="L900">							publishDocData = properties.getText(&quot;editor.publish.note&quot;) + &quot; &quot; + my_form.getPublishStart() + &quot; &quot; + my_form.getPublishStartTime();</span>
+						}
+					}
+				}
+
+				//Logger.println(this,&quot;INSERTING sql=&quot; + sql);
+<span class="fc" id="L906">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L907">				ps.setString(1, my_form.getTitle());</span>
+<span class="pc bpc" id="L908" title="1 of 2 branches missed.">				if (publishDocData != null)</span>
+				{
+<span class="nc" id="L910">					DB.setClob(ps, 2, publishDocData);</span>
+<span class="nc" id="L911">					DB.setClob(ps, 3, getDataAsc(publishDocData, my_form));</span>
+				}
+				else
+				{
+					//ps.setString(2, data);
+					//ps.setString(3, data_asc);
+<span class="fc" id="L917">					DB.setClob(ps, 2, data);</span>
+<span class="fc" id="L918">					DB.setClob(ps, 3, data_asc);</span>
+				}
+<span class="fc" id="L920">				ps.setString(4, my_form.getExternalLink());</span>
+<span class="fc" id="L921">				ps.setString(5, my_form.getNavbar());</span>
+
+<span class="fc" id="L923">				ps.setTimestamp(6, new Timestamp(now.getTime()));</span>
+<span class="pc bpc" id="L924" title="2 of 4 branches missed.">				if (my_form.getPublishStart() != null &amp;&amp; my_form.getPublishStart().trim().length() &gt; 0)</span>
+				{
+<span class="pc bpc" id="L926" title="1 of 2 branches missed.">					if (time &gt; 0)</span>
+					{
+<span class="fc" id="L928">						ps.setTimestamp(7, new Timestamp(time));</span>
+					}
+					else
+					{
+<span class="nc" id="L932">						ps.setNull(7, java.sql.Types.TIMESTAMP);</span>
+					}
+				}
+				else
+				{
+<span class="nc" id="L937">					ps.setNull(7, java.sql.Types.DATE);</span>
+				}
+
+<span class="pc bpc" id="L940" title="2 of 4 branches missed.">				if (my_form.getPublishEnd() != null &amp;&amp; my_form.getPublishEnd().trim().length() &gt; 0)</span>
+				{
+<span class="nc" id="L942">					long time2 = DB.getTimestamp(my_form.getPublishEnd(), my_form.getPublishEndTime());</span>
+<span class="nc bnc" id="L943" title="All 2 branches missed.">					if (time2 != 0)</span>
+					{
+<span class="nc" id="L945">						ps.setTimestamp(8, new Timestamp(time2));</span>
+					}
+					else
+					{
+<span class="nc" id="L949">						ps.setNull(8, java.sql.Types.TIMESTAMP);</span>
+					}
+<span class="nc" id="L951">				}</span>
+				else
+				{
+<span class="fc" id="L954">					ps.setNull(8, java.sql.Types.DATE);</span>
+				}
+
+<span class="fc" id="L957">				ps.setInt(9, user.getUserId());</span>
+<span class="fc" id="L958">				ps.setInt(10, my_form.getGroupId());</span>
+<span class="fc" id="L959">				ps.setInt(11, my_form.getTempId());</span>
+<span class="fc" id="L960">				ps.setBoolean(12, my_form.isSearchable());</span>
+<span class="fc" id="L961">				ps.setBoolean(13, my_form.isAvailable());</span>
+<span class="fc" id="L962">				ps.setBoolean(14, my_form.isCacheable());</span>
+<span class="fc" id="L963">				ps.setInt(15, my_form.getSortPriority());</span>
+<span class="fc" id="L964">				ps.setInt(16, my_form.getHeaderDocId());</span>
+<span class="fc" id="L965">				ps.setInt(17, my_form.getFooterDocId());</span>
+<span class="fc" id="L966">				ps.setInt(18, my_form.getMenuDocId());</span>
+<span class="pc bpc" id="L967" title="1 of 2 branches missed.">				if (my_form.getPasswordProtectedString() == null)</span>
+				{
+<span class="fc" id="L969">					ps.setNull(19, java.sql.Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="nc" id="L973">					ps.setString(19, my_form.getPasswordProtectedString());</span>
+				}
+<span class="fc" id="L975">				DB.setClob(ps, 20, my_form.getHtmlHead());</span>
+<span class="pc bpc" id="L976" title="2 of 4 branches missed.">				if (my_form.getHtmlData() == null || my_form.getHtmlData().length() &lt; 1)</span>
+				{
+<span class="fc" id="L978">					ps.setNull(21, Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="nc" id="L982">					DB.setClob(ps, 21, my_form.getHtmlData());</span>
+				}
+<span class="fc" id="L984">				ps.setString(22, my_form.getPerexPlace());</span>
+<span class="fc" id="L985">				ps.setString(23, my_form.getPerexImage());</span>
+
+<span class="fc" id="L987">				ps.setString(24, my_form.getPerexGroupString());</span>
+<span class="fc" id="L988">				ps.setBoolean(25, my_form.isShowInMenu());</span>
+
+<span class="pc bpc" id="L990" title="1 of 2 branches missed.">				if (Tools.isEmpty(my_form.getEventDate())==false)</span>
+				{
+<span class="nc bnc" id="L992" title="All 2 branches missed.">					if (Tools.isEmpty(my_form.getEventTime()))</span>
+					{
+<span class="nc" id="L994">						my_form.setEventTime(&quot;6:00&quot;);</span>
+					}
+<span class="nc" id="L996">					long time2 = DB.getTimestamp(my_form.getEventDate(), my_form.getEventTime());</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">					if (time2 != 0)</span>
+					{
+<span class="nc" id="L999">						ps.setTimestamp(26, new Timestamp(time2));</span>
+					}
+					else
+					{
+<span class="nc" id="L1003">						ps.setNull(26, java.sql.Types.TIMESTAMP);</span>
+					}
+<span class="nc" id="L1005">				}</span>
+				else
+				{
+<span class="fc" id="L1008">					ps.setNull(26, java.sql.Types.DATE);</span>
+				}
+
+<span class="pc bpc" id="L1011" title="2 of 4 branches missed.">				if (my_form.getVirtualPath()==null || my_form.getVirtualPath().length()&lt;1)</span>
+				{
+<span class="nc" id="L1013">					ps.setNull(27, Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="fc" id="L1017">					ps.setString(27, my_form.getVirtualPath());</span>
+				}
+<span class="fc" id="L1019">				ps.setInt(28, my_form.getRightMenuDocId());</span>
+
+<span class="fc" id="L1021">				ps.setString(29, my_form.getFieldA());</span>
+<span class="fc" id="L1022">				ps.setString(30, my_form.getFieldB());</span>
+<span class="fc" id="L1023">				ps.setString(31, my_form.getFieldC());</span>
+<span class="fc" id="L1024">				ps.setString(32, my_form.getFieldD());</span>
+<span class="fc" id="L1025">				ps.setString(33, my_form.getFieldE());</span>
+<span class="fc" id="L1026">				ps.setString(34, my_form.getFieldF());</span>
+<span class="fc" id="L1027">				ps.setString(35, my_form.getFieldG());</span>
+<span class="fc" id="L1028">				ps.setString(36, my_form.getFieldH());</span>
+<span class="fc" id="L1029">				ps.setString(37, my_form.getFieldI());</span>
+<span class="fc" id="L1030">				ps.setString(38, my_form.getFieldJ());</span>
+<span class="fc" id="L1031">				ps.setString(39, my_form.getFieldK());</span>
+<span class="fc" id="L1032">				ps.setString(40, my_form.getFieldL());</span>
+
+<span class="fc" id="L1034">				ps.setBoolean(41, my_form.isDisableAfterEnd());</span>
+
+<span class="fc" id="L1036">				ps.setString(42, my_form.getFieldM());</span>
+<span class="fc" id="L1037">				ps.setString(43, my_form.getFieldN());</span>
+<span class="fc" id="L1038">				ps.setString(44, my_form.getFieldO());</span>
+<span class="fc" id="L1039">				ps.setString(45, my_form.getFieldP());</span>
+<span class="fc" id="L1040">				ps.setString(46, my_form.getFieldQ());</span>
+<span class="fc" id="L1041">				ps.setString(47, my_form.getFieldR());</span>
+<span class="fc" id="L1042">				ps.setString(48, my_form.getFieldS());</span>
+<span class="fc" id="L1043">				ps.setString(49, my_form.getFieldT());</span>
+
+<span class="fc" id="L1045">				ps.setBoolean(50, my_form.isRequireSsl());</span>
+
+<span class="fc" id="L1047">				GroupDetails group = groupsDB.getGroup(my_form.getGroupId());</span>
+<span class="fc" id="L1048">				String fileName = null;</span>
+<span class="pc bpc" id="L1049" title="2 of 4 branches missed.">		   	if (group != null &amp;&amp; group.isInternal()==false)</span>
+		   	{
+<span class="fc" id="L1051">		   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());</span>
+		   	}
+<span class="fc" id="L1053">				ps.setString(51, DB.prepareString(fileName,255));</span>
+
+<span class="fc" id="L1055">				DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);</span>
+
+<span class="fc" id="L1057">				ps.execute();</span>
+<span class="fc" id="L1058">				ps.close();</span>
+
+<span class="pc bpc" id="L1060" title="3 of 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Constants.getBoolean(&quot;jtdsCommit&quot;))</span>
+				{
+<span class="nc" id="L1062">					db_conn.commit();</span>
+				}
+
+<span class="fc" id="L1065">				dt.diff(&quot;after insert&quot;);</span>
+				//Logger.println(this,&quot;EditorDB: INSERTED&quot;);
+
+				//get new doc_id
+				//get document id
+<span class="fc" id="L1070">				ps = db_conn.prepareStatement(&quot;SELECT max(doc_id) FROM documents WHERE group_id=? AND title=?&quot;);</span>
+				// AND date_created=?&quot;);
+<span class="fc" id="L1072">				ps.setInt(1, my_form.getGroupId()); //aby sa pouzil index!!!</span>
+<span class="fc" id="L1073">				ps.setString(2, my_form.getTitle());</span>
+				//ps.setTimestamp(2, new Timestamp(now.getTime()));
+<span class="fc" id="L1075">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1076" title="1 of 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="fc" id="L1078">					my_form.setDocId(rs.getInt(1));</span>
+				}
+<span class="fc" id="L1080">				rs.close();</span>
+<span class="fc" id="L1081">				ps.close();</span>
+
+<span class="fc" id="L1083">				dt.diff(&quot;after getDocId&quot;);</span>
+
+				//aktualizuj pripadne aj tab. perex_group_doc
+<span class="fc" id="L1086">				DocDB.udpdatePerexGroupDoc(my_form.getDocId(), my_form.getPerexGroupString());</span>
+
+				//DocDB.updateDataClob(db_conn, my_form.getDocId(), -1, data, data_asc);
+<span class="fc" id="L1089">			}</span>
+			else
+			{
+				//premenovanie Groupy ak je stranka defaultna pre Grupu.
+<span class="pc bpc" id="L1093" title="1 of 2 branches missed.">				if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;))</span>
+				{
+<span class="fc" id="L1095">					DocDB.changeGroupTitle(my_form.getGroupId(), my_form.getDocId(), my_form.getTitle());</span>
+				}
+
+				//Logger.println(this,&quot;UKLADAM: requestPublish=&quot;+requestPublish+&quot; publicable=&quot;+my_form.isPublicable());
+
+<span class="pc bpc" id="L1100" title="1 of 2 branches missed.">				if (my_form.isPublicable())</span>
+				{
+<span class="nc bnc" id="L1102" title="All 2 branches missed.">					if (requestPublish)</span>
+					{
+<span class="nc" id="L1104">						long time = DB.getTimestamp(my_form.getPublishStart(), my_form.getPublishStartTime());</span>
+<span class="nc bnc" id="L1105" title="All 2 branches missed.">						if (time != 0)</span>
+						{
+							//Logger.println(this,&quot;time=&quot;+time);
+							//ak sa to ma vypublikovat az po aktualnom case, zrus available
+<span class="nc bnc" id="L1109" title="All 2 branches missed.">							if (time &gt; now.getTime())</span>
+							{
+								//Logger.println(this,&quot;Rusim publish&quot;);
+<span class="nc" id="L1112">								requestPublish = false;</span>
+							}
+						}
+					}
+				}
+
+				//Logger.println(this,&quot;UKLADAM 2: requestPublish=&quot;+requestPublish);
+
+<span class="pc bpc" id="L1120" title="1 of 2 branches missed.">				if (requestPublish)</span>
+				{
+<span class="fc" id="L1122">					dt.diff(&quot;preparing update data&quot;);</span>
+
+<span class="fc" id="L1124">					sql = &quot;UPDATE documents SET title=?, data=?, data_asc=?, external_link=?, navbar=?, date_created=?, &quot; +</span>
+							&quot;publish_start=?, publish_end=?, author_id=?, group_id=?, temp_id=?, searchable=?, available=?, &quot; +
+							&quot;cacheable=?, sort_priority=? , header_doc_id=?, footer_doc_id=?, menu_doc_id=?, password_protected=?, &quot;+
+							&quot;html_head=?, html_data=?, perex_place=?, perex_image=?, perex_group=?, show_in_menu=?, event_date=?, &quot; +
+							&quot;virtual_path=?, right_menu_doc_id=?, &quot; +
+							&quot;field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, field_f=?, field_g=?, field_h=?, field_i=?, field_j=?, field_k=?, field_l=?, disable_after_end=?, &quot; +
+							&quot;field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, require_ssl=?, file_name=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, &quot;+
+							&quot;sync_status=1 &quot;+
+							&quot;WHERE doc_id=?&quot;;
+					//Logger.println(this,&quot;UPDATING id=&quot; + doc_id + &quot; sql=&quot; + sql);
+<span class="fc" id="L1134">					ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1135">					ps.setString(1, my_form.getTitle());</span>
+					//ps.setString(2, data);
+					//ps.setString(3, data_asc);
+
+<span class="fc" id="L1139">					DB.setClob(ps, 2, data);</span>
+<span class="fc" id="L1140">					DB.setClob(ps, 3, data_asc);</span>
+
+<span class="fc" id="L1142">					ps.setString(4, my_form.getExternalLink());</span>
+<span class="fc" id="L1143">					ps.setString(5, my_form.getNavbar());</span>
+
+<span class="fc" id="L1145">					ps.setTimestamp(6, new Timestamp(now.getTime()));</span>
+<span class="pc bpc" id="L1146" title="2 of 4 branches missed.">					if (my_form.getPublishStart() != null &amp;&amp; my_form.getPublishStart().trim().length() &gt; 0)</span>
+					{
+<span class="fc" id="L1148">						long time = DB.getTimestamp(my_form.getPublishStart(), my_form.getPublishStartTime());</span>
+<span class="pc bpc" id="L1149" title="1 of 2 branches missed.">						if (time != 0)</span>
+						{
+<span class="fc" id="L1151">							ps.setTimestamp(7, new Timestamp(time));</span>
+						}
+						else
+						{
+<span class="nc" id="L1155">							ps.setNull(7, java.sql.Types.TIMESTAMP);</span>
+						}
+<span class="fc" id="L1157">					}</span>
+					else
+					{
+<span class="nc" id="L1160">						ps.setNull(7, java.sql.Types.DATE);</span>
+					}
+<span class="pc bpc" id="L1162" title="2 of 4 branches missed.">					if (my_form.getPublishEnd() != null &amp;&amp; my_form.getPublishEnd().trim().length() &gt; 0)</span>
+					{
+<span class="nc" id="L1164">						long time2 = DB.getTimestamp(my_form.getPublishEnd(), my_form.getPublishEndTime());</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">						if (time2 != 0)</span>
+						{
+<span class="nc" id="L1167">							ps.setTimestamp(8, new Timestamp(time2));</span>
+						}
+						else
+						{
+<span class="nc" id="L1171">							ps.setNull(8, java.sql.Types.TIMESTAMP);</span>
+						}
+<span class="nc" id="L1173">					}</span>
+					else
+					{
+<span class="fc" id="L1176">						ps.setNull(8, java.sql.Types.DATE);</span>
+					}
+
+<span class="fc" id="L1179">					ps.setInt(9, user.getUserId());</span>
+<span class="fc" id="L1180">					ps.setInt(10, my_form.getGroupId());</span>
+<span class="fc" id="L1181">					ps.setInt(11, my_form.getTempId());</span>
+<span class="fc" id="L1182">					ps.setBoolean(12, my_form.isSearchable());</span>
+<span class="fc" id="L1183">					ps.setBoolean(13, my_form.isAvailable());</span>
+<span class="fc" id="L1184">					ps.setBoolean(14, my_form.isCacheable());</span>
+<span class="fc" id="L1185">					ps.setInt(15, my_form.getSortPriority());</span>
+
+<span class="fc" id="L1187">					ps.setInt(16, my_form.getHeaderDocId());</span>
+<span class="fc" id="L1188">					ps.setInt(17, my_form.getFooterDocId());</span>
+<span class="fc" id="L1189">					ps.setInt(18, my_form.getMenuDocId());</span>
+
+<span class="pc bpc" id="L1191" title="1 of 2 branches missed.">					if (my_form.getPasswordProtectedString() == null)</span>
+					{
+<span class="fc" id="L1193">						ps.setNull(19, java.sql.Types.VARCHAR);</span>
+					}
+					else
+					{
+<span class="nc" id="L1197">						ps.setString(19, my_form.getPasswordProtectedString());</span>
+					}
+<span class="fc" id="L1199">					DB.setClob(ps, 20, my_form.getHtmlHead());</span>
+<span class="pc bpc" id="L1200" title="2 of 4 branches missed.">					if (my_form.getHtmlData() == null || my_form.getHtmlData().length() &lt; 1)</span>
+					{
+<span class="fc" id="L1202">						ps.setNull(21, Types.VARCHAR);</span>
+					}
+					else
+					{
+<span class="nc" id="L1206">						DB.setClob(ps, 21, my_form.getHtmlData());</span>
+					}
+<span class="fc" id="L1208">					ps.setString(22, my_form.getPerexPlace());</span>
+<span class="fc" id="L1209">					ps.setString(23, my_form.getPerexImage());</span>
+<span class="fc" id="L1210">					ps.setString(24, my_form.getPerexGroupString());</span>
+<span class="fc" id="L1211">					ps.setBoolean(25, my_form.isShowInMenu());</span>
+
+<span class="pc bpc" id="L1213" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(my_form.getEventDate()))</span>
+					{
+<span class="nc bnc" id="L1215" title="All 2 branches missed.">						if (Tools.isEmpty(my_form.getEventTime()))</span>
+						{
+<span class="nc" id="L1217">							my_form.setEventTime(&quot;6:00&quot;);</span>
+						}
+<span class="nc" id="L1219">						long time2 = DB.getTimestamp(my_form.getEventDate(), my_form.getEventTime());</span>
+<span class="nc bnc" id="L1220" title="All 2 branches missed.">						if (time2 != 0)</span>
+						{
+<span class="nc" id="L1222">							ps.setTimestamp(26, new Timestamp(time2));</span>
+						}
+						else
+						{
+<span class="nc" id="L1226">							ps.setNull(26, java.sql.Types.TIMESTAMP);</span>
+						}
+<span class="nc" id="L1228">					}</span>
+					else
+					{
+<span class="fc" id="L1231">						ps.setNull(26, java.sql.Types.DATE);</span>
+					}
+<span class="pc bpc" id="L1233" title="2 of 4 branches missed.">					if (my_form.getVirtualPath()==null || my_form.getVirtualPath().length()&lt;1)</span>
+					{
+<span class="nc" id="L1235">						ps.setNull(27, Types.VARCHAR);</span>
+					}
+					else
+					{
+<span class="fc" id="L1239">						ps.setString(27, my_form.getVirtualPath());</span>
+					}
+<span class="fc" id="L1241">					ps.setInt(28, my_form.getRightMenuDocId());</span>
+
+<span class="fc" id="L1243">					ps.setString(29, my_form.getFieldA());</span>
+<span class="fc" id="L1244">					ps.setString(30, my_form.getFieldB());</span>
+<span class="fc" id="L1245">					ps.setString(31, my_form.getFieldC());</span>
+<span class="fc" id="L1246">					ps.setString(32, my_form.getFieldD());</span>
+<span class="fc" id="L1247">					ps.setString(33, my_form.getFieldE());</span>
+<span class="fc" id="L1248">					ps.setString(34, my_form.getFieldF());</span>
+<span class="fc" id="L1249">					ps.setString(35, my_form.getFieldG());</span>
+<span class="fc" id="L1250">					ps.setString(36, my_form.getFieldH());</span>
+<span class="fc" id="L1251">					ps.setString(37, my_form.getFieldI());</span>
+<span class="fc" id="L1252">					ps.setString(38, my_form.getFieldJ());</span>
+<span class="fc" id="L1253">					ps.setString(39, my_form.getFieldK());</span>
+<span class="fc" id="L1254">					ps.setString(40, my_form.getFieldL());</span>
+
+<span class="fc" id="L1256">					ps.setBoolean(41, my_form.isDisableAfterEnd());</span>
+
+<span class="fc" id="L1258">					ps.setString(42, my_form.getFieldM());</span>
+<span class="fc" id="L1259">					ps.setString(43, my_form.getFieldN());</span>
+<span class="fc" id="L1260">					ps.setString(44, my_form.getFieldO());</span>
+<span class="fc" id="L1261">					ps.setString(45, my_form.getFieldP());</span>
+<span class="fc" id="L1262">					ps.setString(46, my_form.getFieldQ());</span>
+<span class="fc" id="L1263">					ps.setString(47, my_form.getFieldR());</span>
+<span class="fc" id="L1264">					ps.setString(48, my_form.getFieldS());</span>
+<span class="fc" id="L1265">					ps.setString(49, my_form.getFieldT());</span>
+
+<span class="fc" id="L1267">					ps.setBoolean(50, my_form.isRequireSsl());</span>
+
+<span class="fc" id="L1269">					GroupDetails group = groupsDB.getGroup(my_form.getGroupId());</span>
+<span class="fc" id="L1270">					String fileName = null;</span>
+<span class="pc bpc" id="L1271" title="2 of 4 branches missed.">			   	if (group != null &amp;&amp; group.isInternal()==false)</span>
+			   	{
+<span class="fc" id="L1273">			   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());</span>
+			   	}
+<span class="fc" id="L1275">					ps.setString(51, DB.prepareString(fileName, 255));</span>
+
+<span class="fc" id="L1277">					DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);</span>
+
+<span class="fc" id="L1279">					ps.setInt(55, my_form.getDocId());</span>
+
+<span class="fc" id="L1281">					dt.diff(&quot;before execute call&quot;);</span>
+
+<span class="fc" id="L1283">					ps.execute();</span>
+<span class="fc" id="L1284">					ps.close();</span>
+
+					//aktualizuj pripadne aj tab. perex_group_doc
+<span class="fc" id="L1287">					DocDB.udpdatePerexGroupDoc(my_form.getDocId(), my_form.getPerexGroupString());</span>
+
+<span class="pc bpc" id="L1289" title="3 of 4 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Constants.getBoolean(&quot;jtdsCommit&quot;))</span>
+					{
+<span class="nc" id="L1291">						db_conn.commit();</span>
+					}
+
+<span class="fc" id="L1294">					dt.diff(&quot;after update&quot;);</span>
+
+					//DocDB.updateDataClob(db_conn, my_form.getDocId(), -1, data, data_asc);
+
+					//delete old file
+<span class="pc bpc" id="L1299" title="3 of 6 branches missed.">					if (iwcm_DOC_PATH!=null &amp;&amp; my_form.getFileName() != null &amp;&amp; my_form.getFileName().length() &gt; 2)</span>
+					{
+						try
+						{
+<span class="fc" id="L1303">							String filePath = iwcm_DOC_PATH + File.separatorChar + my_form.getFileName();</span>
+<span class="fc" id="L1304">							File outputFile = new File(filePath);</span>
+<span class="pc bpc" id="L1305" title="1 of 2 branches missed.">							if (outputFile.exists())</span>
+							{
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">								if(outputFile.delete() == false)</span>
+<span class="nc" id="L1308">									throw new SecurityException(&quot;Unable to delete file: &quot;+filePath);</span>
+							}
+						}
+<span class="nc" id="L1311">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L1313">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1314">						}</span>
+					}
+				}
+			}
+
+<span class="fc" id="L1319">			dt.diff(&quot;after savedata&quot;);</span>
+
+			//savnutie do history
+<span class="pc bpc" id="L1322" title="1 of 2 branches missed.">			if (requestPublish)</span>
+			{
+<span class="fc" id="L1324">				session.setAttribute(&quot;pageSavedToPublic&quot;, &quot;true&quot;);</span>
+			}
+			else
+			{
+<span class="nc bnc" id="L1328" title="All 2 branches missed.">				if (my_form.isPublicable())</span>
+				{
+<span class="nc" id="L1330">					session.setAttribute(&quot;pagePublishDate&quot;, my_form.getPublishStart() + &quot; &quot; + my_form.getPublishStartTime());</span>
+<span class="nc" id="L1331">					request.setAttribute(&quot;pagePublishDate&quot;, my_form.getPublishStart() + &quot; &quot; + my_form.getPublishStartTime());</span>
+				}
+				else
+				{
+<span class="nc" id="L1335">					session.setAttribute(&quot;pageSaved&quot;, &quot;true&quot;);</span>
+				}
+			}
+
+<span class="fc" id="L1339">			dt.diff(&quot;after session set&quot;);</span>
+
+<span class="fc" id="L1341">			saveDocAttrs(my_form.getDocId(), db_conn, request);</span>
+
+<span class="fc" id="L1343">			dt.diff(&quot;after attributes save&quot;);</span>
+
+			//vypne zapisovanie zaznamov do documents_history tabulky. true - nezapise zaznam do documents_history
+<span class="fc" id="L1346">			boolean disableHistory =  Constants.getBoolean(&quot;editorDisableHistory&quot;);</span>
+<span class="pc bpc" id="L1347" title="1 of 2 branches missed.">			if(disableHistory)</span>
+			{
+<span class="nc" id="L1349">				Logger.debug(EditorDB.class, &quot;Write into documents_history is disabled&quot;);</span>
+<span class="nc" id="L1350">				history_id = 1;</span>
+			}
+
+<span class="fc" id="L1353">			boolean was_approved = false;</span>
+			//ak to nie je volane z ApproveAction
+<span class="pc bpc" id="L1355" title="2 of 4 branches missed.">			if (my_form.getApproveHistoryId() &lt; 0 &amp;&amp; !disableHistory)</span>
+			{
+<span class="pc bpc" id="L1357" title="3 of 4 branches missed.">				if ((my_form.getPublicableToZero() &gt; -1) &amp;&amp; (my_form.isPublicable()))</span>
+				{
+<span class="nc" id="L1359">					ps = db_conn.prepareStatement(&quot;UPDATE documents_history SET publicable=&quot;+DB.getBooleanSql(false)+&quot; WHERE history_id=?&quot;);</span>
+<span class="nc" id="L1360">					ps.setInt(1, my_form.getPublicableToZero());</span>
+<span class="nc" id="L1361">					ps.execute();</span>
+<span class="nc" id="L1362">					ps.close();</span>
+				}
+				else
+				{
+					//Logger.println(this,&quot;my_form.getPublicableToZero()=&quot;+my_form.getPublicableToZero());
+				}
+
+<span class="fc" id="L1369">				dt.diff(&quot;after update doc history publicable&quot;);</span>
+
+				// zisti, ci v hystorii na ten isty datum a cas nema byt nieco vypublikovane //lubbis
+<span class="fc" id="L1372">				sql_check = &quot;UPDATE documents_history SET publicable=?, sync_status=1 WHERE doc_id=? and publish_start=?&quot;;</span>
+<span class="pc bpc" id="L1373" title="1 of 2 branches missed.">				if (my_form.isPublicable())</span>
+				{
+<span class="nc" id="L1375">					ps = db_conn.prepareStatement(sql_check);</span>
+<span class="nc" id="L1376">					ps.setBoolean(1, false);</span>
+<span class="nc" id="L1377">					ps.setInt(2, my_form.getDocId());</span>
+
+<span class="nc bnc" id="L1379" title="All 4 branches missed.">					if (my_form.getPublishStart() != null &amp;&amp; my_form.getPublishStart().trim().length() &gt; 0)</span>
+					{
+<span class="nc" id="L1381">						long time = DB.getTimestamp(my_form.getPublishStart(), my_form.getPublishStartTime());</span>
+
+<span class="nc bnc" id="L1383" title="All 2 branches missed.">						if (time != 0)</span>
+						{
+<span class="nc" id="L1385">							ps.setTimestamp(3, new Timestamp(time));</span>
+						}
+						else
+						{
+<span class="nc" id="L1389">							ps.setNull(3, java.sql.Types.DATE);</span>
+						}
+<span class="nc" id="L1391">					}</span>
+					else
+					{
+<span class="nc" id="L1394">						ps.setNull(3, java.sql.Types.DATE);</span>
+					}
+<span class="nc" id="L1396">					ps.execute();</span>
+<span class="nc" id="L1397">					ps.close();</span>
+
+				}
+
+<span class="fc" id="L1401">				dt.diff(&quot;after dochist is publicable&quot;);</span>
+
+<span class="fc" id="L1403">				sql = &quot;INSERT INTO documents_history (title, data, data_asc, external_link, navbar, date_created, &quot; +</span>
+						&quot;publish_start, publish_end, author_id, group_id, temp_id, searchable, available, &quot; +
+						&quot;cacheable, sort_priority, header_doc_id, footer_doc_id, menu_doc_id, doc_id, save_date, actual, &quot; +
+						&quot;approved_by, awaiting_approve, password_protected, html_head, html_data, publicable, perex_place, &quot; +
+						&quot;perex_image, perex_group, show_in_menu, event_date, virtual_path, right_menu_doc_id,&quot; +
+						&quot;field_a, field_b, field_c, field_d, field_e, field_f, field_g, field_h, field_i, field_j, field_k, field_l, disable_after_end, &quot; +
+						&quot;field_m, field_n, field_o, field_p, field_q, field_r, field_s, field_t, require_ssl) &quot;+
+						&quot;VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
+				//Logger.println(this,&quot;INSERTING sql=&quot; + sql);
+<span class="fc" id="L1412">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1413">				ps.setString(1, my_form.getTitle());</span>
+				//ps.setString(2, data);
+				//ps.setString(3, data_asc);
+<span class="fc" id="L1416">				DB.setClob(ps, 2, data);</span>
+<span class="fc" id="L1417">				DB.setClob(ps, 3, data_asc);</span>
+
+<span class="fc" id="L1419">				ps.setString(4, my_form.getExternalLink());</span>
+<span class="fc" id="L1420">				ps.setString(5, my_form.getNavbar());</span>
+
+<span class="fc" id="L1422">				ps.setTimestamp(6, new Timestamp(now.getTime()));</span>
+<span class="pc bpc" id="L1423" title="2 of 4 branches missed.">				if (my_form.getPublishStart() != null &amp;&amp; my_form.getPublishStart().trim().length() &gt; 0)</span>
+				{
+<span class="fc" id="L1425">					long time = DB.getTimestamp(my_form.getPublishStart(), my_form.getPublishStartTime());</span>
+
+<span class="pc bpc" id="L1427" title="1 of 2 branches missed.">					if (time != 0)</span>
+					{
+<span class="fc" id="L1429">						ps.setTimestamp(7, new Timestamp(time));</span>
+					}
+					else
+					{
+<span class="nc" id="L1433">						ps.setNull(7, java.sql.Types.DATE);</span>
+					}
+<span class="fc" id="L1435">				}</span>
+				else
+				{
+<span class="nc" id="L1438">					ps.setNull(7, java.sql.Types.DATE);</span>
+				}
+
+<span class="pc bpc" id="L1441" title="2 of 4 branches missed.">				if (my_form.getPublishEnd() != null &amp;&amp; my_form.getPublishEnd().trim().length() &gt; 0)</span>
+				{
+<span class="nc" id="L1443">					long time2 = DB.getTimestamp(my_form.getPublishEnd(), my_form.getPublishEndTime());</span>
+<span class="nc bnc" id="L1444" title="All 2 branches missed.">					if (time2 != 0)</span>
+					{
+<span class="nc" id="L1446">						ps.setTimestamp(8, new Timestamp(time2));</span>
+					}
+					else
+					{
+<span class="nc" id="L1450">						ps.setNull(8, java.sql.Types.TIMESTAMP);</span>
+					}
+<span class="nc" id="L1452">				}</span>
+				else
+				{
+<span class="fc" id="L1455">					ps.setNull(8, java.sql.Types.DATE);</span>
+				}
+
+<span class="fc" id="L1458">				ps.setInt(9, user.getUserId());</span>
+<span class="fc" id="L1459">				ps.setInt(10, my_form.getGroupId());</span>
+<span class="fc" id="L1460">				ps.setInt(11, my_form.getTempId());</span>
+<span class="fc" id="L1461">				ps.setBoolean(12, my_form.isSearchable());</span>
+<span class="fc" id="L1462">				ps.setBoolean(13, my_form.isAvailable());</span>
+<span class="fc" id="L1463">				ps.setBoolean(14, my_form.isCacheable());</span>
+<span class="fc" id="L1464">				ps.setInt(15, my_form.getSortPriority());</span>
+<span class="fc" id="L1465">				ps.setInt(16, my_form.getHeaderDocId());</span>
+<span class="fc" id="L1466">				ps.setInt(17, my_form.getFooterDocId());</span>
+<span class="fc" id="L1467">				ps.setInt(18, my_form.getMenuDocId());</span>
+<span class="fc" id="L1468">				ps.setInt(19, my_form.getDocId());</span>
+<span class="fc" id="L1469">				ps.setTimestamp(20, new Timestamp(l_now));</span>
+<span class="pc bpc" id="L1470" title="1 of 2 branches missed.">				if (requestPublish)</span>
+				{
+<span class="fc" id="L1472">					ps.setBoolean(21, true);</span>
+				}
+				else
+				{
+<span class="nc" id="L1476">					ps.setBoolean(21, false);</span>
+				}
+
+<span class="pc bpc" id="L1479" title="1 of 2 branches missed.">				if (approveByTable.size()&gt;0)</span>
+				{
+<span class="nc" id="L1481">					ps.setInt(22, -1);</span>
+				}
+				else
+				{
+<span class="pc bpc" id="L1485" title="1 of 2 branches missed.">					if (requestPublish)</span>
+					{
+<span class="fc" id="L1487">						ps.setInt(22, user.getUserId());</span>
+<span class="fc" id="L1488">						was_approved = true;</span>
+					}
+					else
+					{
+<span class="nc" id="L1492">						ps.setInt(22, -1);</span>
+					}
+				}
+
+<span class="pc bpc" id="L1496" title="3 of 4 branches missed.">				if (approveByTable.size()&gt;0 &amp;&amp; &quot;1&quot;.equals(my_form.getPublish()))</span>
+				{
+<span class="nc" id="L1498">					StringBuilder approveByUsersId = new StringBuilder(&quot;,&quot;);</span>
+<span class="nc bnc" id="L1499" title="All 2 branches missed.">					for (Map.Entry&lt;Integer, UserDetails&gt; entry : approveByTable.entrySet())</span>
+					{
+<span class="nc" id="L1501">						approveByUsersId.append(entry.getValue().getUserId()).append(',');</span>
+<span class="nc" id="L1502">					}</span>
+					//Logger.println(this,&quot;approveByUsersId=&quot;+approveByUsersId+&quot; publish=&quot;+requestPublish);
+<span class="nc" id="L1504">					ps.setString(23, &quot;,&quot;+approveByUsersId.toString()+&quot;,&quot;);</span>
+<span class="nc" id="L1505">				}</span>
+				else
+				{
+<span class="fc" id="L1508">					ps.setNull(23, Types.VARCHAR);</span>
+				}
+
+<span class="pc bpc" id="L1511" title="1 of 2 branches missed.">				if (my_form.getPasswordProtectedString() == null)</span>
+				{
+<span class="fc" id="L1513">					ps.setNull(24, java.sql.Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="nc" id="L1517">					ps.setString(24, my_form.getPasswordProtectedString());</span>
+				}
+
+<span class="fc" id="L1520">				DB.setClob(ps, 25, my_form.getHtmlHead());</span>
+<span class="pc bpc" id="L1521" title="2 of 4 branches missed.">				if (my_form.getHtmlData() == null || my_form.getHtmlData().length() &lt; 1)</span>
+				{
+<span class="fc" id="L1523">					ps.setNull(26, Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="nc" id="L1527">					DB.setClob(ps, 26, my_form.getHtmlData());</span>
+				}
+<span class="fc" id="L1529">				ps.setBoolean(27, my_form.isPublicable());</span>
+<span class="fc" id="L1530">				ps.setString(28, my_form.getPerexPlace());</span>
+<span class="fc" id="L1531">				ps.setString(29, my_form.getPerexImage());</span>
+<span class="fc" id="L1532">				ps.setString(30, my_form.getPerexGroupString());</span>
+<span class="fc" id="L1533">				ps.setBoolean(31, my_form.isShowInMenu());</span>
+
+<span class="pc bpc" id="L1535" title="2 of 4 branches missed.">				if (my_form.getEventDate() != null &amp;&amp; my_form.getEventTime().trim().length() &gt; 0)</span>
+				{
+<span class="nc" id="L1537">					long time2 = DB.getTimestamp(my_form.getEventDate(), my_form.getEventTime());</span>
+<span class="nc bnc" id="L1538" title="All 2 branches missed.">					if (time2 != 0)</span>
+					{
+<span class="nc" id="L1540">						ps.setTimestamp(32, new Timestamp(time2));</span>
+					}
+					else
+					{
+<span class="nc" id="L1544">						ps.setNull(32, java.sql.Types.TIMESTAMP);</span>
+					}
+<span class="nc" id="L1546">				}</span>
+				else
+				{
+<span class="fc" id="L1549">					ps.setNull(32, java.sql.Types.DATE);</span>
+				}
+
+<span class="pc bpc" id="L1552" title="2 of 4 branches missed.">				if (my_form.getVirtualPath()==null || my_form.getVirtualPath().length()&lt;1)</span>
+				{
+<span class="nc" id="L1554">					ps.setNull(33, Types.VARCHAR);</span>
+				}
+				else
+				{
+<span class="fc" id="L1558">					ps.setString(33, my_form.getVirtualPath());</span>
+				}
+<span class="fc" id="L1560">				ps.setInt(34, my_form.getRightMenuDocId());</span>
+
+<span class="fc" id="L1562">				ps.setString(35, my_form.getFieldA());</span>
+<span class="fc" id="L1563">				ps.setString(36, my_form.getFieldB());</span>
+<span class="fc" id="L1564">				ps.setString(37, my_form.getFieldC());</span>
+<span class="fc" id="L1565">				ps.setString(38, my_form.getFieldD());</span>
+<span class="fc" id="L1566">				ps.setString(39, my_form.getFieldE());</span>
+<span class="fc" id="L1567">				ps.setString(40, my_form.getFieldF());</span>
+<span class="fc" id="L1568">				ps.setString(41, my_form.getFieldG());</span>
+<span class="fc" id="L1569">				ps.setString(42, my_form.getFieldH());</span>
+<span class="fc" id="L1570">				ps.setString(43, my_form.getFieldI());</span>
+<span class="fc" id="L1571">				ps.setString(44, my_form.getFieldJ());</span>
+<span class="fc" id="L1572">				ps.setString(45, my_form.getFieldK());</span>
+<span class="fc" id="L1573">				ps.setString(46, my_form.getFieldL());</span>
+
+<span class="fc" id="L1575">				ps.setBoolean(47, my_form.isDisableAfterEnd());</span>
+
+<span class="fc" id="L1577">				ps.setString(48, my_form.getFieldM());</span>
+<span class="fc" id="L1578">				ps.setString(49, my_form.getFieldN());</span>
+<span class="fc" id="L1579">				ps.setString(50, my_form.getFieldO());</span>
+<span class="fc" id="L1580">				ps.setString(51, my_form.getFieldP());</span>
+<span class="fc" id="L1581">				ps.setString(52, my_form.getFieldQ());</span>
+<span class="fc" id="L1582">				ps.setString(53, my_form.getFieldR());</span>
+<span class="fc" id="L1583">				ps.setString(54, my_form.getFieldS());</span>
+<span class="fc" id="L1584">				ps.setString(55, my_form.getFieldT());</span>
+
+<span class="fc" id="L1586">				ps.setBoolean(56, my_form.isRequireSsl());</span>
+
+<span class="fc" id="L1588">				ps.execute();</span>
+<span class="fc" id="L1589">				ps.close();</span>
+
+<span class="pc bpc" id="L1591" title="3 of 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Constants.getBoolean(&quot;jtdsCommit&quot;))</span>
+				{
+<span class="nc" id="L1593">					db_conn.commit();</span>
+				}
+
+<span class="fc" id="L1596">				dt.diff(&quot;after dochistory insert&quot;);</span>
+
+				//ziskaj history_id
+<span class="fc" id="L1599">				ps = db_conn.prepareStatement(&quot;SELECT max(history_id) AS max FROM documents_history WHERE doc_id=?&quot;);</span>
+<span class="fc" id="L1600">				ps.setInt(1, my_form.getDocId());</span>
+<span class="fc" id="L1601">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1602" title="1 of 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="fc" id="L1604">					history_id = rs.getInt(&quot;max&quot;);</span>
+				}
+<span class="fc" id="L1606">				rs.close();</span>
+<span class="fc" id="L1607">				ps.close();</span>
+
+<span class="pc bpc" id="L1609" title="3 of 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Constants.getBoolean(&quot;jtdsCommit&quot;))</span>
+				{
+<span class="nc" id="L1611">					db_conn.commit();</span>
+				}
+
+<span class="fc" id="L1614">				dt.diff(&quot;after dochistory get id&quot;);</span>
+
+				//DocDB.updateDataClob(db_conn, -1, history_id, data, data_asc);
+
+			}
+<span class="nc bnc" id="L1619" title="All 2 branches missed.">			else if (my_form.getApproveHistoryId()&gt;0)</span>
+			{
+				//je to volane z ApproveAction
+<span class="nc" id="L1622">				history_id = my_form.getApproveHistoryId();</span>
+<span class="nc bnc" id="L1623" title="All 2 branches missed.">				if (requestPublish)</span>
+				{
+<span class="nc" id="L1625">					was_approved = true;</span>
+				}
+				try
+				{
+<span class="nc" id="L1629">					ps = db_conn.prepareStatement(&quot;UPDATE documents_history SET approved_by=?, actual=?, awaiting_approve=?, approve_date=?, sync_status=1, available=? WHERE history_id=?&quot;);</span>
+<span class="nc" id="L1630">					ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L1631">					ps.setBoolean(2, true);</span>
+<span class="nc" id="L1632">					ps.setNull(3, Types.VARCHAR);</span>
+<span class="nc" id="L1633">					ps.setTimestamp(4, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L1634">					ps.setBoolean(5, true);</span>
+<span class="nc" id="L1635">					ps.setInt(6, history_id);</span>
+<span class="nc" id="L1636">					ps.execute();</span>
+<span class="nc" id="L1637">					ps.close();</span>
+				}
+<span class="nc" id="L1639">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L1641">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1642">				}</span>
+
+<span class="nc" id="L1644">				dt.diff(&quot;after dochist update&quot;);</span>
+			}
+
+<span class="pc bpc" id="L1647" title="1 of 2 branches missed.">			if (was_approved)</span>
+			{
+				// zmaz stare dokumenty, ktore nie su schvalene
+<span class="fc" id="L1650">				ps = db_conn.prepareStatement(&quot;SELECT history_id FROM documents_history WHERE doc_id=? AND history_id&lt;? AND publicable=? AND author_id=? &quot;);</span>
+<span class="fc" id="L1651">				ps.setInt(1, my_form.getDocId());</span>
+<span class="pc bpc" id="L1652" title="1 of 2 branches missed.">				if (my_form.getApproveHistoryId() &gt; 0)</span>
+				{
+<span class="nc" id="L1654">					ps.setInt(2, my_form.getApproveHistoryId());</span>
+				}
+				else
+				{
+<span class="fc" id="L1658">					ps.setInt(2, history_id);</span>
+				}
+<span class="fc" id="L1660">				ps.setBoolean(3, false);</span>
+<span class="fc" id="L1661">				ps.setInt(4, user.getUserId());</span>
+
+<span class="fc" id="L1663">				StringBuilder historyIds = new StringBuilder();</span>
+<span class="fc" id="L1664">				rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L1665" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc bfc" id="L1667" title="All 2 branches covered.">					if (historyIds.length() == 0)</span>
+					{
+<span class="fc" id="L1669">						historyIds.append(Integer.toString(rs.getInt(&quot;history_id&quot;)));</span>
+					}
+					else
+					{
+<span class="fc" id="L1673">						historyIds.append(',').append(rs.getInt(&quot;history_id&quot;));</span>
+					}
+				}
+<span class="fc" id="L1676">				rs.close();</span>
+<span class="fc" id="L1677">				ps.close();</span>
+
+<span class="fc" id="L1679">				dt.diff(&quot;after was_approved history_id list&quot;);</span>
+
+<span class="fc bfc" id="L1681" title="All 2 branches covered.">				if (historyIds.length() &gt; 0)</span>
+				{
+<span class="pc bpc" id="L1683" title="1 of 2 branches missed.">					if (request.getAttribute(&quot;doNotDeleteHistoryOnPublish&quot;)!=null)</span>
+					{
+						//aby sa pri zmene poradia stranky cez kontextove menu nezmazali rozpracovane verzie stranky
+						//http://intra.iway.sk/helpdesk/?bugID=7713
+
+						//musime im ale aktualizovat (mozne) zmenene hodnoty poradia usporiadania
+<span class="nc" id="L1689">						String sql2 = &quot;UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE history_id IN (&quot; + historyIds + &quot;) AND approved_by=-1&quot;;</span>
+
+<span class="nc" id="L1691">						Logger.debug(EditorDB.class, &quot;sql2=&quot;+sql2);</span>
+
+<span class="nc" id="L1693">						ps = db_conn.prepareStatement(sql2);</span>
+<span class="nc" id="L1694">						ps.setInt(1, my_form.getSortPriority());</span>
+<span class="nc" id="L1695">						ps.setInt(2, my_form.getTempId());</span>
+<span class="nc" id="L1696">						ps.setInt(3, my_form.getGroupId());</span>
+<span class="nc" id="L1697">						ps.execute();</span>
+<span class="nc" id="L1698">						ps.close();</span>
+<span class="nc" id="L1699">					}</span>
+					else
+					{
+<span class="fc" id="L1702">						String sql2 = &quot;DELETE FROM documents_history WHERE history_id IN (&quot; + historyIds + &quot;) AND approved_by=-1 AND author_id=?&quot;;</span>
+						//Logger.println(this,sql2+author_id);
+<span class="fc" id="L1704">						ps = db_conn.prepareStatement(sql2);</span>
+<span class="fc" id="L1705">						ps.setInt(1, user.getUserId());</span>
+<span class="fc" id="L1706">						ps.execute();</span>
+<span class="fc" id="L1707">						ps.close();</span>
+					}
+				}
+
+<span class="fc" id="L1711">				dt.diff(&quot;after was_approved delete&quot;);</span>
+
+				//nastav aktualne na actual=false
+<span class="fc" id="L1714">				ps = db_conn.prepareStatement(&quot;SELECT history_id FROM documents_history WHERE doc_id=? AND history_id&lt;?&quot;);</span>
+<span class="fc" id="L1715">				ps.setInt(1, my_form.getDocId());</span>
+<span class="pc bpc" id="L1716" title="1 of 2 branches missed.">				if (my_form.getApproveHistoryId() &gt; 0)</span>
+				{
+<span class="nc" id="L1718">					ps.setInt(2, my_form.getApproveHistoryId());</span>
+				}
+				else
+				{
+<span class="fc" id="L1722">					ps.setInt(2, history_id);</span>
+				}
+<span class="fc" id="L1724">				historyIds = new StringBuilder();</span>
+<span class="fc" id="L1725">				rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L1726" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc bfc" id="L1728" title="All 2 branches covered.">					if (historyIds.length() == 0)</span>
+					{
+<span class="fc" id="L1730">						historyIds.append(Integer.toString(rs.getInt(&quot;history_id&quot;)));</span>
+					}
+					else
+					{
+<span class="fc" id="L1734">						historyIds.append(',').append(rs.getInt(&quot;history_id&quot;));</span>
+					}
+				}
+<span class="fc" id="L1737">				rs.close();</span>
+<span class="fc" id="L1738">				ps.close();</span>
+
+<span class="fc" id="L1740">				dt.diff(&quot;after was_approved select&quot;);</span>
+
+<span class="fc bfc" id="L1742" title="All 2 branches covered.">				if (historyIds.length() &gt; 0 )</span>
+				{
+<span class="fc" id="L1744">					ps = db_conn.prepareStatement(&quot;UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE history_id IN (&quot; + historyIds + &quot;)&quot;);</span>
+<span class="fc" id="L1745">					ps.setBoolean(1, false);</span>
+<span class="fc" id="L1746">					ps.setNull(2, Types.VARCHAR);</span>
+					//ps.setInt(3, user.getUserId());
+<span class="fc" id="L1748">					ps.executeUpdate();</span>
+<span class="fc" id="L1749">					ps.close();</span>
+				}
+
+<span class="pc bpc" id="L1752" title="3 of 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MSSQL &amp;&amp; Constants.getBoolean(&quot;jtdsCommit&quot;))</span>
+				{
+<span class="nc" id="L1754">					db_conn.commit();</span>
+				}
+
+<span class="fc" id="L1757">				dt.diff(&quot;after was_approved&quot;);</span>
+
+
+			}
+
+			//posli maili na schvalenie
+<span class="pc bpc" id="L1763" title="1 of 2 branches missed.">			if (approveByTable.size()&gt;0)</span>
+			{
+<span class="nc" id="L1765">				sendApproveRequestEmail(history_id, approveByTable, user.getUserId(), null, request);</span>
+
+				//start- navrh na zmenu logovania v CMS (#19820)
+				UserDetails u;
+<span class="nc" id="L1769">				String approveByUsersEmail = null;</span>
+<span class="nc bnc" id="L1770" title="All 2 branches missed.">				for (Map.Entry&lt;Integer, UserDetails&gt; entry : approveByTable.entrySet())</span>
+				{
+<span class="nc" id="L1772">					u=entry.getValue();</span>
+<span class="nc bnc" id="L1773" title="All 2 branches missed.">					if (Tools.isEmail(u.getEmail()))</span>
+					{
+<span class="nc bnc" id="L1775" title="All 2 branches missed.">						if (approveByUsersEmail==null)</span>
+						{
+<span class="nc" id="L1777">							approveByUsersEmail = u.getEmail();</span>
+						}
+						else
+						{
+<span class="nc" id="L1781">							approveByUsersEmail += &quot;,&quot; + u.getEmail(); //NOSONAR</span>
+						}
+					}
+<span class="nc" id="L1784">				}</span>
+<span class="nc" id="L1785">				Adminlog.add(Adminlog.TYPE_SAVEDOC, &quot;Poziadane o schvalenie stranky &quot;+my_form.getTitle()+&quot; / &quot;+my_form.getDocId()+&quot; / &quot;+history_id+&quot;, ziadost zaslana na emaili: &quot;+approveByUsersEmail, my_form.getDocId(), history_id);</span>
+				//koniec- navrh na zmenu logovania v CMS (#19820)
+
+<span class="nc" id="L1788">				dt.diff(&quot;after sendApproveRequestEmail&quot;);</span>
+<span class="nc" id="L1789">			}</span>
+<span class="fc bfc" id="L1790" title="All 2 branches covered.">			else if (notifyTable.size()&gt;0)</span>
+			{
+				//ak nie je nic na schvalenie, posielame info emailom
+				//else if je preto, ze info sa posiela az po schvaleni
+
+<span class="fc" id="L1795">				String title = my_form.getTitle(); //.toLowerCase();</span>
+				//title = DB.internationalToEnglish(title).toLowerCase();
+
+<span class="fc" id="L1798">				String notifyEmails = null;</span>
+				UserDetails u;
+<span class="fc bfc" id="L1800" title="All 2 branches covered.">				for (Map.Entry&lt;Integer, UserDetails&gt; entry : notifyTable.entrySet())</span>
+				{
+<span class="fc" id="L1802">					u = entry.getValue();</span>
+
+<span class="pc bpc" id="L1804" title="1 of 2 branches missed.">					if (notifyEmails==null)</span>
+					{
+<span class="fc" id="L1806">						notifyEmails = u.getEmail();</span>
+					}
+					else
+					{
+<span class="nc" id="L1810">						notifyEmails += &quot;,&quot; + u.getEmail(); //NOSONAR</span>
+					}
+<span class="fc" id="L1812">				}</span>
+
+<span class="fc" id="L1814">				String url = DocDB.getInstance().getDocLink(my_form.getDocId(), null, true, request);  // Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + my_form.getDocId();</span>
+
+<span class="fc" id="L1816">				StringBuilder message = new StringBuilder(&quot;&lt;strong&gt;&quot;).append(properties.getText(&quot;doc.notify.intro&quot;)).append(&quot;:&lt;/strong&gt;&lt;br&gt;\n&quot;);</span>
+<span class="fc" id="L1817">				message.append(&quot;&lt;strong&gt;&quot;).append(title).append(&quot;&lt;/strong&gt;&lt;br&gt;\n&quot;);</span>
+<span class="fc" id="L1818">				message.append(properties.getText(&quot;doc.notify.dir&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="fc" id="L1819">				message.append(groupsDB.getPath(my_form.getGroupId())).append(&quot;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+<span class="fc" id="L1820">				message.append(properties.getText(&quot;doc.notify.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="fc" id="L1821">				message.append(&quot;&lt;a href='&quot;+url+&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+
+<span class="fc" id="L1823">				message.append(user.getFullName()).append(&quot; &amp;lt;&quot;).append(user.getEmail()).append(&quot;&amp;gt;&quot;);</span>
+
+<span class="fc" id="L1825">				String subject = properties.getText(&quot;doc.notify.subject&quot;) + &quot;: &quot; + title;</span>
+
+<span class="fc" id="L1827">				SendMail.send(user.getFullName(), user.getEmail(), notifyEmails, subject, message.toString(), request);</span>
+
+<span class="fc" id="L1829">				dt.diff(&quot;after sendNotifyEmail&quot;);</span>
+			}
+
+<span class="fc" id="L1832">			setDefaultDocId(my_form.getGroupId(), my_form.getDocId());</span>
+
+<span class="fc" id="L1834">			db_conn.close();</span>
+<span class="fc" id="L1835">			db_conn = null;</span>
+<span class="fc" id="L1836">			ps = null;</span>
+<span class="fc" id="L1837">			rs = null;</span>
+
+<span class="pc bpc" id="L1839" title="1 of 2 branches missed.">			if (requestPublish)</span>
+			{
+<span class="pc bpc" id="L1841" title="1 of 2 branches missed.">				if (Constants.getBoolean(&quot;exportFlash&quot;)) XmlExport.flashExport(&quot;/flash_xml/&quot;+my_form.getDocId()+&quot;.xml&quot;, my_form.getDocId());</span>
+
+				//	toto dava info pre ApproveAction ze to zbehlo OK
+<span class="fc" id="L1844">				request.setAttribute(&quot;saveOK&quot;, &quot;true&quot;);</span>
+			}
+
+			//Logger.println(this,my_form.getData());
+		}
+<span class="nc" id="L1849">		catch (Exception sqle)</span>
+		{
+<span class="nc" id="L1851">			Logger.error(EditorDB.class,&quot;DB spadlo spojenie&quot;);</span>
+<span class="nc" id="L1852">			sk.iway.iwcm.Logger.error(sqle);</span>
+<span class="nc" id="L1853">			session.setAttribute(&quot;cssError&quot;, Prop.getTxt(&quot;editor.ajax.save.error&quot;));</span>
+		}
+		finally{
+			try{
+<span class="pc bpc" id="L1857" title="1 of 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="pc bpc" id="L1858" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L1859" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L1860">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+
+<span class="fc" id="L1863">		dt.diff(&quot;after database close&quot;);</span>
+
+<span class="pc bpc" id="L1865" title="1 of 2 branches missed.">		if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML)</span>
+		{
+<span class="fc" id="L1867">			List&lt;DocDetails&gt; updated = fixRenamedVirtualPath(request, my_form.getDocId(), my_form.getVirtualPath());</span>
+<span class="pc bpc" id="L1868" title="1 of 2 branches missed.">			if (updated.size()&gt;0)</span>
+			{
+<span class="nc" id="L1870">				request.getSession().setAttribute(&quot;updatedDocs&quot;, updated);</span>
+			}
+<span class="fc" id="L1872">			dt.diff(&quot;after fixRenamedVirtualPath&quot;);</span>
+		}
+
+		//restore cache - v approve history nastavujem 0 ked nechcem aktualizaciu ani zapis do historie
+<span class="pc bpc" id="L1876" title="3 of 6 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;dontRefreshDocDB&quot;))==false &amp;&amp; &quot;true&quot;.equals(request.getAttribute(&quot;dontRefreshDocDB&quot;))==false &amp;&amp; my_form.getApproveHistoryId()!=0)</span>
+		{
+<span class="pc bpc" id="L1878" title="3 of 6 branches missed.">			if (my_form.getGroupId() == Constants.getInt(&quot;tempGroupId&quot;) || my_form.getGroupId() == Constants.getInt(&quot;menuGroupId&quot;) || my_form.getGroupId() == Constants.getInt(&quot;headerFooterGroupId&quot;))</span>
+			{
+				//v system adresari pre istotu spravim klasicky refresh
+<span class="nc" id="L1881">				docDB = DocDB.getInstance(true);</span>
+<span class="nc" id="L1882">				dt.diff(&quot;after DocDB.getInstance&quot;);</span>
+				/*spravime update dokumentu v indexe */
+<span class="nc" id="L1884">				docDB.updateInternalCaches(my_form.getDocId());</span>
+			}
+			else
+			{
+<span class="fc" id="L1888">				docDB.updateInternalCaches(my_form.getDocId());</span>
+<span class="fc" id="L1889">				dt.diff(&quot;after DocDB.update internal caches&quot;);</span>
+			}
+		}
+
+<span class="pc bpc" id="L1893" title="3 of 6 branches missed.">		if (my_form.getGroupId() == Constants.getInt(&quot;tempGroupId&quot;) || my_form.getGroupId() == Constants.getInt(&quot;menuGroupId&quot;) || my_form.getGroupId() == Constants.getInt(&quot;headerFooterGroupId&quot;))</span>
+		{
+			//refreshnut aj sablony
+			//GroupsDB grDB = GroupsDB.getInstance(servlet.getServletContext(), true, DBPool.getDBName(request));
+<span class="nc" id="L1897">			TemplatesDB.getInstance(true);</span>
+<span class="nc" id="L1898">			dt.diff(&quot;after templates DB getInstance&quot;);</span>
+		}
+
+		//ulozenie poznamky pre redaktorov k webstranke
+<span class="fc" id="L1902">		DocNoteBean note = DocNoteDB.getInstance().getDocNote(my_form.getDocId(), -1);</span>
+<span class="pc bpc" id="L1903" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(my_form.getNote()))</span>
+		{
+			//ak je my_form.isPublicable()==true, tak sa stranka publikuje v buducnosti. Poznamka sa nastavy v DocDB.copyDHistory(List&lt;PublicableForm&gt; copyDHtoD) a nie tu
+<span class="nc bnc" id="L1906" title="All 4 branches missed.">			if(&quot;1&quot;.equals(my_form.getPublish()) &amp;&amp; !my_form.isPublicable())</span>
+			{
+<span class="nc bnc" id="L1908" title="All 2 branches missed.">				if(note == null)</span>
+<span class="nc" id="L1909">					note = new DocNoteBean();</span>
+<span class="nc" id="L1910">				note.setDocId(my_form.getDocId());</span>
+<span class="nc" id="L1911">				note.setHistoryId(-1);</span>
+<span class="nc" id="L1912">				note.setNote(my_form.getNote());</span>
+<span class="nc" id="L1913">				note.setUserId(my_form.getAuthorId());</span>
+<span class="nc" id="L1914">				note.setCreated(new Date());</span>
+<span class="nc" id="L1915">				note.save();</span>
+			}
+
+			//historia sa ulozi stale
+<span class="nc" id="L1919">			DocNoteBean noteHistory = DocNoteDB.getInstance().getDocNote(-1, history_id);</span>
+<span class="nc bnc" id="L1920" title="All 2 branches missed.">			if(noteHistory == null)</span>
+<span class="nc" id="L1921">				noteHistory = new DocNoteBean();</span>
+<span class="nc" id="L1922">			noteHistory.setDocId(-1);</span>
+<span class="nc" id="L1923">			noteHistory.setHistoryId(history_id);</span>
+<span class="nc" id="L1924">			noteHistory.setNote(my_form.getNote());</span>
+<span class="nc" id="L1925">			noteHistory.setUserId(my_form.getAuthorId());</span>
+<span class="nc" id="L1926">			noteHistory.setCreated(new Date());</span>
+<span class="nc" id="L1927">			noteHistory.save();</span>
+<span class="nc" id="L1928">		}</span>
+<span class="pc bpc" id="L1929" title="1 of 2 branches missed.">		else if(note!=null)</span>
+		{
+			//ak je zadana poznamka z formulara prazdna, tak existujucu note k stranke vymazeme
+<span class="nc" id="L1932">			note.delete();</span>
+		}
+
+<span class="fc" id="L1935">		dt.diff(&quot;after instances&quot;);</span>
+
+<span class="fc" id="L1937">		String newPageAppend = &quot;&quot;;</span>
+<span class="fc bfc" id="L1938" title="All 2 branches covered.">		if (isNewPage) newPageAppend = &quot; (newpage)&quot;;</span>
+
+<span class="fc" id="L1940">		Adminlog.add(Adminlog.TYPE_SAVEDOC, &quot;EditorDB&quot;+newPageAppend+&quot; doc_id:&quot; + my_form.getDocId()+&quot; history_id:&quot;+history_id+&quot; title: &quot; + my_form.getTitle()+&quot; path: &quot;+my_form.getVirtualPath(), my_form.getDocId(), history_id);</span>
+
+<span class="fc" id="L1942">		dt.diff(&quot;done&quot;);</span>
+
+		//ak su nastavene syncId tak zapis aj to, potrebne pre synchronizaciu struktury
+<span class="fc bfc" id="L1945" title="All 2 branches covered.">		if (my_form.getSyncId()&gt;0) {</span>
+<span class="fc" id="L1946">			new SimpleQuery().execute(&quot;UPDATE documents SET sync_id=? WHERE doc_id=?&quot;, my_form.getSyncId(), my_form.getDocId());</span>
+		}
+
+		//publishEvent(EditorAfterSaveEvent.class, my_form);
+<span class="fc" id="L1950">		(new WebjetEvent&lt;&gt;(my_form, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
+
+<span class="fc" id="L1952">		return(history_id);</span>
+	}
+
+	/**
+	 * @param myForm
+	 */
+	public static void nonBreakingSpaceReplacement(EditorForm myForm)
+	{
+<span class="fc" id="L1960">		String conjunctions = Constants.getString(&quot;editorSingleCharNbsp&quot;);</span>
+<span class="pc bpc" id="L1961" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(conjunctions))</span>
+		{
+<span class="fc" id="L1963">			myForm.setData(myForm.getData().replaceAll(&quot;(?i)(\\s|&amp;nbsp;)(&quot;+conjunctions.replace(',','|')+&quot;)\\s&quot;,&quot;$1$2&amp;nbsp;&quot;));</span>
+			//volame dva krat, pretoze sa nenahradzali 2 pismena za sebou, napr. Test a v case
+<span class="fc" id="L1965">			myForm.setData(myForm.getData().replaceAll(&quot;(?i)(\\s|&amp;nbsp;)(&quot;+conjunctions.replace(',','|')+&quot;)\\s&quot;,&quot;$1$2&amp;nbsp;&quot;));</span>
+		}
+
+<span class="fc" id="L1968">	}</span>
+
+	/**
+	 * Ak sa zmeni virtual path stranky aktualizuje vsetky doterajsie linky
+	 * @param request
+	 * @param docId
+	 * @param newVirtualPath
+	 * @return
+	 */
+	private static List&lt;DocDetails&gt; fixRenamedVirtualPath(HttpServletRequest request, int docId, String newVirtualPath)
+	{
+<span class="fc" id="L1979">		List&lt;DocDetails&gt; updated = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L1981" title="2 of 4 branches missed.">		if (Tools.isEmpty(newVirtualPath) || Constants.getBoolean(&quot;editorDisableAutomaticRedirect&quot;))</span>
+		{
+<span class="nc" id="L1983">			return(updated);</span>
+		}
+
+<span class="fc" id="L1986">		newVirtualPath = DocDB.normalizeVirtualPath(newVirtualPath);</span>
+
+		//	najdi web stranky, co treba premenovat...
+<span class="fc" id="L1989">		String oldLinkURL = DocDB.getURLFromDocId(docId, request);</span>
+<span class="fc" id="L1990">		Logger.println(EditorDB.class, &quot;OldLinkURL: &quot; + oldLinkURL);</span>
+<span class="fc" id="L1991">		String domain = null;</span>
+<span class="pc bpc" id="L1992" title="1 of 4 branches missed.">		if (Tools.isNotEmpty(oldLinkURL) &amp;&amp; !oldLinkURL.equals(&quot;/showdoc.do?docid=&quot;+docId))</span>
+		{
+<span class="fc" id="L1994">			String newLinkURL = newVirtualPath;</span>
+			//Logger.println(EditorDB.class, &quot;newLinkURL=&quot;+newLinkURL);
+
+<span class="fc bfc" id="L1997" title="All 2 branches covered.">			if (oldLinkURL.compareTo(newLinkURL) != 0)</span>
+			{
+<span class="fc" id="L1999">				Connection db_conn = null;</span>
+<span class="fc" id="L2000">				PreparedStatement ps = null;</span>
+<span class="fc" id="L2001">				ResultSet rs = null;</span>
+				try
+				{
+<span class="fc" id="L2004">					GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2005">					DocDB docDB = DocDB.getInstance();</span>
+
+<span class="fc" id="L2007">					String inSql = &quot;&quot;;</span>
+					//zisti domenu (ak treba) a sprav to iba na substrankach domeny
+<span class="pc bpc" id="L2009" title="1 of 2 branches missed.">					if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true)</span>
+					{
+<span class="fc" id="L2011">						DocDetails doc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L2012" title="1 of 2 branches missed.">						if (doc != null)</span>
+						{
+<span class="fc" id="L2014">							GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="fc" id="L2015">							domain = group.getDomainName();</span>
+<span class="fc" id="L2016">							inSql = &quot; AND group_id IN (&quot;+groupsDB.getSubgroupsIds(domain)+&quot;)&quot;;</span>
+						}
+					}
+
+<span class="fc" id="L2020">					Logger.debug(EditorDB.class, &quot;fixRenamedVirtualPath: old=&quot; + oldLinkURL + &quot; new=&quot; + newLinkURL+&quot; domain=&quot;+domain);</span>
+
+					//premenuj stranky kde sa nachadza text
+<span class="fc" id="L2023">					updated = replaceUrl(oldLinkURL, newLinkURL, domain);</span>
+
+					//aktualizuj presmerovania
+<span class="fc" id="L2026">					db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L2027">					String sql = &quot;UPDATE documents SET external_link=? WHERE external_link=?&quot;+inSql;</span>
+<span class="fc" id="L2028">					Logger.debug(EditorDB.class, &quot;fixRenamedVirtualPath sql1: &quot;+sql+&quot; new=&quot;+newVirtualPath+&quot; old=&quot;+oldLinkURL);</span>
+<span class="fc" id="L2029">					ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L2030">					ps.setString(1, newLinkURL);</span>
+<span class="fc" id="L2031">					ps.setString(2, oldLinkURL);</span>
+<span class="fc" id="L2032">					ps.execute();</span>
+<span class="fc" id="L2033">					ps.close();</span>
+
+<span class="fc" id="L2035">					inSql = &quot;&quot;;</span>
+<span class="pc bpc" id="L2036" title="1 of 2 branches missed.">					if (domain != null)</span>
+					{
+<span class="fc" id="L2038">						inSql = &quot;-1&quot;;</span>
+						//ziskaj najskor cely zoznam a priprav si ID medii na aktualizaciu
+<span class="fc" id="L2040">						ps = db_conn.prepareStatement(&quot;SELECT distinct(media_fk_id) FROM media WHERE media_link=? AND media_fk_table_name=?&quot;);</span>
+<span class="fc" id="L2041">						ps.setString(1, oldLinkURL);</span>
+<span class="fc" id="L2042">						ps.setString(2, &quot;documents&quot;);</span>
+<span class="fc" id="L2043">						rs = ps.executeQuery();</span>
+<span class="fc" id="L2044">						StringBuilder inSqlBuffer = new StringBuilder();</span>
+<span class="pc bpc" id="L2045" title="1 of 2 branches missed.">						while (rs.next())</span>
+						{
+<span class="nc" id="L2047">							int mediaDocId = rs.getInt(1);</span>
+<span class="nc" id="L2048">							String docDomain = docDB.getDomain(mediaDocId);</span>
+<span class="nc bnc" id="L2049" title="All 2 branches missed.">							if (docDomain.equals(domain))</span>
+							{
+<span class="nc" id="L2051">								inSqlBuffer.append(',').append(mediaDocId);</span>
+
+							}
+<span class="nc" id="L2054">						}</span>
+<span class="fc" id="L2055">						inSql = inSqlBuffer.toString();</span>
+<span class="pc bpc" id="L2056" title="1 of 2 branches missed.">						if (Tools.isEmpty(inSql)) inSql = &quot;-1&quot;;</span>
+<span class="fc" id="L2057">						inSql = &quot; AND media_fk_id IN (&quot;+inSql+&quot;) AND media_fk_table_name='documents'&quot;;</span>
+<span class="fc" id="L2058">						rs.close();</span>
+<span class="fc" id="L2059">						ps.close();</span>
+<span class="fc" id="L2060">						rs = null;</span>
+					}
+					//aktualizuj media
+<span class="fc" id="L2063">					sql = &quot;UPDATE media SET media_link=? WHERE media_link=? &quot;+inSql;</span>
+<span class="fc" id="L2064">					Logger.debug(EditorDB.class, &quot;fixRenamedVirtualPath sql2: &quot;+sql);</span>
+<span class="fc" id="L2065">					ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L2066">					ps.setString(1, newLinkURL);</span>
+<span class="fc" id="L2067">					ps.setString(2, oldLinkURL);</span>
+<span class="fc" id="L2068">					ps.execute();</span>
+<span class="fc" id="L2069">					ps.close();</span>
+
+<span class="fc" id="L2071">					db_conn.close();</span>
+<span class="fc" id="L2072">					ps = null;</span>
+<span class="fc" id="L2073">					db_conn = null;</span>
+				}
+<span class="nc" id="L2075">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L2077">					sk.iway.iwcm.Logger.error(ex);</span>
+				}
+				finally
+				{
+					try
+					{
+<span class="pc bpc" id="L2083" title="1 of 2 branches missed.">						if (rs != null)</span>
+<span class="nc" id="L2084">							rs.close();</span>
+<span class="pc bpc" id="L2085" title="1 of 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L2086">							ps.close();</span>
+<span class="pc bpc" id="L2087" title="1 of 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L2088">							db_conn.close();</span>
+					}
+<span class="nc" id="L2090">					catch (Exception ex2)</span>
+					{
+<span class="fc" id="L2092">					}</span>
+				}
+
+				//TODO: aktualizuj linky v suboroch (ak niekde su)
+
+				//	zapis presmerovanie
+<span class="fc" id="L2098">				UrlRedirectDB.addRedirect(oldLinkURL, newVirtualPath, domain, 301);</span>
+			}
+		}
+
+<span class="fc" id="L2102">		return(updated);</span>
+	}
+
+	/**
+	 * Nahradi odkazy z povodneho na nove URL vo vsetkych strankach
+	 * @param oldLinkURL
+	 * @param newLinkURL
+	 * @return
+	 */
+	public static List&lt;DocDetails&gt; replaceUrl(String oldLinkURL, String newLinkURL, String domain)
+	{
+<span class="fc" id="L2113">		List&lt;DocDetails&gt; docsUpdated = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L2115" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;editorQuickUrlFix&quot;)==true) return docsUpdated;</span>
+
+<span class="fc" id="L2117">		DebugTimer dt = new DebugTimer(&quot;replaceUrl&quot;);</span>
+<span class="fc" id="L2118">		Connection db_conn = null;</span>
+<span class="fc" id="L2119">		PreparedStatement ps = null;</span>
+<span class="fc" id="L2120">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L2123">			dt.diff(&quot;starting&quot;);</span>
+
+<span class="fc" id="L2125">			String oldLinkURL2 = oldLinkURL;</span>
+<span class="pc bpc" id="L2126" title="1 of 4 branches missed.">			if (oldLinkURL.length()&gt;2 &amp;&amp; oldLinkURL.endsWith(&quot;/&quot;))</span>
+			{
+<span class="fc" id="L2128">				oldLinkURL2 = oldLinkURL.substring(0, oldLinkURL.length()-1);</span>
+			}
+<span class="fc" id="L2130">			String inSql = &quot;&quot;;</span>
+			//zisti domenu (ak treba) a sprav to iba na substrankach domeny
+<span class="pc bpc" id="L2132" title="2 of 4 branches missed.">			if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true &amp;&amp; Tools.isNotEmpty(domain))</span>
+			{
+<span class="fc" id="L2134">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2135">				inSql = &quot; AND group_id IN (&quot;+groupsDB.getSubgroupsIds(domain)+&quot;)&quot;;</span>
+			}
+
+<span class="fc" id="L2138">			String sql = &quot;SELECT doc_id, title, data FROM documents WHERE data LIKE ? &quot;+inSql;</span>
+
+<span class="fc" id="L2140">			dt.diff(&quot;getting data, sql=&quot;+sql);</span>
+
+			//ziskaj udaje z db
+<span class="fc" id="L2143">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L2144">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L2145">			ps.setString(1, &quot;%&quot;+oldLinkURL2+&quot;%&quot;);</span>
+<span class="fc" id="L2146">			rs = ps.executeQuery();</span>
+<span class="fc" id="L2147">			List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L2148" title="1 of 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L2150">				DocDetails doc = new DocDetails();</span>
+<span class="nc" id="L2151">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L2152">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L2153">				doc.setData(DB.getDbString(rs, &quot;data&quot;));</span>
+
+<span class="nc" id="L2155">				dt.diff(&quot;mam: &quot; + doc.getTitle());</span>
+
+<span class="nc" id="L2157">				docs.add(doc);</span>
+<span class="nc" id="L2158">			}</span>
+<span class="fc" id="L2159">			rs.close();</span>
+<span class="fc" id="L2160">			ps.close();</span>
+
+<span class="fc" id="L2162">			dt.diff(&quot;mam, pocet:&quot;+docs.size());</span>
+
+			//ok, mame zoznam, updatni to
+<span class="pc bpc" id="L2165" title="1 of 2 branches missed.">			for (DocDetails doc : docs)</span>
+			{
+<span class="nc" id="L2167">				Logger.println(EditorDB.class,&quot;updating link in: &quot;+doc.getTitle());</span>
+
+<span class="nc" id="L2169">				String oldData = doc.getData();</span>
+<span class="nc" id="L2170">				doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL+&quot;'&quot;, &quot;'&quot;+newLinkURL+&quot;'&quot;));</span>
+<span class="nc" id="L2171">				doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL+&quot;\&quot;&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;\&quot;&quot;));</span>
+				//toto robilo problem ked sa URL / menilo na /nieco-ine, menilo to aj 0903 / 100 100
+				//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL+&quot; &quot;, &quot; &quot;+newLinkURL+&quot; &quot;));
+<span class="nc" id="L2174">				doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL+&quot;#&quot;, &quot;'&quot;+newLinkURL+&quot;#&quot;));</span>
+<span class="nc" id="L2175">				doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL+&quot;#&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;#&quot;));</span>
+				//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL+&quot;#&quot;, &quot; &quot;+newLinkURL+&quot;#&quot;));
+
+<span class="nc bnc" id="L2178" title="All 4 branches missed.">				if (oldLinkURL.length()&gt;2 &amp;&amp; oldLinkURL.endsWith(&quot;/&quot;))</span>
+				{
+					//fix na chybajuce koncove lomitko
+<span class="nc" id="L2181">					doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL2+&quot;'&quot;, &quot;'&quot;+newLinkURL+&quot;'&quot;));</span>
+<span class="nc" id="L2182">					doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL2+&quot;\&quot;&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;\&quot;&quot;));</span>
+					//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL2+&quot; &quot;, &quot; &quot;+newLinkURL+&quot; &quot;));
+<span class="nc" id="L2184">					doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL2+&quot;#&quot;, &quot;'&quot;+newLinkURL+&quot;#&quot;));</span>
+<span class="nc" id="L2185">					doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL2+&quot;#&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;#&quot;));</span>
+					//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL2+&quot;#&quot;, &quot; &quot;+newLinkURL+&quot;#&quot;));
+				}
+<span class="nc bnc" id="L2188" title="All 4 branches missed.">				else if (oldLinkURL.length()&gt;2 &amp;&amp; oldLinkURL.endsWith(&quot;.html&quot;)==false)</span>
+				{
+					//ak je linka bez koncoveho /, toto to vyriesi
+<span class="nc" id="L2191">					oldLinkURL2 = oldLinkURL+&quot;/&quot;;</span>
+
+<span class="nc" id="L2193">					doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL2+&quot;'&quot;, &quot;'&quot;+newLinkURL+&quot;'&quot;));</span>
+<span class="nc" id="L2194">					doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL2+&quot;\&quot;&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;\&quot;&quot;));</span>
+					//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL2+&quot; &quot;, &quot; &quot;+newLinkURL+&quot; &quot;));
+<span class="nc" id="L2196">					doc.setData(Tools.replace(doc.getData(), &quot;'&quot;+oldLinkURL2+&quot;#&quot;, &quot;'&quot;+newLinkURL+&quot;#&quot;));</span>
+<span class="nc" id="L2197">					doc.setData(Tools.replace(doc.getData(), &quot;\&quot;&quot;+oldLinkURL2+&quot;#&quot;, &quot;\&quot;&quot;+newLinkURL+&quot;#&quot;));</span>
+					//doc.setData(Tools.replace(doc.getData(), &quot; &quot;+oldLinkURL2+&quot;#&quot;, &quot; &quot;+newLinkURL+&quot;#&quot;));
+				}
+
+<span class="nc bnc" id="L2201" title="All 2 branches missed.">				if (oldData.equals(doc.getData()) == false)</span>
+				{
+<span class="nc" id="L2203">					dt.diff(&quot;updating doc:&quot;+doc.getDocId());</span>
+
+<span class="nc" id="L2205">					ps = db_conn.prepareStatement(&quot;UPDATE documents SET data=?, data_asc=?, sync_status=1 WHERE doc_id=?&quot;);</span>
+					//ps.setString(1, doc.getData());
+					//ps.setString(2, DB.internationalToEnglish(doc.getData()).toLowerCase());
+<span class="nc" id="L2208">					DB.setClob(ps, 1, doc.getData());</span>
+<span class="nc" id="L2209">					DB.setClob(ps, 2, DB.internationalToEnglish(doc.getData()).toLowerCase());</span>
+
+<span class="nc" id="L2211">					ps.setInt(3, doc.getDocId());</span>
+<span class="nc" id="L2212">					ps.executeUpdate();</span>
+<span class="nc" id="L2213">					ps.close();</span>
+
+<span class="nc" id="L2215">					docsUpdated.add(doc);</span>
+				}
+
+				//DocDB.updateDataClob(db_conn, doc.getDocId(), -1, doc.getData(), DB.internationalToEnglish(doc.getData()).toLowerCase());
+<span class="nc" id="L2219">			}</span>
+
+<span class="fc" id="L2221">			dt.diff(&quot;done&quot;);</span>
+
+<span class="fc" id="L2223">			db_conn.close();</span>
+<span class="fc" id="L2224">			db_conn = null;</span>
+<span class="fc" id="L2225">			rs = null;</span>
+<span class="fc" id="L2226">			ps = null;</span>
+		}
+<span class="nc" id="L2228">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+		finally{
+			try{
+<span class="pc bpc" id="L2231" title="1 of 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="pc bpc" id="L2232" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L2233" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L2234">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+
+<span class="fc" id="L2237">		return(docsUpdated);</span>
+	}
+
+	/**
+	 *  Gets the cleanBody
+	 *
+	 *@param  data     Description of the Parameter
+	 *@return          The cleanBody value
+	 */
+	public static String getCleanBody(String data)
+	{
+		//odstran vsetko pred &lt;body&gt; a po &lt;/body&gt;
+<span class="fc" id="L2249">		String data_lcase = data.toLowerCase();</span>
+
+<span class="pc bpc" id="L2251" title="1 of 2 branches missed.">		if (data_lcase.contains(&quot;&lt;!-- zaciatok textu iwcm editor --&gt;&quot;))</span>
+		{
+<span class="nc" id="L2253">			int index = data_lcase.indexOf(&quot;&lt;!-- zaciatok textu iwcm editor --&gt;&quot;);</span>
+			int index2;
+<span class="nc bnc" id="L2255" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L2257">				index2 = data_lcase.indexOf(&quot;&gt;&quot;, index + 1);</span>
+<span class="nc bnc" id="L2258" title="All 4 branches missed.">				if (index2 &gt; index &amp;&amp; index2 &lt; data_lcase.length())</span>
+				{
+<span class="nc" id="L2260">					data = data.substring(index2 + 1);</span>
+				}
+			}
+
+<span class="nc" id="L2264">			index = data.toLowerCase().indexOf(&quot;&lt;!-- koniec textu iwcm editor --&gt;&quot;);</span>
+<span class="nc bnc" id="L2265" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L2267">				data = data.substring(0, index);</span>
+			}
+		}
+
+<span class="fc" id="L2271">		data_lcase = data.toLowerCase();</span>
+
+		//orezanie HTML
+<span class="pc bpc" id="L2274" title="5 of 6 branches missed.">		if (Tools.isEmpty(Constants.getString(&quot;htmlImportStart&quot;)) == false &amp;&amp; Tools.isEmpty(Constants.getString(&quot;htmlImportEnd&quot;)) == false &amp;&amp; data_lcase.contains(Constants.getString(&quot;htmlImportStart&quot;).toLowerCase()))</span>
+		{
+<span class="nc" id="L2276">			int index = data_lcase.indexOf(Constants.getString(&quot;htmlImportStart&quot;).toLowerCase());</span>
+			int index2;
+<span class="nc bnc" id="L2278" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L2280">				index2 = data_lcase.indexOf(&quot;&gt;&quot;, index + 1);</span>
+<span class="nc bnc" id="L2281" title="All 4 branches missed.">				if (index2 &gt; index &amp;&amp; index2 &lt; data_lcase.length())</span>
+				{
+					//odrezeme zaciatok
+<span class="nc" id="L2284">					data = data.substring(index2 + 1);</span>
+				}
+			}
+
+<span class="nc" id="L2288">			index = data.toLowerCase().indexOf(Constants.getString(&quot;htmlImportEnd&quot;).toLowerCase());</span>
+<span class="nc bnc" id="L2289" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+				//odrezeme koniec
+<span class="nc" id="L2292">				data = data.substring(0, index);</span>
+			}
+<span class="nc" id="L2294">		}</span>
+		else
+		{
+<span class="fc" id="L2297">			int index = data_lcase.indexOf(&quot;&lt;body&quot;);</span>
+			int index2;
+<span class="pc bpc" id="L2299" title="1 of 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L2301">				index2 = data_lcase.indexOf(&quot;&gt;&quot;, index + 1);</span>
+<span class="nc bnc" id="L2302" title="All 4 branches missed.">				if (index2 &gt; index &amp;&amp; index2 &lt; data_lcase.length())</span>
+				{
+<span class="nc" id="L2304">					data = data.substring(index2 + 1);</span>
+				}
+			}
+
+<span class="fc" id="L2308">			index = data.toLowerCase().indexOf(&quot;&lt;/body&gt;&quot;);</span>
+<span class="pc bpc" id="L2309" title="1 of 2 branches missed.">			if (index &gt; 0)</span>
+			{
+<span class="nc" id="L2311">				data = data.substring(0, index);</span>
+			}
+		}
+<span class="fc" id="L2314">		return (data);</span>
+	}
+
+	/**
+	 * skopiruje niektore udaje z Identity do EditorUserAccessBean
+	 * @param user
+	 * @return
+	 */
+	public static EditorUserAccessBean setEditorUserAccesBean(UserDetails user)
+	{
+<span class="nc" id="L2324">		EditorUserAccessBean userDetail = new EditorUserAccessBean();</span>
+<span class="nc" id="L2325">		userDetail.setUser(user);</span>
+<span class="nc" id="L2326">		userDetail.setDatumPoslednejAktivity(Tools.getNow());</span>
+
+<span class="nc" id="L2328">		return userDetail;</span>
+	}
+
+	/**
+	 * aktualizuje zoznam uzivatelov ktory edituju stranku s docId
+	 * @param docId
+	 * @return
+	 */
+	public static void updateUserAccessList(int docId, UserDetails user)
+	{
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L2339">		Map&lt;Integer, List&lt;EditorUserAccessBean&gt;&gt; userList = (Map&lt;Integer, List&lt;EditorUserAccessBean&gt;&gt;)Constants.getServletContext().getAttribute(&quot;userAccessList&quot;);</span>
+		try
+		{
+			//zistim aj totozne stranky z multikategorii
+<span class="nc" id="L2343">			int masterId = MultigroupMappingDB.getMasterDocId(docId);</span>
+<span class="nc bnc" id="L2344" title="All 2 branches missed.">			List&lt;MultigroupMapping&gt; slavesId = MultigroupMappingDB.getSlaveMappings(masterId &gt; 0 ? masterId : docId);</span>
+<span class="nc" id="L2345">			List&lt;Integer&gt; docIdList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L2346" title="All 2 branches missed.">			if(masterId &gt; 0)</span>
+<span class="nc" id="L2347">				docIdList.add(Integer.valueOf(masterId));</span>
+<span class="nc bnc" id="L2348" title="All 4 branches missed.">			if(slavesId != null &amp;&amp; slavesId.size() &gt; 0)</span>
+<span class="nc bnc" id="L2349" title="All 2 branches missed.">				for(MultigroupMapping mm : slavesId)</span>
+<span class="nc" id="L2350">					docIdList.add(Integer.valueOf(mm.getDocId()));</span>
+<span class="nc bnc" id="L2351" title="All 4 branches missed.">			if(masterId &lt; 1 || docIdList.size() &lt; 1)</span>
+<span class="nc" id="L2352">				docIdList.add(Integer.valueOf(docId));</span>
+
+<span class="nc bnc" id="L2354" title="All 2 branches missed.">			for(Integer id : docIdList)</span>
+			{
+<span class="nc" id="L2356">				List&lt;EditorUserAccessBean&gt; userListAl = null;</span>
+<span class="nc bnc" id="L2357" title="All 4 branches missed.">				if(userList != null &amp;&amp; userList.size() &gt; 0)</span>
+<span class="nc" id="L2358">					userListAl = userList.get(id);</span>
+				else
+<span class="nc" id="L2360">					userList = new Hashtable&lt;&gt;();</span>
+
+<span class="nc bnc" id="L2362" title="All 2 branches missed.">				if(userListAl == null)</span>
+<span class="nc" id="L2363">					userListAl = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L2365">				List&lt;EditorUserAccessBean&gt; toRemove = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2366">				EditorUserAccessBean updateUser = null;</span>
+<span class="nc bnc" id="L2367" title="All 2 branches missed.">				for (int i = 0; i &lt; userListAl.size(); i++)</span>
+				{
+
+<span class="nc" id="L2370">					EditorUserAccessBean editorUserAccessBean = userListAl.get(i);</span>
+<span class="nc bnc" id="L2371" title="All 4 branches missed.">					if (editorUserAccessBean==null || editorUserAccessBean.getUser()==null) continue;</span>
+
+<span class="nc bnc" id="L2373" title="All 2 branches missed.">					if(editorUserAccessBean.getUser().getUserId() == user.getUserId())</span>
+					{
+<span class="nc" id="L2375">						updateUser = editorUserAccessBean;</span>
+<span class="nc" id="L2376">						toRemove.add(editorUserAccessBean);</span>
+					}
+					else
+					{
+<span class="nc" id="L2380">						int editorNotifyTime = Tools.getIntValue(Constants.getString(&quot;editorNotifyTime&quot;), 10);</span>
+<span class="nc" id="L2381">						long now = Tools.getNow();</span>
+<span class="nc" id="L2382">						long userAccessTime = editorUserAccessBean.getDatumPoslednejAktivity();</span>
+<span class="nc" id="L2383">						long rozdiel = (now-userAccessTime)/1000;</span>
+<span class="nc bnc" id="L2384" title="All 2 branches missed.">						if(rozdiel &gt; (2*editorNotifyTime))</span>
+<span class="nc" id="L2385">							toRemove.add(editorUserAccessBean);</span>
+					}
+				}
+
+				// vymaz uzivatelov, ktory uz needituju stranku
+<span class="nc bnc" id="L2390" title="All 2 branches missed.">				if(toRemove.size() &gt; 0)</span>
+<span class="nc" id="L2391">					userListAl.removeAll(toRemove);</span>
+
+<span class="nc bnc" id="L2393" title="All 2 branches missed.">				if(updateUser == null)</span>
+				{
+				   // uzivatel nieje v zozname - pridaj ho
+<span class="nc" id="L2396">					userListAl.add(EditorDB.setEditorUserAccesBean(UsersDB.getUser(user.getUserId())));</span>
+				}
+				else
+				{
+				   //uzivatel edituje stranku - aktualizuj cas
+<span class="nc" id="L2401">					updateUser.setDatumPoslednejAktivity(Tools.getNow());</span>
+<span class="nc" id="L2402">					userListAl.add(updateUser);</span>
+				}
+
+<span class="nc" id="L2405">				userList.put(id, userListAl);</span>
+<span class="nc" id="L2406">			}</span>
+		}
+<span class="nc" id="L2408">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2410">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2411">		}</span>
+
+<span class="nc" id="L2413">		Constants.getServletContext().setAttribute(&quot;userAccessList&quot;, userList);</span>
+<span class="nc" id="L2414">	}</span>
+
+	/**
+	 * vrati zoznam uzivatelov, ktory prave edituju stranku
+	 * @param userId
+	 * @return
+	 */
+	public static List&lt;EditorUserAccessBean&gt; getAllEditorUsers(int docId, int userId, Map&lt;Integer, List&lt;EditorUserAccessBean&gt;&gt; userList)
+	{
+<span class="nc" id="L2423">		List&lt;EditorUserAccessBean&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2424">		List&lt;EditorUserAccessBean&gt; editUsersList = null;</span>
+
+<span class="nc bnc" id="L2426" title="All 4 branches missed.">		if(userList != null &amp;&amp; userList.size() &gt; 0)</span>
+<span class="nc" id="L2427">			editUsersList = userList.get(Integer.valueOf(docId));</span>
+		else
+<span class="nc" id="L2429">			return null;</span>
+<span class="nc bnc" id="L2430" title="All 2 branches missed.">		if(editUsersList != null)</span>
+		{
+<span class="nc bnc" id="L2432" title="All 2 branches missed.">			for (EditorUserAccessBean editorUserAccessBean : editUsersList)</span>
+			{
+<span class="nc bnc" id="L2434" title="All 6 branches missed.">				if(editorUserAccessBean!=null &amp;&amp; editorUserAccessBean.getUser()!=null &amp;&amp; editorUserAccessBean.getUser().getUserId() != userId)</span>
+				{
+<span class="nc" id="L2436">					result.add(editorUserAccessBean);</span>
+				}
+<span class="nc" id="L2438">			}</span>
+		}
+		else
+		{
+<span class="nc" id="L2442">			return null;</span>
+		}
+
+<span class="nc" id="L2445">		return result;</span>
+	}
+
+	public static void sendApproveRequestEmail(int historyId, Map&lt;Integer, UserDetails&gt; approveByTable, int senderUserId, String comment, HttpServletRequest request)
+	{
+<span class="nc" id="L2450">		String title = null;</span>
+<span class="nc" id="L2451">		int docId = -1;</span>
+<span class="nc" id="L2452">		int groupId = -1;</span>
+
+<span class="nc" id="L2454">		Connection db_conn = null;</span>
+<span class="nc" id="L2455">		PreparedStatement ps = null;</span>
+<span class="nc" id="L2456">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L2459">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L2460">			ps = db_conn.prepareStatement(&quot;SELECT title, doc_id, group_id FROM documents_history WHERE history_id=?&quot;);</span>
+<span class="nc" id="L2461">			ps.setInt(1, historyId);</span>
+<span class="nc" id="L2462">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L2463" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L2465">				title = DB.getDbString(rs, &quot;title&quot;);</span>
+<span class="nc" id="L2466">				docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L2467">				groupId = rs.getInt(&quot;group_id&quot;);</span>
+			}
+<span class="nc" id="L2469">			rs.close();</span>
+<span class="nc" id="L2470">			ps.close();</span>
+<span class="nc" id="L2471">			db_conn.close();</span>
+<span class="nc" id="L2472">			rs = null;</span>
+<span class="nc" id="L2473">			ps = null;</span>
+<span class="nc" id="L2474">			db_conn = null;</span>
+		}
+<span class="nc" id="L2476">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L2478">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L2484" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L2485">					rs.close();</span>
+<span class="nc bnc" id="L2486" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L2487">					ps.close();</span>
+<span class="nc bnc" id="L2488" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L2489">					db_conn.close();</span>
+			}
+<span class="nc" id="L2491">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L2493">			}</span>
+		}
+
+<span class="nc bnc" id="L2496" title="All 6 branches missed.">		if (title == null || docId &lt; 0 || groupId &lt; 0) return;</span>
+
+		//title = title.toLowerCase();
+		//title = DB.internationalToEnglish(title).toLowerCase();
+
+<span class="nc" id="L2501">		String approveByUsers = null;</span>
+<span class="nc" id="L2502">		String approveByUsersEmail = null;</span>
+		UserDetails u;
+<span class="nc bnc" id="L2504" title="All 2 branches missed.">		for (Map.Entry&lt;Integer, UserDetails&gt; entry : approveByTable.entrySet())</span>
+		{
+<span class="nc" id="L2506">			u = entry.getValue();</span>
+<span class="nc bnc" id="L2507" title="All 2 branches missed.">			if (approveByUsers==null)</span>
+			{
+<span class="nc" id="L2509">				approveByUsers = u.getFullName();</span>
+			}
+			else
+			{
+<span class="nc" id="L2513">				approveByUsers += &quot;, &quot; + u.getFullName(); //NOSONAR</span>
+			}
+
+<span class="nc bnc" id="L2516" title="All 2 branches missed.">			if (Tools.isEmail(u.getEmail()))</span>
+			{
+<span class="nc bnc" id="L2518" title="All 2 branches missed.">				if (approveByUsersEmail==null)</span>
+				{
+<span class="nc" id="L2520">					approveByUsersEmail = u.getEmail();</span>
+				}
+				else
+				{
+<span class="nc" id="L2524">					approveByUsersEmail += &quot;,&quot; + u.getEmail(); //NOSONAR</span>
+				}
+			}
+<span class="nc" id="L2527">		}</span>
+
+<span class="nc" id="L2529">		UserDetails user = UsersDB.getUser(senderUserId);</span>
+<span class="nc bnc" id="L2530" title="All 2 branches missed.">		if (user == null) return;</span>
+
+<span class="nc" id="L2532">		Prop properties = Prop.getInstance(request);</span>
+<span class="nc" id="L2533">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="nc" id="L2535">		request.getSession().setAttribute(&quot;approveByUsers&quot;, approveByUsers);</span>
+<span class="nc" id="L2536">		request.getSession().removeAttribute(&quot;pageSavedToPublic&quot;);</span>
+<span class="nc" id="L2537">		String url = Tools.getBaseHref(request) + &quot;/admin/approve.jsp?docid=&quot;+docId+&quot;&amp;historyid=&quot; + historyId;</span>
+
+<span class="nc" id="L2539">		StringBuilder message = new StringBuilder(&quot;&lt;strong&gt;&quot;).append(properties.getText(&quot;approve.ask&quot;)).append(&quot;:&lt;/strong&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L2540">		message.append(&quot;&lt;strong&gt;&quot;).append(title).append(&quot;&lt;/strong&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L2541">		message.append(properties.getText(&quot;approve.dir&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L2542">		message.append(groupsDB.getPath(groupId)).append(&quot;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+<span class="nc" id="L2543">		message.append(properties.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L2544">		message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+
+<span class="nc bnc" id="L2546" title="All 2 branches missed.">		if (Tools.isNotEmpty(comment))</span>
+		{
+<span class="nc" id="L2548">			message.append(comment).append(&quot;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+		}
+
+<span class="nc" id="L2551">		message.append(user.getFullName()).append(&quot; &amp;lt;&quot;).append(user.getEmail()).append(&quot;&amp;gt;&quot;);</span>
+
+<span class="nc" id="L2553">		String subject = properties.getText(&quot;approve.subject&quot;) + &quot;: &quot; + title;</span>
+
+<span class="nc" id="L2555">		SendMail.send(user.getFullName(), user.getEmail(), approveByUsersEmail, subject, message.toString(), request);</span>
+<span class="nc" id="L2556">	}</span>
+
+	/**
+	 * Pripravi data_asc pre full text hladanie (ak vkladate do DB priamo - mimo saveEditorForm)
+	 * @param data
+	 * @param ef
+	 * @return
+	 */
+	public static String getDataAsc(String data, EditorForm ef)
+	{
+<span class="fc" id="L2566">		return getDataAsc(data, ef, false);</span>
+	}
+
+	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
+	{
+<span class="fc" id="L2571">		return getDataAsc(data, ef, isLucene, null);</span>
+	}
+
+    /**
+     * @Deprecated - use EditorToolsForCore.getDataAsc
+     * @param data
+     * @param ef
+     * @param isLucene
+     * @param request
+     * @return
+     */
+	public static String getDataAsc(String data, EditorForm ef, boolean isLucene, HttpServletRequest request)
+	{
+<span class="fc" id="L2584">		return EditorToolsForCore.getDataAsc(data, ef, isLucene, request);</span>
+	}
+
+	public static String renderIncludes(DocDetails doc, boolean addInternationalToEnglishSection, HttpServletRequest request)
+	{
+<span class="fc" id="L2589">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2590">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());</span>
+<span class="fc" id="L2591">		GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="pc bpc" id="L2592" title="2 of 4 branches missed.">		if (temp != null &amp;&amp; group != null)</span>
+		{
+<span class="pc bpc" id="L2594" title="3 of 4 branches missed.">			String lng = Tools.isNotEmpty(group.getLng()) ? group.getLng() : Tools.isNotEmpty(temp.getLng()) ? temp.getLng() : &quot;&quot;;</span>
+<span class="fc" id="L2595">			PageLng.setUserLng(request, null, lng);</span>
+
+<span class="fc" id="L2597">			ShowDoc.setRequestData(doc, group, DocDB.getInstance(), groupsDB, request);</span>
+<span class="fc" id="L2598">			ShowDoc.setRequestData(group, groupsDB, request);</span>
+<span class="fc" id="L2599">			ShowDoc.setRequestData(temp, request);</span>
+		}
+
+<span class="fc" id="L2602">		String data = doc.getData();</span>
+
+<span class="fc" id="L2604">		return renderIncludes(data, addInternationalToEnglishSection, request);</span>
+	}
+
+	public static String renderIncludes(String data, boolean addInternationalToEnglishSection, HttpServletRequest request)
+	{
+<span class="fc" id="L2609">		return EditorToolsForCore.renderIncludes(data, addInternationalToEnglishSection, request);</span>
+	}
+
+	/**
+	 * Test ci stranku so zadanym docId moze zadany pouzivatel editovat
+	 * @param user
+	 * @param docId
+	 * @return
+	 */
+	public static boolean isPageEditable(Identity user, int docId)
+	{
+<span class="fc bfc" id="L2620" title="All 2 branches covered.">		if (docId &lt; 1) return true;</span>
+
+<span class="fc" id="L2622">		DocDB docDB = DocDB.getInstance();</span>
+
+<span class="fc" id="L2624">		DocDetails editForm = docDB.getDoc(docId, -1, false);</span>
+<span class="pc bpc" id="L2625" title="1 of 2 branches missed.">		if (editForm == null) return true;</span>
+
+<span class="fc" id="L2627">		return isPageEditable(user, new EditorForm(editForm));</span>
+	}
+
+	/**
+	 * Test ci zadany editForm moze zadany pouzivatel editovat
+	 * @param user
+	 * @param editForm
+	 * @return
+	 */
+	public static boolean isPageEditable(Identity user, EditorForm editForm)
+	{
+<span class="fc bfc" id="L2638" title="All 2 branches covered.">		if (user.isEnabledItem(&quot;menuWebpages&quot;)==false) return false;</span>
+
+<span class="pc bpc" id="L2640" title="1 of 2 branches missed.">		if (editForm == null) return true;</span>
+
+		//otestuj, ci mame na tento dokument pristupove prava
+<span class="fc" id="L2643">		boolean canAccess = GroupsDB.isGroupEditable(user, editForm.getGroupId());</span>
+
+<span class="fc bfc" id="L2645" title="All 2 branches covered.">		if (!canAccess)</span>
+		{
+			//zisti, ci to nie je moja stranka
+<span class="fc" id="L2648">			StringTokenizer st = new StringTokenizer(user.getEditablePages(), &quot;,&quot;);</span>
+			String id;
+			int i_id;
+<span class="fc bfc" id="L2651" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L2653">				id = st.nextToken().trim();</span>
+				try
+				{
+<span class="fc" id="L2656">					i_id = Integer.parseInt(id);</span>
+					//Logger.println(this,&quot;i_id=&quot;+i_id+&quot; doc_id=&quot;+doc_id);
+<span class="fc bfc" id="L2658" title="All 2 branches covered.">					if (i_id == editForm.getDocId())</span>
+					{
+<span class="fc" id="L2660">						canAccess = true;</span>
+					}
+				}
+<span class="nc" id="L2663">				catch (Exception ex)</span>
+				{
+
+<span class="pc" id="L2666">				}</span>
+			}
+		}
+
+		//kontrola pre slave adresare danej stranky
+<span class="fc bfc" id="L2671" title="All 2 branches covered.">		if(!canAccess)</span>
+		{
+			int groupId;
+<span class="fc bfc" id="L2674" title="All 2 branches covered.">			for (MultigroupMapping mapping : MultigroupMappingDB.getSlaveMappings(editForm.getDocId()))</span>
+			{
+<span class="fc" id="L2676">				int dId = mapping.getDocId();</span>
+<span class="fc" id="L2677">				groupId = DocDB.getInstance().getBasicDocDetails(dId, true).getGroupId();</span>
+<span class="pc bpc" id="L2678" title="1 of 2 branches missed.">				if (groupId &gt; 0) canAccess = GroupsDB.isGroupEditable(user, groupId);</span>
+<span class="fc" id="L2679">				Logger.debug(EditorDB.class, &quot;testujem pristup pre multigroup stranky [groupId=&quot;+groupId+&quot;] canAccess=&quot;+canAccess);</span>
+<span class="pc bpc" id="L2680" title="1 of 2 branches missed.">				if(canAccess) break;</span>
+<span class="fc" id="L2681">			}</span>
+		}
+
+<span class="pc bpc" id="L2684" title="1 of 4 branches missed.">		if (canAccess &amp;&amp; Constants.getBoolean(&quot;adminCheckUserGroups&quot;))</span>
+		{
+<span class="nc" id="L2686">			DocDetails doc = new DocDetails();</span>
+<span class="nc" id="L2687">			doc.setDocId(editForm.getDocId());</span>
+<span class="nc" id="L2688">			doc.setPasswordProtected(editForm.getPasswordProtectedString());</span>
+<span class="nc bnc" id="L2689" title="All 2 branches missed.">			 if (DocDB.canAccess(doc, user, true)==false)</span>
+			 {
+<span class="nc" id="L2691">				 canAccess = false;</span>
+			 }
+		}
+
+<span class="fc" id="L2695">		return canAccess;</span>
+	}
+
+	/**
+	 * Vymaze zo session nepotrebne data po ulozeni stranky
+	 * @param request
+	 */
+	public static void cleanSessionData(HttpServletRequest request)
+	{
+<span class="fc" id="L2704">		cleanSessionData(request.getSession());</span>
+<span class="fc" id="L2705">	}</span>
+
+	/**
+	 * Vymaze zo session nepotrebne data po ulozeni stranky
+	 * @param session
+	 */
+	public static void cleanSessionData(HttpSession session)
+	{
+<span class="fc" id="L2713">		session.removeAttribute(&quot;pageSavedToPublic&quot;);</span>
+<span class="fc" id="L2714">		session.removeAttribute(&quot;pagePublishDate&quot;);</span>
+<span class="fc" id="L2715">		session.removeAttribute(&quot;pageSaved&quot;);</span>
+<span class="fc" id="L2716">		session.removeAttribute(&quot;approveByUsers&quot;);</span>
+<span class="fc" id="L2717">		session.removeAttribute(&quot;docHistory&quot;);</span>
+<span class="fc" id="L2718">		session.removeAttribute(&quot;cssError&quot;);</span>
+<span class="fc" id="L2719">	}</span>
+
+	/**
+	 * Nastavi formu virtualPath
+	 * @param my_form
+	 */
+	public static void setVirtualPath(EditorForm my_form)
+	{
+<span class="fc" id="L2727">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2728">		String domain = groupsDB.getDomain(my_form.getGroupId());</span>
+<span class="pc bpc" id="L2729" title="2 of 4 branches missed.">		if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML &amp;&amp; my_form.getVirtualPath().startsWith(&quot;javascript:&quot;)==false)</span>
+		{
+<span class="fc" id="L2731">			boolean mustGenerateVirtualPath = false;</span>
+<span class="fc bfc" id="L2732" title="All 2 branches covered.">			if (Tools.isNotEmpty(my_form.getVirtualPath()))</span>
+			{
+<span class="fc" id="L2734">				int actualDocId = DocDB.getDocIdFromURL(my_form.getVirtualPath(), domain);</span>
+<span class="fc bfc" id="L2735" title="All 4 branches covered.">				if (actualDocId &gt; 0 &amp;&amp; actualDocId != my_form.getDocId())</span>
+				{
+<span class="fc" id="L2737">					mustGenerateVirtualPath = true;</span>
+<span class="fc" id="L2738">					my_form.setVirtualPath(&quot;&quot;);</span>
+				}
+			}
+
+<span class="fc bfc" id="L2742" title="All 6 branches covered.">			if (mustGenerateVirtualPath || Tools.isEmpty(my_form.getVirtualPath()) || my_form.getVirtualPath().indexOf('/')==-1)</span>
+			{
+				//nastavime ako treba
+<span class="fc" id="L2745">				String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), my_form.getGroupId());</span>
+<span class="fc" id="L2746">				DocDetails doc = new DocDetails();</span>
+<span class="fc" id="L2747">				doc.setDocId(my_form.getDocId());</span>
+<span class="fc" id="L2748">				doc.setTitle(my_form.getTitle());</span>
+<span class="fc" id="L2749">				doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));</span>
+<span class="fc" id="L2750">				doc.setVirtualPath(my_form.getVirtualPath());</span>
+<span class="fc" id="L2751">				doc.setGroupId(my_form.getGroupId());</span>
+<span class="fc" id="L2752">				String virtualPath = DocDB.getURL(doc, groupDiskPath);</span>
+<span class="fc bfc" id="L2753" title="All 2 branches covered.">				String koncovka = virtualPath.endsWith(&quot;/&quot;) ? &quot;/&quot; : &quot;.html&quot;;</span>
+<span class="fc" id="L2754">				String editorPageExtension = Constants.getString(&quot;editorPageExtension&quot;);</span>
+
+<span class="pc bpc" id="L2756" title="1 of 2 branches missed.">				for (int i=1; i&lt;1000; i++)</span>
+				{
+<span class="pc bpc" id="L2758" title="2 of 4 branches missed.">					if(virtualPath != null &amp;&amp; virtualPath.length() &gt; 255)</span>
+					{
+<span class="nc" id="L2760">						String vpTmp = virtualPath.substring(0, virtualPath.length()-koncovka.length());</span>
+<span class="nc" id="L2761">						vpTmp = DB.prepareString(vpTmp, 255-koncovka.length())+koncovka;</span>
+<span class="nc" id="L2762">						virtualPath = vpTmp;</span>
+					}
+
+<span class="fc" id="L2765">					int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);</span>
+<span class="fc" id="L2766">					Logger.debug(EditorDB.class, &quot;setVirtualPath: allreadyDocId for virtualPath: &quot;+virtualPath + &quot; ,docid: &quot;+allreadyDocId);</span>
+<span class="fc bfc" id="L2767" title="All 4 branches covered.">					if (allreadyDocId &lt;= 0 || allreadyDocId==my_form.getDocId())</span>
+					{
+<span class="fc" id="L2769">						break;</span>
+					}
+<span class="fc" id="L2771">					doc.setTitle(my_form.getTitle()+&quot; &quot;+i);</span>
+<span class="fc" id="L2772">					doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128)+&quot; &quot;+i);</span>
+
+<span class="pc bpc" id="L2774" title="1 of 2 branches missed.">					if (&quot;/&quot;.equals(editorPageExtension))</span>
+					{
+						//nastav cistu, handluje sa to nastavenim title s cislom vyssie
+<span class="nc" id="L2777">						doc.setVirtualPath(&quot;&quot;);</span>
+					}
+					else
+					{
+<span class="fc bfc" id="L2781" title="All 2 branches covered.">						if (my_form.getVirtualPath().endsWith(&quot;.html&quot;))</span>
+						{
+<span class="fc" id="L2783">							doc.setVirtualPath(Tools.replace(my_form.getVirtualPath(), &quot;.html&quot;, &quot;-&quot; + i + &quot;.html&quot;));</span>
+<span class="fc" id="L2784">							koncovka = &quot;-&quot; + i + &quot;.html&quot;;</span>
+<span class="pc bpc" id="L2785" title="1 of 2 branches missed.">						} else if (my_form.getVirtualPath().endsWith(&quot;/&quot;))</span>
+						{
+<span class="nc" id="L2787">							doc.setVirtualPath(my_form.getVirtualPath() + i + &quot;.html&quot;);</span>
+<span class="nc" id="L2788">							koncovka = i + &quot;.html&quot;;</span>
+<span class="pc bpc" id="L2789" title="1 of 2 branches missed.">						} else if (Tools.isEmpty(my_form.getVirtualPath()))</span>
+						{
+<span class="fc" id="L2791">							doc.setVirtualPath(Tools.replace(my_form.getTitle() + &quot;.html&quot;, &quot;/&quot;, &quot;-&quot;));</span>
+<span class="fc" id="L2792">							my_form.setVirtualPath(doc.getVirtualPath());</span>
+<span class="fc" id="L2793">							koncovka = &quot;.html&quot;;</span>
+						}
+					}
+
+<span class="fc" id="L2797">					virtualPath = DocDB.getURL(doc, groupDiskPath);</span>
+				}
+
+<span class="fc" id="L2800">				my_form.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));</span>
+
+<span class="fc" id="L2802">				Logger.println(EditorDB.class, &quot;nastaveny virtual path na:&quot;+virtualPath+&quot;;&quot;);</span>
+<span class="fc" id="L2803">			}</span>
+<span class="pc bpc" id="L2804" title="1 of 2 branches missed.">			else if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+			{
+				//tiket 15910 - kontrola specialnych znakov v URL
+<span class="nc" id="L2807">				String cleaned = DocTools.removeCharsDir(DB.internationalToEnglish(my_form.getVirtualPath())).toLowerCase();</span>
+<span class="nc bnc" id="L2808" title="All 2 branches missed.">				if(!cleaned.equals(my_form.getVirtualPath()))</span>
+				{
+<span class="nc" id="L2810">					my_form.setVirtualPath(DocDB.normalizeVirtualPath(cleaned));</span>
+<span class="nc" id="L2811">					Logger.println(EditorDB.class, &quot;virtual path upraveny na:&quot;+my_form.getVirtualPath()+&quot;;&quot;);</span>
+				}
+			}
+		}
+<span class="fc" id="L2815">	}</span>
+
+	/**
+     * @Deprecated - use EditorToolsForCore.removeHtmlTagsKeepLength
+	 * Remove from string html tags and keep the length of string
+	 */
+	public static String removeHtmlTagsKeepLength(String html_text)
+	{
+<span class="fc" id="L2823">		return EditorToolsForCore.removeHtmlTagsKeepLength(html_text);</span>
+	}
+
+	/**
+     * @Deprecated - use EditorToolsForCore.removeCommandKeepLength
+	 * Odstrani z HTML kodu riadiace bloky typu !INCLUDE(...)!, !PARAM(...)!, pricom zachova dlzku retazca
+	 */
+	public static String removeCommandKeepLength(String html_text, String commandStart, String commandEnd)
+	{
+<span class="nc" id="L2832">		return EditorToolsForCore.removeCommandKeepLength(html_text, commandStart, commandEnd);</span>
+	}
+
+	/**
+	 * Skontroluje a nastavi default docid adresara (ak je neplatne alebo nenastavene)
+	 * @param groupId
+	 * @param docId
+	 */
+	public static void setDefaultDocId(int groupId, int docId)
+	{
+<span class="fc" id="L2842">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L2843">		DocDB docDB = DocDB.getInstance();</span>
+
+		//ak je to prva stranka v adresari a adresar nema defaultDoc, nastav
+<span class="fc" id="L2846">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="pc bpc" id="L2847" title="1 of 2 branches missed.">		if (group != null)</span>
+		{
+<span class="fc" id="L2849">			DocDetails doc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+
+<span class="pc bpc" id="L2851" title="2 of 6 branches missed.">			if ((group.getDefaultDocId() &lt; 1 &amp;&amp; group.getNavbar().indexOf(&quot;&lt;a&quot;) == -1) || doc == null)</span>
+			{
+<span class="fc" id="L2853">				group.setDefaultDocId(docId);</span>
+<span class="fc" id="L2854">				groupsDB.setGroup(group);</span>
+			}
+		}
+<span class="fc" id="L2857">	}</span>
+
+	public static void saveDocAttrs(int docId, Connection db_conn, HttpServletRequest request)
+	{
+		//ulozenie atributov stranky
+<span class="pc bpc" id="L2862" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;saveDocAtrs&quot;)))</span>
+		{
+			try
+			{
+				//TODO: ulozenie do history! (+restore z history)
+
+				//najskor vymazeme
+<span class="nc" id="L2869">				PreparedStatement ps = db_conn.prepareStatement(&quot;DELETE FROM doc_atr WHERE doc_id=?&quot;);</span>
+<span class="nc" id="L2870">				ps.setInt(1, docId);</span>
+<span class="nc" id="L2871">				ps.execute();</span>
+<span class="nc" id="L2872">				ps.close();</span>
+
+				//nainsertujeme
+<span class="nc" id="L2875">				Enumeration&lt;String&gt; params = request.getParameterNames();</span>
+				String name;
+				String value;
+				int atrId;
+				AtrBean atr;
+
+				//najskor si najdeme zoznam skupin atributov, kde je nieco vyplnene
+				//je to kvoli tomu, ze pre skupinu musim vyplnit vsetky atributy skupiny
+<span class="nc" id="L2883">				Map&lt;String, Byte&gt; atrUsedGroups = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L2884">				Byte bValue = (byte)1;</span>
+<span class="nc bnc" id="L2885" title="All 2 branches missed.">				while (params.hasMoreElements())</span>
+				{
+					try
+					{
+<span class="nc" id="L2889">						name = params.nextElement();</span>
+<span class="nc bnc" id="L2890" title="All 4 branches missed.">						if (name!=null &amp;&amp; name.startsWith(&quot;atr_&quot;))</span>
+						{
+<span class="nc" id="L2892">							atrId = Integer.parseInt(name.substring(4));</span>
+<span class="nc" id="L2893">							value = request.getParameter(name);</span>
+<span class="nc bnc" id="L2894" title="All 2 branches missed.">							if (Tools.isNotEmpty(value))</span>
+							{
+<span class="nc" id="L2896">								atr = AtrDB.getAtrDef(atrId, request);</span>
+<span class="nc bnc" id="L2897" title="All 4 branches missed.">								if (atr != null &amp;&amp; atrUsedGroups.get(atr.getAtrGroup())==null)</span>
+								{
+<span class="nc" id="L2899">									atrUsedGroups.put(atr.getAtrGroup(), bValue);</span>
+								}
+							}
+						}
+					}
+<span class="nc" id="L2904">					catch (Exception ex2)</span>
+					{
+<span class="nc" id="L2906">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2907">					}</span>
+				}
+<span class="nc" id="L2909">				params = request.getParameterNames();</span>
+<span class="nc bnc" id="L2910" title="All 2 branches missed.">				while (params.hasMoreElements())</span>
+				{
+					try
+					{
+<span class="nc" id="L2914">						name = params.nextElement();</span>
+<span class="nc bnc" id="L2915" title="All 4 branches missed.">						if (name!=null &amp;&amp; name.startsWith(&quot;atr_&quot;))</span>
+						{
+<span class="nc" id="L2917">							atrId = Integer.parseInt(name.substring(4));</span>
+<span class="nc" id="L2918">							value = request.getParameter(name);</span>
+<span class="nc" id="L2919">							atr = AtrDB.getAtrDef(atrId, request);</span>
+<span class="nc bnc" id="L2920" title="All 4 branches missed.">							if (atr != null &amp;&amp; atrUsedGroups.get(atr.getAtrGroup())!=null)</span>
+							{
+<span class="nc bnc" id="L2922" title="All 2 branches missed.">								if (value == null) value = &quot;&quot;;</span>
+<span class="nc" id="L2923">								ps = db_conn.prepareStatement(&quot;INSERT INTO doc_atr (doc_id, atr_id, value_string, value_int, value_bool) VALUES (?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L2924">								ps.setInt(1, docId);</span>
+<span class="nc" id="L2925">								ps.setInt(2, atrId);</span>
+<span class="nc bnc" id="L2926" title="All 2 branches missed.">								if (atr.getAtrType()==AtrDB.TYPE_INT)</span>
+								{
+<span class="nc" id="L2928">									ps.setString(3, null);</span>
+<span class="nc" id="L2929">									ps.setInt(4, Tools.getIntValue(value, 0));</span>
+<span class="nc" id="L2930">									ps.setNull(5, Types.INTEGER);</span>
+								}
+<span class="nc bnc" id="L2932" title="All 2 branches missed.">								else if (atr.getAtrType()==AtrDB.TYPE_DOUBLE)</span>
+								{
+<span class="nc" id="L2934">									ps.setString(3, null);</span>
+<span class="nc" id="L2935">									ps.setDouble(4, Tools.getDoubleValue(value, 0));</span>
+<span class="nc" id="L2936">									ps.setNull(5, Types.INTEGER);</span>
+								}
+<span class="nc bnc" id="L2938" title="All 2 branches missed.">								else if (atr.getAtrType()==AtrDB.TYPE_BOOL)</span>
+								{
+<span class="nc" id="L2940">									ps.setString(3, null);</span>
+<span class="nc" id="L2941">									ps.setNull(4, Types.INTEGER);</span>
+<span class="nc bnc" id="L2942" title="All 4 branches missed.">									if (&quot;true&quot;.equalsIgnoreCase(value) || &quot;yes&quot;.equalsIgnoreCase(value))</span>
+									{
+<span class="nc" id="L2944">										ps.setBoolean(5, true);</span>
+									}
+									else
+									{
+<span class="nc" id="L2948">										ps.setBoolean(5, false);</span>
+									}
+								}
+								else
+								{
+<span class="nc" id="L2953">									ps.setString(3, value);</span>
+<span class="nc" id="L2954">									ps.setNull(4, Types.INTEGER);</span>
+<span class="nc" id="L2955">									ps.setNull(5, Types.INTEGER);</span>
+								}
+<span class="nc" id="L2957">								ps.execute();</span>
+<span class="nc" id="L2958">								ps.close();</span>
+							}
+						}
+					}
+<span class="nc" id="L2962">					catch (Exception ex2)</span>
+					{
+<span class="nc" id="L2964">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L2965">					}</span>
+				}
+			}
+<span class="nc" id="L2968">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L2970">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2971">			}</span>
+		}
+<span class="fc" id="L2973">	}</span>
+
+	private static String getBaseCssPath(TemplateDetails temp, String domainName)
+	{
+<span class="nc" id="L2977">		String baseCssPath = &quot;/css/page.css&quot;; //NOSONAR</span>
+<span class="nc bnc" id="L2978" title="All 2 branches missed.">		if (temp != null)</span>
+		{
+<span class="nc" id="L2980">			baseCssPath = temp.getBaseCssPath();</span>
+		}
+<span class="nc bnc" id="L2982" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) == true &amp;&amp; Tools.isNotEmpty(domainName))</span>
+		{
+			// baseCssPath = Tools.replace(baseCssPath, &quot;/css/&quot;,
+			// &quot;/css/&quot;+MultiDomainFilter.getDomainAlias(editForm.getDomainName())+&quot;/&quot;);
+<span class="nc" id="L2986">			baseCssPath = MultiDomainFilter.rewriteUrlToLocal(baseCssPath, MultiDomainFilter.getDomainAlias(domainName));</span>
+		}
+		// Logger.println(this,&quot;base_css_link=&quot;+baseCssPath+&quot; temp=&quot;+temp.getBaseCssPath());
+<span class="nc" id="L2989">		return baseCssPath;</span>
+	}
+
+	private static String getTempCssLink(TemplateDetails temp, String domainName)
+	{
+<span class="nc" id="L2994">		String tempCssLink = null;</span>
+<span class="nc bnc" id="L2995" title="All 6 branches missed.">		if (temp != null &amp;&amp; temp.getCss() != null &amp;&amp; temp.getCss().length() &gt; 1)</span>
+		{
+<span class="nc" id="L2997">			tempCssLink = temp.getCss();</span>
+<span class="nc bnc" id="L2998" title="All 4 branches missed.">			if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) == true &amp;&amp; Tools.isNotEmpty(domainName))</span>
+			{
+<span class="nc" id="L3000">				String multidomainAlias = MultiDomainFilter.getDomainAlias(domainName);</span>
+<span class="nc bnc" id="L3001" title="All 2 branches missed.">				if (Tools.isNotEmpty(multidomainAlias)) {</span>
+<span class="nc" id="L3002">					tempCssLink = Tools.replace(tempCssLink, &quot;/css/&quot;, &quot;/css/&quot;</span>
+					+ multidomainAlias + &quot;/&quot;);
+				}
+			}
+		}
+<span class="nc" id="L3007">		return tempCssLink;</span>
+	}
+
+	/**
+	 * Vrati CSS styl pre editor (ajax form)
+	 * @param request
+	 * @return
+	 */
+	public static String getEditorCssStyle(HttpServletRequest request)
+	{
+<span class="fc" id="L3017">		String cssStyle = (String)request.getAttribute(&quot;base_css_link&quot;);</span>
+<span class="fc" id="L3018">		String cssStyle2 = (String)request.getAttribute(&quot;css_link&quot;);</span>
+
+<span class="pc bpc" id="L3020" title="1 of 2 branches missed.">		if (cssStyle == null)</span>
+		{
+<span class="nc" id="L3022">			String domainName = DocDB.getDomain(request);</span>
+
+			//este nebol nastaveny, asi sme inline editacia, skus vydumat
+<span class="nc" id="L3025">			TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
+<span class="nc bnc" id="L3026" title="All 2 branches missed.">			if (temp != null)</span>
+			{
+<span class="nc" id="L3028">				cssStyle = getBaseCssPath(temp, domainName);</span>
+			}
+<span class="nc bnc" id="L3030" title="All 2 branches missed.">			if (cssStyle2 == null)</span>
+			{
+<span class="nc" id="L3032">				cssStyle2 = getTempCssLink(temp, domainName);</span>
+			}
+		}
+
+<span class="pc bpc" id="L3036" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(cssStyle2))</span>
+<span class="nc" id="L3037">			cssStyle +=&quot;,&quot;+cssStyle2;</span>
+
+<span class="fc" id="L3039">		IwcmFile iwf = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(&quot;/css/editor.css&quot;));</span>
+
+<span class="pc bpc" id="L3041" title="1 of 2 branches missed.">		if (iwf.exists())</span>
+<span class="nc" id="L3042">			cssStyle +=&quot;,&quot;+request.getContextPath()+&quot;/css/editor.css&quot;;</span>
+
+<span class="fc" id="L3044">		cssStyle = Tools.replace(cssStyle, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L3045">		cssStyle = Tools.replace(cssStyle, &quot;\r&quot;, &quot;&quot;);</span>
+
+<span class="fc" id="L3047">		return cssStyle;</span>
+	}
+
+	/*private static void publishEvent(Class&lt;? extends ApplicationEvent&gt; clazz, EditorForm editorForm) {
+		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (requestBean == null) return;
+		ApplicationContext context = requestBean.getSpringContext();
+
+		if (context != null) {
+			try {
+				Constructor&lt;? extends ApplicationEvent&gt; constructor = clazz.getConstructor(Object.class, EditorForm.class);
+				ApplicationEvent event = constructor.newInstance(context, editorForm);
+				context.publishEvent(event);
+
+			} catch (InvocationTargetException | IllegalAccessException | InstantiationException | NoSuchMethodException e) {
+				sk.iway.iwcm.Logger.error(e);
+			}
+		}
+	}*/
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

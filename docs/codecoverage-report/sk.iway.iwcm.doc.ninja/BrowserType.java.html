@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrowserType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.ninja</a> &gt; <span class="el_source">BrowserType.java</span></div><h1>BrowserType.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.ninja;
+
+//TODO: MHO nastavit spravne min verziw prehliadacov
+//TODO: MHO skontrolovat, ze ci su tu vsetky tipy prehliadacov
+<span class="fc" id="L5">public enum BrowserType {</span>
+<span class="fc" id="L6">    MSIE(&quot;msie&quot;, 9),</span>
+<span class="fc" id="L7">    CHROME(&quot;chrome&quot;, 38),</span>
+<span class="fc" id="L8">    SAFARI(&quot;safari&quot;, 6),</span>
+<span class="fc" id="L9">    FIREFOX(&quot;firefox&quot;, 45),</span>
+<span class="fc" id="L10">    EDGE(&quot;edge&quot;, 12),</span>
+<span class="fc" id="L11">    ANDROID_BROWSER(&quot;android&quot;, 4);</span>
+
+    String browser;
+    int defaultMinimalVersion;
+
+<span class="fc" id="L16">    BrowserType(String browser, int defaultMinimalVersion) {</span>
+<span class="fc" id="L17">        this.browser = browser;</span>
+<span class="fc" id="L18">        this.defaultMinimalVersion = defaultMinimalVersion;</span>
+<span class="fc" id="L19">    }</span>
+
+    public String getBrowser() {
+<span class="fc" id="L22">        return browser;</span>
+    }
+
+    public int getDefaultMinimalVersion() {
+<span class="nc" id="L26">        return defaultMinimalVersion;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

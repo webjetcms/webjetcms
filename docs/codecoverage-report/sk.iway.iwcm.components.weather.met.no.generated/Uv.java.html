@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Uv.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.weather.met.no.generated</a> &gt; <span class="el_source">Uv.java</span></div><h1>Uv.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.weather.met.no.generated;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+
+/**
+ * &lt;p&gt;Java class for uv complex type.
+ * 
+ * &lt;p&gt;The following schema fragment specifies the expected content contained within this class.
+ * 
+ * &lt;pre&gt;
+ * &amp;lt;complexType name=&quot;uv&quot;&gt;
+ *   &amp;lt;complexContent&gt;
+ *     &amp;lt;restriction base=&quot;{http://www.w3.org/2001/XMLSchema}anyType&quot;&gt;
+ *       &amp;lt;sequence&gt;
+ *         &amp;lt;element name=&quot;uvi_clear&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;uvi_partly_cloudy&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;uvi_cloudy&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;uvi_forecast&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;ozon&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;snowcover&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;cloudcover&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;albedo&quot; type=&quot;{}unit_value&quot;/&gt;
+ *         &amp;lt;element name=&quot;solar_zenith&quot; type=&quot;{}unit_value&quot;/&gt;
+ *       &amp;lt;/sequence&gt;
+ *     &amp;lt;/restriction&gt;
+ *   &amp;lt;/complexContent&gt;
+ * &amp;lt;/complexType&gt;
+ * &lt;/pre&gt;
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = &quot;uv&quot;, propOrder = {
+    &quot;uviClear&quot;,
+    &quot;uviPartlyCloudy&quot;,
+    &quot;uviCloudy&quot;,
+    &quot;uviForecast&quot;,
+    &quot;ozon&quot;,
+    &quot;snowcover&quot;,
+    &quot;cloudcover&quot;,
+    &quot;albedo&quot;,
+    &quot;solarZenith&quot;
+})
+<span class="nc" id="L48">public class Uv {</span>
+
+    @XmlElement(name = &quot;uvi_clear&quot;, required = true)
+    protected UnitValue uviClear;
+    @XmlElement(name = &quot;uvi_partly_cloudy&quot;, required = true)
+    protected UnitValue uviPartlyCloudy;
+    @XmlElement(name = &quot;uvi_cloudy&quot;, required = true)
+    protected UnitValue uviCloudy;
+    @XmlElement(name = &quot;uvi_forecast&quot;, required = true)
+    protected UnitValue uviForecast;
+    @XmlElement(required = true)
+    protected UnitValue ozon;
+    @XmlElement(required = true)
+    protected UnitValue snowcover;
+    @XmlElement(required = true)
+    protected UnitValue cloudcover;
+    @XmlElement(required = true)
+    protected UnitValue albedo;
+    @XmlElement(name = &quot;solar_zenith&quot;, required = true)
+    protected UnitValue solarZenith;
+
+    /**
+     * Gets the value of the uviClear property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getUviClear() {
+<span class="nc" id="L78">        return uviClear;</span>
+    }
+
+    /**
+     * Sets the value of the uviClear property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setUviClear(UnitValue value) {
+<span class="nc" id="L90">        this.uviClear = value;</span>
+<span class="nc" id="L91">    }</span>
+
+    /**
+     * Gets the value of the uviPartlyCloudy property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getUviPartlyCloudy() {
+<span class="nc" id="L102">        return uviPartlyCloudy;</span>
+    }
+
+    /**
+     * Sets the value of the uviPartlyCloudy property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setUviPartlyCloudy(UnitValue value) {
+<span class="nc" id="L114">        this.uviPartlyCloudy = value;</span>
+<span class="nc" id="L115">    }</span>
+
+    /**
+     * Gets the value of the uviCloudy property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getUviCloudy() {
+<span class="nc" id="L126">        return uviCloudy;</span>
+    }
+
+    /**
+     * Sets the value of the uviCloudy property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setUviCloudy(UnitValue value) {
+<span class="nc" id="L138">        this.uviCloudy = value;</span>
+<span class="nc" id="L139">    }</span>
+
+    /**
+     * Gets the value of the uviForecast property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getUviForecast() {
+<span class="nc" id="L150">        return uviForecast;</span>
+    }
+
+    /**
+     * Sets the value of the uviForecast property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setUviForecast(UnitValue value) {
+<span class="nc" id="L162">        this.uviForecast = value;</span>
+<span class="nc" id="L163">    }</span>
+
+    /**
+     * Gets the value of the ozon property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getOzon() {
+<span class="nc" id="L174">        return ozon;</span>
+    }
+
+    /**
+     * Sets the value of the ozon property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setOzon(UnitValue value) {
+<span class="nc" id="L186">        this.ozon = value;</span>
+<span class="nc" id="L187">    }</span>
+
+    /**
+     * Gets the value of the snowcover property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getSnowcover() {
+<span class="nc" id="L198">        return snowcover;</span>
+    }
+
+    /**
+     * Sets the value of the snowcover property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setSnowcover(UnitValue value) {
+<span class="nc" id="L210">        this.snowcover = value;</span>
+<span class="nc" id="L211">    }</span>
+
+    /**
+     * Gets the value of the cloudcover property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getCloudcover() {
+<span class="nc" id="L222">        return cloudcover;</span>
+    }
+
+    /**
+     * Sets the value of the cloudcover property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setCloudcover(UnitValue value) {
+<span class="nc" id="L234">        this.cloudcover = value;</span>
+<span class="nc" id="L235">    }</span>
+
+    /**
+     * Gets the value of the albedo property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getAlbedo() {
+<span class="nc" id="L246">        return albedo;</span>
+    }
+
+    /**
+     * Sets the value of the albedo property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setAlbedo(UnitValue value) {
+<span class="nc" id="L258">        this.albedo = value;</span>
+<span class="nc" id="L259">    }</span>
+
+    /**
+     * Gets the value of the solarZenith property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link UnitValue }
+     *     
+     */
+    public UnitValue getSolarZenith() {
+<span class="nc" id="L270">        return solarZenith;</span>
+    }
+
+    /**
+     * Sets the value of the solarZenith property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link UnitValue }
+     *     
+     */
+    public void setSolarZenith(UnitValue value) {
+<span class="nc" id="L282">        this.solarZenith = value;</span>
+<span class="nc" id="L283">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

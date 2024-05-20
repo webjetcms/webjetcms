@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupDetailsFullPathDeserializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">GroupDetailsFullPathDeserializer.java</span></div><h1>GroupDetailsFullPathDeserializer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+
+/**
+ * Deserializuje groupId so zadaneho ID alebo zadanej cesty.
+ * Pouziva sa pri importe, ak sa napr. importuju sablony z ineho prostredia a priecinky s danym ID neexistuju.
+ * V takom pripade vytvori priecinok podla zadanej cesty (fullPath).
+ */
+<span class="nc" id="L19">public class GroupDetailsFullPathDeserializer extends JsonDeserializer&lt;Integer&gt; {</span>
+
+    @Override
+    public Integer deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+<span class="nc" id="L23">        String text = p.getText();</span>
+<span class="nc" id="L24">        Integer groupId = null;</span>
+        try {
+<span class="nc" id="L26">            groupId = Integer.parseInt(text);</span>
+<span class="nc" id="L27">        } catch (Exception ex) {</span>
+
+<span class="nc" id="L29">        }</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (groupId == null) {</span>
+
+<span class="nc" id="L32">            GroupDetails group = GroupsDB.getInstance().getCreateGroup(text);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">            if (group != null) {</span>
+<span class="nc" id="L34">                groupId = group.getGroupId();</span>
+<span class="nc" id="L35">                Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L36">                NotifyBean notify = new NotifyBean(prop.getText(&quot;templates.import.creategroup.title&quot;), prop.getText(&quot;templates.import.creategroup.text&quot;, group.getFullPath(), groupId.toString()), NotifyType.INFO);</span>
+<span class="nc" id="L37">                DatatableRestControllerV2.addNotify(notify);</span>
+            }
+        }
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (groupId == null) groupId = -1;</span>
+
+<span class="nc" id="L42">        return groupId;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

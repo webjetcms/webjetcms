@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalyticsHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.analytics</a> &gt; <span class="el_source">AnalyticsHelper.java</span></div><h1>AnalyticsHelper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.analytics;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.utils.Pair;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *
+ */
+<span class="nc" id="L15">public class AnalyticsHelper {</span>
+    /**
+     * Vyparsuje konfiguraciu
+     * @param config String jeden alebo viac parov url:Trieda oddelenych ';' kde url je zaciatok vyhovujucej url a Trieda je cela cesta k triede implementujucej sk.iway.iwcm.analytics.Tracker, napr. '/files/filearchiv/:sk.iway.iwcm.components.file_archiv.FileArchivTracker'
+     * @return vrati rozparsovanu konfiguraciu List&lt;Pair&lt;String, String&gt;&gt; alebo null
+     */
+    public static List&lt;Pair&lt;String, String&gt;&gt; parseConfig(String config) {
+<span class="nc bnc" id="L22" title="All 2 branches missed.">        if(Tools.isNotEmpty(config)) {</span>
+<span class="nc" id="L23">            List&lt;Pair&lt;String, String&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L24">            String[] list = config.split(&quot;;&quot;);</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">            for(int i = 0; i &lt; list.length; i++) {</span>
+<span class="nc" id="L26">                String[] pair = list[i].split(&quot;:&quot;);</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">                if(pair.length == 2) {</span>
+<span class="nc" id="L28">                    result.add(new Pair&lt;&gt;(pair[0], pair[1]));</span>
+                }
+            }
+<span class="nc" id="L31">            return result;</span>
+        }
+<span class="nc" id="L33">        return null;</span>
+    }
+
+    /**
+     * Na zaklade konfiguracie vykona trackovanie
+     * @param path absolutna cestna, napr. /files/sth/file.pdf
+     * @param request HttpServletRequest
+     */
+    public static void track(String path, HttpServletRequest request) {
+<span class="fc" id="L42">        String analyticsConf = Constants.getString(&quot;analyticsTrackerConf&quot;);</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(analyticsConf)) {</span>
+
+            // load configuration
+<span class="nc" id="L46">            List&lt;Pair&lt;String, String&gt;&gt; conf = AnalyticsHelper.parseConfig(analyticsConf);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if(conf != null) {</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                for(Pair&lt;String, String&gt; item : conf) {</span>
+
+<span class="nc" id="L51">                    String urlPattern = item.first;</span>
+<span class="nc" id="L52">                    String className = item.second;</span>
+
+                    // track for every type of url
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                    if(path.startsWith(urlPattern)) {</span>
+                        try {
+                            @SuppressWarnings(&quot;rawtypes&quot;)
+<span class="nc" id="L58">                            Class c = Class.forName(className);</span>
+                            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L60">                            Tracker tracker = (Tracker)c.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L61">                            tracker.track(path, request);</span>
+                        }
+<span class="nc" id="L63">                        catch (Throwable e) {</span>
+                            try {
+<span class="nc" id="L65">                                Logger.error(Class.forName(className), e.getMessage(), e);</span>
+<span class="nc" id="L66">                            } catch(ClassNotFoundException ex) {</span>
+<span class="nc" id="L67">                                Logger.error(Tracker.class,  className + &quot;: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L68">                            }</span>
+<span class="nc" id="L69">                        }</span>
+                    }
+<span class="nc" id="L71">                }</span>
+            }
+        }
+<span class="fc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

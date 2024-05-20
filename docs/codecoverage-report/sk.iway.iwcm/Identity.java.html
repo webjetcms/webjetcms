@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Identity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Identity.java</span></div><h1>Identity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.Hashtable;
+import java.util.Map;
+
+import org.apache.commons.beanutils.PropertyUtils;
+
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Trieda drzi info o prihlasenom pouzivatelovi
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.13 $
+ *@created      $Date: 2004/03/09 14:07:31 $
+ *@modified     $Date: 2004/03/09 14:07:31 $
+ */
+
+public class Identity extends UserDetails
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 3752957232653314717L;
+
+<span class="fc" id="L31">	private boolean valid = false;</span>
+
+<span class="fc" id="L33">	private boolean wasAdminSet = false;</span>
+
+<span class="fc" id="L35">	private Map&lt;String, String&gt; disabledItemsTable = null;</span>
+
+	public Identity()
+	{
+<span class="fc" id="L39">		super();</span>
+<span class="fc" id="L40">	}</span>
+
+	public Identity(UserDetails user)
+<span class="fc" id="L43">	{</span>
+		try
+		{
+<span class="fc" id="L46">			PropertyUtils.copyProperties(this, user);</span>
+			//permissions treba precistit, aby sa korektne znova nasetovali
+<span class="fc bfc" id="L48" title="All 2 branches covered.">			if (disabledItemsTable != null) disabledItemsTable.clear();</span>
+<span class="fc" id="L49">			UsersDB.setDisabledItems(this);</span>
+		}
+<span class="nc" id="L51">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L53">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L54">		}</span>
+<span class="fc" id="L55">	}</span>
+
+	/**
+	 *  Gets the loginName attribute of the Identity object
+	 *
+	 *@return    The loginName value
+	 */
+	public String getLoginName()
+	{
+<span class="fc" id="L64">		return login;</span>
+	}
+
+	/**
+	 *  Sets the loginName attribute of the Identity object
+	 *
+	 *@param  newLoginName  The new loginName value
+	 */
+	public void setLoginName(String newLoginName)
+	{
+<span class="fc" id="L74">		login = newLoginName;</span>
+<span class="fc" id="L75">	}</span>
+
+	/**
+	 *  Sets the admin attribute of the Identity object
+	 *
+	 *@param  newAdmin  The new admin value
+	 */
+	@Override
+	public void setAdmin(boolean newAdmin)
+	{
+		//admin atribut je mozne nastavit len raz
+		//ochrana proti stupidnemu hacku...
+<span class="fc bfc" id="L87" title="All 4 branches covered.">		if (wasAdminSet &amp;&amp; newAdmin == true)</span>
+		{
+<span class="fc" id="L89">			return;</span>
+		}
+
+<span class="fc" id="L92">		wasAdminSet = true;</span>
+<span class="fc" id="L93">		admin = newAdmin;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">		if (admin == true)</span>
+		{
+<span class="fc" id="L96">			authorized = true;</span>
+		}
+<span class="fc" id="L98">	}</span>
+
+	/**
+	 *  Sets the valid attribute of the Identity object
+	 *
+	 *@param  newValid  The new valid value
+	 */
+	public void setValid(boolean newValid)
+	{
+<span class="fc" id="L107">		valid = newValid;</span>
+<span class="fc" id="L108">	}</span>
+
+	/**
+	 *  Gets the valid attribute of the Identity object
+	 *
+	 *@return    The valid value
+	 */
+	public boolean isValid()
+	{
+<span class="fc" id="L117">		return valid;</span>
+	}
+
+	/**
+	 *  Sets the authorized attribute of the Identity object
+	 *
+	 *@param  authorized  The new authorized value
+	 */
+	@Override
+	public void setAuthorized(boolean authorized)
+	{
+<span class="fc bfc" id="L128" title="All 2 branches covered.">		if (admin)</span>
+		{
+<span class="fc" id="L130">			this.authorized = true;</span>
+		}
+		else
+		{
+<span class="fc" id="L134">			this.authorized = authorized;</span>
+		}
+<span class="fc" id="L136">	}</span>
+
+	/**
+	 * Vrati true, ak pouzivatel nema zadane pravo
+	 * @param name
+	 * @return
+	 */
+	public boolean isDisabledItem(String name)
+	{
+		//allow welcome for all
+<span class="fc bfc" id="L146" title="All 2 branches covered.">		if (&quot;welcome&quot;.equals(name)) return false;</span>
+
+<span class="fc" id="L148">		String fixedName = name;</span>
+		//fix starych nazvov
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (&quot;menuForms&quot;.equals(fixedName)) fixedName = &quot;cmp_form&quot;;</span>
+
+
+		//Logger.println(this,&quot;isDisabledItem(&quot;+name+&quot;)&quot;);
+<span class="fc bfc" id="L154" title="All 2 branches covered.">		if (disabledItemsTable == null)</span>
+		{
+<span class="fc" id="L156">			return(false);</span>
+		}
+
+<span class="fc bfc" id="L159" title="All 2 branches covered.">		if (disabledItemsTable.get(fixedName)!=null)</span>
+		{
+<span class="fc" id="L161">			return(true);</span>
+		}
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">		if (Modules.getInstance().isAvailable(fixedName)==false)</span>
+		{
+<span class="nc" id="L165">			return(true);</span>
+		}
+<span class="fc" id="L167">		return(false);</span>
+	}
+
+	/**
+	 * Vrati true, ak ma pouzivatel dane pravo, prava je mozne zadat aj vo formate:
+	 * menuFbrowser|menuForms - pouzije sa ALEBO
+	 * menuFbrowser&amp;menuForms - pouzije sa A
+	 * @param name
+	 * @return
+	 */
+	public boolean isEnabledItem(String name)
+	{
+<span class="fc" id="L179">		String separator = &quot;&quot;;</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">		if (name.contains(&quot;|&quot;)) separator = &quot;|&quot;;</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">		else if (name.contains(&quot;&amp;&quot;)) separator = &quot;&amp;&quot;;</span>
+
+<span class="fc bfc" id="L183" title="All 4 branches covered.">		if (Tools.isEmpty(separator)) return !isDisabledItem(name);</span>
+
+<span class="fc" id="L185">		int counter = 0;</span>
+<span class="fc" id="L186">		String[] names = name.split(separator);</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		for (String n : names)</span>
+		{
+<span class="fc bfc" id="L189" title="All 2 branches covered.">			if (!isDisabledItem(n)) counter++;</span>
+		}
+
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if (&quot;|&quot;.equals(separator))</span>
+		{
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			return counter &gt; 0;</span>
+		}
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">		else if (&quot;&amp;&quot;.equals(separator))</span>
+		{
+<span class="fc bfc" id="L198" title="All 2 branches covered.">			return counter == names.length;</span>
+		}
+<span class="nc" id="L200">		return false;</span>
+	}
+
+	public Map&lt;String, String&gt; getDisabledItemsTable()
+	{
+		//do NOT clone() this, callers may modify the content!
+<span class="fc" id="L206">		return disabledItemsTable;</span>
+	}
+	public void setDisabledItemsTable(Map&lt;String, String&gt; disabledItemsTable)
+	{
+		//do NOT clone() this, callers may modify the content!
+<span class="fc" id="L211">		this.disabledItemsTable = disabledItemsTable;</span>
+<span class="fc" id="L212">	}</span>
+	public void addDisabledItem(String name)
+	{
+<span class="fc bfc" id="L215" title="All 2 branches covered.">		if (&quot;menuFbrowser&quot;.equals(name))</span>
+		{
+<span class="fc" id="L217">			Logger.debug(Identity.class, &quot;Som fbrowser&quot;);</span>
+		}
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">		if (disabledItemsTable == null)</span>
+		{
+<span class="fc" id="L222">			disabledItemsTable = new Hashtable&lt;&gt;();</span>
+		}
+<span class="fc" id="L224">		disabledItemsTable.put(name, name);</span>
+<span class="fc" id="L225">	}</span>
+
+	public void removeDisabledItem(String name)
+	{
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (disabledItemsTable != null)</span>
+		{
+<span class="nc" id="L231">			disabledItemsTable.remove(name);</span>
+		}
+<span class="nc" id="L233">	}</span>
+
+	/**
+	 * JavaBean nevie v JSP vratit spravne FullName, pokial tam nie je toto
+	 */
+	@Override
+	public String getFullName()
+	{
+<span class="fc" id="L241">		return(super.getFullName());</span>
+	}
+
+	@Override
+	public String getWritableFolders()
+	{
+<span class="pc bpc" id="L247" title="1 of 6 branches missed.">		if (isDisabledItem(&quot;menuFbrowser&quot;) &amp;&amp; Tools.isEmpty(writableFolders) &amp;&amp; Constants.getBoolean(&quot;defaultDisableUpload&quot;)==false)</span>
+		{
+<span class="fc" id="L249">			return &quot;/images/*\n/files/*\n&quot;;</span>
+		}
+
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">		if (writableFolders==null) return null;</span>
+<span class="fc" id="L253">		return writableFolders.replace(' ', '\n');</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

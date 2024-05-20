@@ -43,7 +43,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.editor.rest",
     "sk.iway.iwcm.components.translation_keys.rest",
     "sk.iway.webjet.v9",
-    "sk.iway.iwcm.system.audit",
+    "sk.iway.iwcm.system.audit.rest",
     "sk.iway.iwcm.system.monitoring.rest",
     "sk.iway.iwcm.system.elfinder",
     "sk.iway.iwcm.system.logging",
@@ -80,7 +80,9 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.doc.clone_structure",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.xls",
-    "sk.iway.iwcm.components.restaurant_menu.rest"
+    "sk.iway.iwcm.components.restaurant_menu.rest",
+    "sk.iway.iwcm.components.quiz.rest",
+    "sk.iway.iwcm.components.blog.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

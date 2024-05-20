@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2024.18",
+            "perex": "WebJET 2024.18 obsahuje **novú sadu ikon**, Formulár ľahko doplnený o **pokročilé nastavenia** (príjemcovia, presmerovania...), do nového dizajnu sú prerobené aplikácie AB Testovanie, Audit (čaká na publikovanie, zmenené stránky), Blog, Dotazníky, Kalendár udalostí (schvaľovanie). Pridáva **podporu inštalácie typu MultiWeb** (oddelenie údajov domén) v Šablónach, Hromadnom e-maile a ďalších aplikáciách. Nová knižnica na **detekciu prehliadačov**, v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.",
+            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"
+        },
+        {
             "title": "Verzia 2024.0",
             "perex": "WebJET 2024.0 je zhodná s verziou 2023.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
@@ -41,46 +46,6 @@
             "title": "Verzia 2022.0",
             "perex": "2022.0 prináša bezpečnostnú aktualizáciu závislostí Java a JavaScript knižníc.",
             "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
-        },
-        {
-            "title": "Verzia 2021.52",
-            "perex": "2021.52 má nový dizajn aj pre staré verzie aplikácií, zlepšuje responzívnu verziu, pridáva nové polia web stránkam a zlepšuje správanie URL adries stránok pri ich presune do iného adresára.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202152"
-        },
-        {
-            "title": "Verzia 2021.47",
-            "perex": "2021.47 pridáva upravené aplikácie Tooltip, Export dát, Hromadný-email/Doménové limity a Bannerový systém do nového dizajnu. Pridali sme notifikácie o schvaľovaní pri uložení stránky a zlepšili mobilnú verziu.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202147"
-        },
-        {
-            "title": "Verzia 2021.45",
-            "perex": "2021.45 prináša zobrazenie zoznamu web stránok aj z podadresárov, zlepšuje zobrazenie administrácie na mobilných zariadeniach a pridáva aplikáciu Otázky a odpovede. Okrem toho obsahuje mnoho zmien pod kapotou pri práci so zoznamom web stránok (prechod na serverové stránkovanie a vyhľadávanie, použitie Spring DATA pre prístup k databáze).",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202145"
-        },
-        {
-            "title": "Verzia 2021.40",
-            "perex": "2021.40 prináša prerobenú správu používateľov, skupín a skupín práv a prerobenú aplikáciu GDPR do vizuálu WebJET 2021. Okrem toho pridáva množstvo drobných vylepšení a opráv.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202140"
-        },
-        {
-            "title": "Verzia 2021.24",
-            "perex": "2021.24 pridáva možnosť duplikovať záznamy v data tabuľkách, automatické otvorenie koreňových adresárov ak doméne obsahuje napr. len adresár Slovensky a Anglicky (max. 2 adresáre), umožňuje vykonávať hromadnú úpravu vo web stránkach a zlepšuje vo viacerých miestach komfort práce.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202124"
-        },
-        {
-            "title": "Verzia 2021.20",
-            "perex": "2021.20 pridáva zobrazenie a konfiguráciu voliteľných polí pre web stránku a adresár stránok a pridáva (konečne) tlačidlo pre zobrazenie web stránky do nástrojovej lišty datatabuľky.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202120"
-        },
-        {
-            "title": "Verzia 2021.18",
-            "perex": "2021.18 automaticky vytvorí doménový System priečinok, pridáva editáciu značiek (perex skupín), vylepšuje správanie editácie bunky a opravuje chybu zobrazenia číselníkových hodnôt v datatabuľke. Administrácia používa nové písmo Asap.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202118"
-        },
-        {
-            "title": "Verzia 2021.13",
-            "perex": "2021.13 zlepšuje používateľský zážitok zvýšením rýchlosti zobrazenia zoznamu web stránok, možnosť zadať ID stránky alebo adresára pre jej zobrazenie (vrátane zapamätania v URL adrese prehliadača), možnosť nastavenia zobrazených stĺpcov v datatabuľke, preklady v JavaScript súboroch a množstvo ďalších vylepšení v celom WebJETe.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
         }
     ]
 }

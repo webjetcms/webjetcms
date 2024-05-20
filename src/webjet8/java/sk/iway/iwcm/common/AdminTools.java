@@ -96,7 +96,7 @@ public class AdminTools {
             String sql = "SELECT doc_id, group_id, title, virtual_path, save_date, available, password_protected, publish_start, publish_end, external_link, sort_priority FROM documents_history WHERE author_id=? AND (virtual_path is null OR virtual_path not like '/files/%') ORDER BY save_date DESC, title ASC";
 
             db_conn = DBPool.getConnection();
-            if (Constants.DB_TYPE == Constants.DB_MYSQL) {
+            if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) {
                 ps = db_conn.prepareStatement(sql+" LIMIT "+(maxSize*3));
             } else {
                 ps = db_conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -286,7 +286,7 @@ public class AdminTools {
         if (Constants.DB_TYPE == Constants.DB_MSSQL) DOCUMENT_FIELDS_NODATA.append(" TOP (?)"); //BHR: otaznik musi byt v zatvorkach, inak to hlasilo java.sql.SQLException: Incorrect syntax near '@P0'.
 
         DOCUMENT_FIELDS_NODATA.append(" u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+DocDB.getDocumentFieldsNodata()+" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id");
-        String WHERE = " WHERE (d.virtual_path is null OR d.virtual_path not like '/files/%') AND d.available=1 ";
+        String WHERE = " WHERE (d.virtual_path is null OR d.virtual_path not like '/files/%') AND d.available="+DB.getBooleanSql(true)+" ";
         if (InitServlet.isTypeCloud()) WHERE += " AND d.root_group_l1="+ CloudToolsForCore.getDomainId();
         else if (filterDomainId > 0) {
             //ziskaj zoznam ROOT adresarov v zadanej domene
@@ -331,7 +331,7 @@ public class AdminTools {
                 sql.append(WHERE);
                 sql.append(DOCUMENT_ORDER_BY);
             }
-            else if (Constants.DB_TYPE == Constants.DB_MYSQL)
+            else if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
             {
                 sql = new StringBuilder(DOCUMENT_FIELDS_NODATA);
                 sql.append(WHERE);

@@ -18,6 +18,7 @@ Scenario('site-browser', async ({ I, DTE, Document }) => {
     Document.screenshot("/redactor/apps/site-browser/editor-dialog.png");
     I.switchTo();
 
+    let postfix = ("en" === I.getCongLng) ? "?language=en" : "";
     I.amOnPage("/apps/site-browser/");
-    Document.screenshot("/redactor/apps/site-browser/site-browser.png");
+    Document.screenshot("/redactor/apps/site-browser/site-browser.png" + postfix);
 });

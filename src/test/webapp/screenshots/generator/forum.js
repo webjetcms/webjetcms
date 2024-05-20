@@ -52,6 +52,7 @@ Scenario('Forum types', async ({I, DTE, Document}) => {
 
 Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/forum/admin/");
+    let confLng = I.getConfLng();
 
     DT.filter("subject", "diskusia testovací príspevok");
     Document.screenshot("/redactor/apps/forum/forum-list.png", 1500, 800);
@@ -77,7 +78,12 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/forum/forum-list-editor-advanced.png", 1000, 1100);
     DTE.cancel();
 
-    I.amOnPage("/apps/diskusia/");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/diskusia/");
+    } else if("en" === confLng) { 
+        I.amOnPage("/apps/diskusia/?language=en");
+    }
+
     I.waitForElement("#forumContentDiv", 15);
     Document.screenshot("/redactor/apps/forum/forum-list-forum.png");
 
@@ -88,12 +94,21 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     //Resize back
     I.resizeWindow(1280, 760);
 
-    I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+    if("sk" === confLng) {
+        I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+    } else if("en" === confLng) { 
+        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?language=en");
+    }
+
     I.waitForElement("#forumContentDiv");
     Document.screenshot("/redactor/apps/forum/forum-list-board.png", 1200, 1100);
 
+    if("sk" === confLng) {
+        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809");
+    } else if("en" === confLng) { 
+        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809&language=en");
+    }
 
-    I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809");
     I.waitForElement("#forumContentDiv");
     Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1200, 1100);
 

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">SearchDetails.java</span></div><h1>SearchDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+
+
+/**
+ *  Drzi zaznam o vysledku vyhladavania
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      $Date: 2003/11/03 17:25:29 $
+ */
+<span class="nc" id="L17">public class SearchDetails extends DocDetails</span>
+{
+   private String link;
+   private String dataOriginal;
+
+   /**
+    * Vrati ikonu suboru alebo prazdny retazes ak sa nejedna o subor
+    * @return
+    */
+   public String getFileIconImg()
+   {
+<span class="nc bnc" id="L28" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
+<span class="nc" id="L29">  		String icon = FileTools.getFileIcon(super.getExternalLink());</span>
+<span class="nc" id="L30">  		return &quot;&lt;img class='fileIcon' alt='' src='&quot;+icon+&quot;'/&gt; &quot;;</span>
+   }
+
+   /**
+    * Vrati info o subore vo formate PDF, 134,54 kB alebo prazdny retazec ak sa nejedna o subor
+    * @return
+    */
+   public String getFileInfo()
+   {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
+
+<span class="nc" id="L41">   	String fileSize = FileTools.getFileLength(getExternalLink(), false);</span>
+<span class="nc" id="L42">   	String ext = &quot;&quot;;</span>
+   	try
+		{
+<span class="nc" id="L45">   		String url = getExternalLink();</span>
+<span class="nc" id="L46">			ext = url.substring(url.lastIndexOf('.') + 1);</span>
+<span class="nc" id="L47">			ext = ext.trim().toUpperCase();</span>
+		}
+<span class="nc" id="L49">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L51">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L52">		}</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (Tools.isEmpty(fileSize)) return ext;</span>
+<span class="nc" id="L54">		return ext+&quot;, &quot;+fileSize;</span>
+   }
+
+   /**
+    * Vrati upraveny titulok stranky - ak sa jedna o subor prida ikonu a velkost suboru
+    */
+   @Override
+   public String getTitle()
+   {
+<span class="nc" id="L63">   	String fileInfo = getFileInfo();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">   	if (Tools.isNotEmpty(fileInfo))</span>
+   	{
+<span class="nc" id="L66">   		fileInfo = &quot; &lt;span class='fileInfo'&gt;(&quot;+fileInfo+&quot;)&lt;/span&gt;&quot;;</span>
+   	}
+<span class="nc" id="L68">   	return getFileIconImg()+getTitleHuman()+fileInfo;</span>
+   }
+
+   /**
+    * Vrati povodny neupraveny title stranky
+    * @return
+    */
+   public String getTitleOriginal()
+   {
+<span class="nc" id="L77">   	return super.getTitle();</span>
+   }
+
+   /**
+    * Vrati upraveny titulok suboru - nahradi znaky _ - za medzeru, ak sa nejedna o subor ponecha ako je
+    * @return
+    */
+   public String getTitleHuman()
+   {
+<span class="nc" id="L86">   	String title = super.getTitle();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return title;</span>
+<span class="nc" id="L88">   	title = title.replace('_', ' ');</span>
+<span class="nc" id="L89">   	title = title.replace('-', ' ');</span>
+   	try
+		{
+<span class="nc" id="L92">			String externalLink = getExternalLink();</span>
+<span class="nc" id="L93">			int externalLinkIndex = externalLink.lastIndexOf('.') + 1;</span>
+<span class="nc" id="L94">			String externalLinkExtension = externalLink.substring(externalLinkIndex);</span>
+
+<span class="nc" id="L96">			int titleIndex = title.lastIndexOf('.') + 1;</span>
+<span class="nc" id="L97">			String titleExtension = title.substring(titleIndex);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (titleExtension.equalsIgnoreCase(externalLinkExtension)) {</span>
+<span class="nc" id="L100">				int i = title.lastIndexOf('.');</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if (i&gt;0 &amp;&amp; title.charAt(i+1) != ' ') title = title.substring(0, i);</span>
+
+				//prve pismeno velke
+<span class="nc" id="L104">				title = (Character.toUpperCase(title.charAt(0))) +title.substring(1);</span>
+			}
+		}
+<span class="nc" id="L107">		catch (Exception e)</span>
+		{
+
+<span class="nc" id="L110">		}</span>
+
+<span class="nc" id="L112">   		return title;</span>
+   }
+
+   /**
+    *  Gets the doc_id attribute of the SearchDetails object
+    *
+    *@return    The doc_id value
+    */
+   public int getDoc_id()
+   {
+<span class="nc" id="L122">      return getDocId();</span>
+   }
+
+   /**
+    *  Sets the doc_id attribute of the SearchDetails object
+    *
+    *@param  newDoc_id  The new doc_id value
+    */
+   public void setDoc_id(int newDoc_id)
+   {
+<span class="nc" id="L132">      setDocId(newDoc_id);</span>
+<span class="nc" id="L133">   }</span>
+
+   /**
+    *  Sets the link attribute of the SearchDetails object
+    *
+    *@param  link  The new link value
+    */
+   public void setLink(String link)
+   {
+<span class="nc" id="L142">      this.link = link;</span>
+<span class="nc" id="L143">   }</span>
+
+   /**
+    *  Gets the link attribute of the SearchDetails object
+    *
+    *@return    The link value
+    */
+   public String getLink()
+   {
+<span class="nc" id="L152">      return link;</span>
+   }
+
+	public String getDataOriginal()
+	{
+<span class="nc" id="L157">		return dataOriginal;</span>
+	}
+
+	public void setDataOriginal(String dataOriginal)
+	{
+<span class="nc" id="L162">		this.dataOriginal = dataOriginal;</span>
+<span class="nc" id="L163">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

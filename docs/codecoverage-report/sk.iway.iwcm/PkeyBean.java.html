@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PkeyBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">PkeyBean.java</span></div><h1>PkeyBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+/**
+ *  PkeyBean.java - bean pre Primary Key Generator - riadok tabulky pkey_generator
+ *
+ *@Title        webjet
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 29.9.2004 14:16:19
+ *@modified     $Date: 2004/10/04 09:18:58 $
+ */
+<span class="fc" id="L14">class PkeyBean</span>
+{
+	private String name;
+<span class="fc" id="L17">	private long value = 1;</span>
+<span class="fc" id="L18">	private long maxValue = 1;</span>
+	private String tableName;
+	private String tablePkeyName;
+	
+	public String toString()
+	{
+<span class="fc" id="L24">		return(getName() + &quot; [&quot; + getTablePkeyName() + &quot;]=&quot; + getValue()+&quot; max:&quot;+getMaxValue());</span>
+	}
+	
+	public String getName()
+	{
+<span class="fc" id="L29">		return name;</span>
+	}
+	public void setName(String name)
+	{
+<span class="fc" id="L33">		this.name = name;</span>
+<span class="fc" id="L34">	}</span>
+	public String getTableName()
+	{
+<span class="fc" id="L37">		return tableName;</span>
+	}
+	public void setTableName(String tableName)
+	{
+<span class="fc" id="L41">		this.tableName = tableName;</span>
+<span class="fc" id="L42">	}</span>
+	public String getTablePkeyName()
+	{
+<span class="fc" id="L45">		return tablePkeyName;</span>
+	}
+	public void setTablePkeyName(String tablePkeyName)
+	{
+<span class="fc" id="L49">		this.tablePkeyName = tablePkeyName;</span>
+<span class="fc" id="L50">	}</span>
+	public long getValue()
+	{
+<span class="fc" id="L53">		return value;</span>
+	}
+	public void setValue(long value)
+	{
+<span class="fc" id="L57">		this.value = value;</span>
+<span class="fc" id="L58">	}</span>
+	public long getMaxValue()
+	{
+<span class="fc" id="L61">		return maxValue;</span>
+	}
+	public void setMaxValue(long maxValue)
+	{
+<span class="fc" id="L65">		this.maxValue = maxValue;</span>
+<span class="fc" id="L66">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivTracker.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivTracker.java</span></div><h1>FileArchivTracker.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
+
+import org.apache.http.client.utils.URIBuilder;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.analytics.Tracker;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+/**
+ * Trackovanie stahovania subrov do GA z file archivu
+ */
+<span class="nc" id="L16">public class FileArchivTracker implements Tracker {</span>
+
+    /**
+     * Implemetacia triedy tack - Vyplni potrebne parametre a vykona request na GA
+     * @param path cesta k suboru
+     * @param request HttpServletRequest
+     */
+    public void track(String path, HttpServletRequest request) throws Exception {
+
+        // Load configuration
+<span class="nc" id="L26">        String trackingId = Constants.getString(&quot;analyticsTrackingId&quot;);</span>
+<span class="nc" id="L27">        String trackingVersion = Constants.getString(&quot;analyticsTrackingVersion&quot;);</span>
+
+        // Tracking id validation
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if(Tools.isEmpty(trackingId)) {</span>
+<span class="nc" id="L31">            throw new Exception(&quot;FileArchivTracker analyticsTrackingId is empty&quot;);</span>
+        }
+
+        // Cookies to identify user
+<span class="nc" id="L35">        String cid = Tools.getCookieValue(request.getCookies(), &quot;_ga&quot;, &quot;&quot;).replace(trackingVersion + &quot;.&quot;, &quot;&quot;);</span>
+<span class="nc" id="L36">        String gid = Tools.getCookieValue(request.getCookies(), &quot;_gid&quot;, &quot;&quot;).replace(trackingVersion + &quot;.&quot;, &quot;&quot;);</span>
+
+        // requested file
+<span class="nc" id="L39">        FileArchivatorBean file = FileArchivatorDB.getByUrl(path);</span>
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if(Tools.isEmpty(cid)) {</span>
+<span class="nc" id="L42">            cid = &quot;unknownClient&quot;;</span>
+        }
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if(Tools.isEmpty(gid)) {</span>
+<span class="nc" id="L46">            gid = &quot;unknownGroup&quot;;</span>
+        }
+
+        // assemble url
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if(file != null) {</span>
+<span class="nc" id="L51">            URIBuilder builder = new URIBuilder();</span>
+<span class="nc" id="L52">            builder</span>
+<span class="nc" id="L53">                    .setScheme(&quot;http&quot;)</span>
+<span class="nc" id="L54">                    .setHost(&quot;www.google-analytics.com&quot;)</span>
+<span class="nc" id="L55">                    .setPath(&quot;/collect&quot;)</span>
+<span class="nc" id="L56">                    .addParameter(&quot;v&quot;, &quot;1&quot;) // API Version.</span>
+<span class="nc" id="L57">                    .addParameter(&quot;tid&quot;, trackingId) // Tracking ID / Property ID.</span>
+<span class="nc" id="L58">                    .addParameter(&quot;cid&quot;, cid) // Anonymous Client Identifier. Ideally, this should be a UUID that is associated with particular user, device, or browser instance.</span>
+<span class="nc" id="L59">                    .addParameter(&quot;_gid&quot;, gid) // Anonymous Client Identifier. Ideally, this should be a UUID that is associated with particular user, device, or browser instance.</span>
+<span class="nc" id="L60">                    .addParameter(&quot;t&quot;, &quot;event&quot;) // Event hit type.</span>
+<span class="nc" id="L61">                    .addParameter(&quot;ec&quot;, &quot;Stiahnuté dokumenty&quot;) // Event category.</span>
+<span class="nc" id="L62">                    .addParameter(&quot;ea&quot;, file.getVirtualFileName()) // Event action.</span>
+<span class="nc" id="L63">                    .addParameter(&quot;el&quot;, path)  // Event url.</span>
+<span class="nc" id="L64">                    .addParameter(&quot;dl&quot;, request.getHeader(&quot;referer&quot;)) // referer url.</span>
+<span class="nc" id="L65">                    .addParameter(&quot;dt&quot;, request.getHeader(&quot;referer&quot;)); // referer title.</span>
+            URI uri;
+
+            // build url
+            try {
+<span class="nc" id="L70">                uri = builder.build();</span>
+<span class="nc" id="L71">            } catch (URISyntaxException e) {</span>
+<span class="nc" id="L72">                throw new ServletException(&quot;FileArchivTracker Problem building URI&quot;, e);</span>
+<span class="nc" id="L73">            }</span>
+
+            // track event
+<span class="nc" id="L76">            Tools.downloadUrl(uri.toURL().toString());</span>
+        }
+
+<span class="nc" id="L79">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

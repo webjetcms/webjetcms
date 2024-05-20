@@ -20,7 +20,7 @@
     div.dz-message {
         display: block !important;
     }
-    i.fa-upload {
+    i.ti-upload {
         font-size: 120px;
         color: #343a40;
     }
@@ -168,44 +168,44 @@
         white-space: nowrap;
     }
 
-    i.fa-exclamation-triangle,
-    i.fa-check-circle,
+    i.ti-alert-triangle,
+    i.ti-circle-check,
     .fa-progress-bar,
-    i.fa-spin,
-    i.fa-exclamation-circle {
+    i.ti-spin,
+    i.ti-alert-circle {
         display: none;
         position: relative;
         top: 4px;
     }
 
-    i.fa-image-polaroid {
+    i.ti-polaroid {
         color: #007eff;
         padding-left: 12px;
         padding-right: 7px;
     }
 
-    i.fa-check-circle {
+    i.ti-circle-check {
         color: #00be9f;
         font-size: 20px;
     }
 
-    i.fa-exclamation-triangle {
-        font-size: 9px;
+    i.ti-alert-triangle {
+        font-size: 14px;
         color: #ffc000;
         width: 20px;
         height: 20px;
         border: solid 2px #ffc000;
         border-radius: 50%;
         text-align: center;
-        padding: 3px 2px 1px 1px;
+        padding: 0px 2px 1px 1px;
     }
 
-    i.fa-spin {
+    i.ti-spin {
         color: #ffc000;
         font-size: 20px;
     }
 
-    i.fa-exclamation-circle {
+    i.ti-exclamation-circle {
         color: #ff4852;
         font-size: 20px;
     }
@@ -271,13 +271,13 @@
     }
 
     [data-upload-status="success"] {
-        i.fa-check-circle {
+        i.ti-circle-check {
             display: block
         }
     }
 
     [data-upload-status="exist"] {
-        i.fa-exclamation-triangle {
+        i.ti-alert-triangle {
             display: block
         }
         span.exist {
@@ -288,14 +288,14 @@
         }
     }
     [data-upload-status="processing"] {
-        i.fa-spin {
-            display: block
+        i.ti-spin {
+            display: block;
         }
-        i.fa-exclamation-triangle {
-            display: none
+        i.ti-alert-triangle {
+            display: none;
         }
         span.exist {
-            display: none
+            display: none;
         }
         .toast-links {
             display: none;
@@ -303,11 +303,11 @@
     }
 
     [data-upload-status="waitforprocess"] {
-        i.fa-spin {
+        i.ti-spin {
             color: #dddfe6;
             display: block;
         }
-        i.fa-exclamation-triangle {
+        i.ti-alert-triangle {
             display: none
         }
         span.exist {
@@ -319,7 +319,7 @@
     }
 
     [data-upload-status="error"] {
-        i.fa-exclamation-circle,
+        i.ti-alert-circle,
         div.toast-error-message {
             display: block
         }

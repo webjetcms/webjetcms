@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">UserDetailsConverter.java</span></div><h1>UserDetailsConverter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.util.Collection;
+import java.util.Locale;
+
+import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.converters.Converter;
+import org.eclipse.persistence.sessions.Session;
+
+import net.sourceforge.stripes.validation.TypeConverter;
+import net.sourceforge.stripes.validation.ValidationError;
+import sk.iway.iwcm.Tools;
+
+/**
+ * Automaticky konvertuje UserDetails (aj Identity) na int a spat JPA,
+ * zaroven je to TypeConverter pre Stripes :P
+ *
+ * @author mbocko
+ *
+ */
+<span class="fc" id="L21">public class UserDetailsConverter implements Converter, TypeConverter&lt;UserDetails&gt;</span>
+{
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public UserDetails convertDataValueToObjectValue(Object value, Session arg1)
+	{
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">		if (value instanceof Number)</span>
+		{
+<span class="fc" id="L30">			int id = ((Number) value).intValue();</span>
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">			if (id == -1 || id==0) return null;</span>
+
+			//v magma_calendar su neschvalene zaznamy zapisane v DB s -user_id hodnotou
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">			if (id &lt; -1) {</span>
+<span class="nc" id="L35">				id = -id;</span>
+			}
+<span class="fc" id="L37">			UserDetails user = UsersDB.getUserCached(id);</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">			if (user!=null)</span>
+			{
+<span class="fc" id="L40">				return user;</span>
+			}
+		}
+<span class="fc" id="L43">		return null;</span>
+	}
+
+	@Override
+	public Integer convertObjectValueToDataValue(Object object, Session arg1)
+	{
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (object instanceof UserDetails)</span>
+		{
+<span class="nc" id="L51">			UserDetails user = (UserDetails)object;</span>
+<span class="nc" id="L52">			return Integer.valueOf(user.getUserId());</span>
+		}
+<span class="nc" id="L54">		return null;</span>
+	}
+
+	@Override
+	public UserDetails convert(String value, Class&lt;? extends UserDetails&gt; paramClass, Collection&lt;ValidationError&gt; paramCollection)
+	{
+<span class="nc" id="L60">		int id = Tools.getIntValue(value, 0);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (id&gt;0)</span>
+		{
+<span class="nc" id="L63">			UserDetails user = UsersDB.getUserCached(id);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (user!=null)</span>
+			{
+<span class="nc" id="L66">				return user;</span>
+			}
+		}
+<span class="nc" id="L69">		return null;</span>
+	}
+
+
+	@Override
+	public void setLocale(Locale paramLocale)
+	{
+
+<span class="nc" id="L77">	}</span>
+
+	@Override
+	public void initialize(DatabaseMapping arg0, Session arg1)
+	{
+
+<span class="fc" id="L83">	}</span>
+
+	@Override
+	public boolean isMutable()
+	{
+<span class="fc" id="L88">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

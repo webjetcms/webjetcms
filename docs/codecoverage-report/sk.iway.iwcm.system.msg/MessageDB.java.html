@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.msg</a> &gt; <span class="el_source">MessageDB.java</span></div><h1>MessageDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.msg;
+
+import org.apache.commons.lang.StringUtils;
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import org.eclipse.persistence.queries.UpdateAllQuery;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.servlet.http.HttpSession;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ *  MessageDB.java - treida drziaca zoznam odkazov
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: thaber $
+ *@version      $Revision: 1.9 $
+ *@created      Date: 24.2.2006 23:47:06
+ *@modified     $Date: 2010/02/24 16:31:26 $
+ */
+public class MessageDB
+{
+	private static final String CONTEXT_NAME = &quot;sk.iway.iwcm.system.msg.MessageDB&quot;;
+
+	public synchronized static MessageDB getInstance(boolean forceRefresh)
+	{
+		//try to get it from server space
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		if (forceRefresh == false)</span>
+		{
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">			if (Constants.getServletContext()!=null &amp;&amp; Constants.getServletContext().getAttribute(CONTEXT_NAME) != null)</span>
+			{
+				//Logger.println(this,&quot;DocDB: getting from server space&quot;);
+<span class="fc" id="L55">				MessageDB messageDB = (MessageDB) Constants.getServletContext().getAttribute(CONTEXT_NAME);</span>
+
+<span class="fc" id="L57">				return (messageDB);</span>
+			}
+		}
+<span class="fc" id="L60">		return (new MessageDB());</span>
+	}
+
+	private MessageDB()
+<span class="fc" id="L64">	{</span>
+		//remove
+<span class="fc" id="L66">		Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
+		//save us to server space
+<span class="fc" id="L68">		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);</span>
+
+<span class="fc" id="L70">		ClusterDB.addRefresh(MessageDB.class);</span>
+<span class="fc" id="L71">	}</span>
+
+	public boolean saveMessage(HttpSession session, AdminMessageBean msg)
+	{
+<span class="nc" id="L75">		boolean saveOK = false;</span>
+		try
+		{
+<span class="nc" id="L78">			EntityManager em = JpaTools.getEntityManager();</span>
+<span class="nc" id="L79">			em.getTransaction().begin();</span>
+<span class="nc" id="L80">			em.persist(msg);</span>
+
+<span class="nc" id="L82">		   msg.setCreateDate(new Date(Tools.getNow()));</span>
+
+<span class="nc" id="L84">		   Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		   if (user != null)</span>
+		   {
+<span class="nc" id="L87">		   	msg.setCreateByUserId(Integer.valueOf(user.getUserId()));</span>
+		   }
+<span class="nc" id="L89">		   em.getTransaction().commit();</span>
+<span class="nc" id="L90">			saveOK = true;</span>
+
+			//	refreshni DB
+<span class="nc" id="L93">			getInstance(true);</span>
+		}
+<span class="nc" id="L95">		catch (Exception e)</span>
+		{
+<span class="nc" id="L97">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L98">		}</span>
+<span class="nc" id="L99">		return(saveOK);</span>
+	}
+
+	public boolean saveMessage(AdminMessageBean msg)
+	{
+<span class="nc" id="L104">		boolean saveOK = false;</span>
+		try
+		{
+<span class="nc" id="L107">			EntityManager em = JpaTools.getEntityManager();</span>
+<span class="nc" id="L108">			em.getTransaction().begin();</span>
+<span class="nc" id="L109">			em.persist(msg);</span>
+
+<span class="nc" id="L111">			msg.setCreateDate(new Date(Tools.getNow()));</span>
+
+<span class="nc" id="L113">			em.getTransaction().commit();</span>
+<span class="nc" id="L114">			saveOK = true;</span>
+
+			//	refreshni DB
+<span class="nc" id="L117">			getInstance(true);</span>
+		}
+<span class="nc" id="L119">		catch (Exception e)</span>
+		{
+<span class="nc" id="L121">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L122">		}</span>
+<span class="nc" id="L123">		return(saveOK);</span>
+	}
+
+	public List&lt;AdminMessageBean&gt; getUnreadedMessages(HttpSession session)
+	{
+<span class="fc" id="L128">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (user == null) return(new ArrayList&lt;AdminMessageBean&gt;());</span>
+<span class="fc" id="L130">		return(getUnreadedMessages(user.getUserId()));</span>
+	}
+
+	public List&lt;AdminMessageBean&gt; getUnreadedMessages(int userId)
+	{
+<span class="fc" id="L135">		return this.getUnreadedMessages(userId, true);</span>
+	}
+
+	public List&lt;AdminMessageBean&gt; getUnreadedMessages(int userId, boolean setSeen) {
+<span class="fc" id="L139">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L140">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L141">		ReadAllQuery dbQuery = new ReadAllQuery(AdminMessageBean.class, builder);</span>
+<span class="fc" id="L142">		Expression expr = builder.get(&quot;recipientUserId&quot;).equal(userId);</span>
+<span class="fc" id="L143">		expr = expr.and(builder.get(&quot;isReaded&quot;).equal(null));</span>
+<span class="fc" id="L144">		dbQuery.setSelectionCriteria(expr);</span>
+<span class="fc" id="L145">		dbQuery.addOrdering(builder.get(&quot;createDate&quot;).ascending());</span>
+
+<span class="fc" id="L147">		em.getTransaction().begin();</span>
+<span class="fc" id="L148">		Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L149">		List&lt;AdminMessageBean&gt; messages = JpaDB.getResultList(query);</span>
+
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">		if (setSeen){</span>
+<span class="fc" id="L152">				boolean mamZmenu = false;</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">			for (int i = 0; i &lt; messages.size(); i++) {</span>
+<span class="nc" id="L154">				mamZmenu = true;</span>
+<span class="nc" id="L155">				messages.get(i).setReaded(Boolean.TRUE);</span>
+			}
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">			if (mamZmenu)</span>
+<span class="nc" id="L158">				em.getTransaction().commit();</span>
+			else
+<span class="fc" id="L160">				em.getTransaction().rollback();</span>
+		}
+
+<span class="fc" id="L163">		return messages;</span>
+	}
+
+	public AdminMessageBean getMessage(int messageId)
+	{
+<span class="nc" id="L168">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L169">		return em.find(AdminMessageBean.class, messageId);</span>
+	}
+
+	public List&lt;AdminMessageBean&gt; getAllMessages()
+	{
+<span class="nc" id="L174">		return(getAllMessages(-1));</span>
+	}
+
+	public List&lt;AdminMessageBean&gt; getAllMessages(int userId)
+	{
+<span class="nc" id="L179">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L180">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L181">		ReadAllQuery dbQuery = new ReadAllQuery(AdminMessageBean.class, builder);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if(userId&gt;0)</span>
+		{
+<span class="nc" id="L184">			Expression expr = builder.get(&quot;recipientUserId&quot;).equal(userId);</span>
+<span class="nc" id="L185">			dbQuery.setSelectionCriteria(expr);</span>
+		}
+<span class="nc" id="L187">		dbQuery.addOrdering(builder.get(&quot;createDate&quot;).descending());</span>
+<span class="nc" id="L188">		dbQuery.setMaxRows(40);</span>
+
+<span class="nc" id="L190">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L191">		List&lt;AdminMessageBean&gt; messages = JpaDB.getResultList(query);</span>
+
+<span class="nc" id="L193">		return(messages);</span>
+	}
+
+	/** vrati vsetky spravy pre dannych dvoch uzivatelov od tejto spravy
+	 * @param session
+	 * @param messageId
+	 * @param equal ak je true tak buden hladat iba od messageId spravy
+	 * @return
+	 */
+	public List&lt;AdminMessageBean&gt; getMessages(HttpSession session, int messageId, boolean equal)
+	{
+<span class="nc" id="L204">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc" id="L205">		AdminMessageBean am = getMessage(messageId);</span>
+<span class="nc" id="L206">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L207">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L209">		ReadAllQuery dbQuery = new ReadAllQuery(AdminMessageBean.class, builder);</span>
+<span class="nc" id="L210">		Expression ex = builder.get(&quot;createByUserId&quot;).equal(am.getCreateByUserId());</span>
+<span class="nc" id="L211">		ex = ex.and(builder.get(&quot;recipientUserId&quot;).equal(am.getRecipientUserId()));</span>
+<span class="nc" id="L212">		Expression ex2 = builder.get(&quot;createByUserId&quot;).equal(am.getRecipientUserId());</span>
+<span class="nc" id="L213">		ex2 = ex2.and(builder.get(&quot;recipientUserId&quot;).equal(am.getCreateByUserId()));</span>
+<span class="nc" id="L214">		Expression expr = ex.or(ex2);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if(!equal)</span>
+<span class="nc" id="L216">			expr = expr.and(builder.get(&quot;createDate&quot;).greaterThan(am.getCreateDate()));</span>
+		else
+<span class="nc" id="L218">			expr = expr.and(builder.get(&quot;createDate&quot;).greaterThanEqual(am.getCreateDate()));</span>
+
+<span class="nc" id="L220">		dbQuery.setSelectionCriteria(expr);</span>
+<span class="nc" id="L221">		dbQuery.setMaxRows(40);</span>
+
+<span class="nc" id="L223">		em.getTransaction().begin();</span>
+<span class="nc" id="L224">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L225">		List&lt;AdminMessageBean&gt; messages = JpaDB.getResultList(query);</span>
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		for(int i=0;i&lt;messages.size();i++)</span>
+		{
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if(messages.get(i).getRecipientUserId().intValue()==user.getUserId())</span>
+<span class="nc" id="L230">				messages.get(i).setReaded(Boolean.TRUE);</span>
+		}
+<span class="nc" id="L232">		em.getTransaction().commit();</span>
+<span class="nc" id="L233">		return messages;</span>
+	}
+
+	public static List&lt;AdminMessageBean&gt; getMessagesWithUser(HttpSession session, int toUserId,int limit)
+	{
+<span class="nc" id="L238">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+
+<span class="nc" id="L240">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L241">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L243">		ReadAllQuery dbQuery = new ReadAllQuery(AdminMessageBean.class, builder);</span>
+<span class="nc" id="L244">		Expression ex = builder.get(&quot;createByUserId&quot;).equal(user.getUserId());</span>
+<span class="nc" id="L245">		ex = ex.and(builder.get(&quot;recipientUserId&quot;).equal(toUserId));</span>
+<span class="nc" id="L246">		Expression ex2 = builder.get(&quot;createByUserId&quot;).equal(toUserId);</span>
+<span class="nc" id="L247">		ex2 = ex2.and(builder.get(&quot;recipientUserId&quot;).equal(user.getUserId()));</span>
+<span class="nc" id="L248">		Expression expr = ex.or(ex2);</span>
+
+<span class="nc" id="L250">		dbQuery.setSelectionCriteria(expr);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if(limit &gt; 0)</span>
+		{
+<span class="nc" id="L253">			dbQuery.setMaxRows(limit);</span>
+		}
+<span class="nc" id="L255">		dbQuery.addOrdering(builder.get(&quot;createDate&quot;).ascending());</span>
+<span class="nc" id="L256">		Query query = em.createQuery(dbQuery);</span>
+
+<span class="nc" id="L258">		return JpaDB.getResultList(query);</span>
+	}
+
+	public static void setMessagesRead(int createByUserId, HttpSession session,long timeTo)
+	{
+<span class="nc" id="L263">		UserDetails user = UsersDB.getCurrentUser(session);</span>
+<span class="nc" id="L264">		new SimpleQuery().execute(&quot;UPDATE admin_message SET is_readed = 1 WHERE recipient_user_id = ? AND create_by_user_id = ?&quot;, user.getUserId(), createByUserId);</span>
+<span class="nc" id="L265">	}</span>
+
+	public static void setMessageRead(HttpSession session,int messageId)
+	{
+<span class="nc" id="L269">		UserDetails user = UsersDB.getCurrentUser(session);</span>
+<span class="nc" id="L270">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L271">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="nc" id="L273">		UpdateAllQuery dbQuery = new UpdateAllQuery(AdminMessageBean.class, builder);</span>
+<span class="nc" id="L274">		Expression ex = builder.get(&quot;recipientUserId&quot;).equal(user.getUserId());</span>
+<span class="nc" id="L275">		ex = ex.and(builder.get(&quot;admin_message_id&quot;).equal(messageId));</span>
+
+<span class="nc" id="L277">		dbQuery.setSelectionCriteria(ex);</span>
+<span class="nc" id="L278">		dbQuery.addUpdate(&quot;isReaded&quot;, true);</span>
+
+<span class="nc" id="L280">		em.getTransaction().begin();</span>
+<span class="nc" id="L281">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L282">		query.executeUpdate();</span>
+<span class="nc" id="L283">		em.getTransaction().commit();</span>
+<span class="nc" id="L284">	}</span>
+
+	public static Map&lt;Integer,Integer&gt; getCountOfUnreadMessages(int user_id) {
+<span class="nc" id="L287">		Map&lt;Integer,Integer&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L288">		Connection db_conn = null;</span>
+<span class="nc" id="L289">		PreparedStatement ps = null;</span>
+<span class="nc" id="L290">		ResultSet rs = null;</span>
+		try {
+<span class="nc" id="L292">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L293">			StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L294">			sql.append(&quot;SELECT create_by_user_id, COUNT(*) as POCET FROM admin_message &quot;);</span>
+<span class="nc" id="L295">			sql.append(&quot;WHERE recipient_user_id=? AND (is_readed = 0 OR is_readed IS NULL) &quot;);</span>
+<span class="nc" id="L296">			sql.append(&quot;GROUP BY create_by_user_id&quot;);</span>
+<span class="nc" id="L297">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L298">			ps.setInt(1, user_id);</span>
+<span class="nc" id="L299">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L301">				map.put(rs.getInt(&quot;create_by_user_id&quot;),rs.getInt(&quot;pocet&quot;));</span>
+			}
+<span class="nc" id="L303">			rs.close();</span>
+<span class="nc" id="L304">			ps.close();</span>
+
+<span class="nc" id="L306">			db_conn.close();</span>
+<span class="nc" id="L307">			rs = null;</span>
+<span class="nc" id="L308">			ps = null;</span>
+<span class="nc" id="L309">			db_conn = null;</span>
+<span class="nc" id="L310">		} catch (Exception ex) {</span>
+<span class="nc" id="L311">			sk.iway.iwcm.Logger.error(ex);</span>
+		} finally {
+			try {
+<span class="nc bnc" id="L314" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L315">					rs.close();</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L317">					ps.close();</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L319">					db_conn.close();</span>
+<span class="nc" id="L320">			} catch (Exception ex2) {</span>
+
+<span class="nc" id="L322">			}</span>
+		}
+<span class="nc" id="L324">		return map;</span>
+	}
+
+	public static List&lt;Integer&gt; getAllContactsWhichUserSentMessage(int userId, List&lt;Integer&gt; alreadyHave) {
+<span class="nc" id="L328">		List&lt;Integer&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L329">		Connection db_conn = null;</span>
+<span class="nc" id="L330">		PreparedStatement ps = null;</span>
+<span class="nc" id="L331">		ResultSet rs = null;</span>
+		try {
+<span class="nc" id="L333">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L334">			StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L335">			sql.append(&quot;SELECT DISTINCT create_by_user_id, recipient_user_id FROM admin_message WHERE create_by_user_id = ?&quot;);</span>
+<span class="nc bnc" id="L336" title="All 4 branches missed.">			if (alreadyHave != null &amp;&amp; !alreadyHave.isEmpty())</span>
+<span class="nc" id="L337">				sql.append(&quot; AND recipient_user_id NOT IN (&quot; + StringUtils.join(alreadyHave,&quot;,&quot;) + &quot;)&quot;);</span>
+<span class="nc" id="L338">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L339">			ps.setInt(1, userId);</span>
+<span class="nc" id="L340">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L342">				ret.add(rs.getInt(&quot;recipient_user_id&quot;));</span>
+			}
+<span class="nc" id="L344">			rs.close();</span>
+<span class="nc" id="L345">			ps.close();</span>
+
+<span class="nc" id="L347">			db_conn.close();</span>
+<span class="nc" id="L348">			rs = null;</span>
+<span class="nc" id="L349">			ps = null;</span>
+<span class="nc" id="L350">			db_conn = null;</span>
+<span class="nc" id="L351">		} catch (Exception ex) {</span>
+<span class="nc" id="L352">			sk.iway.iwcm.Logger.error(ex);</span>
+		} finally {
+			try {
+<span class="nc bnc" id="L355" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L356">					rs.close();</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L358">					ps.close();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L360">					db_conn.close();</span>
+<span class="nc" id="L361">			} catch (Exception ex2) {</span>
+
+<span class="nc" id="L363">			}</span>
+		}
+<span class="nc" id="L365">		return ret;</span>
+	}
+
+	public static List&lt;Integer&gt; getAllContactsWhichUserReceivedMessage(int userId, List&lt;Integer&gt; alreadyHave) {
+<span class="nc" id="L369">		List&lt;Integer&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L370">		Connection db_conn = null;</span>
+<span class="nc" id="L371">		PreparedStatement ps = null;</span>
+<span class="nc" id="L372">		ResultSet rs = null;</span>
+		try {
+<span class="nc" id="L374">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L375">			StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L376">			sql.append(&quot;SELECT DISTINCT recipient_user_id, create_by_user_id FROM admin_message WHERE recipient_user_id = ?&quot;);</span>
+<span class="nc bnc" id="L377" title="All 4 branches missed.">			if (alreadyHave != null &amp;&amp; !alreadyHave.isEmpty())</span>
+<span class="nc" id="L378">				sql.append(&quot; AND create_by_user_id NOT IN (&quot; + StringUtils.join(alreadyHave,&quot;,&quot;) + &quot;)&quot;);</span>
+<span class="nc" id="L379">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L380">			ps.setInt(1, userId);</span>
+<span class="nc" id="L381">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L383">				ret.add(rs.getInt(&quot;create_by_user_id&quot;));</span>
+			}
+<span class="nc" id="L385">			rs.close();</span>
+<span class="nc" id="L386">			ps.close();</span>
+
+<span class="nc" id="L388">			db_conn.close();</span>
+<span class="nc" id="L389">			rs = null;</span>
+<span class="nc" id="L390">			ps = null;</span>
+<span class="nc" id="L391">			db_conn = null;</span>
+<span class="nc" id="L392">		} catch (Exception ex) {</span>
+<span class="nc" id="L393">			sk.iway.iwcm.Logger.error(ex);</span>
+		} finally {
+			try {
+<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L397">					rs.close();</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L399">					ps.close();</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L401">					db_conn.close();</span>
+<span class="nc" id="L402">			} catch (Exception ex2) {</span>
+
+<span class="nc" id="L404">			}</span>
+		}
+<span class="nc" id="L406">		return ret;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

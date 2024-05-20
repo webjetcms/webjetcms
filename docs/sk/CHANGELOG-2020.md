@@ -141,7 +141,7 @@ Import:
 **Datatables:**
 
 - Pridaná možnosť **nezobraziť filter** v hlavičke tabuľky pre stĺpec nastavením atribútu ```filter=false``` v anotácii
-- Pridaná možnosť **vypnúť stránkovanie** pomocou ```options paging: false``` [dokumentácia](developer/datatables/README.md#možnosti-konfigurácie)
+- Pridaná možnosť **vypnúť stránkovanie** pomocou ```options paging: false```, [dokumentácia](developer/datatables/README.md#možnosti-konfigurácie)
 
 ## 2020.44
 
@@ -213,7 +213,7 @@ Import:
 - #46891 [Auditing] - premenovaná tabuľka ```webjet_audit``` na ```webjet_adminlog``` podľa pôvodného názvu v Oracle
 - #46891 [Testovanie] - pridané [rozšírenie codeceptjs-chai](developer/testing/README.md#assert-knižnica) pre jednoduché písanie ```assert``` podmienok
 - #46891 [Dokumentácia] - pridaná dokumentácia k [auditingu](developer/backend/auditing.md), [riešeniu problémov](developer/troubles/README.md) a doplnené informácie k [testovaniu](developer/testing/README.md#webjet-doplnkové-funkcie)
-- upravené nastavenie v ```build.gradle``` ```options.encoding=utf-8```, opravená diakritika v ```PathFilter```
+- upravené nastavenie v ```build.gradle```, ```options.encoding=utf-8```, opravená diakritika v ```PathFilter```
 - #46891 [Testovanie] - pridané testovanie auditného záznamu do štandardného volania ```DataTables.baseTest('domainRedirectTable');```
 - #46891 [Datatable] - pridaná možnosť nastavenia [spôsobu usporiadania](developer/datatables/README.md#usporiadanie) pri zobrazení stránky, nastavené usporiadanie pre konfiguráciu (podľa dátumu zmeny),
 - #46891 [Datatable] - pridané sekundy k formátovaniu dátumu a času
@@ -231,7 +231,7 @@ Import:
 - #47419 [Monitorovanie servera] pridaná knižnica [amcharts](https://www.amcharts.com/) pre zobrazovanie grafov, použitá je komerčná licencia
 - #46261 [Skripty] modul doplnený o možnosť nastavenia adresára, alebo web stránky pre skript
 - #46261 [DTED json field] refaktorovaný kód [dátového poľa JSON pre DTED](developer/datatables-editor/field-json.md). Doplnená možnosť konverzie JSON objektov a textu tlačítka, vytvorená dokumentácia.
-- #47293 [Datatable] pridaná možnosť zobraziť vlastné tlačidlo iba keď je vybraný nejaký riadok pomocou kódu ```$.fn.dataTable.Buttons.showIfRowSelected(this, dt);``` [dokumentácia](developer/datatables/README.md)
+- #47293 [Datatable] pridaná možnosť zobraziť vlastné tlačidlo iba keď je vybraný nejaký riadok pomocou kódu ```$.fn.dataTable.Buttons.showIfRowSelected(this, dt);```, [dokumentácia](developer/datatables/README.md)
 - #47293 [Datatable] pridaná podpora ```range``` aj na číselné hodnoty, prefix je ```range:```, funguje podobne ako prefix ```daterange:```
 - #47293 [Persistent cache] zobrazenie záznamov cez datatable, Spring DATA
 
@@ -281,7 +281,7 @@ DataTables.baseTest('redirectTable', requiredFields);
 
 ## 2020.32
 
-- #44890 [Datatables] - Upravená funkčnosť ```BOOLEAN``` ```dt-format-boolean-true```, v JSON objekte je hodnota prenášaná ako ```true``` ale v ```options``` objekte ako ```"true"``` (reťazec). Nefungovalo teda porovnanie a nastavenie hodnoty. Upravený kód tak, že sa ```editor.options``` zmenia z ```"true" na true``` hodnotu. Následne už funguje porovnanie s objektom a správne nastavenie ```checkboxu```. Upravené aj filtrovanie pri klientskom stránkovaní, kde sa neporovnáva label ale value hodnota (viď komentár ```//neplati pre column-type-boolean``` v [index.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)).
+- #44890 [Datatables] - Upravená funkčnosť ```BOOLEAN```, ```dt-format-boolean-true```, v JSON objekte je hodnota prenášaná ako ```true``` ale v ```options``` objekte ako ```"true"``` (reťazec). Nefungovalo teda porovnanie a nastavenie hodnoty. Upravený kód tak, že sa ```editor.options``` zmenia z ```"true" na true``` hodnotu. Následne už funguje porovnanie s objektom a správne nastavenie ```checkboxu```. Upravené aj filtrovanie pri klientskom stránkovaní, kde sa neporovnáva label ale value hodnota (viď komentár ```//neplati pre column-type-boolean``` v [index.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)).
 - #44890 [Datatables] - Doplnený prenos data atribútov aj na polia typu ```checkbox``` a ```radio``` (podmienka ```"div.DTE_Field_Type_"+data.editor.type```). Nastavia sa na prvý element v zozname. Umožňujú nastavovať atribúty ako ```data-dt-field-hr``` alebo ```data-dt-field-headline```.
 - #44890 [Dátum a čas] - Upravené správanie sa hodnoty 0 v dátume vo formáte primitívneho typu ```long```. Pre hodnotu 0 sa zobrazí prázdny dátum a čas namiesto 1.1.1970. Upravené v ```renderDate``` v [datatables-config.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js).
 - #44890 [Datatables] - Upravené generovanie ```Options``` polí pre editor pomocou [LabelValue](../src/main/java/sk/iway/iwcm/system/datatable/json/LabelValue.java) objektu.

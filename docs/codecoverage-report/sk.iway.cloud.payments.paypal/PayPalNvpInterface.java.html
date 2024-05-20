@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PayPalNvpInterface.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.cloud.payments.paypal</a> &gt; <span class="el_source">PayPalNvpInterface.java</span></div><h1>PayPalNvpInterface.java</h1><pre class="source lang-java linenums">package sk.iway.cloud.payments.paypal;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.basket.BasketInvoiceBean;
+import sk.iway.iwcm.database.JpaDB;
+
+/**
+ *  PayPalNvpInterface.java
+ *
+ *  Trieda zabezpecuje http komunikaciu s name value pair rozhranim paypalu, zikanie tokenu a vykonanie sale
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2014
+ *@author       $Author: jeeff mhalas $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 2.10.2014 16:40:49
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L39">public class PayPalNvpInterface</span>
+{
+
+	/**
+	 * Iniciuje transakciu, ziska token na zaklade ktoreho sa da presmerovat na paypal
+	 *
+	 *
+
+	https://api-3t.sandbox.paypal.com/nvp?
+	USER=juan.merchant_api1.espana.es
+	&amp;PWD=2FSUU2PFK6PQQ26J
+	&amp;SIGNATURE=AiPC9BjkCyDFQXbSkoZcgqH3hpacAo95ErXCp2fAAa2UfXPKStHov0me
+	&amp;METHOD=SetExpressCheckout
+	&amp;PAYMENTREQUEST_0_PAYMENTACTION=SALE
+	&amp;PAYMENTREQUEST_0_AMT=19
+	&amp;VERSION=95
+	&amp;PAYMENTREQUEST_0_CURRENCYCODE=USD
+	&amp;cancelUrl=http://www.yourdomain.com/cancel.html
+	&amp;returnUrl=http://www.yourdomain.com/success.html
+
+	 * @param invoice
+	 * @param returnUrl
+	 * @param cancelUrl
+	 * @return
+	 * @author mhalas
+	 */
+	public static String setExpressCheckout(BasketInvoiceBean invoice, String returnUrl, String cancelUrl)
+	{
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if(Tools.isAnyEmpty(returnUrl, cancelUrl)) throw new IllegalArgumentException(&quot;returnUrl and cancelUrl can't be empty&quot;);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if(invoice == null) throw new IllegalArgumentException(&quot;invoice can't be null&quot;);</span>
+
+<span class="nc" id="L71">		Logger.debug(PayPalNvpInterface.class,&quot;setExpressCheckout returnUrl: &quot; + returnUrl + &quot; , cancelUrl: &quot;+cancelUrl);</span>
+
+<span class="nc" id="L73">		String token = &quot;&quot;;</span>
+<span class="nc" id="L74">		String url = Constants.getString(&quot;paypalNvpUrl&quot;);</span>
+<span class="nc" id="L75">		PayPalMerchantAccountBean merchant = new JpaDB&lt;PayPalMerchantAccountBean&gt;(PayPalMerchantAccountBean.class).findFirst(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L77">		HttpClient client = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L78">		HttpPost post = new HttpPost(url);</span>
+
+<span class="nc" id="L80">		List&lt;NameValuePair&gt; urlParameters = new ArrayList&lt;NameValuePair&gt;();</span>
+<span class="nc" id="L81">		urlParameters.add(new BasicNameValuePair(&quot;USER&quot;, merchant.getUser()));</span>
+<span class="nc" id="L82">		urlParameters.add(new BasicNameValuePair(&quot;PWD&quot;, merchant.getPwd()));</span>
+<span class="nc" id="L83">		urlParameters.add(new BasicNameValuePair(&quot;SIGNATURE&quot;, merchant.getSignature()));</span>
+<span class="nc" id="L84">		urlParameters.add(new BasicNameValuePair(&quot;METHOD&quot;, &quot;SetExpressCheckout&quot;));</span>
+<span class="nc" id="L85">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_PAYMENTACTION&quot;, &quot;SALE&quot;));</span>
+
+		//zaokruhli na 2 miesta
+<span class="nc" id="L88">		double price = Math.round(invoice.getTotalPriceVat()*100) / 100d;</span>
+
+<span class="nc" id="L90">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_AMT&quot;, Tools.replace(Double.toString( price ), &quot;,&quot;, &quot;.&quot;)));</span>
+<span class="nc" id="L91">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_CURRENCYCODE&quot;, invoice.getCurrency().toUpperCase()));</span>
+<span class="nc" id="L92">		urlParameters.add(new BasicNameValuePair(&quot;VERSION&quot;, Constants.getString(&quot;paypalNvpVersion&quot;)));</span>
+<span class="nc" id="L93">		urlParameters.add(new BasicNameValuePair(&quot;cancelUrl&quot;, cancelUrl));</span>
+<span class="nc" id="L94">		urlParameters.add(new BasicNameValuePair(&quot;returnUrl&quot;, returnUrl));</span>
+
+<span class="nc" id="L96">		Logger.debug(PayPalNvpInterface.class, &quot;PayPal url: &quot;+url);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		for (NameValuePair p : urlParameters)</span>
+		{
+<span class="nc" id="L99">			Logger.debug(PayPalNvpInterface.class, &quot;PayPal params: &quot;+p.getName()+&quot;=&quot;+p.getValue());</span>
+<span class="nc" id="L100">		}</span>
+
+		try
+		{
+<span class="nc" id="L104">			post.setEntity(new UrlEncodedFormEntity(urlParameters,Charset.forName(&quot;UTF-8&quot;)));</span>
+<span class="nc" id="L105">			HttpResponse response = client.execute(post);</span>
+<span class="nc" id="L106">			Logger.debug(PayPalNvpInterface.class,&quot;Response Code : &quot; + response.getStatusLine().getStatusCode());</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK)</span>
+			{
+<span class="nc" id="L109">				String responseBody = EntityUtils.toString(response.getEntity(), &quot;UTF-8&quot;);</span>
+<span class="nc" id="L110">				Logger.debug(PayPalNvpInterface.class, &quot;setExpressCheckout response: &quot;+responseBody);</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">				if(!responseBody.contains(&quot;ACK=Failure&quot;))</span>
+				{
+					//parse and urldecode token
+<span class="nc" id="L115">					String [] responseBodyItems = responseBody.split(&quot;&amp;&quot;);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">					for(String pair : responseBodyItems)</span>
+					{
+<span class="nc bnc" id="L118" title="All 2 branches missed.">						if(pair.startsWith(&quot;TOKEN&quot;))</span>
+						{
+<span class="nc" id="L120">							token = Tools.URLDecode(pair.split(&quot;=&quot;)[1]);</span>
+<span class="nc" id="L121">							break;</span>
+						}
+					}
+<span class="nc" id="L124">					Logger.debug(PayPalNvpInterface.class, &quot;recieved token: &quot; + token);</span>
+<span class="nc" id="L125">				}</span>
+				else
+				{
+<span class="nc" id="L128">					Logger.debug(PayPalNvpInterface.class, &quot;Failed to retrieve token!&quot;);</span>
+<span class="nc" id="L129">					token = &quot;&quot;;</span>
+				}
+
+			}
+		}
+<span class="nc" id="L134">		catch (ClientProtocolException e)</span>
+		{
+<span class="nc" id="L136">			Logger.debug(PayPalNvpInterface.class,&quot;Transaction init failed: &quot; + e.getMessage());</span>
+		}
+<span class="nc" id="L138">		catch (IOException e)</span>
+		{
+<span class="nc" id="L140">			Logger.debug(PayPalNvpInterface.class,&quot;Transaction init failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L141">		}</span>
+<span class="nc" id="L142">		return token;</span>
+	}
+
+	/**
+	 * Vykona samotnu transakciu po schvaleni klientom na strankach paypalu
+	 *
+	 * https://api-3t.sandbox.paypal.com/nvp?
+		USER=juan.merchant_api1.espana.es
+		&amp;PWD=2FSUU2PFK6PQQ26J
+		&amp;SIGNATURE=AiPC9BjkCyDFQXbSkoZcgqH3hpacAo95ErXCp2fAAa2UfXPKStHov0me
+		&amp;METHOD=DoExpressCheckoutPayment
+		&amp;TOKEN=EC-5CC0287178897953R
+		&amp;PAYERID=H5VGM5PD7MMVQ
+		&amp;PAYMENTREQUEST_0_PAYMENTACTION=SALE
+		&amp;PAYMENTREQUEST_0_AMT=19
+		&amp;PAYMENTREQUEST_0_CURRENCYCODE=USD
+	 *
+	 * @param invoice
+	 * @param token
+	 * @param payerId
+	 * @return
+	 * @author mhalas
+	 */
+	public static boolean doExpressCheckoutPayment(BasketInvoiceBean invoice, String token, String payerId)
+	{
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if(Tools.isAnyEmpty(token, payerId)) throw new IllegalArgumentException(&quot;token and payerId can't be empty&quot;);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if(invoice == null) throw new IllegalArgumentException(&quot;invoice can't be null&quot;);</span>
+
+<span class="nc" id="L170">		Logger.debug(PayPalNvpInterface.class,&quot;doExpressCheckoutPayment token: &quot; + token + &quot; , payerid: &quot;+payerId);</span>
+<span class="nc" id="L171">		boolean transok = false;</span>
+
+<span class="nc" id="L173">		String url = Constants.getString(&quot;paypalNvpUrl&quot;);</span>
+<span class="nc" id="L174">		PayPalMerchantAccountBean merchant = new JpaDB&lt;PayPalMerchantAccountBean&gt;(PayPalMerchantAccountBean.class).findFirst(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if(merchant == null)</span>
+		{
+<span class="nc" id="L177">			Logger.debug(PayPalNvpInterface.class,&quot;Failed to retrieve merchant info from DB&quot;);</span>
+<span class="nc" id="L178">			throw new NullPointerException(&quot;merchant can't be null&quot;);</span>
+		}
+
+<span class="nc" id="L181">		HttpClient client = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L182">		HttpPost post = new HttpPost(url);</span>
+
+<span class="nc" id="L184">		List&lt;NameValuePair&gt; urlParameters = new ArrayList&lt;NameValuePair&gt;();</span>
+<span class="nc" id="L185">		urlParameters.add(new BasicNameValuePair(&quot;USER&quot;, merchant.getUser()));</span>
+<span class="nc" id="L186">		urlParameters.add(new BasicNameValuePair(&quot;PWD&quot;, merchant.getPwd()));</span>
+<span class="nc" id="L187">		urlParameters.add(new BasicNameValuePair(&quot;SIGNATURE&quot;, merchant.getSignature()));</span>
+<span class="nc" id="L188">		urlParameters.add(new BasicNameValuePair(&quot;METHOD&quot;, &quot;DoExpressCheckoutPayment&quot;));</span>
+<span class="nc" id="L189">		urlParameters.add(new BasicNameValuePair(&quot;TOKEN&quot;, token));</span>
+<span class="nc" id="L190">		urlParameters.add(new BasicNameValuePair(&quot;PAYERID&quot;, payerId));</span>
+<span class="nc" id="L191">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_PAYMENTACTION&quot;, &quot;SALE&quot;));</span>
+
+		//zaokruhli na 2 miesta
+<span class="nc" id="L194">		double price = Math.round(invoice.getTotalPriceVat()*100) / 100d;</span>
+
+<span class="nc" id="L196">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_AMT&quot;, Tools.replace(Double.toString( price ), &quot;,&quot;, &quot;.&quot;)));</span>
+<span class="nc" id="L197">		urlParameters.add(new BasicNameValuePair(&quot;PAYMENTREQUEST_0_CURRENCYCODE&quot;, invoice.getCurrency().toUpperCase()));</span>
+<span class="nc" id="L198">		urlParameters.add(new BasicNameValuePair(&quot;VERSION&quot;, Constants.getString(&quot;paypalNvpVersion&quot;)));</span>
+
+		try
+		{
+<span class="nc" id="L202">			post.setEntity(new UrlEncodedFormEntity(urlParameters,Charset.forName(&quot;UTF-8&quot;)));</span>
+<span class="nc" id="L203">			HttpResponse response = client.execute(post);</span>
+<span class="nc" id="L204">			Logger.debug(PayPalNvpInterface.class,&quot;Response Code : &quot; + response.getStatusLine().getStatusCode());</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK)</span>
+			{
+<span class="nc" id="L207">				String responseBody = EntityUtils.toString(response.getEntity(), &quot;UTF-8&quot;);</span>
+<span class="nc" id="L208">				Logger.debug(PayPalNvpInterface.class, &quot;setExpressCheckout response: &quot;+responseBody);</span>
+				/**
+				 * example succes response
+				 *
+				 * TOKEN=EC%2d6F106004G20718133
+				 * &amp;SUCCESSPAGEREDIRECTREQUESTED=false
+				 * &amp;TIMESTAMP=2014%2d10%2d03T10%3a32%3a58Z
+				 * &amp;CORRELATIONID=67f0526c2e0fc&amp;ACK=Success
+				 * &amp;VERSION=95&amp;BUILD=13154493
+				 * &amp;INSURANCEOPTIONSELECTED=false
+				 * &amp;SHIPPINGOPTIONISDEFAULT=false
+				 * &amp;PAYMENTINFO_0_TRANSACTIONID=0EL99900EU5413417
+				 * &amp;PAYMENTINFO_0_TRANSACTIONTYPE=expresscheckout
+				 * &amp;PAYMENTINFO_0_PAYMENTTYPE=instant
+				 * &amp;PAYMENTINFO_0_ORDERTIME=2014%2d10%2d03T10%3a32%3a58Z
+				 * &amp;PAYMENTINFO_0_AMT=19%2e00
+				 * &amp;PAYMENTINFO_0_FEEAMT=1%2e04
+				 * &amp;PAYMENTINFO_0_TAXAMT=0%2e00
+				 * &amp;PAYMENTINFO_0_CURRENCYCODE=USD
+				 * &amp;PAYMENTINFO_0_PAYMENTSTATUS=Completed
+				 * &amp;PAYMENTINFO_0_PENDINGREASON=None
+				 * &amp;PAYMENTINFO_0_REASONCODE=None
+				 * &amp;PAYMENTINFO_0_PROTECTIONELIGIBILITY=Eligible
+				 * &amp;PAYMENTINFO_0_PROTECTIONELIGIBILITYTYPE=ItemNotReceivedEligible%2cUnauthorizedPaymentEligible
+				 * &amp;PAYMENTINFO_0_SECUREMERCHANTACCOUNTID=PJQEECPYGMEDC
+				 * &amp;PAYMENTINFO_0_ERRORCODE=0
+				 * &amp;PAYMENTINFO_0_ACK=Success
+				 *
+				 * example error response
+				 *
+				 * TIMESTAMP=2014%2d10%2d03T10%3a31%3a28Z
+				 * &amp;CORRELATIONID=f5085e93f1f5
+				 * &amp;ACK=Failure
+				 * &amp;VERSION=0%2e000000
+				 * &amp;BUILD=13154493
+				 * &amp;L_ERRORCODE0=10006
+				 * &amp;L_SHORTMESSAGE0=Version%20error
+				 * &amp;L_LONGMESSAGE0=Version%20is%20not%20supported
+				 * &amp;L_SEVERITYCODE0=Error
+				 */
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">				if(responseBody.contains(&quot;PAYMENTINFO_0_ACK=Success&quot;))</span>
+				{
+<span class="nc" id="L251">					transok = true;</span>
+				}
+				else
+				{
+<span class="nc" id="L255">					Logger.debug(PayPalNvpInterface.class,&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L256">					transok =false;</span>
+				}
+			}
+		}
+<span class="nc" id="L260">		catch (ClientProtocolException e)</span>
+		{
+<span class="nc" id="L262">			Logger.debug(PayPalNvpInterface.class,&quot;Transaction failed: &quot; + e.getMessage());</span>
+		}
+<span class="nc" id="L264">		catch (IOException e)</span>
+		{
+<span class="nc" id="L266">			Logger.debug(PayPalNvpInterface.class,&quot;Transaction failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L267">		}</span>
+<span class="nc" id="L268">		return transok;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

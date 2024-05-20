@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationDataDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.dto</a> &gt; <span class="el_source">EnumerationDataDto.java</span></div><h1>EnumerationDataDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.dto;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+/**
+ * Date: 09.04.2018
+ * Time: 14:57
+ * Project: webjet8
+ * Company: InterWay a. s. (www.interway.sk)
+ * Copyright: InterWay a. s. (c) 2001-2018
+ *
+ * @author mpijak
+ */
+<span class="nc" id="L15">public class EnumerationDataDto implements Serializable {</span>
+    private static final long serialVersionUID = 1L;
+
+    private int id;
+    private String string1;
+    private String string2;
+    private String string3;
+    private BigDecimal decimal1;
+    private BigDecimal decimal2;
+    private BigDecimal decimal3;
+
+    public int getId() {
+<span class="nc" id="L27">        return id;</span>
+    }
+
+    public void setId(int id) {
+<span class="nc" id="L31">        this.id = id;</span>
+<span class="nc" id="L32">    }</span>
+
+    public String getString1() {
+<span class="nc" id="L35">        return string1;</span>
+    }
+
+    public void setString1(String string1) {
+<span class="nc" id="L39">        this.string1 = string1;</span>
+<span class="nc" id="L40">    }</span>
+
+    public String getString2() {
+<span class="nc" id="L43">        return string2;</span>
+    }
+
+    public void setString2(String string2) {
+<span class="nc" id="L47">        this.string2 = string2;</span>
+<span class="nc" id="L48">    }</span>
+
+    public String getString3() {
+<span class="nc" id="L51">        return string3;</span>
+    }
+
+    public void setString3(String string3) {
+<span class="nc" id="L55">        this.string3 = string3;</span>
+<span class="nc" id="L56">    }</span>
+
+    public BigDecimal getDecimal1() {
+<span class="nc" id="L59">        return decimal1;</span>
+    }
+
+    public void setDecimal1(BigDecimal decimal1) {
+<span class="nc" id="L63">        this.decimal1 = decimal1;</span>
+<span class="nc" id="L64">    }</span>
+
+    public BigDecimal getDecimal2() {
+<span class="nc" id="L67">        return decimal2;</span>
+    }
+
+    public void setDecimal2(BigDecimal decimal2) {
+<span class="nc" id="L71">        this.decimal2 = decimal2;</span>
+<span class="nc" id="L72">    }</span>
+
+    public BigDecimal getDecimal3() {
+<span class="nc" id="L75">        return decimal3;</span>
+    }
+
+    public void setDecimal3(BigDecimal decimal3) {
+<span class="nc" id="L79">        this.decimal3 = decimal3;</span>
+<span class="nc" id="L80">    }</span>
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (!(obj instanceof EnumerationDataDto)) {</span>
+<span class="nc" id="L85">            return false;</span>
+        }
+<span class="nc" id="L87">        EnumerationDataDto obj2 = (EnumerationDataDto) obj;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        return this.getId() == obj2.getId();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

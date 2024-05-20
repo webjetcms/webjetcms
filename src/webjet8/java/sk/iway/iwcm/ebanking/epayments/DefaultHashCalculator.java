@@ -3,12 +3,14 @@ package sk.iway.iwcm.ebanking.epayments;
 import java.security.KeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
-import xjava.security.Cipher;
-import xjava.security.IllegalBlockSizeException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.google.crypto.tink.subtle.Hex;
 
 /**
  *  DefaultHashCalculator.java
@@ -37,18 +39,15 @@ class DefaultHashCalculator
 		try
 		{
 			MessageDigest hash = MessageDigest.getInstance("SHA-1");
-			byte bytesHash[] = hash.digest(toBeEncrypted.getBytes());
-			Cipher des = Cipher.getInstance("DES/ECB", "Cryptix");
+			byte[] bytesHash = hash.digest(toBeEncrypted.getBytes());
+			Cipher des = Cipher.getInstance("DES/ECB/NoPadding");
 
-			des.initEncrypt(new RawSecretKey("DES", privateKey.getBytes()));
-			byte bytesSIGN[] = des.crypt(bytesHash, 0, 8);
-			sign = Hex.dumpString(bytesSIGN);
+			des.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(privateKey.getBytes(), "DES"));
+			byte[] bytesSIGN = des.doFinal(bytesHash, 0, 8);
+			sign = Hex.encode(bytesSIGN);
 		}
-		catch (NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}
-		catch (NoSuchProviderException e){sk.iway.iwcm.Logger.error(e);}
-		catch (KeyException e){sk.iway.iwcm.Logger.error(e);}
-		catch (IllegalBlockSizeException e){sk.iway.iwcm.Logger.error(e);}
+		catch (NoSuchPaddingException|IllegalBlockSizeException|BadPaddingException|KeyException|NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}
 
-		return sign.trim();
+		return sign.trim().toUpperCase();
 	}
 }

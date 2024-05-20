@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Captcha.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.captcha</a> &gt; <span class="el_source">Captcha.java</span></div><h1>Captcha.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.captcha;
+
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Locale;
+
+import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import com.octo.captcha.service.CaptchaServiceException;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  Captcha.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 2.2.2010 10:57:33
+ *@modified     $Date: 2010/02/09 08:56:19 $
+ */
+<span class="nc" id="L50">public class Captcha</span>
+{
+<span class="fc" id="L52">	private static String captchaDiv = &quot;&lt;div class=\&quot;g-recaptcha\&quot;id=\&quot;wjReCaptcha\&quot;&gt;&lt;/div&gt;&lt;script src=\&quot;https://www.google.com/recaptcha/api.js?onload=onloadCallback&amp;render=explicit\&quot;async defer&gt;&lt;/script&gt;&lt;script type=\&quot;text/javascript\&quot;&gt;var reCaptchaWidgetId=-1;function isReCaptchaValid(){return serverRequest(false)}function serverRequest(setId){var isValid=false;var captchaId=$('#g-recaptcha-response').val();var url='/components/form/re_captcha_ajax.jsp';if(setId)url='/components/form/set_re_catpcha_ajax.jsp';$.ajax({type:'POST',url:url,data:{capchaId:captchaId},success:function(data){if(data.trim()=='OK')isValid=true;else grecaptcha.reset(reCaptchaWidgetId)},async:false});return isValid}var verifyCallback=function(response){serverRequest(true)};var onloadCallback=function(){reCaptchaWidgetId=grecaptcha.render('wjReCaptcha',{'sitekey':'&quot;+Constants.getString(&quot;reCaptchaSiteKey&quot;)+&quot;','callback':verifyCallback,'theme':'light'})};&lt;/script&gt;&quot;;</span>
+	/**
+	 * Vrati true ak je pre zadanu komponentu vyzadovana captcha (nastavuje sa konfiguracnou premennou captchaComponents ako zoznam oddeleny medzerami)
+	 * @param component
+	 * @return
+	 */
+	public static boolean isRequired(String component)
+	{
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">		if (Tools.isEmpty(component)) return true;</span>
+
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">		if ((&quot; &quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot; &quot;).indexOf(&quot; &quot;+component+&quot; &quot;)!=-1 || (&quot;,&quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot;,&quot;).indexOf(&quot;,&quot;+component+&quot;,&quot;)!=-1) return true;</span>
+<span class="fc" id="L63">		return false;</span>
+	}
+
+	/**
+	 * Zvaliduje a VYMAZE odpoved (malo by sa pouzit vo finalnej validacii na strane servera)
+	 * @param httpServletRequest
+	 * @param response
+	 * @param component - meno komponenty, alebo null ak kontrolu na povolenie komponenty nie je potrebne vykonat
+	 * @return
+	 */
+	public static boolean validateResponse(HttpServletRequest httpServletRequest, String response, String component)
+	{
+		try
+		{
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">			if (component != null &amp;&amp; isRequired(component)==false)</span>
+<span class="fc" id="L78">				return true;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;))) {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (response == null) response = httpServletRequest.getParameter(&quot;g-recaptcha-response&quot;);</span>
+<span class="nc" id="L81">				return reCaptchaValidate(response);</span>
+			}
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			else if (&quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+			{
+<span class="nc" id="L85">				return reCaptchaValidate(httpServletRequest.getSession().getAttribute(&quot;sessionId&quot;));</span>
+			}
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			else if (&quot;reCaptchaV3&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+			{
+<span class="nc" id="L89">				return reCaptchaV3Validate(httpServletRequest);</span>
+			}
+			//preber si priamo wjcaptcha parameter
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (Tools.isEmpty(response)) response = httpServletRequest.getParameter(&quot;wjcaptcha&quot;);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (Tools.isEmpty(response)) return false;</span>
+
+<span class="nc" id="L95">			String captchaId = httpServletRequest.getSession().getId();</span>
+<span class="nc" id="L96">			return CaptchaServiceSingleton.getInstance().validateResponseForID(captchaId, response.toUpperCase());</span>
+		}
+<span class="nc" id="L98">		catch (Exception e)</span>
+		{
+
+		}
+<span class="nc" id="L102">		return false;</span>
+	}
+
+	/** Zisti, ci je reCaptcha spravna
+	 *
+	 * @return
+	 */
+	private static boolean reCaptchaValidate(Object capchaId)
+	{
+<span class="nc bnc" id="L111" title="All 4 branches missed.">		if(capchaId == null || Tools.isEmpty(capchaId+&quot;&quot;))</span>
+		{
+<span class="nc" id="L113">			Logger.debug(Captcha.class, &quot;ReCaptcha BAD id: &quot;+capchaId);</span>
+<span class="nc" id="L114">			return false;</span>
+		}
+
+		try
+		{
+<span class="nc" id="L119">			String url = &quot;https://www.google.com/recaptcha/api/siteverify&quot;;</span>
+<span class="nc" id="L120">			URL obj = new URL(url);</span>
+<span class="nc" id="L121">			HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();</span>
+
+<span class="nc" id="L123">			con.setRequestMethod(&quot;POST&quot;);</span>
+<span class="nc" id="L124">			con.setRequestProperty(&quot;User-Agent&quot;, null);</span>
+<span class="nc" id="L125">			con.setRequestProperty(&quot;Accept-Language&quot;, &quot;en-US,en;q=0.5&quot;);</span>
+
+<span class="nc" id="L127">			String urlParameters = &quot;secret=&quot;+Constants.getString(&quot;reCaptchaSecret&quot;)+&quot;&amp;response=&quot;+capchaId;</span>
+
+<span class="nc" id="L129">			con.setDoOutput(true);</span>
+<span class="nc" id="L130">			DataOutputStream wr = new DataOutputStream(con.getOutputStream());</span>
+<span class="nc" id="L131">			wr.writeBytes(urlParameters);</span>
+<span class="nc" id="L132">			wr.flush();</span>
+<span class="nc" id="L133">			wr.close();</span>
+
+<span class="nc" id="L135">			int responseCode = con.getResponseCode();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if(responseCode != 200)</span>
+			{
+<span class="nc" id="L138">				Logger.debug(null, &quot;Sending 'POST' request to URL : &quot; + url);</span>
+<span class="nc" id="L139">				Logger.debug(null, &quot;Post parameters : &quot; + urlParameters);</span>
+<span class="nc" id="L140">				Logger.debug(null, &quot;Response Code : &quot; + responseCode);</span>
+			}
+
+<span class="nc" id="L143">			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));</span>
+			String inputLine;
+<span class="nc" id="L145">			StringBuffer postResponse = new StringBuffer();</span>
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			while ((inputLine = in.readLine()) != null) {</span>
+<span class="nc" id="L148">				postResponse.append(inputLine);</span>
+			}
+<span class="nc" id="L150">			in.close();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if(postResponse.toString().indexOf(&quot;\&quot;success\&quot;: true&quot;) != -1)</span>
+			{
+<span class="nc" id="L153">				Logger.debug(Captcha.class, &quot;ReCaptcha OK id: &quot;+capchaId);</span>
+<span class="nc" id="L154">				return true;</span>
+			}
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			else if(postResponse.toString().indexOf(&quot;\&quot;success\&quot;: false&quot;) != -1)</span>
+			{
+<span class="nc" id="L158">				Logger.debug(Captcha.class, &quot;ReCaptcha BAD id: &quot;+capchaId);</span>
+<span class="nc" id="L159">				return false;</span>
+			}
+			else
+			{
+<span class="nc" id="L163">				Logger.debug(Captcha.class, &quot;ReCaptcha Response Error id: &quot;+capchaId);</span>
+<span class="nc" id="L164">				Logger.debug(Captcha.class, postResponse.toString());</span>
+			}
+		}
+<span class="nc" id="L167">		catch(Exception ex)</span>
+		{
+<span class="nc" id="L169">			Logger.debug(Captcha.class,&quot;ReCaptcha Verify Error id: &quot;+capchaId);</span>
+<span class="nc" id="L170">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L171">		}</span>
+<span class="nc" id="L172">		return false;</span>
+	}
+
+	private static boolean reCaptchaV3Validate(HttpServletRequest request) {
+<span class="nc" id="L176">		String token = Tools.getParameter(request, &quot;g-recaptcha-response&quot;);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (Tools.isEmpty(token)) {</span>
+<span class="nc" id="L178">			Logger.debug(Captcha.class, &quot;reCaptchaV3Validate - Google token empty&quot;);</span>
+<span class="nc" id="L179">			return false;</span>
+		}
+
+<span class="nc" id="L182">		String ip = Tools.getRemoteIP(request);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (Tools.isEmpty(ip)) {</span>
+<span class="nc" id="L184">			Logger.debug(&quot;reCaptchaV3Validate - ip empty&quot;);</span>
+<span class="nc" id="L185">			return false;</span>
+		}
+
+<span class="nc" id="L188">		RestTemplate restTemplate = new RestTemplate();</span>
+
+<span class="nc" id="L190">		ClientHttpRequestFactory factory = new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory());</span>
+<span class="nc" id="L191">		restTemplate.setRequestFactory(factory);</span>
+
+<span class="nc" id="L193">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L194">		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);</span>
+
+<span class="nc" id="L196">		MultiValueMap&lt;String, String&gt; map = new LinkedMultiValueMap&lt;&gt;();</span>
+<span class="nc" id="L197">		map.add(&quot;secret&quot;, Constants.getString(&quot;reCaptchaSecret&quot;));</span>
+<span class="nc" id="L198">		map.add(&quot;response&quot;, token);</span>
+<span class="nc" id="L199">		map.add(&quot;remoteip&quot;, ip);</span>
+
+<span class="nc" id="L201">		HttpEntity&lt;MultiValueMap&lt;String, String&gt;&gt; entity = new HttpEntity&lt;&gt;(map, headers);</span>
+
+<span class="nc" id="L203">		ResponseEntity&lt;GoogleRecaptchaResponse&gt; response =</span>
+<span class="nc" id="L204">				restTemplate.exchange(&quot;https://www.google.com/recaptcha/api/siteverify&quot;,</span>
+						HttpMethod.POST,
+						entity,
+						GoogleRecaptchaResponse.class);
+
+<span class="nc" id="L209">		double minimalScore = Tools.getDoubleValue(Constants.getString(&quot;recaptchaMinScore&quot;), 0.5);</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (response.getStatusCode() != HttpStatus.OK) {</span>
+<span class="nc" id="L212">			Logger.debug(&quot;reCaptchaV3Validate - Google response status not ok: {}&quot;, response.getStatusCode().name());</span>
+<span class="nc" id="L213">			return false;</span>
+		}
+
+<span class="nc" id="L216">		GoogleRecaptchaResponse body = response.getBody();</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (body == null) {</span>
+<span class="nc" id="L218">			Logger.debug(&quot;reCaptchaV3Validate - Google response body null&quot;);</span>
+<span class="nc" id="L219">			return false;</span>
+		}
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (!body.isSuccess()) {</span>
+<span class="nc" id="L223">			Logger.debug(&quot;reCaptchaV3Validate - Google response success false, error codes: {}&quot;, Tools.join(body.getErrorCodes(), &quot;, &quot;));</span>
+<span class="nc" id="L224">			return false;</span>
+		}
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (body.getScore() &lt; minimalScore) {</span>
+<span class="nc" id="L228">			Logger.debug(&quot;reCaptchaV3Validate - Google response score: &quot;+body.getScore()+&quot;, minimal score: &quot;+minimalScore);</span>
+<span class="nc" id="L229">			return false;</span>
+		}
+
+<span class="nc" id="L232">		return true;</span>
+	}
+
+	/**
+	 * Overi spravnost odpovede voci obrazku, pouziva sa opakovane cez AJAX volanie (viz check_form_impl.jsp)
+	 * NEPOUZIVAT V JAVA KODE NA OVERENIE SPRAVNOSTI CAPTCHA, na to treba pouzit validateResponse!!!!
+	 * @param httpServletRequest
+	 * @param response
+	 * @return
+	 */
+	public static boolean isReponseCorrect(HttpServletRequest httpServletRequest, String response)
+	{
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		if (Tools.isEmpty(response)) return false;</span>
+
+<span class="nc" id="L246">		Boolean isResponseCorrect = Boolean.FALSE;</span>
+		// remenber that we need an id to validate!
+<span class="nc" id="L248">		String captchaId = httpServletRequest.getSession().getId();</span>
+		// retrieve the response
+		// Call the Service method
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;))) {</span>
+<span class="nc" id="L252">			return reCaptchaValidate(response);</span>
+		}
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		else if (&quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+		{
+<span class="nc" id="L256">			return reCaptchaValidate(httpServletRequest.getSession().getAttribute(&quot;sessionId&quot;));</span>
+		}
+		try
+		{
+<span class="nc" id="L260">			isResponseCorrect = CaptchaServiceSingleton.getInstance().testResponseForID(captchaId, response);</span>
+			//Logger.debug(Captcha.class, &quot;ID=&quot;+captchaId+&quot;, response=&quot;+response+&quot;, correct=&quot;+isResponseCorrect);
+		}
+<span class="nc" id="L263">		catch (CaptchaServiceException e)</span>
+		{
+			// should not happen, may be thrown if the id is not valid
+<span class="nc" id="L266">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L267">		}</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		if (isResponseCorrect == null) isResponseCorrect = Boolean.FALSE;</span>
+<span class="nc" id="L269">		return isResponseCorrect.booleanValue();</span>
+	}
+
+	/**
+	 * Vygeneruje JPG obrazok captchy
+	 * @param httpServletRequest
+	 * @param httpServletResponse
+	 * @throws ServletException
+	 * @throws IOException
+	 */
+	public static void getImage(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException
+	{
+<span class="nc bnc" id="L281" title="All 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))// pre reCaptcha nepotrebujeme</span>
+<span class="nc" id="L282">			return;</span>
+
+		// the output stream to render the captcha image as jpeg into
+		try
+		{
+			// get the session id that will identify the generated captcha.
+			// the same id must be used to validate the response, the session id is
+			// a good candidate!
+<span class="nc" id="L290">			String captchaId = httpServletRequest.getSession().getId();</span>
+			//Logger.debug(Captcha.class, &quot;Generating CAPTCHA for &quot;+captchaId);
+			// call the ImageCaptchaService getChallenge method
+
+<span class="nc" id="L294">			ByteArrayOutputStream jpegOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L295">			BufferedImage challenge = CaptchaServiceSingleton.getInstance().getImageChallengeForID(captchaId, Locale.ENGLISH);</span>
+<span class="nc" id="L296">			ImageIO.write(challenge, &quot;jpg&quot;, jpegOutputStream);</span>
+<span class="nc" id="L297">			byte[] captchaChallengeAsJpeg = null;</span>
+<span class="nc" id="L298">			captchaChallengeAsJpeg = jpegOutputStream.toByteArray();</span>
+
+
+			// flush it in the response
+<span class="nc" id="L302">			httpServletResponse.setHeader(&quot;Cache-Control&quot;, &quot;no-store&quot;);</span>
+<span class="nc" id="L303">			httpServletResponse.setHeader(&quot;Pragma&quot;, &quot;no-cache&quot;);</span>
+<span class="nc" id="L304">			httpServletResponse.setDateHeader(&quot;Expires&quot;, 0);</span>
+<span class="nc" id="L305">			httpServletResponse.setContentType(&quot;image/jpeg&quot;);</span>
+<span class="nc" id="L306">			ServletOutputStream responseOutputStream = httpServletResponse.getOutputStream();</span>
+
+
+<span class="nc" id="L309">			responseOutputStream.write(captchaChallengeAsJpeg);</span>
+
+			//use imageio to write image
+			//ImageIO.write(challenge, &quot;jpeg&quot;, responseOutputStream);
+<span class="nc" id="L313">			responseOutputStream.flush();</span>
+<span class="nc" id="L314">			responseOutputStream.close();</span>
+		}
+<span class="nc" id="L316">		catch (CaptchaServiceException e)</span>
+		{
+<span class="nc" id="L318">			httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);</span>
+<span class="nc" id="L319">			return;</span>
+<span class="nc" id="L320">		}</span>
+<span class="nc" id="L321">	}</span>
+
+	/**
+	 * Vrati HTML kod captcha obrazku
+	 * @param request
+	 * @return
+	 */
+	public static String getImage(HttpServletRequest request)
+	{
+<span class="nc" id="L330">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc bnc" id="L331" title="All 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+<span class="nc" id="L332">			return captchaDiv;</span>
+<span class="nc" id="L333">		return (&quot;&lt;img id=\&quot;wjcaptchaImg1\&quot; class=\&quot;captchaImage\&quot; src=\&quot;/captcha.jpg\&quot; onclick=\&quot;this.src='/captcha.jpg?rnd='+(new Date().getTime());\&quot; style=\&quot;cursor: pointer;\&quot; alt=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot; title=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot;/&gt;&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

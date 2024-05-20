@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationDataDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations</a> &gt; <span class="el_source">EnumerationDataDB.java</span></div><h1>EnumerationDataDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.utils.Pair;
+
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import java.math.BigDecimal;
+import java.security.InvalidParameterException;
+import java.util.*;
+
+/**
+ * EnumerationDataDB.java
+ *
+ * Class EnumerationDataDB is used for
+ *
+ *
+ * Title        webjet8
+ * Company      Interway a.s. (www.interway.sk)
+ * Copyright    Interway a.s. (c) 2001-2018
+ * @author      $Author: mhruby $
+ * @version     $Revision: 1.0 $
+ * created      9.4.2018 11:59
+ * modified     5.4.2018 16:37
+ */
+
+public class EnumerationDataDB extends JpaDB&lt;EnumerationDataBean&gt; {
+
+<span class="fc" id="L40">    private static EnumerationDataDB INSTANCE = new EnumerationDataDB();</span>
+
+    public static EnumerationDataDB getInstance() {
+<span class="nc" id="L43">        return INSTANCE;</span>
+    }
+
+    public EnumerationDataDB() {
+<span class="fc" id="L47">        super(EnumerationDataBean.class);</span>
+<span class="fc" id="L48">    }</span>
+
+    public static EnumerationDataBean getEnumerationDataById(int id) {
+<span class="nc" id="L51">        EnumerationDataBean enumerationDataBean = getFromCache(id);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (enumerationDataBean == null) {</span>
+<span class="nc" id="L53">            EnumerationDataBean temp = getEnumerationDataFromDB(id);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">            if (temp != null) {</span>
+<span class="nc" id="L55">                saveToCache(temp);</span>
+<span class="nc" id="L56">                return temp;</span>
+            }
+<span class="nc" id="L58">            return null;</span>
+        }
+<span class="nc" id="L60">        return enumerationDataBean;</span>
+    }
+
+    public static EnumerationDataBean getEnumerationDataFromDB(int id) {
+<span class="nc" id="L64">        return new JpaDB&lt;&gt;(EnumerationDataBean.class).getById(id);</span>
+    }
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataByType(String type) {
+<span class="nc" id="L67">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.typeName&quot;, type), new Pair&lt;&gt;(&quot;hidden&quot;, false));</span>
+    }
+
+    public static boolean saveEnumerationData(EnumerationDataBean enumerationDataBean) {
+<span class="nc" id="L71">        removeFromCache(enumerationDataBean.getEnumerationDataId());</span>
+<span class="nc" id="L72">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (enumerationDataBean.getSortPriority() == 0)</span>
+<span class="nc" id="L74">            enumerationDataBean.setSortPriority(EnumerationDataDB.getMaxPriority(enumerationDataBean.getType()) + 10);</span>
+<span class="nc" id="L75">        return new JpaDB&lt;&gt;(EnumerationDataBean.class).save(enumerationDataBean);</span>
+    }
+
+    /**
+     * Skryje zadany typ ciselnika.
+     * @param id
+     * @return
+     */
+    public static boolean softDelete(int id) {
+<span class="nc" id="L84">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="nc" id="L85">        EnumerationDataBean enumerationDataBean = getEnumerationDataById(id);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (enumerationDataBean != null) {</span>
+<span class="nc" id="L87">            enumerationDataBean.setHidden(true);</span>
+<span class="nc" id="L88">            return saveEnumerationData(enumerationDataBean);</span>
+        }
+<span class="nc" id="L90">        return false;</span>
+    }
+
+    public static boolean deleteEnumerationData(int id) {
+<span class="nc" id="L94">        return JpaTools.delete(EnumerationDataBean.class, id);</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getAllEnumerationData() {
+<span class="nc" id="L98">        return JpaTools.getAll(EnumerationDataBean.class);</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getAllEnumerationDataByType(int typeId) {
+<span class="nc" id="L102">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataByType(int typeId) {
+<span class="fc" id="L106">        return getEnumerationDataByType(typeId, false);</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataByType(int typeId, boolean hidden) {
+<span class="fc" id="L110">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, hidden));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(String string1, int typeId ) {
+<span class="nc" id="L114">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(&quot;string1&quot;,string1));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(BigDecimal value, String decimalColumn, int typeId) {
+<span class="nc bnc" id="L118" title="All 8 branches missed.">        if (&quot;decimal1&quot;.equalsIgnoreCase(decimalColumn) || &quot;decimal2&quot;.equalsIgnoreCase(decimalColumn) || &quot;decimal3&quot;.equalsIgnoreCase(decimalColumn) || &quot;decimal4&quot;.equalsIgnoreCase(decimalColumn))</span>
+<span class="nc" id="L119">            return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(decimalColumn.toLowerCase(), value));</span>
+<span class="nc" id="L120">        throw new InvalidParameterException(&quot;Unsuported decimalColumn value: &quot; + decimalColumn);</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(String string1, BigDecimal decimal1, int typeId ) {
+<span class="nc" id="L124">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(&quot;string1&quot;,string1), new Pair&lt;&gt;(&quot;decimal1&quot;, decimal1));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(BigDecimal decimal1, int typeId ) {
+<span class="nc" id="L128">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(&quot;decimal1&quot;, decimal1));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(String string1, BigDecimal decimal1, BigDecimal decimal2, int typeId ) {
+<span class="nc" id="L132">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;type.id&quot;, typeId), new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(&quot;decimal1&quot;, decimal1), new Pair&lt;&gt;(&quot;decimal2&quot;, decimal2), new Pair&lt;&gt;(&quot;string1&quot;,string1));</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getSortedEnumerationDataFromString(String enumerationIdString) {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (Tools.isNotEmpty(enumerationIdString)) {</span>
+<span class="nc" id="L137">            int enumerationId = EnumerationTypeDB.getEnumerationIdFromString(enumerationIdString);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (enumerationId &gt; 0) {</span>
+<span class="nc" id="L139">                return getSortedEnumerationDataByType(EnumerationTypeDB.getEnumerationById(enumerationId));</span>
+            }
+        }
+<span class="nc" id="L142">        return Collections.emptyList();</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getSortedEnumerationDataByType(EnumerationTypeBean typeBean) {
+<span class="nc" id="L146">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+        try {
+<span class="nc" id="L148">            ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L149">            ReadAllQuery dbQuery = new ReadAllQuery(EnumerationDataBean.class, builder);</span>
+
+<span class="nc" id="L151">            Expression expr = builder.get(&quot;type&quot;).equal(typeBean).and(builder.get(&quot;hidden&quot;).equal(false));</span>
+<span class="nc" id="L152">            dbQuery.setSelectionCriteria(expr);</span>
+<span class="nc" id="L153">            dbQuery.addAscendingOrdering(&quot;string1&quot;);</span>
+<span class="nc" id="L154">            Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L155">            List&lt;EnumerationDataBean&gt; enumerationDataBeanList = JpaDB.getResultList(query);</span>
+<span class="nc" id="L156">            return enumerationDataBeanList;</span>
+<span class="nc" id="L157">        } catch (Exception e) {</span>
+<span class="nc" id="L158">            sk.iway.iwcm.Logger.error(e);</span>
+        } finally {
+<span class="nc" id="L160">            em.close();</span>
+        }
+<span class="nc" id="L162">        return null;</span>
+    }
+
+    public static List&lt;EnumerationDataBean&gt; getEnumerationDataBy(String string1, String string9, String string10, int typeId ) {
+<span class="nc" id="L166">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+        try {
+<span class="nc" id="L168">            ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L169">            ReadAllQuery dbQuery = new ReadAllQuery(EnumerationDataBean.class, builder);</span>
+
+
+<span class="nc" id="L172">            Expression likeExpr = builder.get(&quot;string1&quot;).likeIgnoreCase(&quot;%&quot; + string1 + &quot;%&quot;).or(builder.get(&quot;string9&quot;).likeIgnoreCase(&quot;%&quot; + string9 + &quot;%&quot;)).or(builder.get(&quot;string10&quot;).likeIgnoreCase(&quot;%&quot; + string10 + &quot;%&quot;));</span>
+<span class="nc" id="L173">            Expression expr = builder.get(&quot;typeId&quot;).equal(typeId).and(builder.get(&quot;hidden&quot;).equal(false)).and(likeExpr);</span>
+
+<span class="nc" id="L175">            dbQuery.setSelectionCriteria(expr);</span>
+<span class="nc" id="L176">            dbQuery.addAscendingOrdering(&quot;string1&quot;);</span>
+<span class="nc" id="L177">            Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L178">            List&lt;EnumerationDataBean&gt; enumerationDataBeanList = JpaDB.getResultList(query);</span>
+<span class="nc" id="L179">            return enumerationDataBeanList;</span>
+<span class="nc" id="L180">        }catch (Exception e) {</span>
+<span class="nc" id="L181">            sk.iway.iwcm.Logger.error(e);</span>
+        } finally {
+<span class="nc" id="L183">            em.close();</span>
+        }
+<span class="nc" id="L185">        return null;</span>
+    }
+
+    public static void deleteAll(int enumerationTypeId) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        for(EnumerationDataBean item : EnumerationDataDB.getEnumerationDataByType(enumerationTypeId)) {</span>
+<span class="nc" id="L190">            deleteEnumerationData(item.getEnumerationDataId());</span>
+<span class="nc" id="L191">        }</span>
+<span class="nc" id="L192">    }</span>
+
+    public static int getMaxPriority(EnumerationTypeBean type) {
+<span class="nc" id="L195">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+        try{
+<span class="nc" id="L197">            CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();</span>
+
+            //SELECT MAX(e.sortPriority) FROM enumeration_data e WHERE e.enumeration_type_id = 32;
+<span class="nc" id="L200">            CriteriaQuery&lt;Integer&gt; criteria = criteriaBuilder.createQuery(Integer.class);</span>
+<span class="nc" id="L201">            Root&lt;EnumerationDataBean&gt; root = criteria.from(EnumerationDataBean.class);</span>
+<span class="nc" id="L202">            criteria.select(criteriaBuilder.max(root.get(&quot;sortPriority&quot;)));</span>
+<span class="nc" id="L203">            criteria.where(criteriaBuilder.equal(root.get(&quot;type&quot;), type));</span>
+<span class="nc" id="L204">            Object result = em.createQuery(criteria).getSingleResult();</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (result instanceof Integer)</span>
+<span class="nc" id="L206">                return (Integer) result;</span>
+<span class="nc" id="L207">        }catch (Exception e) {</span>
+<span class="nc" id="L208">            sk.iway.iwcm.Logger.error(e);</span>
+        }finally{
+<span class="nc" id="L210">            em.close();</span>
+        }
+<span class="nc" id="L212">        return -1;</span>
+    }
+
+    public static String getString1(int enumerationDataId) {
+<span class="nc" id="L216">        EnumerationDataBean enumerationDataBean = getFromCache(enumerationDataId);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (enumerationDataBean == null) {</span>
+<span class="nc" id="L218">            EnumerationDataBean temp = getEnumerationDataById(enumerationDataId);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            if (temp != null) {</span>
+<span class="nc" id="L220">                saveToCache(temp);</span>
+<span class="nc" id="L221">                return temp.getString1();</span>
+            }
+<span class="nc" id="L223">            return &quot;&quot;;</span>
+        }
+<span class="nc" id="L225">        return enumerationDataBean.getString1();</span>
+    }
+
+    private static void saveToCache(EnumerationDataBean temp) {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (temp != null) {</span>
+<span class="nc" id="L230">            Map&lt;Integer, EnumerationDataBean&gt; map = getCache();</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">            if (map != null)</span>
+<span class="nc" id="L232">                map.put(temp.getEnumerationDataId(), temp);</span>
+        }
+<span class="nc" id="L234">    }</span>
+
+    private static Map&lt;Integer, EnumerationDataBean&gt; getCache() {
+<span class="nc" id="L237">        Cache c = Cache.getInstance();</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L239">        Map&lt;Integer, EnumerationDataBean&gt; map = (HashMap&lt;Integer, EnumerationDataBean&gt;) c.getObject(&quot;enumerationsBeans&quot;);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (map == null) {</span>
+<span class="nc" id="L241">            c.setObjectSeconds(&quot;enumerationsBeans&quot;, new HashMap&lt;Integer, String&gt;(), 28800, true); // 28800 = 8 hodin</span>
+<span class="nc" id="L242">            return getCache();</span>
+        } else {
+<span class="nc" id="L244">            return map;</span>
+        }
+    }
+
+    private static EnumerationDataBean getFromCache(int enumerationDataId) {
+<span class="nc" id="L249">        Map&lt;Integer, EnumerationDataBean&gt; map = getCache();</span>
+<span class="nc" id="L250">        return map.get(enumerationDataId);</span>
+    }
+
+    private static void removeFromCache(int enumerationDataId) {
+<span class="nc" id="L254">        Map&lt;Integer, EnumerationDataBean&gt; map = getCache();</span>
+<span class="nc" id="L255">        map.remove(enumerationDataId);</span>
+<span class="nc" id="L256">    }</span>
+
+    public List&lt;EnumerationDataBean&gt; getActiveDirectChildrens(EnumerationDataBean enumerationDataBean) {
+<span class="nc" id="L259">        return JpaTools.findByProperties(EnumerationDataBean.class, new Pair&lt;&gt;(&quot;hidden&quot;, false), new Pair&lt;&gt;(&quot;type.id&quot;, enumerationDataBean.getType().getId()), new Pair&lt;&gt;(&quot;parentEnumerationData.enumerationDataId&quot;, enumerationDataBean.getId()));</span>
+    }
+
+    public List&lt;EnumerationDataBean&gt; getAllActiveChildrens(EnumerationDataBean enumerationDataBean) {
+<span class="nc" id="L263">        List&lt;EnumerationDataBean&gt; list = getActiveDirectChildrens(enumerationDataBean);</span>
+<span class="nc" id="L264">        List&lt;EnumerationDataBean&gt; list2 = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        for (EnumerationDataBean obj: list) {</span>
+<span class="nc" id="L266">            list2.addAll(getActiveDirectChildrens(obj));</span>
+<span class="nc" id="L267">        }</span>
+<span class="nc" id="L268">        list.addAll(list2);</span>
+<span class="nc" id="L269">        return list;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -53,7 +53,7 @@ public class BaseEditorFields {
 
     /**
      * Prida novu ikonu k textu (vytvorenu ako span element)
-     * @param className - fas fa-eye-slash
+     * @param className - ti ti-eye-off
      */
     public void addStatusIcon(String className) {
         if (statusIconsList == null) statusIconsList = new ArrayList<>();

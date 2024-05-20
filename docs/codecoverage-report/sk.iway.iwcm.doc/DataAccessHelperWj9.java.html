@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataAccessHelperWj9.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DataAccessHelperWj9.java</span></div><h1>DataAccessHelperWj9.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import sk.iway.iwcm.DB;
+
+/**
+ * Rozsirenie modelu documents a groups tabulky pre WJ2022
+ */
+<span class="nc" id="L12">public class DataAccessHelperWj9 {</span>
+
+    /**
+     * Metoda je volana pri citani udajov z tabulky documents, umoznuje donacitat
+     * dalsie/specificke data
+     * Odporucame kvoli dalsiemu rozsirovaniu si spravit separe triedu a pri
+     * rozsireni tejto len volat
+     * metodu zo separe triedy, napr. DataAccessHelperMyProjecy.docLoadData(doc,
+     * rs);
+     *
+     * @param rs
+     * @param doc
+     */
+    public static void docLoadData(ResultSet rs, DocDetails doc) {
+        try {
+            // WJ2021 polia
+<span class="fc" id="L28">            doc.setTempFieldADocId(rs.getInt(&quot;temp_field_a_docid&quot;));</span>
+<span class="fc" id="L29">            doc.setTempFieldBDocId(rs.getInt(&quot;temp_field_b_docid&quot;));</span>
+<span class="fc" id="L30">            doc.setTempFieldCDocId(rs.getInt(&quot;temp_field_c_docid&quot;));</span>
+<span class="fc" id="L31">            doc.setTempFieldDDocId(rs.getInt(&quot;temp_field_d_docid&quot;));</span>
+
+<span class="fc" id="L33">            doc.setShowInNavbar(DB.getBoolean(rs, &quot;show_in_navbar&quot;));</span>
+<span class="fc" id="L34">            doc.setShowInSitemap(DB.getBoolean(rs, &quot;show_in_sitemap&quot;));</span>
+<span class="fc" id="L35">            doc.setLoggedShowInMenu(DB.getBoolean(rs, &quot;logged_show_in_menu&quot;));</span>
+<span class="fc" id="L36">            doc.setLoggedShowInNavbar(DB.getBoolean(rs, &quot;logged_show_in_navbar&quot;));</span>
+<span class="fc" id="L37">            doc.setLoggedShowInSitemap(DB.getBoolean(rs, &quot;logged_show_in_sitemap&quot;));</span>
+
+<span class="fc" id="L39">            doc.setUrlInheritGroup(DB.getBoolean(rs, &quot;url_inherit_group&quot;));</span>
+<span class="fc" id="L40">            doc.setGenerateUrlFromTitle(DB.getBoolean(rs, &quot;generate_url_from_title&quot;));</span>
+<span class="fc" id="L41">            doc.setEditorVirtualPath(rs.getString(&quot;editor_virtual_path&quot;));</span>
+<span class="nc" id="L42">        } catch (Exception ex) {</span>
+            // ignorujeme, asi nebolo v SQL vybere
+<span class="fc" id="L44">        }</span>
+<span class="fc" id="L45">    }</span>
+
+    /**
+     * Vrati zoznam DODATOCNYCH stlpcov pre SQL select/insert/update do documents
+     * tabulky, priklad:
+     * [show_in_navbar, show_in_sitemap, logged_show_in_navbar]
+     *
+     * @return
+     */
+    public static String[] getDocFields() {
+<span class="fc" id="L55">        String[] fields = { &quot;temp_field_a_docid&quot;, &quot;temp_field_b_docid&quot;, &quot;temp_field_c_docid&quot;, &quot;temp_field_d_docid&quot;,</span>
+                &quot;show_in_navbar&quot;, &quot;show_in_sitemap&quot;, &quot;logged_show_in_menu&quot;, &quot;logged_show_in_navbar&quot;, &quot;logged_show_in_sitemap&quot;,
+                &quot;url_inherit_group&quot;, &quot;generate_url_from_title&quot;, &quot;editor_virtual_path&quot; };
+<span class="fc" id="L58">        return fields;</span>
+    }
+
+    /**
+     * Metoda je volana pri citani udajov z tabulky groups, umoznuje donacitat
+     * dalsie/specificke data
+     *
+     * @param rs
+     * @param group
+     */
+    public static void groupLoadData(ResultSet rs, GroupDetails group) {
+        try {
+			//WJ2021 polia
+<span class="fc" id="L71">			group.setShowInNavbar(DB.getInteger(rs, &quot;show_in_navbar&quot;));</span>
+<span class="fc" id="L72">			group.setLoggedShowInNavbar(DB.getInteger(rs, &quot;logged_show_in_navbar&quot;));</span>
+<span class="fc" id="L73">			group.setShowInSitemap(DB.getInteger(rs, &quot;show_in_sitemap&quot;));</span>
+<span class="fc" id="L74">			group.setLoggedShowInSitemap(DB.getInteger(rs, &quot;logged_show_in_sitemap&quot;));</span>
+<span class="nc" id="L75">		} catch (Exception ex) {</span>
+			//ignorujeme, asi nebolo v SQL vybere
+<span class="fc" id="L77">		}</span>
+<span class="fc" id="L78">    }</span>
+
+    /**
+     * Vrati zoznam DODATOCNYCH stlpcov pre SQL insert/update do groups tabulky,
+     * priklad:
+     * [show_in_navbar, show_in_sitemap, logged_show_in_navbar]
+     *
+     * @return
+     */
+    public static String[] getGroupFields() {
+<span class="fc" id="L88">        String[] fields = {&quot;show_in_navbar&quot;, &quot;show_in_sitemap&quot;, &quot;logged_show_in_navbar&quot;, &quot;logged_show_in_sitemap&quot;};</span>
+<span class="fc" id="L89">        return fields;</span>
+    }
+
+    /**
+     * Nastavi do SQL prepared statementu hodnoty z group objektu pre zapis do
+     * databazy
+     *
+     * @param ps
+     * @param group
+     * @param psCounter - pocitadlo poradia parametrov
+     * @return
+     */
+    public static int setGroupPreparedStatement(PreparedStatement ps, GroupDetails group, int psCounter) throws SQLException {
+<span class="fc" id="L102">        ps.setObject(psCounter++, group.getShowInNavbar());</span>
+<span class="fc" id="L103">        ps.setObject(psCounter++, group.getShowInSitemap());</span>
+<span class="fc" id="L104">        ps.setObject(psCounter++, group.getLoggedShowInNavbar());</span>
+<span class="fc" id="L105">        ps.setObject(psCounter++, group.getLoggedShowInSitemap());</span>
+<span class="fc" id="L106">        return psCounter;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

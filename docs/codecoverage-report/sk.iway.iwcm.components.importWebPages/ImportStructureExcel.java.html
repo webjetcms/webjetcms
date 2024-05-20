@@ -1,0 +1,1109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportStructureExcel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.importWebPages</a> &gt; <span class="el_source">ImportStructureExcel.java</span></div><h1>ImportStructureExcel.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.importWebPages; //NOSONAR
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.beanutils.BeanUtils;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *  ImportStructureExcel.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.23 $
+ *@created      Date: 18.5.2005 14:26:32
+ *@modified     $Date: 2010/01/20 10:12:54 $
+ */
+public class ImportStructureExcel extends ExcelImportJXL
+{
+<span class="fc" id="L58">	private Map&lt;String, List&lt;String&gt; &gt; gestored = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L59">	private Map&lt;String, List&lt;String&gt; &gt; coordinated = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L60">	private Map&lt;String, List&lt;String&gt; &gt; highCoordinated = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L61">	private Map&lt;String, List&lt;String&gt; &gt; coordinatedByGestor = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L62">	private Map&lt;String, GroupDetails&gt; codeToGroupsMapping = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L63">	private List&lt;String&gt; alreadyClearedAdmins = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L65">	private Identity userDefaultGestor = null;</span>
+<span class="fc" id="L66">	private Identity userDefaultKoordinator = null;</span>
+<span class="fc" id="L67">	private Map&lt;String, String&gt; docContentMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L69">	int rootGroupId = 1;</span>
+<span class="fc" id="L70">	GroupDetails rootGroup = null;</span>
+	String basePath;
+
+<span class="fc" id="L73">	boolean foundStart = false;</span>
+<span class="fc" id="L74">	boolean foundEnd = false;</span>
+
+<span class="fc" id="L76">	boolean downloadData = false;</span>
+<span class="fc" id="L77">	String cropHtmlStart = &quot;&quot;;</span>
+<span class="fc" id="L78">	String cropHtmlEnd = &quot;&quot;;</span>
+
+	String[] groupNameLevels;
+
+
+	String sTmp;
+	String groupName;
+
+	String levelNumber;
+
+<span class="fc" id="L88">	boolean levelAsPriority = true;</span>
+
+<span class="fc" id="L90">	int[] autoLevelNumbers = new int[100];</span>
+<span class="fc" id="L91">	int autoLevelLast = 0;</span>
+
+	public ImportStructureExcel(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="fc" id="L95">		super(in, request, out);</span>
+
+		//ziskaj ID adresara, kam sa importuje
+<span class="fc" id="L98">		int groupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
+		try
+		{
+<span class="fc" id="L101">			String p = request.getParameter(&quot;parentGroupIdString&quot;);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(p))</span>
+			{
+<span class="fc" id="L104">				groupId = Tools.getIntValue(p, -1);</span>
+			}
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">			if (groupId &lt; 1)</span>
+			{
+				//skus ziskat data zo session
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				if (request.getSession().getAttribute(Constants.SESSION_GROUP_ID) != null)</span>
+				{
+<span class="nc" id="L111">					groupId = Integer.parseInt((String) request.getSession().getAttribute(Constants.SESSION_GROUP_ID));</span>
+				}
+			}
+		}
+<span class="nc" id="L115">		catch (Exception ex)</span>
+		{
+<span class="fc" id="L117">		}</span>
+<span class="fc" id="L118">		rootGroupId = groupId;</span>
+<span class="fc" id="L119">		rootGroup = GroupDetails.getById(rootGroupId);</span>
+
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;levelAsPriority&quot;))) levelAsPriority = true;</span>
+<span class="nc" id="L122">		else levelAsPriority = false;</span>
+
+<span class="fc" id="L124">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L126">		basePath = groupsDB.getGroupNamePath(rootGroupId);</span>
+
+<span class="fc" id="L128">		groupNameLevels = new String[20];</span>
+
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;downloadData&quot;)))</span>
+		{
+<span class="nc" id="L132">			downloadData = true;</span>
+
+<span class="nc" id="L134">			cropHtmlStart = fixCRLF(request.getParameter(&quot;cropHtmlStart&quot;));</span>
+<span class="nc" id="L135">			cropHtmlEnd = fixCRLF(request.getParameter(&quot;cropHtmlEnd&quot;));</span>
+		}
+<span class="fc" id="L137">	}</span>
+	@Override
+	protected void afterImportJob(Prop prop)
+	{
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		for (String gestor : gestored.keySet())</span>
+		{
+<span class="nc" id="L143">			clearPrivilegesFor(gestor);</span>
+<span class="nc" id="L144">			saveGestor(prop, gestor);</span>
+<span class="nc" id="L145">		}</span>
+
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		for (String coordinator : coordinated.keySet())</span>
+		{
+<span class="nc" id="L149">			clearPrivilegesFor(coordinator);</span>
+<span class="nc" id="L150">			saveCoordinator(prop, coordinator, UsersDB.APPROVE_APPROVE);</span>
+<span class="nc" id="L151">		}</span>
+
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		for (String coordinator : highCoordinated.keySet())</span>
+		{
+<span class="nc" id="L155">			clearPrivilegesFor(coordinator);</span>
+<span class="nc" id="L156">			saveCoordinator(prop, coordinator, UsersDB.APPROVE_LEVEL2);</span>
+<span class="nc" id="L157">		}</span>
+
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		for (String coordinator : coordinatedByGestor.keySet())</span>
+		{
+<span class="nc" id="L161">			clearPrivilegesFor(coordinator);</span>
+<span class="nc" id="L162">			saveCoordinator(prop, coordinator, UsersDB.APPROVE_NONE);</span>
+<span class="nc" id="L163">		}</span>
+
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		for (String u : alreadyClearedAdmins)</span>
+<span class="nc" id="L166">			resolveAndCreateWritableFolders(u);</span>
+
+		//refreshni okno
+<span class="fc" id="L169">		out.println(&quot;&lt;script type='text/javascript'&gt;try { window.opener.parent.leftFrame.window.location.href='/admin/skins/webjet6/groupslist-tree.jsp?rnd=&quot;+Tools.getNow()+&quot;'; } catch (ex) {}&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L170">	}</span>
+
+	@SuppressWarnings(&quot;java:S1643&quot;)
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+		try
+		{
+<span class="fc bfc" id="L178" title="All 2 branches covered.">		if (row.length&lt;1)</span>
+		{
+<span class="fc" id="L180">			return;</span>
+		}
+
+		//println(getValue(row[0])+&quot; Primárna navigácia &quot;+&quot;Primárna navigácia&quot;.equals(getValue(row[0])));
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">		if (&quot;Primárna navigácia&quot;.equals(getValue(row[0])))</span>
+		{
+<span class="fc" id="L187">			foundStart = true;</span>
+<span class="fc" id="L188">			autoLevelReset(0);</span>
+<span class="fc" id="L189">			return;</span>
+		}
+<span class="pc bpc" id="L191" title="1 of 4 branches missed.">		if (&quot;Sekundárna navigácia&quot;.equals(getValue(row[0]).trim()) || &quot;Pomocná navigácia&quot;.equals(getValue(row[0]).trim()))</span>
+		{
+			//foundEnd = true;
+<span class="fc" id="L194">			groupNameLevels[1] = getValue(row[0]);</span>
+<span class="fc" id="L195">			return;</span>
+		}
+<span class="fc bfc" id="L197" title="All 2 branches covered.">		if (&quot;ID stránky&quot;.equals(getValue(row[0]).trim()))</span>
+		{
+<span class="fc" id="L199">			setHeader(row);</span>
+		}
+
+<span class="pc bpc" id="L202" title="1 of 4 branches missed.">		if (foundStart == false || foundEnd == true)</span>
+		{
+<span class="fc" id="L204">			return;</span>
+		}
+
+<span class="fc" id="L207">		levelNumber = getValue(row[0]);</span>
+
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (&quot;-&quot;.equals(levelNumber))</span>
+		{
+<span class="nc" id="L211">			levelNumber = &quot;&quot;;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">			for (int i=1; i&lt;row.length; i++)</span>
+			{
+<span class="nc" id="L214">				String value = getValue(row[i]);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
+				{
+<span class="nc" id="L217">					autoLevelNumbers[i-1] = autoLevelNumbers[i-1] + 1;</span>
+
+<span class="nc bnc" id="L219" title="All 2 branches missed.">					if (Tools.isEmpty(levelNumber)) levelNumber += Integer.toString(autoLevelNumbers[i-1]);</span>
+<span class="nc" id="L220">					else levelNumber += &quot;.&quot;+autoLevelNumbers[i-1];</span>
+
+<span class="nc" id="L222">					autoLevelReset(i);</span>
+<span class="nc" id="L223">					break;</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L227" title="All 2 branches missed.">					if (Tools.isEmpty(levelNumber)) levelNumber += Integer.toString(autoLevelNumbers[i-1]);</span>
+<span class="nc" id="L228">					else levelNumber += &quot;.&quot;+autoLevelNumbers[i-1];</span>
+				}
+			}
+		}
+
+<span class="fc bfc" id="L233" title="All 2 branches covered.">		if (Tools.isEmpty(levelNumber))</span>
+		{
+<span class="fc" id="L235">			return;</span>
+		}
+
+<span class="fc" id="L238">		int sortPriority = -1;</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">		if (levelAsPriority)</span>
+		{
+<span class="fc" id="L241">			sortPriority = Tools.getIntValue(Tools.replace(levelNumber, &quot;.&quot;, &quot;&quot;).trim(), -1);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">			if (sortPriority &gt; 0) sortPriority = sortPriority * 10;</span>
+		}
+
+		int currentLevel;
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">		for (currentLevel = 1; currentLevel &lt; 7; currentLevel++)</span>
+		{
+<span class="fc" id="L248">			groupName = getValue(row[currentLevel]);</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">			if (Tools.isNotEmpty(groupName))</span>
+			{
+<span class="fc" id="L251">				groupName = groupName.trim();</span>
+				//nemoze tam byt lomitko, lebo inak to bude ako dalsi podadresar
+<span class="fc" id="L253">				groupName = groupName.replace('/', ' ');</span>
+<span class="fc" id="L254">				break;</span>
+			}
+		}
+
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">		if (levelNumber.startsWith(&quot;0.&quot;))</span>
+		{
+<span class="nc" id="L260">			String[] data = levelNumber.split(&quot;\\.&quot;);</span>
+<span class="nc" id="L261">			int level = data.length;</span>
+<span class="nc" id="L262">			currentLevel = level;</span>
+<span class="nc" id="L263">			groupNameLevels[1] = &quot;Sekundárna navigácia&quot;;</span>
+<span class="nc" id="L264">		}</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">		else if (currentLevel == 1)</span>
+		{
+			//detekuj level podla cisel
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">			if (levelNumber.endsWith(&quot;.&quot;)) levelNumber = levelNumber.substring(0, levelNumber.length()-1);</span>
+<span class="fc" id="L269">			String[] data = levelNumber.split(&quot;\\.&quot;);</span>
+<span class="fc" id="L270">			int level = data.length;</span>
+			//ak je to 1.0 tak je to v podstate 1 uroven, nie druha
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">			if (levelNumber.endsWith(&quot;.0&quot;))</span>
+			{
+<span class="nc" id="L274">				level = level - 1;</span>
+			}
+<span class="fc" id="L276">			currentLevel = level;</span>
+		}
+
+		//vyskladaj celu cestu
+<span class="fc" id="L280">		groupNameLevels[currentLevel] = groupName;</span>
+
+<span class="fc" id="L282">		String groupPath = getGroupPath(currentLevel);</span>
+
+<span class="fc" id="L284">		println(levelNumber+&quot; [&quot;+currentLevel+&quot;] &quot;+groupPath, rowCounter);</span>
+<span class="fc" id="L285">		print(&quot;&lt;div style='padding-left: 20px;'&gt;&quot;);</span>
+
+<span class="fc" id="L287">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L288">		GroupDetails group = groupsDB.getCreateGroup(groupPath);</span>
+
+
+		//VUB specific - gestor can edit, coordinator must acknowledge his changes
+		// and so does high coordinator coordinator's changes
+		// Firstly, we collect them all and act after import - see afterImportJob
+<span class="fc" id="L294">		String groupCode = getValue( row[0] );</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">		if (groupCode != null)</span>
+<span class="fc" id="L296">			groupCode = stripRedundantCode(groupCode);</span>
+
+<span class="fc" id="L298">		String workflowType = getValue(row,&quot;Workflow&quot;);</span>
+
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(groupCode))</span>
+		{
+<span class="fc" id="L302">			String maybeGestor = getValue(row, &quot;Gestor&quot;);</span>
+<span class="fc" id="L303">			String maybeCoordinator = getValue(row, &quot;Koordinátor&quot;);</span>
+<span class="fc" id="L304">			String maybeHighCoordinator = getValue(row,&quot;Obsahový správca&quot;);</span>
+
+			//put this group into his list of gestored groups
+<span class="fc" id="L307">			addGroupsToPersons(groupCode, maybeGestor,gestored);</span>
+<span class="fc" id="L308">			addGroupsToPersons(groupCode, maybeCoordinator,gestored);</span>
+<span class="fc" id="L309">			addGroupsToPersons(groupCode, maybeHighCoordinator,gestored);</span>
+<span class="pc bpc" id="L310" title="2 of 4 branches missed.">			if (workflowType != null &amp;&amp; !workflowType.startsWith(&quot;GK&quot;))</span>
+<span class="fc" id="L311">				addGroupsToPersons(groupCode, maybeGestor,coordinatedByGestor);</span>
+			//the same for coordinators
+<span class="fc" id="L313">			addGroupsToPersons(groupCode, maybeCoordinator,coordinated);</span>
+			//and the same for high coordinators
+<span class="fc" id="L315">			addGroupsToPersons(groupCode, maybeHighCoordinator,highCoordinated);</span>
+<span class="fc" id="L316">			codeToGroupsMapping.put(groupCode, group);</span>
+		}
+
+
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">		if (group != null)</span>
+		{
+<span class="fc" id="L322">			String data = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L324" title="2 of 4 branches missed.">			if (row.length&gt;5 &amp;&amp; downloadData)</span>
+			{
+<span class="nc" id="L326">				String url = getValue(row, &quot;Súčasná adresa (ak existuje)&quot;);</span>
+				try
+				{
+<span class="nc bnc" id="L329" title="All 4 branches missed.">					if (Tools.isNotEmpty(url) &amp;&amp; url.startsWith(&quot;http&quot;))</span>
+					{
+
+<span class="nc" id="L332">						data = fixCRLF(Tools.downloadUrl(url));</span>
+
+<span class="nc bnc" id="L334" title="All 2 branches missed.">						if (data == null) data = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L336" title="All 2 branches missed.">						if (Tools.isNotEmpty(cropHtmlStart))</span>
+						{
+<span class="nc" id="L338">							int startIndex = data.indexOf(cropHtmlStart);</span>
+
+<span class="nc" id="L340">							Logger.println(this,&quot;Orezavam zaciatok, index = &quot; + startIndex);</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">							if (startIndex != -1) data = data.substring(startIndex+cropHtmlStart.length());</span>
+						}
+<span class="nc bnc" id="L343" title="All 2 branches missed.">						if (Tools.isNotEmpty(cropHtmlEnd))</span>
+						{
+<span class="nc" id="L345">							int endIndex = data.indexOf(cropHtmlEnd);</span>
+
+<span class="nc" id="L347">							Logger.println(this,&quot;Orezavam koniec, index = &quot; + endIndex);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">							if (endIndex &gt; 0) data = data.substring(0, endIndex);</span>
+						}
+
+<span class="nc" id="L351">						println(prop.getText(&quot;components.import_web_pages.xls.page_downloaded&quot;, url), -1);</span>
+					}
+				}
+<span class="nc" id="L354">				catch (RuntimeException ex)</span>
+				{
+<span class="nc" id="L356">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L357">					printlnError(prop.getText(&quot;components.import_web_pages.xls.error_crop_data&quot;)+&quot;: &quot;+ex.getMessage(), rowCounter);</span>
+<span class="nc" id="L358">				}</span>
+			}
+
+<span class="fc" id="L361">			int setTempId = -1;</span>
+<span class="fc" id="L362">			String templateName = getValue(row, &quot;Šablóna&quot;);</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(templateName))</span>
+			{
+<span class="nc" id="L365">				TemplatesDB tempDB = TemplatesDB.getInstance();</span>
+<span class="nc" id="L366">				TemplateDetails temp = tempDB.getTemplate(templateName);</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">				if (temp == null)</span>
+				{
+<span class="nc" id="L369">					printlnError(prop.getText(&quot;components.import_web_pages.xls.temp_not_exists&quot;, templateName), rowCounter);</span>
+				}
+				else
+				{
+<span class="nc" id="L373">					println(prop.getText(&quot;components.import_web_pages.xls.setting_template&quot;, temp.getTempName()), -1);</span>
+<span class="nc" id="L374">					setTempId = temp.getTempId();</span>
+				}
+			}
+
+<span class="pc bpc" id="L378" title="2 of 4 branches missed.">			if (levelAsPriority &amp;&amp; sortPriority &gt; 0)</span>
+			{
+<span class="fc" id="L380">				group.setSortPriority(sortPriority);</span>
+<span class="pc bpc" id="L381" title="1 of 2 branches missed.">				if (setTempId&gt;0) group.setTempId(setTempId);</span>
+<span class="fc" id="L382">				groupsDB.setGroup(group);</span>
+			}
+
+			//vytvor prazdnu stranku
+<span class="fc" id="L386">			EditorForm ef = EditorDB.getEditorForm(request, -1, -1, group.getGroupId());</span>
+<span class="fc" id="L387">			ef.setTitle(groupName);</span>
+<span class="fc" id="L388">			ef.setNavbar(groupName);</span>
+<span class="fc" id="L389">			ef.setExternalLink(&quot;&quot;);</span>
+<span class="fc" id="L390">			ef.setSearchable(true);</span>
+<span class="fc" id="L391">			ef.setAvailable(true);</span>
+<span class="fc" id="L392">			ef.setCacheable(false);</span>
+
+<span class="fc" id="L394">			DocDB docDB = DocDB.getInstance();</span>
+			//	zisti kolko je v grupe stranok a zvys pocitadlo
+<span class="fc" id="L396">			ef.setSortPriority(0);</span>
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">			for (DocDetails doc2 : docDB.getDocByGroup(group.getGroupId()))</span>
+			{
+<span class="nc bnc" id="L399" title="All 2 branches missed.">				if (doc2!=null)</span>
+				{
+<span class="nc bnc" id="L401" title="All 2 branches missed.">					if (ef.getSortPriority()&lt;doc2.getSortPriority())</span>
+					{
+<span class="nc" id="L403">						ef.setSortPriority(doc2.getSortPriority());</span>
+					}
+					//aktualizuj existujucu stranku
+<span class="nc bnc" id="L406" title="All 2 branches missed.">					if (doc2.getTitle().equals(ef.getTitle()))</span>
+					{
+<span class="nc" id="L408">						println(&quot;&lt;font color='orange'&gt;[&quot;+prop.getText(&quot;components.import_web_pages.xls.page_will_update&quot;)+&quot;]&lt;/font&gt;&quot;, -1);</span>
+						//ef.setDocId(doc2.getDocId());
+<span class="nc" id="L410">						ef = EditorDB.getEditorForm(request, doc2.getDocId(), -1, group.getGroupId());</span>
+					}
+				}
+<span class="nc" id="L413">			}</span>
+
+<span class="pc bpc" id="L415" title="2 of 4 branches missed.">			if (levelAsPriority &amp;&amp; sortPriority &gt; 0)</span>
+			{
+<span class="fc" id="L417">				ef.setSortPriority(sortPriority);</span>
+			}
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			else if (ef.getDocId()&lt;1)</span>
+			{
+<span class="nc" id="L421">				ef.setSortPriority(ef.getSortPriority()+10);</span>
+			}
+
+<span class="fc" id="L424">			ef.setPublish(&quot;1&quot;);</span>
+<span class="pc bpc" id="L425" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(data)) ef.setData(data);</span>
+
+<span class="fc" id="L427">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L428">			ef.setAuthorId(user.getUserId());</span>
+
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">			if (setTempId&gt;0) ef.setTempId(setTempId);</span>
+
+<span class="fc" id="L432">			String[] fields = {&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;, &quot;I&quot;, &quot;J&quot;, &quot;K&quot;, &quot;L&quot;};</span>
+<span class="fc bfc" id="L433" title="All 2 branches covered.">			for (String pismeno : fields)</span>
+			{
+<span class="fc" id="L435">				String value = getValue(row, &quot;Pole &quot;+pismeno);</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(value)) BeanUtils.setProperty(ef, &quot;field&quot;+pismeno, value);</span>
+			}
+
+<span class="fc" id="L439">			String keywords = getValue(row, &quot;Klúčové slová&quot;);</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(keywords))</span>
+			{
+<span class="nc" id="L442">				String perexGroups = null;</span>
+<span class="nc" id="L443">				StringTokenizer st = new StringTokenizer(keywords, &quot;,&quot;);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+				{
+<span class="nc" id="L446">					String keyword = st.nextToken().trim();</span>
+<span class="nc" id="L447">					PerexGroupBean perexGroup = docDB.getPerexGroup(-1, keyword);</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">					if (perexGroup != null)</span>
+					{
+<span class="nc bnc" id="L450" title="All 2 branches missed.">						if (perexGroups == null) perexGroups = Integer.toString(perexGroup.getPerexGroupId());</span>
+<span class="nc" id="L451">						else perexGroups += &quot;,&quot;+perexGroup.getPerexGroupId();</span>
+					}
+<span class="nc" id="L453">				}</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">				if (Tools.isNotEmpty(perexGroups)) ef.setPerexGroupString(perexGroups);</span>
+			}
+
+<span class="pc bpc" id="L457" title="2 of 4 branches missed.">			if (Tools.isEmpty(ef.getData()) || ef.getData().length() &lt; 20)</span>
+			{
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">				if (Tools.isEmpty(templateName))</span>
+				{
+<span class="fc" id="L461">					TemplatesDB tempDB = TemplatesDB.getInstance();</span>
+<span class="fc" id="L462">					TemplateDetails temp = tempDB.getTemplate(ef.getTempId());</span>
+<span class="pc bpc" id="L463" title="1 of 2 branches missed.">					if (temp != null) templateName = temp.getTempName();</span>
+				}
+
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(templateName))</span>
+				{
+<span class="fc" id="L468">					String html = getDocDefaultContent(templateName);</span>
+<span class="pc bpc" id="L469" title="2 of 4 branches missed.">					if (Tools.isNotEmpty(html) &amp;&amp; html.length() &gt; 20)</span>
+					{
+<span class="nc" id="L471">						println(&quot;Nastavujem content podľa &quot;+templateName);</span>
+<span class="nc" id="L472">						ef.setData(html);</span>
+					}
+
+				}
+			}
+
+<span class="fc" id="L478">			int saveStatus = EditorDB.saveEditorForm(ef, request);</span>
+
+<span class="fc" id="L480">			EditorDB.cleanSessionData(request);</span>
+
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">			if (saveStatus &gt; 0)</span>
+			{
+<span class="fc" id="L484">				setDefaultDocId(group.getGroupId(), ef.getDocId());</span>
+<span class="fc" id="L485">				println(&quot;&lt;font color='green'&gt;[&quot;+prop.getText(&quot;components.import_web_pages.xls.page_saved&quot;)+&quot;]&lt;/font&gt;&quot;, -1);</span>
+			}
+			else
+			{
+<span class="nc" id="L489">				printlnError(prop.getText(&quot;components.import_web_pages.xls.page_not_saved&quot;), rowCounter);</span>
+			}
+		}
+<span class="fc" id="L492">		print(&quot;&lt;/div&gt;&quot;);</span>
+		}
+<span class="nc" id="L494">		catch (Exception e)</span>
+		{
+<span class="nc" id="L496">			printlnError(&quot;Row import failed because of &quot;+e.getMessage());</span>
+<span class="fc" id="L497">		}</span>
+<span class="fc" id="L498">	}</span>
+
+
+	private boolean setDefaultDocId(int groupId, int docId)
+	{
+<span class="fc" id="L503">		boolean ret = false;</span>
+<span class="fc" id="L504">		Connection db_conn = null;</span>
+<span class="fc" id="L505">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="fc" id="L508">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L509">			ps = db_conn.prepareStatement(&quot;UPDATE groups SET default_doc_id=? WHERE group_id=?&quot;);</span>
+<span class="fc" id="L510">			ps.setInt(1, docId);</span>
+<span class="fc" id="L511">			ps.setInt(2, groupId);</span>
+<span class="fc" id="L512">			ps.execute();</span>
+<span class="fc" id="L513">			ps.close();</span>
+<span class="fc" id="L514">			ps = null;</span>
+<span class="fc" id="L515">			ret = true;</span>
+		}
+<span class="nc" id="L517">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L519">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L525" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L526">					db_conn.close();</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L528">					ps.close();</span>
+			}
+<span class="nc" id="L530">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L532">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L533">			}</span>
+		}
+<span class="fc" id="L535">		return(ret);</span>
+	}
+
+	private String getGroupPath(int currentLevel)
+	{
+<span class="fc" id="L540">		StringBuilder path = new StringBuilder(basePath);</span>
+		int i;
+<span class="fc bfc" id="L542" title="All 2 branches covered.">		for (i=1; i&lt;=currentLevel; i++)</span>
+		{
+<span class="fc" id="L544">			path.append('/').append(groupNameLevels[i]);</span>
+		}
+
+<span class="fc" id="L547">		Logger.println(this,&quot;getGroupPath(&quot;+currentLevel+&quot;)=&quot;+path);</span>
+
+<span class="fc" id="L549">		return path.toString();</span>
+	}
+
+	/**
+	 * Odsrani CR z textu (necha len LF), aby to bolo rovnake
+	 * @param text
+	 * @return
+	 */
+	private static String fixCRLF(String text)
+	{
+<span class="nc" id="L559">		text = Tools.replace(text, &quot;\r&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L561">		return(text);</span>
+	}
+
+	public static String listToString(List&lt;String&gt; list)
+	{
+<span class="nc" id="L566">		String ret = null;</span>
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		for (String l : list)</span>
+		{
+<span class="nc bnc" id="L569" title="All 2 branches missed.">			if (ret == null) ret = l;</span>
+<span class="nc" id="L570">			else ret += &quot;,&quot;+l; //NOSONAR</span>
+<span class="nc" id="L571">		}</span>
+<span class="nc" id="L572">		return ret;</span>
+	}
+
+
+	public static List&lt;String&gt; collapseGroups(List&lt;String&gt; groups)
+	{
+<span class="nc" id="L578">		Logger.debug(ImportStructureExcel.class, &quot;Collapse groups: &quot;+listToString(groups));</span>
+
+		//sort the codes
+<span class="nc" id="L581">		Collections.sort(groups,new Comparator&lt;String&gt;(){</span>
+			@Override
+			public int compare(String group1, String group2)
+			{
+<span class="nc" id="L585">				String[] group1Levels = group1.split(&quot;\\.&quot;);</span>
+<span class="nc" id="L586">				String[] group2Levels = group2.split(&quot;\\.&quot;);</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">				int maxLevels = group1Levels.length &gt; group2Levels.length ? group2Levels.length : group1Levels.length;</span>
+
+<span class="nc bnc" id="L589" title="All 2 branches missed.">				for (int levelIndex = 0;levelIndex &lt; maxLevels;levelIndex++)</span>
+				{
+<span class="nc" id="L591">					int first = Integer.parseInt( group1Levels[ levelIndex ] );</span>
+<span class="nc" id="L592">					int second = Integer.parseInt( group2Levels[ levelIndex ] );</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">					if ( (first - second) != 0 )</span>
+<span class="nc" id="L594">						return first - second;</span>
+				}
+				//still no answer - return the one with less dots
+<span class="nc bnc" id="L597" title="All 2 branches missed.">				return group1Levels.length &gt; group2Levels.length ? 1 : -1;</span>
+			}
+		});
+
+		/* povodny kod od marosa, ktory orezaval ak mal user pravo na parent - odrezal vsetky subs
+		int size = groups.size();
+
+		for (int groupIndex = 0;groupIndex &lt; size; groupIndex++)
+		{
+			//devourChildren(groups, groupIndex );
+			size = groups.size();
+		}
+		*/
+<span class="nc" id="L610">		return groups;</span>
+	}
+
+	/**
+	 * Spoji adresare smerom hore, ak mam pristup na vsetky podadresare nejakeho adresara spoji to do jedneho
+	 * @param groups - zoznam ID adresarov
+	 * @return
+	 */
+	public static String collapseGroupsUp(String groupsStr)
+	{
+<span class="nc" id="L620">		Logger.debug(ImportStructureExcel.class, &quot;Collapse groups UP: &quot;+groupsStr);</span>
+<span class="nc" id="L621">		String[] groups = Tools.getTokens(groupsStr, &quot;,&quot;);</span>
+
+<span class="nc" id="L623">		Map&lt;String, String&gt; allreadyHas = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L625">		Map&lt;Integer, Integer&gt; groupsIdTable = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">		for (String group : groups)</span>
+		{
+<span class="nc" id="L628">			int groupId = Tools.getIntValue(group, -1);</span>
+<span class="nc" id="L629">			groupsIdTable.put(Integer.valueOf(groupId), Integer.valueOf(groupId));</span>
+		}
+
+<span class="nc" id="L632">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">		for (String group : groups)</span>
+		{
+<span class="nc" id="L635">			int groupId = Tools.getIntValue(group, -1);</span>
+<span class="nc" id="L636">			int[] groupIdArr = new int[1];</span>
+<span class="nc" id="L637">			groupIdArr[0] = groupId;</span>
+<span class="nc" id="L638">			int[] childs = groupsDB.expandGroupIdsToChilds(groupIdArr, true);</span>
+
+<span class="nc" id="L640">			boolean someMissing = false;</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">			for (int childId : childs)</span>
+			{
+<span class="nc bnc" id="L643" title="All 2 branches missed.">				if (groupsIdTable.get(Integer.valueOf(childId))==null)</span>
+				{
+					//takehoto potomka nema, nemozeme orezat
+<span class="nc" id="L646">					Logger.debug(ImportStructureExcel.class, &quot;collapseGroups: missing &quot;+childId+&quot; parent=&quot;+groupId);</span>
+<span class="nc" id="L647">					someMissing = true;</span>
+<span class="nc" id="L648">					break;</span>
+				}
+			}
+<span class="nc bnc" id="L651" title="All 2 branches missed.">			if (!someMissing)</span>
+			{
+				//mozeme poznacit ako duplicitu
+<span class="nc bnc" id="L654" title="All 2 branches missed.">				for (int childId : childs)</span>
+				{
+					//rodica musime nechat
+<span class="nc bnc" id="L657" title="All 2 branches missed.">					if (groupId == childId) continue;</span>
+
+<span class="nc" id="L659">					String childIdString = Integer.toString(childId);</span>
+<span class="nc" id="L660">					allreadyHas.put(childIdString, childIdString);</span>
+				}
+			}
+		}
+
+		//zrus duplicity
+<span class="nc" id="L666">		List&lt;String&gt; groupsNew = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">		for (String groupId : groups)</span>
+		{
+<span class="nc bnc" id="L669" title="All 2 branches missed.">			if (allreadyHas.get(groupId)==null)</span>
+			{
+<span class="nc" id="L671">				allreadyHas.put(groupId, groupId);</span>
+<span class="nc" id="L672">				groupsNew.add(groupId);</span>
+			}
+		}
+
+<span class="nc" id="L676">		String ret = listToString(groupsNew);</span>
+<span class="nc" id="L677">		Logger.debug(ImportStructureExcel.class, &quot;Collapse groups UP done: &quot;+ret);</span>
+<span class="nc" id="L678">		return ret;</span>
+	}
+
+	private void addGroupsToPersons(String groupCode, String maybePerson,Map&lt;String,List&lt;String&gt;&gt; collection)
+	{
+<span class="pc bpc" id="L683" title="1 of 2 branches missed.">			if (isNotEmpty(maybePerson))</span>
+			{
+<span class="nc" id="L685">				String[] persons = maybePerson.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L686" title="All 2 branches missed.">				for (String person : persons)</span>
+				{
+<span class="nc" id="L688">					person = person.trim();</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">					if (collection.get(person) == null)</span>
+<span class="nc" id="L690">						collection.put(person, new ArrayList&lt;&gt;() );</span>
+<span class="nc" id="L691">					collection.get(person).add(groupCode);</span>
+				}
+			}
+<span class="fc" id="L694">	}</span>
+
+	private String stripRedundantCode(String groupCode)
+	{
+
+<span class="pc bpc" id="L699" title="1 of 2 branches missed.">		while (groupCode.endsWith(&quot;.0&quot;))</span>
+		{
+<span class="nc" id="L701">			groupCode = groupCode.substring(0, groupCode.lastIndexOf(&quot;.0&quot;) );</span>
+		}
+<span class="fc" id="L703">		return groupCode;</span>
+	}
+
+	/**
+	 * Creates/loads gestor as a user and sets his editable groups.
+	 */
+	private void saveGestor(Prop prop, String gestor)
+	{
+<span class="nc" id="L711">		Logger.debug(ImportStructureExcel.class, &quot;Saving gestor: &quot;+gestor);</span>
+<span class="nc" id="L712">		println(&quot;Saving editable groups for: &quot;+gestor);</span>
+		try
+		{
+			//if he does not exist - create him
+<span class="nc bnc" id="L716" title="All 2 branches missed.">			if ( UsersDB.getUser(gestor) == null )</span>
+<span class="nc" id="L717">				createUser(gestor);</span>
+<span class="nc" id="L718">			UserDetails gestorUser = UsersDB.getUser(gestor);</span>
+
+<span class="nc" id="L720">			List&lt;String&gt; groups = gestored.get(gestor);</span>
+			//remove redundant groups
+<span class="nc" id="L722">			groups = collapseGroups(groups);</span>
+			//build editableGroups string
+<span class="nc" id="L724">			StringBuilder editableGroups = new StringBuilder( gestorUser.getEditableGroups() );</span>
+<span class="nc bnc" id="L725" title="All 2 branches missed.">			for (String code : groups)</span>
+			{
+<span class="nc" id="L727">				GroupDetails group = codeToGroupsMapping.get(code);</span>
+
+<span class="nc bnc" id="L729" title="All 2 branches missed.">				if (editableGroups.length() &gt; 0)</span>
+<span class="nc" id="L730">					editableGroups.append(',');</span>
+<span class="nc" id="L731">				editableGroups.append( group.getGroupId() );</span>
+<span class="nc" id="L732">			}</span>
+<span class="nc" id="L733">			String collapsedGroups = collapseGroupsUp(editableGroups.toString());</span>
+
+<span class="nc bnc" id="L735" title="All 2 branches missed.">			if (highCoordinated.get(gestor)!=null)</span>
+			{
+				//koordinator ma pristup vsade, takze mu pridame aj root folder
+<span class="nc" id="L738">				collapsedGroups = rootGroupId+&quot;,&quot;+collapsedGroups;</span>
+			}
+
+<span class="nc" id="L741">			gestorUser.setEditableGroups(collapsedGroups);</span>
+
+			//and save changes
+<span class="nc" id="L744">			UsersDB.saveUser(gestorUser);</span>
+
+<span class="nc bnc" id="L746" title="All 2 branches missed.">			if (highCoordinated.get(gestor)==null)</span>
+			{
+				//vsetkym okrem koordinatora nastavme prava
+<span class="nc" id="L749">				copyPerms(gestorUser, getUserDefaultGestor());</span>
+			}
+		}
+<span class="nc" id="L752">		catch (Exception e)</span>
+		{
+<span class="nc" id="L754">			printlnError(prop.getText(&quot;components.import_web_pages.xls.error_mapping&quot;,gestor)+&quot;: &quot;+e.getMessage() );</span>
+<span class="nc" id="L755">		}</span>
+<span class="nc" id="L756">	}</span>
+
+
+
+	/**
+	 * Creates/loads coordinator as a user and sets his editable groups.
+	 */
+	private void saveCoordinator(Prop prop, String coordinator,int approveLevel)
+	{
+<span class="nc" id="L765">		Logger.debug(ImportStructureExcel.class, &quot;Saving coordinator: &quot;+coordinator);</span>
+<span class="nc" id="L766">		println(&quot;Saving user: &quot;+coordinator);</span>
+		try
+		{
+			//if he does not exist - create him
+<span class="nc bnc" id="L770" title="All 2 branches missed.">			if ( UsersDB.getUser(coordinator) == null )</span>
+<span class="nc" id="L771">				createUser(coordinator);</span>
+<span class="nc" id="L772">			UserDetails coordinatorUser = UsersDB.getUser(coordinator);</span>
+
+<span class="nc" id="L774">			List&lt;String&gt; groups = null;</span>
+<span class="nc bnc" id="L775" title="All 4 branches missed.">			switch (approveLevel) //NOSONAR</span>
+			{
+<span class="nc" id="L777">				case UsersDB.APPROVE_LEVEL2 :	groups = highCoordinated.get(coordinator);	break;</span>
+<span class="nc" id="L778">				case UsersDB.APPROVE_APPROVE:	groups = coordinated.get(coordinator); 		break;</span>
+<span class="nc" id="L779">				case UsersDB.APPROVE_NONE: groups = coordinatedByGestor.get(coordinator);	break;</span>
+			}
+			//remove redundant groups
+<span class="nc bnc" id="L782" title="All 2 branches missed.">			if (groups != null) groups = collapseGroups(groups);</span>
+			else
+<span class="nc" id="L784">				groups = Collections.emptyList();</span>
+<span class="nc" id="L785">			List&lt;String&gt; groupIdsList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">			for (String code : groups)</span>
+			{
+<span class="nc" id="L788">				GroupDetails group = codeToGroupsMapping.get(code);</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">				if (UsersDB.getApproveMode(coordinatorUser.getUserId(), group.getGroupId()) == -1)</span>
+				{
+<span class="nc" id="L791">					groupIdsList.add(Integer.toString(group.getGroupId()));</span>
+				}
+<span class="nc" id="L793">			}</span>
+
+<span class="nc bnc" id="L795" title="All 2 branches missed.">			if (highCoordinated.get(coordinator)!=null)</span>
+			{
+				//koordinator musi mat pravo menit cokolvek v root foldri
+<span class="nc" id="L798">				UsersDB.addApproveGroup(coordinatorUser.getUserId(), rootGroupId, UsersDB.APPROVE_NONE);</span>
+			}
+
+			//collapse UP
+<span class="nc" id="L802">			String groupIds = collapseGroupsUp(listToString(groupIdsList));</span>
+<span class="nc" id="L803">			int[] groupIdsArr = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
+<span class="nc bnc" id="L804" title="All 2 branches missed.">			for (int groupId : groupIdsArr)</span>
+			{
+<span class="nc" id="L806">				UsersDB.addApproveGroup(coordinatorUser.getUserId(), groupId, approveLevel);</span>
+			}
+
+			//and save changes
+<span class="nc" id="L810">			UsersDB.saveUser(coordinatorUser);</span>
+
+<span class="nc bnc" id="L812" title="All 2 branches missed.">			if (highCoordinated.get(coordinator)==null)</span>
+			{
+				//ak to nie je koordinator, nastav prava
+<span class="nc bnc" id="L815" title="All 6 branches missed.">				if (approveLevel == UsersDB.APPROVE_NONE &amp;&amp; coordinated.get(coordinator)==null &amp;&amp; highCoordinated.get(coordinator)==null) copyPerms(coordinatorUser, getUserDefaultGestor());</span>
+<span class="nc" id="L816">				else copyPerms(coordinatorUser, getUserDefaultKoordinator());</span>
+			}
+		}
+<span class="nc" id="L819">		catch (Exception e)</span>
+		{
+<span class="nc" id="L821">			printlnError(prop.getText(&quot;components.import_web_pages.xls.error_mapping&quot;,coordinator)+&quot;: &quot;+e.getMessage() );</span>
+<span class="nc" id="L822">		}</span>
+<span class="nc" id="L823">	}</span>
+
+	/**
+	 * Removes children of the given element from the given list
+	 */
+	public static void devourChildren(List&lt;String&gt; groups, int index)
+	{
+<span class="nc bnc" id="L830" title="All 2 branches missed.">		for (int childIndex = index+1;childIndex&lt;groups.size();childIndex++ )</span>
+		{
+<span class="nc bnc" id="L832" title="All 2 branches missed.">			if ( isChild( groups.get(index), groups.get(childIndex) ) )</span>
+			{
+<span class="nc" id="L834">				groups.remove(childIndex);</span>
+<span class="nc" id="L835">				childIndex--; //NOSONAR</span>
+			}
+			else
+<span class="nc" id="L838">				return;</span>
+		}
+<span class="nc" id="L840">	}</span>
+
+	/**
+	 * Returns, whether the second parameter
+	 * is child of the first one in case both
+	 * are represented in decimal dotted notation
+	 */
+	public static boolean isChild(String parent, String child)
+	{
+<span class="nc" id="L849">		return child.startsWith(parent);</span>
+	}
+
+	/**
+	 * Vytvori usera, ak pozna iba login
+	 */
+	private void createUser(String gestor)
+	{
+<span class="nc" id="L857">		UserDetails usr = new UserDetails();</span>
+<span class="nc" id="L858">		usr.setAdmin(true);</span>
+<span class="nc" id="L859">		usr.setLogin(gestor);</span>
+<span class="nc" id="L860">		usr.setFirstName(gestor);</span>
+<span class="nc" id="L861">		usr.setLastName(gestor);</span>
+<span class="nc" id="L862">		usr.setAuthorized(true);</span>
+<span class="nc" id="L863">		usr.setPasswordPlain(gestor);</span>
+<span class="nc" id="L864">		UsersDB.saveUser(usr);</span>
+<span class="nc" id="L865">		println(&quot;New user: &quot;+gestor );</span>
+<span class="nc" id="L866">	}</span>
+
+	private static boolean isNotEmpty(String s)
+	{
+<span class="pc bpc" id="L870" title="3 of 4 branches missed.">		return Tools.isNotEmpty(s) &amp;&amp; !&quot;N/A&quot;.equals(s);</span>
+	}
+
+
+	private void createDirectoriesAndAccess(GroupDetails group,UserDetails usr)
+	{
+<span class="nc" id="L876">		String groupPath = group.getFullPath();</span>
+<span class="nc bnc" id="L877" title="All 2 branches missed.">		if (isNotEmpty(group.getDomainName()))</span>
+		{
+<span class="nc" id="L879">			String domainAlias = Constants.getString(&quot;multiDomainAlias:&quot;+group.getDomainName());</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">			if (Tools.isNotEmpty(domainAlias))</span>
+			{
+<span class="nc" id="L882">				int i = groupPath.indexOf('/', 2);</span>
+				//odstranime prvy folder, to je nas alias
+<span class="nc bnc" id="L884" title="All 2 branches missed.">				if (i &gt; 0) groupPath = groupPath.substring(i);</span>
+<span class="nc" id="L885">				groupPath = &quot;/&quot;+domainAlias+groupPath; //NOSONAR</span>
+			}
+		}
+<span class="nc" id="L888">		groupPath = DocTools.removeCharsDir(DB.internationalToEnglish(groupPath).toLowerCase(), true);</span>
+<span class="nc" id="L889">		IwcmFile imagesDirectory = new IwcmFile( Tools.getRealPath(&quot;/images&quot;+groupPath) );</span>
+<span class="nc" id="L890">		IwcmFile filesDirectory = new IwcmFile( Tools.getRealPath(&quot;/files&quot;+groupPath) );</span>
+<span class="nc" id="L891">		imagesDirectory.mkdirs();</span>
+<span class="nc" id="L892">		filesDirectory.mkdirs();</span>
+
+<span class="nc bnc" id="L894" title="All 2 branches missed.">		if (!usr.getWritableFolders().contains(&quot;/images&quot;+groupPath))</span>
+		{
+<span class="nc" id="L896">			String writableFolders = usr.getWritableFolders();</span>
+<span class="nc bnc" id="L897" title="All 2 branches missed.">			if (Tools.isEmpty(writableFolders))</span>
+<span class="nc" id="L898">				writableFolders = &quot;/images&quot;+groupPath+&quot;*&quot;;</span>
+			else
+<span class="nc" id="L900">				writableFolders += System.getProperty(&quot;line.separator&quot;)+&quot;/images&quot;+groupPath+&quot;*&quot;;</span>
+<span class="nc" id="L901">			usr.setWritableFolders(writableFolders);</span>
+		}
+
+<span class="nc bnc" id="L904" title="All 2 branches missed.">		if (!usr.getWritableFolders().contains(&quot;/files&quot;+groupPath))</span>
+		{
+<span class="nc" id="L906">			String writableFolders = usr.getWritableFolders();</span>
+<span class="nc bnc" id="L907" title="All 2 branches missed.">			if (Tools.isEmpty(writableFolders))</span>
+<span class="nc" id="L908">				writableFolders = &quot;/files&quot;+groupPath+&quot;*&quot;;</span>
+			else
+<span class="nc" id="L910">				writableFolders += System.getProperty(&quot;line.separator&quot;)+&quot;/files&quot;+groupPath+&quot;*&quot;;</span>
+<span class="nc" id="L911">			usr.setWritableFolders(writableFolders);</span>
+		}
+<span class="nc" id="L913">	}</span>
+
+	/**
+	 * Nastavi pouzivatelovi prava na moduly podla grouPusera
+	 * @param user
+	 * @param groupUser
+	 */
+	public void copyPerms(UserDetails user, Identity groupUser)
+	{
+<span class="nc bnc" id="L922" title="All 6 branches missed.">		if (user.getUserId()&gt;0 &amp;&amp; groupUser.getDisabledItemsTable()!=null &amp;&amp; groupUser.getDisabledItemsTable().size()&gt;0)</span>
+		{
+<span class="nc" id="L924">			Connection db_conn = null;</span>
+<span class="nc" id="L925">			PreparedStatement ps = null;</span>
+			try
+			{
+<span class="nc" id="L928">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L930">				ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L931">				ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L932">				ps.execute();</span>
+<span class="nc" id="L933">				ps.close();</span>
+
+<span class="nc" id="L935">				ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+
+<span class="nc" id="L937">				Iterator&lt;String&gt; e = groupUser.getDisabledItemsTable().keySet().iterator();</span>
+<span class="nc bnc" id="L938" title="All 2 branches missed.">				while (e.hasNext())</span>
+				{
+<span class="nc" id="L940">					String key = e.next();</span>
+
+<span class="nc" id="L942">					ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L943">					ps.setString(2, key);</span>
+<span class="nc" id="L944">					ps.execute();</span>
+
+<span class="nc" id="L946">				}</span>
+<span class="nc" id="L947">				ps.close();</span>
+
+<span class="nc" id="L949">				db_conn.close();</span>
+<span class="nc" id="L950">				ps = null;</span>
+<span class="nc" id="L951">				db_conn = null;</span>
+			}
+<span class="nc" id="L953">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L955">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L961" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L962">						ps.close();</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L964">						db_conn.close();</span>
+				}
+<span class="nc" id="L966">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L968">				}</span>
+			}
+		}
+<span class="nc" id="L971">	}</span>
+
+	/**
+	 * User s loginom gestorGrpAdmin definuje default prava k modulom pre gestora
+	 * @return
+	 */
+	public Identity getUserDefaultGestor()
+	{
+<span class="nc bnc" id="L979" title="All 2 branches missed.">		if (userDefaultGestor == null)</span>
+		{
+<span class="nc" id="L981">			userDefaultGestor = new Identity(UsersDB.getUser(&quot;gestorGrpAdmin&quot;));</span>
+<span class="nc bnc" id="L982" title="All 2 branches missed.">			if (userDefaultGestor.getUserId()&lt;1) userDefaultGestor = new Identity();</span>
+<span class="nc" id="L983">			else UsersDB.setDisabledItems(userDefaultGestor);</span>
+		}
+
+<span class="nc" id="L986">		return userDefaultGestor;</span>
+	}
+
+	/**
+	 * User s loginom koordinatorGrpAdmin definuje default prava k modulom pre koordinatora
+	 * @return
+	 */
+	public Identity getUserDefaultKoordinator()
+	{
+<span class="nc bnc" id="L995" title="All 2 branches missed.">		if (userDefaultKoordinator == null)</span>
+		{
+<span class="nc" id="L997">			userDefaultKoordinator = new Identity(UsersDB.getUser(&quot;koordinatorGrpAdmin&quot;));</span>
+<span class="nc bnc" id="L998" title="All 2 branches missed.">			if (userDefaultKoordinator.getUserId()&lt;1) userDefaultKoordinator = new Identity();</span>
+<span class="nc" id="L999">			else UsersDB.setDisabledItems(userDefaultKoordinator);</span>
+		}
+
+<span class="nc" id="L1002">		return userDefaultKoordinator;</span>
+	}
+
+	/**
+	 * Podla nazvu sablony vyhlada v adresari System-&gt;Sablony default content pre stranku
+	 * @param tempName
+	 * @return
+	 */
+	public String getDocDefaultContent(String tempName)
+	{
+<span class="fc" id="L1012">		String content = docContentMap.get(tempName);</span>
+<span class="fc bfc" id="L1013" title="All 2 branches covered.">		if (content == null)</span>
+		{
+<span class="fc" id="L1015">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1016">			DocDetails doc = docDB.getDocByTitle(tempName, Constants.getInt(&quot;tempGroupId&quot;));</span>
+<span class="pc bpc" id="L1017" title="1 of 2 branches missed.">			if (doc != null) content = doc.getData();</span>
+<span class="pc bpc" id="L1018" title="1 of 2 branches missed.">			if (content == null) content = &quot;&lt;p&gt;&amp;nbsp;&lt;/p&gt;&quot;;</span>
+
+<span class="fc" id="L1020">			docContentMap.put(tempName, content);</span>
+		}
+<span class="fc" id="L1022">		return content;</span>
+	}
+
+	private void clearPrivilegesFor(String login)
+	{
+<span class="nc bnc" id="L1027" title="All 2 branches missed.">		if (alreadyClearedAdmins.contains(login))</span>
+<span class="nc" id="L1028">			return;</span>
+
+<span class="nc" id="L1030">		alreadyClearedAdmins.add(login);</span>
+
+		//no need to delete anything in case user doesn't even exist
+<span class="nc bnc" id="L1033" title="All 2 branches missed.">		if ( UsersDB.getUser(login) == null )</span>
+<span class="nc" id="L1034">			return;</span>
+
+<span class="nc" id="L1036">		UserDetails user = UsersDB.getUser(login);</span>
+		//delete those groups which are under the imported ROOT
+		//------------------DELETING APPROVE GROUPS---------------------
+<span class="nc" id="L1039">		List&lt;Number&gt; approveGroups = UsersDB.getApproveGroups(user.getUserId());</span>
+
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">		for (Number groupId : approveGroups)</span>
+		{
+<span class="nc" id="L1043">			GroupDetails group = GroupDetails.getById(groupId.intValue());</span>
+<span class="nc bnc" id="L1044" title="All 4 branches missed.">			if (group == null ||  group.getFullPath().startsWith( rootGroup.getFullPath() ))</span>
+<span class="nc" id="L1045">				UsersDB.deleteApproveGroup(user.getUserId(), groupId.intValue());</span>
+<span class="nc" id="L1046">		}</span>
+		//the same with editable groups
+		//------------------DELETING EDITABLE GROUPS-----------------------
+<span class="nc" id="L1049">		String editableGroups = user.getEditableGroups();</span>
+<span class="nc" id="L1050">		StringBuilder editableGroupsAfter = new StringBuilder(editableGroups.length());</span>
+<span class="nc bnc" id="L1051" title="All 2 branches missed.">		for (String groupIdString : editableGroups.split(&quot;,&quot;))</span>
+		{
+<span class="nc" id="L1053">			groupIdString = groupIdString.trim();</span>
+<span class="nc bnc" id="L1054" title="All 2 branches missed.">			if (!Tools.isInteger(groupIdString))</span>
+<span class="nc" id="L1055">				continue;</span>
+
+<span class="nc" id="L1057">			Integer groupId = Integer.valueOf(groupIdString);</span>
+<span class="nc" id="L1058">			GroupDetails group = GroupDetails.getById(groupId);</span>
+
+<span class="nc bnc" id="L1060" title="All 2 branches missed.">			if (group != null) Logger.debug(ImportStructureExcel.class, &quot;clearPrivileges - testing &quot;+group.getFullPath()+&quot; vs &quot;+rootGroup.getFullPath());</span>
+
+<span class="nc bnc" id="L1062" title="All 4 branches missed.">			if (group != null &amp;&amp; !group.getFullPath().startsWith( rootGroup.getFullPath() ))</span>
+			{
+<span class="nc" id="L1064">				editableGroupsAfter.append(',');</span>
+<span class="nc" id="L1065">				editableGroupsAfter.append(groupId);</span>
+			}
+		}
+		//delete the first comma
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		if (editableGroupsAfter.length() &gt; 0)</span>
+<span class="nc" id="L1070">			editableGroupsAfter = new StringBuilder(editableGroupsAfter.substring(1));</span>
+
+<span class="nc" id="L1072">		user.setEditableGroups(editableGroupsAfter.toString());</span>
+
+		//writable folders will be generated out of the editable pages structure
+<span class="nc" id="L1075">		user.setWritableFolders(&quot;&quot;);</span>
+<span class="nc" id="L1076">		println(&quot;Writable folders, editable groups and approve Groups for &quot;+login+&quot; has been cleared according to the root: &quot;+rootGroup.getFullPath());</span>
+<span class="nc" id="L1077">		UsersDB.saveUser(user);</span>
+<span class="nc" id="L1078">	}</span>
+
+	private void resolveAndCreateWritableFolders(String login)
+	{
+<span class="nc" id="L1082">		UserDetails user = UsersDB.getUser(login);</span>
+
+<span class="nc bnc" id="L1084" title="All 2 branches missed.">		if (highCoordinated.get(login)!=null)</span>
+		{
+			//koordinatorovi nenastavujem nic
+<span class="nc" id="L1087">			return;</span>
+		}
+
+<span class="nc bnc" id="L1090" title="All 2 branches missed.">		for (String groupIdString : user.getEditableGroups().split(&quot;,&quot;))</span>
+		{
+<span class="nc bnc" id="L1092" title="All 2 branches missed.">			if (!Tools.isInteger(groupIdString))</span>
+<span class="nc" id="L1093">				continue;</span>
+<span class="nc" id="L1094">			Integer groupId = Integer.valueOf(groupIdString);</span>
+<span class="nc" id="L1095">			createDirectoriesAndAccess( GroupDetails.getById(groupId) , user);</span>
+		}
+<span class="nc" id="L1097">		println(&quot;Creating writable folders for &quot;+login);</span>
+<span class="nc" id="L1098">		UsersDB.saveUser(user);</span>
+<span class="nc" id="L1099">	}</span>
+
+	private void autoLevelReset(int start)
+	{
+<span class="fc bfc" id="L1103" title="All 2 branches covered.">		for (int i=start; i&lt;autoLevelNumbers.length; i++)</span>
+		{
+<span class="fc" id="L1105">			autoLevelNumbers[i] = 0;</span>
+		}
+<span class="fc" id="L1107">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

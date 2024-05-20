@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocDetailsToDocHistoryMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">DocDetailsToDocHistoryMapper.java</span></div><h1>DocDetailsToDocHistoryMapper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.factory.Mappers;
+
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocHistory;
+
+/**
+ * Mapper medzi DocDetails a DocHistory objektom, je to z toho dovodu, ze na FE zobrazujeme stranky na schvalenie
+ * ktore su ale z doc_history tabulky, cize DocHistory objekt. Ale datatabulka je nakonfigurovana na DocDetails
+ * a len sa v nej prepinanim kariet zobrazuju rozne data. Jednym z nich su aj stranky na schvalenie, potrebujeme
+ * ich preto premapovat na DocDetails objekty.
+ */
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface DocDetailsToDocHistoryMapper {
+
+<span class="fc" id="L22">    DocDetailsToDocHistoryMapper INSTANCE = Mappers.getMapper(DocDetailsToDocHistoryMapper.class);</span>
+
+    @Mapping(target = &quot;publicable&quot;, ignore = true)
+    DocDetails docHistoryToDocDetails(DocHistory history);
+
+    List&lt;DocDetails&gt; docHistoryListToDocDetailsList(List&lt;DocHistory&gt; historyList);
+
+    @Mapping(target = &quot;publicable&quot;, ignore = true)
+    @Mapping(target = &quot;id&quot;, ignore = true)
+    DocHistory docDetailsToDocHistory(DocDetails detail);
+
+    List&lt;DocHistory&gt; docDetailsListToDocHistoryList(List&lt;DocDetails&gt; detailsList);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

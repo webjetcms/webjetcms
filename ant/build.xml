@@ -38,7 +38,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.0.21" />
+        <property name="artifact.version" value="2024.18" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -201,6 +201,7 @@
                 <include name="WEB-INF/sql/blank_web.sql"/>
                 <include name="WEB-INF/sql/blank_web_mssql.sql"/>
                 <include name="WEB-INF/sql/blank_web_oracle.sql"/>
+                <include name="WEB-INF/sql/blank_web_pgsql.sql"/>
                 <include name="WEB-INF/sql/stopwords.csv"/>
             </zipfileset>
         </jar>

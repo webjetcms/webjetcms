@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PermissionGroupDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">PermissionGroupDB.java</span></div><h1>PermissionGroupDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import javax.persistence.Query;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+
+/**
+ *  PermissionGroupDB.java
+ *
+ *  Zakladne CRUD operacie pre skupiny prav
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 16.04.2010 14:09:28
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class PermissionGroupDB extends JpaDB&lt;PermissionGroupBean&gt;
+{
+
+	public PermissionGroupDB() {
+<span class="fc" id="L40">		super(PermissionGroupBean.class);</span>
+<span class="fc" id="L41">	}</span>
+
+<span class="fc" id="L43">	private static final SimpleQuery query = new SimpleQuery();</span>
+
+	//-----------------------------------CRUD OPERACIE-------------------------------
+
+	public static void delete(int id)
+	{
+<span class="nc" id="L49">		PermissionGroupDB pgdb = new PermissionGroupDB();</span>
+<span class="nc" id="L50">		PermissionGroupBean group = pgdb.getById(id);</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (group != null) {</span>
+<span class="nc" id="L53">			Adminlog.add(Adminlog.TYPE_USER_PERM_GROUP_DELETE, &quot;Zmazana skupina prav &quot;+group.title, id, -1);</span>
+
+<span class="nc" id="L55">			group.delete();</span>
+<span class="nc" id="L56">			query.execute(&quot;DELETE FROM user_perm_groups_perms WHERE perm_group_id = ?&quot;, id);</span>
+<span class="nc" id="L57">			query.execute(&quot;DELETE FROM users_in_perm_groups WHERE perm_group_id = ?&quot;, id);</span>
+		}
+<span class="nc" id="L59">	}</span>
+
+	@Override
+	public List&lt;PermissionGroupBean&gt; getAll()
+	{
+<span class="fc" id="L64">		return PermissionGroupDB.getPermissionGroups(null);</span>
+	}
+
+	/**
+	 * Vrati vsetky vytvorene skupiny prav, ktorych nazov obsahuje vstupny parameter groupName
+	 *
+	 * @param groupName nazov skupiny
+	 * @return
+	 */
+	public static List&lt;PermissionGroupBean&gt; getPermissionGroups(String groupName)
+	{
+<span class="fc" id="L75">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+
+<span class="fc" id="L77">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L78">		ReadAllQuery all = new ReadAllQuery(PermissionGroupBean.class, builder);</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(groupName))</span>
+		{
+<span class="nc" id="L82">			Expression expr = builder.get(&quot;title&quot;).likeIgnoreCase(&quot;%&quot; + groupName + &quot;%&quot;);</span>
+<span class="nc" id="L83">			all.setSelectionCriteria(expr);</span>
+		}
+
+<span class="fc" id="L86">		Query query = em.createQuery(all);</span>
+<span class="fc" id="L87">		return JpaDB.getResultList(query);</span>
+	}
+
+    /**
+     * Vrati vsetky skupinu prav, ktorej nazov je rovnaky ako groupName
+     *
+     * @param groupName nazov skupiny
+     * @return
+     */
+    public static PermissionGroupBean getPermissionGroup(String groupName)
+    {
+<span class="nc" id="L98">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+
+<span class="nc" id="L100">        ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L101">        ReadAllQuery all = new ReadAllQuery(PermissionGroupBean.class, builder);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (Tools.isNotEmpty(groupName))</span>
+        {
+<span class="nc" id="L105">            Expression expr = builder.get(&quot;title&quot;).equal(groupName);</span>
+<span class="nc" id="L106">            all.setSelectionCriteria(expr);</span>
+        }
+
+<span class="nc" id="L109">        Query query = em.createQuery(all);</span>
+<span class="nc" id="L110">        return (PermissionGroupBean) query.getSingleResult();</span>
+    }
+
+
+
+	//---------------------------OPREACIE NAD PermissionGroupBean-------------------------------
+
+	public static int getUserCount(PermissionGroupBean permGroup)
+	{
+<span class="nc" id="L119">		return query.forInt(&quot;SELECT COUNT(upg.user_id) FROM users_in_perm_groups upg JOIN users u ON (upg.user_id = u.user_id) WHERE u.is_admin=&quot;+DB.getBooleanSql(true)+&quot; AND perm_group_id = ?&quot;, permGroup.getId());</span>
+	}
+
+	public static List&lt;Number&gt; getUserIds(PermissionGroupBean permGroup)
+	{
+<span class="nc" id="L124">		return query.forListNumber(&quot;SELECT user_id FROM users_in_perm_groups WHERE perm_group_id = ?&quot;, permGroup.getId());</span>
+	}
+
+	public static int savePermission(int permissionGroupId,String newName, String[] newPermissions)
+	{
+<span class="nc" id="L129">		return savePermission(permissionGroupId, newName, newPermissions, null, null, null);</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static int savePermission(int permissionGroupId,String newName, String[] newPermissions,String editableGroups,String editablePages,String writableFoldersField)
+	{
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (Tools.isEmpty(newName))</span>
+<span class="nc" id="L136">			throw new IllegalArgumentException(&quot;users.permission_group.errors.empty_name&quot;);</span>
+
+//		if (newPermissions == null)
+//			throw new IllegalArgumentException(&quot;users.permission_group.errors.empty_set&quot;);
+
+<span class="nc" id="L141">	   PermissionGroupDB pgdb = new PermissionGroupDB();</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (permissionGroupId &lt; 1)</span>
+		{
+<span class="nc" id="L145">			boolean nameAllreadyExists = false;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			for (PermissionGroupBean perm : pgdb.getAll())</span>
+			{
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if (perm.getTitle().equalsIgnoreCase(newName))</span>
+				{
+<span class="nc" id="L150">					nameAllreadyExists = true;</span>
+<span class="nc" id="L151">					break;</span>
+				}
+<span class="nc" id="L153">			}</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (nameAllreadyExists)</span>
+			{
+<span class="nc" id="L156">				throw new IllegalArgumentException(&quot;users.permission_group.errors.title_allready_exists&quot;);</span>
+			}
+		}
+
+		PermissionGroupBean permGroup;
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (permissionGroupId &lt; 1)</span>
+		{
+<span class="nc" id="L164">			permGroup = new PermissionGroupBean();</span>
+<span class="nc" id="L165">			Adminlog.add(Adminlog.TYPE_USER_PERM_GROUP_CREATE, &quot;Vytvorena skupina prav: &quot;+newName+&quot;. Jej prava: &quot;+Arrays.toString(newPermissions), -1, -1);</span>
+		}
+		else
+		{
+<span class="nc" id="L169">			permGroup = pgdb.getById(permissionGroupId);</span>
+		}
+
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if (permGroup == null)</span>
+<span class="nc" id="L173">			throw new IllegalArgumentException(&quot;PermissionGroup with id: &quot;+permissionGroupId+&quot; does not exist&quot;);</span>
+
+<span class="nc" id="L175">		permGroup.setTitle(newName);</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if(editableGroups != null)</span>
+<span class="nc" id="L178">			permGroup.setEditableGroups(editableGroups);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if(editablePages != null)</span>
+<span class="nc" id="L180">			permGroup.setEditablePages(editablePages);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if(writableFoldersField != null)</span>
+<span class="nc" id="L182">			permGroup.setWritableFolders(writableFoldersField);</span>
+
+<span class="nc" id="L184">		Collection&lt;String&gt; whichToBeGranted = null;</span>
+<span class="nc" id="L185">		Collection&lt;String&gt; whichToBeTaken = null;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if(newPermissions != null)</span>
+		{
+<span class="nc" id="L188">			List&lt;String&gt; newPerms = Arrays.asList(newPermissions);</span>
+<span class="nc" id="L189">			List&lt;String&gt; oldPerms = permGroup.getPermissionNames();</span>
+
+<span class="nc" id="L191">			whichToBeGranted = CollectionUtils.subtract(newPerms, oldPerms);</span>
+<span class="nc" id="L192">			whichToBeTaken = CollectionUtils.subtract(oldPerms, newPerms);</span>
+
+<span class="nc" id="L194">			logChanges(permGroup, whichToBeGranted, whichToBeTaken);</span>
+		}
+
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if(newPermissions != null) {</span>
+<span class="nc" id="L199">			takePermissions(permGroup, whichToBeTaken);</span>
+<span class="nc" id="L200">			grantPermissions(permGroup, whichToBeGranted);</span>
+		}
+
+<span class="nc" id="L203">		pgdb.save(permGroup);</span>
+
+<span class="nc" id="L205">		return permGroup.getUserPermGroupId();</span>
+	}
+
+	private static void logChanges(PermissionGroupBean permGroup, Collection&lt;String&gt; whichToBeGranted, Collection&lt;String&gt; whichToBeTaken)
+	{
+<span class="nc bnc" id="L210" title="All 6 branches missed.">		if (permGroup.getUserPermGroupId() &gt; 0 &amp;&amp; (whichToBeGranted.size() &gt; 0 || whichToBeTaken.size() &gt; 0))</span>
+		{
+<span class="nc" id="L212">			StringBuilder message = new StringBuilder(&quot;Zmenena skupina prav: &quot;).append(permGroup.title).append('.').append(&quot;. \n&quot;).</span>
+<span class="nc" id="L213">				append(&quot;Pridane prava: &quot;).append(whichToBeGranted).append(&quot;, \n&quot;).</span>
+<span class="nc" id="L214">				append(&quot;Odobrane prava: &quot;).append(whichToBeTaken);</span>
+<span class="nc" id="L215">			Adminlog.add(Adminlog.TYPE_USER_PERM_GROUP_UPDATE, message.toString(), permGroup.getId().intValue(), -1);</span>
+		}
+<span class="nc" id="L217">	}</span>
+
+	private static void grantPermissions(PermissionGroupBean permGroup, Collection&lt;String&gt; whichToBeAdded)
+	{
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		for (String permission : whichToBeAdded)</span>
+		{
+			//addPermission(permGroup.getId(), permission);
+<span class="nc" id="L224">			permGroup.addPermission(permission);</span>
+<span class="nc" id="L225">		}</span>
+<span class="nc" id="L226">	}</span>
+
+	private static void takePermissions(PermissionGroupBean permGroup, Collection&lt;String&gt; whichToBeTaken)
+	{
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		for (String permission : whichToBeTaken)</span>
+		{
+			//takePermission(permGroup.getId(), permission);
+<span class="nc" id="L233">			permGroup.deletePermission(permission);</span>
+<span class="nc" id="L234">		}</span>
+<span class="nc" id="L235">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

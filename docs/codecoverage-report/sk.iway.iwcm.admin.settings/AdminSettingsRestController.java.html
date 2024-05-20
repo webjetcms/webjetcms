@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminSettingsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.settings</a> &gt; <span class="el_source">AdminSettingsRestController.java</span></div><h1>AdminSettingsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.settings;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * #54513
+ * Ulozi admin settings, aby sme to nemali len v LocalStoraga ale mohli to mat ulozene v DB a synchronizovane medzi kontami
+ */
+@RestController
+@PreAuthorize(&quot;@WebjetSecurityService.isAdmin()&quot;)
+<span class="fc" id="L20">public class AdminSettingsRestController {</span>
+
+   @PostMapping(&quot;/admin/rest/admin-settings/&quot;)
+   public boolean save(@RequestBody LabelValue settings, final HttpServletRequest request) {
+<span class="fc" id="L24">      Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L25">      AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L26">      boolean saveok = ass.saveSettings(settings.getLabel(), settings.getValue());</span>
+<span class="fc" id="L27">      return saveok;</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

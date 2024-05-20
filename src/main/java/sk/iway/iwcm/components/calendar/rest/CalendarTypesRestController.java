@@ -20,7 +20,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
-@RequestMapping("/admin/rest/calendar_types")
+@RequestMapping("/admin/rest/calendar/types")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_calendar')")
 @Datatable
 public class CalendarTypesRestController extends DatatableRestControllerV2<CalendarTypesEntity, Long> {
@@ -59,8 +59,9 @@ public class CalendarTypesRestController extends DatatableRestControllerV2<Calen
         if(id == -1) {
             entity = new CalendarTypesEntity();
             entity.setApproverId(-1);
-        } else
-            entity = calendarTypesRepository.findByIdAndDomainId(id, CloudToolsForCore.getDomainId());
+        } else {
+            entity = calendarTypesRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+        }
 
         return entity;
     }

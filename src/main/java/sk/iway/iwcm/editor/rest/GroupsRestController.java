@@ -21,10 +21,12 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
@@ -593,7 +595,21 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
         if (entity.getGroupId()>0 && GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {
             errors.rejectValue("errorField.editorFields.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
+            return;
         }
+
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        if (InitServlet.isTypeCloud() && entity.getGroupId()>0)
+		{
+			//kontrola prav
+			GroupDetails oldGroup = groupsDB.getGroup(entity.getGroupId());
+			if (oldGroup == null || oldGroup.getDomainName().equals(CloudToolsForCore.getDomainName())==false)
+			{
+				errors.rejectValue("errorField.domainName", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
+                return;
+			}
+		}
 
         if ("remove".equals(target.getAction())) return;
 
@@ -603,7 +619,6 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
         }
 
-        GroupsDB groupsDB = GroupsDB.getInstance();
         int groupId = entity.getGroupId();
         int newParentGroupId = entity.getEditorFields().getParentGroupDetails().getGroupId();
 
@@ -788,4 +803,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
         return false;
     }
+
+    @Override
+    public boolean checkItemPerms(GroupDetails entity, Long id) {
+        if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
+            GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());
+            if (old != null && GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;
+        }
+        return true;
+    }
+
 }

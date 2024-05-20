@@ -10,7 +10,7 @@ Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo We
 ## Základné požiadavky na server
 
 - Server s minimálne 8 GB pamäte (pre aplikácie s väčšou záťažou minimálne 12GB), procesor aspoň `Dual Core 2 GHz` (pre servery s väčšou záťažou Quad core), miesto na disku aspoň 40GB.
-- Databáza `MySQL/MariaDB verzie 5.0+` (s kódovaním UTF-8), alebo databáza `Microsoft SQL 2012+` alebo databáza `Oracle 11g+`.
+- Databáza `MySQL/MariaDB verzie 5.0+` (s kódovaním UTF-8), alebo databáza `Microsoft SQL 2012+` alebo databáza `Oracle 11g+` alebo `PostgreSQL 16+`.
 - [Open JDK](https://adoptium.net/temurin/releases/) verzie 17 a aplikačný server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
 - Pripojenie na SMTP server pre posielanie emailov.
 - Funkčný DNS server.
@@ -71,6 +71,22 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
       <username>DB-LOGIN</username>
       <password>DB-HESLO</password>
   </datasource>
+</poolman>
+```
+
+[PostgreSQL](https://jdbc.postgresql.org/documentation/use/):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman><management-mode>local</management-mode>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <driver>org.postgresql.Driver</driver>
+        <url>jdbc:postgresql://localhost/DB-NAME?currentSchema=webjet_cms</url>
+        <username></username>
+        <password></password>
+    </datasource>
 </poolman>
 ```
 
@@ -213,6 +229,8 @@ PathFilterInit - customPath: /Users/jeeff/Documents/DISK_E/webapps-server/ppa
 
 V tomto momente je WebJET inicializovaný a spustený do štandardného stavu.
 
+## Prihlásenie do administrácie
+
 Prihláste sa do [admin sekcie](http://localhost/admin/) s menom ```admin``` a heslom ```heslo```:
 
 ![](./first-login.png)
@@ -221,7 +239,7 @@ WebJET vás vyzve na zmenu hesla:
 
 ![](./change-password.png)
 
-Po prihlásení sa vám na úvodnej obrazovke zobrazí hlásenie, že nebola vykonaná konverzia databázy. Kliknite na linku [Spustiť konverziu](http://localhost/admin/update/update_webjet7.jsp) pre konverziu databázy.
+Po prihlásení sa vám na úvodnej obrazovke môže zobraziť hlásenie, že nebola vykonaná konverzia databázy. Kliknite na linku [Spustiť konverziu](http://localhost/admin/update/update_webjet7.jsp) pre konverziu databázy. Ak sa vám hlásenie nezobrazí, je inštalačná databáza už pripravená v novom formáte, pokračujte [nastavením práv](#nastavenie-práv).
 
 ![](./main-page.png)
 
@@ -238,7 +256,11 @@ DROP TABLE stat_doc;
 DROP TABLE stat_views;
 ```
 
-Zatvorte kartu, v ktorej máte konverziu. V pôvodnom okne prejdite do časti [Používatelia -> Zoznam používateľov](http://localhost/admin/v9/users/user-list/), pomocou navigácie v ľavom menu.
+Zatvorte kartu, v ktorej máte konverziu.
+
+## Nastavenie práv
+
+V pôvodnom okne prejdite do časti [Používatelia -> Zoznam používateľov](http://localhost/admin/v9/users/user-list/), pomocou navigácie v ľavom menu.
 
 ![](./users.png)
 

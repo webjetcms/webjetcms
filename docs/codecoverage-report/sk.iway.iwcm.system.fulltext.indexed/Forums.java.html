@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Forums.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.indexed</a> &gt; <span class="el_source">Forums.java</span></div><h1>Forums.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.indexed;
+
+import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
+import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
+
+import java.io.Writer;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.TermVector;
+import org.apache.lucene.document.NumericField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.util.Version;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.fulltext.FulltextSearch;
+import sk.iway.iwcm.system.fulltext.lucene.AnalyzerFactory;
+import sk.iway.iwcm.system.fulltext.lucene.IndexSearcherBuilder;
+import sk.iway.iwcm.system.fulltext.lucene.IndexingMapper;
+import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
+
+/**
+ * Forums.java
+ *
+ *@Title webjet7
+ *@Company Interway s.r.o. (www.interway.sk)
+ *@Copyright Interway s.r.o. (c) 2001-2011
+ *@author $Author: jeeff thaber $
+ *@version $Revision: 1.3 $
+ *@created Date: 1.6.2011 13:04:21
+ *@modified $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L50">public class Forums extends Indexed</span>
+{
+<span class="fc" id="L52">	private static final String JOIN_CLAUSE = &quot; join documents d on (d.doc_id = df.doc_id) where df.confirmed=&quot;+DB.getBooleanSql(true)+&quot; AND df.deleted=&quot;+DB.getBooleanSql(false)+&quot; &quot;;</span>
+
+	@Override
+	public void close()
+	{
+		//
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	public String language()
+	{
+<span class="nc" id="L63">		return defaultLangauge();</span>
+	}
+
+	private static String defaultLangauge()
+	{
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		return Tools.isNotEmpty(Constants.getString(&quot;defaultLanguage&quot;))?Constants.getString(&quot;defaultLanguage&quot;):&quot;sk&quot;;</span>
+	}
+
+	@Override
+	public IndexingMapper mapper(IndexWriter writer, Writer log)
+	{
+<span class="nc" id="L74">		return new IndexingMapper(writer, log)</span>
+<span class="nc" id="L75">		{</span>
+<span class="nc" id="L76">			int count = 0;</span>
+			@Override
+			public Void map(ResultSet rs) throws SQLException
+			{
+				try
+				{
+<span class="nc" id="L82">					writer.addDocument(toLuceneDocument(rs));</span>
+					//proccessed();
+
+					//if (count % 100 == 0)
+					{
+<span class="nc" id="L87">						FulltextSearch.log(Forums.class, &quot;Indexed &quot; + count + &quot; forums.&quot;, log);</span>
+					}
+
+<span class="nc" id="L90">					count++;</span>
+<span class="nc" id="L91">					proccessed();</span>
+				}
+<span class="nc" id="L93">				catch (Exception e)</span>
+				{
+<span class="nc" id="L95">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L96">				}</span>
+<span class="nc" id="L97">				return null;</span>
+			}
+		};
+	}
+
+	@Override
+	public String name()
+	{
+<span class="nc" id="L105">		return &quot;forums&quot;;</span>
+	}
+
+	@Override
+	public int numberOfDocuments()
+	{
+<span class="nc" id="L111">		return new SimpleQuery().forInt(&quot;SELECT count(*) FROM document_forum df &quot; + JOIN_CLAUSE);</span>
+	}
+
+	private static Document toLuceneDocument(ResultSet rs)
+	{
+<span class="nc" id="L116">		Document document = new Document();</span>
+
+<span class="nc" id="L118">		DocDB docDB = DocDB.getInstance();</span>
+
+		try
+		{
+<span class="nc" id="L122">			document.add(new Field(&quot;forum_id&quot;, nvl(rs.getString(&quot;forum_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L123">			document.add(new Field(&quot;doc_id&quot;, nvl(rs.getString(&quot;doc_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L124">			document.add(new Field(&quot;parent_id&quot;, nvl(rs.getString(&quot;parent_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L125">			String title = rs.getString(&quot;subject&quot;);</span>
+<span class="nc" id="L126">			document.add(new Field(&quot;subject&quot;, nvl(title), Field.Store.YES, Field.Index.ANALYZED, TermVector.WITH_POSITIONS_OFFSETS));</span>
+
+<span class="nc" id="L128">			String question = SearchTools.htmlToPlain(rs.getString(&quot;question&quot;));</span>
+<span class="nc" id="L129">			document.add(new Field(&quot;question&quot;, nvl(question), Field.Store.YES, Field.Index.ANALYZED, TermVector.WITH_POSITIONS_OFFSETS));</span>
+<span class="nc" id="L130">			document.add(new Field(&quot;author_name&quot;, nvl(rs.getString(&quot;author_name&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L131">			document.add(new Field(&quot;author_email&quot;, nvl(rs.getString(&quot;author_email&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L132">			document.add(new Field(&quot;flag&quot;, nvl(rs.getString(&quot;flag&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="nc" id="L133">			document.add(new Field(&quot;user_id&quot;, nvl(rs.getString(&quot;user_id&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+			//document.add(new NumericField(&quot;user_id&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;user_id&quot;)));
+			//Logger.debug(Forums.class,&quot;user_id stored value: &quot;+ new NumericField(&quot;user_id&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;user_id&quot;)).stringValue());
+<span class="nc" id="L136">			document.add(new Field(&quot;question_date&quot;, dateToLucene(rs.getDate(&quot;question_date&quot;)), Field.Store.YES, Field.Index.ANALYZED));//FIXME: prerobit na numeric field a serach na datumy na numericrangequery</span>
+
+<span class="nc" id="L138">			String data = rs.getString(&quot;title&quot;);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (Tools.isNotEmpty(data)) data = data+&quot; &quot;+question;</span>
+<span class="nc" id="L140">			else data = question;</span>
+
+<span class="nc" id="L142">			document.add(new Field(&quot;data&quot;, LuceneUtils.nonNull(data), Field.Store.YES, Field.Index.ANALYZED,TermVector.WITH_POSITIONS_OFFSETS));</span>
+<span class="nc" id="L143">			document.add(Documents.typeField(&quot;forums&quot;));</span>
+
+<span class="nc" id="L145">			DocDetails doc = docDB.getBasicDocDetails(rs.getInt(&quot;doc_id&quot;), false);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (doc != null)</span>
+			{
+<span class="nc" id="L148">				String url = DocDB.getInstance().getDocLink(doc.getDocId());</span>
+
+<span class="nc" id="L150">				int parentId = rs.getInt(&quot;parent_id&quot;);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				if (parentId &gt; 0) url = Tools.addParameterToUrlNoAmp(url, &quot;pId&quot;, String.valueOf(parentId));</span>
+<span class="nc" id="L152">				url = Tools.addParameterToUrlNoAmp(url, &quot;hfid&quot;, String.valueOf(rs.getInt(&quot;forum_id&quot;)));</span>
+<span class="nc" id="L153">				url = url+&quot;#post&quot;+rs.getInt(&quot;forum_id&quot;);</span>
+
+<span class="nc" id="L155">				Logger.debug(Forums.class, &quot;Setting URL: &quot;+url);</span>
+<span class="nc" id="L156">				document.add(Documents.urlField(url));</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (Tools.isEmpty(title))</span>
+				{
+<span class="nc" id="L159">					title = DocDB.getInstance().getDoc(rs.getInt(&quot;doc_id&quot;)).getTitle();</span>
+				}
+
+<span class="nc" id="L162">				document.add(new Field(&quot;file_name&quot;, nvl(GroupsDB.getInstance().getGroupNamePath(doc.getGroupId())), Field.Store.NO, Field.Index.ANALYZED));</span>
+
+<span class="nc" id="L164">				Documents.addMultiValueField(doc.getPasswordProtected(), &quot;password_protected&quot;, document);</span>
+
+<span class="nc" id="L166">				document.add(new NumericField(&quot;group_id&quot;, Field.Store.NO, true).setIntValue(doc.getGroupId()));</span>
+			}
+
+<span class="nc" id="L169">			document.add(AdminTools.titleField(title));</span>
+		}
+<span class="nc" id="L171">		catch (Exception e)</span>
+		{
+<span class="nc" id="L173">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L174">		}</span>
+
+<span class="nc" id="L176">		return document;</span>
+	}
+
+	@Override
+	public String sql()
+	{
+<span class="nc" id="L182">		return &quot;SELECT df.*,d.title FROM document_forum df &quot;+JOIN_CLAUSE;</span>
+	}
+
+	public static void updateSingleQuestion(int forumId)
+	{
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalForumIndexing&quot;))</span>
+		{
+<span class="nc" id="L189">			Logger.debug(Forums.class, &quot;updateSingleQuestion, forumId=&quot;+forumId);</span>
+
+<span class="nc" id="L191">			Connection db_conn = null;</span>
+<span class="nc" id="L192">			PreparedStatement ps = null;</span>
+<span class="nc" id="L193">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L196">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L197">				ps = db_conn.prepareStatement(&quot;SELECT df.*,d.title FROM document_forum df &quot;+JOIN_CLAUSE+&quot; and df.forum_id = ? &quot;);</span>
+<span class="nc" id="L198">				ps.setInt(1, forumId);</span>
+<span class="nc" id="L199">				rs = ps.executeQuery();</span>
+
+<span class="nc" id="L201">				IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31,defaultLangauge()));</span>
+<span class="nc" id="L202">				config.setOpenMode(OpenMode.APPEND);</span>
+<span class="nc" id="L203">				IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(defaultLangauge()), config);</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L207">					writer.updateDocument(new Term(&quot;forum_id&quot;, Integer.toString(forumId)), toLuceneDocument(rs));</span>
+				}
+				else
+				{
+<span class="nc" id="L211">					writer.deleteDocuments(new Term(&quot;forum_id&quot;, Integer.toString(forumId)));</span>
+				}
+
+<span class="nc" id="L214">				writer.commit();</span>
+<span class="nc" id="L215">				writer.close();</span>
+<span class="nc" id="L216">				IndexSearcherBuilder.refresh();</span>
+
+<span class="nc" id="L218">				rs.close();</span>
+<span class="nc" id="L219">				ps.close();</span>
+<span class="nc" id="L220">				db_conn.close();</span>
+<span class="nc" id="L221">				rs = null;</span>
+<span class="nc" id="L222">				ps = null;</span>
+<span class="nc" id="L223">				db_conn = null;</span>
+			}
+<span class="nc" id="L225">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L227">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L233" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L234">						rs.close();</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L236">						ps.close();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L238">						db_conn.close();</span>
+				}
+<span class="nc" id="L240">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L242">				}</span>
+			}
+		}
+
+<span class="fc" id="L246">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

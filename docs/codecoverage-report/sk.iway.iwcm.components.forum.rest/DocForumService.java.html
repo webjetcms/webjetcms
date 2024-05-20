@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocForumService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.forum.rest</a> &gt; <span class="el_source">DocForumService.java</span></div><h1>DocForumService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.forum.rest;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SpamProtection;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.ForumTools;
+import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
+import sk.iway.iwcm.components.forum.jpa.DocForumIdAndParentId;
+import sk.iway.iwcm.components.forum.jpa.DocForumRepository;
+import sk.iway.iwcm.components.forum.jpa.ForumGroupEntity;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.forum.ForumDB;
+import sk.iway.iwcm.forum.ForumSortBy;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.fulltext.indexed.Forums;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.spirit.MediaDB;
+import sk.iway.spirit.model.Media;
+
+public class DocForumService {
+
+    private static final String SAVE_FORUM_SUCCESS = &quot;/components/forum/saveok&quot;;
+
+	private DocForumService() {
+		//utility class
+	}
+
+	/**
+	 * Represent recursive action's upon forum's.
+	 */
+<span class="fc" id="L71">	public enum ActionType {</span>
+<span class="fc" id="L72">		DELETE, //Delete forum recursive (with all child's)</span>
+<span class="fc" id="L73">		RECOVER, //Recover forum recursive (with all child's)</span>
+<span class="fc" id="L74">		APPROVE, //Approve forum recursive (with all child's)</span>
+<span class="fc" id="L75">		REJECT, //Reject forum recursive (with all child's)</span>
+<span class="fc" id="L76">		LOCK, //Lock forum recursive (with all child's)</span>
+<span class="fc" id="L77">		UNLOCK //Unlock forum recursive (with all child's)</span>
+	}
+
+    /**
+     * Return icon options for status icon select.
+     * @param prop
+     * @return
+     */
+    public static List&lt;LabelValue&gt; getStatusIconOptions(Prop prop) {
+<span class="fc" id="L86">		List&lt;LabelValue&gt; icons = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L88">        icons.add(new LabelValue(&quot;&lt;i class=\&quot;fa-regular fa-circle-check\&quot; style=\&quot;color: #00be9f;\&quot;&gt;&lt;/i&gt; &quot; + prop.getText(&quot;apps.forum.icon.confirmed&quot;), &quot;confirmed:true&quot;));</span>
+<span class="fc" id="L89">        icons.add(new LabelValue(&quot;&lt;i class=\&quot;fa-regular fa-circle-xmark\&quot; style=\&quot;color: #ff4b58;\&quot;&gt;&lt;/i&gt; &quot; + prop.getText(&quot;apps.forum.icon.non_confirmed&quot;), &quot;confirmed:false&quot;));</span>
+<span class="fc" id="L90">        icons.add(new LabelValue(&quot;&lt;i class=\&quot;fa-solid fa-lock\&quot; style=\&quot;color: #000000;\&quot;&gt;&lt;/i&gt; &quot; + prop.getText(&quot;apps.forum.icon.non_active&quot;), &quot;active:false&quot;));</span>
+<span class="fc" id="L91">        icons.add(new LabelValue(&quot;&lt;i class=\&quot;fa-regular fa-trash-can-undo\&quot; style=\&quot;color: #fabd00;\&quot;&gt;&lt;/i&gt; &quot; + prop.getText(&quot;apps.forum.icon.deleted&quot;), &quot;deleted:true&quot;));</span>
+
+<span class="fc" id="L93">		return icons;</span>
+	}
+
+	/******************************* MAIN LOGIC methods (save / delete / recover / approve / reject) ****************************************** */
+
+	/**
+	 * Save given ForumFormBean entity, update and send confirmation notification email
+	 *
+	 * @param request
+	 * @param response
+	 * @param forumForm - entity to be saved (forum)
+	 * @return
+	 * @throws IOException
+	 */
+    public static String saveDocForum(HttpServletRequest request, HttpServletResponse response, DocForumEntity forumForm) {
+<span class="fc" id="L108">		DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+<span class="fc" id="L109">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L110">		Identity sender = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L111">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L112">		Integer domainId = Tools.getIntValue(DocDB.getDomain(request), 1);</span>
+<span class="fc" id="L113">		int userId = -1;</span>
+		String hashCode;
+
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">		if (sender == null || sender.isAdmin() == false) {</span>
+<span class="fc" id="L117">			synchronized (DocForumRepository.class) {</span>
+				//kontrola pred duplicitnym odoslanim prispevku (nejaka ajax haluz) - http://helpdesk.interway.sk/?bugID=4676
+				//v access logu servera sa zaznamy skutocne nasli viac krat, preco nikto netusi
+<span class="fc" id="L120">				String lastSessionText = (String)session.getAttribute(&quot;DocForumRepository.lastText&quot;);</span>
+<span class="pc bpc" id="L121" title="3 of 4 branches missed.">				if (lastSessionText!=null &amp;&amp; lastSessionText.equals(forumForm.getQuestion())) {</span>
+<span class="nc" id="L122">					request.setAttribute(&quot;permissionDenied&quot;, &quot;sameText&quot;);</span>
+<span class="nc" id="L123">					return SAVE_FORUM_SUCCESS;</span>
+				}
+
+<span class="fc" id="L126">				session.setAttribute(&quot;DocForumRepository.lastText&quot;, forumForm.getQuestion());</span>
+<span class="fc" id="L127">			}</span>
+		}
+
+		//Get forum group akak setting
+<span class="fc" id="L131">		ForumGroupEntity forumGroup = ForumGroupService.getForum(forumForm.getDocId(), true);</span>
+
+		//Check if parent we answering to (if set) is active
+		//If not permit this comment / forum ...
+<span class="fc bfc" id="L135" title="All 2 branches covered.">		if(forumForm.getParentId() &gt; 0) {</span>
+<span class="fc" id="L136">			boolean isParentActive = (new SimpleQuery()).forBoolean(&quot;SELECT active FROM document_forum WHERE forum_id=?&quot;, forumForm.getParentId());</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">			if(!isParentActive) {</span>
+<span class="nc" id="L138">				boolean isAdmin = false;</span>
+<span class="nc bnc" id="L139" title="All 4 branches missed.">				if(forumGroup != null &amp;&amp; forumGroup.isAdmin(sender)) isAdmin = true;</span>
+
+				//Only admin can be exception for restriction
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if(!isAdmin) {</span>
+<span class="nc" id="L143">					request.setAttribute(&quot;errorKey&quot;, prop.getText(&quot;components.forum.active.error&quot;));</span>
+<span class="nc" id="L144">					return SAVE_FORUM_SUCCESS;</span>
+				}
+			}
+		}
+
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">		if (forumGroup == null) {</span>
+			//najdi parent adresar a skus podla neho
+<span class="nc" id="L151">			DocDetails docDetails = DocDB.getInstance().getBasicDocDetails(forumForm.getDocId(), false);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (docDetails != null) {</span>
+<span class="nc" id="L153">				GroupDetails group = GroupsDB.getInstance().getGroup(docDetails.getGroupId());</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				if (group != null) {</span>
+<span class="nc" id="L155">					GroupDetails parentGroup = GroupsDB.getInstance().getGroup(group.getParentGroupId());</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					if (parentGroup!=null)</span>
+<span class="nc" id="L157">						forumGroup = ForumGroupService.getForum(parentGroup.getDefaultDocId(), true);</span>
+				}
+			}
+		}
+
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if (forumGroup == null) {</span>
+<span class="nc" id="L163">            DocDetails docDetails = DocDB.getInstance().getDoc(forumForm.getDocId());</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            if (docDetails != null) {</span>
+<span class="nc" id="L165">                int defaultDocId = docDetails.getGroup().getDefaultDocId();</span>
+<span class="nc" id="L166">                DocDetails defaultDocDetails = DocDB.getInstance().getDoc(defaultDocId);</span>
+<span class="nc" id="L167">                forumGroup = ForumGroupService.getForum(defaultDocDetails.getDocId(), true);</span>
+            }
+        }
+
+<span class="fc" id="L171">		ForumGroupEntity forumGroupPerms = forumGroup;</span>
+<span class="pc bpc" id="L172" title="3 of 4 branches missed.">		if (forumGroupPerms == null &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;forumDefaultAddmessageGroups&quot;))) {</span>
+<span class="nc" id="L173">			forumGroupPerms = new ForumGroupEntity();</span>
+<span class="nc" id="L174">			forumGroupPerms.setAddmessageGroups(Constants.getString(&quot;forumDefaultAddmessageGroups&quot;));</span>
+		}
+
+<span class="pc bpc" id="L177" title="2 of 4 branches missed.">		if (forumGroupPerms != null &amp;&amp; forumGroupPerms.canPostMessage(sender)==false) {</span>
+			//nema dostatocne prava (kontrola user groups)
+<span class="nc" id="L179">			request.setAttribute(&quot;errorKey&quot;, &quot;components.forum.wrong_user_groups_for_post&quot;);</span>
+<span class="nc" id="L180">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+<span class="pc bpc" id="L183" title="5 of 6 branches missed.">		if (ForumGroupService.isActive(forumForm.getDocId()) == false &amp;&amp; (sender == null || sender.isAdmin() == false)) {</span>
+<span class="nc" id="L184">			request.setAttribute(&quot;errorKey&quot;, &quot;components.forum.forum_closed&quot;);</span>
+<span class="nc" id="L185">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+<span class="pc bpc" id="L188" title="2 of 4 branches missed.">		if (isVulgar(forumForm.getAuthorName()) || isVulgar(forumForm.getAuthorEmail()) ||</span>
+<span class="pc bpc" id="L189" title="2 of 4 branches missed.">			 isVulgar(forumForm.getQuestion()) || isVulgar(forumForm.getSubject()) ||</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">			 ShowDoc.getXssRedirectUrl(request)!=null)</span>
+		{
+<span class="nc" id="L192">			request.setAttribute(&quot;isVulgar&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L193">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+<span class="fc" id="L196">		String plainQuestion = SearchTools.htmlToPlain(forumForm.getQuestion());</span>
+<span class="fc" id="L197">		plainQuestion = Tools.replace(plainQuestion, &quot;\n&quot;, &quot;&quot;);</span>
+<span class="fc" id="L198">		plainQuestion = Tools.replace(plainQuestion, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;forumAllowEmptyMessage&quot;))==false &amp;&amp;</span>
+<span class="pc bpc" id="L200" title="2 of 4 branches missed.">			 (Tools.isEmpty(forumForm.getQuestion()) || Tools.isEmpty(plainQuestion)))</span>
+		{
+<span class="nc" id="L202">			request.setAttribute(&quot;errorKey&quot;, &quot;components.forum.error.questionEmpty&quot;);</span>
+<span class="nc" id="L203">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//fixni hlasku o nahravani editora (ak tam je)
+<span class="fc" id="L207">		forumForm.setQuestion(Tools.replace(forumForm.getQuestion(), prop.getText(&quot;editor.loading_please_wait&quot;), &quot;&quot;));</span>
+
+		//ak je vypnuty wysiwyg editor, tak nedovol HTML
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;disableWysiwyg&quot;)) {</span>
+<span class="nc" id="L211">			String oldText = forumForm.getQuestion();</span>
+<span class="nc" id="L212">			String newText = oldText.replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L213">			newText = newText.replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L214">			newText = newText.replace(&quot;\n&quot;, &quot;&lt;br /&gt;&quot;);</span>
+<span class="nc" id="L215">			forumForm.setQuestion(newText);</span>
+		}
+
+		//nastav linkam nofollow
+<span class="fc" id="L219">		forumForm.setQuestion(Tools.replace(forumForm.getQuestion(), &quot;&lt;a href&quot;, &quot;&lt;a rel=\&quot;nofollow\&quot; href&quot;));</span>
+<span class="fc" id="L220">		forumForm.setQuestion(Tools.replace(forumForm.getQuestion(), &quot;&lt;A HREF&quot;, &quot;&lt;a rel=\&quot;nofollow\&quot; href&quot;));</span>
+
+<span class="pc bpc" id="L222" title="1 of 4 branches missed.">		if (sender == null || sender.isAdmin() == false) forumForm.setId((long) -1);</span>
+
+<span class="fc bfc" id="L224" title="All 2 branches covered.">		if (sender != null) userId = sender.getUserId();</span>
+
+		//Clear MsOffice tags from question
+<span class="fc" id="L227">		forumForm.setQuestion( clearMsOfficeTags( forumForm.getQuestion() ) );</span>
+
+<span class="fc" id="L229">		hashCode = Password.generatePassword(15);</span>
+
+<span class="pc bpc" id="L231" title="3 of 6 branches missed.">		if (sender != null &amp;&amp; Tools.isNotEmpty(sender.getSignature()) &amp;&amp; &quot;true&quot;.equals(request.getParameter(&quot;addSignature&quot;))) {</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (&quot;true&quot;.equals(request.getParameter(&quot;dontReplaceSignatureCodes&quot;)))</span>
+<span class="nc" id="L233">				forumForm.setQuestion(forumForm.getQuestion() + &quot;&lt;div class='forumSignature'&gt;&quot;+sender.getSignature()+&quot;&lt;/div&gt;&quot;);</span>
+			else
+<span class="nc" id="L235">				forumForm.setQuestion(forumForm.getQuestion() + &quot;&lt;div class='forumSignature'&gt;&quot;+ ForumTools.replaceSignatureCodes(sender)+&quot;&lt;/div&gt;&quot;);</span>
+		}
+
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">		if (!SpamProtection.canPost(&quot;forum&quot;, forumForm.getQuestion(), request)) {</span>
+<span class="nc" id="L239">			request.setAttribute(&quot;permissionDenied&quot;, &quot;postLimit&quot;);</span>
+<span class="nc" id="L240">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+<span class="fc bfc" id="L243" title="All 2 branches covered.">		if (sender != null) {</span>
+			//ako autora povolime len login, alebo meno
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">			if (sender.getLogin().equals(forumForm.getAuthorName())==false) forumForm.setAuthorName(sender.getFullName());</span>
+<span class="fc" id="L246">			forumForm.setAuthorEmail(sender.getEmail());</span>
+		}
+
+<span class="fc bfc" id="L249" title="All 2 branches covered.">		if (forumForm.getParentId() == -1) {</span>
+			//
+<span class="fc" id="L251">			prepareForumForSave(forumForm, forumGroup, sender, request, hashCode, userId, true);</span>
+<span class="fc" id="L252">			docForumRepository.save(forumForm);</span>
+<span class="fc" id="L253">			Adminlog.add(Adminlog.TYPE_FORUM_CREATE, &quot;Vytvorena tema diskusie: &quot;+forumForm.getSubject(), -1, forumForm.getDocId());</span>
+		} else {
+			//
+<span class="fc" id="L256">			prepareForumForSave(forumForm, forumGroup, sender, request, hashCode, userId, false);</span>
+<span class="fc" id="L257">			docForumRepository.save(forumForm);</span>
+
+			//Update SUBTOPIC by incrementing statReplies and setting actual lastPost Date
+<span class="fc" id="L260">			int fId = ForumDB.getForumMessageParent(forumForm.getParentId(), forumForm.getDocId());</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">			if (fId &gt; 0) docForumRepository.updateSubtopic(new Date(), Long.valueOf(fId), domainId);</span>
+
+<span class="fc" id="L263">			Adminlog.add(Adminlog.TYPE_FORUM_CREATE, &quot;Vytvoreny prispevok: &quot;+forumForm.getSubject(), -1, forumForm.getDocId());</span>
+		}
+
+		//If user is logged, increment user forum rank
+<span class="fc bfc" id="L267" title="All 2 branches covered.">		if(userId &gt; 0) (new SimpleQuery()).execute(&quot;UPDATE users SET forum_rank=forum_rank+1 WHERE user_id=?&quot;, userId);</span>
+
+		//Increment WebPage forum_count
+<span class="fc" id="L270">		(new SimpleQuery()).execute(&quot;UPDATE documents SET forum_count=forum_count+1 WHERE doc_id=?&quot;, forumForm.getDocId());</span>
+
+		//get new forum ID and set it into forum form
+<span class="fc bfc" id="L273" title="All 2 branches covered.">		if (forumForm.getId() &lt; 1)</span>
+<span class="fc" id="L274">			forumForm.setId( new SimpleQuery().forLong(&quot;SELECT max(forum_id) AS forum_id FROM document_forum WHERE doc_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true), forumForm.getDocId()) );</span>
+
+		//Set default forum group values
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">		if (forumGroup == null) {</span>
+<span class="nc" id="L278">			String forumDefaultApproveEmail = Constants.getString(&quot;forumDefaultApproveEmail&quot;);</span>
+<span class="nc" id="L279">			String forumDefaultNotifyEmail = Constants.getString(&quot;forumDefaultNotifyEmail&quot;);</span>
+
+<span class="nc bnc" id="L281" title="All 4 branches missed.">			if (Tools.isNotEmpty(forumDefaultApproveEmail) || Tools.isNotEmpty(forumDefaultNotifyEmail)) {</span>
+<span class="nc" id="L282">				forumGroup = new ForumGroupEntity();</span>
+<span class="nc" id="L283">				forumGroup.setMessageConfirmation(false);</span>
+
+<span class="nc bnc" id="L285" title="All 2 branches missed.">				if (Tools.isNotEmpty(forumDefaultApproveEmail)) {</span>
+<span class="nc" id="L286">					forumGroup.setApproveEmail(forumDefaultApproveEmail);</span>
+<span class="nc" id="L287">					forumGroup.setMessageConfirmation(true);</span>
+				}
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				if (Tools.isNotEmpty(forumDefaultNotifyEmail))</span>
+<span class="nc" id="L291">					forumGroup.setNotifEmail(forumDefaultNotifyEmail);</span>
+			}
+		}
+
+		//Send confirmation email
+<span class="fc" id="L296">		DocForumEmailService emailService = new DocForumEmailService(forumForm, forumGroupPerms, request, prop);</span>
+<span class="fc" id="L297">		emailService.sendForumEmails();</span>
+
+<span class="fc" id="L299">		String fromName = Constants.getString(&quot;forumNotifySenderName&quot;);</span>
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">		if(Tools.isEmpty(fromName)) fromName = forumForm.getAuthorName();</span>
+
+<span class="fc" id="L302">		String fromEmail = Constants.getString(&quot;forumNotifySenderEmail&quot;);</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">		if (Tools.isEmpty(fromEmail)) fromEmail = forumForm.getAuthorEmail();</span>
+
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(fromName)) {</span>
+			//uloz meno a email do cookies
+<span class="fc" id="L307">			Cookie forumName = new Cookie(&quot;forumname&quot;, Tools.URLEncode(fromName));</span>
+<span class="fc" id="L308">			forumName.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L309">			forumName.setMaxAge(60 * 24 * 3600);</span>
+<span class="fc" id="L310">			forumName.setHttpOnly(true);</span>
+
+<span class="fc" id="L312">			Cookie forumEmail = new Cookie(&quot;forumemail&quot;, Tools.URLEncode(fromEmail));</span>
+<span class="fc" id="L313">			forumEmail.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L314">			forumEmail.setMaxAge(60 * 24 * 3600);</span>
+<span class="fc" id="L315">			forumEmail.setHttpOnly(true);</span>
+
+<span class="fc" id="L317">			Tools.addCookie(forumName, response, request);</span>
+<span class="fc" id="L318">			Tools.addCookie(forumEmail, response, request);</span>
+		}
+
+<span class="fc" id="L321">		Forums.updateSingleQuestion(forumForm.getId().intValue());</span>
+
+		//return link to saveok.jsp
+<span class="fc" id="L324">		return SAVE_FORUM_SUCCESS;</span>
+	}
+
+	/**
+	 * Perform recursive supported action uppon forum.
+	 * More details in this fn code coments.
+	 *
+	 * @param actionType - Supported recursive actions
+	 * @param forumId
+	 * @param docId
+	 * @param user - logged user
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static boolean docForumRecursiveAction(ActionType actionType, int forumId, int docId, Identity user) {
+		//There must be logged user
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">		if(user == null) return true;</span>
+
+<span class="fc" id="L342">		String domainSql = CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+
+		//Get all forum's under this one (all child's)
+<span class="fc" id="L345">		List&lt;DocForumEntity&gt; msgList = getForumFieldsForDoc(actionType, docId, forumId, true);</span>
+<span class="fc" id="L346">		String fIds = getChildForumIdsRecursive(msgList, forumId);</span>
+
+<span class="fc bfc" id="L348" title="All 2 branches covered.">		if (Tools.isNotEmpty(fIds)) fIds += forumId;</span>
+<span class="fc" id="L349">		else fIds = Integer.toString(forumId);</span>
+
+<span class="fc" id="L351">		boolean isAdmin = user.isAdmin();</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">		if (isAdmin == false) {</span>
+<span class="nc" id="L353">			ForumGroupEntity forumGroupBean = ForumGroupService.getForum(docId, false);</span>
+<span class="nc" id="L354">			isAdmin = forumGroupBean.isAdmin(user);</span>
+		}
+
+		//Customize query
+<span class="fc" id="L358">		String simpleQuery = &quot;SELECT user_id FROM document_forum WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">		if(actionType == ActionType.DELETE) simpleQuery += &quot; AND deleted &lt; 1&quot;; //Because change will affect only NON-Deleted forum's</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">		else if(actionType == ActionType.RECOVER) simpleQuery += &quot; AND deleted &gt; 0&quot;; //Because change will affect only Deleted forum's</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">		else if(actionType == ActionType.APPROVE) simpleQuery += &quot; AND confirmed &lt; 1&quot;; //Because change will affect only NON-Confirmed forum's</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		else if(actionType == ActionType.REJECT) simpleQuery += &quot; AND confirmed &gt; 0&quot;; //Because change will affect only Confirmed forum's</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		else if(actionType == ActionType.LOCK) simpleQuery += &quot; AND active &gt; 0&quot;; //Because change will affect only Active forum's</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">		else if(actionType == ActionType.UNLOCK) simpleQuery += &quot; AND active &lt; 1&quot;; //Because change will affect only NON-Active forum's</span>
+
+		//Get users from affected forum's (those where I perform action)
+<span class="fc" id="L367">		List&lt;Number&gt; usersInForums = null;</span>
+		try {
+<span class="fc" id="L369">			usersInForums = new SimpleQuery().forList(simpleQuery);</span>
+<span class="nc" id="L370">		} catch (Exception ex) {</span>
+<span class="nc" id="L371">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L372">			usersInForums = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			if (isAdmin == false) usersInForums.add(user.getUserId());</span>
+<span class="fc" id="L374">		}</span>
+
+		//PREPARE QUERY FOR THE ACTION
+<span class="fc" id="L377">		simpleQuery = &quot;&quot;;</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">		if(actionType == ActionType.DELETE) {</span>
+			//By constatnt decise if use SOFT delete or HARD delete
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;forumReallyDeleteMessages&quot;))</span>
+<span class="nc" id="L381">				simpleQuery = &quot;DELETE FROM document_forum WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql; //HARD DELETE</span>
+			else
+<span class="fc" id="L383">				simpleQuery = &quot;UPDATE document_forum SET deleted = &quot;+DB.getBooleanSql(true)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;) &quot; + domainSql; //SOFT DELETE (update)</span>
+
+			//Specification for user if is not admin
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+
+<span class="fc" id="L388">			Logger.debug(DocForumService.class, &quot;deleteMessage sql=&quot; + simpleQuery);</span>
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">		} else if(actionType == ActionType.RECOVER) {</span>
+<span class="fc" id="L390">			simpleQuery = &quot;UPDATE document_forum SET deleted = &quot;+DB.getBooleanSql(false)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+
+			//Specification for user if is not admin
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+
+<span class="fc" id="L395">			Logger.debug(DocForumService.class, &quot;recoverMessage sql=&quot; + simpleQuery);</span>
+		}
+
+<span class="nc bnc" id="L398" title="All 2 branches missed.">		else if(actionType == ActionType.APPROVE) {</span>
+<span class="nc" id="L399">			simpleQuery = &quot;UPDATE document_forum SET confirmed = &quot;+DB.getBooleanSql(true)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+
+			//Specification for user if is not admin
+<span class="nc bnc" id="L402" title="All 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+		}
+
+<span class="nc bnc" id="L405" title="All 2 branches missed.">		else if(actionType == ActionType.REJECT) {</span>
+<span class="nc" id="L406">			simpleQuery = &quot;UPDATE document_forum SET confirmed = &quot;+DB.getBooleanSql(false)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+
+			//Specification for user if is not admin
+<span class="nc bnc" id="L409" title="All 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+		}
+
+<span class="nc bnc" id="L412" title="All 2 branches missed.">		else if(actionType == ActionType.LOCK) {</span>
+<span class="nc" id="L413">			simpleQuery = &quot;UPDATE document_forum SET active = &quot;+DB.getBooleanSql(false)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+
+			//Specification for user if is not admin
+<span class="nc bnc" id="L416" title="All 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+		}
+
+<span class="nc bnc" id="L419" title="All 2 branches missed.">		else if(actionType == ActionType.UNLOCK) {</span>
+<span class="nc" id="L420">			simpleQuery = &quot;UPDATE document_forum SET active = &quot;+DB.getBooleanSql(true)+&quot; WHERE forum_id IN (&quot; + fIds + &quot;)&quot; + domainSql;</span>
+
+			//Specification for user if is not admin
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			if(!isAdmin) simpleQuery += &quot; AND user_id=&quot; + user.getUserId();</span>
+		}
+
+		//PERFORM action AND save number of changed rows
+<span class="fc" id="L427">		Integer numberOfUpdated = new SimpleQuery().executeWithUpdateCount(simpleQuery);</span>
+
+<span class="pc bpc" id="L429" title="2 of 4 branches missed.">		if(numberOfUpdated != null &amp;&amp; numberOfUpdated &gt; 0) {</span>
+<span class="pc bpc" id="L430" title="2 of 4 branches missed.">			if (usersInForums != null &amp;&amp; usersInForums.isEmpty() == false) {</span>
+<span class="fc" id="L431">				String loggerMsg = &quot;&quot;;</span>
+<span class="fc" id="L432">				String sqlSign = &quot;&quot;;</span>
+
+<span class="pc bpc" id="L434" title="1 of 4 branches missed.">				if(actionType == ActionType.DELETE || actionType == ActionType.REJECT) {</span>
+					//During DELETE / REJECT action, user's loosing rank, and forum loosing count
+<span class="fc" id="L436">					loggerMsg = &quot;Lowering rank for user: &quot;;</span>
+<span class="fc" id="L437">					sqlSign = &quot;-&quot;;</span>
+				} else {
+					//During RECOVER / APPROVE action, user's retrieve rank, and forum retrieve count
+<span class="fc" id="L440">					loggerMsg = &quot;Increasing rank for user: &quot;;</span>
+<span class="fc" id="L441">					sqlSign = &quot;+&quot;;</span>
+				}
+
+				//Update user rank
+<span class="fc bfc" id="L445" title="All 2 branches covered.">				for (Number userId : usersInForums) {</span>
+<span class="fc" id="L446">					Logger.debug(DocForumService.class, loggerMsg + userId.intValue());</span>
+
+					//Only real user (-1 userId represent NOT logged user)
+<span class="pc bpc" id="L449" title="1 of 2 branches missed.">					if(userId.intValue() &gt; 0)</span>
+<span class="fc" id="L450">						(new SimpleQuery()).execute(&quot;UPDATE users SET forum_rank=forum_rank&quot; + sqlSign + &quot;1 WHERE user_id=?&quot;, userId.intValue());</span>
+<span class="fc" id="L451">				}</span>
+
+				//Update webpage forum_count
+<span class="fc" id="L454">				(new SimpleQuery()).execute(&quot;UPDATE documents SET forum_count=forum_count&quot; + sqlSign + &quot;? WHERE doc_id=?&quot;, numberOfUpdated, docId);</span>
+			}
+		}
+
+<span class="fc" id="L458">		DocForumEntity docForumEntity = getForumBean(forumId, true);</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">		Integer parentId = docForumEntity != null ? docForumEntity.getParentId() : -1;</span>
+
+		//Update forum info like stat view ...
+<span class="fc" id="L462">		updateForumStatInfo(docId, parentId);</span>
+
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">		if(docForumEntity != null) {</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">			if(actionType == ActionType.DELETE)</span>
+<span class="fc" id="L466">				Adminlog.add(Adminlog.TYPE_FORM_DELETE, &quot;Zmazany diskusny prispevok: &quot; + docForumEntity.getSubject(), forumId, docId);</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">			else if(actionType == ActionType.RECOVER)</span>
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">				Adminlog.add(Adminlog.TYPE_FORUM_UNDELETE, &quot;Obnoveny prispevok: &quot; + (docForumEntity == null ? &quot; ktory neexistuje&quot; : docForumEntity.getSubject()), forumId, parentId);</span>
+		}
+
+<span class="fc" id="L471">		return true;</span>
+	}
+
+    /**
+	 * testuje, ci nie je prispevok vulgarny, alebo obsahuje nepovoleny HTML kod
+	 * @param message
+	 * @return
+	 */
+	public static boolean isVulgar(String message) {
+		//Get vulgar words
+<span class="fc" id="L481">		String vulgarisms = Constants.getString(&quot;vulgarizmy&quot;);</span>
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">		if (Tools.isEmpty(vulgarisms)) return false;</span>
+
+		//Test message
+<span class="pc bpc" id="L485" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(message)) {</span>
+<span class="fc" id="L486">			message = &quot; &quot; + message.toLowerCase();</span>
+			//aby to naslo aj take ze ...text&lt;script...
+<span class="fc" id="L488">			message = Tools.replace(message, &quot;&lt;&quot;, &quot; &lt;&quot;);</span>
+<span class="fc" id="L489">			message = Tools.replace(message, &quot;&gt;&quot;, &quot;&gt; &quot;);</span>
+<span class="fc" id="L490">			message = message.replace('\n', ' ');</span>
+<span class="fc" id="L491">			message = message.replace('\r', ' ');</span>
+
+<span class="fc" id="L493">			StringTokenizer st = new StringTokenizer(vulgarisms, &quot;,&quot;);</span>
+<span class="fc bfc" id="L494" title="All 2 branches covered.">			while (st.hasMoreTokens()) {</span>
+<span class="fc" id="L495">				String word = st.nextToken().trim();</span>
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">				if (Tools.isEmpty(word)) continue;</span>
+
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">				if (message.indexOf(&quot; &quot; + word) != -1) {</span>
+<span class="nc" id="L499">					Logger.println(DocForumService.class, &quot;vulgar: &quot; + word + &quot; message: &quot; + message);</span>
+<span class="nc" id="L500">					Adminlog.add(Adminlog.TYPE_FORUM_SAVE, &quot;vulgar: &quot; + word + &quot; message: &quot; + message, -1, -1);</span>
+<span class="nc" id="L501">					return true;</span>
+				}
+<span class="fc" id="L503">			}</span>
+		}
+
+<span class="fc" id="L506">		return false;</span>
+	}
+
+	/**
+	 * Odstrani Microsot Office tagy z textu. Tieto tagy mozu sposobovat zle
+	 * odsadzovanie textu.
+	 *
+	 * @return String - povodny text ostripovany o tagy
+	 */
+	public static String clearMsOfficeTags(String text) {
+<span class="fc" id="L516">		String oldText = text;</span>
+<span class="fc" id="L517">		String forumWysiwygIcons = Constants.getString(&quot;forumWysiwygIcons&quot;);</span>
+<span class="pc bpc" id="L518" title="1 of 2 branches missed.">		if (forumWysiwygIcons.indexOf(&quot;createlink&quot;) == -1) {</span>
+			//odpazme linky
+<span class="nc" id="L520">			Pattern linkPattern = Pattern.compile(&quot;&lt;\\s*[^&gt;]*\\s*a\\s*href\\s*=\\s*\&quot;[^\&quot;]*\&quot;\\s*[^&gt;]*&gt;|&lt;/a&gt;&quot;, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE); //NOSONAR</span>
+<span class="nc" id="L521">			Matcher linkMatcher = linkPattern.matcher(text);</span>
+<span class="nc" id="L522">			text = linkMatcher.replaceAll(&quot;&quot;);</span>
+		}
+
+<span class="pc bpc" id="L525" title="1 of 2 branches missed.">		if (forumWysiwygIcons.indexOf(&quot;insertimage&quot;) == -1) {</span>
+			//odpazme linky
+<span class="nc" id="L527">			Pattern linkPattern = Pattern.compile(&quot;&lt;\\s*[^&gt;]*\\s*img\\s*src\\s*=\\s*\&quot;[^\&quot;]*\&quot;\\s*[^&gt;]*&gt;|&lt;/img&gt;&quot;, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE); //NOSONAR</span>
+<span class="nc" id="L528">			Matcher linkMatcher = linkPattern.matcher(text);</span>
+<span class="nc" id="L529">			text = linkMatcher.replaceAll(&quot;&quot;);</span>
+		}
+
+		try {
+			//ak neobsahuje tento text, tak sa nie je coho bat
+<span class="pc bpc" id="L534" title="2 of 4 branches missed.">			if (!text.contains(&quot;class=MsoNormal&quot;) &amp;&amp; !text.contains(&quot;class=\&quot;MsoNormal\&quot;&quot;))</span>
+<span class="fc" id="L535">				return text;</span>
+
+			//v prvom rade zmaz vsetky &lt;FONT&gt; a &lt;/FONT&gt; tagy
+<span class="nc" id="L538">			Pattern fontPattern = Pattern.compile(&quot;&lt;FONT .*?&gt;&quot;,Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L539">			Matcher fontMatcher = fontPattern.matcher(text);</span>
+
+<span class="nc bnc" id="L541" title="All 2 branches missed.">			while (fontMatcher.find()) {</span>
+<span class="nc" id="L542">				text = text.replace(fontMatcher.group(0), &quot;&quot;);</span>
+<span class="nc" id="L543">				fontMatcher = fontPattern.matcher(text);</span>
+			}
+
+<span class="nc" id="L546">			text = text.replace(&quot;&lt;/FONT&gt;&quot;, &quot;&quot;);</span>
+
+			//potom samotne MsoNormal tagy
+<span class="nc" id="L549">			Pattern msTagPattern = Pattern.compile(&quot;&lt;P.*?class=.?MsoNormal.*?&gt;&quot;,Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L550">			Matcher msTagMatcher = msTagPattern.matcher(text);</span>
+
+<span class="nc bnc" id="L552" title="All 2 branches missed.">			while (msTagMatcher.find()) {</span>
+<span class="nc" id="L553">				text = text.replace(msTagMatcher.group(0), &quot;&lt;P&gt;&quot;);</span>
+<span class="nc" id="L554">				msTagMatcher = msTagPattern.matcher(text);</span>
+			}
+
+			//toto su dalsie MS specific tagy...
+<span class="nc" id="L558">			text = text.replace(&quot;&lt;o:p&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L559">			text = text.replace(&quot;&lt;/o:p&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L560">		} catch (Exception e) {</span>
+<span class="nc" id="L561">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L562">			return oldText;</span>
+<span class="nc" id="L563">		}</span>
+
+<span class="nc" id="L565">		return text;</span>
+	}
+
+	/**
+	 * Prepare new created instance of DocForumEntity for save.
+	 *
+	 */
+	private static void prepareForumForSave(DocForumEntity forumForm, ForumGroupEntity forumGroup, Identity sender, HttpServletRequest request, String hashCode, Integer userId, Boolean isSubtopic) {
+		//If user is logged, use his login/email as sender or use data from forumForm
+<span class="pc bpc" id="L574" title="1 of 4 branches missed.">		if(sender != null &amp;&amp; Tools.isEmpty(forumForm.getAuthorName())) {</span>
+<span class="nc" id="L575">			forumForm.setAuthorName( sender.getLogin() );</span>
+<span class="nc" id="L576">			forumForm.setAuthorEmail( sender.getEmail());</span>
+		}
+
+		//If validation is ENABLED, set confirmed as FALSE (because it needs approve)
+<span class="pc bpc" id="L580" title="2 of 4 branches missed.">		if (forumGroup != null &amp;&amp;  forumGroup.getMessageConfirmation()) {</span>
+			//Need's approve
+			//BUT if user is logged AND he is approver of forum AND he is author of this new contribution ... DO a AUTO approve
+<span class="nc bnc" id="L583" title="All 6 branches missed.">			if(sender != null &amp;&amp; sender.getEmail().equals(forumGroup.getApproveEmail()) &amp;&amp; sender.getEmail().equals(forumForm.getAuthorEmail()))</span>
+<span class="nc" id="L584">				forumForm.setConfirmed(true);</span>
+			else
+<span class="nc" id="L586">				forumForm.setConfirmed(false);</span>
+		} else //Forum do NOT need approve
+<span class="fc" id="L588">			forumForm.setConfirmed(true);</span>
+
+<span class="fc" id="L590">		forumForm.setQuestionDate( new Date() );</span>
+<span class="fc" id="L591">		forumForm.setIp( Tools.getRemoteIP(request) );</span>
+<span class="fc" id="L592">		forumForm.setHashCode(hashCode);</span>
+<span class="fc" id="L593">		forumForm.setUserId(userId);</span>
+<span class="fc" id="L594">		forumForm.setActive(true);</span>
+<span class="fc" id="L595">		forumForm.setDomainId( CloudToolsForCore.getDomainId() );</span>
+<span class="fc" id="L596">		forumForm.setDeleted(false);</span>
+
+<span class="fc bfc" id="L598" title="All 2 branches covered.">		if(Boolean.TRUE.equals(isSubtopic)) {</span>
+			//If the forumForm represent subtopic
+<span class="fc" id="L600">			forumForm.setStatViews(0);</span>
+<span class="fc" id="L601">			forumForm.setStatReplies(0);</span>
+<span class="fc" id="L602">			forumForm.setStatLastPost(new Date());</span>
+		}
+<span class="fc" id="L604">	}</span>
+
+	/**
+	 * Get DocForumEntity based on forumId (id), is entity is present, convert it to dDocForumEntity or return null.
+	 *
+	 * @param forumId - entity id
+	 * @param sortAscending - true = ASC, false = DESC
+	 * @return
+	 */
+	public static DocForumEntity getForumBean(int forumId, boolean sortAscending) {
+<span class="fc" id="L614">		DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+<span class="fc" id="L615">		Integer domainId = CloudToolsForCore.getDomainId();</span>
+
+		//Based on param sortAscending call getData
+		Optional&lt;DocForumEntity&gt; entityOpt;
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">		if(sortAscending)</span>
+<span class="fc" id="L620">			entityOpt = docForumRepository.findByIdAndDomainIdOrderByQuestionDateAsc(Long.valueOf(forumId), domainId);</span>
+		else
+<span class="nc" id="L622">			entityOpt = docForumRepository.findByIdAndDomainIdOrderByQuestionDateDesc(Long.valueOf(forumId), domainId);</span>
+
+<span class="fc bfc" id="L624" title="All 2 branches covered.">		if(entityOpt.isPresent())</span>
+<span class="fc" id="L625">			return entityOpt.get();</span>
+
+<span class="fc" id="L627">		return null;</span>
+	}
+
+	/**
+	 * Recursively sort List (unsorted) and sorted values add into List (sorted).
+	 *
+	 * @param unsorted
+	 * @param sorted
+	 * @param level
+	 * @param parent
+	 */
+	public static void recursiveSort(List&lt;DocForumEntity&gt; unsorted, List&lt;DocForumEntity&gt; sorted, int level, int parent) {
+<span class="fc bfc" id="L639" title="All 2 branches covered.">		for (DocForumEntity fb : unsorted) {</span>
+<span class="pc bpc" id="L640" title="1 of 4 branches missed.">			if (fb.getParentId() != null &amp;&amp; fb.getParentId().intValue() == parent) {</span>
+<span class="fc" id="L641">				fb.setPrefix(&quot;&lt;div style=\&quot;margin-left:&quot; + (20 * level) + &quot;px\&quot;&gt;&quot;);</span>
+<span class="fc" id="L642">				fb.setLevel(level);</span>
+<span class="fc" id="L643">				sorted.add(fb);</span>
+<span class="fc" id="L644">				recursiveSort(unsorted, sorted, level + 1, fb.getId().intValue());</span>
+			}
+<span class="fc" id="L646">		}</span>
+<span class="fc" id="L647">	}</span>
+
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int docId, boolean onlyConfirmed, int parentId, boolean sortAscending, boolean showDeleted, boolean isForumSearch) {
+		//It's Mental gymnastic, we using SQL where BOOLEAN params are compared as (boolean == val1 OR boolean == val2)
+		//By setting val1 and val2 we can return all combinations true/false/doesnt matter
+
+<span class="pc bpc" id="L653" title="1 of 2 branches missed.">		if(showDeleted)</span>
+<span class="nc" id="L654">			return getForumFieldsForDoc(docId, parentId, sortAscending, onlyConfirmed, true, true, false, isForumSearch); //speaking about deleted, true &amp;&amp; false -&gt; all forum's, not depending on deleted value</span>
+		else
+<span class="fc" id="L656">			return getForumFieldsForDoc(docId, parentId, sortAscending, onlyConfirmed, true, false, false, isForumSearch); //speaking about deleted, flase &amp;&amp; false -&gt; only not deleted forum's</span>
+	}
+
+	private static List&lt;DocForumEntity&gt; getForumFieldsForDoc(ActionType actionType, int docId, int parentId, boolean sortAscending) {
+<span class="fc" id="L660">		boolean deleteA = true;</span>
+<span class="fc" id="L661">		boolean deleteB = false;</span>
+<span class="fc" id="L662">		boolean confirmA = true;</span>
+<span class="fc" id="L663">		boolean confirmB = false;</span>
+
+<span class="fc bfc" id="L665" title="All 2 branches covered.">		if(actionType == ActionType.DELETE) //Only NOT deleted</span>
+<span class="fc" id="L666">			deleteA = false;</span>
+<span class="pc bpc" id="L667" title="1 of 2 branches missed.">		else if(actionType == ActionType.RECOVER) //Only deleted</span>
+<span class="fc" id="L668">			deleteB = true;</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">		else if(actionType == ActionType.APPROVE) //Only NOT approved (not confirmed)</span>
+<span class="nc" id="L670">			confirmA = false;</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		else if(actionType == ActionType.REJECT) //Only approved (confirmed)</span>
+<span class="nc" id="L672">			confirmB = true;</span>
+
+<span class="fc" id="L674">		return getForumFieldsForDoc(docId, parentId, sortAscending, confirmA, confirmB, deleteA, deleteB, false);</span>
+	}
+
+	/**
+	 * confirmedA == true &amp;&amp; confirmedB == true -&gt; only confirmed.
+	 * confirmedA == false &amp;&amp; confirmedB == false -&gt; only NOT confirmed.
+	 * else -&gt; all records, confirmed value doesnt matter.
+	 *
+	 * deletedA == true &amp;&amp; deletedB == true -&gt; only deleted.
+	 * deletedA == false &amp;&amp; deletedB == false -&gt; only NOT deleted.
+	 * else -&gt; all records, deleted value doesnt matter.
+	 */
+	private static List&lt;DocForumEntity&gt; getForumFieldsForDoc(int docId, int parentId, boolean sortAscending, boolean confirmedA,  boolean confirmedB, boolean deletedA, boolean deletedB, boolean isForumSearch) {
+		//Returned List, even empty
+<span class="fc" id="L688">		List&lt;DocForumEntity&gt; sorted = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L690" title="1 of 2 branches missed.">		if(docId &gt; 0) {</span>
+<span class="fc" id="L691">			List&lt;DocForumEntity&gt; unsorted = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L692">			List&lt;Integer&gt; parentIds = new ArrayList&lt;&gt;(Arrays.asList(parentId));</span>
+<span class="fc" id="L693">			HashSet&lt;Integer&gt; obtainnedParentIds = new HashSet&lt;&gt;(Arrays.asList(parentId));</span>
+<span class="fc" id="L694">			HashSet&lt;Integer&gt; obtainedChildIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L695">			Integer domainId = CloudToolsForCore.getDomainId();</span>
+
+<span class="fc" id="L697">			DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+
+			//Get all relevant forum entities
+<span class="fc" id="L700">			List&lt;DocForumIdAndParentId&gt; entities = new ArrayList&lt;&gt;();</span>
+
+			//Very special FIX -&gt; only in case of calling ForumDB.getForumMessageParent (after forum search), we must include massage-board forum's with parent id &lt; 0
+			//It's because we cant prepare link for forum in search, when we do not load allso root parent
+<span class="pc bpc" id="L704" title="5 of 10 branches missed.">			if(isForumSearch) entities = docForumRepository.getDocForumListForumIdParentIdWithRootParents(docId, deletedA||deletedB, confirmedA||confirmedB, domainId);</span>
+<span class="pc bpc" id="L705" title="4 of 8 branches missed.">			else entities = docForumRepository.getDocForumListForumIdParentId(docId, deletedA||deletedB, confirmedA||confirmedB, domainId);</span>
+
+			//Loop all entities and make String of all parent ids (even sub levels)
+<span class="fc bfc" id="L708" title="All 2 branches covered.">			for(DocForumIdAndParentId entity : entities) {</span>
+<span class="fc" id="L709">				int childForumId = entity.getId().intValue();</span>
+<span class="fc" id="L710">				int childParentId = entity.getParentId();</span>
+
+				//To make answers work in simple forum
+<span class="fc bfc" id="L713" title="All 2 branches covered.">				if (parentId == 0) parentIds.add(childParentId);</span>
+
+<span class="fc bfc" id="L715" title="All 2 branches covered.">				if (obtainnedParentIds.contains(childParentId))</span>
+<span class="fc" id="L716">					obtainedChildIds.add(childForumId);</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">				else if (obtainedChildIds.contains(childParentId)) {</span>
+<span class="fc" id="L718">					obtainedChildIds.add(childForumId);</span>
+<span class="fc" id="L719">					obtainnedParentIds.add(childParentId);</span>
+<span class="fc" id="L720">					parentIds.add(childParentId);</span>
+				}
+<span class="fc" id="L722">			}</span>
+
+			//Based of parent id's, gett all their child's entities
+<span class="fc" id="L725">			List&lt;DocForumEntity&gt; childForums = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L726" title="All 2 branches covered.">			if(sortAscending)</span>
+<span class="pc bpc" id="L727" title="4 of 8 branches missed.">				childForums.addAll( docForumRepository.getDocForumListAsc(docId, parentIds, deletedA||deletedB, confirmedA||confirmedB, domainId) );</span>
+			else
+<span class="pc bpc" id="L729" title="5 of 8 branches missed.">				childForums.addAll( docForumRepository.getDocForumListDesc(docId, parentIds, deletedA||deletedB, confirmedA||confirmedB, domainId) );</span>
+
+			//It must be ForumBean List
+<span class="fc" id="L732">			unsorted.addAll( childForums );</span>
+
+<span class="fc" id="L734">			DocForumEntity parentForum = getForumBean(parentId, true);</span>
+			//Push from start
+<span class="pc bpc" id="L736" title="1 of 4 branches missed.">			if(parentForum != null &amp;&amp; sortAscending) sorted.add(parentForum);</span>
+
+			//Sort it
+<span class="fc" id="L739">			recursiveSort(unsorted, sorted, 0, parentId);</span>
+
+			//Push at end (aka first question)
+<span class="pc bpc" id="L742" title="1 of 4 branches missed.">			if (parentForum != null &amp;&amp; !sortAscending) sorted.add(parentForum);</span>
+		}
+
+		//return sorted values
+<span class="fc" id="L746">		return sorted;</span>
+	}
+
+	/**
+	 * BAsed on give forumId, return string where are joined all children id's.
+	 *
+	 * @param msgList - list of entities to loop
+	 * @param forumId - forumId of root parent
+	 * @return
+	 */
+	public static String getChildForumIdsRecursive(List&lt;DocForumEntity&gt; msgList, int forumId) {
+<span class="fc" id="L757">		StringBuilder idStr = new StringBuilder();</span>
+
+<span class="pc bpc" id="L759" title="1 of 4 branches missed.">		if (msgList != null &amp;&amp; forumId &gt; 0) {</span>
+<span class="fc bfc" id="L760" title="All 2 branches covered.">			for (DocForumEntity fb : msgList) {</span>
+<span class="fc bfc" id="L761" title="All 2 branches covered.">				if (fb.getParentId() == forumId) {</span>
+<span class="pc bpc" id="L762" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(idStr)) idStr.append(String.valueOf(fb.getId())).append(',');</span>
+<span class="fc" id="L763">					else idStr = new StringBuilder(String.valueOf(fb.getId())).append(',');</span>
+<span class="fc" id="L764">					idStr.append(getChildForumIdsRecursive(msgList, fb.getId().intValue()));</span>
+				}
+<span class="fc" id="L766">			}</span>
+		}
+<span class="fc" id="L768">		return idStr.toString();</span>
+	}
+
+	public static void updateForumStatInfo(int docId, int forumId) {
+		String childForumIdsString;
+		String[] childForumIds;
+<span class="fc" id="L774">		int countStatReplies = 0;</span>
+<span class="fc" id="L775">		List&lt;DocForumEntity&gt; msgList = getForumFieldsForDoc(null, docId, true, forumId, true, false, false);</span>
+<span class="fc" id="L776">		int parentId = findParentRecursive(msgList, forumId);</span>
+<span class="fc" id="L777">		String domain = CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+
+<span class="fc" id="L779">		childForumIdsString = getChildForumIdsRecursive(msgList, parentId);</span>
+<span class="pc bpc" id="L780" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(childForumIdsString) &amp;&amp; childForumIdsString.endsWith(&quot;,&quot;)) childForumIdsString = childForumIdsString.substring(0, childForumIdsString.length() - 1);</span>
+
+<span class="fc" id="L782">		childForumIds = Tools.getTokens(childForumIdsString, &quot;,&quot;);</span>
+<span class="pc bpc" id="L783" title="1 of 2 branches missed.">		if (childForumIds != null)</span>
+<span class="fc" id="L784">			countStatReplies = childForumIds.length;</span>
+
+<span class="pc bpc" id="L786" title="1 of 2 branches missed.">		if (countStatReplies == 0) {</span>
+<span class="fc" id="L787">			(new SimpleQuery()).execute(&quot;UPDATE document_forum SET stat_replies=?, stat_last_post=question_date WHERE forum_id=? AND parent_id=-1&quot; + domain, countStatReplies, parentId);</span>
+		}
+
+<span class="pc bpc" id="L790" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(childForumIdsString)) {</span>
+<span class="nc" id="L791">			StringBuilder sql = new StringBuilder(&quot;SELECT &quot;);</span>
+<span class="nc bnc" id="L792" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="nc" id="L793">				sql.append(&quot;TOP 1 &quot;);</span>
+<span class="nc" id="L794">			sql.append(&quot;question_date FROM document_forum WHERE &quot;);</span>
+<span class="nc bnc" id="L795" title="All 2 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="nc" id="L796">				sql.append(&quot; rownum = 1 AND &quot;);</span>
+<span class="nc" id="L797">			sql.append(&quot;doc_id=?&quot; + domain + &quot; AND forum_id IN (&quot; + childForumIdsString + &quot;)&quot; + &quot; ORDER BY question_date DESC&quot;);</span>
+<span class="nc bnc" id="L798" title="All 4 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+<span class="nc" id="L799">				sql.append(&quot; LIMIT 1&quot;);</span>
+
+<span class="nc" id="L801">			Date lastPostDate = (new SimpleQuery()).forDate(sql.toString(), docId);</span>
+<span class="nc bnc" id="L802" title="All 6 branches missed.">			if (lastPostDate != null &amp;&amp; lastPostDate.getTime() &gt; 0 &amp;&amp; countStatReplies &gt; 0)</span>
+<span class="nc" id="L803">				(new SimpleQuery()).execute(&quot;UPDATE document_forum SET stat_replies=?, stat_last_post=? WHERE forum_id=? AND parent_id=-1&quot; + domain, countStatReplies, lastPostDate, parentId);</span>
+		}
+<span class="fc" id="L805">	}</span>
+
+	/**
+	 * Rekurzivne vyhlada forumId podtemy
+	 *
+	 * @param msgList
+	 * @param parentId
+	 * @return
+	 */
+	public static int findParentRecursive(List&lt;DocForumEntity&gt; msgList, int parentId) {
+<span class="fc" id="L815">		int forumId = -1;</span>
+
+<span class="fc bfc" id="L817" title="All 2 branches covered.">		for (DocForumEntity fb : msgList) {</span>
+<span class="fc bfc" id="L818" title="All 2 branches covered.">			if (fb.getId().intValue() == parentId) {</span>
+<span class="fc" id="L819">				forumId = findParentRecursive(msgList, fb.getParentId());</span>
+<span class="pc bpc" id="L820" title="1 of 2 branches missed.">				if (forumId &lt; 0) forumId = fb.getId().intValue();</span>
+			}
+<span class="fc" id="L822">		}</span>
+
+<span class="fc" id="L824">		return forumId;</span>
+	}
+
+	/**
+	 * Upload file for specific forum. Using MediaDB.
+	 *
+	 * @param uploadFile - file to upload
+	 * @param request
+	 * @param response
+	 * @return - path to file (forward)
+	 */
+	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
+<span class="nc" id="L836">		int forumId = Tools.getIntValue(request.getParameter(&quot;forumId&quot;) , -1);</span>
+<span class="nc bnc" id="L837" title="All 6 branches missed.">		if(forumId == -1 || uploadFile == null || uploadFile.isEmpty()) return null;</span>
+
+<span class="nc" id="L839">		DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+<span class="nc" id="L840">		Optional&lt;DocForumEntity&gt; forumOpt = docForumRepository.findById((long) forumId);</span>
+<span class="nc bnc" id="L841" title="All 2 branches missed.">		if(!forumOpt.isPresent()) return null;</span>
+
+		try {
+<span class="nc" id="L844">            return uploadForumFileLogic(uploadFile, forumOpt.get(), request);</span>
+<span class="nc" id="L845">        } catch(Exception e) {</span>
+<span class="nc" id="L846">           sk.iway.iwcm.Logger.error(e);</span>
+        }
+
+<span class="nc" id="L849">		return SAVE_FORUM_SUCCESS;</span>
+	}
+
+	private static String uploadForumFileLogic(CommonsMultipartFile uploadedFile, DocForumEntity docForum, HttpServletRequest request) throws IOException {
+		//Check logged user
+<span class="nc" id="L854">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L855" title="All 2 branches missed.">		if (user == null) {</span>
+<span class="nc" id="L856">			request.setAttribute(&quot;permissionDenied&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L857">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//skontrolu, ci nahravam subor k mojmu prispevku
+<span class="nc bnc" id="L861" title="All 4 branches missed.">		if (docForum.getUserId() &lt; 1 || docForum.getUserId() != user.getUserId()) {</span>
+<span class="nc" id="L862">			request.setAttribute(&quot;permissionDenied&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L863">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//Get upload limits
+<span class="nc" id="L867">		LabelValueDetails uploadLimits = ForumDB.getUploadLimits(docForum.getDocId(), request);</span>
+<span class="nc bnc" id="L868" title="All 2 branches missed.">		if (uploadLimits == null) {</span>
+<span class="nc" id="L869">			request.setAttribute(&quot;permissionDenied&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L870">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//Check uploaded file size limit
+<span class="nc bnc" id="L874" title="All 4 branches missed.">		if (uploadLimits.getInt1() &gt; 0 &amp;&amp; (uploadLimits.getInt1() * 1024) &lt; uploadedFile.getFileItem().getSize()) {</span>
+<span class="nc" id="L875">			request.setAttribute(&quot;permissionDenied&quot;, &quot;fileSize&quot;);</span>
+<span class="nc" id="L876">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//skontroluj prava na subory
+<span class="nc" id="L880">		String fileName = DocTools.removeChars(uploadedFile.getFileItem().getName()).toLowerCase();</span>
+
+		//Check the suffix
+<span class="nc bnc" id="L883" title="All 4 branches missed.">		if (fileName.endsWith(&quot;.jsp&quot;) || fileName.endsWith(&quot;.class&quot;)) {</span>
+<span class="nc" id="L884">			request.setAttribute(&quot;permissionDenied&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L885">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+<span class="nc" id="L888">		boolean canUpload = false;</span>
+<span class="nc bnc" id="L889" title="All 2 branches missed.">		if (&quot;*&quot;.equals(uploadLimits.getValue())) {</span>
+<span class="nc" id="L890">			canUpload = true;</span>
+		} else {
+			//skontroluj priponu suboru
+<span class="nc" id="L893">			StringTokenizer st = new StringTokenizer(uploadLimits.getValue(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L894" title="All 4 branches missed.">			while (st.hasMoreTokens() &amp;&amp; canUpload == false)</span>
+<span class="nc bnc" id="L895" title="All 2 branches missed.">				if (fileName.endsWith(st.nextToken())) canUpload = true;</span>
+		}
+
+<span class="nc bnc" id="L898" title="All 2 branches missed.">		if (!canUpload) {</span>
+<span class="nc" id="L899">			request.setAttribute(&quot;permissionDenied&quot;, &quot;fileType&quot;);</span>
+<span class="nc" id="L900">			return SAVE_FORUM_SUCCESS;</span>
+		}
+
+		//ok, mozeme to nahrat
+<span class="nc" id="L904">		String baseDir = uploadLimits.getValue2();</span>
+<span class="nc bnc" id="L905" title="All 2 branches missed.">		if (baseDir == null) baseDir = &quot;/files/forum/&quot;;</span>
+<span class="nc" id="L906">		baseDir = baseDir.replace('\\', '/');</span>
+<span class="nc bnc" id="L907" title="All 2 branches missed.">		if (baseDir.endsWith(&quot;/&quot;) == false) baseDir = baseDir + &quot;/&quot;;</span>
+<span class="nc" id="L908">		fileName = user.getUserId() + &quot;-&quot; + docForum.getId() + &quot;-&quot; + fileName;</span>
+
+<span class="nc" id="L910">		File f = new File(Tools.getRealPath(baseDir + fileName));</span>
+<span class="nc bnc" id="L911" title="All 2 branches missed.">		if (f.getParentFile().exists() == false) {</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">			if(f.getParentFile().mkdirs() == false) {</span>
+<span class="nc" id="L913">				request.setAttribute(&quot;permissionDenied&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L914">				return SAVE_FORUM_SUCCESS;</span>
+			}
+		}
+
+<span class="nc" id="L918">		boolean fileAllreadyExists = f.exists();</span>
+
+		//zapis subor na disk
+<span class="nc" id="L921">		int bytesRead = 0;</span>
+<span class="nc" id="L922">		byte[] buffer = new byte[8192];</span>
+<span class="nc" id="L923">		BufferedInputStream buffReader = new BufferedInputStream(uploadedFile.getFileItem().getInputStream());</span>
+<span class="nc" id="L924">		FileOutputStream fos = new FileOutputStream(f);</span>
+<span class="nc bnc" id="L925" title="All 2 branches missed.">		while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)</span>
+<span class="nc" id="L926">			fos.write(buffer, 0, bytesRead);</span>
+
+		//Logger.println(this,&quot;read end&quot;);
+<span class="nc" id="L929">		buffReader.close();</span>
+<span class="nc" id="L930">		fos.close();</span>
+<span class="nc" id="L931">		uploadedFile.getFileItem().delete();</span>
+
+		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
+<span class="nc bnc" id="L934" title="All 2 branches missed.">		if (fileAllreadyExists == false) {</span>
+			//zapis do medii
+<span class="nc" id="L936">			Media m = new Media();</span>
+<span class="nc" id="L937">			m.setMediaFkId( docForum.getId().intValue() );</span>
+<span class="nc" id="L938">			m.setMediaFkTableName(&quot;document_forum&quot;);</span>
+
+<span class="nc bnc" id="L940" title="All 2 branches missed.">			if (Tools.isNotEmpty(docForum.getSubject()))</span>
+<span class="nc" id="L941">				m.setMediaTitleSk(docForum.getSubject());</span>
+			else
+<span class="nc" id="L943">				m.setMediaTitleSk(uploadedFile.getFileItem().getName());</span>
+
+<span class="nc" id="L945">			m.setMediaLink(baseDir + fileName);</span>
+<span class="nc" id="L946">			m.setMediaSortOrder(10);</span>
+<span class="nc" id="L947">			new MediaDB().save(m);</span>
+		}
+
+<span class="nc" id="L950">		return SAVE_FORUM_SUCCESS;</span>
+	}
+
+	public static DocForumEntity getForumStat(int docId) {
+
+<span class="pc bpc" id="L955" title="1 of 2 branches missed.">		if(docId &lt; 1) return null;</span>
+
+<span class="fc" id="L957">		Date lastPost = null;</span>
+<span class="fc" id="L958">		int totalMessages = 0;</span>
+<span class="fc" id="L959">		DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+<span class="fc" id="L960">		List&lt;DocForumEntity&gt; forums = docForumRepository.getForumStat(docId, false,  CloudToolsForCore.getDomainId());</span>
+
+<span class="fc bfc" id="L962" title="All 2 branches covered.">		for(DocForumEntity forum : forums) {</span>
+<span class="fc" id="L963">			totalMessages += forum.getStatReplies() + 1;</span>
+<span class="pc bpc" id="L964" title="1 of 2 branches missed.">			if(forum.getStatLastPost() != null) lastPost = forum.getStatLastPost();</span>
+<span class="fc" id="L965">		}</span>
+
+<span class="fc" id="L967">		DocForumEntity stat = new DocForumEntity();</span>
+<span class="fc" id="L968">		stat.setStatReplies(totalMessages);</span>
+<span class="pc bpc" id="L969" title="1 of 2 branches missed.">		if(lastPost != null) stat.setStatLastPost(lastPost);</span>
+
+<span class="fc" id="L971">		return stat;</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId, boolean onlyConfirmed, boolean showDeleted, String flagSearch, ForumSortBy sortBy) {
+<span class="fc" id="L975">		List&lt;DocForumEntity&gt; topics = new ArrayList&lt;&gt;();</span>
+
+		//docId mus be set !!
+<span class="pc bpc" id="L978" title="1 of 2 branches missed.">		if(docId &lt; 1) return topics;</span>
+
+		//Params for query
+<span class="fc" id="L981">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L982">		params.add(docId);</span>
+		//Object[] params = {docId};
+
+		//Prepare sql query
+<span class="fc" id="L986">		String sql = &quot;SELECT * FROM document_forum WHERE doc_id=? AND parent_id=-1&quot; + CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="pc bpc" id="L987" title="1 of 2 branches missed.">		if (showDeleted == false) sql += &quot; AND deleted = &quot;+DB.getBooleanSql(false);</span>
+<span class="pc bpc" id="L988" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(flagSearch)) {</span>
+<span class="nc" id="L989">			sql += &quot; AND flag LIKE ?&quot;;</span>
+<span class="nc" id="L990">			params.add(flagSearch + &quot;%&quot;);</span>
+		}
+<span class="fc" id="L992">		sql += &quot; ORDER BY flag DESC, &quot; + sortBy.getColumnName() + &quot; DESC&quot;;</span>
+
+<span class="fc" id="L994">		Logger.debug(ForumDB.class, &quot;getForumTopics: docId=&quot; + docId + &quot; flagSearch=&quot; + flagSearch + &quot; sql=&quot; + sql);</span>
+
+<span class="fc" id="L996">		new ComplexQuery().setSql(sql).setParams(params.toArray()).list(new Mapper&lt;DocForumEntity&gt;() {</span>
+			@Override
+			public DocForumEntity map(ResultSet rs) throws SQLException {
+<span class="fc" id="L999">				boolean isConfirmed = rs.getBoolean(&quot;confirmed&quot;);</span>
+<span class="pc bpc" id="L1000" title="3 of 4 branches missed.">				if(onlyConfirmed &amp;&amp; !isConfirmed) {</span>
+					//If confired only but this one is not confimed
+				} else {
+<span class="fc" id="L1003">					DocForumEntity tmpEntity = rsToDocForumEntity(rs);</span>
+
+					//Insert to our list
+<span class="pc bpc" id="L1006" title="1 of 2 branches missed.">					if(tmpEntity != null)</span>
+<span class="fc" id="L1007">						topics.add(tmpEntity);</span>
+				}
+
+<span class="fc" id="L1010">				return null;</span>
+			}
+		});
+
+		//Add ForumGroupEntity
+<span class="fc bfc" id="L1015" title="All 2 branches covered.">		for(DocForumEntity topic : topics)</span>
+<span class="fc" id="L1016">			topic.setForumGroupEntity( ForumGroupService.getForum(topic.getDocId(), false) );</span>
+
+<span class="fc" id="L1018">		return topics;</span>
+	}
+
+	private static DocForumEntity rsToDocForumEntity(ResultSet rs) {
+		try {
+<span class="fc" id="L1023">			DocForumEntity tmpEntity = new DocForumEntity();</span>
+
+<span class="fc" id="L1025">			tmpEntity.setId(rs.getLong(&quot;forum_id&quot;));</span>
+<span class="fc" id="L1026">			tmpEntity.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L1027">			tmpEntity.setParentId(rs.getInt(&quot;parent_id&quot;));</span>
+<span class="fc" id="L1028">			tmpEntity.setSubject(DB.getDbString(rs, &quot;subject&quot;));</span>
+<span class="fc" id="L1029">			tmpEntity.setQuestion(DB.getDbString(rs, &quot;question&quot;));</span>
+<span class="fc" id="L1030">			tmpEntity.setQuestionDate( new Date( DB.getDbTimestamp(rs, &quot;question_date&quot;) ) );</span>
+<span class="fc" id="L1031">			tmpEntity.setAuthorName(DB.getDbString(rs, &quot;author_name&quot;));</span>
+<span class="fc" id="L1032">			tmpEntity.setAuthorEmail(DB.getDbString(rs, &quot;author_email&quot;));</span>
+<span class="fc" id="L1033">			tmpEntity.setConfirmed(rs.getBoolean(&quot;confirmed&quot;));</span>
+<span class="fc" id="L1034">			tmpEntity.setHashCode(DB.getDbString(rs, &quot;hash_code&quot;));</span>
+<span class="fc" id="L1035">			tmpEntity.setSendAnswerNotif(rs.getBoolean(&quot;send_answer_notif&quot;));</span>
+<span class="fc" id="L1036">			tmpEntity.setStatReplies(rs.getInt(&quot;stat_replies&quot;));</span>
+<span class="fc" id="L1037">			tmpEntity.setStatViews(rs.getInt(&quot;stat_views&quot;));</span>
+<span class="fc" id="L1038">			tmpEntity.setStatLastPost( new Date( DB.getDbTimestamp(rs, &quot;stat_last_post&quot;) ) );</span>
+<span class="fc" id="L1039">			tmpEntity.setFlag(DB.getDbString(rs, &quot;flag&quot;));</span>
+<span class="fc" id="L1040">			tmpEntity.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="fc" id="L1041">			tmpEntity.setActive(rs.getBoolean(&quot;active&quot;));</span>
+<span class="fc" id="L1042">			tmpEntity.setDeleted(rs.getBoolean(&quot;deleted&quot;));</span>
+
+<span class="fc" id="L1044">			return tmpEntity;</span>
+<span class="nc" id="L1045">		} catch (SQLException ex) {</span>
+<span class="nc" id="L1046">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+
+<span class="nc" id="L1049">		return null;</span>
+	}
+
+	public static DocForumEntity getLastMessage(int docId) {
+<span class="nc" id="L1053">		DocForumRepository docForumRepository = Tools.getSpringBean(&quot;docForumRepository&quot;, DocForumRepository.class);</span>
+<span class="nc" id="L1054">		Optional&lt;DocForumEntity&gt; optMsp = docForumRepository.findFirstByDocIdAndDomainIdOrderByQuestionDateDesc(docId, CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L1055" title="All 2 branches missed.">		if(optMsp.isPresent()) return optMsp.get();</span>
+
+<span class="nc" id="L1057">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

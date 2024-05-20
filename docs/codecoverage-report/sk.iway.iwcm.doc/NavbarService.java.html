@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NavbarService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">NavbarService.java</span></div><h1>NavbarService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+
+import org.apache.commons.lang.StringUtils;
+
+/**
+ * Generovanie navigacnej listy (navbar) pre rozne typy zobrazenia
+ */
+<span class="fc" id="L16">public class NavbarService {</span>
+
+    public String getNavbar(DocDetails doc, HttpServletRequest request) {
+<span class="fc" id="L19">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L20">		DocDB docDB = DocDB.getInstance();</span>
+
+<span class="fc" id="L22">        String navbar = doc.getNavbar();</span>
+        String navbar2;
+        //najskor zisti ako je na tom adresar
+<span class="fc" id="L25">        GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (&quot;rdf&quot;.equalsIgnoreCase(Constants.getString(&quot;navbarDefaultType&quot;)))</span>
+        {
+<span class="nc" id="L28">            navbar2 = getNavbarRDF(doc.getGroupId(), doc.getDocId(), request.getSession());</span>
+        }
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        else if (&quot;schema.org&quot;.equalsIgnoreCase(Constants.getString(&quot;navbarDefaultType&quot;)))</span>
+        {
+<span class="nc" id="L32">            navbar2 = getNavbarSchema(doc.getGroupId(), doc.getDocId(), request.getSession());</span>
+        }
+        else
+        {
+<span class="fc" id="L36">            navbar2 = getNavbar(doc.getGroupId(), doc.getDocId(), request.getSession());</span>
+        }
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (navbar2.length() &gt; 2)</span>
+        {
+<span class="fc" id="L40">            navbar = navbar2;</span>
+            //ak to nie je default doc pre grupu tak sprav linku
+<span class="fc bfc" id="L42" title="All 4 branches covered.">            if (doc.getDocId() != group.getDefaultDocId() &amp;&amp; doc.isShowInNavbar(request))</span>
+            {
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">                if (doc.getNavbar().length() &gt; 2)</span>
+                {
+<span class="pc bpc" id="L46" title="3 of 4 branches missed.">                    if (&quot;rdf&quot;.equalsIgnoreCase(Constants.getString(&quot;navbarDefaultType&quot;)) &amp;&amp; navbar.indexOf(&quot;&lt;/div&gt;&quot;)!=-1)</span>
+                    {
+<span class="nc" id="L48">                        navbar = navbar.substring(0, navbar.length()-6) + &quot; &quot; + Constants.getString(&quot;navbarSeparator&quot;)+&quot; &lt;span&gt;&quot;+doc.getNavbar()+&quot;&lt;/span&gt;&lt;/div&gt;&quot;;</span>
+                    }
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                    else if (&quot;schema.org&quot;.equalsIgnoreCase(Constants.getString(&quot;navbarDefaultType&quot;)))</span>
+                    {
+<span class="nc" id="L52">                        int counter = StringUtils.countMatches(navbar, &quot;&lt;li&quot;) + 1;</span>
+<span class="nc" id="L53">                        String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);</span>
+<span class="nc" id="L54">                        navbar = navbar.substring(0, navbar.length() - 5);</span>
+<span class="nc" id="L55">                        navbar = navbar + &quot;	&lt;li class=\&quot;is-item\&quot; itemprop=\&quot;itemListElement\&quot; itemscope=\&quot;\&quot; itemtype=\&quot;http://schema.org/ListItem\&quot;&gt;&lt;a href=\&quot;&quot; + link + &quot;\&quot; class=\&quot;navbar\&quot; itemprop=\&quot;item\&quot;&gt;&lt;span itemprop=\&quot;name\&quot;&gt;&quot; + Tools.convertToHtmlTags(doc.getNavbar()) + &quot;&lt;/span&gt;&lt;/a&gt;&lt;meta itemprop=\&quot;position\&quot; content=\&quot;&quot; + counter + &quot;\&quot;&gt;&lt;/li&gt;&quot;;</span>
+<span class="nc" id="L56">                        navbar += &quot;\n&lt;/ol&gt;&quot;;</span>
+<span class="nc" id="L57">                    }</span>
+                    else
+                    {
+<span class="fc" id="L60">                        navbar = navbar + &quot; &quot; + Constants.getString(&quot;navbarSeparator&quot;) + &quot; &quot; + Tools.convertToHtmlTags(doc.getNavbar());</span>
+                    }
+                }
+            }
+        }
+
+<span class="fc" id="L66">        return navbar;</span>
+    }
+
+    /**
+	 * Vrati navigacnu listup, pre zadane docId (aktualne) nezrenderuje odkaz
+	 * @param groupId
+	 * @param docId
+	 * @param session
+	 * @return
+	 */
+	public String getNavbar(int groupId, int docId, HttpSession session)
+	{
+<span class="fc" id="L78">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L80">		String path = &quot;&quot;;</span>
+<span class="fc" id="L81">		boolean finished = false;</span>
+<span class="fc" id="L82">		int currentGroupId = groupId;</span>
+<span class="fc" id="L83">		int depth = 0;</span>
+<span class="fc" id="L84">		int max_depth = 30;</span>
+		GroupDetails group;
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">		while (finished == false &amp;&amp; depth++&lt;max_depth)</span>
+		{
+<span class="fc" id="L88">			group = groupsDB.findGroup(currentGroupId);</span>
+<span class="pc bpc" id="L89" title="2 of 4 branches missed.">			if (group != null &amp;&amp; group.getGroupId()!=group.getParentGroupId())</span>
+			{
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+				{
+<span class="nc" id="L93">					currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L94">					continue;</span>
+				}
+
+<span class="pc bpc" id="L97" title="2 of 4 branches missed.">				if (group.getNavbar().length() &gt; 1 &amp;&amp; &quot;&amp;nbsp;&quot;.equals(group.getNavbarName())==false)</span>
+				{
+<span class="pc bpc" id="L99" title="3 of 4 branches missed.">					if (Constants.getBoolean(&quot;navbarRenderAllLinks&quot;)==false &amp;&amp; group.getDefaultDocId()==docId)</span>
+					{
+<span class="nc" id="L101">						String newPath = &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot; + group.getNavbarName().replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;,&quot;&quot;);</span>
+						//ochrana pred duplikovanim cesty (ak mame root a v nom mame hlavnu stranku v podadresari s rovnakym nazvom)
+<span class="nc bnc" id="L103" title="All 2 branches missed.">						if (path.startsWith(newPath)==false) path = newPath + path;</span>
+<span class="nc" id="L104">					}</span>
+					else
+					{
+<span class="fc" id="L107">						String navbarName = group.getNavbar();</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">						if (navbarName.contains(&quot;*||&quot;)) navbarName = Tools.replace(navbarName, &quot;*||&quot;, &quot;&lt;/&quot;);</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">						if (navbarName.contains(&quot;*|&quot;)) navbarName = Tools.replace(navbarName, &quot;*|&quot;, &quot;&lt;&quot;);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">						if (navbarName.contains(&quot;|*&quot;)) navbarName = Tools.replace(navbarName, &quot;|*&quot;, &quot;&gt;&quot;);</span>
+<span class="fc" id="L111">						String newPath = &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot; + navbarName;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">						if (path.startsWith(newPath)==false) path = newPath + path;</span>
+					}
+				}
+<span class="fc" id="L115">				currentGroupId = group.getParentGroupId();</span>
+			}
+			else
+			{
+				//group doesn't exist
+<span class="nc" id="L120">				finished = true;</span>
+			}
+			//we are on the root group
+<span class="fc bfc" id="L123" title="All 2 branches covered.">			if (currentGroupId == 0)</span>
+			{
+<span class="fc" id="L125">				finished = true;</span>
+			}
+		}
+		try
+		{
+			//odstran zobak na zaciatku
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">			if (path.startsWith(&quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;))</span>
+			{
+<span class="fc" id="L133">				path = path.substring(Constants.getString(&quot;navbarSeparator&quot;).length() + 2).trim();</span>
+			}
+		}
+<span class="nc" id="L136">		catch (Exception ex)</span>
+		{
+<span class="fc" id="L138">		}</span>
+<span class="fc" id="L139">		return (path);</span>
+	}
+
+    /**
+	 * Vrati HTML kod pre Breadcrumb navigaciu vo formate schema.org
+	 * @param groupId - ID adresara
+	 * @param docId - ID aktualnej web stranky
+	 * @param session
+	 * @return
+	 */
+	public String getNavbarSchema(int groupId, int docId, HttpSession session)
+	{
+<span class="nc" id="L151">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L152">		DocDB docDB = DocDB.getInstance();</span>
+
+<span class="nc" id="L154">		String htmlCode = &quot;&quot;;</span>
+
+<span class="nc" id="L156">		boolean finished = false;</span>
+<span class="nc" id="L157">		int currentGroupId = groupId;</span>
+<span class="nc" id="L158">		int depth = 0;</span>
+<span class="nc" id="L159">		int max_depth = 30;</span>
+		GroupDetails group;
+<span class="nc" id="L161">		int realMaxDepth = 1;</span>
+
+		// potrebujem zistit realny pocet urovni
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		while (finished == false &amp;&amp; depth++&lt;max_depth)</span>
+		{
+<span class="nc" id="L166">			group = groupsDB.findGroup(currentGroupId);</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">			if (group != null &amp;&amp; group.getGroupId()!=group.getParentGroupId())</span>
+			{
+<span class="nc bnc" id="L169" title="All 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+				{
+<span class="nc" id="L171">					currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L172">					continue;</span>
+				}
+
+<span class="nc" id="L175">				Map&lt;String, String&gt; aparams = groupsDB.parseAparam(group.getNavbarName());</span>
+<span class="nc bnc" id="L176" title="All 8 branches missed.">				if (group.getDefaultDocId() &gt; 0 &amp;&amp; (!aparams.containsKey(&quot;class&quot;) || aparams.containsKey(&quot;class&quot;) &amp;&amp; !aparams.get(&quot;class&quot;).equalsIgnoreCase(&quot;is-headline&quot;))) {</span>
+<span class="nc" id="L177">					realMaxDepth++;</span>
+				}
+<span class="nc" id="L179">				currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L180">			}</span>
+			else
+			{
+				//group doesn't exist
+<span class="nc" id="L184">				finished = true;</span>
+			}
+			//we are on the root group
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (currentGroupId == 0)</span>
+			{
+<span class="nc" id="L189">				finished = true;</span>
+			}
+		}
+
+<span class="nc" id="L193">		depth = 0;</span>
+<span class="nc" id="L194">		currentGroupId = groupId;</span>
+<span class="nc" id="L195">		finished = false;</span>
+<span class="nc" id="L196">		int skippedCount = 0;</span>
+
+<span class="nc bnc" id="L198" title="All 4 branches missed.">		while (finished == false &amp;&amp; depth++&lt;max_depth)</span>
+		{
+<span class="nc" id="L200">			group = groupsDB.findGroup(currentGroupId);</span>
+<span class="nc bnc" id="L201" title="All 4 branches missed.">			if (group != null &amp;&amp; group.getGroupId()!=group.getParentGroupId())</span>
+			{
+<span class="nc bnc" id="L203" title="All 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+				{
+<span class="nc" id="L205">					currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L206">					skippedCount++;</span>
+<span class="nc" id="L207">					continue;</span>
+				}
+
+<span class="nc" id="L210">				String groupNavbar = Tools.convertToHtmlTags(group.getNavbarName());</span>
+
+<span class="nc" id="L212">				Map&lt;String, String&gt; aparams = groupsDB.parseAparam(groupNavbar);</span>
+<span class="nc bnc" id="L213" title="All 6 branches missed.">				if (group.getDefaultDocId() &lt; 1 || aparams.containsKey(&quot;class&quot;) &amp;&amp; aparams.get(&quot;class&quot;).equalsIgnoreCase(&quot;is-headline&quot;)) {</span>
+<span class="nc" id="L214">					currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L215">					skippedCount++;</span>
+<span class="nc" id="L216">					continue;</span>
+				}
+
+<span class="nc bnc" id="L219" title="All 8 branches missed.">				if (group.getDefaultDocId() &gt; 0 &amp;&amp; groupNavbar.length() &gt; 1 &amp;&amp; (groupNavbar.indexOf(&quot;&lt;a&quot;) &lt; 0 || groupNavbar.toLowerCase().indexOf(&quot;&lt;aparam&quot;) &gt;= 0))</span>
+				{
+					//odstrani &lt;aparam&gt;
+<span class="nc" id="L222">					String text = groupNavbar.replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L223">					groupNavbar = &quot;\n	&lt;li class=\&quot;is-item\&quot; itemprop=\&quot;itemListElement\&quot; itemscope itemtype=\&quot;http://schema.org/ListItem\&quot;&gt;&quot; +</span>
+<span class="nc" id="L224">							&quot;&lt;a href='&quot; + docDB.getDocLink(group.getDefaultDocId()) + &quot;' class='navbar' itemprop=\&quot;item\&quot;&gt;&quot; +</span>
+<span class="nc" id="L225">							&quot;&lt;span itemprop=\&quot;name\&quot;&gt;&quot; + Tools.convertToHtmlTags(text) + &quot;&lt;/span&gt;&quot; +</span>
+							&quot;&lt;/a&gt;&quot; +
+							&quot;&lt;meta itemprop=\&quot;position\&quot; content=\&quot;&quot; + (realMaxDepth - depth + skippedCount) + &quot;\&quot; /&gt;&lt;/li&gt;&quot;;
+				}
+
+<span class="nc bnc" id="L230" title="All 4 branches missed.">				if (groupNavbar.length() &gt; 1 &amp;&amp; &quot;&amp;nbsp;&quot;.equals(group.getNavbarName())==false)</span>
+				{
+<span class="nc bnc" id="L232" title="All 4 branches missed.">					if (Constants.getBoolean(&quot;navbarRenderAllLinks&quot;)==false &amp;&amp; group.getDefaultDocId()==docId)</span>
+					{
+<span class="nc" id="L234">						String text = group.getNavbarName().replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L235">						String newPath = Tools.convertToHtmlTags(text);</span>
+
+						//ochrana pred duplikovanim cesty (ak mame root a v nom mame hlavnu stranku v podadresari s rovnakym nazvom)
+<span class="nc bnc" id="L238" title="All 2 branches missed.">						if (htmlCode.startsWith(newPath)==false) htmlCode = newPath + htmlCode;</span>
+<span class="nc" id="L239">					}</span>
+					else
+					{
+						//tu nepotrebujeme nahradu, tu uz len pridavame moznosti dokopy
+<span class="nc" id="L243">						String newPath = groupNavbar;</span>
+
+<span class="nc bnc" id="L245" title="All 2 branches missed.">						if (htmlCode.startsWith(newPath)==false) htmlCode = newPath + htmlCode;</span>
+					}
+				}
+<span class="nc" id="L248">				currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L249">			}</span>
+			else
+			{
+				//group doesn't exist
+<span class="nc" id="L253">				finished = true;</span>
+			}
+			//we are on the root group
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (currentGroupId == 0)</span>
+			{
+<span class="nc" id="L258">				finished = true;</span>
+			}
+		}
+		try
+		{
+			//odstran zobak na zaciatku
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (htmlCode.startsWith(&quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;))</span>
+			{
+<span class="nc" id="L266">				htmlCode = htmlCode.substring(Constants.getString(&quot;navbarSeparator&quot;).length() + 2).trim();</span>
+			}
+		}
+<span class="nc" id="L269">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L271">		}</span>
+
+<span class="nc" id="L273">		htmlCode = &quot;\n&lt;ol itemscope itemtype=\&quot;http://schema.org/BreadcrumbList\&quot;&gt;&quot; + htmlCode+ &quot;\n&lt;/ol&gt;&quot;;</span>
+<span class="nc" id="L274">		return (htmlCode);</span>
+	}
+
+    /**
+	 * Vrati HTML kod pre Breadcrumb navigaciu vo formate RDF
+	 * http://support.google.com/webmasters/bin/answer.py?hl=en&amp;topic=1088474&amp;hlrm=en&amp;answer=185417&amp;ctx=topic
+	 * @param groupId - ID adresara
+	 * @param docId - ID aktualnej web stranky
+	 * @param session
+	 * @return
+	 */
+	public String getNavbarRDF(int groupId, int docId, HttpSession session)
+	{
+<span class="nc" id="L287">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L288">		DocDB docDB = DocDB.getInstance();</span>
+
+<span class="nc" id="L290">		String htmlCode = &quot;&quot;;</span>
+
+<span class="nc" id="L292">		boolean finished = false;</span>
+<span class="nc" id="L293">		int currentGroupId = groupId;</span>
+<span class="nc" id="L294">		int depth = 0;</span>
+<span class="nc" id="L295">		int max_depth = 30;</span>
+		GroupDetails group;
+<span class="nc bnc" id="L297" title="All 4 branches missed.">		while (finished == false &amp;&amp; depth++&lt;max_depth)</span>
+		{
+<span class="nc" id="L299">			group = groupsDB.findGroup(currentGroupId);</span>
+<span class="nc bnc" id="L300" title="All 4 branches missed.">			if (group != null &amp;&amp; group.getGroupId()!=group.getParentGroupId())</span>
+			{
+<span class="nc bnc" id="L302" title="All 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+				{
+<span class="nc" id="L304">					currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L305">					continue;</span>
+				}
+
+<span class="nc" id="L308">				String groupNavbar = group.getNavbarName();</span>
+<span class="nc bnc" id="L309" title="All 8 branches missed.">				if (group.getDefaultDocId() &gt; 0 &amp;&amp; groupNavbar.length() &gt; 1 &amp;&amp; (groupNavbar.indexOf(&quot;&lt;a&quot;) &lt; 0 || groupNavbar.toLowerCase().indexOf(&quot;&lt;aparam&quot;) &gt;= 0))</span>
+				{
+					//odstrani &lt;aparam&gt;
+<span class="nc" id="L312">					String text = groupNavbar.replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;,&quot;&quot;);</span>
+<span class="nc" id="L313">					groupNavbar = &quot;&lt;span typeof=\&quot;v:Breadcrumb\&quot;&gt;&lt;a href='&quot;+docDB.getDocLink(group.getDefaultDocId())+&quot;' class='navbar' rel=\&quot;v:url\&quot; property=\&quot;v:title\&quot;&gt;&quot; + text + &quot;&lt;/a&gt;&lt;/span&gt;&quot;;</span>
+				}
+
+<span class="nc bnc" id="L316" title="All 4 branches missed.">				if (groupNavbar.length() &gt; 1 &amp;&amp; &quot;&amp;nbsp;&quot;.equals(group.getNavbarName())==false)</span>
+				{
+<span class="nc bnc" id="L318" title="All 4 branches missed.">					if (Constants.getBoolean(&quot;navbarRenderAllLinks&quot;)==false &amp;&amp; group.getDefaultDocId()==docId)</span>
+					{
+<span class="nc" id="L320">						String newPath = &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot; + group.getNavbarName().replaceAll(&quot;(?i)&lt;aparam.*&gt;&quot;,&quot;&quot;);</span>
+						//ochrana pred duplikovanim cesty (ak mame root a v nom mame hlavnu stranku v podadresari s rovnakym nazvom)
+<span class="nc bnc" id="L322" title="All 2 branches missed.">						if (htmlCode.startsWith(newPath)==false) htmlCode = newPath + htmlCode;</span>
+<span class="nc" id="L323">					}</span>
+					else
+					{
+<span class="nc" id="L326">						String newPath = &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot; + groupNavbar;</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">						if (htmlCode.startsWith(newPath)==false) htmlCode = newPath + htmlCode;</span>
+					}
+				}
+<span class="nc" id="L330">				currentGroupId = group.getParentGroupId();</span>
+<span class="nc" id="L331">			}</span>
+			else
+			{
+				//group doesn't exist
+<span class="nc" id="L335">				finished = true;</span>
+			}
+			//we are on the root group
+<span class="nc bnc" id="L338" title="All 2 branches missed.">			if (currentGroupId == 0)</span>
+			{
+<span class="nc" id="L340">				finished = true;</span>
+			}
+		}
+		try
+		{
+			//odstran zobak na zaciatku
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			if (htmlCode.startsWith(&quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;))</span>
+			{
+<span class="nc" id="L348">				htmlCode = htmlCode.substring(Constants.getString(&quot;navbarSeparator&quot;).length() + 2).trim();</span>
+			}
+		}
+<span class="nc" id="L351">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L353">		}</span>
+
+<span class="nc" id="L355">		htmlCode = &quot;&lt;div class=\&quot;breadcrumbrdf\&quot; xmlns:v=\&quot;http://rdf.data-vocabulary.org/#\&quot;&gt;&quot; + htmlCode + &quot;&lt;/div&gt;&quot;;</span>
+<span class="nc" id="L356">		return (htmlCode);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

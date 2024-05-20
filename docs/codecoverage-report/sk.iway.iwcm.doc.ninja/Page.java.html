@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Page.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.ninja</a> &gt; <span class="el_source">Page.java</span></div><h1>Page.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.ninja;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDetails;
+
+public class Page {
+    private Ninja ninja;
+    private DocDetails doc;
+
+<span class="fc" id="L17">    public Page(Ninja ninja) {</span>
+<span class="fc" id="L18">        this.ninja = ninja;</span>
+
+        // request nemoze byt null
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">        if (ninja.getRequest() == null) return;</span>
+
+<span class="fc" id="L23">        this.doc = (DocDetails) ninja.getRequest().getAttribute(&quot;docDetails&quot;);</span>
+<span class="fc" id="L24">    }</span>
+
+    public DocDetails getDoc(){
+<span class="fc" id="L27">        return doc;</span>
+    }
+
+    public String getSeoTitle() {
+<span class="nc" id="L31">        String seoTitle = &quot;&quot;;</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if(doc != null) {</span>
+<span class="nc" id="L33">            seoTitle = doc.getFieldR();</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            if(Tools.isEmpty(seoTitle)){</span>
+<span class="nc" id="L35">                seoTitle = doc.getTitle();</span>
+            }
+        }
+<span class="nc" id="L38">        return seoTitle;</span>
+    }
+
+    public String getSeoDescription(){
+<span class="fc" id="L42">        String seoDesc = &quot;&quot;;</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if(doc!=null){</span>
+<span class="fc" id="L44">            seoDesc = doc.getFieldS();</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">            if(Tools.isEmpty(seoDesc)){</span>
+<span class="fc" id="L46">                seoDesc = doc.getPerexPre();</span>
+            }
+        }
+<span class="fc" id="L49">        return Tools.html2text(seoDesc).replace(&quot;\&quot;&quot;,&quot;&quot;);</span>
+    }
+
+    public String getSeoImage(){
+<span class="nc" id="L53">        String seoImage = &quot;&quot;;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if(doc!=null){</span>
+<span class="nc" id="L55">            seoImage = doc.getFieldT();</span>
+            //skontroluj, ze obsahuje / a ., inak to nie je obrazok, ale nejaky text
+<span class="nc bnc" id="L57" title="All 4 branches missed.">            if (seoImage.contains(&quot;/&quot;)==false || seoImage.contains(&quot;.&quot;)==false) seoImage = &quot;&quot;;</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if(Tools.isEmpty(seoImage)){</span>
+<span class="nc" id="L59">                seoImage = getStringValue(doc.getPerexImage(), ninja.getTemp().getBasePathImg() + ninja.getConfig(&quot;defaultSeoImage&quot;));</span>
+            }
+        }
+<span class="nc" id="L62">        return seoImage;</span>
+    }
+
+    public String getStringValue(String value, String defaultValue)
+    {
+<span class="nc" id="L67">        String ret = defaultValue;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if(Tools.isNotEmpty(value)) ret = value;</span>
+<span class="nc" id="L69">        return(ret);</span>
+    }
+
+    public String getRobots(){
+<span class="fc" id="L73">        String robots = &quot;&quot;;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if(doc!=null){</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            robots = doc.isSearchable() ? &quot;index, follow&quot; :  &quot;noindex, follow&quot;;</span>
+        }
+<span class="fc" id="L77">        return robots;</span>
+    }
+
+    public String getUrl(){
+<span class="fc" id="L81">        return getUrlDomain() +&quot;&quot;+ getUrlPath();</span>
+    }
+
+    public String getUrlDomain(){
+<span class="fc" id="L85">        return Tools.getBaseHref(ninja.getRequest());</span>
+    }
+
+    public String getUrlPath(){
+<span class="fc" id="L89">        return PathFilter.getOrigPath(ninja.getRequest());</span>
+    }
+
+    public Map&lt;String, String[]&gt; getUrlParameters() {
+<span class="nc" id="L93">        Optional&lt;HttpServletRequest&gt; requestOptional = Optional.ofNullable(ninja.getRequest());</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        return requestOptional.isPresent() ? requestOptional.get().getParameterMap() : Collections.emptyMap();</span>
+    }
+
+    public String getTitle() {
+<span class="nc" id="L98">        return ninja.replaceNbspSingleChar(doc.getTitle());</span>
+    }
+
+    public String getPerex() {
+<span class="nc" id="L102">        return ninja.replaceNbspSingleChar(doc.getPerex());</span>
+    }
+
+    public String getPerexPlace() {
+<span class="nc" id="L106">        return ninja.replaceNbspSingleChar(doc.getPerexPlace());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

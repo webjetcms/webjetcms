@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NonApprovedEventsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.calendar.rest</a> &gt; <span class="el_source">NonApprovedEventsRestController.java</span></div><h1>NonApprovedEventsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.calendar.rest;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.calendar.jpa.CalendarEventsBasic;
+import sk.iway.iwcm.components.calendar.jpa.CalendarEventsRepository;
+import sk.iway.iwcm.components.calendar.jpa.CalendarTypesEntity;
+import sk.iway.iwcm.components.calendar.jpa.CalendarTypesRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/calendar/non-approved-events&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_calendar')&quot;)
+@Datatable
+public class NonApprovedEventsRestController extends DatatableRestControllerV2&lt;CalendarEventsBasic, Long&gt; {
+
+    private final CalendarEventsRepository calendarEventsRepository;
+    private final CalendarTypesRepository calendarTypesRepository;
+
+    @Autowired
+    public NonApprovedEventsRestController(CalendarEventsRepository calendarEventsRepository, CalendarTypesRepository calendarTypesRepository) {
+<span class="fc" id="L35">        super(null);</span>
+<span class="fc" id="L36">        this.calendarEventsRepository = calendarEventsRepository;</span>
+<span class="fc" id="L37">        this.calendarTypesRepository = calendarTypesRepository;</span>
+<span class="fc" id="L38">    }</span>
+
+    @Override
+    public Page&lt;CalendarEventsBasic&gt; getAllItems(Pageable pageable) {
+
+        List&lt;CalendarEventsBasic&gt; events;
+<span class="nc" id="L44">        List&lt;Integer&gt; approvingTypes = calendarTypesRepository.getTypeIdsByApproverAndDomain(getUser().getUserId(), CloudToolsForCore.getDomainId());</span>
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if(approvingTypes.isEmpty()) events = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L47">        else events = calendarEventsRepository.getBasicEventsForApprove(approvingTypes, CloudToolsForCore.getDomainId());</span>
+
+        //Create page
+<span class="nc" id="L50">        DatatablePageImpl&lt;CalendarEventsBasic&gt; page = new DatatablePageImpl&lt;&gt;(events);</span>
+
+<span class="nc" id="L52">        List&lt;CalendarTypesEntity&gt; calendarTypes = calendarTypesRepository.findAllByDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        for(CalendarTypesEntity type : calendarTypes) {</span>
+<span class="nc" id="L54">            page.addOption(&quot;typeId&quot;, type.getName(), type.getId().toString(), false);</span>
+<span class="nc" id="L55">        }</span>
+
+<span class="nc" id="L57">        return page;</span>
+    }
+
+    //Needed for DatatableRestControllerV2 -&gt; when calling action from FE
+    @Override
+    public CalendarEventsBasic getOneItem(long id) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if(id &lt; 1) throwError(&quot;&quot;);</span>
+
+<span class="nc" id="L65">        return calendarEventsRepository.getOne(id, CloudToolsForCore.getDomainId());</span>
+    }
+
+    @Override
+    public boolean processAction(CalendarEventsBasic entity, String action) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (&quot;approveEvent&quot;.equals(action)) {</span>
+            //Approve
+<span class="nc" id="L72">            int updatedRow = calendarEventsRepository.updateApprove(entity.getId(), 1, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if(updatedRow == 1) {</span>
+<span class="nc" id="L75">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.approve_event_action&quot;), getProp().getText(&quot;calendar.approve_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
+            } else {
+<span class="nc" id="L77">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.approve_event_action&quot;), getProp().getText(&quot;calendar.approve_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
+            }
+
+<span class="nc" id="L80">            return true;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        } else if (&quot;rejectEvent&quot;.equals(action)) {</span>
+            //Reject (dis-approve)
+<span class="nc" id="L83">            int updatedRow = calendarEventsRepository.updateApprove(entity.getId(), 0, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if(updatedRow == 1) {</span>
+<span class="nc" id="L86">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.disapprove_event_action&quot;), getProp().getText(&quot;calendar.disapprove_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
+            } else {
+<span class="nc" id="L88">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.disapprove_event_action&quot;), getProp().getText(&quot;calendar.disapprove_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
+            }
+
+<span class="nc" id="L91">            return true;</span>
+        }
+
+        //Uknown action
+<span class="nc" id="L95">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

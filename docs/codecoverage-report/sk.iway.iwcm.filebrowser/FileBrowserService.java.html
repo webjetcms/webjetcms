@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileBrowserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.filebrowser</a> &gt; <span class="el_source">FileBrowserService.java</span></div><h1>FileBrowserService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.filebrowser;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Types;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.ui.Model;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+<span class="nc" id="L38">public class FileBrowserService {</span>
+
+	/**
+	 * Prepare model/form for elfinder dir properties (fbrowser_dirprop.jsp)
+	 * @param dir
+	 * @param model
+	 * @param request
+	 * @return
+	 */
+	public static String editDir(String dir, Model model, HttpServletRequest request) {
+<span class="fc" id="L48">		UserDetails user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L49">        boolean canUpload = user.isFolderWritable(&quot;/&quot;+dir);</span>
+
+<span class="pc bpc" id="L51" title="2 of 4 branches missed.">        if (Tools.isEmpty(dir) || canUpload==false) {</span>
+<span class="nc" id="L52">            return SpringUrlMapping.redirectTo403();</span>
+        }
+
+<span class="fc" id="L55">        IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(dir));</span>
+<span class="fc" id="L56">        String dirName = f.getName();</span>
+
+<span class="fc" id="L58">        UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+<span class="fc" id="L59">        request.setAttribute(&quot;userGroupsList&quot;, userGroupsDB.getUserGroups());</span>
+
+<span class="fc" id="L61">        EditForm ef = new EditForm();</span>
+<span class="fc" id="L62">        ef.setDir(dirName);</span>
+<span class="fc" id="L63">        ef.setOrigDir(dir);</span>
+
+<span class="fc" id="L65">        FileAtrDB.fillEditForm(ef);</span>
+
+<span class="fc" id="L67">        model.addAttribute(&quot;fbrowserEditForm&quot;, ef);</span>
+
+<span class="fc" id="L69">        return &quot;/admin/fbrowser_dirprop&quot;;</span>
+	}
+
+	/**
+	 * Save elfinder dir properties (fbrowser_dirprop.jsp)
+	 * @param form
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+    public static String saveDir(EditForm form, HttpServletRequest request, HttpServletResponse response) {
+        //Request check
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if(request == null) return SpringUrlMapping.redirectToLogon();</span>
+
+        //Get session +  check
+<span class="fc" id="L84">        HttpSession session = request.getSession();</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (session == null) return SpringUrlMapping.redirectToLogon();</span>
+
+        //Check logged user
+<span class="fc" id="L88">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L89" title="2 of 4 branches missed.">		if (user == null || !user.isAdmin()) return SpringUrlMapping.redirectToLogon();</span>
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		if (user.isFolderWritable(form.getOrigDir() + &quot;/&quot;) == false)</span>
+<span class="nc" id="L92">			return SpringUrlMapping.redirect( &quot;fbrowser.browse.do?refreshLeft=true&amp;permsDenied=true&amp;dir=&quot; + form.getOrigDir() );</span>
+
+		//Delete old one and save new one
+<span class="fc" id="L95">		String dirUrl = form.getOrigDir();</span>
+<span class="fc" id="L96">		new SimpleQuery().execute(&quot;DELETE FROM dirprop WHERE dir_url = ?&quot;, dirUrl);</span>
+
+<span class="fc" id="L98">		new SimpleQuery().execute(&quot;INSERT INTO dirprop (dir_url, index_fulltext, password_protected, logon_doc_id) VALUES (?, ?, ?, ?)&quot;,</span>
+			dirUrl,
+<span class="fc" id="L100">			form.isIndexFulltext(),</span>
+<span class="fc" id="L101">			form.getPasswordProtectedString(),</span>
+<span class="fc" id="L102">			form.getLogonDocId());</span>
+
+		//refreshni zoznam v PathFilter
+<span class="fc" id="L105">		PathFilter.reloadProtectedDirs();</span>
+
+<span class="fc" id="L107">		String forward = &quot;/admin/fbrowser/dirprop/?saveok=true&amp;refreshLeft=true&amp;dir=&quot; + form.getOrigDir();</span>
+
+		//There is lack of /admin/ prefix
+<span class="fc" id="L110">		return SpringUrlMapping.redirect( Tools.sanitizeHttpHeaderParam(forward) );</span>
+	}
+
+	/**
+	 * Prepare model/form for elfinder file properties (fbrowser_prop.jsp)
+	 * @param dir
+	 * @param model
+	 * @param request
+	 * @return
+	 */
+	public static String editFile(String dir, Model model, HttpServletRequest request) {
+<span class="fc" id="L121">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L122" title="2 of 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin())</span>
+		{
+		}
+		else
+		{
+<span class="nc" id="L127">			return SpringUrlMapping.redirectToLogon();</span>
+		}
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (user.isFolderWritable(dir)==false) return &quot;/admin/fbrowser_editor&quot;;</span>
+
+<span class="fc" id="L131">		String file = request.getParameter(&quot;file&quot;);</span>
+		// writeOutFile(dir,file);
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		if (&quot;&quot;.equals(file))</span>
+		{
+			// mame novy subor
+<span class="fc" id="L136">			file = null;</span>
+		}
+<span class="fc" id="L138">		boolean alsoData = true;</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;prop&quot;)))</span>
+		{
+<span class="fc" id="L141">			alsoData = false;</span>
+		}
+<span class="fc" id="L143">		EditForm editForm = EditorToolsForCore.fillEditFormFromFile(dir, file, alsoData, user);</span>
+<span class="fc" id="L144">		model.addAttribute(&quot;fbrowserEditForm&quot;, editForm);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">		if (file != null)</span>
+		{
+			// atributy stranky
+<span class="fc" id="L148">			List&lt;?&gt; atrs = FileAtrDB.getAtributes(dir + &quot;/&quot; + file, request);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">			if (atrs.size() &gt; 0)</span>
+			{
+<span class="nc" id="L151">				request.setAttribute(&quot;atrs&quot;, atrs);</span>
+			}
+		}
+<span class="fc" id="L154">		return &quot;/admin/fbrowser_prop&quot;;</span>
+	}
+
+	/**
+	 * Save elfinder file properties (fbrowser_prop.jsp)
+	 * @param editForm
+	 * @param request
+	 * @return
+	 */
+	public static String saveFile(EditForm editForm, HttpServletRequest request) {
+<span class="nc" id="L164">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L165" title="All 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin())</span>
+		{
+
+		}
+		else
+		{
+<span class="nc" id="L171">			return SpringUrlMapping.redirectToLogon();</span>
+		}
+
+		//ak je to novy subor, alebo nazov nie je rovnaky ako povodny, skontroluj ho
+<span class="nc bnc" id="L175" title="All 4 branches missed.">		if (editForm.getOrigFile() == null || editForm.getOrigFile().compareTo(editForm.getFile()) != 0)</span>
+		{
+<span class="nc" id="L177">			editForm.setFile(DB.internationalToEnglish(DocTools.removeChars(editForm.getFile())));</span>
+		}
+
+<span class="nc bnc" id="L180" title="All 4 branches missed.">		if (editForm.getFile() == null || editForm.getFile().length() &lt; 1)</span>
+		{
+<span class="nc" id="L182">			editForm.setFile(&quot;new.html&quot;);</span>
+		}
+
+<span class="nc" id="L185">		boolean needRefreshParent = false;</span>
+
+<span class="nc" id="L187">		boolean isProp = &quot;yes&quot;.equals(request.getParameter(&quot;prop&quot;));</span>
+
+		//ak treba, presun subor
+<span class="nc bnc" id="L190" title="All 6 branches missed.">		if (editForm.getOrigFile() != null &amp;&amp; editForm.getOrigFile().length() &gt; 0 &amp;&amp; isProp)</span>
+		{
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			if (!editForm.getFile().equals(editForm.getOrigFile()))</span>
+			{
+<span class="nc" id="L194">				Adminlog.add(Adminlog.TYPE_FILE_EDIT, &quot;Rename file: oldUrl=&quot;+editForm.getDir()+&quot;/&quot;+editForm.getOrigFile()+&quot; newUrl=&quot;+editForm.getDir()+&quot;/&quot;+editForm.getFile(), -1, -1);</span>
+
+<span class="nc" id="L196">				String dir = Tools.getRealPath(editForm.getDir());</span>
+<span class="nc" id="L197">				Tools.renameFile(dir + File.separatorChar + editForm.getOrigFile(), dir + File.separatorChar + editForm.getFile());</span>
+<span class="nc" id="L198">				needRefreshParent = true;</span>
+
+				//ak existuje full text zmen odkaz
+<span class="nc" id="L201">				String oldUrl = editForm.getDir()+&quot;/&quot;+editForm.getOrigFile();</span>
+<span class="nc" id="L202">				String newUrl = editForm.getDir()+&quot;/&quot;+editForm.getFile();</span>
+<span class="nc" id="L203">				DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L204">				int docId = docDB.getDocIdFromURLImpl(oldUrl+&quot;.html&quot;, null);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">				if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(oldUrl, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, null);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">				if (docId &gt; 0)</span>
+				{
+<span class="nc" id="L208">					IwcmFile f = new IwcmFile(Tools.getRealPath(newUrl));</span>
+<span class="nc" id="L209">					long length = f.length();</span>
+
+					//existuje nam full text verzia
+<span class="nc" id="L212">					EditorForm ef = EditorDB.getEditorForm(request, docId, -1, -1);</span>
+<span class="nc" id="L213">					ef.setTitle(editForm.getFile());</span>
+<span class="nc" id="L214">					ef.setNavbar(editForm.getFile() +  &quot; (&quot;+Tools.formatFileSize(length)+&quot;)&quot;);</span>
+<span class="nc" id="L215">					ef.setVirtualPath(newUrl+&quot;.html&quot;);</span>
+<span class="nc" id="L216">					ef.setExternalLink(newUrl);</span>
+<span class="nc" id="L217">					ef.setAuthorId(user.getUserId());</span>
+<span class="nc" id="L218">					ef.setPublish(&quot;1&quot;);</span>
+
+<span class="nc" id="L220">					EditorDB.saveEditorForm(ef, request);</span>
+
+<span class="nc" id="L222">					EditorDB.cleanSessionData(request);</span>
+				}
+
+<span class="nc" id="L225">				String dir2 = editForm.getDir();</span>
+<span class="nc" id="L226">				System.out.println(&quot;dir2 &quot;+dir2);</span>
+<span class="nc" id="L227">				String oldFile = dir2 + &quot;/&quot; +  editForm.getOrigFile();</span>
+<span class="nc" id="L228">				String newFile = dir2 + &quot;/&quot; +  editForm.getFile();</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">				if(Tools.getIntValue(request.getParameter(&quot;zmenNazov&quot;), 0)==1)</span>
+				{
+					// zmenim udaje v suboroch
+					Column col;
+<span class="nc" id="L234">					String stranka=&quot;&quot;;</span>
+<span class="nc" id="L235">					List&lt;Column&gt; zoznamUsage = FileTools.getFileUsage(oldFile);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">					for(int i=0;i&lt;zoznamUsage.size();i++)</span>
+					{
+<span class="nc" id="L238">						col = zoznamUsage.get(i);</span>
+<span class="nc" id="L239">						String subor = col.getColumn2().replaceAll(&quot;\\\\&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L240">						IwcmFile f = new IwcmFile(Tools.getRealPath(subor));</span>
+<span class="nc bnc" id="L241" title="All 6 branches missed.">						if (f.exists() &amp;&amp; f.isFile() &amp;&amp; f.canRead())</span>
+						{
+<span class="nc" id="L243">							stranka = FileTools.readFileContent(subor);</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">							if(Tools.isNotEmpty(stranka))</span>
+							{
+<span class="nc" id="L246">								String strankaNova = stranka.replaceAll(oldFile, newFile);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">								if (strankaNova.equals(stranka)==false)</span>
+								{
+<span class="nc" id="L249">									FileTools.saveFileContent(subor, strankaNova);</span>
+<span class="nc" id="L250">									System.out.println(&quot;ZMENENE &quot;+col.getColumn2());</span>
+								}
+							}
+						}
+					}
+					//zmenim udaje na strankach
+<span class="nc" id="L256">					List&lt;DocDetails&gt; replacedPages = docDB.replaceTextAll(oldFile, newFile);</span>
+<span class="nc" id="L257">					request.setAttribute(&quot;replacedPages&quot;, replacedPages);</span>
+				}
+			}
+		}
+
+
+		//ak je to novy subor
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (Tools.isEmpty(editForm.getOrigFile()))</span>
+		{
+<span class="nc" id="L266">			needRefreshParent = true;</span>
+		}
+
+		//ulozenie atributov stranky
+<span class="nc" id="L270">		Connection db_conn = null;</span>
+<span class="nc" id="L271">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L274">			String link = editForm.getDir() + &quot;/&quot; + editForm.getFile();</span>
+			//TODO: ulozenie do history! (+restore z history)
+
+			//najskor vymazeme
+<span class="nc" id="L278">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L279">			ps = db_conn.prepareStatement(&quot;DELETE FROM file_atr WHERE link=?&quot;);</span>
+<span class="nc" id="L280">			ps.setString(1, link);</span>
+<span class="nc" id="L281">			ps.execute();</span>
+<span class="nc" id="L282">			ps.close();</span>
+<span class="nc" id="L283">			ps = null;</span>
+
+			//nainsertujeme
+<span class="nc" id="L286">			Enumeration&lt;String&gt; params = request.getParameterNames();</span>
+			String name;
+			String value;
+			int atrId;
+			FileAtrBean atr;
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			while (params.hasMoreElements())</span>
+			{
+				try
+				{
+<span class="nc" id="L295">					name = params.nextElement();</span>
+<span class="nc bnc" id="L296" title="All 4 branches missed.">					if (name != null &amp;&amp; name.startsWith(&quot;atr_&quot;))</span>
+					{
+<span class="nc" id="L298">						atrId = Integer.parseInt(name.substring(4));</span>
+<span class="nc" id="L299">						value = request.getParameter(name);</span>
+<span class="nc" id="L300">						atr = FileAtrDB.getAtrDef(atrId, request);</span>
+<span class="nc bnc" id="L301" title="All 4 branches missed.">						if (Tools.isNotEmpty(value) &amp;&amp; atr != null)</span>
+						{
+<span class="nc" id="L303">							ps = db_conn.prepareStatement(&quot;INSERT INTO file_atr (file_name, link, atr_id, value_string, value_int, value_bool) VALUES (?, ?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L304">							ps.setString(1, editForm.getFile());</span>
+<span class="nc" id="L305">							ps.setString(2, link);</span>
+<span class="nc" id="L306">							ps.setInt(3, atrId);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">							if (atr.getAtrType() == FileAtrDB.TYPE_INT)</span>
+							{
+<span class="nc" id="L309">								ps.setString(4, Integer.toString(Integer.parseInt(value)));</span>
+<span class="nc" id="L310">								ps.setInt(5, Integer.parseInt(value));</span>
+<span class="nc" id="L311">								ps.setNull(6, Types.INTEGER);</span>
+							}
+<span class="nc bnc" id="L313" title="All 2 branches missed.">							else if (atr.getAtrType() == FileAtrDB.TYPE_BOOL)</span>
+							{
+<span class="nc" id="L315">								ps.setString(4, null);</span>
+<span class="nc" id="L316">								ps.setNull(5, Types.INTEGER);</span>
+<span class="nc bnc" id="L317" title="All 4 branches missed.">								if (&quot;true&quot;.equalsIgnoreCase(value) || &quot;yes&quot;.equalsIgnoreCase(value))</span>
+								{
+<span class="nc" id="L319">									ps.setBoolean(6, true);</span>
+								}
+								else
+								{
+<span class="nc" id="L323">									ps.setBoolean(6, false);</span>
+								}
+							}
+							else
+							{
+<span class="nc" id="L328">								ps.setString(4, value);</span>
+<span class="nc" id="L329">								ps.setNull(5, Types.INTEGER);</span>
+<span class="nc" id="L330">								ps.setNull(6, Types.INTEGER);</span>
+							}
+<span class="nc" id="L332">							ps.execute();</span>
+<span class="nc" id="L333">							ps.close();</span>
+<span class="nc" id="L334">							ps = null;</span>
+							//String sa = editForm.
+							//ps = db_conn.prepareStatement(&quot;UPDATE documents SET title=? WHERE doc_id=?&quot;);
+						}
+					}
+				}
+<span class="nc" id="L340">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L342">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L343">				}</span>
+			}
+<span class="nc" id="L345">			db_conn.close();</span>
+<span class="nc" id="L346">			db_conn = null;</span>
+		}
+<span class="nc" id="L348">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L350">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L356" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L357">					ps.close();</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L359">					db_conn.close();</span>
+			}
+<span class="nc" id="L361">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L363">			}</span>
+		}
+
+<span class="nc" id="L366">		StringBuilder url = new StringBuilder(&quot;/admin/fbrowser/fileprop/?dir=&quot;).append(Tools.URLEncode(editForm.getDir())).append(&quot;&amp;file=&quot;).append(Tools.URLEncode(editForm.getFile()));</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;prop&quot;)))</span>
+		{
+<span class="nc" id="L369">			url.append(&quot;&amp;prop=yes&quot;);</span>
+		}
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if (needRefreshParent)</span>
+		{
+<span class="nc" id="L373">			url.append(&quot;&amp;refresh=yes&quot;);</span>
+		}
+<span class="nc" id="L375">		url.append(&quot;&amp;saved=true&quot;);</span>
+<span class="nc" id="L376">		return SpringUrlMapping.redirect(url.toString());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

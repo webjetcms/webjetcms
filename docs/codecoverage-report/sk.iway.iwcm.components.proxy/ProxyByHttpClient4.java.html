@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProxyByHttpClient4.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.proxy</a> &gt; <span class="el_source">ProxyByHttpClient4.java</span></div><h1>ProxyByHttpClient4.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.proxy;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.proxy.jpa.ProxyBean;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  ProxyByHttpClient.java - proxy vykonane pomocou JakartaHttpClienta, vie modifikovat encoding
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 10.11.2008 13:43:48
+ *@modified     $Date: 2009/09/10 19:59:49 $
+ */
+@SuppressWarnings(&quot;deprecation&quot;)
+public class ProxyByHttpClient4
+{
+	//public static String AUTH_STATE_KEY = &quot;ProxyByHttpClient.authStateKey&quot;;
+
+<span class="nc" id="L61">	protected ProxyByHttpClient4() {</span>
+		//utility class
+<span class="nc" id="L63">	}</span>
+
+	public static void service(ProxyBean proxy, HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException
+	{
+<span class="fc" id="L67">		Logger.debug(ProxyByHttpClient4.class, &quot;ProxyByHttpClient - service&quot;);</span>
+<span class="fc" id="L68">		String path = null;</span>
+<span class="fc" id="L69">		String data = null;</span>
+		try
+		{
+<span class="fc" id="L72">			String originalURI = req.getRequestURI();</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(req)) originalURI = ContextFilter.removeContextPath(req.getContextPath(), originalURI);</span>
+
+<span class="fc" id="L75">			req.setAttribute(&quot;path_filter_orig_path&quot;, originalURI);</span>
+
+<span class="fc" id="L77">			String localUrl = ProxyDB.getLocalUrl(proxy, originalURI);</span>
+<span class="fc" id="L78">			path = proxy.getRemoteUrl() + originalURI.substring(localUrl.length());</span>
+
+			//path = Tools.replace(path, &quot;.wsp&quot;, &quot;.asp&quot;);
+<span class="fc" id="L81">			Logger.debug(ProxyByHttpClient4.class, &quot;path:&quot;+path);</span>
+
+<span class="fc" id="L83">			req.setAttribute(&quot;path_filter_proxy_path&quot;, path);</span>
+
+<span class="fc" id="L85">			boolean includeIntoPage = Proxy.isIncludeIntoPage(proxy, path);</span>
+
+<span class="fc" id="L87">			String fullPath = null;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">			if (proxy.getRemoteServer().startsWith(&quot;http&quot;)==false)</span>
+			{
+<span class="fc" id="L90">				fullPath = &quot;http&quot;;</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">				if (443==proxy.getRemotePort()) {</span>
+<span class="fc" id="L92">					fullPath += &quot;s&quot;;</span>
+				}
+<span class="fc" id="L94">				fullPath += &quot;://&quot;+proxy.getRemoteServer() + &quot;:&quot; + proxy.getRemotePort() + path;</span>
+			}
+			else
+			{
+<span class="nc" id="L98">				fullPath = proxy.getRemoteServer() + &quot;:&quot; + proxy.getRemotePort() + path;</span>
+			}
+
+			//prekoduj na cielove kodovanie
+<span class="fc" id="L102">	      	String pathIncludingQuery = fullPath;</span>
+<span class="pc bpc" id="L103" title="3 of 4 branches missed.">			if (req.getQueryString()!=null &amp;&amp; req.getQueryString().length()&gt;1)</span>
+			{
+<span class="nc" id="L105">				pathIncludingQuery = fullPath + &quot;?&quot; + req.getQueryString();</span>
+<span class="nc" id="L106">				pathIncludingQuery = Tools.replace(pathIncludingQuery, &quot;{&quot;, &quot;%7B&quot;);</span>
+<span class="nc" id="L107">				pathIncludingQuery = Tools.replace(pathIncludingQuery, &quot;}&quot;, &quot;%7D&quot;);</span>
+			}
+
+<span class="fc" id="L110">			Logger.debug(ProxyByHttpClient4.class, &quot;fullPath:&quot;+fullPath);</span>
+
+<span class="fc" id="L112">			CloseableHttpClient client = null;</span>
+<span class="fc" id="L113">			HttpClientContext context = HttpClientContext.create();</span>
+
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">			if (client == null)</span>
+			{
+<span class="fc" id="L117">				client = HttpClients.createDefault();</span>
+			}
+
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">			if (proxy.getRemoteServer().startsWith(&quot;https&quot;))</span>
+			{
+				//Protocol.registerProtocol(&quot;https&quot;, new Protocol(&quot;https&quot;, new EasySSLProtocolSocketFactory(), 443));
+			}
+
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">			if (&quot;ntlm&quot;.equalsIgnoreCase(proxy.getAuthMethod()))</span>
+			{
+					//client.getParams().setAuthenticationPreemptive(true);
+				//CredentialsProvider defaultcreds = new NTCredentials(proxy.getAuthUsername(), proxy.getAuthPassword(), proxy.getAuthHost(), proxy.getAuthDomain());
+					//client.getParams().setCredentials(new AuthScope(proxy.getAuthHost(), proxy.getRemotePort(), AuthScope.ANY_REALM), defaultcreds);
+<span class="nc" id="L130">				CredentialsProvider credsProvider = new BasicCredentialsProvider();</span>
+<span class="nc" id="L131">				credsProvider.setCredentials(AuthScope.ANY, new NTCredentials(proxy.getAuthUsername(), proxy.getAuthPassword(), proxy.getAuthHost(), proxy.getAuthDomain()));</span>
+<span class="nc" id="L132">				context.setCredentialsProvider(credsProvider);</span>
+<span class="nc" id="L133">				}</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">			else if (&quot;basic&quot;.equalsIgnoreCase(proxy.getAuthMethod()))</span>
+			{
+<span class="nc" id="L136">				CredentialsProvider credsProvider = new BasicCredentialsProvider();</span>
+<span class="nc" id="L137">				credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(proxy.getAuthUsername(), proxy.getAuthPassword()));</span>
+<span class="nc" id="L138">				context.setCredentialsProvider(credsProvider);</span>
+				}
+
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(proxy.getAllowedMethods()))</span>
+			{
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (proxy.getAllowedMethods().toLowerCase().contains(req.getMethod().toLowerCase())==false)</span>
+				{
+<span class="nc" id="L145">					response.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L146">					return;</span>
+				}
+			}
+
+			//WebJETProxySelector.setProxyForHttpClient(client, fullPath);
+
+<span class="fc" id="L152">			HttpRequestBase method = null;</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">			if (&quot;GET&quot;.equalsIgnoreCase(req.getMethod()))</span>
+			{
+
+<span class="fc" id="L156">				Logger.debug(ProxyByHttpClient4.class,&quot;JE TO GET: &quot; + pathIncludingQuery);</span>
+
+				//method = (GetMethod)req.getSession().getAttribute(&quot;proxyHttpClientMethod&quot;);
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">				if (method == null)</span>
+				{
+<span class="fc" id="L161">					method = new HttpGet(pathIncludingQuery);</span>
+					//req.getSession().setAttribute(&quot;proxyHttpClientMethod&quot;, method);
+				}
+			}
+			else
+			{
+<span class="nc bnc" id="L167" title="All 4 branches missed.">				if (req.getHeader(&quot;Content-type&quot;)!=null &amp;&amp; req.getHeader(&quot;Content-type&quot;).indexOf(&quot;multipart/form-data&quot;)!=-1)</span>
+				{
+					/*
+					Logger.debug(ProxyByHttpClient4.class,&quot;JE TO POST (multipart): &quot; + fullPath);
+					MultipartPostMethod pmethod = new MultipartPostMethod(fullPath);
+					pmethod.setRequestHeader(&quot;Content-type&quot;, &quot;multipart/form-data;&quot;);
+
+					DiskFileUpload fu = new DiskFileUpload();
+					// maximum size before a FileUploadException will be thrown
+			      fu.setSizeMax(100000000);
+			      // maximum size that will be stored in memory
+			      fu.setSizeThreshold(0);
+			      // the location for saving data that is larger than getSizeThreshold()
+			      File uploadDir = new File(Tools.getRealPath(&quot;/WEB-INF/tmp/upload-&quot;+Tools.getNow()+&quot;/&quot;));
+			      if(uploadDir.mkdirs() == false)
+			      	throw new FileUploadException(&quot;Unable to create directory &quot;+&quot;/WEB-INF/tmp/upload-&quot;+Tools.getNow()+&quot;/&quot;);
+			      fu.setRepositoryPath(uploadDir.getPath());
+
+			      List&lt;FileItem&gt; fileItems = fu.parseRequest(req);
+			      for (FileItem file : fileItems)
+			      {
+			      	if (file.isFormField())
+			      	{
+			      		Logger.debug(ProxyByHttpClient4.class, &quot;Adding parameter: &quot; + file.getFieldName());
+			      		String value = file.getString(SetCharacterEncodingFilter.getEncoding());
+							Logger.debug(ProxyByHttpClient4.class,&quot;param: &quot; + file.getFieldName()+&quot;=&quot;+value);
+							//pmethod.addParameter(file.getFieldName(), value);
+							StringPart sp = new StringPart(file.getFieldName(), value, proxy.getEncoding());
+							//inak nam tam nastavovalo transfer encoding s cim mali ASP uploady problem
+							sp.setTransferEncoding(null);
+							pmethod.addPart(sp);
+			      	}
+			      }
+			      for (FileItem file : fileItems)
+			      {
+			      	if (file.isFormField()==false &amp;&amp; file instanceof DefaultFileItem)
+			      	{
+			      		DefaultFileItem dfi = (DefaultFileItem)file;
+			      		Logger.debug(ProxyByHttpClient4.class,&quot;Adding FILE: &quot; + file.getFieldName()+&quot;=&quot;+dfi.getStoreLocation().getPath());
+			      		//pmethod.addParameter(file.getFieldName(), file.getName(), dfi.getStoreLocation());
+			      		FilePart fp = new FilePart(file.getFieldName(), file.getName(), dfi.getStoreLocation());
+			      		pmethod.addPart(fp);
+			      	}
+			      }
+
+			      //vymaz subory z tmp adresara
+
+			      method = pmethod;
+			      */
+				}
+				else
+				{
+<span class="nc" id="L219">					Logger.debug(ProxyByHttpClient4.class,&quot;JE TO POST: &quot; + pathIncludingQuery);</span>
+
+<span class="nc" id="L221">					HttpPost pmethod = new HttpPost(pathIncludingQuery);</span>
+<span class="nc" id="L222">					pmethod.setHeader(&quot;Content-type&quot;, &quot;application/x-www-form-urlencoded; charset=&quot;+proxy.getEncoding());</span>
+
+<span class="nc" id="L224">				   Enumeration&lt;String&gt; params = req.getParameterNames();</span>
+				   int i;
+				   String[] values;
+				   String name;
+<span class="nc" id="L228">				   List&lt;NameValuePair&gt; nvps = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">					while (params.hasMoreElements())</span>
+					{
+<span class="nc" id="L231">						name = params.nextElement();</span>
+<span class="nc" id="L232">						values = req.getParameterValues(name);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">						for (i=0; i&lt;values.length; i++)</span>
+						{
+<span class="nc" id="L235">							Logger.debug(ProxyByHttpClient4.class,&quot;param: &quot; + name+&quot;=&quot;+values[i]);</span>
+							//pmethod.getParams().setParameter(name, values[i]);
+<span class="nc" id="L237">							nvps.add(new BasicNameValuePair(name, values[i]));</span>
+						}
+					}
+<span class="nc" id="L240">					pmethod.setEntity(new UrlEncodedFormEntity(nvps, proxy.getEncoding()));</span>
+
+<span class="nc" id="L242">					method = pmethod;</span>
+				}
+
+			}
+
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">			if (method != null) {</span>
+				//preposli hlavicky
+<span class="fc" id="L249">				Enumeration&lt;String&gt; en = req.getHeaderNames();</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">				while (en.hasMoreElements())</span>
+				{
+<span class="fc" id="L252">					String key = en.nextElement();</span>
+					// Filter incoming headers:
+<span class="fc bfc" id="L254" title="All 2 branches covered.">					if (&quot;Host&quot;.equalsIgnoreCase(key))</span>
+					{
+<span class="fc" id="L256">						String value = proxy.getRemoteServer();</span>
+						//remove http/s prefix
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">						if (value.startsWith(&quot;http&quot;)) {</span>
+<span class="nc" id="L259">							value = value.substring(value.indexOf(&quot;://&quot;)+3);</span>
+						}
+<span class="fc" id="L261">						Logger.debug(ProxyByHttpClient4.class, &quot;header: &quot; + key + &quot;: &quot; + value);</span>
+<span class="fc" id="L262">						method.addHeader(key, value);</span>
+<span class="fc" id="L263">					}</span>
+<span class="pc bpc" id="L264" title="1 of 4 branches missed.">					else if (&quot;Connection&quot;.equalsIgnoreCase(key) || &quot;If-Modified-Since&quot;.equalsIgnoreCase(key) ||</span>
+<span class="pc bpc" id="L265" title="1 of 4 branches missed.">								&quot;If-None-Match&quot;.equalsIgnoreCase(key) || &quot;Accept-Encoding&quot;.equalsIgnoreCase(key) ||</span>
+<span class="pc bpc" id="L266" title="2 of 6 branches missed.">								&quot;Cookie&quot;.equalsIgnoreCase(key) || &quot;content-type&quot;.equalsIgnoreCase(key) || &quot;content-length&quot;.equalsIgnoreCase(key))</span>
+					{
+						//tieto preskakujem
+<span class="fc" id="L269">						Logger.debug(ProxyByHttpClient4.class, &quot;header: SKIP &quot; + key + &quot;: &quot; + req.getHeader(key));</span>
+					}
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">					else if (&quot;authorization&quot;.equalsIgnoreCase(key))</span>
+					{
+						//nastavujeme dole
+<span class="nc" id="L274">						Logger.debug(ProxyByHttpClient4.class, &quot;header: SKIP &quot; + key + &quot;: &quot; + req.getHeader(key));</span>
+					}
+					else
+					{
+<span class="fc" id="L278">						String value = req.getHeader(key);</span>
+<span class="fc" id="L279">						method.addHeader(key, value);</span>
+<span class="fc" id="L280">						Logger.debug(ProxyByHttpClient4.class, &quot;header: &quot; + key + &quot;: &quot; + value);</span>
+					}
+<span class="fc" id="L282">				}</span>
+
+
+<span class="fc" id="L285">				Principal principal = req.getUserPrincipal();</span>
+<span class="pc bpc" id="L286" title="2 of 4 branches missed.">				if (principal != null &amp;&amp; Tools.isNotEmpty(principal.getName()))</span>
+				{
+<span class="fc" id="L288">					Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + principal.getName());</span>
+<span class="fc" id="L289">					method.addHeader(&quot;AUTH_USER_CMS&quot;, principal.getName());</span>
+				}
+				else
+				{
+<span class="nc" id="L293">					Identity user = UsersDB.getCurrentUser(req);</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">					if (user != null)</span>
+					{
+<span class="nc" id="L296">						Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + user.getLogin());</span>
+<span class="nc" id="L297">						method.addHeader(&quot;AUTH_USER_CMS&quot;, user.getLogin());</span>
+					}
+				}
+			}
+
+			/*
+			String authState = (String)req.getSession().getAttribute(AUTH_STATE_KEY);
+			Logger.debug(ProxyByHttpClient.class, &quot;authState: &quot;+authState);
+			if (authState == null)
+			{
+
+			}
+			else if (&quot;NTLM&quot;.equals(authState))
+			{
+				String value = &quot;NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAFAs4OAAAADw==&quot;;
+				Logger.debug(ProxyByHttpClient.class, &quot;header: authorization1: &quot; + value);
+				method.addRequestHeader(&quot;authorization&quot;, value);
+			}
+			else if (authState.startsWith(&quot;NTLM&quot;))
+			{
+				//String value = Tools.replace(req.getHeader(&quot;authorization&quot;), &quot;Negotiate&quot;, &quot;NTLM&quot;);
+				String value = req.getHeader(&quot;authorization&quot;);
+				Logger.debug(ProxyByHttpClient.class, &quot;header: authorization2: &quot; + value);
+				method.addRequestHeader(&quot;authorization&quot;, value);
+			}
+			*/
+
+
+			//String responseBody = null;
+<span class="fc" id="L326">			CloseableHttpResponse hcResponse = null;</span>
+			try{
+				//
+<span class="fc" id="L329">				hcResponse = client.execute(method, context);</span>
+				//responseBody = method.getResponseBodyAsString();
+<span class="nc" id="L331">			} catch (IOException ioe){</span>
+<span class="nc" id="L332">				Logger.error(ProxyByHttpClient4.class,&quot;Unable to connect to '&quot; + path + &quot;'&quot;);</span>
+<span class="nc" id="L333">				Logger.error(ProxyByHttpClient4.class,ioe.getMessage());</span>
+<span class="nc" id="L334">				sk.iway.iwcm.Logger.error(ioe);</span>
+<span class="fc" id="L335">			}</span>
+
+			/**
+			Cookie[] cookies = state.getCookies();
+	      // Display the cookies
+			Logger.debug(ProxyByHttpClient4.class, &quot;STATE Present cookies: &quot;);
+	      for (int i = 0; i &lt; cookies.length; i++)
+	      {
+	      	Logger.debug(ProxyByHttpClient4.class, &quot; - &quot; + cookies[i].toExternalForm());
+	      }
+	      */
+
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">			if (hcResponse != null) {</span>
+<span class="fc" id="L348">				Logger.debug(ProxyByHttpClient4.class,&quot;*** Response ***&quot;);</span>
+<span class="fc" id="L349">				Logger.debug(ProxyByHttpClient4.class,&quot;Status Line: &quot; + hcResponse.getStatusLine());</span>
+<span class="fc" id="L350">				Header[] responseHeaders = hcResponse.getAllHeaders();</span>
+				Header h;
+
+<span class="fc bfc" id="L353" title="All 2 branches covered.">				for (int i=0; i&lt;responseHeaders.length; i++)</span>
+				{
+<span class="fc" id="L355">					h = responseHeaders[i];</span>
+					//Logger.debug(this,responseHeaders[i]);
+<span class="pc bpc" id="L357" title="2 of 4 branches missed.">					if (h.getName()!=null &amp;&amp; h.getValue() != null)</span>
+					{
+<span class="fc" id="L359">						Logger.debug(ProxyByHttpClient4.class,h.getName()+&quot;: &quot;+h.getValue());</span>
+					}
+					/*
+					if (h.getName().indexOf(&quot;Authenticate&quot;)!=-1)
+					{
+						response.setStatus(401);
+						response.setHeader(h.getName(), h.getValue());
+						req.getSession().setAttribute(AUTH_STATE_KEY, h.getValue());
+						includeIntoPage = false;
+					}
+					*/
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">					if (h.getName().equalsIgnoreCase(&quot;Location&quot;))</span>
+					{
+<span class="nc" id="L372">						String value = h.getValue();</span>
+<span class="nc" id="L373">						Logger.debug(ProxyByHttpClient4.class, &quot;Original location: &quot; + value);</span>
+
+<span class="nc bnc" id="L375" title="All 2 branches missed.">						if (value.startsWith(&quot;http&quot;))</span>
+						{
+<span class="nc" id="L377">							value = value.substring(value.indexOf('/', 10));</span>
+						}
+						//urci nove URL
+<span class="nc bnc" id="L380" title="All 2 branches missed.">						if (value.startsWith(proxy.getRemoteUrl())) value = localUrl + value.substring(proxy.getRemoteUrl().length());</span>
+
+						//dopln nasu cestu
+<span class="nc bnc" id="L383" title="All 2 branches missed.">						if (value.charAt(0)!='/') value = localUrl + value;</span>
+
+<span class="nc" id="L385">						Logger.debug(ProxyByHttpClient4.class, &quot;Redirecting to: &quot; + value);</span>
+
+<span class="nc" id="L387">						response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);</span>
+<span class="nc" id="L388">						response.setHeader(h.getName(), value);</span>
+					}
+				}
+
+<span class="fc" id="L392">				HttpEntity entity = hcResponse.getEntity();</span>
+
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">				if (includeIntoPage)</span>
+				{
+					//vkladam vystup do WebJETu
+
+<span class="nc" id="L398">					StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L399">					BufferedInputStream is = new BufferedInputStream(entity.getContent());</span>
+<span class="nc" id="L400">					InputStreamReader in = new InputStreamReader(is, proxy.getEncoding());</span>
+<span class="nc" id="L401">					char[] buffer = new char[8000];</span>
+<span class="nc" id="L402">					int n = 0;</span>
+					while (true)
+					{
+<span class="nc" id="L405">						n = in.read(buffer);</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">						if (n &lt; 1) break;</span>
+<span class="nc" id="L407">						sb.append(buffer, 0, n);</span>
+					}
+<span class="nc" id="L409">					in.close();</span>
+<span class="nc" id="L410">					data = sb.toString();</span>
+
+<span class="nc" id="L412">					req.setAttribute(&quot;proxyOutputDataNoCrop&quot;, data);</span>
+
+					//Logger.debug(ProxyByHttpClient4.class, &quot;Proxy response:\n&quot;+data);
+
+<span class="nc bnc" id="L416" title="All 4 branches missed.">					if (Tools.isNotEmpty(proxy.getCropStart()) &amp;&amp; Tools.isNotEmpty(proxy.getCropEnd()))</span>
+					{
+						try
+						{
+<span class="nc bnc" id="L420" title="All 2 branches missed.">							if (proxy.isKeepCropEnd()==false) data = ProxyDB.getCleanBodyIncludeStartNoEnd(data, proxy.getCropStart(), proxy.getCropEnd());</span>
+<span class="nc" id="L421">							else data = ProxyDB.getCleanBodyIncludeStartEnd(data, proxy.getCropStart(), proxy.getCropEnd());</span>
+
+<span class="nc bnc" id="L423" title="All 2 branches missed.">							if (proxy.isKeepCropStart()==false) data = data.substring(proxy.getCropStart().length());</span>
+						}
+<span class="nc" id="L425">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L427">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L428">						}</span>
+					}
+
+<span class="nc" id="L431">					req.setAttribute(&quot;proxyOutputData&quot;, data);</span>
+
+					//ziskaj docid
+					//stranka ma nastavenu takuto virtualnu cestu
+<span class="nc" id="L435">					DocDB docDB = DocDB.getInstance();</span>
+
+					//kvoli sharepointu kde mapujeme priecinky podla roznych parametrov #16338
+<span class="nc" id="L438">					String testURL = originalURI+&quot;?&quot;+req.getQueryString();</span>
+<span class="nc" id="L439">					int docId = docDB.getVirtualPathDocId(testURL, DocDB.getDomain(req));</span>
+					//musime spravit toto inak sa nam vrati * URL a nikdy sa nevojde do bloku docId &lt; 1
+<span class="nc" id="L441">					DocDetails testDoc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L442" title="All 4 branches missed.">					if (testDoc != null &amp;&amp; testDoc.getVirtualPath().indexOf(&quot;*&quot;)!=-1) docId = -1;</span>
+
+<span class="nc" id="L444">					Logger.debug(ProxyByHttpClient4.class, &quot;Tested URL &quot;+testURL+&quot; returned docId=&quot;+docId);</span>
+
+<span class="nc bnc" id="L446" title="All 2 branches missed.">					if (docId &lt; 1)</span>
+					{
+<span class="nc" id="L448">						testURL = originalURI+&quot;?RootFolder=&quot;+Tools.replace(Tools.URLEncode(req.getParameter(&quot;RootFolder&quot;)), &quot;_&quot;, &quot;%5F&quot;);</span>
+<span class="nc" id="L449">						docId = docDB.getVirtualPathDocId(testURL, DocDB.getDomain(req));</span>
+
+<span class="nc" id="L451">						testDoc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L452" title="All 4 branches missed.">						if (testDoc != null &amp;&amp; testDoc.getVirtualPath().indexOf(&quot;*&quot;)!=-1) docId = -1;</span>
+
+<span class="nc" id="L454">						Logger.debug(ProxyByHttpClient4.class, &quot;Tested URL &quot;+testURL+&quot; returned docId=&quot;+docId);</span>
+					}
+<span class="nc bnc" id="L456" title="All 2 branches missed.">					if (docId &lt; 1)</span>
+					{
+<span class="nc" id="L458">						testURL = originalURI;</span>
+<span class="nc" id="L459">						docId = docDB.getVirtualPathDocId(testURL, DocDB.getDomain(req));</span>
+<span class="nc" id="L460">						Logger.debug(ProxyByHttpClient4.class, &quot;Tested URL &quot;+testURL+&quot; returned docId=&quot;+docId);</span>
+					}
+
+<span class="nc" id="L463">					String wjforward = req.getParameter(&quot;wjforward&quot;);</span>
+<span class="nc bnc" id="L464" title="All 10 branches missed.">					if (Tools.isNotEmpty(wjforward) &amp;&amp; wjforward.startsWith(&quot;/components&quot;) &amp;&amp; wjforward.indexOf(&quot;search&quot;)!=-1 &amp;&amp; wjforward.indexOf(&quot;ajax&quot;)!=-1 &amp;&amp; wjforward.endsWith(&quot;.jsp&quot;))</span>
+					{
+<span class="nc" id="L466">						testURL = wjforward;</span>
+
+<span class="nc" id="L468">						testURL = WriteTag.getCustomPage(testURL, req);</span>
+
+<span class="nc" id="L470">						Logger.debug(ProxyByHttpClient4.class, &quot;Forwarding to: &quot; + testURL );</span>
+<span class="nc" id="L471">						req.getRequestDispatcher(testURL).forward(req, response);</span>
+					}
+					else
+					{
+<span class="nc" id="L475">						Logger.debug(ProxyByHttpClient4.class, &quot;Forwarding to: &quot; + testURL + &quot; (&quot; + docId + &quot;)&quot;);</span>
+<span class="nc" id="L476">						req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+docId).forward(req, response);</span>
+					}
+<span class="nc" id="L478">				}</span>
+				else
+				{
+<span class="fc" id="L481">					response.setContentType(entity.getContentType().getValue());</span>
+
+<span class="fc" id="L483">					copyStream(entity.getContent(), response.getOutputStream());</span>
+				}
+
+				/*
+				*
+				state = client.getState();
+				req.getSession().setAttribute(STATE_KEY, state);
+				*/
+
+				//clean up the connection resources
+<span class="fc" id="L493">				hcResponse.close();</span>
+			}
+<span class="pc bpc" id="L495" title="1 of 2 branches missed.">			if (method != null) method.releaseConnection();</span>
+<span class="fc" id="L496">			client.close();</span>
+
+<span class="fc" id="L498">			req.setAttribute(&quot;proxyOutputData&quot;, data);</span>
+		}
+<span class="nc" id="L500">		catch (Exception e)</span>
+		{
+<span class="nc" id="L502">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L503">			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Socket opening: &quot; + proxy.getRemoteServer() + &quot;:&quot; + proxy.getRemotePort()+path);</span>
+<span class="fc" id="L504">		}</span>
+<span class="fc" id="L505">	}</span>
+
+	private static void copyStream(InputStream in, OutputStream out) throws IOException
+	{
+<span class="fc" id="L509">		BufferedInputStream bin = new BufferedInputStream(in);</span>
+<span class="fc" id="L510">		Logger.debug(ProxyByHttpClient4.class, &quot;REQUEST: ------------------------------&quot;);</span>
+<span class="fc" id="L511">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L512">		byte[] buff = new byte[8000];</span>
+		int len;
+<span class="fc bfc" id="L514" title="All 2 branches covered.">		while ((len = bin.read(buff)) != -1)</span>
+		{
+<span class="fc" id="L516">			Logger.debug(ProxyByHttpClient4.class, &quot;Writing &quot;+len+&quot; bytes&quot;);</span>
+<span class="fc" id="L517">			out.write(buff, 0, len);</span>
+<span class="fc" id="L518">			sb.append(new String(buff, 0, len));</span>
+		}
+<span class="fc" id="L520">		Logger.debug(ProxyByHttpClient4.class, sb.toString());</span>
+<span class="fc" id="L521">		Logger.debug(ProxyByHttpClient4.class, &quot;REQUEST KONIEC-------------------------&quot;);</span>
+<span class="fc" id="L522">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -11,11 +11,11 @@ import org.apache.http.util.EntityUtils;
 import org.apache.struts.util.ResponseUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.jsoup.Jsoup;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import sk.iway.Html2Text;
 import sk.iway.Password;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
@@ -888,6 +888,23 @@ public class Tools
 			}
 		}
 		return ret;
+	}
+
+	public static float getFloatValue(String value, float defaultValue)
+	{
+		float ret = defaultValue;
+		try
+		{
+			if (value!=null)
+			{
+				ret = Float.parseFloat(value.trim());
+			}
+		}
+		catch (Exception ex)
+		{
+
+		}
+		return(ret);
 	}
 
 	public static double getDoubleValue(String value, double defaultValue)
@@ -2552,7 +2569,7 @@ public class Tools
 	 */
 	public static String html2text(String html)
 	{
-		return isNotEmpty(html)?Jsoup.parse(html).text():"";
+		return Html2Text.html2text(html);
 	}
 
 	/**
@@ -2811,6 +2828,7 @@ public class Tools
 
 	public static boolean isNumeric(String str)
 	{
+		if (Tools.isEmpty(str)) return false;
 		try
 		{
 			Double.parseDouble(str);

@@ -129,6 +129,9 @@ public class DashboardListener {
             //check minimal java version
             int requiredJavaVersion = Constants.getInt("javaMinimalVersion");
             String currentJavaVersion = System.getProperty("java.version");
+            if ("tester".equals(user.getLogin()) && request.getParameter("javaVersion") != null) {
+                currentJavaVersion = request.getParameter("javaVersion");
+            }
             if (Tools.isNotEmpty(currentJavaVersion) && requiredJavaVersion > 0) {
                 int i = currentJavaVersion.indexOf(".");
                 if (i > 0) {
@@ -139,6 +142,12 @@ public class DashboardListener {
                         model.addAttribute("javaVersionWarningText", message);
                     }
                 }
+            }
+
+            if (Constants.getBoolean("useAmazonSES")) {
+                Prop prop = Prop.getInstance(request);
+                String message = prop.getText("overview.useAmazonSES.deprecated");
+                model.addAttribute("amazonSesWarningText", message);
             }
 
         } catch (JsonProcessingException e) {

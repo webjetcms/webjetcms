@@ -6,7 +6,6 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
-%><%@ taglib uri="/WEB-INF/datetime.tld" prefix="dt"
 %><%
 Prop prop = Prop.getInstance(request);
 String brandSuffix = InitServlet.getBrandSuffix();
@@ -90,14 +89,14 @@ String brandSuffix = InitServlet.getBrandSuffix();
                 <div class="form-group">
                     <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.name"/>:</label>
                     <div class="input-icon">
-                        <i class="fa fa-user"></i>
+                        <i class="ti ti-user"></i>
                         <form:input path="username" maxlength="40" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.login")%>'/>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                     <div class="input-icon">
-                        <i class="fa fa-lock"></i>
+                        <i class="ti ti-lock"></i>
                         <form:password path="password" maxlength="32" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.password")%>'/>
                     </div>
                     <div class="password-strength-info"></div>
@@ -114,7 +113,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
                 <div class="form-actions">
                     <%--<form:button name="login" value="Submit">Submit</form:button>--%>
                     <button type="submit" name="login-submit" id="login-submit" class="btn blue pull-right"><iwcm:text key="button.login"/></button>
-                    <button type="button" class="btn lost-password" onclick="$('#sendPassword').show('slow');"><i class="fa fa-unlock-alt"></i> <iwcm:text key="logon.mail.lost_password"/></button>
+                    <button type="button" class="btn lost-password" onclick="$('#sendPassword').show('slow');"><i class="ti ti-lock-open"></i> <iwcm:text key="logon.mail.lost_password"/></button>
                 </div>
             </form:form>
 

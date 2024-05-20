@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryAnswerEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.inquiry.jpa</a> &gt; <span class="el_source">InquiryAnswerEntity.java</span></div><h1>InquiryAnswerEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.inquiry.jpa;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;inquiry_answers&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
+<span class="fc" id="L31">public class InquiryAnswerEntity extends ActiveRecordRepository implements Serializable {</span>
+
+    @Id
+    @Column(name = &quot;answer_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_inquiry_answers&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    @Accessors(chain = false)
+    private Long id;
+
+    @Column(name = &quot;question_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        hidden = true,
+        editor = @DataTableColumnEditor(
+            attr = @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+        )
+    )
+    @javax.validation.constraints.NotNull
+    private Integer questionId;
+
+    @Column(name = &quot;answer_text&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;qa.answer&quot;
+    )
+    @NotEmpty
+    @Size(max = 255)
+    private String answerText;
+
+    @Column(name = &quot;image_path&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        className = &quot;image&quot;,
+        title = &quot;editor.perex.image&quot;,
+        renderFormat = &quot;dt-format-image&quot;
+    )
+    @Size(max = 255)
+    private String imagePath;
+
+    @Column(name = &quot;url&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        title = &quot;inquiry.url&quot;
+    )
+    @Size(max = 255)
+    private String url;
+
+    @Column(name = &quot;answer_clicks&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        className = &quot;hideOnCreate disabled&quot;,
+        title = &quot;inquiry.click_number&quot;
+    )
+    private Integer answerClicks;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

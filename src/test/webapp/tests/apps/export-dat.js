@@ -26,6 +26,7 @@ Scenario('Export dat zakladne testy', async ({I, DataTables}) => {
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
+        skipSwitchDomain: true
     });
 });
 

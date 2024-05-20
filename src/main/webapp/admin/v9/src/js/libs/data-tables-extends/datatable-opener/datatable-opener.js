@@ -362,7 +362,7 @@ export class DatatableOpener {
         //console.log("row=", $("#"+this.dataTable.DATA.id+"_wrapper div.dt-header-row div.row"));
         let inputId = "datatable-"+this.dataTable.DATA.id+"-id";
         let label = window.WJ.translate("datatables.id.js");
-        $("#"+this.dataTable.DATA.id+"_wrapper div.dt-header-row div.row div.col-auto .dt-buttons").append($(`
+        $("#"+this.dataTable.DATA.id+"_wrapper div.dt-header-row div.row div.col-auto .dt-buttons").prepend($(`
             <div id="${this.dataTable.DATA.id}InputWrapper" class="col-auto col-pk-input">
                 <label for="${inputId}">${label} : </label>
                 <input type="text" id="${inputId}"/>

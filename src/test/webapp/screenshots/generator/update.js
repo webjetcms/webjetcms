@@ -20,7 +20,12 @@ Scenario('Screens', async ({ I, Document }) => {
     Document.screenshotElement("#UPLOAD_selector", "/sysadmin/update/upload-selector.png");
 
     I.resizeWindow(1000, 800);
-    I.click("Aktualizovať zo súboru");
+
+    if("sk" === I.getConfLng()) {
+        I.click("Aktualizovať zo súboru");
+    } else if("en" === I.getConfLng()) { 
+        I.click("Update from file");
+    }
     I.wait(1);
 
     Document.screenshot("/sysadmin/update/upload-page.png");

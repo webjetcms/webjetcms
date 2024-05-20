@@ -115,7 +115,7 @@ export function prepareButtons(dataTable, pageType) {
     var buttonCounter = 1;
     //Reset actual data button
     dataTable.button().add(buttonCounter++, {
-        text: '<i class="far fa-trash-alt"></i>',
+        text: '<i class="ti ti-trash"></i>',
         action: function (e, dt, node) {
             var selectedNodeValue = $('#nodesFilterSelect').val();
             $.ajax({url: urlBase + "/resetData?showType=" + pageType + "&selectedNode=" + selectedNodeValue, success: function() {
@@ -132,7 +132,7 @@ export function prepareButtons(dataTable, pageType) {
 
     //Get actual data button
     dataTable.button().add(buttonCounter++, {
-        text: '<i class="fa-duotone fa-rotate"></i>',
+        text: '<i class="ti ti-refresh"></i>',
         action: function (e, dt, node) {
             //refresh data
             refreshData(dataTable, pageType);

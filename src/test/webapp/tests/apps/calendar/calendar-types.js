@@ -51,3 +51,23 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
 
     I.dontSee(entityName + ".changed")
 });
+
+Scenario('Domain test', ({I, DT, Document}) => {
+    I.amOnPage("/apps/calendar/admin/calendar-types");
+    DT.filter("name", "Výstava");
+    I.see("Výstava");
+
+    DT.filter("name", "DomainTest_Test23_type");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+    Document.switchDomain("test23.tau27.iway.sk");
+    DT.filter("name", "Výstava");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+    DT.filter("name", "DomainTest_Test23_type");
+    I.see("DomainTest_Test23_type");
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});

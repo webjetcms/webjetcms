@@ -315,7 +315,7 @@
         if (window.confirm("<iwcm:text key="groupslist.do_you_really_want_to_delete"/>"))
         {
             // presmeruje na adresar v ktorom sa nachadzala stranka
-            var redirect = '<%=doc.getVirtualPath().substring(0, doc.getVirtualPath().lastIndexOf('/')) %>';
+            var redirect = '<% if (doc.getVirtualPath().indexOf("/")>0) out.print(doc.getVirtualPath().substring(0, doc.getVirtualPath().lastIndexOf('/'))); %>';
             //var redirect = '/';
             $.post("/admin/webpages/ajax_jstreeoperations.jsp?act=delete", {id: "<%=groupId %>_<%=docId %>"} )
                 .done(function() {
@@ -746,7 +746,7 @@
                         </div>
                         <div class="wj-row wj-full-width">
                             <div class="wj-row-label"><label for="perexImageId"><iwcm:text key="editor.mainImage"/></label></div>
-                            <div class="wj-row-input has-action"><form:input id="perexImageId" path="perexImage"/><i onclick="openImageDialogWindow('editorForm', 'perexImage');" class="wj-action-icon fa fa-image">&nbsp;</i></div>
+                            <div class="wj-row-input has-action"><form:input id="perexImageId" path="perexImage"/><i onclick="openImageDialogWindow('editorForm', 'perexImage');" class="wj-action-icon" style="background-position: center center;background-repeat: no-repeat;background-size:20px;background-image: url('/admin/webpages/page-builder/images/photo-black.png')">&nbsp;</i></div>
                         </div>
                         <div class="wj-row">
                             <div class="wj-row-headline"><iwcm:text key="components.news.title"/></div>
@@ -765,7 +765,7 @@
                         </div>
                         <div class="wj-row  wj-full-width">
                             <div class="wj-row-label"><label for="externalLink"><iwcm:text key="components.inline.tabs.seo.externalLink"/></label></div>
-                            <div class="wj-row-input has-action"><form:input id="externalLink" path="externalLink"/><i onclick="openLinkDialogWindow('editorForm', 'externalLink');" class="wj-action-icon fa fa-link">&nbsp;</i></div>
+                            <div class="wj-row-input has-action"><form:input id="externalLink" path="externalLink"/><i onclick="openLinkDialogWindow('editorForm', 'externalLink');" class="wj-action-icon" style="background-position: center center;background-repeat: no-repeat;background-size:20px;background-image: url('/admin/webpages/page-builder/images/focus-2-black.png')">&nbsp;</i></div>
                         </div>
                         <div class="wj-row">
                             <div class="wj-row-headline"><iwcm:text key="components.inline.tabs.seo.tabTitle"/></div>

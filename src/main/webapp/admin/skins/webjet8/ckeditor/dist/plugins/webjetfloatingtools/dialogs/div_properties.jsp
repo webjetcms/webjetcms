@@ -137,7 +137,7 @@ function getData()
 
 function setData(arr)
 {
-	//console.log("Set data");
+	//console.log("Set data, arr=", arr);
 	//console.log(arr);
 
 	$.each(arr, function(i, v) {
@@ -187,7 +187,10 @@ function setData(arr)
 		tab.find('.backgroundAttachment').val(v.backgroundAttachment);
 
 		if (color != "") {
-			tab.find('.backgroundColor').minicolors('value', rgbaToHexObject(color));
+			//console.log("minicolors, color=", color, "hex=", rgbaToHexObject(color));
+			try {
+				tab.find('.backgroundColor').minicolors('value', rgbaToHexObject(color));
+			} catch (e) {}
 		}
 		else {
 			tab.find('.backgroundColor').val("");
@@ -254,7 +257,7 @@ div.div-properties-item { border-bottom:2px solid blue; margin-bottom: 10px; }
 </style>
 
 <div class="div-properties-list">
-	<iwcm:forEach items="${tabs}" var="item" varStatus="status" type="java.lang.String">
+	<c:forEach items="${tabs}" var="item" varStatus="status"><% String item = (String)pageContext.getAttribute("item"); %>
 		<c:set var="i" value="${status.index + 1}"></c:set>
 			<%
 			String title = prop.getText("editor.div_properties." + item);
@@ -307,7 +310,7 @@ div.div-properties-item { border-bottom:2px solid blue; margin-bottom: 10px; }
 					    	<div class="input-group">
 					    		<input type="text" class="form-control col-md-6 backgroundImage" name="backgroundImage${i}" id="backgroundImage${i}" placeholder="<iwcm:text key="editor.div_properties.background_image" />">
 							  	<span class="input-group-addon btn green" onclick="openImageDialogWindow('div_properties${i}', 'backgroundImage${i}', '')" >
-			              		<i class="fa fa-picture-o"></i>
+			              		<i class="ti ti-photo"></i>
 			              	</span>
 				         </div>
 					  	</div>
@@ -394,6 +397,6 @@ div.div-properties-item { border-bottom:2px solid blue; margin-bottom: 10px; }
 				</form>
 			</div>
 		</div>
-	</iwcm:forEach>
+	</c:forEach>
 </div>
 <%@ include file="/admin/skins/webjet8/layout_bottom_iframe.jsp" %>

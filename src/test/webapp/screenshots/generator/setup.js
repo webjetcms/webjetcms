@@ -1,9 +1,15 @@
 Feature('setup');
 
+let confLng = "sk";
+
+Before(({ I }) => {
+    confLng = I.getConfLng();
+});
+
 Scenario('Setup action', ({I, Document}) => {
 
     I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
-    I.say("Databaza musí byť prázdna !!! Nesmie obsahovať židne tabuľky");
+    I.say("Databaza musí byť prázdna !!! Nesmie obsahovať žiadne tabuľky");
     I.say("-----------------------------------------------------------------");
 
     I.amOnPage("/admin");
@@ -21,12 +27,22 @@ Scenario('Setup action', ({I, Document}) => {
 
     Document.screenshot("/install/setup/setup.png", 660, 520);
 
-    I.amOnPage("/wjerrorpages/setup/setup");
+    if("sk" === confLng) {
+        I.amOnPage("/wjerrorpages/setup/setup");
+    } else {
+        I.amOnPage("/wjerrorpages/setup/setup?language=en");
+    }
+   
     I.say("Refreshni obrazovku a zadaj licencne cislo");
     pause();
 
     I.click("#btnOk");
-    I.waitForText("WebJET je nakonfigurovaný", 300);
+
+    if("sk" === confLng) {
+        I.waitForText("WebJET je nakonfigurovaný", 300);
+    } else {
+        I.waitForText("WebJET successfully configured", 300);
+    }
 
     Document.screenshot("/install/setup/setup-saved.png", 660, 180);
 
@@ -40,6 +56,12 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
     I.say("-----------------------------------------------------------------");
 
     I.amOnPage("/admin/logon/");
+
+    if("sk" !== confLng) {
+        if("en" === confLng) {
+            I.selectOption("language", "English");
+        }
+    }
 
     I.fillField("#username", "admin");
     I.fillField("#password", "heslo");
@@ -78,7 +100,11 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
 Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
-    I.amOnPage("/wjerrorpages/setup/license");
+    if("sk" === confLng) { 
+        I.amOnPage("/wjerrorpages/setup/license");
+    } else if("en" === confLng) {
+        I.amOnPage("/wjerrorpages/setup/license?language=en");
+    }
 
     Document.screenshot("/install/license/license.png");
 
@@ -88,7 +114,12 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
     pause();
 
     I.click("#btnOk");
-    I.waitForText("Licencia úspešne zmenená.", 10);
+
+    if("sk" === confLng) {
+        I.waitForText("Licencia úspešne zmenená.", 10);
+    } else {
+        I.waitForText("License successfully changed.", 10);
+    }
 
     Document.screenshot("/install/license/license-saved.png");
 });

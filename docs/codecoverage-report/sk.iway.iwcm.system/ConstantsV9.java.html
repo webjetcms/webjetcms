@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConstantsV9.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ConstantsV9.java</span></div><h1>ConstantsV9.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+
+public class ConstantsV9 {
+
+	private ConstantsV9() {
+	}
+
+	/**
+	 * Nastavi predvolene hodnoty pre verziu 9
+	 * Tato trieda je vo W9 reimplementovana, tu nic nemente
+	 */
+	public static void clearValuesWebJet9() {
+<span class="fc" id="L19">		Constants.setString(&quot;defaultSkin&quot;, &quot;webjet9&quot;);</span>
+<span class="fc" id="L20">		Constants.setString(&quot;auditJpaDisabledEntities&quot;, &quot;&quot;);</span>
+<span class="fc" id="L21">		Constants.setString(&quot;mariaDbDefaultEngine&quot;, &quot;InnoDB&quot;);</span>
+<span class="fc" id="L22">		Constants.setString(&quot;chunksQuantity&quot;, &quot;25&quot;);</span>
+<span class="fc" id="L23">		Constants.setString(&quot;propertiesAdminKeys&quot;,</span>
+				&quot;button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*&quot;);
+<span class="fc" id="L25">		Constants.setInt(&quot;webpagesTreeAutoOpenLimit&quot;, 2);</span>
+<span class="fc" id="L26">		Constants.setString(&quot;deepl_auth_key&quot;, &quot;&quot;, &quot;translations&quot;, &quot;Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov&quot;);</span>
+<span class="fc" id="L27">		Constants.setString(&quot;deepl_api_url&quot;, &quot;https://api-free.deepl.com/v2/translate&quot;, &quot;translations&quot;, &quot;Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate&quot;);</span>
+
+<span class="fc" id="L29">		Constants.setInt(&quot;formsDatatableServerSizeLimit&quot;, 5000, Constants.mods(Constants.MOD_PERFORMANCE, &quot;forms&quot;),</span>
+				&quot;Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.&quot;);
+
+<span class="fc" id="L32">		Constants.setString(&quot;sk.iway.iwcm.qa.AddAction.sendAdminMail.url&quot;, &quot;/apps/qa/admin/&quot;);</span>
+
+<span class="fc" id="L34">		Constants.setBoolean(&quot;loggingInMemoryEnabled&quot;, false, &quot;adminlog&quot;,</span>
+				&quot;Aktivovanie ukladania posledných log záznamov do pamäte pre jednoduchšiu kontrolu logov.&quot;);
+<span class="fc" id="L36">		Constants.setInt(&quot;loggingInMemoryQueueSize&quot;, 200, &quot;adminlog&quot;,</span>
+				&quot;Maximalny počet log záznamov držaných v pamäti.&quot;);
+<span class="fc" id="L38">		Constants.setString(&quot;passwordHashAlgorithm&quot;, &quot;bcrypt&quot;, Constants.MOD_SECURITY, &quot;Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512&quot;);</span>
+<span class="fc" id="L39">		Constants.setInt(&quot;bcryptSaltRounds&quot;, 12, Constants.MOD_SECURITY, &quot;log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel&quot;);</span>
+
+		//pentesty, vylucene /components/user/logon.jsp
+<span class="fc" id="L42">		Constants.setString(&quot;componentsDirectCallExceptionsSystem&quot;,</span>
+				&quot;/components/_common/clk.jsp,/components/_common/combine.jsp,/components/_common/html_tags_support.jsp,/components/_common/wysiwyg/,%.js.jsp,/components/banner/banner.jsp,%/invoice_email.jsp,/components/basket/order_payment_bank_reply.jsp,/components/blog/blog_save.jsp,%/detail.jsp,%/upload.jsp,/components/forum/iframe.jsp,%new.jsp,%/saveok.jsp,%/savefail.jsp,%/new_file.jsp,%/send_card.jsp,%/show_gallery_image,%videoplayer.jsp,%ajax,%voteResultsDiv,%check_form,%/forum-open,%/forum_mb_open,%/forum_mb,%-approve.jsp,%send_link_form,/components/reservation/,/components/user/change_password.jsp,/components/user/authorize.jsp,%import.jsp,/components/zmluvy/,/components/server_monitoring/monitor.jsp,/components/page_update_info/add_subscriber,/components/page_update_info/remove_subscriber,%jscript.jsp,%addbasket_popup.jsp,/components/messages/refresher-ac.jsp,%/iframe_blank,/components/user/fileforward.jsp,%spamprotectiondisable.jsp,%/htmlarea/,%json,/components/qa/admin_answer.jsp,%popcalendar.jsp,%jscripts.jsp,%chart.jsp,%date_locale.jsp,%click.jsp,/components/cloud/calendar/potvrd_akciu_verejnost.jsp,/components/customer_reviews/potvrd_review.jsp,/components/gis/potvrd_gis.jsp,/components/gallery/photoswipe/photoswipe.jsp&quot;,
+				Constants.MOD_SECURITY, &quot;Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty&quot;);
+
+		//domena a priecinok s novinkami pre dashboard
+<span class="fc" id="L47">		Constants.setString(&quot;overviewJsonUrl&quot;, &quot;https://docs.webjetcms.sk/json/&quot;);</span>
+<span class="fc" id="L48">		Constants.setString(&quot;languages&quot;, &quot;sk,cz,en,de,pl,hu,cho,ru,esp&quot;, Constants.MOD_CONFIG, &quot;Zoznam jazykov pre webjet cms&quot;);</span>
+
+<span class="fc" id="L50">		Constants.setString(&quot;xssHtmlAllowedFieldsSystem&quot;,</span>
+				&quot;value,prop_value,message_text,text,description,user_note,title,value_string,question,message,string1,string2,string3,string4,string5,string6,reg_exp,gallery_perex,watermark,regexp_value,body,room_description,question_text,answer_text_ok,answer_text_fail,script_body,junk_reason,media_info_sk,password,salt,crop_start,crop_end,auth_username,auth_password,question,answer,hash,kategoria,definicia,poznamka1,poznamka2,zdroj1,zdroj2,priklad,tip_text,svalue1,svalue2,svalue3,svalue4,signature,authorize_hash,password_salt,navbar,external_link,group_name,url,question_text&quot;,
+				Constants.MOD_SECURITY,
+				&quot;Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields&quot;);
+
+<span class="fc" id="L55">		Constants.setString(&quot;xsrfParamNameExceptionSystem&quot;, Constants.getString(&quot;xsrfParamNameExceptionSystem&quot;)+&quot;,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd,login,auth&quot;);</span>
+
+<span class="fc" id="L57">		Constants.setString(&quot;jpaToLowerFields&quot;, &quot;description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name&quot;, Constants.MOD_CONFIG, &quot;Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani&quot;);</span>
+
+<span class="fc" id="L59">		Constants.setInt(&quot;datatablesExportMaxRows&quot;, 50000, Constants.MOD_PERFORMANCE, &quot;Datatables - maximalny pocet riadkov, ktore je mozne naraz exportovat.&quot;);</span>
+<span class="fc" id="L60">		Constants.setInt(&quot;javaMinimalVersion&quot;, 17, Constants.MOD_CONFIG, &quot;Minimalna podporovana verzia jazyka Java&quot;);</span>
+
+<span class="fc" id="L62">		Constants.setBoolean(&quot;2factorAuthEnabled&quot;, true, Constants.MOD_SECURITY, &quot;Umoznuje vypnut moznost pridania 2factor autorizacie pre administratorov. Pouziva sa v pripade SSO integracie, kedy sa prihlasovania vykonava na externom serveri.&quot;);</span>
+
+<span class="fc" id="L64">		Constants.setString(&quot;seo.serpApiKey&quot;, &quot;&quot;, Constants.MOD_STAT, &quot;API kluc k SerpAPI pre vyhladavanie pozicii klucovych slov&quot;);</span>
+<span class="fc" id="L65">		Constants.setInt(&quot;seo.serpApiGoogleMaxResult&quot;, 10, Constants.MOD_STAT, &quot;Maximalny pocet zaznamov ktore ma Google vratit pri prehladavani pozicie SEO keywords&quot;);</span>
+
+<span class="fc" id="L67">		Constants.setString(&quot;structureMirroringAutoTranslatorLogin&quot;, &quot;autotranslator&quot;, Constants.MOD_USER, &quot;Login usera, ktorý sa využíva na auto prekladanie. Slúži pri prekladaní (názvu, tela) web stránok a pri indikácií že do web stránky ešte nezasiahol normálny používateľ.&quot;);</span>
+
+<span class="fc" id="L69">		Constants.setBoolean(&quot;multigroupRedirectSlavesToMaster&quot;, false, Constants.MOD_EDITOR, &quot;Pri ulozeni stranky vo viacerych priecinkoch nastavuje sposob zobrazenia slave stranok. Pri hodnote true su presmerovane na master, pri hodnote slave su zobrazene ako samostatne stranky.&quot;);</span>
+
+<span class="fc" id="L71">		Constants.setBoolean(&quot;clusterHostnameTrimFromEnd&quot;, false, &quot;cluster&quot;, &quot;Rezim ziskania hostname pre cluster. Ak je hodnota true, tak sa hostname ziskava ako 16 znakov od konca, inak 16 znakov od zaciatku.&quot;);</span>
+
+<span class="fc" id="L73">		Constants.setBoolean(&quot;attrAlwaysCleanOnSave&quot;, false, Constants.MOD_EDITOR, &quot;Po nastaveni na true sa vzdy pri ulozeni stranky premaze zoznam atributov&quot;);</span>
+
+<span class="fc" id="L75">		Constants.setString(&quot;DocTools.removeCharsDir&quot;, &quot;[^a-zA-Z/_0-9\\-\\.=]&quot;, Constants.MOD_SECURITY, &quot;Regex pre znaky, ktore sa maju odstranit z nazvu suboru/adresara. Pouziva sa v metode DocTools.removeCharsDir(). Hodnota premennej sa reloadne za behu.&quot;);</span>
+
+<span class="fc" id="L77">		Constants.setString(&quot;FileBrowserTools.forbiddenSymbols&quot;, &quot;@,#,+,(,),{,},=&quot;, Constants.MOD_SECURITY, &quot;Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.&quot;);</span>
+
+<span class="fc" id="L79">		Constants.setBoolean(&quot;structureMirroringDisabledOnCreate&quot;, true, &quot;structuremirroring&quot;, &quot;Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat&quot;);</span>
+
+<span class="fc" id="L81">		Constants.setInt(&quot;restaurantMenu.alergensCount&quot;, 14, &quot;restaurant_menu&quot;, &quot;Maximalny pocet alergenov, tie sa ziskavaju z prekladovych klucov s prefixom components.restaurant_menu.alergen&quot;);</span>
+
+<span class="fc" id="L83">		Constants.setString(&quot;ntlmLogonAction.charsetEncoding&quot;, &quot;windows-1250&quot;, &quot;ntlm&quot;, &quot;Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.&quot;);</span>
+
+<span class="fc" id="L85">		Constants.setString(&quot;webpagesFunctionsPerms&quot;, &quot;menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting&quot;, Constants.MOD_SECURITY, &quot;Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.&quot;);</span>
+<span class="fc" id="L86">		Constants.setString(&quot;bloggerAppPermissions&quot;, &quot;menuGallery,menuInquiry,cmp_quiz,cmp_form&quot;, &quot;blog&quot;, &quot;Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER&quot;);</span>
+<span class="fc" id="L87">	}</span>
+
+	/**
+	 * Returns coma separated value as Array
+	 * @param name
+	 * @return
+	 * @deprecated use Constants.getArray(name)
+	 */
+	@Deprecated
+	public static String[] getArray(String name) {
+<span class="nc" id="L97">		return Constants.getArray(name);</span>
+	}
+
+	/**
+	 * Returns coma separated value as Array and cache it for faster access
+	 * @param name
+	 * @param cacheMinutes
+	 * @return
+	 */
+	public static String[] getArrayCached(String name, int cacheMinutes) {
+<span class="nc" id="L107">		String CACHE_KEY = name+&quot;.arrayCache-&quot;+cacheMinutes;</span>
+<span class="nc" id="L108">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L109">		String[] arr = (String[])c.getObject(CACHE_KEY);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (arr == null) {</span>
+<span class="nc" id="L111">			arr = Constants.getArray(name);</span>
+<span class="nc" id="L112">			c.setObject(CACHE_KEY, arr, cacheMinutes);</span>
+		}
+<span class="nc" id="L114">		return arr;</span>
+	}
+
+	/**
+	 * Returns config list with name starts with prefix
+	 * @param prefix
+	 * @return
+	 */
+	public static List&lt;ConfDetails&gt; getValuesStartsWith(String prefix) {
+<span class="nc" id="L123">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (String key : Constants.getAllKeys()) {</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">			if (key!=null &amp;&amp; key.startsWith(prefix)) {</span>
+<span class="nc" id="L126">				ConfDetails conf = new ConfDetails();</span>
+<span class="nc" id="L127">				conf.setName(key);</span>
+<span class="nc" id="L128">				conf.setValue(Constants.getString(key));</span>
+<span class="nc" id="L129">				filtered.add(conf);</span>
+			}
+<span class="nc" id="L131">		}</span>
+<span class="nc" id="L132">		return filtered;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

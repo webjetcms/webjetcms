@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTableColumnEditor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable.json</a> &gt; <span class="el_source">DataTableColumnEditor.java</span></div><h1>DataTableColumnEditor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable.json;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.springframework.beans.BeanWrapperImpl;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+/**
+ * Trieda pre generovanie JSONu pre DataTableEditor {@see https://datatables.net/} z anotacie {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor} nad poliami objektu.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@Setter
+public class DataTableColumnEditor {
+    private String type;
+    private String tab;
+    private String label;
+    private String message;
+    private Map&lt;String, String&gt; attr;
+    private List&lt;LabelValue&gt; options;
+
+    String format;
+    String wireFormat;
+    private Map&lt;String, String&gt; opts;
+<span class="pc" id="L42">    private boolean required = false;</span>
+<span class="pc" id="L43">    private Boolean multiple = null;</span>
+<span class="pc" id="L44">    private String separator = null;</span>
+
+    String def;
+
+<span class="fc" id="L48">    public DataTableColumnEditor() {</span>
+<span class="fc" id="L49">    }</span>
+
+<span class="nc" id="L51">    public DataTableColumnEditor(Field field) {</span>
+<span class="nc" id="L52">        setPropertiesFromField(field);</span>
+<span class="nc" id="L53">    }</span>
+
+    public void setPropertiesFromField(Field field) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (Tools.isEmpty(type)) {</span>
+<span class="fc" id="L57">            setPropertiesFromFieldType(field);</span>
+        }
+<span class="fc" id="L59">        setPropertiesFromAnnotation(field);</span>
+<span class="fc" id="L60">    }</span>
+
+    @JsonIgnore
+    public boolean isEmpty() {
+<span class="pc bpc" id="L64" title="7 of 20 branches missed.">        return Tools.isEmpty(label) &amp;&amp; Tools.isEmpty(message) &amp;&amp; Tools.isEmpty(format) &amp;&amp; Tools.isEmpty(wireFormat) &amp;&amp; Tools.isEmpty(type) &amp;&amp; Tools.isEmpty(tab) &amp;&amp; (attr == null || attr.isEmpty()) &amp;&amp; (opts == null || opts.isEmpty());</span>
+    }
+
+    /**
+     * Metoda na ziskanie typu z datoveho typu pola
+     * @param field
+     * @return hodnotu type, podla datoveho typu daneho fieldu {@link Field}
+     */
+    private void setPropertiesFromFieldType(Field field) {
+        // DATE
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (field.getType().isAssignableFrom(Date.class)</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">            || field.getType().isAssignableFrom(java.sql.Date.class)) {</span>
+<span class="fc" id="L76">                type = &quot;datetime&quot;;</span>
+<span class="fc" id="L77">                format = &quot;L HH:mm:ss&quot;;</span>
+<span class="fc" id="L78">                wireFormat = &quot;x&quot;;</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+
+    /**
+     * Metoda nastavi v JSON objekte atribut editor podla anotacie {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor} na danom poli
+     * @param field - reflection field objektu, ktore ma nastavenu anotaciu {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor}
+     */
+    private void setPropertiesFromAnnotation(Field field) {
+<span class="fc" id="L88">        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);</span>
+<span class="fc" id="L89">        sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor[] editor = annotation.editor();</span>
+
+<span class="fc bfc" id="L91" title="All 6 branches covered.">        if (field.isAnnotationPresent(NotBlank.class) || field.isAnnotationPresent(NotEmpty.class) || field.isAnnotationPresent(NotNull.class)) {</span>
+<span class="fc" id="L92">            required = true;</span>
+        }
+
+<span class="pc bpc" id="L95" title="2 of 6 branches missed.">        if (annotation == null || editor == null || editor.length == 0) {</span>
+<span class="fc" id="L96">            return;</span>
+        }
+
+<span class="fc" id="L99">        String type = editor[0].type();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (Tools.isNotEmpty(type)) {</span>
+<span class="fc" id="L101">            this.type = type;</span>
+        }
+
+<span class="fc" id="L104">        String label = editor[0].label();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (Tools.isNotEmpty(label)) {</span>
+<span class="fc" id="L106">            this.label = DataTableColumnsFactory.translate(label);</span>
+        }
+
+<span class="fc" id="L109">        String message = editor[0].message();</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (Tools.isNotEmpty(message)) {</span>
+<span class="fc" id="L111">            this.message = DataTableColumnsFactory.translate(message);</span>
+        }
+
+<span class="fc" id="L114">        String tab = editor[0].tab();</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (Tools.isNotEmpty(tab)) {</span>
+<span class="fc" id="L116">            this.tab = tab;</span>
+        }
+
+<span class="fc" id="L119">        String format = editor[0].format();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(format)) {</span>
+<span class="nc" id="L121">            this.format = format;</span>
+        }
+
+<span class="fc" id="L124">        String wireFormat = editor[0].wireFormat();</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(wireFormat)) {</span>
+<span class="nc" id="L126">            this.wireFormat = wireFormat;</span>
+        }
+
+<span class="fc" id="L129">        DataTableColumnEditorAttr[] options = editor[0].options();</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (options.length &gt; 0) {</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            if (this.options == null) {</span>
+<span class="fc" id="L132">                this.options = new ArrayList&lt;&gt;();</span>
+            }
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            for (DataTableColumnEditorAttr option : options) {</span>
+                //moznost zadat options ako volanie API metody
+                //@DataTableColumnEditorAttr(key = &quot;method:sk.iway.basecms.contact.ContactRestController.getCountries&quot;, value = &quot;label:value&quot;),
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                if (option.key().startsWith(&quot;method:&quot;)) {</span>
+                    try{
+<span class="fc" id="L140">                        String fqdn = option.key().substring(option.key().indexOf(&quot;:&quot;)+1);</span>
+<span class="fc" id="L141">                        String className = fqdn.substring(0, fqdn.lastIndexOf(&quot;.&quot;));</span>
+<span class="fc" id="L142">                        String methodName = fqdn.substring(fqdn.lastIndexOf(&quot;.&quot;) + 1);</span>
+
+<span class="fc" id="L144">                        Class&lt;?&gt; clazz = Class.forName(className);</span>
+<span class="fc" id="L145">                        Method method = clazz.getMethod(methodName);</span>
+<span class="fc" id="L146">                        Object returned = method.invoke(null);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">                        if (returned instanceof List) {</span>
+                            @SuppressWarnings(&quot;rawtypes&quot;)
+<span class="fc" id="L149">                            List list = (List)returned;</span>
+<span class="fc" id="L150">                            String labelProperty = null;</span>
+<span class="fc" id="L151">                            String valueProperty = null;</span>
+
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                            if (Tools.isNotEmpty(option.value())) {</span>
+<span class="fc" id="L154">                                int i = option.value().indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                                if (i&gt;0) {</span>
+<span class="fc" id="L156">                                    labelProperty = option.value().substring(0, i);</span>
+<span class="fc" id="L157">                                    valueProperty = option.value().substring(i+1);</span>
+                                }
+                            }
+
+<span class="fc" id="L161">                            addOptions(list, labelProperty, valueProperty);</span>
+                        }
+
+<span class="fc" id="L164">                        continue;</span>
+<span class="nc" id="L165">                    } catch (Exception ex) {</span>
+<span class="nc" id="L166">                        Logger.error(DataTableColumnEditor.class, ex);</span>
+                    }
+                }
+
+                //moznost zadania optionov pomocou odkazu na ciselnik
+                //@DataTableColumnEditorAttr(key = &quot;enumeration:Okresne Mestá&quot;, value = &quot;string1:string2&quot;)
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                if (option.key().startsWith(&quot;enumeration:&quot;)) {</span>
+                    try{
+<span class="nc" id="L174">                        String name = option.key().substring(option.key().indexOf(&quot;:&quot;)+1);</span>
+<span class="nc" id="L175">                        int id = Tools.getIntValue(name, -1);</span>
+                        List&lt;EnumerationDataBean&gt; list;
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                        if (id &gt; 0) list = EnumerationDataDB.getEnumerationDataByType(id);</span>
+<span class="nc" id="L178">                        else list = EnumerationDataDB.getEnumerationDataByType(name);</span>
+
+<span class="nc" id="L180">                        String labelProperty = null;</span>
+<span class="nc" id="L181">                        String valueProperty = null;</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                        if (Tools.isNotEmpty(option.value())) {</span>
+<span class="nc" id="L184">                            int i = option.value().indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                            if (i&gt;0) {</span>
+<span class="nc" id="L186">                                labelProperty = option.value().substring(0, i);</span>
+<span class="nc" id="L187">                                valueProperty = option.value().substring(i+1);</span>
+                            }
+                        }
+
+<span class="nc" id="L191">                        addOptions(list, labelProperty, valueProperty);</span>
+
+<span class="nc" id="L193">                        continue;</span>
+<span class="nc" id="L194">                    } catch (Exception ex) {</span>
+<span class="nc" id="L195">                        Logger.error(DataTableColumnEditor.class, ex);</span>
+                    }
+                }
+
+<span class="fc" id="L199">                this.options.add(new LabelValue(DataTableColumnsFactory.translate(option.key()), DataTableColumnsFactory.translate(option.value()) ));</span>
+            }
+        }
+
+<span class="fc" id="L203">        DataTableColumnEditorAttr[] attrs = editor[0].attr();</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        if (attrs.length &gt; 0) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">            if (this.attr == null) {</span>
+<span class="fc" id="L206">                this.attr = new HashMap&lt;&gt;();</span>
+            }
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">            for (DataTableColumnEditorAttr attr : attrs) {</span>
+<span class="fc" id="L210">                String value = attr.value();</span>
+<span class="fc" id="L211">                String key = attr.key();</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">                if (&quot;data-dt-field-dt-columns&quot;.equals(key)==false) {</span>
+<span class="fc" id="L213">                    value = DataTableColumnsFactory.translate(value);</span>
+                }
+
+<span class="fc" id="L216">                this.attr.put(key, value);</span>
+            }
+        }
+
+<span class="fc" id="L220">        DataTableColumnEditorAttr[] opts = editor[0].opts();</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">        if (opts.length &gt; 0) {</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">            if (this.opts == null) {</span>
+<span class="nc" id="L223">                this.opts = new HashMap&lt;&gt;();</span>
+            }
+
+<span class="nc bnc" id="L226" title="All 2 branches missed.">            for (DataTableColumnEditorAttr opt : opts) {</span>
+<span class="nc" id="L227">                this.opts.put(opt.key(), DataTableColumnsFactory.translate(opt.value()));</span>
+            }
+        }
+
+<span class="fc" id="L231">        String separator = editor[0].separator();</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(separator)) {</span>
+<span class="nc" id="L233">            this.separator = separator;</span>
+        }
+<span class="fc" id="L235">    }</span>
+
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    private void addOptions(List genericOptions, String labelProperty, String valueProperty) {
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        for (Object o : genericOptions) {</span>
+<span class="fc" id="L240">            BeanWrapperImpl bw = new BeanWrapperImpl(o);</span>
+
+            String label;
+            String value;
+
+<span class="pc bpc" id="L245" title="3 of 4 branches missed.">            if(Tools.isEmpty(labelProperty) &amp;&amp; Tools.isEmpty(valueProperty)) {</span>
+<span class="nc" id="L246">                label = (String)o;</span>
+<span class="nc" id="L247">                value = (String)o;</span>
+            } else {
+<span class="fc" id="L249">                label = String.valueOf(bw.getPropertyValue(labelProperty));</span>
+<span class="fc" id="L250">                value = String.valueOf(bw.getPropertyValue(valueProperty));</span>
+            }
+
+<span class="fc" id="L253">            this.options.add(new LabelValue(label, value));</span>
+<span class="fc" id="L254">        }</span>
+<span class="fc" id="L255">    }</span>
+
+    public void addAttr(String key, String value) {
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (attr == null) {</span>
+<span class="fc" id="L259">            attr = new HashMap&lt;&gt;();</span>
+        }
+<span class="fc" id="L261">        attr.put(key, value);</span>
+<span class="fc" id="L262">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -61,6 +61,7 @@
     - [Reporty cez Allure](/developer/testing/allure.md)
     - [Pokrytie kódom](/developer/testing/codecoverage.md)
     - [Paralelné spustenie testov](/developer/testing/parallel.md)
+- [Preklad dokumnentácie](/developer/documentation-translate/README.md)
 - Ukážkový kód
   - [PugJS aplikácia](/developer/frameworks/example.md)
 - Backend

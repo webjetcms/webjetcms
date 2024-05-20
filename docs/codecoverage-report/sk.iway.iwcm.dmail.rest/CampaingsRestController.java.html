@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CampaingsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.rest</a> &gt; <span class="el_source">CampaingsRestController.java</span></div><h1>CampaingsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.rest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.dmail.EmailDB;
+import sk.iway.iwcm.dmail.Sender;
+import sk.iway.iwcm.dmail.jpa.CampaingsEditorFields;
+import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
+import sk.iway.iwcm.dmail.jpa.CampaingsRepository;
+import sk.iway.iwcm.dmail.jpa.EmailsEntity;
+import sk.iway.iwcm.dmail.jpa.EmailsRepository;
+import sk.iway.iwcm.dmail.jpa.StatClicksRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/dmail/campaings&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuEmail')&quot;)
+@Datatable
+public class CampaingsRestController extends DatatableRestControllerV2&lt;CampaingsEntity, Long&gt; {
+
+    private final CampaingsRepository campaingsRepository;
+    private final EmailsRepository emailsRepository;
+    private final UserDetailsRepository userDetailsRepository;
+    private final StatClicksRepository statClicksRepository;
+
+    @Autowired
+    public CampaingsRestController(
+        CampaingsRepository campaingsRepository,
+        EmailsRepository emailsRepository,
+        UserDetailsRepository userDetailsRepository,
+        StatClicksRepository statClicksRepository) {
+
+<span class="fc" id="L62">            super(campaingsRepository);</span>
+<span class="fc" id="L63">            this.campaingsRepository = campaingsRepository;</span>
+<span class="fc" id="L64">            this.emailsRepository = emailsRepository;</span>
+<span class="fc" id="L65">            this.userDetailsRepository = userDetailsRepository;</span>
+<span class="fc" id="L66">            this.statClicksRepository = statClicksRepository;</span>
+<span class="fc" id="L67">    }</span>
+
+    @Override
+    public Page&lt;CampaingsEntity&gt; getAllItems(Pageable pageable) {
+
+        DatatablePageImpl&lt;CampaingsEntity&gt; page;
+
+<span class="fc" id="L74">        page = new DatatablePageImpl&lt;&gt;(campaingsRepository.findAll(pageable));</span>
+
+<span class="fc" id="L76">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+
+        //Add both perms and emails (The receiver field represents a list of groups that will receive an email)
+<span class="fc" id="L79">        page.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L80">        page.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+
+<span class="fc" id="L82">        return page;</span>
+    }
+
+    @Override
+    public CampaingsEntity getOneItem(long id) {
+
+        CampaingsEntity entity;
+<span class="fc" id="L89">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if(id == -1) {</span>
+<span class="fc" id="L92">            entity = new CampaingsEntity();</span>
+<span class="fc" id="L93">            entity.setSenderName(user.getFullName());</span>
+<span class="fc" id="L94">            entity.setSenderEmail(user.getEmail());</span>
+<span class="fc" id="L95">            entity.setId(id);</span>
+<span class="fc" id="L96">            entity.setCountOfSentMails(0);</span>
+
+            //Delete previous temporaly saved emails
+<span class="fc" id="L99">            emailsRepository.deleteByCampainId((long)-user.getUserId());</span>
+        } else {
+<span class="fc" id="L101">            entity = campaingsRepository.getById(id);</span>
+        }
+
+<span class="fc" id="L104">        processFromEntity(entity, ProcessItemAction.GETALL);</span>
+
+<span class="fc" id="L106">        return entity;</span>
+    }
+
+    @Override
+	public void beforeSave(CampaingsEntity entity) {
+<span class="fc" id="L111">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+
+<span class="fc" id="L113">        int[] selectedGroups = Tools.getTokensInt(UserDetailsService.getUserGroupIds(entity.getEditorFields().getPermisions(), entity.getEditorFields().getEmails()), &quot;,&quot;);</span>
+<span class="fc" id="L114">        int[] originalGroups = Tools.getTokensInt(entity.getUserGroupsIds(), &quot;,&quot;);</span>
+
+<span class="fc" id="L116">        entity = processToEntity(entity, ProcessItemAction.CREATE);</span>
+
+<span class="pc bpc" id="L118" title="1 of 4 branches missed.">        if(entity.getId()==null || entity.getId().longValue() &lt;1) {</span>
+<span class="fc" id="L119">            entity.setCreateDate(new Date());</span>
+<span class="fc" id="L120">            entity.setCreatedByUserId(user.getUserId());</span>
+
+<span class="fc" id="L122">            addEmails(Arrays.stream(selectedGroups).boxed().collect(Collectors.toList()), entity);</span>
+        } else {
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            if(!Arrays.equals(selectedGroups, originalGroups)) {</span>
+<span class="fc" id="L125">                handleEmails(selectedGroups, originalGroups, entity);</span>
+            }
+        }
+<span class="fc" id="L128">	}</span>
+
+    @Override
+    public void afterSave(CampaingsEntity entity, CampaingsEntity saved) {
+<span class="fc" id="L132">        Long oldCampaignId = entity.getId();</span>
+<span class="fc" id="L133">        int userId = getUser().getUserId();</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (oldCampaignId == null) oldCampaignId = Long.valueOf(-userId);</span>
+
+        //update vykoname vzdy, co ked sa zmenil predmet, alebo odosielatel
+<span class="fc" id="L137">        emailsRepository.updateCampaingEmails(Integer.valueOf(userId), saved.getUrl(), saved.getSubject(), saved.getSenderName(), saved.getSenderEmail(), saved.getReplyTo(), saved.getCcEmail(), saved.getBccEmail(), saved.getSendAt(), saved.getAttachments(), saved.getId(), oldCampaignId);</span>
+
+        //Set count of recipients
+<span class="fc" id="L140">        saved.setCountOfRecipients(emailsRepository.getNumberOfCampaingEmails(saved.getId()));</span>
+<span class="fc" id="L141">        saved.setCountOfSentMails(emailsRepository.getNumberOfSentEmails(saved.getId()));</span>
+<span class="fc" id="L142">        campaingsRepository.save(saved);</span>
+
+        //resetni sender
+<span class="fc" id="L145">        Sender.resetSenderWait();</span>
+<span class="fc" id="L146">    }</span>
+
+    //Add and/or remove emails which belongs to campain by ceratin user group
+    private void handleEmails(int[] selectedGroups, int[] originalGroups, CampaingsEntity entity) {
+        /* We need compare saved groups ids and now selected group ids
+            so we can add/delete emails mapped on current domain, where reciver belongs to one of that groups*/
+<span class="fc" id="L152">        List&lt;Integer&gt; groupsRemoved = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L153">        List&lt;Integer&gt; groupsAdded = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L154">        List&lt;Integer&gt; selectedGroupsList = Arrays.stream(selectedGroups).boxed().collect(Collectors.toList());</span>
+
+        //Fn handleEmails is called only if selectedGroups != originalGroups
+<span class="pc bpc" id="L157" title="1 of 4 branches missed.">        if(selectedGroups == null || selectedGroups.length == 0) {</span>
+<span class="fc" id="L158">            groupsRemoved = Arrays.stream(originalGroups).boxed().collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L160" title="1 of 4 branches missed.">        } else if(originalGroups == null || originalGroups.length == 0) {</span>
+<span class="fc" id="L161">            groupsAdded = Arrays.stream(selectedGroups).boxed().collect(Collectors.toList());</span>
+        } else {
+            //Find of groups witch ids were removed from selected
+<span class="fc bfc" id="L164" title="All 2 branches covered.">            for(int originalId : originalGroups) {</span>
+<span class="fc" id="L165">                boolean find = false;</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                for(int selectedId : selectedGroups) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                    if(originalId == selectedId) {</span>
+<span class="fc" id="L168">                        find = true;</span>
+<span class="fc" id="L169">                        break;</span>
+                    }
+                }
+<span class="fc bfc" id="L172" title="All 2 branches covered.">                if(!find) groupsRemoved.add(originalId);</span>
+            }
+
+            //Find of groups witch ids were added to selected
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            for(int selectedId : selectedGroups) {</span>
+<span class="fc" id="L177">                boolean find = false;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                for(int originalId : originalGroups) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                    if(selectedId == originalId) {</span>
+<span class="fc" id="L180">                        find = true;</span>
+<span class="fc" id="L181">                        break;</span>
+                    }
+                }
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                if(!find) groupsAdded.add(selectedId);</span>
+            }
+        }
+
+        //toto je zoznam userId ktore musia zostat zachovane
+        //jeden user moze byt vo viacerych user skupinach, ked odoberieme, musi zostat ak je v inej
+<span class="fc" id="L190">        Set&lt;Integer&gt; mustContainUserId = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L191">        List&lt;Integer&gt; userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, selectedGroupsList);</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        for (Integer uid : userIds) {</span>
+<span class="fc" id="L193">            mustContainUserId.add(uid);</span>
+<span class="fc" id="L194">        }</span>
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, entity.getId());</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        if(groupsAdded.isEmpty()==false) addEmails(groupsAdded, entity);</span>
+<span class="fc" id="L198">    }</span>
+
+    /**
+     * Odstrani pouzivatelov v skupine groupsRemoved, zachova ale pouzivatelov v mustContainUserId
+     * (user moze byt vo viacerych skupinach, takze moze byt v tej co musi zostat zachovane)
+     * @param groupsRemoved
+     * @param mustContainUserId
+     * @param campainId
+     */
+    private void removeEmails(List&lt;Integer&gt; groupsRemoved, Set&lt;Integer&gt; mustContainUserId, Long campainId) {
+
+<span class="fc" id="L209">        List&lt;Integer&gt; userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsRemoved);</span>
+<span class="fc" id="L210">        List&lt;Integer&gt; filteredUserIds = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        for (Integer uid : userIds) {</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            if (mustContainUserId.contains(uid)) continue;</span>
+<span class="fc" id="L214">            filteredUserIds.add(uid);</span>
+<span class="fc" id="L215">        }</span>
+
+        //Delete all emails under removed user group
+<span class="fc" id="L218">        emailsRepository.deleteCampainEmail(campainId, filteredUserIds);</span>
+<span class="fc" id="L219">    }</span>
+
+    //Add emails which belongs to certain user group and campain
+    private void addEmails(List&lt;Integer&gt; groupsAdded, CampaingsEntity entity) {
+<span class="fc" id="L223">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+
+        //Now get all emails under campain actualy in DB - we need it to prevent duplicity
+<span class="fc" id="L226">        Map&lt;String, Integer&gt; emailsTable = new Hashtable&lt;&gt;();</span>
+<span class="pc bpc" id="L227" title="1 of 4 branches missed.">        if (entity.getId() != null &amp;&amp; entity.getId().longValue()&gt;0) {</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            for (String email : emailsRepository.getAllCampainEmails(getCampaignId(entity, getUser()))) {</span>
+<span class="fc" id="L229">                emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);</span>
+<span class="fc" id="L230">            }</span>
+        }
+
+<span class="fc" id="L233">        List&lt;String&gt; recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);</span>
+
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        for(String recipientEmail : recpientEmails) {</span>
+            //Check duplicity (if this emial alreadry belongs to campain)
+<span class="fc bfc" id="L237" title="All 2 branches covered.">            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;</span>
+<span class="fc" id="L238">            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);</span>
+
+<span class="fc" id="L240">            EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);</span>
+<span class="fc" id="L241">            boolean isValid = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            if (isValid) {</span>
+<span class="fc" id="L243">                emailToAdd.setSubject(entity.getSubject());</span>
+<span class="fc" id="L244">                emailToAdd.setUrl(entity.getUrl());</span>
+
+                //Save record in DB
+<span class="fc" id="L247">                emailsRepository.save(emailToAdd);</span>
+            } else {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                if (getLastImportedRow()!=null) addNotify(new NotifyBean(getProp().getText(&quot;datatables.error.title.js&quot;), getProp().getText(&quot;datatable.error.importRow&quot;, String.valueOf(getLastImportedRow().intValue()+1), &quot;`&quot;+recipientEmail)+&quot;` &quot;+getProp().getText(&quot;components.dmail.emailIsNotValid&quot;), NotifyType.ERROR));</span>
+<span class="nc" id="L250">                else addNotify(new NotifyBean(getProp().getText(&quot;datatables.error.title.js&quot;), getProp().getText(&quot;components.dmail.unsubscribe.email.error&quot;, &quot;`&quot;+recipientEmail+&quot;`&quot;), NotifyType.ERROR));</span>
+            }
+<span class="fc" id="L252">        }</span>
+<span class="fc" id="L253">    }</span>
+
+    @Override
+    public CampaingsEntity processFromEntity(CampaingsEntity entity, ProcessItemAction action) {
+
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        if (entity == null) entity = new CampaingsEntity();</span>
+
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) {</span>
+<span class="fc" id="L261">            CampaingsEditorFields cef = new CampaingsEditorFields();</span>
+<span class="fc" id="L262">            cef.fromCampaingEntity(entity, getProp(), getRequest());</span>
+<span class="fc" id="L263">            entity.setEditorFields(cef);</span>
+        }
+
+<span class="fc" id="L266">        return entity;</span>
+    }
+
+    @Override
+    public CampaingsEntity processToEntity(CampaingsEntity entity, ProcessItemAction action) {
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if(entity != null) {</span>
+            //
+<span class="fc" id="L273">            CampaingsEditorFields cef = new CampaingsEditorFields();</span>
+<span class="fc" id="L274">            cef.toCampaingEntity(entity, getRequest());</span>
+        }
+<span class="fc" id="L276">        return entity;</span>
+    }
+
+    @Override
+    public boolean processAction(CampaingsEntity entity, String action) {
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (&quot;start&quot;.equals(action)) { //Send emails</span>
+<span class="nc" id="L283">            EmailDB.activateDisableEmails(false, entity.getId().intValue());</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        } else if (&quot;stop&quot;.equals(action)) { //Stop emails</span>
+<span class="nc" id="L285">            EmailDB.activateDisableEmails(true, entity.getId().intValue());</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        } else if (&quot;resend&quot;.equals(action)) { //Resend emails</span>
+<span class="nc" id="L287">            EmailDB.resendEmail(entity.getId().intValue());</span>
+        }
+
+<span class="nc" id="L290">        Sender.resetSenderWait();</span>
+
+<span class="nc" id="L292">        return true;</span>
+    }
+
+    @Override
+    public boolean beforeDelete(CampaingsEntity entity) {
+
+<span class="fc" id="L298">        Integer totalEmails = emailsRepository.getNumberOfCampaingEmails(entity.getId());</span>
+<span class="pc bpc" id="L299" title="1 of 4 branches missed.">        if (totalEmails != null &amp;&amp; totalEmails.intValue()&gt;0) {</span>
+            //delete all campiang dependencies
+<span class="fc" id="L301">            emailsRepository.deleteByCampainId(entity.getId());</span>
+<span class="fc" id="L302">            statClicksRepository.deleteByCampainId(entity.getId());</span>
+        }
+
+<span class="fc" id="L305">        return true;</span>
+    }
+
+    /**
+     * Returns ID of campaign. If campaign is not saved yet, returns -ID of current user used as temporary ID for nested tables
+     * @param entity
+     * @param user
+     * @return
+     */
+    public static Long getCampaignId(CampaingsEntity entity, UserDetails user) {
+<span class="pc bpc" id="L315" title="2 of 6 branches missed.">        if (entity != null &amp;&amp; entity.getId() != null &amp;&amp; entity.getId().longValue()&gt;0) return entity.getId();</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        if (user == null) return 0L;</span>
+<span class="fc" id="L317">        return Long.valueOf(-user.getUserId());</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

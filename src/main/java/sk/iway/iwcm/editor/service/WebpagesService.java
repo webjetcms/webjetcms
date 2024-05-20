@@ -3,6 +3,7 @@ package sk.iway.iwcm.editor.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,14 +20,25 @@ import javax.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.components.abtesting.ABTesting;
+import sk.iway.iwcm.components.blog.rest.BlogService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
@@ -58,7 +70,6 @@ import sk.iway.iwcm.users.UsersDB;
  * Priprava zoznamu web stranok a pridruzenych ciselnikov pre DT.
  * Servis je potrebne konstruovat so zadanym group_id, podla neho sa nasledne vracaju data.
  */
-@Service
 public class WebpagesService {
 
     private int groupId;
@@ -837,20 +848,49 @@ public class WebpagesService {
         Prop prop = Prop.getInstance(options.getRequest());
         WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
 
-		if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
+		if("true".equals(options.getRequest().getParameter("isABtestingVersion")) ) {
+			//Check perms with combination with ABTesting version
+			if(options.getCurrentUser().isEnabledItem("cmp_abtesting")) {
+				Set<DocDetails> mainWebPages = new HashSet<>();
+				List<DocDetails> allBasicDoc = DocDB.getInstance().getBasicDocDetailsAll();
+				if(allBasicDoc != null) {
+					List<String> allDomains = GroupsDB.getInstance().getAllDomainsList();
+					DocDB docDB = DocDB.getInstance();
+					for(DocDetails dd : allBasicDoc)
+						if(!ABTesting.getAllVariantsDocIds(dd, allDomains, docDB).isEmpty()) mainWebPages.add(dd);
+				}
+
+				//Editor fields need to be nullified, or status icons will be stacking
+				for(DocDetails dd : mainWebPages) dd.setEditorFields(null);
+
+				page = new DatatablePageImpl<>(new ArrayList<>(mainWebPages));
+			} else {
+				//User has no right to request data in ABTesting mode
+				page = new DatatablePageImpl<>(new ArrayList<>());
+			}
+		} else if("true".equals(options.getRequest().getParameter("isBlogVersion"))) {
+			//BLOG VERSION
+			List<Integer> allGroupIds = getBloggerDataList(options.getCurrentUser(), Tools.getIntValue(options.getRequest().getParameter("groupId"), -1));
+			if(allGroupIds == null || allGroupIds.isEmpty()) page = new DatatablePageImpl<>(new ArrayList<>());
+			else page = options.getDocDetailsRepository().findAllByGroupIdIn(allGroupIds.toArray(new Integer[0]), options.getPageable());
+		} else if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
 			Specification<DocDetails> spec = WebpagesService.getRecentPagesConditions(options.getUserId());
 			//Combine spec (recent pages) with columnsSpecification (serch throu columns)
 			if(options.getColumnsSpecification() != null) {
 				spec = spec.and(options.getColumnsSpecification());
 			}
 			page = ((JpaSpecificationExecutor<DocDetails>)options.getDocDetailsRepository()).findAll(spec, options.getPageable());
-		}
-		else if(options.isUserGroupIdRequested()) {
+		} else if(options.isUserGroupIdRequested()) {
             //chceme vratit stranky podla zadaneho ID skupiny pouzivatelov, pouziva sa na zoznam stranok s danou skupinou
             page = options.getDocDetailsRepository().findAllByPasswordProtectedLike(""+options.getUserGroupId(), options.getUserGroupId()+",%", "%,"+options.getUserGroupId(), "%," + options.getUserGroupId() + ",%", options.getPageable());
         } else if(options.isTempIdRequested()) {
 			//We want to return web pages that use specific template (by tempId)
 			page = options.getDocDetailsRepository().findAllByTempId(options.getTempId(), options.getPageable());
+		} else if("true".equals(options.getRequest().getParameter("auditVersion"))) {
+			/** We want all web pages sorted by date of change **/
+
+			if(!options.getCurrentUser().isEnabledItem("cmp_adminlog")) throw new IllegalArgumentException("Access is denied");
+			page = options.getDocDetailsRepository().findAllByOrderByDateCreatedDesc(options.getPageable());
 		} else {
 			if (GroupsDB.isGroupEditable(options.getCurrentUser(), options.getGroupId())) {
 				Map<String, String> params = new HashMap<>();
@@ -865,7 +905,7 @@ public class WebpagesService {
 
 					final List<Predicate> predicates = new ArrayList<>();
 
-					addSpecSearch(params, predicates, root, builder);
+					addSpecSearch(params, predicates, root, builder, options.getCurrentUser());
 
 					return builder.and(predicates.toArray(new Predicate[predicates.size()]));
 				};
@@ -912,6 +952,34 @@ public class WebpagesService {
         return pageImpl;
     }
 
+	private static List<Integer> getBloggerDataList(Identity currentUser, int selectedGroupId) {
+		if(BlogService.isUserBloggerAdmin(currentUser)) {
+			//It's admin with perms cmp_blog && cmp_blog_admin -> return all bloggers web pages
+			List<Integer> allGroupIds = BlogService.getAllBloggersGroupIds();
+
+			if(selectedGroupId == -1) //Docs from all bloggers groups
+				return allGroupIds;
+			else if(allGroupIds.contains(selectedGroupId)) //Docs from specific blogger group
+				return Arrays.asList(selectedGroupId);
+		} else if(BlogService.isUserBlogger( currentUser )) {
+			//It's blogger -> return only his web pages
+			int rootGroupId = Tools.getTokensInt(currentUser.getEditableGroups(), ",")[0];
+
+			//Get groups tree from user editable root group
+			List<GroupDetails> groupsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);
+			List<Integer> groupIds = new ArrayList<>();
+			for(GroupDetails group : groupsTree) groupIds.add(group.getGroupId());
+
+			if(selectedGroupId == -1)
+				return groupIds;
+			else if(groupIds.contains(selectedGroupId))
+				return Arrays.asList(selectedGroupId);
+		}
+
+		//User has no right or specific groupId is not from his groups tree (or not from any blogger group tree)
+		return null;
+	}
+
 	/**
 	 * Vrati option pre DT so zoznamom stavovych ikon
 	 * riesi kontrolu prav na app abtesting (ikony sa zobrazia len ak ma pouzivatel pravo)
@@ -922,17 +990,17 @@ public class WebpagesService {
 	private static List<LabelValue> getStatusIconOptions(GetAllItemsDocOptions options, Prop prop) {
 		List<LabelValue> icons = new ArrayList<>();
 
-		icons.add(new LabelValue("<i class=\"fas fa-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
-		icons.add(new LabelValue("<i class=\"fas fa-map-marker-alt\"></i> "+prop.getText("webpages.icons.showInMenu"), "showInMenu:true"));
-		icons.add(new LabelValue("<i class=\"far fa-map-marker-alt-slash\"></i> "+prop.getText("webpages.icons.notShowInMenu"), "showInMenu:false"));
-		icons.add(new LabelValue("<i class=\"fas fa-lock\"></i> "+prop.getText("webpages.icons.onlyForLogged"), "passwordProtected:notEmpty"));
+		icons.add(new LabelValue("<i class=\"ti ti-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
+		icons.add(new LabelValue("<i class=\"ti ti-map-pin\"></i> "+prop.getText("webpages.icons.showInMenu"), "showInMenu:true"));
+		icons.add(new LabelValue("<i class=\"ti ti-map-pin-off\"></i> "+prop.getText("webpages.icons.notShowInMenu"), "showInMenu:false"));
+		icons.add(new LabelValue("<i class=\"ti ti-lock\"></i> "+prop.getText("webpages.icons.onlyForLogged"), "passwordProtected:notEmpty"));
 		icons.add(new LabelValue("<span style=\"color: #FF4B58\">"+prop.getText("webpages.icons.disabled")+"</span>", "available:false"));
-		icons.add(new LabelValue("<i class=\"fas fa-external-link-alt\"></i> "+prop.getText("webpages.icons.externalLink"), "externalLink:notEmpty"));
-		icons.add(new LabelValue("<i class=\"fas fa-eye-slash\"></i> "+prop.getText("webpages.icons.notSearchable"), "searchable:false"));
+		icons.add(new LabelValue("<i class=\"ti ti-external-link\"></i> "+prop.getText("webpages.icons.externalLink"), "externalLink:notEmpty"));
+		icons.add(new LabelValue("<i class=\"ti ti-eye-off\"></i> "+prop.getText("webpages.icons.notSearchable"), "searchable:false"));
 
 		if (options.getCurrentUser().isEnabledItem("cmp_abtesting")) {
-			icons.add(new LabelValue("<i class=\"fas fa-restroom\"></i> "+prop.getText("webpages.icons.avariant"), "virtualPath:!%"+Constants.getString("ABTestingName")+"%"));
-			icons.add(new LabelValue("<i class=\"fas fa-restroom\"></i> "+prop.getText("webpages.icons.bvariant"), "virtualPath:%"+Constants.getString("ABTestingName")+"%"));
+			icons.add(new LabelValue("<i class=\"ti ti-a-b\"></i> "+prop.getText("webpages.icons.avariant"), "virtualPath:!%"+Constants.getString("ABTestingName")+"%"));
+			icons.add(new LabelValue("<i class=\"ti ti-a-b\"></i> "+prop.getText("webpages.icons.bvariant"), "virtualPath:%"+Constants.getString("ABTestingName")+"%"));
 		}
 
 		return icons;
@@ -951,7 +1019,10 @@ public class WebpagesService {
 	public static DocDetails getBasicDocFromUrl(String url) {
 		DocDetails doc = null;
 		try {
-			if (Tools.isNotEmpty(url) && url.startsWith("http")) {
+			if (Tools.isNotEmpty(url)) {
+				if (url.startsWith("http")==false) {
+					url = "http://"+CloudToolsForCore.getDomainName()+url;
+				}
 				DocDB docDB = DocDB.getInstance();
 				int to = url.indexOf("/", 8);
 				if (to==-1) to = url.indexOf(":", 8);
@@ -964,6 +1035,7 @@ public class WebpagesService {
 				to = url.indexOf("/", 8);
 				String path = "/";
 				if (to>0) path = url.substring(to);
+				path = Tools.replace(path, "//", "/");
 
 				int docId = -1;
 				if (path.startsWith("/showdoc.do")) {
@@ -1058,7 +1130,7 @@ public class WebpagesService {
 	/**
 	 * Add special conditions to search query based on request parameters
 	 */
-	public static void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
+	public static void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder, Identity user) {
 
         SpecSearch<DocDetails> specSearch = new SpecSearch<>();
         GroupsDB groupsDB = GroupsDB.getInstance();
@@ -1091,46 +1163,51 @@ public class WebpagesService {
 			if ("true".equals(params.get("recursive"))) groupIdListParam+="*";
 		}
 
-		String[] groupIdListArray = Tools.getTokens(groupIdListParam, ",", true);
-		int groupId;
-        if (groupIdListArray.length>0) {
-            List<Integer> groupIds = new ArrayList<>();
-            for (String id : groupIdListArray) {
-                if (id.endsWith("*") && id.length()>1) {
+		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get("isBlogVersion"), false) )) {
+			List<Integer> bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get("groupId"), -1));
+			if(bloggersGroupIds != null)
+				predicates.add(root.get("groupId").in(bloggersGroupIds));
+		} else {
+			String[] groupIdListArray = Tools.getTokens(groupIdListParam, ",", true);
+			int groupId;
+			if (groupIdListArray.length>0) {
+				List<Integer> groupIds = new ArrayList<>();
+				for (String id : groupIdListArray) {
+					if (id.endsWith("*") && id.length()>1) {
 
-                    groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);
-					GroupDetails baseGroup = groupsDB.getGroup(groupId);
-					//to filter FullTextIndex of files
-					final boolean baseGroupIsFiles = baseGroup.getFullPath().contains("/files");
-                    List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
+						groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);
+						GroupDetails baseGroup = groupsDB.getGroup(groupId);
+						//to filter FullTextIndex of files
+						final boolean baseGroupIsFiles = baseGroup.getFullPath().contains("/files");
+						List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
 
-                    groupIds.addAll(subGroups.stream()
-						.filter(g -> baseGroupIsFiles || !g.getFullPath().contains("/files"))
-						.map(g -> g.getGroupId())
-						.collect(Collectors.toList()));
+						groupIds.addAll(subGroups.stream()
+							.filter(g -> baseGroupIsFiles || !g.getFullPath().contains("/files"))
+							.map(g -> g.getGroupId())
+							.collect(Collectors.toList()));
 
-                } else {
+					} else {
 
-                    groupIds.add(Tools.getIntValue(id, -1));
+						groupIds.add(Tools.getIntValue(id, -1));
 
-                }
-            }
-			if (groupIds.size()==1) {
-				predicates.add(builder.equal(root.get("groupId"), groupIds.get(0)));
-			} else if (groupIds.size()>1) {
-            	predicates.add(root.get("groupId").in(groupIds));
+					}
+				}
+				if (groupIds.size()==1) {
+					predicates.add(builder.equal(root.get("groupId"), groupIds.get(0)));
+				} else if (groupIds.size()>1) {
+					predicates.add(root.get("groupId").in(groupIds));
+				}
+
+				//filter iba hlavnych stranok adresarov
+				String searchStatusIcon = params.get("searchEditorFields.statusIcons");
+				if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
+					//ziskaj zoznam default_doc_id pre zvolene adresare
+					String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+					List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
+					//pridaj to ako predikat
+					predicates.add(root.get("id").in(defaultDocIds));
+				}
 			}
-
-			//filter iba hlavnych stranok adresarov
-			String searchStatusIcon = params.get("searchEditorFields.statusIcons");
-			if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
-				//ziskaj zoznam default_doc_id pre zvolene adresare
-				String ids = groupIds.stream().map(g -> String.valueOf(g)).collect(Collectors.joining(","));
-				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
-				//pridaj to ako predikat
-				predicates.add(root.get("id").in(defaultDocIds));
-			}
-        }
-
+		}
     }
 }

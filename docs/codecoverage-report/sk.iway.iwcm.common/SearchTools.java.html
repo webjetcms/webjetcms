@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">SearchTools.java</span></div><h1>SearchTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+
+import java.util.StringTokenizer;
+import java.util.regex.Pattern;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+<span class="nc" id="L9">public class SearchTools {</span>
+
+    // ze ak je (String)output prazdny tak sa tam da tolko charov ...
+<span class="fc" id="L12">    public final static String[] checkInputParams = {&quot;html_head&quot;, &quot;html_data&quot;, &quot;field_a&quot;, &quot;field_b&quot;, &quot;field_c&quot;, &quot;field_d&quot;, &quot;field_e&quot;, &quot;field_f&quot;, &quot;field_g&quot;, &quot;field_h&quot;, &quot;field_i&quot;, &quot;field_j&quot;, &quot;field_k&quot;, &quot;field_l&quot;, &quot;field_o&quot;, &quot;field_n&quot;, &quot;publish_start&quot;, &quot;publish_end&quot;, &quot;title&quot;, &quot;publish_start_lt&quot;,&quot;publish_start_gt&quot;, &quot;publish_end_gt&quot;, &quot;publish_end_lt&quot;,&quot;temp_id&quot;, &quot;perex_place&quot;, &quot;keyword&quot;};</span>
+
+    /**
+     * Odstrani z HTML kodu riadiace bloky typu !INCLUDE(...)!, !PARAM(...)!
+     * @param html
+     * @return
+     */
+    public static String removeCommands(String html)
+    {
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">        if (html != null)</span>
+        {
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">            if (html.contains(&quot;)!&quot;))</span>
+            {
+<span class="nc" id="L25">                Pattern replace = Pattern.compile(</span>
+                &quot;(!INCLUDE.*?\\)!)|(!REMAP_PAGE.*?\\)!)|(!PARAMETER.*?\\)!)|(!REQUEST.*?\\)!)|(!LOGGED_USER.*?\\)!)&quot;, Pattern.CASE_INSENSITIVE);
+<span class="nc" id="L27">                html = replace.matcher(html).replaceAll(&quot;&quot;);</span>
+            }
+<span class="fc" id="L29">            return html;</span>
+        }
+<span class="nc" id="L31">        return null;</span>
+    }
+
+    /**
+     * Vrati true ak posledny riadok html kodu obsahuje zadany text
+     * @param html
+     * @param text
+     * @return
+     */
+    private static boolean lastLineContains(String html, String text)
+    {
+        try
+        {
+            //najdi posledny riadok
+<span class="nc" id="L45">            int i = html.lastIndexOf('\n');</span>
+<span class="nc bnc" id="L46" title="All 4 branches missed.">            if (i&gt;0 &amp;&amp; html.substring(i).indexOf(text)!=-1) return true;</span>
+<span class="nc" id="L47">        } catch (Exception ex) {}</span>
+<span class="nc" id="L48">        return false;</span>
+    }
+
+    public static String htmlToPlain(String html)
+    {
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (html == null) return &quot;&quot;;</span>
+<span class="fc" id="L54">        html = removeCommands(html);</span>
+<span class="fc" id="L55">        html = Tools.replace(html, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L56">        int failsafe = 0;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (html != null)</span>
+        {
+            //toto nefungovalo na nekorektny HTML kod (napr. useknuty pre fastSnippet)
+            //return new Source(html).getTextExtractor().toString();
+
+<span class="fc" id="L62">            StringTokenizer sTok = new StringTokenizer(html, &quot;&lt;&gt;&quot;, true);</span>
+<span class="fc" id="L63">            String pom = &quot;&quot;;</span>
+<span class="fc" id="L64">            StringBuilder plain = new StringBuilder();</span>
+<span class="pc bpc" id="L65" title="1 of 4 branches missed.">            while (sTok.hasMoreElements() &amp;&amp; failsafe++ &lt; 10000)</span>
+            {
+                try
+                {
+<span class="fc" id="L69">                    pom = sTok.nextToken();</span>
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">                    if (pom.equals(&quot;&lt;&quot;) &amp;&amp; sTok.hasMoreElements())</span>
+                    {
+<span class="fc" id="L72">                        String tagName = sTok.nextToken().toLowerCase();</span>
+
+<span class="pc bpc" id="L74" title="3 of 8 branches missed.">                        if (tagName.startsWith(&quot;/p&quot;) || tagName.startsWith(&quot;/h&quot;) || tagName.startsWith(&quot;/ul&quot;) || tagName.startsWith(&quot;/div&quot;))</span>
+                        {
+                            //ten trim odstrani poslednu medzeru na konci riadku
+<span class="fc" id="L77">                            plain.append(&quot;\n\n&quot;);</span>
+                        }
+<span class="pc bpc" id="L79" title="5 of 10 branches missed.">                        else if (tagName.startsWith(&quot;br&quot;) || tagName.startsWith(&quot;/tr&quot;) || tagName.startsWith(&quot;/li&quot;) || tagName.startsWith(&quot;ul&quot;) || tagName.startsWith(&quot;h&quot;) )</span>
+                        {
+                            //ten trim odstrani poslednu medzeru na konci riadku
+<span class="nc" id="L82">                            plain.append(&quot;\n&quot;);</span>
+                        }
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                        else if (tagName.startsWith(&quot;li&quot;)) plain.append(&quot;* &quot;);</span>
+<span class="pc bpc" id="L85" title="5 of 6 branches missed.">                        else if (tagName.startsWith(&quot;span class='emailinput-&quot;) &amp;&amp; plain.toString().trim().endsWith(&quot;:&quot;)==false &amp;&amp; lastLineContains(plain.toString(), &quot;:&quot;)==false)</span>
+                        {
+                            //doplnime znak : za posledny text
+<span class="nc" id="L88">                            plain.append(&quot;:&quot;);</span>
+                        }
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">                        if (sTok.hasMoreTokens())</span>
+<span class="fc" id="L92">                            sTok.nextToken();</span>
+<span class="fc" id="L93">                    }</span>
+                    else
+                    {
+						/*
+						 * if (pom.equals(&amp;nbsp;))
+						 */
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">                        if (pom!=null &amp;&amp; Tools.isNotEmpty(pom.trim()))</span>
+                        {
+                            //ak to nekonci na \n pridaj medzeru
+<span class="pc bpc" id="L102" title="1 of 4 branches missed.">                            if (plain.length()&gt;0 &amp;&amp; plain.toString().endsWith(&quot;\n&quot;)==false) plain.append(&quot; &quot;);</span>
+<span class="fc" id="L103">                            plain.append(pom.trim());</span>
+                        }
+                    }
+                }
+<span class="nc" id="L107">                catch (Exception ex)</span>
+                {
+<span class="nc" id="L109">                    plain.append(&quot;-&amp;nbsp;&quot;);</span>
+<span class="nc" id="L110">                    Logger.error(SearchTools.class,&quot;CHYBA PARSOVANIA HTML: &quot; + html);</span>
+<span class="nc" id="L111">                    sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L112">                }</span>
+            }
+
+<span class="fc" id="L115">            plain = Tools.replace(plain, &quot;\n\n\n&quot;, &quot;\n\n&quot;);</span>
+<span class="fc" id="L116">            plain = Tools.replace(plain, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L117">            plain = Tools.replace(plain, &quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+<span class="fc" id="L118">            plain = Tools.replace(plain, &quot;   \n&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L119">            plain = Tools.replace(plain, &quot;  \n&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L120">            plain = Tools.replace(plain, &quot; \n&quot;, &quot;\n&quot;);</span>
+
+<span class="fc" id="L122">            String plainString = plain.toString().trim();</span>
+<span class="fc" id="L123">            plainString = plainString.trim();</span>
+<span class="fc" id="L124">            plainString = plainString.trim();</span>
+
+<span class="fc" id="L126">            return plainString;</span>
+
+        }
+<span class="nc" id="L129">        return null;</span>
+    }
+
+    public static String[] getCheckInputParams()
+    {
+<span class="nc" id="L134">        return checkInputParams;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

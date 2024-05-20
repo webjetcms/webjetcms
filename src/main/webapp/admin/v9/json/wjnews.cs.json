@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2024.18",
+            "perex": "WebJET 2024.18 obsahuje **novou sadu ikon**, Formulář snadno doplněn o **pokročilé nastavení** (příjemci, přesměrování...), do nového designu jsou předělané aplikace AB Testování, Audit (čeká na publikování, změněné stránky), Blog, Dotazníky, Kalendář událostí (schvalování). Přidává **podporu instalace typu MultiWeb** (oddělení údajů domén) v Šablonách, Hromadném e-mailu a dalších aplikacích. Nová knihovna na **detekci prohlížečů**, ve Statistika-Prohlížeče dojde k drobným rozdílům, ale údaje o prohlížeči anonymizovaně zaznamenáváme i bez Cookies souhlasu.",
+            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"
+        },
+        {
             "title": "Verze 2024.0",
             "perex": "WebJET verze 2024.0 je shodná s verzí 2023.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
@@ -42,46 +47,6 @@
             "title": "Verze 2022.0",
             "perex": "2022.0 přináší bezpečnostní aktualizaci závislostí Java a JavaScript knihoven.",
             "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
-        },
-        {
-            "title": "Verze 2021.52",
-            "perex": "2021.52 má nový design i pro staré verze aplikací, zlepšuje responzivní verzi, přidává nová pole web stránkám a zlepšuje chování URL adres stránek při jejich přesunu do jiného adresáře.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202152"
-        },
-        {
-            "title": "Verze 2021.47",
-            "perex": "2021.47 přidává upravené aplikace Tooltip, Export dat, Hromadný-email/Doménové limity a Bannerový systém do nového designu. Přidali jsme notifikace o schvalování při uložení stránky a zlepšili mobilní verzi.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202147"
-        },
-        {
-            "title": "Verze 2021.45",
-            "perex": "2021.45 přináší zobrazení seznamu web stránek i z podadresářů, zlepšuje zobrazení administrace na mobilních zařízeních a přidává aplikaci Otázky a odpovědi. Kromě toho obsahuje mnoho změn pod kapotou při práci se seznamem web stránek (přechod na serverové stránkování a vyhledávání, použití Spring DATA pro přístup k databázi).",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202145"
-        },
-        {
-            "title": "Verze 2021.40",
-            "perex": "2021.40 přináší předělanou správu uživatelů, skupin a skupin práv a předělanou aplikaci GDPR do vizuálu WebJET 2021. Kromě toho přidává množství drobných vylepšení a oprav.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202140"
-        },
-        {
-            "title": "Verze 2021.24",
-            "perex": "2021.24 přidává možnost duplikovat záznamy v data tabulkách, automatické otevření kořenových adresářů pokud doména obsahuje např. jen adresář Česky a Anglicky (max. 2 adresáře), umožňuje provádět hromadnou úpravu ve web stránkách a zlepšuje ve více místech komfort práce. ",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202124"
-        },
-        {
-            "title": "Verze 2021.20",
-            "perex": "2021.20 přidává zobrazení a konfiguraci volitelných polí pro web stránku a adresář stránek a přidává (konečně) tlačítko pro zobrazení web stránky do nástrojové lišty datatabulky.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202120"
-        },
-        {
-            "title": "Verze 2021.18",
-            "perex": "2021.18 automaticky vytvoří doménovou System složku, přidává editaci značek (perex skupin), vylepšuje chování editace buňky a opravuje chybu zobrazení číselníkových hodnot v datatabulce. Administrace používá nové písmo Asap.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202118"
-        },
-        {
-            "title": "Verze 2021.13",
-            "perex": "2021.13 zlepšuje uživatelský zážitek zvýšením rychlosti zobrazení seznamu web stránek, možnost zadat ID stránky nebo adresáře pro její zobrazení (včetně zapamatování v URL adrese prohlížeče), možnost nastavení zobrazených sloupců v datatabulce, překlady v JavaScript souborech a množství dalších vylepšení v celém WebJETu.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
         }
     ]
 }

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmDocGroupItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmDocGroupItem.java</span></div><h1>IwcmDocGroupItem.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import cn.bluejoe.elfinder.service.FsItem;
+import cn.bluejoe.elfinder.service.FsVolume;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+
+/**
+ *  IwcmFsItem.java - file objekt pre elFinder (cn.bluejoe.elfinder)
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2015
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 19.2.2015 19:11:16
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class IwcmDocGroupItem implements FsItem
+{
+	DocDetails _doc;
+	GroupDetails _group;
+
+	FsVolume _volumn;
+
+	public IwcmDocGroupItem(IwcmDocGroupFsVolume volumn, DocDetails doc)
+	{
+<span class="fc" id="L28">		super();</span>
+<span class="fc" id="L29">		_volumn = volumn;</span>
+<span class="fc" id="L30">		_doc = doc;</span>
+<span class="fc" id="L31">	}</span>
+	
+	public IwcmDocGroupItem(IwcmDocGroupFsVolume volumn, GroupDetails group)
+	{
+<span class="fc" id="L35">		super();</span>
+<span class="fc" id="L36">		_volumn = volumn;</span>
+<span class="fc" id="L37">		_group = group;</span>
+<span class="fc" id="L38">	}</span>
+
+	public FsVolume getVolume()
+	{
+<span class="fc" id="L42">		return _volumn;</span>
+	}
+
+	public void setVolumn(FsVolume volumn)
+	{
+<span class="nc" id="L47">		_volumn = volumn;</span>
+<span class="nc" id="L48">	}</span>
+
+	public DocDetails getDoc()
+	{
+<span class="fc" id="L52">		return _doc;</span>
+	}
+
+	public void setDoc(DocDetails doc)
+	{
+<span class="nc" id="L57">		this._doc = doc;</span>
+<span class="nc" id="L58">	}</span>
+
+	public GroupDetails getGroup()
+	{
+<span class="fc" id="L62">		return _group;</span>
+	}
+
+	public void setGroup(GroupDetails group)
+	{
+<span class="nc" id="L67">		this._group = group;</span>
+<span class="nc" id="L68">	}</span>
+
+	public boolean exists()
+	{
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		if (_doc != null || _group != null) return true;</span>
+<span class="nc" id="L73">		return false;</span>
+	}
+
+	public long lastModified()
+	{
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (_doc != null) return _doc.getDateCreated();</span>
+		
+<span class="fc" id="L80">		return 0;</span>
+	}
+	
+	public String getName()
+	{
+<span class="fc bfc" id="L85" title="All 2 branches covered.">		if (_doc != null) return _doc.getTitle();</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">		else if (_group != null) return _group.getGroupName();</span>
+					
+<span class="nc" id="L88">		return null;</span>
+	}
+	
+	public int getGroupId()
+	{
+<span class="fc" id="L93">		int groupId = 0;</span>
+		
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">		if (getDoc()!=null) groupId = getDoc().getGroupId();</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">		else if (getGroup()!=null) groupId = getGroup().getGroupId();</span>
+		
+<span class="fc" id="L98">		return groupId;</span>
+	}
+	
+	public String getPath()
+	{
+<span class="fc bfc" id="L103" title="All 2 branches covered.">		if (getDoc()!=null) return &quot;/doc:&quot;+getDoc().getDocId();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">		else if (getGroup()!=null) return &quot;/group:&quot;+getGroup().getGroupId();</span>
+		
+<span class="nc" id="L106">		return &quot;/unknown&quot;;</span>
+	}
+	
+	public int getSortPriority()
+	{
+<span class="fc bfc" id="L111" title="All 2 branches covered.">		if (getDoc() != null) {</span>
+<span class="fc" id="L112">			return getDoc().getSortPriority();</span>
+		}
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		else if (getGroup() != null) {</span>
+<span class="fc" id="L115">			return getGroup().getSortPriority();</span>
+		}
+		
+<span class="fc" id="L118">		return -1;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

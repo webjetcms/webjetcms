@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegUserAjaxAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">RegUserAjaxAction.java</span></div><h1>RegUserAjaxAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+
+import java.util.Enumeration;
+
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.validation.ValidationErrorHandler;
+import net.sourceforge.stripes.validation.ValidationErrors;
+import net.sourceforge.stripes.validation.ValidationMethod;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.stripes.ActionContextJavaScriptResolution;
+
+/**
+ *  RegUserAjaxAction.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 6.3.2008 22:53:01
+ *@modified     $Date: 2008/07/29 14:42:14 $
+ */
+<span class="fc" id="L23">public class RegUserAjaxAction extends RegUserAction implements ValidationErrorHandler</span>
+{
+	@Override
+	public Resolution handleValidationErrors(ValidationErrors errors) throws Exception
+	{
+<span class="fc" id="L28">		Logger.debug(RegUserAjaxAction.class, &quot;handleValidationErrors: &quot;+errors);</span>
+<span class="fc" id="L29">		return new ActionContextJavaScriptResolution(this);</span>
+	}
+	@Override
+	public Resolution bSubmit()
+	{
+<span class="fc" id="L34">		Logger.debug(RegUserAjaxAction.class, &quot;bSubmit&quot;);</span>
+
+<span class="fc" id="L36">		super.bSubmit();</span>
+
+<span class="fc" id="L38">		return new ActionContextJavaScriptResolution(this);</span>
+	}
+
+	@ValidationMethod(on=&quot;bSubmit&quot;)
+	@Override
+	public void validation(ValidationErrors errors)
+	{
+<span class="fc" id="L45">		Logger.debug(RegUserAjaxAction.class, &quot;validation&quot;);</span>
+
+<span class="fc" id="L47">		Enumeration&lt;String&gt; parameters = getRequest().getParameterNames();</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		while (parameters.hasMoreElements())</span>
+		{
+<span class="fc" id="L50">			String name = parameters.nextElement();</span>
+<span class="fc" id="L51">			Logger.debug(RegUserAjaxAction.class, &quot;params: &quot;+name+&quot;=&quot;+getRequest().getParameter(name));</span>
+<span class="fc" id="L52">		}</span>
+
+		//Prop prop = Prop.getInstance(getRequest());
+		//errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;userForm.err.email&quot;)));
+
+<span class="fc" id="L57">		super.validation(errors);</span>
+<span class="fc" id="L58">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

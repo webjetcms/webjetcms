@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PhoneValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form.validators</a> &gt; <span class="el_source">PhoneValidator.java</span></div><h1>PhoneValidator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form.validators;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.collections.CollectionUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.form.FormDB;
+import sk.iway.iwcm.i18n.Prop;
+
+public class PhoneValidator {
+
+<span class="fc" id="L21">    private static final PhoneValidator VALIDATOR = new PhoneValidator();</span>
+    private Prop prop;
+    public static PhoneValidator getInstance() {
+<span class="fc" id="L24">        return VALIDATOR;</span>
+    }
+    public Set&lt;String&gt; phoneCodes;
+    public boolean onlyMobilePhone;
+
+<span class="fc" id="L29">    protected PhoneValidator() {</span>
+<span class="fc" id="L30">        prop = Prop.getInstance();</span>
+<span class="fc" id="L31">    }</span>
+
+    public boolean isValid(List&lt;String&gt; phoneClasses, String phoneNumberIn) {
+<span class="fc" id="L34">        String phoneNumber = phoneNumberIn;</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (phoneNumber == null) {</span>
+<span class="nc" id="L36">            phoneNumber = &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L39">        phoneNumber = normalize(phoneNumber);</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if (Tools.isEmpty(phoneNumber)) {</span>
+<span class="nc" id="L41">            return false;</span>
+        }
+
+<span class="pc bpc" id="L44" title="3 of 4 branches missed.">        if (onlyMobilePhone &amp;&amp; !phoneNumber.startsWith(&quot;+4219&quot;)) {</span>
+<span class="nc" id="L45">            return false;</span>
+        }
+
+<span class="fc" id="L48">        List&lt;String&gt; regexps = getRegexps(phoneClasses);</span>
+<span class="fc" id="L49">        String stringPattern = Tools.join(regexps, &quot;|&quot;);</span>
+<span class="fc" id="L50">        Pattern pattern = Pattern.compile(stringPattern);</span>
+<span class="fc" id="L51">        Matcher matcher = pattern.matcher(phoneNumber);</span>
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (matcher.matches() == false) {</span>
+<span class="fc" id="L54">            return false;</span>
+        }
+
+<span class="fc" id="L57">        return true;</span>
+    }
+
+    protected List&lt;String&gt; getRegexps(List&lt;String&gt; phoneClasses) {
+<span class="fc" id="L61">        List&lt;String&gt; regexps = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (phoneClasses != null) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            for (String phoneClass : phoneClasses) {</span>
+<span class="fc" id="L65">                String[] row = FormDB.getRegExpByType(phoneClass.trim());</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">                if (row != null) {</span>
+<span class="fc" id="L67">                    regexps.add(row[2]);</span>
+                }
+<span class="fc" id="L69">            }</span>
+        }
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (phoneCodes != null) {</span>
+            //regexps.add(&quot;^([+]|00)[0-9]{1,3}[0-9]{10}$|^0[0-9]{9}$&quot;);
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            for (String phoneCode : phoneCodes) {</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                if (phoneCode.startsWith(&quot;+&quot;)) {</span>
+<span class="fc" id="L76">                    phoneCode = phoneCode.substring(1);</span>
+                }
+
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">                if (phoneCode.startsWith(&quot;00&quot;)) {</span>
+<span class="nc" id="L80">                    phoneCode = phoneCode.substring(2);</span>
+                }
+
+<span class="fc" id="L83">                regexps.add(&quot;^[+]&quot; + phoneCode + &quot;[+0-9]{9}$&quot;);</span>
+<span class="fc" id="L84">                regexps.add(&quot;^00&quot; + phoneCode + &quot;[+0-9]{9}$&quot;);</span>
+<span class="fc" id="L85">            }</span>
+
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">            if (phoneCodes.contains(&quot;+421&quot;)) {</span>
+<span class="fc" id="L88">                regexps.add(&quot;^0[0-9]{9}&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L92">        return regexps;</span>
+    }
+
+    public boolean hasPhoneClass(List&lt;String&gt; classes) {
+<span class="nc" id="L96">        return CollectionUtils.containsAny(classes, getPhoneClasses());</span>
+    }
+
+    public boolean hasBlacklistedPhoneClass(List&lt;String&gt; classes) {
+<span class="nc" id="L100">        return CollectionUtils.containsAny(classes, getBlacklistedPhoneClasses());</span>
+    }
+
+    public boolean isBlacklisted(String phoneNumber) {
+<span class="nc" id="L104">        String primaryKey = &quot;tatrabanka.blacklisted_phone_numbers&quot;;</span>
+<span class="nc" id="L105">        String secondaryKey = &quot;blacklisted_phone_numbers&quot;;</span>
+<span class="nc" id="L106">        String blacklist = getConstant(primaryKey, secondaryKey);</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (Tools.isNotEmpty(blacklist)) {</span>
+<span class="nc" id="L109">            String phoneNumberNormalized = normalize(phoneNumber);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            String delimiter = blacklist.contains(&quot;,&quot;) ? &quot;,&quot; : &quot;|&quot;;</span>
+<span class="nc" id="L111">            List&lt;String&gt; blacklistItems = Arrays.asList(Tools.getTokens(blacklist,delimiter));</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (blacklistItems.stream().anyMatch(phoneNumberNormalized::startsWith)) {</span>
+<span class="nc" id="L114">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L118">        return false;</span>
+    }
+
+    protected List&lt;String&gt; getBlacklistedPhoneClasses() {
+<span class="nc" id="L122">        String primaryKey = &quot;tatrabanka.blacklisted_phone_numbers.html_classes&quot;;</span>
+<span class="nc" id="L123">        String secondaryKey = &quot;blacklisted_phone_numbers.html_classes&quot;;</span>
+<span class="nc" id="L124">        String classes = getConstant(primaryKey, secondaryKey);</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (Tools.isNotEmpty(classes)) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            String delimiter = classes.contains(&quot;,&quot;) ? &quot;,&quot; : &quot;|&quot;;</span>
+<span class="nc" id="L128">            return Arrays.asList(Tools.getTokens(classes, delimiter));</span>
+        }
+
+<span class="nc" id="L131">        return Collections.emptyList();</span>
+    }
+
+    public List&lt;String&gt; getPhoneClasses() {
+<span class="fc" id="L135">        String primaryKey = &quot;tatrabanka.phone_numbers.html_classes&quot;;</span>
+<span class="fc" id="L136">        String secondaryKey = &quot;phone_numbers.html_classes&quot;;</span>
+<span class="fc" id="L137">        String classes = getConstant(primaryKey, secondaryKey);</span>
+
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(classes)) {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            String delimiter = classes.contains(&quot;,&quot;) ? &quot;,&quot; : &quot;|&quot;;</span>
+<span class="nc" id="L141">            return Arrays.asList(Tools.getTokens(classes, delimiter));</span>
+        }
+
+<span class="fc" id="L144">        return Collections.emptyList();</span>
+    }
+
+    protected String getConstant(String key, String defaultKey) {
+<span class="fc" id="L148">        return Constants.getString(key, Constants.getString(defaultKey));</span>
+    }
+
+    protected String getText(String key, String defaultKey) {
+<span class="nc bnc" id="L152" title="All 4 branches missed.">        return !prop.getText(key).equals(key) ? prop.getText(key) : !prop.getText(defaultKey).equals(defaultKey) ? prop.getText(defaultKey) : null;</span>
+    }
+
+    private String normalize(String phoneNumber) {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (phoneNumber == null) {</span>
+<span class="nc" id="L157">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L160">        String result = phoneNumber;</span>
+
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (result.startsWith(&quot;00&quot;)) {</span>
+<span class="fc" id="L163">            result = &quot;+&quot; + result.substring(2);</span>
+        }
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        else if (result.startsWith(&quot;0&quot;)) {</span>
+<span class="fc" id="L166">            result = &quot;+421&quot; + result.substring(1);</span>
+        }
+
+<span class="fc" id="L169">        return result;</span>
+    }
+
+    public String getPhoneNumberNormalized(String phoneNumber) {
+<span class="nc" id="L173">        return normalize(phoneNumber);</span>
+    }
+
+    public Set&lt;String&gt; getPhoneCodes() {
+<span class="nc" id="L177">        return phoneCodes;</span>
+    }
+
+    public void setPhoneCodes(Set&lt;String&gt; phoneCodes) {
+<span class="nc" id="L181">        this.phoneCodes = phoneCodes;</span>
+<span class="nc" id="L182">    }</span>
+
+    public void setPhoneCodes(List&lt;String&gt; phoneCodes) {
+<span class="nc" id="L185">        this.phoneCodes.clear();</span>
+<span class="nc" id="L186">        this.phoneCodes.addAll(phoneCodes);</span>
+<span class="nc" id="L187">    }</span>
+
+    public void addPhoneCode(String phoneCode) {
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        if (phoneCodes == null) {</span>
+<span class="fc" id="L191">            phoneCodes = new HashSet&lt;&gt;();</span>
+        }
+<span class="fc" id="L193">        this.phoneCodes.add(phoneCode);</span>
+<span class="fc" id="L194">    }</span>
+
+    public void addPhoneCodes(Set&lt;String&gt; phoneCodes) {
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (this.phoneCodes == null) {</span>
+<span class="nc" id="L198">            this.phoneCodes = new HashSet&lt;&gt;();</span>
+        }
+<span class="nc" id="L200">        this.phoneCodes.addAll(phoneCodes);</span>
+<span class="nc" id="L201">    }</span>
+
+    public void addPhoneCodes(List&lt;String&gt; phoneCodes) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (this.phoneCodes == null) {</span>
+<span class="nc" id="L205">            this.phoneCodes = new HashSet&lt;&gt;();</span>
+        }
+<span class="nc" id="L207">        this.phoneCodes.addAll(phoneCodes);</span>
+<span class="nc" id="L208">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

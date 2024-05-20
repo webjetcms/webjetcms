@@ -6,11 +6,11 @@ div(id="upload-wrapper" style="display: none;")
     div.upload-wrapper-header
         span(data-th-text="\#{datatables.upload.title}" data-th-remove="tag") Nahravanie suborov
         span
-            i.fa.fa-times.fa-pull-right(id="upload-wrapper-close")
+            i.ti.ti-x.float-end(id="upload-wrapper-close")
 
     div.toast-container-progress
         <span data-th-text="\#{datatables.upload.totalUploaded}">Celkovo nahrate</span>
-        <svg class="fa-progress-bar fa-pull-right" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+        <svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
             <circle cx="16" cy="16" r="15"class="fa-progress-bar__background" />
             <circle cx="16" cy="16" r="15"class="fa-progress-bar__progress" style="stroke-dashoffset: 100px;" />
         </svg>
@@ -27,13 +27,13 @@ div(id="upload-wrapper" style="display: none;")
             </div>
 
 div(id="upload-toastr-template" style="display:none;")
-    <i class="far fa-image-polaroid"></i>
+    <i class="ti ti-polaroid"></i>
     <span>{FILE_NAME}</span>
-    <i class="far fa-check-circle fa-pull-right"></i>
-    <i class="fas fa-exclamation-triangle fa-pull-right"></i>
-    <i class="fas fa-circle-notch fa-spin fa-pull-right"></i>
-    <i class="far fa-exclamation-circle fa-pull-right"></i>
-    <svg class="fa-progress-bar fa-pull-right" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
+    <i class="ti ti-circle-check float-end"></i>
+    <i class="ti ti-alert-triangle float-end"></i>
+    <i class="ti ti-loader-2 ti-spin float-end"></i>
+    <i class="ti ti-alert-circle float-end"></i>
+    <svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34">
         <circle cx="16" cy="16" r="15"class="fa-progress-bar__background" />
         <circle cx="16" cy="16" r="15"class="fa-progress-bar__progress" style="stroke-dashoffset: 100px;" />
     </svg>

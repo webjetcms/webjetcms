@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportUsersXLS.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">ImportUsersXLS.java</span></div><h1>ImportUsersXLS.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import jxl.Cell;
+import jxl.Sheet;
+import sk.iway.Password;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.xls.ExcelImportJXL;
+
+/**
+ *  ImportUsersXLS.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: bhric $
+ *@version      $Revision: 1.10 $
+ *@created      Date: 23.10.2004 18:44:14
+ *@modified     $Date: 2009/10/07 12:26:31 $
+ */
+public class ImportUsersXLS extends ExcelImportJXL
+{
+	PreparedStatement ps;
+	ResultSet rs;
+	Identity user;
+	int userId;
+
+	String firstName;
+	String lastName;
+	String email;
+	String loginName;
+	String password;
+
+	String autoEmailFormat;
+<span class="nc" id="L54">	boolean emailUnique = false;</span>
+	boolean allreadyExists;
+<span class="nc" id="L56">	boolean generatePassword = false;</span>
+<span class="nc" id="L57">	boolean generateLoginName = false;</span>
+
+<span class="nc" id="L59">	boolean authorize = false;</span>
+<span class="nc" id="L60">	boolean sendEmail = false;</span>
+
+	protected String[] groupsParams;
+<span class="nc" id="L63">	String groups = &quot;1&quot;;</span>
+<span class="nc" id="L64">	boolean admin = false;</span>
+	boolean authEmailSend;
+
+<span class="nc" id="L67">	boolean emailUniqueOverwrite = false;</span>
+
+	/**
+	 * Import pouzivatelov z Excelu
+	 * @param in
+	 * @param request
+	 * @param out
+	 */
+	public ImportUsersXLS(InputStream in, HttpServletRequest request, PrintWriter out)
+	{
+<span class="nc" id="L77">		super(in, request, out);</span>
+
+<span class="nc" id="L79">		autoEmailFormat = request.getParameter(&quot;autoEmailFormat&quot;);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;emailUnique&quot;)))</span>
+		{
+<span class="nc" id="L82">			emailUnique = true;</span>
+		}
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;authorize&quot;)))</span>
+		{
+<span class="nc" id="L87">			authorize = true;</span>
+		}
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;sendEmail&quot;)))</span>
+		{
+<span class="nc" id="L91">			sendEmail = true;</span>
+		}
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;generatePassword&quot;)))</span>
+		{
+<span class="nc" id="L96">			generatePassword = true;</span>
+		}
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;generateLoginName&quot;)))</span>
+		{
+<span class="nc" id="L101">			generateLoginName = true;</span>
+		}
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;emailUniqueOverwrite&quot;)))</span>
+		{
+<span class="nc" id="L106">			emailUniqueOverwrite = true;</span>
+		}
+
+<span class="nc" id="L109">		groupsParams = request.getParameterValues(&quot;groups&quot;);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (groupsParams != null)</span>
+		{
+			int i;
+<span class="nc" id="L113">			int size = groupsParams.length;</span>
+<span class="nc" id="L114">			groups = null;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			for (i=0; i&lt;size; i++)</span>
+			{
+<span class="nc bnc" id="L117" title="All 2 branches missed.">				if (groups == null)</span>
+				{
+<span class="nc" id="L119">					groups = groupsParams[i];</span>
+				}
+				else
+				{
+<span class="nc" id="L123">					groups += &quot;,&quot; + groupsParams[i]; //NOSONAR</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;admin&quot;)))</span>
+		{
+<span class="nc" id="L129">			admin = true;</span>
+		}
+
+<span class="nc" id="L132">		user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L133">	}</span>
+
+	@Override
+	protected void saveRow(Connection db_conn, Cell[] row, Sheet sheet, Prop prop) throws Exception
+	{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (row.length &lt; 1)</span>
+		{
+<span class="nc" id="L140">			return;</span>
+		}
+
+<span class="nc" id="L143">		firstName = getValue(row, &quot;firstName&quot;);</span>
+<span class="nc" id="L144">		lastName = getValue(row, &quot;lastName&quot;);</span>
+<span class="nc" id="L145">		email = getValue(row, &quot;email&quot;);</span>
+<span class="nc" id="L146">		loginName = getValue(row, &quot;loginName&quot;);</span>
+<span class="nc" id="L147">		password = getValue(row, &quot;password&quot;);</span>
+
+
+<span class="nc bnc" id="L150" title="All 4 branches missed.">		if (Tools.isEmpty(lastName) &amp;&amp; Tools.isNotEmpty(email)) lastName = email;</span>
+
+		//meno a priezvisko potrebujem na dogenerovanie ostatnych veci (ak nie su zadane)
+<span class="nc bnc" id="L153" title="All 4 branches missed.">		if (Tools.isEmpty(firstName) &amp;&amp; Tools.isEmpty(lastName))</span>
+		{
+<span class="nc" id="L155">			printlnError(prop.getText(&quot;users.import.missing_fields&quot;), rowCounter);</span>
+<span class="nc" id="L156">			return;</span>
+		}
+
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		if (Tools.isEmpty(password) &amp;&amp; generatePassword)</span>
+		{
+<span class="nc" id="L161">			password = Password.generatePassword(5);</span>
+		}
+
+<span class="nc bnc" id="L164" title="All 4 branches missed.">		if (Tools.isEmpty(loginName) &amp;&amp; generateLoginName)</span>
+		{
+			/*if (Tools.isNotEmpty(email))
+			{
+				//pouzi email ako login
+				loginName = email;
+			}
+			else
+			{
+				//generuj login vo formate lbalat
+				if (Tools.isNotEmpty(firstName))
+				{
+					loginName = DB.internationalToEnglish(firstName).toLowerCase().charAt(0) + DB.internationalToEnglish(lastName).toLowerCase();
+				}
+				else
+				{
+					loginName = DB.internationalToEnglish(lastName).toLowerCase();
+				}
+			}*/
+			//kedze sa import pouziva hlavne kvoli mailingom a tu koliduje login, budem ho generovat
+<span class="nc" id="L184">			loginName = groups + &quot;-&quot; + rowCounter + &quot;-&quot; + Password.generatePassword(4);</span>
+		}
+
+<span class="nc bnc" id="L187" title="All 4 branches missed.">		if (Tools.isEmpty(email) &amp;&amp; Tools.isNotEmpty(autoEmailFormat))</span>
+		{
+			//	email sa vytvara automaticky
+<span class="nc" id="L190">			email = autoEmailFormat;</span>
+<span class="nc" id="L191">			email = Tools.replace(email, &quot;firstName&quot;, DB.internationalToEnglish(firstName).toLowerCase());</span>
+<span class="nc" id="L192">			email = Tools.replace(email, &quot;lastName&quot;, DB.internationalToEnglish(lastName).toLowerCase());</span>
+		}
+
+<span class="nc bnc" id="L195" title="All 6 branches missed.">		if (Tools.isNotEmpty(firstName) &amp;&amp; Tools.isNotEmpty(lastName) &amp;&amp; Tools.isNotEmpty(email) &amp;&amp;</span>
+<span class="nc bnc" id="L196" title="All 4 branches missed.">			 Tools.isNotEmpty(loginName) &amp;&amp; Tools.isNotEmpty(password))</span>
+		{
+
+<span class="nc" id="L199">			allreadyExists = false;</span>
+			//ak treba, skontroluj jedinecnost emailovej adresy
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			if (emailUnique)</span>
+			{
+				//	zisti ci uz taky user v DB nie je
+<span class="nc" id="L204">				ps = db_conn.prepareStatement(&quot;SELECT user_id, user_groups FROM  users WHERE email=?&quot; + UsersDB.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L205">				ps.setString(1, email);</span>
+<span class="nc" id="L206">				rs = ps.executeQuery();</span>
+<span class="nc" id="L207">				allreadyExists = false;</span>
+
+<span class="nc" id="L209">				List&lt;UserDetails&gt; allreadyExistsUsers = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L212">					UserDetails usr = new UserDetails();</span>
+<span class="nc" id="L213">					usr.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L214">					usr.setUserGroupsIds(DB.getDbString(rs, &quot;user_groups&quot;));</span>
+<span class="nc" id="L215">					allreadyExistsUsers.add(usr);</span>
+<span class="nc" id="L216">					allreadyExists = true;</span>
+<span class="nc" id="L217">				}</span>
+<span class="nc" id="L218">				rs.close();</span>
+<span class="nc" id="L219">				ps.close();</span>
+
+				//fixni im IDecka
+<span class="nc bnc" id="L222" title="All 2 branches missed.">				for (UserDetails usr : allreadyExistsUsers)</span>
+				{
+<span class="nc" id="L224">					UsersDB.addUserGroups(usr, groupsParams);</span>
+
+					//uprav im nastavenia - ziadost SPSS pre hromadny email
+<span class="nc bnc" id="L227" title="All 2 branches missed.">					if (emailUniqueOverwrite)</span>
+					{
+<span class="nc" id="L229">						UserDetails u = UsersDB.getUser(usr.getUserId());</span>
+<span class="nc" id="L230">						u.setTitle(getValue(row, &quot;title&quot;, u.getTitle()));</span>
+<span class="nc" id="L231">						u.setFirstName(firstName);</span>
+<span class="nc" id="L232">						u.setLastName(lastName);</span>
+
+<span class="nc" id="L234">						u.setCompany(getValue(row, &quot;company&quot;, u.getCompany()));</span>
+<span class="nc" id="L235">						u.setAdress(getValue(row, &quot;street&quot;, u.getAdress()));</span>
+<span class="nc" id="L236">						u.setCity(getValue(row, &quot;city&quot;, u.getCity()));</span>
+<span class="nc" id="L237">						u.setZip(getValue(row, &quot;zip&quot;, u.getZip()));</span>
+<span class="nc" id="L238">						u.setCountry(getValue(row, &quot;country&quot;, u.getCountry()));</span>
+<span class="nc" id="L239">						u.setPhone(getValue(row, &quot;phone&quot;, u.getPhone()));</span>
+
+<span class="nc" id="L241">						u.setFieldA(getValue(row, &quot;fieldA&quot;, u.getFieldA()));</span>
+<span class="nc" id="L242">						u.setFieldB(getValue(row, &quot;fieldB&quot;, u.getFieldB()));</span>
+<span class="nc" id="L243">						u.setFieldC(getValue(row, &quot;fieldC&quot;, u.getFieldC()));</span>
+<span class="nc" id="L244">						u.setFieldD(getValue(row, &quot;fieldD&quot;, u.getFieldD()));</span>
+<span class="nc" id="L245">						u.setFieldE(getValue(row, &quot;fieldE&quot;, u.getFieldE()));</span>
+
+<span class="nc bnc" id="L247" title="All 4 branches missed.">						if (Constants.getString(&quot;usersPositionList&quot;).startsWith(&quot;enumeration_&quot;) &amp;&amp; Tools.isNotEmpty(getValue(row, &quot;position&quot;))) {</span>
+<span class="nc" id="L248">							u.setPosition(UserTools.resolveOrCreate(&quot;usersPositionList&quot;, getValue(row, &quot;position&quot;)).getId() + &quot;&quot;);</span>
+						} else {
+<span class="nc" id="L250">							u.setPosition(getValue(row, &quot;position&quot;, u.getPosition()));</span>
+						}
+
+<span class="nc" id="L253">						Cell cell = getCell(row, &quot;sexMale&quot;);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">						if (cell != null) u.setSexMale(getBooleanValue(row, &quot;sexMale&quot;));</span>
+<span class="nc" id="L255">						u.setPhoto(getValue(row, &quot;photo&quot;, u.getPhoto()));</span>
+<span class="nc" id="L256">						u.setSignature(getValue(row, &quot;signature&quot;, u.getSignature()));</span>
+
+<span class="nc" id="L258">						u.setFax(UserTools.getDepartment(getValue(row, &quot;fax&quot;), getValue(row, &quot;parentFax&quot;), rowCounter));</span>
+
+<span class="nc" id="L260">						u.setDeliveryFirstName(getValue(row, &quot;deliveryFirstName&quot;));</span>
+<span class="nc" id="L261">						u.setDeliveryLastName(getValue(row, &quot;deliveryLastName&quot;));</span>
+<span class="nc" id="L262">						u.setDeliveryCompany(getValue(row, &quot;deliveryCompany&quot;));</span>
+<span class="nc" id="L263">						u.setDeliveryAdress(getValue(row, &quot;deliveryAddress&quot;));</span>
+<span class="nc" id="L264">						u.setDeliveryCity(getValue(row, &quot;deliveryCity&quot;));</span>
+<span class="nc" id="L265">						u.setDeliveryPsc(getValue(row, &quot;deliveryPSC&quot;));</span>
+<span class="nc" id="L266">						u.setDeliveryCountry(getValue(row, &quot;deliveryCountry&quot;));</span>
+<span class="nc" id="L267">						u.setDeliveryPhone(getValue(row, &quot;deliveryPhone&quot;));</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">						if (Tools.isNotEmpty(getValue(row, &quot;userGroups&quot;))) {</span>
+<span class="nc" id="L269">							this.groups = &quot;1&quot;;</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">							for (String string : getValue(row, &quot;userGroups&quot;).split(&quot;,&quot;)) {</span>
+<span class="nc" id="L271">								this.groups += &quot;,&quot; + UserGroupsDB.getInstance().getUserGroupId(string);  //NOSONAR</span>
+							}
+						}
+<span class="nc" id="L274">						u.setUserGroupsIds(groups);</span>
+<span class="nc" id="L275">						cell = getCell(row, &quot;parentId&quot;);</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">						if (cell != null) u.setParentId(getIntValue(row, &quot;parentId&quot;));</span>
+
+<span class="nc" id="L278">						UsersDB.saveUser(u);</span>
+					}
+<span class="nc" id="L280">				}</span>
+			}
+
+<span class="nc bnc" id="L283" title="All 2 branches missed.">			if (allreadyExists)</span>
+			{
+<span class="nc" id="L285">				println(prop.getText(&quot;users.import.email_allready_exists&quot;, email), rowCounter);</span>
+<span class="nc" id="L286">				return;</span>
+			}
+
+			//	zisti ci uz taky user v DB nie je
+<span class="nc" id="L290">			ps = db_conn.prepareStatement(&quot;SELECT user_id FROM  users WHERE login=?&quot; + UsersDB.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L291">			ps.setString(1, loginName);</span>
+<span class="nc" id="L292">			rs = ps.executeQuery();</span>
+<span class="nc" id="L293">			allreadyExists = false;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L296">				allreadyExists = true;</span>
+			}
+<span class="nc" id="L298">			rs.close();</span>
+<span class="nc" id="L299">			ps.close();</span>
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (allreadyExists)</span>
+			{
+<span class="nc" id="L303">				printlnError(prop.getText(&quot;users.import.login_allready_exists&quot;, loginName), rowCounter);</span>
+<span class="nc" id="L304">				return;</span>
+			}
+
+			//naimportuj to do DB
+<span class="nc" id="L308">			ps = db_conn.prepareStatement(&quot;INSERT INTO  users (title, first_name, last_name, login, password, &quot; +</span>
+					&quot;is_admin, user_groups, company, adress, city, email, PSC, country, &quot; +
+					&quot;phone, authorized, editable_groups, editable_pages, writable_folders, last_logon, module_perms, reg_date, field_a, field_b, field_c, field_d, field_e, password_salt, date_of_birth, position, &quot; +
+					&quot;sex_male, photo, signature, forum_rank, rating_rank, allow_login_start, allow_login_end, fax, delivery_first_name, delivery_last_name, delivery_company, delivery_adress, delivery_city, delivery_psc, delivery_country, delivery_phone, parent_id, domain_id) VALUES &quot; +
+					&quot;(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)&quot;);
+
+<span class="nc" id="L314">			ps.setString(1, getValue(row, &quot;title&quot;));</span>
+<span class="nc" id="L315">			ps.setString(2, firstName);</span>
+<span class="nc" id="L316">			ps.setString(3, lastName);</span>
+<span class="nc" id="L317">			ps.setString(4, loginName);</span>
+
+<span class="nc" id="L319">			String salt = &quot;&quot;;</span>
+<span class="nc" id="L320">			sk.iway.Password pass = new sk.iway.Password();</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+			{
+<span class="nc" id="L323">				salt = PasswordSecurity.generateSalt();</span>
+<span class="nc" id="L324">				ps.setString(5, PasswordSecurity.calculateHash(password, salt));</span>
+			}
+			else
+<span class="nc" id="L327">				ps.setString(5, pass.encrypt(password));</span>
+
+<span class="nc" id="L329">			ps.setBoolean(6, admin);</span>
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">			if (Tools.isNotEmpty(getValue(row, &quot;userGroups&quot;))) {</span>
+<span class="nc" id="L332">				this.groups = &quot;1&quot;;</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				for (String string : getValue(row, &quot;userGroups&quot;).split(&quot;,&quot;)) {</span>
+<span class="nc" id="L334">					this.groups += &quot;,&quot; + UserGroupsDB.getInstance().getUserGroupId(string);  //NOSONAR</span>
+				}
+			}
+
+<span class="nc" id="L338">			ps.setString(7, groups);</span>
+<span class="nc" id="L339">			ps.setString(8, getValue(row, &quot;company&quot;));</span>
+<span class="nc" id="L340">			ps.setString(9, getValue(row, &quot;street&quot;));</span>
+<span class="nc" id="L341">			ps.setString(10, getValue(row, &quot;city&quot;));</span>
+<span class="nc" id="L342">			ps.setString(11, email);</span>
+<span class="nc" id="L343">			ps.setString(12, getValue(row, &quot;zip&quot;));</span>
+<span class="nc" id="L344">			ps.setString(13, getValue(row, &quot;country&quot;));</span>
+
+<span class="nc" id="L346">			ps.setString(14, getValue(row, &quot;phone&quot;));</span>
+<span class="nc" id="L347">			ps.setBoolean(15, authorize);</span>
+<span class="nc" id="L348">			ps.setString(16, getValue(row, &quot;editableGroups&quot;));</span>
+<span class="nc" id="L349">			ps.setString(17, getValue(row, &quot;editablePages&quot;));</span>
+<span class="nc" id="L350">			ps.setString(18, getValue(row, &quot;writableFolders&quot;));</span>
+<span class="nc" id="L351">			java.util.Date date = getDateValue(row, &quot;lastLogon&quot;);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">			if (date != null) ps.setTimestamp(19, new Timestamp(date.getTime()));</span>
+<span class="nc" id="L353">			else ps.setNull(19, Types.TIMESTAMP);</span>
+<span class="nc" id="L354">			ps.setString(20, getValue(row, &quot;modulePerms&quot;));</span>
+<span class="nc" id="L355">			ps.setTimestamp(21, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L356">			ps.setString(22, getValue(row, &quot;fieldA&quot;));</span>
+<span class="nc" id="L357">			ps.setString(23, getValue(row, &quot;fieldB&quot;));</span>
+<span class="nc" id="L358">			ps.setString(24, getValue(row, &quot;fieldC&quot;));</span>
+<span class="nc" id="L359">			ps.setString(25, getValue(row, &quot;fieldD&quot;));</span>
+<span class="nc" id="L360">			ps.setString(26, getValue(row, &quot;fieldE&quot;));</span>
+<span class="nc" id="L361">			ps.setString(27, salt);</span>
+<span class="nc" id="L362">			java.util.Date dateOfBirth = getDateValue(row, &quot;dateOfBirth&quot;);</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">			if (dateOfBirth != null) ps.setTimestamp(28, new Timestamp(dateOfBirth.getTime()));</span>
+<span class="nc" id="L364">			else ps.setNull(28, Types.TIMESTAMP);</span>
+
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (Constants.getString(&quot;usersPositionList&quot;).startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="nc" id="L367">				ps.setString(29, UserTools.resolveOrCreate(&quot;usersPositionList&quot;, getValue(row, &quot;position&quot;)).getEnumerationDataId() + &quot;&quot;);</span>
+			} else {
+<span class="nc" id="L369">				ps.setString(29, getValue(row, &quot;position&quot;));</span>
+			}
+<span class="nc" id="L371">			ps.setBoolean(30, getBooleanValue(row, &quot;sexMale&quot;));</span>
+<span class="nc" id="L372">			ps.setString(31, getValue(row, &quot;photo&quot;));</span>
+<span class="nc" id="L373">			ps.setString(32, getValue(row, &quot;signature&quot;));</span>
+<span class="nc" id="L374">			ps.setInt(33, getIntValue(row, &quot;forumRank&quot;));</span>
+<span class="nc" id="L375">			ps.setInt(34, getIntValue(row, &quot;rantingRank&quot;));</span>
+<span class="nc" id="L376">			date = getDateValue(row, &quot;allowLoginStart&quot;);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			if (date != null) ps.setTimestamp(35, new Timestamp(date.getTime()));</span>
+<span class="nc" id="L378">			else ps.setNull(35, Types.TIMESTAMP);</span>
+<span class="nc" id="L379">			date = getDateValue(row, &quot;allowLoginEnd&quot;);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (date != null) ps.setTimestamp(36, new Timestamp(date.getTime()));</span>
+<span class="nc" id="L381">			else ps.setNull(36, Types.TIMESTAMP);</span>
+
+			//pole FAX pouzivame ako ciselnik oddeleni (sialene rozhodnutie, ale co uz)
+<span class="nc" id="L384">			ps.setString(37, UserTools.getDepartment(getValue(row, &quot;fax&quot;), getValue(row, &quot;parentFax&quot;), rowCounter));</span>
+
+<span class="nc" id="L386">			ps.setString(38, getValue(row, &quot;deliveryFirstName&quot;));</span>
+<span class="nc" id="L387">			ps.setString(39, getValue(row, &quot;deliveryLastName&quot;));</span>
+<span class="nc" id="L388">			ps.setString(40, getValue(row, &quot;deliveryCompany&quot;));</span>
+<span class="nc" id="L389">			ps.setString(41, getValue(row, &quot;deliveryAddress&quot;));</span>
+<span class="nc" id="L390">			ps.setString(42, getValue(row, &quot;deliveryCity&quot;));</span>
+<span class="nc" id="L391">			ps.setString(43, getValue(row, &quot;deliveryPSC&quot;));</span>
+<span class="nc" id="L392">			ps.setString(44, getValue(row, &quot;deliveryCountry&quot;));</span>
+<span class="nc" id="L393">			ps.setString(45, getValue(row, &quot;deliveryPhone&quot;));</span>
+<span class="nc" id="L394">			ps.setInt(46, getIntValue(row, &quot;parentId&quot;));</span>
+<span class="nc" id="L395">			ps.setInt(47, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L397">			ps.execute();</span>
+<span class="nc" id="L398">			ps.close();</span>
+
+<span class="nc" id="L400">			userId = -1;</span>
+			//ziskaj userId
+<span class="nc" id="L402">			ps = db_conn.prepareStatement(&quot;SELECT user_id FROM  users WHERE login=?&quot; + UsersDB.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L403">			ps.setString(1, loginName);</span>
+<span class="nc" id="L404">			rs = ps.executeQuery();</span>
+<span class="nc" id="L405">			allreadyExists = false;</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">			if (rs.next())</span>
+			{
+<span class="nc" id="L408">				userId = rs.getInt(&quot;user_id&quot;);</span>
+			}
+<span class="nc" id="L410">			rs.close();</span>
+<span class="nc" id="L411">			ps.close();</span>
+
+<span class="nc" id="L413">			println(prop.getText(&quot;users.import.regSuccess&quot;) + &quot;: &quot; + firstName + &quot; &quot; + lastName + &quot;; &quot; + loginName + &quot;; &quot; + password, rowCounter);</span>
+
+			//trigger po zmene udajov pouzivatela - podobne ako u usrLogon
+<span class="nc bnc" id="L416" title="All 2 branches missed.">			if ( Tools.isNotEmpty(Constants.getString(&quot;userAfterSaveMethod&quot;) ))</span>
+			{
+				try
+				{
+<span class="nc" id="L420">					String saveMethod = Constants.getString(&quot;userAfterSaveMethod&quot;);</span>
+<span class="nc" id="L421">					String clazzName = saveMethod.substring(0, saveMethod.lastIndexOf('.'));</span>
+<span class="nc" id="L422">					String methodName = saveMethod.substring(clazzName.length() + 1);</span>
+<span class="nc" id="L423">					Class&lt;?&gt; clazz = Class.forName(clazzName);</span>
+<span class="nc" id="L424">					boolean skipWithoutRequest = false;</span>
+					try
+					{
+<span class="nc" id="L427">						Method method = clazz.getMethod(methodName, HttpServletRequest.class, UserDetails.class, UserDetails.class);</span>
+<span class="nc" id="L428">						method.invoke(null, request, null, UsersDB.getUser(user.getLogin()));</span>
+<span class="nc" id="L429">						skipWithoutRequest = true;</span>
+					}
+<span class="nc" id="L431">					catch (NoSuchMethodException nsme) {/*do nothing*/}</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">					if (!skipWithoutRequest)</span>
+					{
+<span class="nc" id="L434">						Method method = clazz.getMethod(methodName, UserDetails.class, UserDetails.class);</span>
+<span class="nc" id="L435">						method.invoke(null, null, UsersDB.getUser(loginName));</span>
+					}
+				}
+<span class="nc" id="L438">				catch (Exception e)</span>
+				{
+<span class="nc" id="L440">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L441">				}</span>
+			}
+
+<span class="nc bnc" id="L444" title="All 4 branches missed.">			if (sendEmail &amp;&amp; userId &gt; 0)</span>
+			{
+<span class="nc" id="L446">				authEmailSend = AuthorizeAction.sendInfoEmail(userId, password, user, request);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">				if (!authEmailSend)</span>
+				{
+<span class="nc" id="L449">					printlnError(prop.getText(&quot;users.import.authEmailFail&quot;, email), rowCounter);</span>
+				}
+			}
+
+<span class="nc" id="L453">			Adminlog.add(Adminlog.TYPE_USER_INSERT, &quot;Naimportovany novy pouzivatel, userId=&quot; + userId + &quot; login=&quot; + loginName + &quot; firstName=&quot; + firstName + &quot; lastName=&quot; + lastName + &quot; email=&quot; + email, userId, -1);</span>
+<span class="nc" id="L454">		}</span>
+		else
+		{
+<span class="nc" id="L457">			printlnError(prop.getText(&quot;users.import.missing_fields&quot;), rowCounter);</span>
+		}
+<span class="nc" id="L459">	}</span>
+
+	/**
+	 * Vrati hodnotu z Excelu, ak ale taky stlpec nemame, vrati aktalnu hodnotu (potrebne pre aktualizaciu zaznamov)
+	 * @param row
+	 * @param name
+	 * @param actualValue
+	 * @return
+	 * @throws Exception
+	 */
+	private String getValue(Cell[] row, String name, String actualValue) throws Exception
+	{
+<span class="nc" id="L471">		Cell cell = getCell(row, name);</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">		if (cell!=null)</span>
+		{
+<span class="nc" id="L474">			return getValue(row, name);</span>
+		}
+<span class="nc" id="L476">		return actualValue;</span>
+	}
+
+	@Override
+	protected void afterImportJob(Prop prop) {
+<span class="nc bnc" id="L481" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;organisationStructure&quot;) == true) {</span>
+<span class="nc" id="L482">			List&lt;UserDetails&gt; userDetails = UsersDB.getUsersByGroup(Constants.getInt(&quot;organisation_structure.intranet_group&quot;,-1)); // intranet</span>
+<span class="nc" id="L483">			UserTools.setSuperiorWorker(userDetails); // prepocitaj celu strukturu</span>
+		}
+<span class="nc" id="L485">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

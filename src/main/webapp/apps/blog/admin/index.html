@@ -1,0 +1,129 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/web-pages";
+    var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
+</script>
+<script type="text/javascript">
+    var bloggerArticlesDataTable;
+
+    WJ.breadcrumb({
+        id: "bloggerArticles",
+        tabs: [
+            {
+                url: '/apps/blog/admin/',
+                title: '[[#{components.blog.articles.title}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //Add filter to tab
+        $("#pills-dateRange-tab").html("");
+        $("div#bloggerArticlesDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        //Prepare columns
+        window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
+        //rename title column
+        window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("components.blog.filter.name.js") });
+
+        window.importWebPagesDatatable().then(module => {
+
+            url = WJ.urlAddParam(url, "isBlogVersion", true);
+
+            let wpdInstance = new module.WebPagesDatatable({
+                url: url,
+                columns: webpageColumns,
+                id: "bloggerArticlesDataTable",
+                newPageTitleKey: "components.blog.articles.new_article.js",
+            });
+            bloggerArticlesDataTable = wpdInstance.createDatatable();
+
+            //Add new button with logic -> add folder
+            bloggerArticlesDataTable.button().add(1, {
+                text: '<i class="ti ti-folder-plus"></i>',
+                action: function (e, dt, node) {
+                    addFolderFn();
+                },
+                className: 'btn btn-outline-secondary buttons-divider buttons-add-folder',
+                attr: {
+                    title : "[[#{components.blog.add_folder.title}]]",
+                    'data-toggle': 'tooltip'
+                }
+            });
+        });
+
+        //Init select
+        ChartTools.setSelect("/admin/rest/web-pages/blogger-groups", $('#groupSelect').val(), "groupSelect");
+
+        $("#groupSelect").on("change", function() {
+            updateTable();
+        });
+
+        function updateTable() {
+            //set table filter params
+            bloggerArticlesDataTable.ajax.url(WJ.urlUpdateParam( bloggerArticlesDataTable.ajax.url() , "groupId", $('#groupSelect').val()));
+            //reload tables values
+            bloggerArticlesDataTable.ajax.reload();
+        }
+
+        //After addFolder action is executed, reload select with folders
+        window.addEventListener('WJ.DT.executeAction', function (e) {
+            //Sub group added successfully - reload select
+            ChartTools.setSelect("/admin/rest/web-pages/blogger-groups", $('#groupSelect').val(), "groupSelect");
+        });
+
+        /**
+         * Add folder action
+         */
+        async function addFolderFn() {
+            if($('#groupSelect').val() == -1) {
+                WJ.notifyWarning("[[#{components.blog.add_folder.title}]]", "[[#{components.blog.add_folder.warning}]]", 15000);
+            } else {
+                WJ.prompt({
+                    title: "[[#{components.blog.add_folder.title}]]",
+                    message: "[[#{components.blog.add_folder.msg}]] " + $('#groupSelect').find(":selected").text(),
+                    success: function(value) {
+                        //let customData = "{\"groupId\":\"" + $('#groupSelect').val() + "\", \"newGroupName\":" + value + "}";
+                        let customData = {
+                            groupId: $('#groupSelect').val(),
+                            newGroupName: value
+                        }
+                        bloggerArticlesDataTable.executeAction("addBloggerGroup", true, null, null, JSON.stringify(customData));
+                    },
+                    cancel: function() {}
+                });
+            }
+        }
+    });
+</script>
+
+<style>
+    /*During crate/edit action user cant see groupTree, it's set via extFilter*/
+    .DTE_Action_Create {
+        #panel-body-dt-bloggerArticlesDataTable-basic > div.DTE_Field.form-group.row.DTE_Field_Type_json.DTE_Field_Name_editorFields\.groupCopyDetails.dt-style-json.dt-tree-group-array { display: none; }
+    }
+
+    .DTE_Action_Edit {
+        #panel-body-dt-bloggerArticlesDataTable-basic > div.DTE_Field.form-group.row.DTE_Field_Type_json.DTE_Field_Name_editorFields\.groupCopyDetails.dt-style-json.dt-tree-group-array { display: none; }
+    }
+    #pills-dt-bloggerArticlesDataTable-template-tab {
+        display: none;
+    }
+</style>
+
+<div id="bloggerArticlesDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <select id="groupSelect">
+                <option value="-1">[[#{components.blog.all_groups}]]</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<table id="bloggerArticlesDataTable" class="datatableInit table"></table>

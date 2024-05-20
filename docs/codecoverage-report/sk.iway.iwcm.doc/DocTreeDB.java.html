@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocTreeDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocTreeDB.java</span></div><h1>DocTreeDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+
+/**
+ *  Vytvori stromovu strukturu adresarov a dokumentov
+ *
+ *@Title        e-iwcm.sk
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      $Date: 2004/01/13 07:50:25 $
+ *@modified     $Date: 2004/01/13 07:50:25 $
+ */
+public class DocTreeDB extends DB
+{
+	private List&lt;DocTreeDetails&gt; docs;
+<span class="nc" id="L27">	int counter = 0;</span>
+	private String navbar;
+
+	DocTreeDetails first;
+
+
+	/**
+	 *  Constructor for the DocTreeDB object
+	 *
+	 *@param  group_id    Description of the Parameter
+	 *@param  groupsDB    Description of the Parameter
+	 *@param  serverName  Description of the Parameter
+	 */
+	public DocTreeDB(int group_id, GroupsDB groupsDB, String serverName)
+<span class="nc" id="L41">	{</span>
+<span class="nc" id="L42">		docs = new ArrayList&lt;&gt;();</span>
+		//ArrayList a_grp = groupsDB.getGroupsTree(group_id, true, false);
+<span class="nc" id="L44">		List&lt;GroupDetails&gt; a_grp = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L45">		a_grp.add(groupsDB.findGroup(group_id));</span>
+<span class="nc" id="L46">		groupsDB.getGroupsTree(group_id, a_grp, false, true);</span>
+
+		DocTreeDetails det;
+
+<span class="nc" id="L50">		Connection db_conn = null;</span>
+		try
+		{
+<span class="nc" id="L53">			db_conn = DBPool.getConnection(serverName);</span>
+<span class="nc" id="L54">			int max_group_id = 0;</span>
+			//najskor vytvorim adresare a potom tam nastrkam dokumenty
+<span class="nc" id="L56">			boolean is_first = true;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			for (GroupDetails group : a_grp)</span>
+			{
+<span class="nc bnc" id="L59" title="All 6 branches missed.">				if (group == null || group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN || group.isInternal() == true)</span>
+				{
+<span class="nc" id="L61">					continue;</span>
+				}
+<span class="nc" id="L63">				det = new DocTreeDetails();</span>
+<span class="nc" id="L64">				det.setId(group.getGroupId());</span>
+				//ak je to prvy nastav mu parenta na 0
+<span class="nc bnc" id="L66" title="All 2 branches missed.">				if (is_first)</span>
+				{
+<span class="nc" id="L68">					det.setParent(0);</span>
+<span class="nc" id="L69">					navbar = groupsDB.getNavbar(group.getGroupId());</span>
+<span class="nc" id="L70">					first = det;</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L74" title="All 2 branches missed.">					if (group.getParentGroupId() == first.getId())</span>
+					{
+<span class="nc" id="L76">						det.setParent(0);</span>
+					}
+					else
+					{
+<span class="nc" id="L80">						det.setParent(group.getParentGroupId());</span>
+					}
+				}
+
+<span class="nc" id="L84">				det.setName(group.getGroupName());</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				if (group.getDefaultDocId() &gt; 0)</span>
+				{
+<span class="nc" id="L87">					det.setLink(&quot;/showdoc.do?docid=&quot; + group.getDefaultDocId());</span>
+				}
+				else
+				{
+<span class="nc" id="L91">					det.setLink(&quot;#&quot;);</span>
+					//det.setName(&quot;&quot; + det.getName() + &quot;&lt;/font&gt;&quot;);
+				}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (!is_first)</span>
+				{
+					//set whole link
+<span class="nc" id="L97">					det.setJsTree(&quot;fld&quot; + det.getId() + &quot;=insFld(fld&quot; + det.getParent() + &quot;, gFld(\&quot;&quot; + det.getName() + &quot;\&quot;, \&quot;&quot; + det.getLink() + &quot;\&quot;))&quot;);</span>
+<span class="nc" id="L98">					docs.add(det);</span>
+				}
+<span class="nc" id="L100">				is_first = false;</span>
+<span class="nc" id="L101">			}</span>
+
+<span class="nc" id="L103">			counter = max_group_id + 1000;</span>
+<span class="nc" id="L104">			is_first = true;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			for (GroupDetails group : a_grp)</span>
+			{
+<span class="nc bnc" id="L107" title="All 6 branches missed.">				if (group == null || group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN || group.isInternal() == true)</span>
+				{
+<span class="nc" id="L109">					continue;</span>
+				}
+				/*
+				 *  if (is_first)
+				 *  {
+				 *  load(group.getGroupId(), db_conn, group.getDefaultDocId(), 0);
+				 *  }
+				 *  else
+				 *  {
+				 */
+<span class="nc bnc" id="L119" title="All 2 branches missed.">				if (group.getMenuType()==GroupDetails.MENU_TYPE_NORMAL)</span>
+				{
+<span class="nc" id="L121">					load(group.getGroupId(), db_conn, group.getDefaultDocId(), group.getGroupId());</span>
+				}
+				//}
+<span class="nc" id="L124">			}</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">			if (db_conn != null &amp;&amp; !db_conn.isClosed())</span>
+<span class="nc" id="L126">				db_conn.close();</span>
+<span class="nc" id="L127">			db_conn = null;</span>
+		}
+<span class="nc" id="L129">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L131">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L137" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L138">					db_conn.close();</span>
+			}
+<span class="nc" id="L140">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L142">			}</span>
+		}
+<span class="nc" id="L144">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  group_id           Description of the Parameter
+	 *@param  db_conn            Description of the Parameter
+	 *@param  group_default_doc  Description of the Parameter
+	 *@param  doc_parent         Description of the Parameter
+	 *@exception  Exception      Description of the Exception
+	 */
+	public void load(int group_id, Connection db_conn, int group_default_doc, int doc_parent) throws Exception
+	{
+		DocTreeDetails det;
+
+<span class="nc" id="L159">		PreparedStatement ps = null;</span>
+<span class="nc" id="L160">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L163">			String sql = &quot;SELECT * FROM documents WHERE group_id=? AND available=? AND show_in_menu=? ORDER BY sort_priority, title&quot;;</span>
+<span class="nc" id="L164">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L165">			ps.setInt(1, group_id);</span>
+<span class="nc" id="L166">			ps.setBoolean(2, true);</span>
+<span class="nc" id="L167">			ps.setBoolean(3, true);</span>
+<span class="nc" id="L168">			rs = ps.executeQuery();</span>
+
+			int doc_id;
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L173">				det = new DocTreeDetails();</span>
+<span class="nc" id="L174">				det.setId(counter);</span>
+<span class="nc" id="L175">				counter++;</span>
+<span class="nc" id="L176">				det.setName(getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L177">				doc_id = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L178">				det.setLink(&quot;/showdoc.do?docid=&quot; + doc_id);</span>
+				//det.setParent(doc_parent);
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (doc_parent == first.getId())</span>
+				{
+<span class="nc" id="L182">					det.setParent(0);</span>
+				}
+				else
+				{
+<span class="nc" id="L186">					det.setParent(doc_parent);</span>
+				}
+
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				if (doc_id != group_default_doc)</span>
+				{
+<span class="nc" id="L191">					det.setJsTree(&quot;insDoc(fld&quot; + det.getParent() + &quot;, gLnk(2, \&quot;&quot; + det.getName() + &quot;\&quot;, \&quot;&quot; + det.getLink() + &quot;\&quot;))&quot;);</span>
+<span class="nc" id="L192">					docs.add(det);</span>
+				}
+			}
+
+<span class="nc" id="L196">			rs.close();</span>
+<span class="nc" id="L197">			ps.close();</span>
+<span class="nc" id="L198">			rs = null;</span>
+<span class="nc" id="L199">			ps = null;</span>
+		}
+<span class="nc" id="L201">		catch (Exception sqle)</span>
+		{
+<span class="nc" id="L203">			Logger.error(this,&quot;GroupsDB spadlo spojenie&quot; + sqle.getMessage());</span>
+<span class="nc" id="L204">			sk.iway.iwcm.Logger.error(sqle);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L211">					rs.close();</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L213">					ps.close();</span>
+			}
+<span class="nc" id="L215">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L217">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L218">			}</span>
+		}
+<span class="nc" id="L220">	}</span>
+
+	/**
+	 *  vrati zoznam dokumentov
+	 *
+	 *@return    The docs value
+	 */
+	public List&lt;DocTreeDetails&gt; getDocs()
+	{
+<span class="nc" id="L229">		return (docs);</span>
+	}
+
+	/**
+	 *  nastavi navigacnu listu (default bude na nazov korenoveho objektu)
+	 *
+	 *@param  newNavbar  The new navbar value
+	 */
+	public void setNavbar(String newNavbar)
+	{
+<span class="nc" id="L239">		navbar = newNavbar;</span>
+<span class="nc" id="L240">	}</span>
+
+	/**
+	 *  vrati navigacnu listu
+	 *
+	 *@return    The navbar value
+	 */
+	public String getNavbar()
+	{
+<span class="nc" id="L249">		return navbar;</span>
+	}
+
+	/**
+	 *  vrati korenovy objekt
+	 *
+	 *@return    The first value
+	 */
+	public DocTreeDetails getFirst()
+	{
+<span class="nc" id="L259">		return (first);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UniversalComponentHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.crud</a> &gt; <span class="el_source">UniversalComponentHelper.java</span></div><h1>UniversalComponentHelper.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.crud;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+
+/**
+ * @author mbocko
+ *
+ *
+ *
+ */
+@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+public class UniversalComponentHelper
+{
+	private HttpServletRequest req;
+<span class="nc" id="L24">	private int filterCounter=0;</span>
+
+	private UniversalComponentHelper(HttpServletRequest request)
+<span class="nc" id="L27">	{</span>
+<span class="nc" id="L28">		this.req = request;</span>
+<span class="nc" id="L29">	}</span>
+
+
+	/**
+	 * metoda vrati instanciu tejto triedy
+	 *
+	 * @param request
+	 * @return
+	 */
+	public static UniversalComponentHelper setComponent(HttpServletRequest request)
+	{
+<span class="nc" id="L40">		return new UniversalComponentHelper(request);</span>
+	}
+
+	/**
+	 * cesta k tejto komponente
+	 *
+	 * @param listPath
+	 * @return
+	 */
+	public UniversalComponentHelper addListPath(String listPath)
+	{
+<span class="nc" id="L51">		this.req.setAttribute(&quot;universal_component_list&quot;, listPath);</span>
+<span class="nc" id="L52">		return this;</span>
+	}
+
+	/**
+	 * cesta k edit dialogu
+	 * @param dialogPath
+	 * @return
+	 */
+	public UniversalComponentHelper addDialogPath(String dialogPath)
+	{
+<span class="nc" id="L62">		this.req.setAttribute(&quot;universal_component_editDialog&quot;, dialogPath);</span>
+<span class="nc" id="L63">		return this;</span>
+	}
+
+	/**
+	 * Objekt triedy beanClass
+	 *
+	 * @param beanClass
+	 * @return
+	 */
+	public UniversalComponentHelper addBeanClass(Class beanClass)
+	{
+<span class="nc" id="L74">		this.req.setAttribute(&quot;universal_component_beanClass&quot;, beanClass);</span>
+<span class="nc" id="L75">		return this;</span>
+	}
+
+	/**
+	 * instancia DB pre beanClass - potomok JpaDB
+	 *
+	 * @param dbInstance
+	 * @return
+	 */
+	public UniversalComponentHelper addDbClass(String fqn)
+	{
+<span class="nc" id="L86">		Class dbClass = null;</span>
+		try {
+<span class="nc" id="L88">			dbClass = Class.forName(fqn);</span>
+<span class="nc" id="L89">		} catch (ClassNotFoundException e)</span>
+		{
+<span class="nc" id="L91">			Logger.debug(getClass(), &quot;DB trieda &quot;+fqn+&quot; sa nenasla&quot;);</span>
+<span class="nc" id="L92">		}</span>
+<span class="nc" id="L93">		return addDbClass(dbClass);</span>
+	}
+
+	/**
+	 * Vytvori instanciu DB triedy
+	 *
+	 * @param dbInstance
+	 * @return
+	 */
+	public UniversalComponentHelper addDbClass(Class dbClass)
+	{
+<span class="nc" id="L104">		JpaDB dbInstance = null;</span>
+<span class="nc" id="L105">		Constructor constr = null;</span>
+		try
+		{
+<span class="nc" id="L108">			Class[] varargs = null;</span>
+<span class="nc" id="L109">			constr = dbClass.getConstructor(varargs);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (constr!=null) {</span>
+<span class="nc" id="L111">				Object[] params = null;</span>
+<span class="nc" id="L112">				dbInstance = (JpaDB)constr.newInstance(params);</span>
+			}
+		}
+<span class="nc" id="L115">		catch (Exception e)</span>
+		{
+
+<span class="nc" id="L118">		}</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (dbInstance==null)</span>
+		{
+			try
+			{
+<span class="nc" id="L123">				Class[] varargs = null;</span>
+<span class="nc" id="L124">				Method getInstanceMethod = dbClass.getDeclaredMethod(&quot;getInstance&quot;, varargs);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if (getInstanceMethod!=null) {</span>
+<span class="nc" id="L126">					Object[] params = null;</span>
+<span class="nc" id="L127">					getInstanceMethod.invoke(dbInstance, params);</span>
+				}
+			}
+<span class="nc" id="L130">			catch (Exception e)</span>
+			{
+
+<span class="nc" id="L133">			}</span>
+		}
+<span class="nc" id="L135">		return addDbInstance(dbInstance);</span>
+	}
+
+
+	/**
+	 * instancia DB pre beanClass - potomok JpaDB
+	 *
+	 * @param dbInstance
+	 * @return
+	 */
+	public UniversalComponentHelper addDbInstance(JpaDB dbInstance)
+	{
+<span class="nc" id="L147">		this.req.setAttribute(&quot;universal_component_dbInstance&quot;, dbInstance);</span>
+<span class="nc" id="L148">		return this;</span>
+	}
+
+	/**
+	 * Prida do requestu filtrovanie v zozname beanov
+	 *
+	 * @param propertyToFilter property podla ktorej sa bude zoznam filtrovat
+	 * @return
+	 */
+	public UniversalComponentHelper addListFilter(String propertyToFilter)
+	{
+
+<span class="nc" id="L160">		return addListFilter(propertyToFilter, null, null, null);</span>
+	}
+
+	/**
+	 * Prida do requestu filtrovanie v zozname beanov, umoznuje pridat aj selecbox s ponukou na foltrovanie
+	 *
+	 * @param propertyToFilter property podla ktorej sa bude zoznam filtrovat
+	 * @param selectItems kolekcia s polozkami ak sa ma zobrazit select box s moznostami filtrovania
+	 * @param selectValue property objektu kolekcie z ktoreho sa berie hodnota selectu
+	 * @param selectLabel property objektu kolekcie z ktoreho sa berie popis selectu
+	 * @return
+	 */
+	public UniversalComponentHelper addListFilter(String propertyToFilter, Collection selectItems, String selectValue, String selectLabel)
+	{
+<span class="nc" id="L174">		int filterNum = ++filterCounter;</span>
+<span class="nc" id="L175">		req.setAttribute((&quot;universal_component_filter.&quot;+filterNum), propertyToFilter);</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">		if (selectItems!=null &amp;&amp; selectItems.size()&gt;0)</span>
+		{
+<span class="nc" id="L178">			req.setAttribute((&quot;universal_component_filter.&quot;+filterNum+&quot;.select&quot;), selectItems);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (Tools.isNotEmpty(selectLabel))</span>
+<span class="nc" id="L180">				req.setAttribute((&quot;universal_component_filter.&quot;+filterNum+&quot;.select.label&quot;), selectLabel);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (Tools.isNotEmpty(selectValue))</span>
+<span class="nc" id="L182">				req.setAttribute((&quot;universal_component_filter.&quot;+filterNum+&quot;.select.value&quot;), selectValue);</span>
+		}
+<span class="nc" id="L184">		return this;</span>
+	}
+
+	/**
+	 * Prida do requestu filtrovanie v zozname beanov, pre proprety ktora je mapovana cez JPA
+	 *
+	 * @param propertyToFilter property podla ktorej sa bude zoznam filtrovat
+	 * @param dbClass JpaDB trieda mapovaneho objektu
+	 * @param selectLabel property objektu kolekcie z ktoreho sa berie popis selectu
+	 * @return
+	 */
+	public UniversalComponentHelper addListFilterForMappedEntity(String propertyToFilter, Class dbClass, String selectLabel)
+	{
+
+<span class="nc" id="L198">		JpaDB dbInstance = null;</span>
+<span class="nc" id="L199">		Constructor constr = null;</span>
+		try
+		{
+<span class="nc" id="L202">			Class[] varargs = null;</span>
+<span class="nc" id="L203">			Object[] params = null;</span>
+<span class="nc" id="L204">			constr = dbClass.getConstructor(varargs);</span>
+<span class="nc" id="L205">			dbInstance = (JpaDB)constr.newInstance(params);</span>
+		}
+<span class="nc" id="L207">		catch (Exception e)</span>
+<span class="nc" id="L208">		{ }</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		if (dbInstance==null)</span>
+		{
+			try
+			{
+<span class="nc" id="L213">				Class[] varargs = null;</span>
+<span class="nc" id="L214">				Object[] params = null;</span>
+<span class="nc" id="L215">				Method getInstanceMethod = dbClass.getDeclaredMethod(&quot;getInstance&quot;, varargs);</span>
+<span class="nc" id="L216">				getInstanceMethod.invoke(dbInstance, params);</span>
+			}
+<span class="nc" id="L218">			catch (Exception e)</span>
+<span class="nc" id="L219">			{ }</span>
+		}
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (dbInstance != null) {</span>
+<span class="nc" id="L222">			List objects = dbInstance.getAll();</span>
+			@SuppressWarnings(&quot;unused&quot;)
+<span class="nc" id="L224">			UniversalComponentHelper result = addListFilter(propertyToFilter, objects, &quot;id&quot;, selectLabel);</span>
+<span class="nc" id="L225">			req.setAttribute(&quot;universal_component_filter.&quot;+filterCounter+&quot;.select.dbInstance&quot;, dbInstance);</span>
+		}
+<span class="nc" id="L227">		return this;</span>
+	}
+
+
+	/**
+	 * Metoda prida mapovanie na zaklade ID a zabezpeci spravne zobrazenie
+	 * - pouzije sa ak je metoda na vyber objektu staticka
+	 *
+	 * @param dbClass trieda DB z ktorej sa vyberie objekt
+	 * @param propertyToMap nazov property, ktora reprezentuje referenciu na objekt
+	 * @param methodToRetrieveObject Metoda na ziskanie instancie objektu na ktory je mapovana property
+	 * @param fieldToDisplay property objektu, ktora sa zobrazi
+	 * @return
+	 */
+	public UniversalComponentHelper addListFieldMapping(Class dbClass, String propertyToMap, String methodToRetrieveObject, String fieldToDisplay)
+	{
+<span class="nc" id="L243">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingDbClass&quot;, dbClass);</span>
+<span class="nc" id="L244">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingMethodName&quot;, methodToRetrieveObject);</span>
+<span class="nc" id="L245">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingObjectFieldName&quot;, fieldToDisplay);</span>
+
+<span class="nc" id="L247">		return this;</span>
+	}
+
+
+	/**
+	 * * Metoda prida mapovanie na zaklade ID a zabezpeci spravne zobrazenie
+	 * - pouzije sa ak je metoda na vyber instancna
+	 *
+	 * @param dbInstance Instancia DB triedy z ktorej sa vyberie objekt
+	 * @param propertyToMap nazov property, ktora reprezentuje referenciu na objekt
+	 * @param methodToRetrieveObject Metoda na ziskanie instancie objektu na ktory je mapovana property
+	 * @param fieldToDisplay property objektu, ktora sa zobrazi
+	 * @return
+	 */
+	public UniversalComponentHelper addListFieldMapping(Object dbInstance, String propertyToMap, String methodToRetrieveObject, String fieldToDisplay)
+	{
+<span class="nc" id="L263">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingDbInstance&quot;, dbInstance);</span>
+<span class="nc" id="L264">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingMethodName&quot;, methodToRetrieveObject);</span>
+<span class="nc" id="L265">		req.setAttribute(&quot;universal_component_&quot;+propertyToMap+&quot;.mappingObjectFieldName&quot;, fieldToDisplay);</span>
+
+<span class="nc" id="L267">		return this;</span>
+	}
+
+
+	/**
+	 * Nastavi pre editForm pre konkretnu property nastavenie cez selectbox
+	 *
+	 * @param propertyToAddSelect nemo property ktoru budeme nastavovat cez select
+	 * @param selectItems kolekcia s polozkami na zobrazenie v selecte
+	 * @param selectValue property objektu kolekcie z ktoreho sa berie hodnota selectu
+	 * @param selectLabel property objektu kolekcie z ktoreho sa berie popis selectu
+	 * @return
+	 */
+	public UniversalComponentHelper addSelectToField(String propertyToAddSelect, Collection selectItems, String selectValue, String selectLabel)
+	{
+<span class="nc" id="L282">		req.setAttribute(&quot;universal_component_&quot;+propertyToAddSelect+&quot;.select&quot;, selectItems);</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (Tools.isNotEmpty(selectValue))</span>
+<span class="nc" id="L284">			req.setAttribute(&quot;universal_component_&quot;+propertyToAddSelect+&quot;.select.value&quot;, selectValue);</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (Tools.isNotEmpty(selectLabel))</span>
+<span class="nc" id="L286">			req.setAttribute(&quot;universal_component_&quot;+propertyToAddSelect+&quot;.select.label&quot;, selectLabel);</span>
+<span class="nc" id="L287">		return this;</span>
+	}
+
+	/**
+	 * Nastavi pre editForm pre konkretnu property nastavenie cez selectbox
+	 *
+	 * @param propertyToAddSelect nemo property ktoru budeme nastavovat cez select
+	 * @param selectItems kolekcia s polozkami na zobrazenie v selecte
+	 * @return
+	 */
+	public UniversalComponentHelper addSelectToField(String propertyToAddSelect, Collection selectItems)
+	{
+<span class="nc" id="L299">		return addSelectToField(propertyToAddSelect, selectItems, null, null);</span>
+	}
+
+	public UniversalComponentHelper addIwcmTextPrefixToField(String propertyToText, String iwcmTextPrefix)
+	{
+<span class="nc" id="L304">		req.setAttribute(&quot;universal_component_&quot;+propertyToText+&quot;_iwcmtextprefix&quot;, iwcmTextPrefix);</span>
+<span class="nc" id="L305">		return this;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CookieManagerBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr</a> &gt; <span class="el_source">CookieManagerBean.java</span></div><h1>CookieManagerBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotBlank;
+
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+
+/**
+ *  CookieManagerBean.java - #23881 Modul pre spravu cookies banneru
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 19.05.2018 10:43:50
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;cookies&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GDPR_COOKIES)
+<span class="fc" id="L40">public class CookieManagerBean extends ActiveRecord implements Serializable</span>
+{
+	private static final long serialVersionUID = -1L;
+
+	@Id
+	@GeneratedValue(generator=&quot;WJGen_cookies&quot;)
+	@TableGenerator(name=&quot;WJGen_cookies&quot;,pkColumnValue=&quot;cookies&quot;)
+	@Column(name=&quot;cookie_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.ID,
+        title = &quot;editor.cell.id&quot;)
+	private int cookieId;
+
+    @Column(name=&quot;cookie_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;components.cookies.cookie_manager.cookie_name&quot;,
+		tab = &quot;basic&quot;
+    )
+	@NotBlank
+	String cookieName;
+
+    @Column(name=&quot;classification&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.cookies.cookie_manager.classification&quot;,
+		tab = &quot;basic&quot;
+    )
+	String classification;
+
+    @Column(name=&quot;provider&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.cookies.cookie_manager.provider&quot;,
+        tab = &quot;advanced&quot;
+    )
+	String provider;
+
+    @Column(name=&quot;purpouse&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;components.cookies.cookie_manager.purpouse&quot;,
+        tab = &quot;advanced&quot;
+    )
+	String purpouse;
+
+    @Column(name=&quot;validity&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.cookies.cookie_manager.validity&quot;,
+        tab = &quot;advanced&quot;
+    )
+	String validity;
+
+    @Column(name=&quot;type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;components.cookies.cookie_manager.type&quot;,
+		tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;http&quot;, value = &quot;http&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;html&quot;, value = &quot;html&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;pixel&quot;, value = &quot;pixel&quot;),
+                }
+            )
+        }
+    )
+	String type;
+
+    @Column(name=&quot;application&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.cookies.cookie_manager.application&quot;,
+		tab = &quot;basic&quot;
+    )
+	private String application;
+
+    @Column(name=&quot;typical_value&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.cookies.cookie_manager.typicalValue&quot;,
+		tab = &quot;basic&quot;
+    )
+	private String typicalValue;
+
+    @Column(name=&quot;party_3rd&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title=&quot;components.cookies.cookie_manager.party3rd&quot;,
+		tab = &quot;basic&quot;
+    )
+	private boolean party3rd;
+
+    @Column(name=&quot;save_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;components.date.last_update&quot;,
+        hiddenEditor = true
+    )
+	Date saveDate;
+
+	@Column(name=&quot;domain_id&quot;)
+	int domainId;
+
+	@Column(name=&quot;user_id&quot;)
+	int userId;
+
+	@Column(name=&quot;description&quot;)
+	String description;
+
+	public int getcookieId()
+	{
+<span class="fc" id="L155">		return cookieId;</span>
+	}
+
+	public void setcookieId(int cookieId)
+	{
+<span class="fc" id="L160">		this.cookieId = cookieId;</span>
+<span class="fc" id="L161">	}</span>
+
+	@Override
+	public void setId(int id)
+	{
+<span class="fc" id="L166">		setcookieId(id);</span>
+<span class="fc" id="L167">	}</span>
+
+	@Override
+	public int getId()
+	{
+<span class="fc" id="L172">		return getcookieId();</span>
+	}
+
+	public int getDomainId()
+	{
+<span class="fc" id="L177">		return domainId;</span>
+	}
+
+	public void setDomainId(int domainId)
+	{
+<span class="fc" id="L182">		this.domainId = domainId;</span>
+<span class="fc" id="L183">	}</span>
+
+	public int getUserId()
+	{
+<span class="fc" id="L187">		return userId;</span>
+	}
+
+	public void setUserId(int userId)
+	{
+<span class="fc" id="L192">		this.userId = userId;</span>
+<span class="fc" id="L193">	}</span>
+
+	public Date getSaveDate()
+	{
+<span class="fc" id="L197">		return saveDate;</span>
+	}
+
+	public void setSaveDate(Date saveDate)
+	{
+<span class="fc" id="L202">		this.saveDate = saveDate;</span>
+<span class="fc" id="L203">	}</span>
+
+	public String getCookieName()
+	{
+<span class="fc" id="L207">		return cookieName;</span>
+	}
+
+	public void setCookieName(String cookieName)
+	{
+<span class="fc" id="L212">		this.cookieName = cookieName;</span>
+<span class="fc" id="L213">	}</span>
+
+	public String getDescription()
+	{
+<span class="fc" id="L217">		return description;</span>
+	}
+
+	public void setDescription(String description)
+	{
+<span class="fc" id="L222">		this.description = description;</span>
+<span class="fc" id="L223">	}</span>
+
+	public String getProvider()
+	{
+<span class="fc" id="L227">		return provider;</span>
+	}
+
+	public void setProvider(String provider)
+	{
+<span class="fc" id="L232">		this.provider = provider;</span>
+<span class="fc" id="L233">	}</span>
+
+	public String getPurpouse()
+	{
+<span class="fc" id="L237">		return purpouse;</span>
+	}
+
+	public void setPurpouse(String purpouse)
+	{
+<span class="fc" id="L242">		this.purpouse = purpouse;</span>
+<span class="fc" id="L243">	}</span>
+
+	public String getValidity()
+	{
+<span class="fc" id="L247">		return validity;</span>
+	}
+
+	public void setValidity(String validity)
+	{
+<span class="fc" id="L252">		this.validity = validity;</span>
+<span class="fc" id="L253">	}</span>
+
+	public String getType()
+	{
+<span class="fc" id="L257">		return type;</span>
+	}
+
+	public void setType(String type)
+	{
+<span class="fc" id="L262">		this.type = type;</span>
+<span class="fc" id="L263">	}</span>
+
+	public String getClassification()
+	{
+<span class="fc" id="L267">		return classification;</span>
+	}
+
+	public void setClassification(String classification)
+	{
+<span class="fc" id="L272">		this.classification = classification;</span>
+<span class="fc" id="L273">	}</span>
+
+	public String getApplication() {
+<span class="fc" id="L276">		return application;</span>
+	}
+
+	public void setApplication(String application) {
+<span class="fc" id="L280">		this.application = application;</span>
+<span class="fc" id="L281">	}</span>
+
+	public String getTypicalValue() {
+<span class="fc" id="L284">		return typicalValue;</span>
+	}
+
+	public void setTypicalValue(String typicalValue) {
+<span class="fc" id="L288">		this.typicalValue = typicalValue;</span>
+<span class="fc" id="L289">	}</span>
+
+	public boolean isParty3rd() {
+<span class="fc" id="L292">		return party3rd;</span>
+	}
+
+	public void setParty3rd(boolean party3rd) {
+<span class="fc" id="L296">		this.party3rd = party3rd;</span>
+<span class="fc" id="L297">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

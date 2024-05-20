@@ -554,6 +554,65 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
     DTE.save();
 });
 
+Scenario("Domain separation check", ({I, DT, Document}) => {
+    I.amOnPage("/apps/dmail/admin/");
+
+    DT.filter("subject", "test_domain_filter");
+    DT.checkTableRow("campaingsDataTable", 1, ["2476", "test_domain_filter_webjet9"]);
+    I.dontSee("test_domain_filter_test23");
+
+    //Change domain
+    Document.switchDomain("test23.tau27.iway.sk");
+    DT.filter("subject", "test_domain_filter");
+    DT.checkTableRow("campaingsDataTable", 1, ["2477", "test_domain_filter_test23"]);
+    I.dontSee("test_domain_filter_webjet9");
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});
+
+Scenario("BUG check - disabling buttons + emails/stat delete", ({I, DT, DTE}) => {
+    I.amOnPage("/apps/dmail/admin/");
+
+    DT.filter("subject", "test_domain_filter");
+    I.click("test_domain_filter_webjet9");
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    I.waitForElement("#pills-dt-campaingsDataTable-receivers");
+
+    I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-create") );
+    DTE.waitForEditor("datatableFieldDTE_Field_recipientsTab");
+
+    within("#datatableFieldDTE_Field_recipientsTab_modal", () => {
+        I.fillField({css: "#DTE_Field_recipientName"}, "testForDelete");
+        I.fillField({css: "#DTE_Field_recipientEmail"}, "testForDelete@test.sk");
+    });
+
+    DTE.save("datatableFieldDTE_Field_recipientsTab");
+    DT.waitForLoader();
+
+    DT.filter("recipientName", "testForDelete");
+
+    I.see("testForDelete");
+    I.seeElement( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-resend") );
+
+    I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-select-all") );
+
+    I.dontSeeElement( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-resend.disabled") );
+
+    I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-remove") );
+    I.waitForElement("div.DTE_Action_Remove");
+    I.waitForText("Naozaj chcete zmazať položku?", 5);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+
+    I.seeElement( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-resend") );
+});
+
+Scenario('logout2', async ({I}) => {
+    I.logout();
+});
 /* CHECK new custom constraint MultipleEmails */
 
 Scenario('Check BUG recipients + constraint MultipleEmails', ({ I, DT, DTE}) => {

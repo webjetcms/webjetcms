@@ -70,7 +70,7 @@ public class BannerRestController extends DatatableRestControllerV2<BannerBean, 
             entity.setPriority(10);
             entity.setActive(true);
         } else {
-            entity = bannerRepository.getById(id);
+            entity = bannerRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
 
             if (getUser().isDisabledItem("cmp_banner_seeall") && (entity.getClientId()==null || entity.getClientId().intValue()!=getUser().getUserId())) {
                 //na entitu nema pravo

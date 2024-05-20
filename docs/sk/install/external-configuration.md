@@ -65,6 +65,10 @@ Vhodné miesto na nastavenie premennej je aj ```<Parameter``` v ```<Context``` e
       </Host>
 ```
 
+## Prázdna hodnota
+
+Pri zadaní hodnoty cez `-Dwebjet.` alebo `ENV` sa použije hodnota, len ak nie je prázdna. Aby bolo možné zadať aj prázdnu hodnotu zadajte znak `-`, tento bude nahradený za prázdnu hodnotu.
+
 ## Externé databázové spojenie
 
 Databázové spojenie sa vo WebJETe nastavuje v súbore ```WEB-INF/classes/poolman.xml```. Niekedy je vhodné meniť parametre databázového spojenia podľa prostredia (PROD, TEST), alebo bezpečnosť nepovoľuje mať databázové heslo zapísané v súbore.

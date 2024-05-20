@@ -1,0 +1,19 @@
+{
+    "bundles" : [
+      { "bundleName" : "apache1", "licenseName" : "Apache Software License, Version 1.1", "licenseUrl" : "http://www.apache.org/licenses/LICENSE-1.1" },
+      { "bundleName" : "apache2", "licenseName" : "Apache License, Version 2.0", "licenseUrl" : "http://www.apache.org/licenses/LICENSE-2.0" },
+      { "bundleName" : "cddl1", "licenseName" : "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE Version 1.0 (CDDL-1.0)", "licenseUrl" : "http://opensource.org/licenses/CDDL-1.0" },
+      { "bundleName" : "lgpl2", "licenseName" : "GNU Lesser General Public License version 2", "licenseUrl" : "https://opensource.org/license/lgpl-2-1/" },
+      { "bundleName" : "mit", "licenseName" : "The MIT License", "licenseUrl" : "https://opensource.org/licenses/MIT" }
+    ],
+    "transformationRules" : [
+      { "bundleName" : "apache2", "licenseNamePattern" : ".*The Apache Software License, Version 2.0.*" },
+      { "bundleName" : "apache2", "licenseNamePattern" : "Apache 2" },
+      { "bundleName" : "apache2", "licenseUrlPattern" : "http://www.apache.org/licenses/LICENSE-2.0.txt" },
+      { "bundleName" : "lgpl2", "licenseUrlPattern" : "https://openjdk.java.net/legal/gplv2+ce.html" },
+      { "bundleName" : "lgpl2", "licenseUrlPattern" : "https://www.gnu.org/licenses/lgpl-2.1" },
+      { "bundleName" : "lgpl2", "licenseNamePattern" : ".*GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1.*" },
+      { "bundleName" : "lgpl2", "licenseNamePattern" : "LGPL" },
+      { "bundleName" : "lgpl2", "licenseNamePattern" : "LGPL-2.1" }
+    ]
+  }

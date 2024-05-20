@@ -174,7 +174,7 @@ Scenario('overenie zoznamu v inej domene', ({I, DTE, Document}) => {
     DTE.cancel();
 });
 
-Scenario('logout', ({I, login}) => {
+Scenario('logout', ({I}) => {
     I.logout();
 });
 

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BaseEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">BaseEditorFields.java</span></div><h1>BaseEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.FieldType;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.editor.rest.FieldValue;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ * Zakladna trieda pre EditorFields Datatabulky, obsahuje spolocne vlastnosti, primarne nastavenie CSS riadku a ikony
+ */
+@Getter
+@Setter
+<span class="fc" id="L31">public class BaseEditorFields {</span>
+
+    private String rowClass;
+    //zoznam stavovych ikon, je to jsonignore, musi sa pridat specialne v EditorFields objekte ako @DatatableColumn(...) String statusIcons;
+    @JsonIgnore
+    private List&lt;String&gt; statusIconsList;
+    //zoznam volnych poli
+    private List&lt;Field&gt; fieldsDefinition;
+    //properties key prefix for fields definition, needs to be set for autocomplete field
+    private String fieldsDefinitionKeyPrefix;
+
+    //poslanie notifikacie, je potrebne pri getOne alebo pri ulozeni
+    private List&lt;NotifyBean&gt; notify;
+
+    /**
+     * Prida CSS triedu k ROW tagu (implementovane v index.js v optione rowCallback: DT)
+     * @param addClass
+     */
+    public void addRowClass(String addClass) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (Tools.isEmpty(rowClass)) rowClass = addClass;</span>
+<span class="fc" id="L51">        else rowClass += &quot; &quot;+addClass;</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Prida novu ikonu k textu (vytvorenu ako span element)
+     * @param className - fas fa-eye-slash
+     */
+    public void addStatusIcon(String className) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (statusIconsList == null) statusIconsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L60">        statusIconsList.add(className);</span>
+<span class="fc" id="L61">    }</span>
+
+    @JsonIgnore
+    /**
+     * Vygeneruje definiciu volnych poli, presunute sem z EditorForm.getFields() pre moznost pouzitia aj v inych DT ako webpages
+     * @param bean - java bean, musi obsahovat metody getFieldX
+     * @param keyPrefix - prefix textovych klucov, napr. edior, alebo groupedit, nasledne sa hladaju kluce keyPrefix.field_X a keyPrefix.field_X.type
+     * @param lastAlphabet - koncove pismeno (urcuje pocet volnych poli), nap. T aleb D
+     * @return
+     */
+    public List&lt;Field&gt; getFields(Object bean, String keyPrefix, char lastAlphabet) {
+		//tu musi byt getInstance aby sa prebral jazyk podla prihlaseneho usera
+<span class="fc" id="L73">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L74">		Prop propType = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L75">        List&lt;Field&gt; fields = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L76">        fieldsDefinitionKeyPrefix = keyPrefix;</span>
+        Method method;
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (char alphabet = 'A'; alphabet &lt;= lastAlphabet; alphabet++) {</span>
+
+            try {
+<span class="fc" id="L81">                Field field = new Field();</span>
+<span class="fc" id="L82">                method = bean.getClass().getMethod(&quot;getField&quot; + alphabet);</span>
+
+<span class="fc" id="L84">                String labelKey = keyPrefix+&quot;.field_&quot; + Character.toLowerCase(alphabet);</span>
+<span class="fc" id="L85">                String label = prop.getText(labelKey);</span>
+
+<span class="fc" id="L87">                String typeKey = labelKey + &quot;.type&quot;;</span>
+<span class="fc" id="L88">                String type = propType.getText(typeKey);</span>
+
+<span class="fc" id="L90">                FieldType fieldType = FieldType.asFieldType(type);</span>
+<span class="fc" id="L91">                List&lt;FieldValue&gt; fieldValues = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">                if (!type.equals(typeKey)) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                    if (type.contains(&quot;|&quot;)) {</span>
+                        // multiple select
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                        if(type.startsWith(&quot;multiple:&quot;)) {</span>
+<span class="fc" id="L97">                            type = type.replace(&quot;multiple:&quot;, &quot;&quot;);</span>
+<span class="fc" id="L98">                            field.setMultiple(true);</span>
+                        }
+<span class="fc" id="L100">                        String values = type.substring(type.indexOf(&quot;:&quot;) + 1);</span>
+                        //ak zacina na znak | chceme mat moznost prvu hodnotu mat prazdnu
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">                        if (values.startsWith(&quot;|&quot;)) fieldValues.add(new FieldValue(&quot;&quot;, &quot;&quot;));</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                        for (String value : Tools.getTokens(values, &quot;|&quot;)) {</span>
+<span class="fc" id="L104">                            fieldValues.add(new FieldValue(value, value));</span>
+                        }
+                    }
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                    if (type.startsWith(&quot;docsIn_&quot;)) {</span>
+                        //JICH - add
+<span class="fc" id="L110">                        boolean isNull = false;</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                        if (type.endsWith(&quot;_null&quot;)) {</span>
+<span class="fc" id="L112">                            isNull = true;</span>
+<span class="fc" id="L113">                            type = type.replace(&quot;_null&quot;, &quot;&quot;);</span>
+                        }
+                        //JICH - add end
+<span class="fc" id="L116">                        String groupId = type.substring(type.indexOf(&quot;_&quot;) + 1);</span>
+<span class="fc" id="L117">                        int groupIdInt = Tools.getIntValue(groupId, 0);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                        if (groupIdInt &gt; 0) {</span>
+<span class="fc" id="L119">                            GroupDetails group = GroupsDB.getInstance().getGroup(groupIdInt);</span>
+<span class="fc" id="L120">                            List&lt;DocDetails&gt; listOfDocs = DocDB.getInstance().getDocByGroup(groupIdInt);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">                            if (listOfDocs != null) {</span>
+                                //JICH - add
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                                if (isNull) {</span>
+<span class="fc" id="L124">                                    fieldValues.add(new FieldValue(&quot;&quot;, &quot;&quot;));</span>
+                                }
+                                //JICH - add end
+<span class="fc bfc" id="L127" title="All 2 branches covered.">                                for (DocDetails d : listOfDocs) {</span>
+<span class="pc bpc" id="L128" title="1 of 4 branches missed.">                                    if (group != null &amp;&amp; group.getDefaultDocId() != d.getDocId()) {</span>
+<span class="fc" id="L129">                                        fieldValues.add(new FieldValue(d.getTitle(), d.getDocId()));</span>
+                                    }
+<span class="fc" id="L131">                                }</span>
+                            }
+                        }
+                    }
+
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                    if (type.startsWith(&quot;enumeration_&quot;)) {</span>
+<span class="fc" id="L137">                        boolean isNull = false;</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                        if (type.endsWith(&quot;_null&quot;)) {</span>
+<span class="nc" id="L139">                            isNull = true;</span>
+<span class="nc" id="L140">                            type = type.replace(&quot;_null&quot;, &quot;&quot;);</span>
+                        }
+
+<span class="fc" id="L143">                        int enumerationId = Tools.getIntValue(type.substring(type.indexOf(&quot;_&quot;) + 1), 0);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                        if (enumerationId &gt; 0) {</span>
+<span class="fc" id="L145">                            List&lt;EnumerationDataBean&gt; enumerationDataList = EnumerationDataDB.getEnumerationDataByType(enumerationId);</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                            if (enumerationDataList != null) {</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">                                if (isNull) {</span>
+<span class="nc" id="L148">                                    fieldValues.add(new FieldValue(&quot;&quot;, &quot;&quot;));</span>
+                                }
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                                for (EnumerationDataBean enumData : enumerationDataList) {</span>
+<span class="fc" id="L151">                                    fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));</span>
+<span class="fc" id="L152">                                }</span>
+                            }
+                        }
+                    }
+
+                    //JICH - add
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">                    if (type.startsWith(&quot;custom-dialog&quot;)) {</span>
+                        //System.out.println(type);
+<span class="nc" id="L160">                        String[] typeArray = type.split(&quot;,&quot;);</span>
+<span class="nc" id="L161">                        String dialogScript = &quot;&quot;;</span>
+<span class="nc" id="L162">                        String displayScript = &quot;&quot;;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                        if (typeArray.length &gt; 1) dialogScript = typeArray[1];</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                        if (typeArray.length &gt; 2) displayScript = typeArray[2];</span>
+
+<span class="nc" id="L166">                        fieldValues.add(new FieldValue(dialogScript, displayScript));</span>
+                    }
+                    //JICH - add end
+                }
+
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                if (fieldType == null) {</span>
+<span class="nc" id="L172">                    fieldType = FieldType.TEXT;</span>
+                }
+
+<span class="fc" id="L175">                String value = (String) method.invoke(bean);</span>
+
+                //	TAN: textovym retazcom je mozne zadat maximalnu dlzku znakov v inpute alebo validaciu s odporucanym maximalnym poctom znakov inputu
+                // priklad zadania textoveho kluca: text-120, warningLength-80
+<span class="fc" id="L179">                int maxlength = 255;</span>
+<span class="fc" id="L180">                int warninglength = 0;</span>
+                try
+                {
+<span class="fc bfc" id="L183" title="All 2 branches covered.">                    if (type.startsWith(&quot;text-&quot;)) {</span>
+
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                        if (type.contains(&quot;,&quot;)) {</span>
+<span class="fc" id="L186">                            String[] typeArray = type.split(&quot;,&quot;);</span>
+<span class="fc" id="L187">                            String maxlengthstring = typeArray[0];</span>
+<span class="fc" id="L188">                            String warninglengthstring = typeArray[1];</span>
+
+<span class="fc" id="L190">                            maxlengthstring = maxlengthstring.substring(maxlengthstring.lastIndexOf(&quot;-&quot;) + 1);</span>
+<span class="fc" id="L191">                            warninglengthstring = warninglengthstring.substring(warninglengthstring.lastIndexOf(&quot;-&quot;) + 1);</span>
+
+<span class="fc" id="L193">                            maxlength = Integer.parseInt(maxlengthstring.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;));</span>
+<span class="fc" id="L194">                            warninglength = Integer.parseInt(warninglengthstring.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;));</span>
+<span class="fc" id="L195">                        } else {</span>
+<span class="nc" id="L196">                            int pomlcka = type.indexOf(&quot;-&quot;);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                            if (pomlcka &gt; 0) maxlength = Tools.getIntValue(type.substring(pomlcka + 1), 255);</span>
+                        }
+                    }
+                }
+<span class="nc" id="L201">                catch (Exception ex)</span>
+                {
+<span class="nc" id="L203">                    Logger.error(BaseEditorFields.class, ex);</span>
+<span class="fc" id="L204">                }</span>
+
+<span class="fc" id="L206">                field.setKey(Character.toLowerCase(alphabet) + &quot;&quot;);</span>
+<span class="fc" id="L207">                field.setLabel(label);</span>
+<span class="fc" id="L208">                field.setValue(value);</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">                if (Tools.isEmpty(field.getType())) field.setType(fieldType.name().toLowerCase());</span>
+<span class="fc" id="L210">                field.setMaxlength(maxlength);</span>
+<span class="fc" id="L211">                field.setWarninglength(warninglength);</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">                if (warninglength&gt;0) {</span>
+<span class="fc" id="L213">                    field.setWarningMessage( prop.getText(keyPrefix+&quot;.field_&quot; + Character.toUpperCase(alphabet)+&quot;.warningText&quot;, String.valueOf(warninglength)));</span>
+                }
+<span class="fc bfc" id="L215" title="All 2 branches covered.">                if (fieldType != FieldType.TEXT) {</span>
+<span class="fc" id="L216">                    field.setTypeValues(fieldValues);</span>
+                }
+
+<span class="fc" id="L219">                fields.add(field);</span>
+<span class="nc" id="L220">            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L221">                Logger.error(BaseEditorFields.class, e);</span>
+<span class="fc" id="L222">            }</span>
+        }
+
+<span class="fc" id="L225">		return fields;</span>
+	}
+
+    /**
+     * Vrati HTML kod stavovych ikon, vo vasej triede musite implementovat minimalny kod:
+     * getStatusIcons() { return getStatusIconsHtml(); }
+     * @return
+     */
+    @JsonIgnore
+    public String getStatusIconsHtml() {
+<span class="fc" id="L235">        StringBuilder iconsHtml = new StringBuilder();</span>
+        //console.log(&quot;currentRow=&quot;, currentRow);
+<span class="pc bpc" id="L237" title="1 of 4 branches missed.">        if (statusIconsList!=null &amp;&amp; statusIconsList.isEmpty()==false) {</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">            for (String icon : statusIconsList) {</span>
+<span class="fc" id="L239">                iconsHtml.append(&quot;&lt;i class=\&quot;&quot;).append(icon).append(&quot;\&quot;&gt;&lt;/i&gt; &quot;);</span>
+<span class="fc" id="L240">            }</span>
+        }
+<span class="fc" id="L242">        return iconsHtml.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

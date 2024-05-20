@@ -30,7 +30,7 @@ block content
 
             style.
                 .dt-header-row .form-switch.buttons-recursive .form-check-label.is-icon-arrows-v::after {
-                    content: "\f802";
+                    content: "\ec9f";
                 }
                 span.baseurl {
                     max-width: 60%;
@@ -61,9 +61,6 @@ block content
                 @media (max-width: 1200px) {
                     #datatableInit_wrapper > div.dt-header-row .buttons-divider { margin-right: 16px; }
                     #datatableInit_wrapper > div.dt-header-row .buttons-divider-left { margin-left: 12px; }
-                }
-                #datatableInit_wrapper .dt-header-row div.dt-buttons {
-                    padding-right: 175px;
                 }
 
             script.
@@ -168,7 +165,7 @@ block content
 
                     var buttonCounter = 4;
                     webpagesDatatable.button().add(buttonCounter++, {
-                        text: '<i class="fa-solid fa-trash-can-undo text-danger"></i>',
+                        text: '<i class="ti ti-trash-off text-danger"></i>',
                         action: function (e, dt, node) {
                             webpagesDatatable.executeAction("recoverDoc", false);
                         },
@@ -327,7 +324,7 @@ block content
                         if (type === 'group') {
                             //console.log("KLIK na nejaku grupu, original=", node.original);
                             var isEditable = true;
-                            if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("folder-times")!=-1) isEditable = false;
+                            if (typeof node.original.icon != "undefined" && node.original.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
                             setCurrentGroup(node.original.groupDetails, isEditable);
                         }
                         else {
@@ -454,31 +451,6 @@ block content
                                 }
                             }, 200);
                         }
-                        if ("datatableInit"===e.detail.id) {
-                            if (webpagesDatatable.EDITOR.currentJson?.docId === -1) {
-                                if ($("#pills-dt-datatableInit-content-tab").hasClass("active")) {
-                                    //je to nova stranka, prepni sa na kartu Zakladne
-                                    setTimeout(()=> {
-                                        $("#pills-dt-datatableInit-basic-tab").trigger("click");
-                                    }, 700);
-                                }
-                            }
-                            //pri duplikovani zmazme niektore hodnoty
-                            setTimeout(()=> {
-                                if ($("#datatableInit_modal").attr("data-action")=="duplicate") {
-                                    $("#pills-dt-datatableInit-basic-tab").trigger("click");
-                                    $("#DTE_Field_navbar").val("");
-                                    $("#DTE_Field_virtualPath").val("");
-                                }
-                            }, 700);
-
-                            //bug: edit - celledit - edit = virtualPath bad positioning, fix to flex
-                            var display = $("div.DTE_Field_Name_virtualPath").css("display");
-                            //console.log("display=", display);
-                            if (typeof display != undefined && "block"==display) {
-                                $("div.DTE_Field_Name_virtualPath").css("display", "flex");
-                            }
-                        }
                     });
                     groupsDatatable.EDITOR.on('postSubmit', function (e, json, data) {
                         setTimeout(()=>{
@@ -534,7 +506,7 @@ block content
 
                     (() => {
                         //presun input do DT hlavicky
-                        $("#datatableInit_wrapper div.dt-header-row div.row div.col-auto .dt-buttons").append($("#docIdInputWrapper")).parents("div.dt-header-row").addClass("wp-header");
+                        $("#datatableInit_wrapper div.dt-header-row div.row div.col-auto .dt-buttons").prepend($("#docIdInputWrapper")).parents("div.dt-header-row").addClass("wp-header");
 
                         window?.jsTreeDocumentOpener?.inputDataFrom($('#tree-doc-id'), value => {
                             WJ.notifyError(WJ.translate("groupslist.docid_url") + " " + value, WJ.translate("editor.docid.cantload.js"), 5000);

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractUploadListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin</a> &gt; <span class="el_source">AbstractUploadListener.java</span></div><h1>AbstractUploadListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.core.GenericTypeResolver;
+import org.springframework.ui.ModelMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Abstraktna trieda ktora spracuje multipart upload v MVC aplikacii vo WebJET CMS
+ * Vysledkom je vrateny objekt form aj s pripojenym suborom
+ */
+public abstract class AbstractUploadListener&lt;T&gt; {
+
+    private final Validator validator;
+    private BindingResult bindingResult;
+    private boolean isPost;
+    private T form;
+
+<span class="fc" id="L39">    protected AbstractUploadListener(Validator validator) {</span>
+<span class="fc" id="L40">        this.validator = validator;</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Metoda pre sprocesovanie formularu a validovanie
+     * @param event WebjetEvent&lt;ThymeleafEvent&gt;
+     */
+    public void processForm(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+<span class="fc" id="L48">        ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L49">        this.isPost = &quot;post&quot;.equalsIgnoreCase(event.getSource().getRequest().getMethod());</span>
+
+<span class="fc" id="L51">        Optional&lt;T&gt; formOptional = getBeanOptional(event.getSource().getRequest());</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (!formOptional.isPresent()) {</span>
+<span class="nc" id="L53">            return;</span>
+        }
+
+<span class="fc" id="L56">        this.form = formOptional.get();</span>
+<span class="fc" id="L57">        this.bindingResult = new BeanPropertyBindingResult(form, &quot;form&quot;);</span>
+
+<span class="fc" id="L59">        validate(model, form);</span>
+<span class="fc" id="L60">    }</span>
+
+    /**
+     * Metoda pre validaciu dat z formularu
+     * @param model ModelMap
+     * @param form T
+     */
+    public void validate(ModelMap model, T form) {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (!isPost) {</span>
+<span class="fc" id="L69">            return;</span>
+        }
+
+<span class="fc" id="L72">        Set&lt;ConstraintViolation&lt;T&gt;&gt; violations = validator.validate(form);</span>
+
+        //we dont know why, but validator for files returns same error two times
+<span class="fc" id="L75">        Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (ConstraintViolation&lt;T&gt; violation : violations) {</span>
+<span class="fc" id="L78">            String message = violation.getMessage();</span>
+<span class="fc" id="L79">            String path = violation.getPropertyPath().toString();</span>
+<span class="fc" id="L80">            String key = path + &quot;_&quot; + message;</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (duplicityCheck.contains(key)) {</span>
+<span class="nc" id="L82">                continue;</span>
+            }
+<span class="fc" id="L84">            duplicityCheck.add(key);</span>
+<span class="fc" id="L85">            this.bindingResult.rejectValue(path, &quot;&quot;, message);</span>
+<span class="fc" id="L86">        }</span>
+
+<span class="fc" id="L88">        model.put(BindingResult.MODEL_KEY_PREFIX + &quot;form&quot;, this.bindingResult);</span>
+<span class="fc" id="L89">    }</span>
+
+    /**
+     * Pomocna metoda pre ziskanie informacie, ci je request typu post
+     * @return boolean
+     */
+    public boolean isPost() {
+<span class="fc" id="L96">        return isPost;</span>
+    }
+
+    /**
+     * Pomocna metoda pre ziskanie vysledku validacii
+     * @return BindingResult
+     */
+    public BindingResult getBindingResult() {
+<span class="fc" id="L104">        return bindingResult;</span>
+    }
+
+    /**
+     * Pomocna metoda pre ziskanie objektu s vyplnenymi datami vo formulari
+     * @return T
+     */
+    public T getForm() {
+<span class="fc" id="L112">        return form;</span>
+    }
+
+    /**
+     * Metoda pre ziskanie dat z requestu a nasetovanie do generickeho objektu
+     * @param request HttpServletRequest
+     * @return Optional&lt;T&gt;
+     */
+    private Optional&lt;T&gt; getBeanOptional(HttpServletRequest request) {
+        //noinspection unchecked
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L123">        Class&lt;T&gt; tClass = (Class&lt;T&gt;) GenericTypeResolver.resolveTypeArgument(getClass(), AbstractUploadListener.class);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (tClass == null) {</span>
+<span class="nc" id="L125">            Logger.error(AbstractUploadListener.class, &quot;Cannot resolve type argument of this class: {}&quot;, getClass());</span>
+<span class="nc" id="L126">            return Optional.empty();</span>
+        }
+
+<span class="fc" id="L129">        T instance = BeanUtils.instantiateClass(tClass);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (!isPost) {</span>
+<span class="fc" id="L131">            return Optional.of(instance);</span>
+        }
+
+<span class="fc" id="L134">        setParametersToProperties(request, instance);</span>
+<span class="fc" id="L135">        setMultipartFilePerametersToProperties(request, instance);</span>
+
+<span class="fc" id="L137">        return Optional.of(instance);</span>
+    }
+
+    /**
+     * Metoda pre nasavenie hodnot z formularu do properties objektu
+     * @param request HttpServletRequest
+     * @param form T
+     */
+    private void setParametersToProperties(HttpServletRequest request, T form) {
+<span class="fc" id="L146">        Map&lt;String, String[]&gt; parameterMap = request.getParameterMap();</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for (Map.Entry&lt;String, String[]&gt; stringEntry : parameterMap.entrySet()) {</span>
+<span class="fc" id="L148">            setProperty(request, form, stringEntry.getKey());</span>
+<span class="fc" id="L149">        }</span>
+<span class="fc" id="L150">    }</span>
+
+    /**
+     * Metoda pre nasavenie hodnoty z formularu do property objektu
+     * @param request HttpServletRequest
+     * @param form T
+     * @param key String
+     */
+    private void setProperty(HttpServletRequest request, T form, String key) {
+<span class="fc" id="L159">        Method declaredMethodWithMinimalParameters = BeanUtils.findDeclaredMethodWithMinimalParameters(form.getClass(), &quot;set&quot; + StringUtils.capitalize(key));</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (declaredMethodWithMinimalParameters == null) {</span>
+<span class="fc" id="L161">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L165">            declaredMethodWithMinimalParameters.invoke(form, Tools.getParameter(request, key));</span>
+<span class="nc" id="L166">        } catch (IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L167">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L168">        }</span>
+<span class="fc" id="L169">    }</span>
+
+    /**
+     * Metoda pre vlozenie suborov z formularu do properties objektu
+     * @param request HttpServletRequest
+     * @param form T
+     */
+    private void setMultipartFilePerametersToProperties(HttpServletRequest request, T form) {
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (!request.getClass().isAssignableFrom(DefaultMultipartHttpServletRequest.class)) {</span>
+<span class="nc" id="L178">            return;</span>
+        }
+
+<span class="fc" id="L181">        DefaultMultipartHttpServletRequest req = (DefaultMultipartHttpServletRequest) request;</span>
+<span class="fc" id="L182">        MultiValueMap&lt;String, MultipartFile&gt; multiFileMap = req.getMultiFileMap();</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        for (Map.Entry&lt;String, List&lt;MultipartFile&gt;&gt; stringListEntry : multiFileMap.entrySet()) {</span>
+<span class="fc" id="L184">            String key = stringListEntry.getKey();</span>
+<span class="fc" id="L185">            List&lt;MultipartFile&gt; value = stringListEntry.getValue();</span>
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">            for (MultipartFile multipartFile : value) {</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                if (multipartFile.getSize() == 0) {</span>
+<span class="fc" id="L189">                    continue;</span>
+                }
+
+<span class="fc" id="L192">                Method declaredMethodWithMinimalParameters = BeanUtils.findDeclaredMethod(form.getClass(), &quot;set&quot; + StringUtils.capitalize(key), MultipartFile.class);</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (declaredMethodWithMinimalParameters == null) {</span>
+<span class="nc" id="L194">                    continue;</span>
+                }
+
+                try {
+<span class="fc" id="L198">                    declaredMethodWithMinimalParameters.invoke(form, multipartFile);</span>
+<span class="nc" id="L199">                } catch (IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L200">                    sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L201">                }</span>
+<span class="fc" id="L202">            }</span>
+<span class="fc" id="L203">        }</span>
+<span class="fc" id="L204">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

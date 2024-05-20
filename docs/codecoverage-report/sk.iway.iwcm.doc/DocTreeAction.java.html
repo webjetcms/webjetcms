@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocTreeAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocTreeAction.java</span></div><h1>DocTreeAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.i18n.Prop;
+
+/**
+ *  Zobrazi dokumenty v stromovej strukture
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      $Date: 2003/06/05 16:05:53 $
+ *@modified     $Date: 2003/06/05 16:05:53 $
+ */
+<span class="nc" id="L21">public class DocTreeAction</span>
+{
+
+   public static String doTree(HttpServletRequest request)
+   {
+      //korenova skupina
+<span class="nc" id="L27">      int group_id = Constants.getInt(&quot;rootGroupId&quot;);</span>
+      try
+      {
+<span class="nc bnc" id="L30" title="All 2 branches missed.">      	 if (request.getAttribute(&quot;groupid&quot;) != null)</span>
+      	 {
+<span class="nc" id="L32">      	 	group_id = Integer.parseInt((String) request.getAttribute(&quot;groupid&quot;));</span>
+      	 }
+      	 else
+      	 {
+<span class="nc" id="L36">      	 	group_id = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
+      	 }
+      }
+<span class="nc" id="L39">      catch (Exception ex)</span>
+      {
+
+<span class="nc" id="L42">      }</span>
+
+<span class="nc" id="L44">      Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">      if(!GroupsDB.isGroupEditable(user, group_id))</span>
+      {
+<span class="nc" id="L47">      	request.setAttribute(&quot;err_msg&quot;, Prop.getInstance().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="nc" id="L48">			return &quot;error_admin&quot;;</span>
+      }
+
+<span class="nc" id="L51">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L52">      DocTreeDB docTreeDB = new DocTreeDB(group_id, groupsDB, DBPool.getDBName(request));</span>
+<span class="nc" id="L53">      request.setAttribute(&quot;navbar&quot;, docTreeDB.getNavbar());</span>
+<span class="nc" id="L54">      DocTreeDetails det = docTreeDB.getFirst();</span>
+<span class="nc" id="L55">      request.setAttribute(&quot;root_name&quot;, det.getName());</span>
+<span class="nc" id="L56">      request.setAttribute(&quot;root_url&quot;, det.getLink());</span>
+
+      //set data for group tree
+<span class="nc" id="L59">      request.setAttribute(&quot;tree_list&quot;, docTreeDB.getDocs());</span>
+
+<span class="nc" id="L61">      GroupDetails group = groupsDB.getGroup(group_id);</span>
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">      if (group != null)</span>
+      {
+<span class="nc" id="L65">         TemplatesDB tempDB = TemplatesDB.getInstance(false);</span>
+<span class="nc" id="L66">         TemplateDetails temp = tempDB.getTemplate(group.getTempId());</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">         if (temp == null)</span>
+         {
+<span class="nc" id="L70">            request.setAttribute(&quot;err_msg&quot;, &quot;Požadovaný dokument neexistuje 3&quot;);</span>
+<span class="nc" id="L71">            return (&quot;error&quot;);</span>
+         }
+
+<span class="nc" id="L74">         request.setAttribute(&quot;doc_header&quot;, temp.getHeaderDocData());</span>
+<span class="nc" id="L75">         request.setAttribute(&quot;doc_footer&quot;, temp.getFooterDocData());</span>
+<span class="nc" id="L76">         request.setAttribute(&quot;doc_menu&quot;, temp.getMenuDocData());</span>
+<span class="nc" id="L77">         request.setAttribute(&quot;after_body&quot;, temp.getAfterBodyData());</span>
+<span class="nc" id="L78">         request.setAttribute(&quot;doc_title&quot;, det.getName());</span>
+<span class="nc" id="L79">         ShowDoc.updateCodes(request, Constants.getServletContext(), -1);</span>
+      }
+
+<span class="nc" id="L82">      String forward=&quot;listing&quot;;</span>
+<span class="nc" id="L83">      String pForward = request.getParameter(&quot;forward&quot;);</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">      if (pForward!=null &amp;&amp; pForward.endsWith(&quot;.jsp&quot;))</span>
+      {
+<span class="nc" id="L86">         forward = &quot;/templates/&quot;+pForward;</span>
+      }
+
+      //ak sa jedna o archiv, bude to pekne v zelenom ;-)
+<span class="nc bnc" id="L90" title="All 2 branches missed.">      if (request.getParameter(&quot;archiv&quot;) != null)</span>
+      {
+<span class="nc" id="L92">         return (&quot;listing_archiv&quot;);</span>
+      }
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">      if (forward.endsWith(&quot;.jsp&quot;))</span>
+      {
+<span class="nc" id="L97">         return (forward);</span>
+      }
+      else
+      {
+<span class="nc" id="L101">         return (&quot;listing&quot;);</span>
+      }
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

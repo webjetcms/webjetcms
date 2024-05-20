@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsertScriptBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.insertScript</a> &gt; <span class="el_source">InsertScriptBean.java</span></div><h1>InsertScriptBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.insertScript; //NOSONAR
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+
+
+/**
+ *  InsertScriptBean.java - &gt;&gt;&gt;POPIS MA&lt;&lt;&lt;&lt;
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: prau $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 14.09.2016 14:46:13
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name=&quot;insert_script&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INSERT_SCRIPT)
+public class InsertScriptBean extends ActiveRecordRepository implements Serializable
+{
+    @JsonIgnore
+    private static final long serialVersionUID = -1L;
+
+    @Id
+    @GeneratedValue(generator=&quot;WJGen_insert_script&quot;)
+	@TableGenerator(name=&quot;WJGen_insert_script&quot;,pkColumnValue=&quot;insert_script&quot;)
+    @Column(name=&quot;insert_script_id&quot;)
+    @DataTableColumn(inputType=DataTableColumnType.ID)
+    private Long id;
+
+    @Column(name=&quot;name&quot;)
+    @NotBlank
+    @DataTableColumn(inputType=DataTableColumnType.OPEN_EDITOR, tab=&quot;main&quot;)
+    String name;
+
+    @Column(name=&quot;position&quot;)
+    @NotBlank
+    @DataTableColumn(
+        inputType=DataTableColumnType.TEXT,
+        tab=&quot;main&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/components/insert-script/positions&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+				}
+			)
+		}
+    )
+    String position;
+
+    @Column(name=&quot;cookie_class&quot;)
+    @NotBlank
+    @DataTableColumn(inputType=DataTableColumnType.SELECT, tab=&quot;main&quot;)
+    String cookieClass;
+
+    @Column(name=&quot;valid_from&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType=DataTableColumnType.DATETIME, tab=&quot;scriptPerms&quot;, title=&quot;user.admin.allowLoginStart&quot;)
+    Date validFrom;
+
+    @Column(name=&quot;valid_to&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType=DataTableColumnType.DATETIME, tab=&quot;scriptPerms&quot;, title=&quot;user.admin.allowLoginEnd&quot;)
+    Date validTo;
+
+    @JsonManagedReference(value=&quot;insertScriptBeanGr&quot;)
+    @OneToMany(mappedBy=&quot;insertScriptBeanGr&quot;,fetch=FetchType.LAZY,cascade={CascadeType.ALL},orphanRemoval=true)
+    @DataTableColumn(inputType=DataTableColumnType.JSON, tab=&quot;scriptPerms&quot;, title=&quot;grouptree.title&quot;, className=&quot;dt-tree-group-array&quot;,
+        editor = { @DataTableColumnEditor( attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addGroup&quot;)
+        } )}
+    )
+    List&lt;InsertScriptGroupBean&gt; groupIds; //NOSONAR
+
+    @JsonManagedReference(value=&quot;insertScriptBeanDoc&quot;)
+    @OneToMany(mappedBy=&quot;insertScriptBeanDoc&quot;,fetch=FetchType.LAZY,cascade={CascadeType.ALL},orphanRemoval=true)
+    @DataTableColumn(inputType=DataTableColumnType.JSON, tab=&quot;scriptPerms&quot;, title=&quot;components.insert_script.choose_pages&quot;, className=&quot;dt-tree-page-array&quot;,
+        editor = { @DataTableColumnEditor( attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addPage&quot;)
+        } )}
+    )
+    List&lt;InsertScriptDocBean&gt; docIds; //NOSONAR
+
+    @Column(name=&quot;script_body&quot;)
+    @Convert(converter = AllowHtmlAttributeConverter.class)
+    @DataTableColumn(inputType=DataTableColumnType.TEXTAREA, tab=&quot;scriptBody&quot;, title=&quot;components.insert_script.body&quot;, className = &quot;textarea-code show-html&quot;)
+    String scriptBody;
+
+
+    @Column(name=&quot;save_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    Date saveDate;
+
+    @Column(name=&quot;user_id&quot;)
+    int user;
+
+    @Column(name=&quot;domain_id&quot;)
+    int domainId;
+
+    public InsertScriptBean() {
+<span class="fc" id="L124">        super();</span>
+<span class="fc" id="L125">        validFrom = null;</span>
+<span class="fc" id="L126">        validTo = null;</span>
+<span class="fc" id="L127">    }</span>
+
+    @Override
+    public void setId(Long id) {
+<span class="fc" id="L131">        this.id = id;</span>
+<span class="fc" id="L132">    }</span>
+
+    @Override
+    public Long getId()
+    {
+<span class="fc" id="L137">        return id;</span>
+    }
+
+    public int getInsertScriptId()
+    {
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (id==null) return 0;</span>
+<span class="fc" id="L143">        return getId().intValue();</span>
+    }
+
+    public void setInsertScriptId(int insertScriptId)
+    {
+<span class="fc" id="L148">        setId(Long.valueOf(insertScriptId));</span>
+<span class="fc" id="L149">    }</span>
+
+    public int getUser()
+    {
+<span class="fc" id="L153">        return user;</span>
+    }
+
+    public void setUser(int user)
+    {
+<span class="fc" id="L158">        this.user = user;</span>
+<span class="fc" id="L159">    }</span>
+
+    public String getScriptBody()
+    {
+<span class="fc" id="L163">        return scriptBody;</span>
+    }
+
+    public void setScriptBody(String scriptBody)
+    {
+<span class="fc" id="L168">        this.scriptBody = scriptBody;</span>
+<span class="fc" id="L169">    }</span>
+
+    public String getPosition()
+    {
+<span class="fc" id="L173">        return position;</span>
+    }
+
+    public void setPosition(String position)
+    {
+<span class="fc" id="L178">        this.position = position;</span>
+<span class="fc" id="L179">    }</span>
+
+    public Date getSaveDate() {
+<span class="fc" id="L182">        return saveDate;</span>
+    }
+
+    public void setSaveDate(Date saveDate) {
+<span class="fc" id="L186">        this.saveDate = saveDate;</span>
+<span class="fc" id="L187">    }</span>
+
+    public String getName() {
+<span class="fc" id="L190">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="fc" id="L194">        this.name = name;</span>
+<span class="fc" id="L195">    }</span>
+
+    public Date getValidFrom() {
+<span class="fc" id="L198">        return validFrom;</span>
+    }
+
+    public void setValidFrom(Date validFrom) {
+<span class="fc" id="L202">        this.validFrom = validFrom;</span>
+<span class="fc" id="L203">    }</span>
+
+    public Date getValidTo() {
+<span class="fc" id="L206">        return validTo;</span>
+    }
+
+    public void setValidTo(Date validTo) {
+<span class="fc" id="L210">        this.validTo = validTo;</span>
+<span class="fc" id="L211">    }</span>
+
+    public List&lt;InsertScriptGroupBean&gt; getGroupIds() {
+<span class="fc" id="L214">        return groupIds;</span>
+    }
+
+    //@JsonManagedReference(value=&quot;insertScriptBeanGr&quot;)
+    public void setGroupIds(List&lt;InsertScriptGroupBean&gt; groupIds) {
+<span class="fc" id="L219">        this.groupIds = groupIds;</span>
+<span class="fc" id="L220">    }</span>
+
+    public List&lt;InsertScriptDocBean&gt; getDocIds() {
+<span class="fc" id="L223">        return docIds;</span>
+    }
+
+    //@JsonManagedReference(value=&quot;insertScriptBeanDoc&quot;)
+    public void setDocIds(List&lt;InsertScriptDocBean&gt; docIds) {
+<span class="fc" id="L228">        this.docIds = docIds;</span>
+<span class="fc" id="L229">    }</span>
+
+    @Override
+    public boolean save()
+    {
+<span class="nc" id="L234">        setSaveDate(new Date());</span>
+<span class="nc" id="L235">        InsertScriptDB.deleteCache();</span>
+<span class="nc" id="L236">        return super.save();</span>
+    }
+
+    @Override
+    public boolean delete()
+    {
+<span class="nc" id="L242">        InsertScriptDB.deleteCache();</span>
+<span class="nc" id="L243">        return super.delete();</span>
+    }
+
+    public int getDomainId() {
+<span class="fc" id="L247">        return domainId;</span>
+    }
+
+    public void setDomainId(int domainId) {
+<span class="fc" id="L251">        this.domainId = domainId;</span>
+<span class="fc" id="L252">    }</span>
+
+    public String getCookieClass() {
+<span class="fc" id="L255">        return cookieClass;</span>
+    }
+
+    public void setCookieClass(String cookieClass) {
+<span class="fc" id="L259">        this.cookieClass = cookieClass;</span>
+<span class="fc" id="L260">    }</span>
+
+    public List&lt;String&gt; getGroupsAndDocs() {
+<span class="fc" id="L263">        List&lt;String&gt; groups = null;</span>
+
+        try {
+<span class="fc" id="L266">            groups = getGroupIds().stream().map(g -&gt;</span>
+<span class="fc" id="L267">                GroupsDB.getInstance().getGroupNamePath(g.groupId) + &quot; (&quot; + g.groupId + &quot;)&quot;</span>
+<span class="fc" id="L268">            ).collect(Collectors.toList());</span>
+<span class="nc" id="L269">        } catch (Exception e) {</span>
+
+<span class="fc" id="L271">        }</span>
+
+<span class="fc" id="L273">        List&lt;String&gt; docs = null;</span>
+        try {
+<span class="fc" id="L275">            docs = getDocIds().stream().map(d -&gt; {</span>
+<span class="fc" id="L276">                DocDetails doc = DocDB.getInstance().getDoc(d.docId);</span>
+                try {
+<span class="fc" id="L278">                    return doc.getVirtualPath() + &quot; (&quot; + doc.getDocId() + &quot;)&quot;;</span>
+<span class="nc" id="L279">                } catch(Exception e) {</span>
+<span class="nc" id="L280">                    return &quot;&quot;;</span>
+                }
+
+<span class="fc" id="L283">            }).collect(Collectors.toList());</span>
+<span class="nc" id="L284">        } catch (Exception e) {</span>
+
+<span class="fc" id="L286">        }</span>
+
+<span class="fc" id="L288">        List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">        if(groups != null) {</span>
+<span class="fc" id="L290">            result.addAll(groups);</span>
+        }
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">        if(docs != null) {</span>
+<span class="fc" id="L293">            result.addAll(docs);</span>
+        }
+
+<span class="fc" id="L296">        return result;</span>
+    }
+}
+/*
+
+!!!!!
+alter table insert_script add cookie_class NVARCHAR2(255);
+!!!!!
+
+GRANT SELECT, UPDATE, INSERT, DELETE ON INSERT_SCRIPT TO NN_WEB_PUBLIC;
+GRANT SELECT, UPDATE, INSERT, DELETE ON INSERT_SCRIPT_DOC TO NN_WEB_PUBLIC;
+GRANT SELECT, UPDATE, INSERT, DELETE ON INSERT_SCRIPT_GR TO NN_WEB_PUBLIC;
+
+GRANT SELECT, UPDATE, INSERT, DELETE ON insert_script TO NN_WEB_PUBLIC;
+GRANT SELECT, UPDATE, INSERT, DELETE ON insert_script_doc TO NN_WEB_PUBLIC;
+GRANT SELECT, UPDATE, INSERT, DELETE ON insert_script_gr TO NN_WEB_PUBLIC;
+
+mysql
+java.sql.SQLSyntaxErrorException: ORA-00900: neplatnďż˝ prďż˝kaz SQL
+
+CREATE TABLE insert_script (
+insert_script_id INT NOT NULL PRIMARY KEY,
+create_date DATETIME,
+user INT,
+script_body VARCHAR(255),
+position INT);
+INSERT INTO pkey_generator VALUES('insert_script', 1 , 'insert_script', 'insert_script_id')
+
+mssql
+java.sql.SQLSyntaxErrorException: ORA-00900: neplatnďż˝ prďż˝kaz SQL
+
+CREATE TABLE insert_script (
+[insert_script_id] [INT] NOT NULL PRIMARY KEY,
+create_date [DATETIME],
+user [INT],
+script_body [NVARCHAR](255),
+position [INT]);
+INSERT INTO pkey_generator VALUES('insert_script', 1 , 'insert_script', 'insert_script_id')
+
+oracle
+java.sql.SQLSyntaxErrorException: ORA-00900: neplatnďż˝ prďż˝kaz SQL
+
+CREATE TABLE insert_script (
+insert_script_id INT NOT NULL PRIMARY KEY,
+create_date DATE,
+user INTEGER,
+script_body NVARCHAR2(255),
+position INTEGER);
+INSERT INTO pkey_generator VALUES('insert_script', 1 , 'insert_script', 'insert_script_id')
+PKEY:
+INSERT INTO pkey_generator VALUES('insert_script', 1 , 'insert_script', 'insert_script_id');
+*/
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersistentCacheBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cache</a> &gt; <span class="el_source">PersistentCacheBean.java</span></div><h1>PersistentCacheBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cache;
+
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Date;
+
+
+/**
+ * PersistentCacheBean.java - &gt;&gt;&gt;POPIS MA&lt;&lt;&lt;&lt;
+ *
+ * @author $Author: jeeff $
+ * @version $Revision: 1.3 $
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2010
+ * @created Date: 20.01.2012 11:08:13
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+@Entity
+@Table(name = &quot;cache&quot;)
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PERSISTENT_CACHE)
+<span class="fc" id="L31">public class PersistentCacheBean extends ActiveRecordRepository implements Serializable {</span>
+    private static final long serialVersionUID = -1L;
+
+    @Id
+    @GeneratedValue(generator = &quot;WJGen_cache&quot;)
+    @TableGenerator(name = &quot;WJGen_cache&quot;, pkColumnValue = &quot;cache&quot;)
+    @Column(name = &quot;cache_id&quot;)
+    @DataTableColumn(
+            inputType = {DataTableColumnType.ID},
+            title = &quot;[[#{components.memory_cleanup.persistent_cache_objects.id}]]&quot;
+    )
+    private Long cacheId;
+
+    @Column(name = &quot;data_type&quot;)
+    int dataType;
+
+    @Column(name = &quot;data_value&quot;)
+    @Convert(converter = AllowHtmlAttributeConverter.class)
+    @DataTableColumn(
+            inputType = {DataTableColumnType.OPEN_EDITOR},
+            renderFormat = &quot;dt-format-text-wrap&quot;,
+            title = &quot;[[#{components.data_deleting.name}]]&quot;,
+            tab = &quot;basicTab&quot;
+    )
+    String dataValue;
+
+    @Transient
+    @DataTableColumn(
+            renderFormat = &quot;td-format-number&quot;,
+            title = &quot;[[#{components.memory_cleanup.persistent_cache_objects.size}]]&quot;,
+            tab = &quot;basicTab&quot;,
+            editor = @DataTableColumnEditor(
+                    type = &quot;text&quot;,
+                    attr = @DataTableColumnEditorAttr(
+                            key = &quot;disabled&quot;,
+                            value = &quot;disabled&quot;
+                    )
+            )
+    )
+    private int resultSize;
+
+    @Column(name = &quot;data_result&quot;)
+    @Convert(converter = AllowHtmlAttributeConverter.class)
+    @DataTableColumn(
+            hidden = true,
+            tab = &quot;descriptionTab&quot;,
+            editor = @DataTableColumnEditor(
+                    type = &quot;textarea&quot;,
+                    attr = @DataTableColumnEditorAttr(
+                            key = &quot;class&quot;,
+                            value = &quot;textarea-code&quot;
+                    )
+            )
+    )
+    String dataResult;
+
+    @Column(name = &quot;refresh_minutes&quot;)
+    @DataTableColumn(
+            renderFormat = &quot;dt-format-number&quot;,
+            title = &quot;[[#{components.data_deleting.persistentCache.refreshMinutes}]]&quot;,
+            tab = &quot;basicTab&quot;
+    )
+    int refreshMinutes;
+
+    @Column(name = &quot;next_refresh&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+            renderFormat = &quot;dt-format-date-time&quot;,
+            title = &quot;[[#{components.memory_cleanup.persistent_cache_objects.next_update}]]&quot;,
+            tab = &quot;basicTab&quot;
+    )
+    Date nextRefresh;
+
+    public int getResultSize() {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (dataResult == null) return 0;</span>
+<span class="nc" id="L106">        resultSize = dataResult.length();</span>
+<span class="nc" id="L107">        return resultSize;</span>
+    }
+
+    public void setResultSize(int resultSize) {
+<span class="nc" id="L111">        this.resultSize = resultSize;</span>
+<span class="nc" id="L112">    }</span>
+
+    @Override
+    public void setId(Long id) {
+<span class="nc" id="L116">        setCacheId(id);</span>
+<span class="nc" id="L117">    }</span>
+
+    @Override
+    public Long getId() {
+<span class="nc" id="L121">        return getCacheId();</span>
+    }
+
+    public Long getCacheId() {
+<span class="nc" id="L125">        return cacheId;</span>
+    }
+
+    public void setCacheId(Long cacheId) {
+<span class="nc" id="L129">        this.cacheId = cacheId;</span>
+<span class="nc" id="L130">    }</span>
+
+    public int getDataType() {
+<span class="nc" id="L133">        return dataType;</span>
+    }
+
+    public void setDataType(int dataType) {
+<span class="nc" id="L137">        this.dataType = dataType;</span>
+<span class="nc" id="L138">    }</span>
+
+    public String getDataValue() {
+<span class="nc" id="L141">        return dataValue;</span>
+    }
+
+    public void setDataValue(String dataValue) {
+<span class="nc" id="L145">        this.dataValue = dataValue;</span>
+<span class="nc" id="L146">    }</span>
+
+    public int getRefreshMinutes() {
+<span class="nc" id="L149">        return refreshMinutes;</span>
+    }
+
+    public void setRefreshMinutes(int refreshMinutes) {
+<span class="nc" id="L153">        this.refreshMinutes = refreshMinutes;</span>
+<span class="nc" id="L154">    }</span>
+
+    public Date getNextRefresh() {
+<span class="nc" id="L157">        return nextRefresh;</span>
+    }
+
+    public void setNextRefresh(Date nextRefresh) {
+<span class="nc" id="L161">        this.nextRefresh = nextRefresh;</span>
+<span class="nc" id="L162">    }</span>
+
+    public String getDataResult() {
+<span class="nc" id="L165">        return dataResult;</span>
+    }
+
+    public void setDataResult(String dataResult) {
+<span class="nc" id="L169">        this.dataResult = dataResult;</span>
+<span class="nc" id="L170">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

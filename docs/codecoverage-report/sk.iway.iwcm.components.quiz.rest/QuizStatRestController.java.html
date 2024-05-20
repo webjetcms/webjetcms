@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizStatRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.rest</a> &gt; <span class="el_source">QuizStatRestController.java</span></div><h1>QuizStatRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.rest;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.quiz.jpa.QuizAnswerRespository;
+import sk.iway.iwcm.components.quiz.jpa.QuizStatDTO;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/quiz/stat&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_quiz')&quot;)
+@Datatable
+public class QuizStatRestController extends DatatableRestControllerV2&lt;QuizStatDTO, Long&gt; {
+
+    private final QuizAnswerRespository quizAnswerRespository;
+    
+    @Autowired
+    public QuizStatRestController(QuizAnswerRespository quizAnswerRespository) {
+<span class="fc" id="L34">        super(null);</span>
+<span class="fc" id="L35">        this.quizAnswerRespository = quizAnswerRespository;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public Page&lt;QuizStatDTO&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L40">        Integer quizId = Tools.getIntValue(getRequest().getParameter(&quot;quizId&quot;), -1);</span>
+<span class="fc" id="L41">        String stringRange = getRequest().getParameter(&quot;dayDate&quot;);</span>
+<span class="fc" id="L42">        ChartType chartType = StatService.stringToChartTypeEnum(getRequest().getParameter(&quot;chartType&quot;));</span>
+
+<span class="fc" id="L44">        return new PageImpl&lt;&gt;(QuizService.statTableData(quizId, stringRange, chartType, quizAnswerRespository));</span>
+    }
+
+    @Override
+    public Page&lt;QuizStatDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, QuizStatDTO search) {
+<span class="fc" id="L49">        Integer quizId = -1;</span>
+<span class="fc" id="L50">        String stringRange = &quot;&quot;;</span>
+<span class="fc" id="L51">        String chartType = &quot;&quot;;</span>
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) { </span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if(entry.getKey().equalsIgnoreCase(&quot;quizId&quot;)) {</span>
+<span class="fc" id="L55">                quizId = Tools.getIntValue(entry.getValue(), -1);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            } else if(entry.getKey().equalsIgnoreCase(&quot;searchDayDate&quot;)) {</span>
+<span class="fc" id="L57">                stringRange = entry.getValue();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            } else if(entry.getKey().equalsIgnoreCase(&quot;chartType&quot;)) {</span>
+<span class="nc" id="L59">                chartType = entry.getValue();</span>
+            }
+<span class="fc" id="L61">        }</span>
+
+<span class="fc" id="L63">        return new PageImpl&lt;&gt;(QuizService.statTableData(quizId, stringRange, StatService.stringToChartTypeEnum( chartType ), quizAnswerRespository));</span>
+    }
+
+    @RequestMapping(value=&quot;/lineChartDataRight&quot;, params={&quot;quizId&quot;, &quot;dayDate&quot;})
+    @ResponseBody
+    public Map&lt;String, List&lt;QuizStatDTO&gt;&gt; lineChartDataRight(
+        @RequestParam(&quot;quizId&quot;) int quizId,
+        @RequestParam(&quot;dayDate&quot;) String dayDate) {
+
+<span class="fc" id="L72">        return QuizService.statLineData(quizId, dayDate, &quot;0&quot;, quizAnswerRespository, getProp());</span>
+    }
+
+    @RequestMapping(value=&quot;/lineChartDataRated&quot;, params={&quot;quizId&quot;, &quot;dayDate&quot;})
+    @ResponseBody
+    public Map&lt;String, List&lt;QuizStatDTO&gt;&gt; lineChartDataRated(
+        @RequestParam(&quot;quizId&quot;) int quizId,
+        @RequestParam(&quot;dayDate&quot;) String dayDate) {
+
+<span class="fc" id="L81">        return QuizService.statLineData(quizId, dayDate, &quot;1&quot;, quizAnswerRespository, getProp());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,1068 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NtlmLogonAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.ntlm</a> &gt; <span class="el_source">NtlmLogonAction.java</span></div><h1>NtlmLogonAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.ntlm;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.naming.Context;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.PartialResultException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import sk.iway.Password;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  LogonAction.java - prihlasenie usera do systemu pomocou NTLM filtra
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.21 $
+ *@created      Date: 4.8.2005 14:04:07
+ *@modified     $Date: 2010/01/11 08:15:21 $
+ */
+@Controller
+<span class="fc" id="L66">public class NtlmLogonAction</span>
+{
+	private static Map&lt;String, String&gt; emptyGroupsTable;
+	static
+	{
+<span class="fc" id="L71">		emptyGroupsTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L72">	}</span>
+
+	@ResponseBody
+    @RequestMapping(&quot;/ntlm/logon.struts&quot;)
+	public void execute(HttpServletRequest request, HttpServletResponse response)
+				throws Exception
+	{
+<span class="fc" id="L79">		Logger.debug(NtlmLogonAction.class,&quot;NtlmLogonAction&quot;);</span>
+		try
+		{
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">			if (request instanceof NtlmHttpServletRequest)</span>
+			{
+<span class="nc" id="L84">				Identity loggedUser = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">				if (loggedUser != null)</span>
+				{
+					//user je uz zalogovany, asi nema prava tam kde chce ist...
+<span class="nc" id="L88">					Logger.debug(NtlmLogonAction.class,&quot;NtlmLogonAction - user je uz lognuty, asi sem nema pristup, admin: &quot; + loggedUser.isAdmin()+&quot; forbiddenURL=&quot;+AuthenticationFilter.getForbiddenURL());</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">					if (AuthenticationFilter.getForbiddenURL()!=null)</span>
+					{
+<span class="nc" id="L92">						response.sendRedirect(AuthenticationFilter.getForbiddenURL());</span>
+					}
+					else
+					{
+<span class="nc" id="L96">						response.sendError(HttpServletResponse.SC_FORBIDDEN);</span>
+					}
+<span class="nc" id="L98">					return;</span>
+				}
+
+
+<span class="nc" id="L102">				NtlmHttpServletRequest reqAuth = (NtlmHttpServletRequest)request;</span>
+<span class="nc" id="L103">				String loginName = reqAuth.getUserPrincipal().getName();</span>
+
+<span class="nc" id="L105">				int index = loginName.indexOf('\\');</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (index == -1) index = loginName.indexOf('/');</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				loginName = (index != -1) ? loginName.substring(index + 1) : loginName;</span>
+
+				//Set groups = reqAuth.getGroups();
+
+<span class="nc" id="L111">				Logger.debug(NtlmLogonAction.class,&quot;NtlmLogonAction - login: &quot; + loginName);</span>
+
+				//nastav default jazyk
+<span class="nc" id="L114">				request.getSession().setAttribute(sk.iway.iwcm.i18n.Prop.SESSION_I18N_PROP_LNG, Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="nc" id="L115">				Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+
+
+				UserDetails user;
+				//TODO refaktorovat tak, aby robil normalne redirecty, nie hadzal exception
+				try
+				{
+<span class="nc" id="L122">					user = authentificateUserAgainstLdap(request, response, loginName);</span>
+				}
+<span class="nc" id="L124">				catch (Exception e)</span>
+				{
+<span class="nc" id="L126">					return;</span>
+<span class="nc" id="L127">				}</span>
+
+<span class="nc" id="L129">				boolean logonSuccess = false;</span>
+<span class="nc" id="L130">				String afterLogonUrl = &quot;/&quot;;</span>
+
+<span class="nc" id="L132">				String password = user.getPassword();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+				{
+					//v BasicNtlmLogonAction to takto nastavime a ulozime, kedze heslo realne nevieme
+<span class="nc" id="L136">					password = user.getLogin();</span>
+				}
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				if (user.isAdmin())</span>
+				{
+					//prihlas ho
+<span class="nc" id="L142">					Identity identity = new Identity();</span>
+<span class="nc" id="L143">					Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L144">					String forward = LogonTools.logon(user.getLogin(), password, identity, errors, request, prop);</span>
+<span class="nc bnc" id="L145" title="All 6 branches missed.">					if (forward.compareTo(&quot;logon_ok_admin&quot;) != 0 || identity == null || identity.isAdmin() == false)</span>
+					{
+<span class="nc" id="L147">						identity = null;</span>
+					}
+					else
+					{
+<span class="nc" id="L151">						identity.setLoginName(user.getLogin());</span>
+<span class="nc" id="L152">						identity.setPassword(password);</span>
+<span class="nc" id="L153">						identity.setValid(true);</span>
+						//je korektne prihlaseny
+<span class="nc" id="L155">						LogonTools.setUserToSession(request.getSession(), identity);</span>
+
+<span class="nc" id="L157">						Logger.debug(NtlmLogonAction.class,&quot;NtlmLogonAction: admin prihlaseny&quot;);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">						if (request.getParameter(&quot;admin&quot;)!=null)</span>
+						{
+<span class="nc" id="L160">							afterLogonUrl = &quot;/admin&quot;;</span>
+						}
+<span class="nc" id="L162">						logonSuccess = true;</span>
+					}
+<span class="nc" id="L164">				}</span>
+				else
+				{
+<span class="nc" id="L167">					List&lt;String&gt; errors = LogonTools.logonUser(request, user.getLogin(), password);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">					if (errors.isEmpty())</span>
+					{
+						//je prihlaseny
+<span class="nc" id="L171">						Logger.debug(NtlmLogonAction.class,&quot;NtlmLogonAction: user je prihlaseny&quot;);</span>
+<span class="nc" id="L172">						logonSuccess = true;</span>
+					}
+				}
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				if (logonSuccess)</span>
+				{
+<span class="nc bnc" id="L178" title="All 2 branches missed.">					if (request.getParameter(&quot;origDocId&quot;)!=null)</span>
+					{
+<span class="nc" id="L180">						afterLogonUrl = &quot;/showdoc.do?docid=&quot;+request.getParameter(&quot;origDocId&quot;);</span>
+					}
+<span class="nc" id="L182">					String afterLogonRedirect = (String)request.getSession().getAttribute(&quot;afterLogonRedirect&quot;);</span>
+<span class="nc" id="L183">					request.getSession().removeAttribute(&quot;afterLogonRedirect&quot;);</span>
+<span class="nc" id="L184">					request.setAttribute(&quot;afterLogonRedirect&quot;, afterLogonRedirect);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">					if (Tools.isNotEmpty(afterLogonRedirect)) afterLogonUrl = afterLogonRedirect;</span>
+
+<span class="nc" id="L187">					response.sendRedirect(Tools.sanitizeHttpHeaderParam(afterLogonUrl));</span>
+<span class="nc" id="L188">					return;</span>
+				}
+<span class="nc" id="L190">			}</span>
+			else
+			{
+<span class="fc" id="L193">				Logger.debug(NtlmLogonAction.class,&quot;NIE JE TO NtlmHttpServletRequest&quot;);</span>
+			}
+		}
+<span class="nc" id="L196">		catch (Exception e)</span>
+		{
+<span class="nc" id="L198">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L199">		}</span>
+
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">		if (AuthenticationFilter.getForbiddenURL()!=null)</span>
+		{
+<span class="nc" id="L203">			response.sendRedirect(AuthenticationFilter.getForbiddenURL());</span>
+		}
+		else
+		{
+<span class="fc" id="L207">			response.sendError(HttpServletResponse.SC_FORBIDDEN);</span>
+		}
+<span class="fc" id="L209">		return;</span>
+	}
+
+	public static UserDetails authentificateUserAgainstLdap(HttpServletRequest request, HttpServletResponse response, String loginName) throws IOException, IllegalAccessException, InvocationTargetException, RedirectedException
+	{
+		//Skontroluj usera voci DB
+<span class="nc" id="L215">		loginName = loginName.toLowerCase();</span>
+<span class="nc" id="L216">		UserDetails user = UsersDB.getUser(loginName);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (user == null)</span>
+		{
+			//este neexistuje, treba vytvorit
+<span class="nc" id="L220">			user = new UserDetails();</span>
+<span class="nc" id="L221">			user.setUserId(-1);</span>
+<span class="nc" id="L222">			user.setLogin(loginName);</span>
+<span class="nc" id="L223">			user.setPasswordPlain(Password.generatePassword(10));</span>
+		}
+
+<span class="nc" id="L226">		doLdapQuery(user);</span>
+
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (Tools.isEmpty(user.getLogin()))</span>
+		{
+<span class="nc" id="L230">			Logger.debug(NtlmLogonAction.class,&quot;UserLogin je null: forbiddenURL=&quot;+AuthenticationFilter.getForbiddenURL());</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (AuthenticationFilter.getForbiddenURL()!=null)</span>
+			{
+<span class="nc" id="L233">				response.sendRedirect(AuthenticationFilter.getForbiddenURL());</span>
+			}
+			else
+			{
+<span class="nc" id="L237">				response.sendError(HttpServletResponse.SC_FORBIDDEN);</span>
+			}
+<span class="nc" id="L239">			throw new RedirectedException();</span>
+		}
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;passwordProtectedAutoIdDontCreateUser&quot;)==true) {</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;passwordProtectedAutoId&quot;)) &amp;&amp; isUserInProtectedGroup(user)) {</span>
+<span class="nc" id="L244">				logonAndRedirectUserInProtectedGroup(request, response, user);</span>
+<span class="nc" id="L245">				throw new RedirectedException();</span>
+			}
+		}
+
+		//ak nie je prideleny do ziadnej skupiny (a nie je to admin), posli ho prec
+<span class="nc bnc" id="L250" title="All 6 branches missed.">		if (Tools.isEmpty(user.getUserGroupsIds()) &amp;&amp; user.isAdmin()==false &amp;&amp; Constants.getBoolean(&quot;ntlmAllowEmptyGroups&quot;)==false)</span>
+		{
+<span class="nc" id="L252">			Logger.debug(NtlmLogonAction.class,&quot;UserGroups je null: forbiddenURL=&quot;+AuthenticationFilter.getForbiddenURL());</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">			if (AuthenticationFilter.getForbiddenURL()!=null)</span>
+			{
+<span class="nc" id="L255">				response.sendRedirect(AuthenticationFilter.getForbiddenURL());</span>
+			}
+			else
+			{
+<span class="nc" id="L259">				response.sendError(HttpServletResponse.SC_FORBIDDEN);</span>
+			}
+<span class="nc" id="L261">			throw new RedirectedException();</span>
+		}
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (Tools.isEmpty(user.getUserGroupsIds())) user.setUserGroupsIds(&quot;&quot;);</span>
+
+<span class="nc" id="L266">		user.setAuthorized(true);</span>
+
+
+		//toto je uz uplna haluz kvoli Transgasu, maju drbnuto nastaveny server
+		/*String fn = user.getFirstName();
+		Logger.debug(NtlmLogonAction.class, &quot;PRED RECODE: &quot;+fn);
+		String fn1 = new String(user.getFirstName().getBytes(), &quot;windows-1250&quot;);
+		String fn2 = new String(user.getFirstName().getBytes(&quot;windows-1250&quot;));
+		String fn3 = new String(user.getFirstName().getBytes(), &quot;iso-8859-1&quot;);
+		String fn4 = new String(user.getFirstName().getBytes(&quot;iso-8859-1&quot;));
+		String fn5 = new String(user.getFirstName().getBytes(&quot;iso-8859-1&quot;), &quot;windows-1250&quot;);
+
+		fn = &quot;o:&quot;+fn+&quot; 1:&quot;+fn1+&quot; 2:&quot;+fn2+&quot; 3:&quot;+fn3+&quot; 4:&quot;+fn4+&quot; 5:&quot;+fn5;
+		Logger.debug(NtlmLogonAction.class, &quot;RECODED: fn=&quot;+fn);*/
+<span class="nc" id="L280">		String recode = Constants.getString(&quot;ntlmLogonAction.charsetEncoding&quot;);</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (Tools.isNotEmpty(recode)) {</span>
+			//weird backward compatibility where user details are wrongly encoded
+<span class="nc" id="L283">			user.setFirstName(new String(user.getFirstName().getBytes(), recode));</span>
+<span class="nc" id="L284">			user.setLastName(new String(user.getLastName().getBytes(), recode));</span>
+<span class="nc" id="L285">			user.setAdress(new String(user.getAdress().getBytes(), recode));</span>
+<span class="nc" id="L286">			user.setCity(new String(user.getCity().getBytes(), recode));</span>
+<span class="nc" id="L287">			user.setCompany(new String(user.getCompany().getBytes(), recode));</span>
+		}
+
+<span class="nc" id="L290">		UserDetails adminUser = null;</span>
+<span class="nc" id="L291">		int defaultAdminUserId = Constants.getInt(&quot;NTLMDefaultAdminUserId&quot;);</span>
+<span class="nc bnc" id="L292" title="All 6 branches missed.">		if (user.isAdmin() &amp;&amp; user.getUserId()&lt;1 &amp;&amp; defaultAdminUserId&gt;0)</span>
+		{
+			//nacitaj default admin usera
+<span class="nc" id="L295">			adminUser = UsersDB.getUser(defaultAdminUserId);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			if (adminUser!=null)</span>
+			{
+<span class="nc" id="L298">				adminUser.setEmail(user.getEmail());</span>
+<span class="nc" id="L299">				adminUser.setTitle(user.getTitle());</span>
+<span class="nc" id="L300">				adminUser.setFirstName(user.getFirstName());</span>
+<span class="nc" id="L301">				adminUser.setLastName(user.getLastName());</span>
+<span class="nc" id="L302">				adminUser.setAdress(user.getAdress());</span>
+<span class="nc" id="L303">				adminUser.setCity(user.getCity());</span>
+<span class="nc" id="L304">				adminUser.setPSC(user.getPSC());</span>
+<span class="nc" id="L305">				adminUser.setCountry(user.getCountry());</span>
+<span class="nc" id="L306">				adminUser.setCompany(user.getCompany());</span>
+<span class="nc" id="L307">				adminUser.setPhone(user.getPhone());</span>
+<span class="nc" id="L308">				adminUser.setUserGroupsIds(user.getUserGroupsIds());</span>
+<span class="nc" id="L309">				adminUser.setAdmin(true);</span>
+
+<span class="nc" id="L311">				user = adminUser;</span>
+<span class="nc" id="L312">				user.setUserId(-1);</span>
+<span class="nc" id="L313">				user.setLogin(loginName);</span>
+<span class="nc" id="L314">				user.setPassword(Password.generatePassword(10));</span>
+			}
+		}
+
+		//dolezite, inak nas neprihlasi
+<span class="nc" id="L319">		String password = user.getPassword();</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+		{
+<span class="nc" id="L322">			password = user.getLogin();</span>
+<span class="nc" id="L323">			user.setPasswordPlain(password);</span>
+<span class="nc" id="L324">			Logger.debug(NtlmLogonAction.class, &quot;NtlmLogonAction - Pass use hash, nastavujem na &quot;+user.getLogin());</span>
+		}
+
+<span class="nc" id="L327">		UsersDB.saveUser(user);</span>
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		if (adminUser != null)</span>
+		{
+			//uloz prava
+<span class="nc" id="L332">			copyAdminUserGroupsApprove(defaultAdminUserId, user.getUserId());</span>
+<span class="nc" id="L333">			copyUserDisabledItems(defaultAdminUserId, user.getUserId());</span>
+		}
+
+<span class="nc bnc" id="L336" title="All 2 branches missed.">		if (user.isAuthorized())</span>
+        {
+            try
+            {
+                //prihlasenie pre SPRING / REST
+<span class="nc" id="L341">                RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                if (requestBean != null)</span>
+                {
+<span class="nc" id="L344">                    AuthenticationManager authenticationManager = requestBean.getSpringBean(&quot;authenticationManagerBean&quot;, AuthenticationManager.class);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">                    if (authenticationManager != null)</span>
+                    {
+<span class="nc" id="L347">                        final UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(user.getLogin(), password);</span>
+<span class="nc" id="L348">                        final Authentication authentication = authenticationManager.authenticate(authRequest);</span>
+<span class="nc" id="L349">                        SecurityContextHolder.getContext().setAuthentication(authentication);</span>
+                    }
+                }
+            }
+<span class="nc" id="L353">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L355">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L356">            }</span>
+        }
+
+<span class="nc" id="L359">		return user;</span>
+	}
+
+	private static void logonAndRedirectUserInProtectedGroup(HttpServletRequest request, HttpServletResponse response, UserDetails user) throws IllegalAccessException, InvocationTargetException, IOException
+	{
+		//stranky vidia len pouzivatelia ktory su spravne zalogovany
+<span class="nc" id="L365">		String passwordProtectedAutoId = Constants.getString(&quot;passwordProtectedAutoId&quot;);</span>
+<span class="nc" id="L366">		Logger.debug(NtlmLogonAction.class, &quot;passwordProtectedAutoId=&quot;+passwordProtectedAutoId);</span>
+
+<span class="nc" id="L368">		Logger.debug(NtlmLogonAction.class, &quot;prihlasujem a nevytvaram v DB&quot;);</span>
+
+		//	akoze ho prihlasime a pouzijeme (takychto pouzivatelov v DB nevytvarame)
+<span class="nc" id="L371">		user.setUserGroupsIds(passwordProtectedAutoId);</span>
+<span class="nc" id="L372">		user.setAuthorized(true);</span>
+<span class="nc" id="L373">		Identity userLogged = new Identity();</span>
+<span class="nc" id="L374">		BeanUtils.copyProperties(userLogged, user);</span>
+<span class="nc" id="L375">		LogonTools.setUserToSession(request.getSession(), userLogged);</span>
+<span class="nc" id="L376">		String afterLogonUrl = &quot;/&quot;;</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		if (request.getParameter(&quot;origDocId&quot;)!=null)</span>
+		{
+<span class="nc" id="L379">			afterLogonUrl = &quot;/showdoc.do?docid=&quot;+request.getParameter(&quot;origDocId&quot;);</span>
+		}
+<span class="nc" id="L381">		response.sendRedirect(Tools.sanitizeHttpHeaderParam(afterLogonUrl));</span>
+
+<span class="nc bnc" id="L383" title="All 2 branches missed.">		if (user.getUserId()&gt;0)</span>
+		{
+<span class="nc" id="L385">			Logger.debug(NtlmLogonAction.class, &quot;userID=&quot;+user.getUserId()+&quot; --- td&quot;);</span>
+		}
+<span class="nc" id="L387">	}</span>
+
+
+	private static boolean isUserInProtectedGroup(UserDetails user)
+	{
+		//pouzivatelia, ktory patria (len) do tejto skupiny sa neukladaju do WebJETu
+<span class="nc" id="L393">		String passwordProtectedAutoId = Constants.getString(&quot;passwordProtectedAutoId&quot;);</span>
+<span class="nc bnc" id="L394" title="All 6 branches missed.">		return user.isAdmin()==false &amp;&amp; passwordProtectedAutoId.equals(user.getUserGroupsIds()) &amp;&amp; Constants.getBoolean(&quot;NTLMdontCreateAutoIdUser&quot;)==true;</span>
+	}
+
+
+	public static void doLdapQuery(UserDetails user)
+	{
+<span class="nc" id="L400">		String ldapQueryMethod = Constants.getString(&quot;NTLMldapQueryMethod&quot;);</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if (Tools.isNotEmpty(ldapQueryMethod))</span>
+		{
+<span class="nc" id="L403">			int i = ldapQueryMethod.lastIndexOf('.');</span>
+<span class="nc" id="L404">			String ldapQueryClass = ldapQueryMethod.substring(0, i);</span>
+<span class="nc" id="L405">			ldapQueryMethod = ldapQueryMethod.substring(i+1);</span>
+			//String
+			try
+			{
+<span class="nc" id="L409">				Class&lt;?&gt; c = Class.forName(ldapQueryClass);</span>
+<span class="nc" id="L410">				Object o = c.getDeclaredConstructor().newInstance();</span>
+				Method m;
+<span class="nc" id="L412">				Class&lt;?&gt;[] parameterTypes = new Class[] {UserDetails.class};</span>
+<span class="nc" id="L413">				Object[] arguments = new Object[] {user};</span>
+<span class="nc" id="L414">				m = c.getMethod(ldapQueryMethod, parameterTypes);</span>
+<span class="nc" id="L415">				m.invoke(o, arguments);</span>
+			}
+<span class="nc" id="L417">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L419">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L420">			}</span>
+<span class="nc" id="L421">			return;</span>
+		}
+
+<span class="nc" id="L424">		DirContext ctx = null;</span>
+
+<span class="nc" id="L426">		String CNUserName = null;</span>
+
+		try
+		{
+<span class="nc" id="L430">	       Hashtable&lt;String, String&gt; env = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L432">	       boolean ldapUseSslProtocol = Constants.getBoolean(&quot;ldapUseSslProtocol&quot;);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">	       if(ldapUseSslProtocol) env.put(Context.SECURITY_PROTOCOL, &quot;ssl&quot;);</span>
+<span class="nc" id="L434">	       env.put(Context.INITIAL_CONTEXT_FACTORY, &quot;com.sun.jndi.ldap.LdapCtxFactory&quot;);</span>
+<span class="nc" id="L435">	       env.put(Context.STATE_FACTORIES, &quot;PersonStateFactory&quot;);</span>
+<span class="nc" id="L436">	       env.put(Context.OBJECT_FACTORIES, &quot;PersonObjectFactory&quot;);</span>
+<span class="nc" id="L437">	       env.put(Context.PROVIDER_URL, AuthenticationFilter.getLdapProvider());  // SET YOUR SERVER AND STARTING CONTEXT HERE</span>
+<span class="nc" id="L438">	       env.put(Context.SECURITY_PRINCIPAL,  AuthenticationFilter.getLdapUsername()); //&quot;cn=Administrator, o=oracle.local&quot;);  // SET USER THAT CAN SEARCH AND MODIFY FULL NAME HERE</span>
+<span class="nc" id="L439">	       env.put(Context.SECURITY_CREDENTIALS, AuthenticationFilter.getLdapPassword());  // SET PASSWORD HERE</span>
+<span class="nc" id="L440">	       env.put(Context.REFERRAL, &quot;follow&quot;);</span>
+<span class="nc" id="L441">	       env.put(LdapContext.CONTROL_FACTORIES, &quot;com.sun.jndi.ldap.ControlFactory&quot;);</span>
+
+<span class="nc" id="L443">	       ctx = new InitialDirContext(env);</span>
+
+	       // Specify the search filter to match all users with no full name
+<span class="nc" id="L446">	       String filter = &quot;(&amp;(objectClass=Person) (&amp;(sAMAccountName=&quot;+user.getLogin()+&quot;)))&quot;; // &quot;DC=oracle, (&amp;(objectClass=Person) (&amp;(sn=priezvisko)))&quot;;</span>
+	       // limit returned attributes to those we care about
+	       //String[] attrIDs = {&quot;sn&quot;, &quot;givenName&quot;, &quot;mail&quot;};
+<span class="nc" id="L449">	       SearchControls ctls = new SearchControls();</span>
+	       //ctls.setReturningAttributes(attrIDs);
+	       // comment out next line to limit to one container otherwise it'll walk down the tree
+<span class="nc" id="L452">	       ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);</span>
+
+	       // Search for objects using filter and controls
+<span class="nc" id="L455">	       NamingEnumeration&lt;SearchResult&gt; answer = ctx.search(&quot;&quot;, filter, ctls);</span>
+
+	       //String ldapGroups = null;
+	       // cycle through result set
+<span class="nc bnc" id="L459" title="All 2 branches missed.">	       if (answer.hasMore())</span>
+	       {
+<span class="nc" id="L461">	           SearchResult sr = answer.next();</span>
+<span class="nc" id="L462">	           Attributes attrs = sr.getAttributes();</span>
+
+	           //DEBUG: treba vymazat
+	           /*NamingEnumeration all = attrs.getAll();
+	           //Logger.println(this,&quot;POCET: &quot; + attrs.size());
+	           while (all.hasMoreElements())
+	           {
+	              Attribute a = (Attribute)all.next();
+	              //Logger.println(this,&quot;ENUM: &quot; + a);
+	           }*/
+
+<span class="nc" id="L473">	           user.setEmail(getAtrValue(attrs, &quot;mail&quot;, user.getEmail()));</span>
+<span class="nc" id="L474">	           user.setFirstName(getAtrValue(attrs, &quot;givenName&quot;, &quot;&quot;)); //user.getFirstName()</span>
+<span class="nc" id="L475">	           user.setLastName(getAtrValue(attrs, &quot;sn&quot;, &quot;&quot;)); //user.getLastName()</span>
+<span class="nc" id="L476">	           user.setAdress(getAtrValue(attrs, &quot;streetAddress&quot;, user.getAdress()));</span>
+<span class="nc" id="L477">	           user.setCity(getAtrValue(attrs, &quot;l&quot;, user.getCity()));</span>
+<span class="nc" id="L478">	           user.setPSC(getAtrValue(attrs, &quot;postalCode&quot;, user.getPSC()));</span>
+<span class="nc" id="L479">	           user.setCountry(getAtrValue(attrs, &quot;co&quot;, user.getCountry()));</span>
+<span class="nc" id="L480">	           user.setCompany(getAtrValue(attrs, &quot;company&quot;, user.getCompany()));</span>
+<span class="nc" id="L481">	           user.setPhone(getAtrValue(attrs, &quot;telephoneNumber&quot;, user.getPhone()));</span>
+<span class="nc" id="L482">	           user.setFax(getAtrValue(attrs, &quot;mobile&quot;, user.getFax()));</span>
+
+<span class="nc" id="L484">	           CNUserName = getAtrValue(attrs, &quot;cn&quot;, &quot;&quot;);</span>
+
+	           //ldapGroups = getAtrValue(attrs, &quot;memberOf&quot;, null) + &quot;, &quot;;
+
+	           // eDir returns &quot;attribute name : attribute value on get method so strip off up to &quot;: &quot;
+	           //attrs.put(&quot;fullName&quot;, givenName.substring(givenName.indexOf(':')+2) + ' ' + surName.substring(surName.indexOf(':')+2));
+	           //ctx.modifyAttributes(sr.getName(), DirContext.REPLACE_ATTRIBUTE, attrs);
+<span class="nc" id="L491">	       }</span>
+	       else
+	       {
+<span class="nc" id="L494">	      	 user.setLogin(null);</span>
+<span class="nc" id="L495">	      	 return;</span>
+	       }
+
+	       // Close the context when we're done
+<span class="nc" id="L499">		    ctx.close();</span>
+<span class="nc" id="L500">		    ctx = null;</span>
+
+		    /*Logger.debug(NtlmLogonAction.class,&quot;Nastavujem skupiny:\n&quot;+ldapGroups);
+	       if (ldapGroups != null)
+	       {
+	       	String groupsString = null;
+				List allGroups = UserGroupsDB.getInstance().getUserGroups();
+				Iterator iter = allGroups.iterator();
+				UserGroupDetails ugd;
+				while (iter.hasNext())
+				{
+					ugd = (UserGroupDetails)iter.next();
+					Logger.debug(NtlmLogonAction.class,&quot;testujem skupinu: &quot; + ugd.getUserGroupName());
+					if (ldapGroups.indexOf(&quot;CN=&quot;+ugd.getUserGroupName()+&quot;,&quot;)!=-1)
+					{
+						Logger.debug(NtlmLogonAction.class,&quot;je clenom skupiny&quot;);
+						if (groupsString == null)
+						{
+							groupsString = &quot;&quot;+ugd.getUserGroupId();
+						}
+						else
+						{
+							groupsString += &quot;,&quot;+ugd.getUserGroupId();
+						}
+					}
+				}
+				Logger.debug(NtlmLogonAction.class,&quot;nastavujem skupinyIDS: &quot; + groupsString);
+				user.setUserGroupsIds(groupsString);
+
+		       if (ldapGroups.indexOf(&quot;CN=&quot;+Constants.getString(&quot;NTLMAdminGroupName&quot;)+&quot;,&quot;)!=-1)
+		       {
+		       	Logger.debug(NtlmLogonAction.class,&quot;USER JE ADMIN&quot;);
+					user.setAdmin(true);
+		       }
+		       else
+		       {
+		       	Logger.debug(NtlmLogonAction.class,&quot;USER NIE JE ADMIN&quot;);
+		       	user.setAdmin(false);
+		       }
+	       }*/
+
+<span class="nc" id="L541">			 StringBuilder groupsString = null;</span>
+
+<span class="nc bnc" id="L543" title="All 2 branches missed.">			 if (Tools.isNotEmpty(Constants.getString(&quot;passwordProtectedAutoId&quot;)))</span>
+			 {
+<span class="nc" id="L545">			 	groupsString = new StringBuilder(Constants.getString(&quot;passwordProtectedAutoId&quot;));</span>
+			 }
+
+<span class="nc bnc" id="L548" title="All 2 branches missed.">			 if (Tools.isEmpty(CNUserName))</span>
+			 {
+<span class="nc" id="L550">				 CNUserName = user.getLastName() + &quot; &quot; + user.getFirstName();</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">				 if (Constants.getBoolean(&quot;NTLMldapIsSlovak&quot;)==true)</span>
+				 {
+<span class="nc" id="L553">					 CNUserName = user.getFirstName() + &quot; &quot; + user.getLastName();</span>
+				 }
+				 //odstran medzeru na konci/zaciatku, ked ma zadane len meno
+<span class="nc" id="L556">				 CNUserName = DB.internationalToEnglish(CNUserName).toLowerCase().trim();</span>
+			 }
+
+<span class="nc bnc" id="L559" title="All 2 branches missed.">			 for (UserGroupDetails ugd : UserGroupsDB.getInstance().getUserGroups())</span>
+			 {
+<span class="nc" id="L561">				 Logger.debug(NtlmLogonAction.class,&quot;testujem skupinu: &quot; + ugd.getUserGroupName());</span>
+<span class="nc bnc" id="L562" title="All 2 branches missed.">				 if (isMemberOf(user.getLogin(), CNUserName, ugd.getUserGroupName(), 1, null))</span>
+				 {
+<span class="nc" id="L564">					Logger.debug(NtlmLogonAction.class,&quot;je clenom skupiny &quot; + ugd.getUserGroupName());</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">					if (groupsString == null)</span>
+					{
+<span class="nc" id="L567">						groupsString = new StringBuilder(String.valueOf(ugd.getUserGroupId()));</span>
+					}
+					else
+					{
+<span class="nc" id="L571">						groupsString.append(',').append(ugd.getUserGroupId());</span>
+					}
+				 }
+				 else
+				 {
+<span class="nc" id="L576">					 Logger.debug(NtlmLogonAction.class,&quot;NIEje clenom skupiny &quot; + ugd.getUserGroupName());</span>
+				 }
+<span class="nc" id="L578">			 }</span>
+<span class="nc" id="L579">			 Logger.debug(NtlmLogonAction.class,&quot;nastavujem skupiny: &quot; + groupsString);</span>
+<span class="nc bnc" id="L580" title="All 2 branches missed.">			 if (groupsString != null)</span>
+			 {
+<span class="nc" id="L582">				 user.setUserGroupsIds(groupsString.toString());</span>
+
+<span class="nc bnc" id="L584" title="All 2 branches missed.">				 if (groupsString.toString().equals(Constants.getString(&quot;passwordProtectedAutoId&quot;))==false)</span>
+				 {
+				 	//ak to nie je autoid neries nastavenie admina, zacovaj z DB
+					 //otestuj admina
+<span class="nc bnc" id="L588" title="All 2 branches missed.">					 if (isMemberOf(user.getLogin(), CNUserName, Constants.getString(&quot;NTLMAdminGroupName&quot;), 1, null)) {</span>
+<span class="nc" id="L589">						 Logger.debug(NtlmLogonAction.class, &quot;USER JE ADMIN&quot;);</span>
+<span class="nc" id="L590">						 user.setAdmin(true);</span>
+					 } else {
+<span class="nc" id="L592">						 Logger.debug(NtlmLogonAction.class, &quot;USER NIE JE ADMIN&quot;);</span>
+<span class="nc" id="L593">						 user.setAdmin(false);</span>
+					 }
+				 }
+			 }
+
+<span class="nc bnc" id="L598" title="All 2 branches missed.">			if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+			{
+<span class="nc" id="L600">				user.setPasswordPlain(user.getLogin());</span>
+			}
+
+	     }
+<span class="nc" id="L604">	     catch(NamingException ne)</span>
+		  {
+<span class="nc" id="L606">	       Logger.error(NtlmLogonAction.class,ne.getMessage());</span>
+<span class="nc" id="L607">	       sk.iway.iwcm.Logger.error(ne);</span>
+	     }
+	     finally
+	     {
+<span class="nc bnc" id="L611" title="All 2 branches missed.">	   	   if (ctx != null)</span>
+				{
+					try
+					{
+<span class="nc" id="L615">						ctx.close();</span>
+					}
+<span class="nc" id="L617">					catch (Exception e2)</span>
+					{
+<span class="nc" id="L619">					}</span>
+				}
+	     }
+<span class="nc" id="L622">	}</span>
+
+	/**
+	 * Ziska atribut a dekoduje jeho hodnotu, alebo vrati defaultValue
+	 * @param attrs
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
+	public static String getAtrValue(Attributes attrs, String name, String defaultValue)
+	{
+<span class="nc" id="L633">		String ret = defaultValue;</span>
+		try
+		{
+			Attribute a;
+<span class="nc" id="L637">         a = attrs.get(name);</span>
+         //Logger.println(this,&quot;LDAP: &quot;+name+&quot;=&quot;+a);
+<span class="nc bnc" id="L639" title="All 2 branches missed.">         if (a!=null)</span>
+         {
+<span class="nc" id="L641">         	Object o = a.get();</span>
+
+<span class="nc" id="L643">         	Logger.debug(NtlmLogonAction.class, &quot;o=&quot;+o.getClass());</span>
+
+<span class="nc" id="L645">	         ret = recodeString((String)o);</span>
+         }
+<span class="nc" id="L647">         Logger.debug(NtlmLogonAction.class, &quot;getAtrValue(&quot;+name+&quot;)=&quot;+ret);</span>
+		}
+<span class="nc" id="L649">		catch (Exception e)</span>
+		{
+<span class="nc" id="L651">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L652">		}</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		if (ret == null) ret = &quot;&quot;;</span>
+<span class="nc" id="L654">		return(ret);</span>
+	}
+
+	private static String recodeString(String str)
+	{
+		//je to spravne nemusime robit nic
+<span class="nc bnc" id="L660" title="All 4 branches missed.">		if (Tools.isEmpty(Constants.getString(&quot;NTLMldapEncoding&quot;)) || Constants.getString(&quot;NTLMldapEncoding&quot;).length()&lt;2)</span>
+		{
+<span class="nc" id="L662">			return(str);</span>
+		}
+<span class="nc bnc" id="L664" title="All 2 branches missed.">		if (str == null) return(null);</span>
+		try
+		{
+<span class="nc" id="L667">			String newStr = new String(str.getBytes(Constants.getString(&quot;NTLMldapEncoding&quot;)));</span>
+<span class="nc" id="L668">			Logger.debug(NtlmLogonAction.class, &quot;Encoding string (&quot;+str+&quot;) to: &quot;+Constants.getString(&quot;NTLMldapEncoding&quot;)+&quot; new=&quot;+newStr);</span>
+<span class="nc" id="L669">			return(newStr);</span>
+		}
+<span class="nc" id="L671">		catch (Exception e)</span>
+		{
+<span class="nc" id="L673">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+<span class="nc" id="L675">		return(str);</span>
+	}
+
+	public static boolean isMemberOf(String login, String userCN, String groupCN, int actualLevel, DirContext ctx)
+	{
+<span class="nc" id="L680">		String isMemberOfMethod = Constants.getString(&quot;NTLMisMemberOfMethod&quot;);</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">		if (Tools.isNotEmpty(isMemberOfMethod))</span>
+		{
+<span class="nc" id="L683">			int i = isMemberOfMethod.lastIndexOf('.');</span>
+<span class="nc" id="L684">			String isMemberOfClass = isMemberOfMethod.substring(0, i);</span>
+<span class="nc" id="L685">			isMemberOfMethod = isMemberOfMethod.substring(i+1);</span>
+			//String
+			try
+			{
+<span class="nc" id="L689">				Class&lt;?&gt; c = Class.forName(isMemberOfClass);</span>
+<span class="nc" id="L690">				Object o = c.getDeclaredConstructor().newInstance();</span>
+				Method m;
+<span class="nc" id="L692">				Class&lt;?&gt;[] parameterTypes = new Class[] {String.class, String.class, String.class, int.class, DirContext.class};</span>
+<span class="nc" id="L693">				Object[] arguments = new Object[] {login, userCN, groupCN, actualLevel, ctx};</span>
+<span class="nc" id="L694">				m = c.getMethod(isMemberOfMethod, parameterTypes);</span>
+<span class="nc" id="L695">				return((Boolean)m.invoke(o, arguments));</span>
+			}
+<span class="nc" id="L697">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L699">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+		}
+
+		//groupCN = getNameFromCNString(groupCN);
+
+<span class="nc" id="L705">		String spacer = &quot;                                                                                                           &quot;;</span>
+		try
+		{
+<span class="nc" id="L708">			spacer = spacer.substring(0, actualLevel*3);</span>
+		}
+<span class="nc" id="L710">		catch (Exception e)</span>
+		{
+<span class="nc" id="L712">			spacer = &quot;&quot;;</span>
+<span class="nc" id="L713">		}</span>
+
+<span class="nc" id="L715">		Logger.debug(NtlmLogonAction.class, spacer+&quot;isMemberOf -------- START userCN=&quot;+userCN+&quot; groupCN=&quot;+groupCN+&quot; level=&quot;+actualLevel);</span>
+
+		//DirContext ctx = null;
+<span class="nc" id="L718">		boolean otvorilSomCTX = false;</span>
+<span class="nc" id="L719">		String filter = null;</span>
+		try
+		{
+			//	najskor ziskaj pouzivatelov tejto skupiny
+<span class="nc" id="L723">			String baseProvider = AuthenticationFilter.getLdapProvider();</span>
+<span class="nc" id="L724">			int i = baseProvider.indexOf('/', 10);</span>
+<span class="nc" id="L725">			String providerURL = baseProvider.substring(0, i);</span>
+<span class="nc" id="L726">			String searchBase = baseProvider.substring(i+1);</span>
+<span class="nc" id="L727">			i = searchBase.indexOf('?');</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">			if (i&gt;0) searchBase = searchBase.substring(0, i);</span>
+
+<span class="nc" id="L730">			boolean groupHasCN = false;</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			if (groupCN.indexOf(&quot;CN=&quot;)!=-1)</span>
+			{
+<span class="nc" id="L733">				groupHasCN = true;</span>
+			}
+
+<span class="nc" id="L736">			filter = &quot;(&amp;(objectClass=*)(CN=&quot; + groupCN + &quot;))&quot;;</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">			if (groupHasCN)</span>
+			{
+				//filter = &quot;(objectClass=*)&quot;;
+<span class="nc" id="L740">				searchBase = getBaseFromCNString(groupCN); // &quot;OU=Limuzska Groups,DC=oracle,DC=local&quot;;</span>
+<span class="nc" id="L741">				filter = &quot;(&amp;(objectClass=*)(CN=&quot; + getNameFromCNString(groupCN) + &quot;))&quot;;</span>
+			}
+
+			//	over ci to nie je prazdne
+<span class="nc bnc" id="L745" title="All 2 branches missed.">			if (emptyGroupsTable.get(filter)!=null)</span>
+			{
+<span class="nc" id="L747">				Logger.debug(NtlmLogonAction.class, spacer+&quot;toto je prazdne: &quot; + groupCN + &quot; vraciam sa z isMemeberOf&quot;);</span>
+<span class="nc" id="L748">				return(false);</span>
+			}
+
+<span class="nc" id="L751">			Logger.debug(NtlmLogonAction.class, spacer+&quot;provider=&quot;+providerURL);</span>
+
+<span class="nc" id="L753">			Hashtable&lt;String, String&gt; env = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L754">			boolean ldapUseSslProtocol = Constants.getBoolean(&quot;ldapUseSslProtocol&quot;);</span>
+<span class="nc bnc" id="L755" title="All 2 branches missed.">			if(ldapUseSslProtocol) env.put(Context.SECURITY_PROTOCOL, &quot;ssl&quot;);</span>
+<span class="nc" id="L756">			env.put(Context.INITIAL_CONTEXT_FACTORY, &quot;com.sun.jndi.ldap.LdapCtxFactory&quot;);</span>
+<span class="nc" id="L757">			env.put(Context.STATE_FACTORIES, &quot;PersonStateFactory&quot;);</span>
+<span class="nc" id="L758">			env.put(Context.OBJECT_FACTORIES, &quot;PersonObjectFactory&quot;);</span>
+<span class="nc" id="L759">			env.put(Context.PROVIDER_URL, providerURL); //AuthenticationFilter.getLdapProvider()); // SET YOUR SERVER AND STARTING CONTEXT HERE</span>
+<span class="nc" id="L760">			env.put(Context.SECURITY_PRINCIPAL, AuthenticationFilter.getLdapUsername()); //&quot;cn=Administrator, o=oracle.local&quot;);  // SET USER THAT CAN SEARCH AND MODIFY FULL NAME HERE</span>
+<span class="nc" id="L761">			env.put(Context.SECURITY_CREDENTIALS, AuthenticationFilter.getLdapPassword()); // SET PASSWORD HERE</span>
+<span class="nc" id="L762">			env.put(LdapContext.CONTROL_FACTORIES, &quot;com.sun.jndi.ldap.ControlFactory&quot;);</span>
+
+			//teraz sprav skupiny
+<span class="nc bnc" id="L765" title="All 2 branches missed.">			if (ctx == null)</span>
+			{
+<span class="nc" id="L767">				Logger.debug(NtlmLogonAction.class, spacer+&quot;Otvaram CTX&quot;);</span>
+<span class="nc" id="L768">				ctx = new InitialDirContext(env);</span>
+<span class="nc" id="L769">				otvorilSomCTX = true;</span>
+			}
+
+<span class="nc" id="L772">			Logger.debug(NtlmLogonAction.class, spacer+&quot;searchBase=&quot;+searchBase);</span>
+<span class="nc" id="L773">			Logger.debug(NtlmLogonAction.class, spacer+&quot;filter=&quot;+filter);</span>
+
+			//	     Create the search controls
+<span class="nc" id="L776">			SearchControls searchCtls = new SearchControls();</span>
+			//Specify the search scope
+<span class="nc" id="L778">			searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);</span>
+<span class="nc" id="L779">			String[] returnedAtts = {&quot;member&quot;};</span>
+			//	     Specify the attributes to return
+<span class="nc" id="L781">			searchCtls.setReturningAttributes(returnedAtts);</span>
+			// Search for objects using filter and controls
+<span class="nc" id="L783">			NamingEnumeration&lt;SearchResult&gt; answer = ctx.search(searchBase, filter, searchCtls);</span>
+			// cycle through result set
+<span class="nc" id="L785">			int totalResults = 0;</span>
+
+<span class="nc" id="L787">			List&lt;String&gt; groupNames = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L788">			boolean membersIsEmpty = true;</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">			if (answer.hasMore())</span>
+			{
+<span class="nc" id="L791">				SearchResult sr = answer.next();</span>
+				//Logger.debug(NtlmLogonAction.class, spacer+&quot;sr=&quot; + sr.getName());
+<span class="nc" id="L793">				Attributes attrs = sr.getAttributes();</span>
+<span class="nc bnc" id="L794" title="All 2 branches missed.">				if (attrs != null)</span>
+				{
+					try
+					{
+<span class="nc bnc" id="L798" title="All 2 branches missed.">						for (NamingEnumeration&lt;? extends Attribute&gt; ae = attrs.getAll(); ae.hasMore();)</span>
+						{
+<span class="nc" id="L800">							Attribute attr = ae.next();</span>
+							//Logger.debug(NtlmLogonAction.class, spacer+&quot;Attribute: &quot; + attr.getID());
+<span class="nc bnc" id="L802" title="All 2 branches missed.">							for (NamingEnumeration&lt;?&gt; e = attr.getAll(); e.hasMore(); totalResults++)</span>
+							{
+<span class="nc" id="L804">								membersIsEmpty = false;</span>
+<span class="nc" id="L805">								String name = recodeString((String)e.next());</span>
+<span class="nc" id="L806">								String nameLC = DB.internationalToEnglish(name).toLowerCase().trim();</span>
+<span class="nc" id="L807">								String userCNLC = DB.internationalToEnglish(userCN).toLowerCase().trim();</span>
+								//to druhe je tam kvoli Meno Priezvisko Ing.
+<span class="nc" id="L809">								Logger.debug(NtlmLogonAction.class, spacer+&quot; testing: nameLC=&quot; + nameLC + &quot; userCNLC=&quot;+userCNLC);</span>
+<span class="nc bnc" id="L810" title="All 4 branches missed.">								if ((nameLC+&quot;,&quot;).indexOf(&quot;cn=&quot;+userCNLC+&quot;,&quot;)!=-1 || (nameLC+&quot;,&quot;).indexOf(&quot;cn=&quot;+userCNLC+&quot; &quot;)!=-1)</span>
+								{
+<span class="nc" id="L812">									Logger.debug(NtlmLogonAction.class, spacer+&quot;GRP: &quot; + totalResults + &quot;. &quot; + name);</span>
+<span class="nc" id="L813">									Logger.debug(NtlmLogonAction.class, spacer+userCN+&quot;-------------------user najdeny !!!!&quot;);</span>
+<span class="nc" id="L814">									return(true);</span>
+								}
+<span class="nc" id="L816">								groupNames.add(name);</span>
+							}
+<span class="nc" id="L818">						}</span>
+					}
+<span class="nc" id="L820">					catch (NamingException e)</span>
+					{
+<span class="nc" id="L822">						Logger.error(NtlmLogonAction.class, spacer+&quot;Problem listing members: &quot; + e);</span>
+<span class="nc" id="L823">					}</span>
+				}
+			}
+<span class="nc bnc" id="L826" title="All 2 branches missed.">			if (membersIsEmpty)</span>
+			{
+<span class="nc" id="L828">				Logger.debug(NtlmLogonAction.class, spacer+&quot;vrateny zoznam je prazdny, davam do cache: &quot; + groupCN);</span>
+<span class="nc" id="L829">				emptyGroupsTable.put(filter, groupCN);</span>
+			}
+			// Close the context when we're done
+			//ctx.close();
+
+<span class="nc" id="L834">			totalResults = 0;</span>
+<span class="nc bnc" id="L835" title="All 2 branches missed.">			for (String name : groupNames)</span>
+			{
+<span class="nc" id="L837">				totalResults++;</span>
+<span class="nc" id="L838">				Logger.debug(NtlmLogonAction.class, spacer+&quot;GRP: &quot; + totalResults + &quot;. &quot; + name);</span>
+
+				//zavolaj rekurziu
+<span class="nc" id="L841">				boolean found = isMemberOf(login, userCN, name, actualLevel+1, ctx);</span>
+<span class="nc bnc" id="L842" title="All 2 branches missed.">				if (found)</span>
+				{
+<span class="nc" id="L844">					return(true);</span>
+				}
+<span class="nc" id="L846">			}</span>
+		}
+<span class="nc" id="L848">		catch (NameNotFoundException nfe)</span>
+		{
+<span class="nc" id="L850">			Logger.debug(NtlmLogonAction.class, spacer+&quot;NFE group=&quot;+groupCN+&quot; user=&quot;+userCN+&quot; chyba: &quot;+nfe.getMessage());</span>
+<span class="nc" id="L851">			Logger.debug(NtlmLogonAction.class, spacer+&quot;davam do cache: &quot; + groupCN);</span>
+<span class="nc" id="L852">			emptyGroupsTable.put(filter, groupCN);</span>
+		}
+<span class="nc" id="L854">		catch (PartialResultException pre)</span>
+		{
+<span class="nc" id="L856">			Logger.debug(NtlmLogonAction.class, spacer+pre.getMessage()+&quot; PRE group=&quot;+groupCN+&quot; user=&quot;+userCN);</span>
+		}
+<span class="nc" id="L858">		catch (Exception e)</span>
+		{
+<span class="nc" id="L860">			Logger.error(NtlmLogonAction.class, spacer+e);</span>
+<span class="nc" id="L861">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="nc bnc" id="L865" title="All 4 branches missed.">			if (otvorilSomCTX &amp;&amp; ctx != null)</span>
+			{
+				try
+				{
+<span class="nc" id="L869">					Logger.debug(NtlmLogonAction.class, &quot;Zatvaram CTX&quot;);</span>
+<span class="nc" id="L870">					ctx.close();</span>
+				}
+<span class="nc" id="L872">				catch (Exception e2)</span>
+				{
+<span class="nc" id="L874">				}</span>
+			}
+		}
+
+<span class="nc" id="L878">		Logger.debug(NtlmLogonAction.class, spacer+&quot;isMemberOf -------- END&quot;);</span>
+<span class="nc" id="L879">		return (false);</span>
+	}
+
+	/**
+	 * Vrati len hodnotu CN z retazca
+	 * @param cnString
+	 * @return
+	 */
+	private static String getNameFromCNString(String cnString)
+	{
+<span class="nc" id="L889">		int start = cnString.indexOf(&quot;CN=&quot;);</span>
+<span class="nc" id="L890">		int end = cnString.indexOf(',');</span>
+<span class="nc bnc" id="L891" title="All 2 branches missed.">		if (start == -1) return(cnString);</span>
+<span class="nc bnc" id="L892" title="All 2 branches missed.">		if (end == -1) return(cnString.substring(start+3).trim());</span>
+<span class="nc" id="L893">		return(cnString.substring(start+3, end).trim());</span>
+	}
+
+	/**
+	 * Vrati vsetko okrem CN z retazca
+	 * @param cnString
+	 * @return
+	 */
+	private static String getBaseFromCNString(String cnString)
+	{
+<span class="nc" id="L903">		int start = cnString.indexOf(&quot;CN=&quot;);</span>
+<span class="nc" id="L904">		int end = cnString.indexOf(',');</span>
+<span class="nc bnc" id="L905" title="All 2 branches missed.">		if (start == -1) return(cnString);</span>
+<span class="nc bnc" id="L906" title="All 2 branches missed.">		if (end == -1) return(&quot;&quot;);</span>
+<span class="nc" id="L907">		return(cnString.substring(end+1).trim());</span>
+	}
+
+	private static void copyAdminUserGroupsApprove(int originalUserId, int newUserId)
+	{
+<span class="nc" id="L912">		Connection db_conn = null;</span>
+<span class="nc" id="L913">		PreparedStatement ps = null;</span>
+<span class="nc" id="L914">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L917">			Map&lt;Integer, Integer&gt; approveTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L919">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L920">			ps = db_conn.prepareStatement(&quot;SELECT group_id, approve_mode FROM groups_approve WHERE user_id=?&quot;);</span>
+<span class="nc" id="L921">			ps.setInt(1, originalUserId);</span>
+<span class="nc" id="L922">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L923" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L925">				approveTable.put(rs.getInt(&quot;group_id&quot;), rs.getInt(&quot;approve_mode&quot;));</span>
+			}
+<span class="nc" id="L927">			rs.close();</span>
+<span class="nc" id="L928">			ps.close();</span>
+
+<span class="nc" id="L930">			ps = db_conn.prepareStatement(&quot;DELETE FROM groups_approve WHERE user_id=?&quot;);</span>
+<span class="nc" id="L931">			ps.setInt(1, newUserId);</span>
+<span class="nc" id="L932">			ps.execute();</span>
+<span class="nc" id="L933">			ps.close();</span>
+
+<span class="nc" id="L935">			ps = db_conn.prepareStatement(&quot;INSERT INTO groups_approve (user_id, group_id, approve_mode) VALUES (?, ?, ?)&quot;);</span>
+<span class="nc" id="L936">			ps.setInt(1, newUserId);</span>
+
+<span class="nc bnc" id="L938" title="All 2 branches missed.">			for (Map.Entry&lt;Integer, Integer&gt; entry : approveTable.entrySet())</span>
+			{
+<span class="nc" id="L940">				Integer groupId = entry.getKey();</span>
+<span class="nc" id="L941">				Integer approveMode = entry.getValue();</span>
+<span class="nc" id="L942">				ps.setInt(2, groupId);</span>
+<span class="nc" id="L943">				ps.setInt(3, approveMode);</span>
+<span class="nc" id="L944">				ps.execute();</span>
+
+<span class="nc" id="L946">				Logger.debug(NtlmLogonAction.class, &quot;copyAdminUserGroupsApprove userId=&quot;+newUserId+&quot; groupId=&quot;+groupId+&quot; approveMode=&quot;+approveMode);</span>
+<span class="nc" id="L947">			}</span>
+
+<span class="nc" id="L949">			ps.close();</span>
+
+<span class="nc" id="L951">			db_conn.close();</span>
+<span class="nc" id="L952">			rs = null;</span>
+<span class="nc" id="L953">			ps = null;</span>
+<span class="nc" id="L954">			db_conn = null;</span>
+		}
+<span class="nc" id="L956">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L958">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L964" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L965">					rs.close();</span>
+<span class="nc bnc" id="L966" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L967">					ps.close();</span>
+<span class="nc bnc" id="L968" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L969">					db_conn.close();</span>
+			}
+<span class="nc" id="L971">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L973">			}</span>
+		}
+<span class="nc" id="L975">	}</span>
+
+	private static void copyUserDisabledItems(int originalUserId, int newUserId)
+	{
+<span class="nc" id="L979">		Connection db_conn = null;</span>
+<span class="nc" id="L980">		PreparedStatement ps = null;</span>
+<span class="nc" id="L981">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L984">			Map&lt;String, String&gt; permsTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L986">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L987">			ps = db_conn.prepareStatement(&quot;SELECT item_name FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L988">			ps.setInt(1, originalUserId);</span>
+<span class="nc" id="L989">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L990" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L992">				permsTable.put(DB.getDbString(rs, &quot;item_name&quot;), &quot;1&quot;);</span>
+			}
+<span class="nc" id="L994">			rs.close();</span>
+<span class="nc" id="L995">			ps.close();</span>
+
+<span class="nc" id="L997">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L998">			ps.setInt(1, newUserId);</span>
+<span class="nc" id="L999">			ps.execute();</span>
+<span class="nc" id="L1000">			ps.close();</span>
+
+<span class="nc" id="L1002">			ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L1003">			ps.setInt(1, newUserId);</span>
+
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">			for (Map.Entry&lt;String, String&gt; entry : permsTable.entrySet())</span>
+			{
+<span class="nc" id="L1007">				String itemName = entry.getKey();</span>
+
+<span class="nc" id="L1009">				ps.setString(2, itemName);</span>
+<span class="nc" id="L1010">				ps.execute();</span>
+
+<span class="nc" id="L1012">				Logger.debug(NtlmLogonAction.class, &quot;copyUserDisabledItems userId=&quot;+newUserId+&quot; itemName=&quot;+itemName);</span>
+<span class="nc" id="L1013">			}</span>
+
+<span class="nc" id="L1015">			ps.close();</span>
+
+<span class="nc" id="L1017">			db_conn.close();</span>
+<span class="nc" id="L1018">			rs = null;</span>
+<span class="nc" id="L1019">			ps = null;</span>
+<span class="nc" id="L1020">			db_conn = null;</span>
+		}
+<span class="nc" id="L1022">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1024">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1030" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1031">					rs.close();</span>
+<span class="nc bnc" id="L1032" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1033">					ps.close();</span>
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1035">					db_conn.close();</span>
+			}
+<span class="nc" id="L1037">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L1039">			}</span>
+		}
+<span class="nc" id="L1041">	}</span>
+
+	/**
+	 *
+	 * Odstrani zo zadaneho stringu znaky, ktore
+	 * by mohli zmenit formatovanie a vyznam
+	 * LDAPovskeho filtru
+	 *
+	 * @param originalString
+	 * @return escaped {@link String}
+	 */
+	public static String escapeLdapString(String originalString)
+	{
+<span class="nc" id="L1054">		StringBuilder escapedString = new StringBuilder( originalString.length() );</span>
+
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">		for (int i=0;i&lt;originalString.length();i++)</span>
+		{
+<span class="nc" id="L1058">			Character toBeInvestigated = originalString.charAt(i);</span>
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">			if ( Character.isLetterOrDigit( toBeInvestigated ) ||</span>
+<span class="nc bnc" id="L1060" title="All 2 branches missed.">					toBeInvestigated.toString().matches(&quot;^[&quot;+Constants.getString(&quot;ldapLoginChars&quot;)+&quot;]$&quot;) )</span>
+<span class="nc" id="L1061">				escapedString.append(toBeInvestigated);</span>
+
+		}
+
+<span class="nc" id="L1065">		return escapedString.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

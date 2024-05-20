@@ -34,7 +34,9 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -83,6 +85,7 @@ public class UpdateDatabase
 		mediaGroupsUpdate();
 
 		updateMediaDomainIdColumn();
+		updateEmailsCampainDomainIdColumn();
 
 		deletePoiClasses();
 
@@ -99,6 +102,8 @@ public class UpdateDatabase
 		//zatial nie, ponechame do WJ8 updateArchiveFormat();
 
         setDefaultMapProvider();
+
+		statErrorAddDomainId();
 
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
@@ -369,6 +374,10 @@ public class UpdateDatabase
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				sql = udb.getOracle();
+			}
+			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+			{
+				sql = udb.getPgsql();
 			}
 
 			updateSuccess = true;
@@ -1359,6 +1368,113 @@ public class UpdateDatabase
 		return(errMsg.toString());
 	}
 
+	@SuppressWarnings("java:S106")
+	public static String fillEmptyDatabasePgSQL(String schema)
+	{
+		System.out.println("fillEmptyDatabasePgSQL, schema="+schema);
+
+		StringBuilder errMsg = null;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		String sql = null;
+		try
+		{
+			//over, ci mame nejaku databazu
+			boolean hasDatabase = false;
+
+			System.out.println("fillEmptyDatabasePgSQL 1");
+
+			db_conn = DBPool.getConnection();
+			try
+			{
+				ps = db_conn.prepareStatement("SELECT * FROM documents");
+				rs = ps.executeQuery();
+				if (rs.next())
+				{
+					hasDatabase = true;
+				}
+			}
+			catch (Exception ex)
+			{
+				//databaza nie je naplnena
+			}
+			finally
+			{
+				if (rs!=null) rs.close();
+				if (ps!=null) ps.close();
+			}
+
+			System.out.println("fillEmptyDatabasePgSQL 2");
+
+			System.out.println("hasDatabase="+hasDatabase);
+
+			if (hasDatabase)
+			{
+				return(null);
+			}
+
+			//	nacitaj obsah suboru
+			String data = FileTools.readFileContent("/WEB-INF/sql/blank_web_pgsql.sql", "utf-8");
+
+			//System.out.println(data);
+
+			StringTokenizer st = new StringTokenizer(data, ";");
+
+			while (st.hasMoreTokens())
+			{
+				sql = st.nextToken();
+				if (Tools.isNotEmpty(sql))
+				{
+					if ("webjet_cms".equals(schema)==false) {
+						sql = Tools.replace(sql, "CREATE SCHEMA IF NOT EXISTS \"webjet_cms\"", "CREATE SCHEMA IF NOT EXISTS \""+schema+"\"");
+						sql = Tools.replace(sql, "SCHEMA \"webjet_cms\"", "SCHEMA \""+schema+"\"");
+						sql = Tools.replace(sql, "\"webjet_cms\".", "\""+schema+"\".");
+					}
+
+					System.out.println("Executing: "+sql);
+
+					ps = db_conn.prepareStatement(sql);
+					ps.execute();
+					ps.close();
+				}
+			}
+
+			rs = null;
+			ps = null;
+		}
+		catch (Exception ex)
+		{
+			if (ex.getMessage()!=null) errMsg = new StringBuilder(ex.getMessage());
+			if (sql != null && errMsg!=null)
+			{
+				errMsg.append(" - ").append(sql);
+			}
+			sk.iway.iwcm.Logger.error(ex);
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		finally
+		{
+			try
+			{
+				if (db_conn != null)
+					db_conn.close();
+				if (rs != null)
+					rs.close();
+				if (ps != null)
+					ps.close();
+			}
+			catch (Exception ex2)
+			{
+			}
+		}
+
+		if (errMsg == null) return null;
+
+		return(errMsg.toString());
+	}
+
 	private static void configureModules()
 	{
 		if ("public".equals(Constants.getString("clusterMyNodeType")))
@@ -1818,6 +1934,70 @@ public class UpdateDatabase
 		saveSuccessUpdate(note);
 	}
 
+	public static void statErrorAddDomainId()
+	{
+		String note = "20.3.2024 [jeeff] stat_error add domain_id column";
+		if (isAllreadyUpdated(note)) return;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, 1);
+		long to = cal.getTimeInMillis();
+		cal.set(Calendar.YEAR, 2000);
+		cal.set(Calendar.DATE, 1);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		long from = cal.getTimeInMillis();
+
+		String[] suffixes = StatNewDB.getTableSuffix(from, to);
+		for (int s=0; s<suffixes.length; s++)
+		{
+			try
+			{
+				Logger.println(UpdateDatabase.class, "Add domain_id to stat_error"+suffixes[s]+" "+(s+1)+"/"+suffixes.length);
+
+				db_conn = DBPool.getConnection();
+
+				StringBuilder sql = new StringBuilder("ALTER TABLE stat_error");
+				sql.append(suffixes[s]);
+				sql.append(' ');
+
+				sql.append("ADD domain_id INT DEFAULT 0 NOT NULL");
+
+				ps = db_conn.prepareStatement(sql.toString());
+				ps.execute();
+				ps.close();
+				db_conn.close();
+				ps = null;
+				db_conn = null;
+			}
+			catch (Exception ex)
+			{
+				if (ex.getMessage().indexOf("exist")==-1 && ex.getMessage().indexOf("duplicate")==-1)
+				{
+					sk.iway.iwcm.Logger.error(ex);
+				}
+			}
+			finally
+			{
+				try
+				{
+					if (ps != null)
+						ps.close();
+					if (db_conn != null)
+						db_conn.close();
+				}
+				catch (Exception ex2)
+				{
+				}
+			}
+		}
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
+	}
+
 	/**
 	 * Zmluvy - migracia do novej struktury, ak sa pouzivali zmluvy pred pridanim organizacie (#23935)
 	 */
@@ -2003,5 +2183,73 @@ public class UpdateDatabase
 
 		//zapis do DB, ze domain_id stlpec bol uz aktualizovany
 		saveSuccessUpdate(note);
+	}
+
+	public static void updateEmailsCampainDomainIdColumn() {
+		String note = "18.3.2024 [sivan] pridanie stlpcu domain_id do tabulky emails_campain";
+		if(isAllreadyUpdated(note)) return;
+
+		try {
+			@SuppressWarnings("unchecked")
+			List<String> emailsCampainUrl = DB.queryForList("SELECT DISTINCT url FROM emails_campain");
+
+			for(String url : emailsCampainUrl) {
+				int domainId = getDomainIdBasedOnUrl(url);
+
+				try {
+					//Set domain id based on URL
+					DB.execute("UPDATE emails_campain SET domain_id = ? WHERE url = ?", domainId, url);
+					Logger.info(UpdateDatabase.class, "Setting emails_campain domainId = " + domainId + " for url = " + url);
+				} catch (Exception ex) {}
+
+				try {
+					//Set domain id based on URL
+					DB.execute("UPDATE emails SET domain_id = ? WHERE url LIKE ?", domainId, url+"%");
+					Logger.info(UpdateDatabase.class, "Settings emails domainId = " + domainId + " for url = " + url);
+				} catch (Exception ex) {}
+			}
+
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+
+		//zapis do DB, ze domain_id stlpec bol uz aktualizovany
+		saveSuccessUpdate(note);
+	}
+
+	private static int getDomainIdBasedOnUrl(String url) throws Exception {
+		int domainId = 1;
+		if( Tools.isNotEmpty(url) ) {
+			DocDetails doc = WebpagesService.getBasicDocFromUrl(url);
+			if(doc != null) {
+				GroupDetails group = doc.getGroup();
+				if(group != null) {
+					String domainName = group.getDomainName();
+					if( Tools.isNotEmpty(domainName) ) {
+						domainId = GroupsDB.getDomainId(domainName);
+						if(domainId < 1) domainId = 1;
+					}
+				}
+			} else {
+				try {
+					//get domainId from URL
+					if (url.startsWith("http")) {
+						int to = url.indexOf("/", 8);
+						if (to==-1) to = url.indexOf(":", 8);
+						if (to==-1) to = url.indexOf("?", 8);
+
+						String domainName = url.substring(url.indexOf("://")+3, to);
+						int portDelimiter = domainName.indexOf(":");
+						if (portDelimiter > 0) domainName = domainName.substring(0, portDelimiter);
+
+						domainId = GroupsDB.getDomainId(domainName);
+					}
+				} catch (Exception e) {
+					//do nothing
+				}
+			}
+		}
+
+		return domainId;
 	}
 }

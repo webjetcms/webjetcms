@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersistentCacheDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.cache</a> &gt; <span class="el_source">PersistentCacheDB.java</span></div><h1>PersistentCacheDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.cache;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+import javax.persistence.Query;
+import java.util.*;
+
+/**
+ * PersistentCacheDB.java
+ * &lt;p&gt;
+ * DAO class for manipulating with PersistentCacheBean
+ *
+ * @author      $Author: jeeff $
+ * @version     $Revision: 1.3 $
+ * @Title       webjet7
+ * @Company     Interway s.r.o. (www.interway.sk)
+ * @Copyright   Interway s.r.o. (c) 2001-2010
+ * @created     Date: 20.01.2012 11:08:14
+ * @modified    $Date: 2004/08/16 06:26:11 $
+ */
+public class PersistentCacheDB extends JpaDB&lt;PersistentCacheBean&gt; {
+    public static final int TYPE_URLDOWNLOAD = 1;
+
+    public PersistentCacheDB() {
+<span class="nc" id="L31">        super(PersistentCacheBean.class);</span>
+<span class="nc" id="L32">    }</span>
+
+    public PersistentCacheBean findByCacheId(int cacheId) {
+<span class="nc" id="L35">        return JpaTools.findFirstByMatchingProperty(PersistentCacheBean.class, &quot;cacheId&quot;, cacheId);</span>
+    }
+
+    public List&lt;PersistentCacheBean&gt; findByDataType(int dataType) {
+<span class="nc" id="L39">        return JpaTools.findByMatchingProperty(PersistentCacheBean.class, &quot;dataType&quot;, dataType);</span>
+    }
+
+    public PersistentCacheBean findFirstByDataValue(String dataValue) {
+<span class="nc" id="L43">        return JpaTools.findFirstByMatchingProperty(PersistentCacheBean.class, &quot;dataValue&quot;, dataValue);</span>
+    }
+
+    /**
+     * Najde zaznamy ktore maju byt vykonane (je prekroceny next refresh cas)
+     *
+     * @return
+     */
+    private List&lt;PersistentCacheBean&gt; findNext() {
+<span class="nc" id="L52">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+        try {
+<span class="nc" id="L54">            ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L55">            ReadAllQuery dbQuery = new ReadAllQuery(PersistentCacheBean.class, builder);</span>
+<span class="nc" id="L56">            Expression expr = builder.get(&quot;nextRefresh&quot;).lessThan(new Date());</span>
+<span class="nc" id="L57">            dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="nc" id="L59">            Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L60">            List&lt;PersistentCacheBean&gt; records = JpaDB.getResultList(query);</span>
+<span class="nc" id="L61">            return records;</span>
+<span class="nc" id="L62">        } catch (Exception e) {</span>
+<span class="nc" id="L63">            sk.iway.iwcm.Logger.error(e);</span>
+        } finally {
+<span class="nc" id="L65">            em.close();</span>
+        }
+<span class="nc" id="L67">        return Collections.&lt;PersistentCacheBean&gt;emptyList();</span>
+    }
+
+    /**
+     * Main metoda volana z CRONu
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L77">            Logger.debug(PersistentCacheDB.class, &quot;main&quot;);</span>
+            //ziskaj zoznam objektov ktore uz maju byt vykonane
+<span class="nc" id="L79">            PersistentCacheDB cdb = new PersistentCacheDB();</span>
+<span class="nc" id="L80">            List&lt;PersistentCacheBean&gt; nextData = cdb.findNext();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            for (PersistentCacheBean c : nextData) {</span>
+                try {
+<span class="nc" id="L83">                    Logger.println(PersistentCacheDB.class, &quot;main: type=&quot; + c.getDataType() + &quot; value=&quot; + c.getDataValue() + &quot; next=&quot; + Tools.formatDateTime(c.getNextRefresh()));</span>
+
+<span class="nc" id="L85">                    cdb.updateData(c);</span>
+<span class="nc" id="L86">                } catch (Exception e) {</span>
+<span class="nc" id="L87">                    sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L88">                }</span>
+<span class="nc" id="L89">            }</span>
+<span class="nc" id="L90">        } catch (Exception ex) {</span>
+<span class="nc" id="L91">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L92">        }</span>
+<span class="nc" id="L93">    }</span>
+
+    /**
+     * Nastavi limity pre connection timeout
+     */
+    private void setConnectionTimeouts() {
+<span class="nc" id="L99">        System.setProperty(&quot;sun.net.client.defaultConnectTimeout&quot;, String.valueOf(10 * 60 * 1000));</span>
+<span class="nc" id="L100">        System.setProperty(&quot;sun.net.client.defaultReadTimeout&quot;, String.valueOf(10 * 60 * 1000));</span>
+<span class="nc" id="L101">    }</span>
+
+
+    /**
+     * Nasilne vyvola aktualizaciu databazy cache hodnot
+     *
+     * @param cacheId
+     */
+    public void updateData(int cacheId) {
+<span class="nc" id="L110">        PersistentCacheBean c = getById(cacheId);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (c != null) {</span>
+<span class="nc" id="L112">            updateData(c);</span>
+<span class="nc" id="L113">            Cache cache = Cache.getInstance();</span>
+<span class="nc" id="L114">            cache.removeObject(&quot;PersistentCache.&quot; + c.getDataValue());</span>
+        }
+<span class="nc" id="L116">    }</span>
+
+    /**
+     * Interne aktualizuje databazu cache hodnot
+     *
+     * @param c
+     */
+    public void updateData(PersistentCacheBean c) {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (c.getDataType() == PersistentCacheDB.TYPE_URLDOWNLOAD) {</span>
+<span class="nc" id="L125">            setConnectionTimeouts();</span>
+<span class="nc" id="L126">            String htmlCode = Tools.downloadUrl(c.getDataValue(), SetCharacterEncodingFilter.getEncoding(), null, 10 * 60 * 1000);</span>
+<span class="nc" id="L127">            c.setDataResult(htmlCode);</span>
+        }
+
+        //neukladame
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (c.getDataResult() == null) return;</span>
+
+        //uloz vysledok
+<span class="nc" id="L134">        Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L135">        cal.add(Calendar.MINUTE, c.getRefreshMinutes());</span>
+<span class="nc" id="L136">        c.setNextRefresh(cal.getTime());</span>
+
+<span class="nc" id="L138">        Logger.debug(PersistentCacheDB.class, &quot;Ukladam data, value=&quot; + c.getDataValue() + &quot; next=&quot; + Tools.formatDateTime(c.getNextRefresh()));</span>
+<span class="nc" id="L139">        save(c);</span>
+<span class="nc" id="L140">    }</span>
+
+    /**
+     * Metoda pre stiahnutie URL adresy a ulozenie do persistentnej cache
+     *
+     * @param url            -  URL adresa pre download
+     * @param cacheInMinutes -  pocet minut pre cachovanie
+     * @return
+     */
+    public String downloadUrl(String url, int cacheInMinutes) {
+<span class="nc" id="L150">        url = Tools.replace(url, &quot;+&quot;, &quot;%2B&quot;);</span>
+<span class="nc" id="L151">        url = Tools.replace(url, &quot; &quot;, &quot;%20&quot;);</span>
+
+<span class="nc" id="L153">        String htmlCode = getUrlDownloadValue(url, cacheInMinutes);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (htmlCode != null) return htmlCode;</span>
+
+        //v cache neexistuje, zapiseme docasnu hodnotu
+<span class="nc" id="L157">        setUrlDownloadValue(url, &quot;&lt;!-- PERSISTENT_TEMP_VALUE: downloading, please try again later --&gt;&quot;, cacheInMinutes);</span>
+
+        //v cache neexistuje, musime stiahnut
+<span class="nc" id="L160">        setConnectionTimeouts();</span>
+
+<span class="nc" id="L162">        Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;PersistentCache: adding new link, url=&quot; + url, -1, -1);</span>
+
+<span class="nc" id="L164">        htmlCode = Tools.downloadUrl(url, SetCharacterEncodingFilter.getEncoding(), null, 10 * 60 * 1000);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (htmlCode != null) //null je kvoli tomu, ze to nastane pri chybe downloadu a niekedy moze byt platny aj prazdny retazec</span>
+        {
+<span class="nc" id="L167">            setUrlDownloadValue(url, htmlCode, cacheInMinutes);</span>
+        }
+
+<span class="nc" id="L170">        return htmlCode;</span>
+    }
+
+    private String getUrlDownloadValue(String dataValue, int localCacheMinutes) {
+        //lokalna cache
+<span class="nc" id="L175">        String localCacheName = &quot;PersistentCache.&quot; + dataValue;</span>
+<span class="nc" id="L176">        Cache c = Cache.getInstance();</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (localCacheMinutes &gt; 0) {</span>
+<span class="nc" id="L178">            Object o = c.getObject(localCacheName);</span>
+<span class="nc bnc" id="L179" title="All 4 branches missed.">            if (o != null &amp;&amp; o instanceof String) {</span>
+<span class="nc" id="L180">                return (String) o;</span>
+            }
+        }
+
+        //persistent cache
+<span class="nc" id="L185">        PersistentCacheBean cb = findFirstByDataValue(dataValue);</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        if (cb != null) {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (localCacheMinutes &gt; 0) {</span>
+                //ak sa nejedna o docasnu hodnotu
+<span class="nc bnc" id="L190" title="All 4 branches missed.">                if (cb.getDataResult() != null &amp;&amp; cb.getDataResult().indexOf(&quot;PERSISTENT_TEMP_VALUE&quot;) == -1) {</span>
+<span class="nc" id="L191">                    Date nextRefresh = cb.getNextRefresh();</span>
+<span class="nc" id="L192">                    long expiryTime = nextRefresh.getTime();</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                    if (expiryTime &lt; Tools.getNow()) {</span>
+                        //nastav na 5 minut
+<span class="nc" id="L195">                        expiryTime = Tools.getNow() + (1000 * 60 * 5);</span>
+                    }
+
+                    //ulozime do cache (ak to nie je len docasna hodnota)
+<span class="nc" id="L199">                    c.setObjectByExpiry(localCacheName, cb.getDataResult(), expiryTime, true);</span>
+                }
+            }
+<span class="nc" id="L202">            return cb.getDataResult();</span>
+        }
+
+<span class="nc" id="L205">        return null;</span>
+    }
+
+    private void setUrlDownloadValue(String dataValue, String dataResult, int refreshMinutes) {
+<span class="nc" id="L209">        PersistentCacheBean cb = findFirstByDataValue(dataValue);</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (cb == null) cb = new PersistentCacheBean();</span>
+
+<span class="nc" id="L212">        cb.setDataType(TYPE_URLDOWNLOAD);</span>
+<span class="nc" id="L213">        cb.setDataValue(dataValue);</span>
+<span class="nc" id="L214">        cb.setDataResult(dataResult);</span>
+<span class="nc" id="L215">        cb.setRefreshMinutes(refreshMinutes);</span>
+
+<span class="nc" id="L217">        Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L218">        cal.add(Calendar.MINUTE, refreshMinutes);</span>
+<span class="nc" id="L219">        cb.setNextRefresh(cal.getTime());</span>
+
+        //null neukladame
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (cb.getDataResult() == null) return;</span>
+
+<span class="nc" id="L224">        save(cb);</span>
+<span class="nc" id="L225">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CacheBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">CacheBean.java</span></div><h1>CacheBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+/**
+ *  CacheBean.java - objekt, ktory sa nachadza v Cache (viz Cache.java)
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      $Date: 2008/05/30 07:23:33 $
+ *@modified     $Date: 2008/05/30 07:23:33 $
+ */
+<span class="fc" id="L14">public class CacheBean</span>
+{
+	private String name;
+	private Object object;
+	private long expiryTime;
+<span class="fc" id="L19">	private boolean allowSmartRefresh = false;</span>
+<span class="fc" id="L20">	private boolean smartRefreshed = false;</span>
+	
+	/**
+	 * @return Returns the expiryTime.
+	 */
+	public long getExpiryTime()
+	{
+<span class="fc" id="L27">		return expiryTime;</span>
+	}
+	/**
+	 * @param expiryTime The expiryTime to set.
+	 */
+	public void setExpiryTime(long expiryTime)
+	{
+<span class="fc" id="L34">		this.expiryTime = expiryTime;</span>
+<span class="fc" id="L35">	}</span>
+	/**
+	 * @return Returns the name.
+	 */
+	public String getName()
+	{
+<span class="fc" id="L41">		return name;</span>
+	}
+	/**
+	 * @param name The name to set.
+	 */
+	public void setName(String name)
+	{
+<span class="fc" id="L48">		this.name = name;</span>
+<span class="fc" id="L49">	}</span>
+	/**
+	 * @return Returns the object.
+	 */
+	public Object getObject()
+	{
+<span class="fc" id="L55">		return object;</span>
+	}
+	/**
+	 * @param object The object to set.
+	 */
+	public void setObject(Object object)
+	{
+<span class="fc" id="L62">		this.object = object;</span>
+<span class="fc" id="L63">	}</span>
+	public boolean isAllowSmartRefresh()
+	{
+<span class="fc" id="L66">		return allowSmartRefresh;</span>
+	}
+	public void setAllowSmartRefresh(boolean allowSmartRefresh)
+	{
+<span class="fc" id="L70">		this.allowSmartRefresh = allowSmartRefresh;</span>
+<span class="fc" id="L71">	}</span>
+	public boolean isSmartRefreshed()
+	{
+<span class="fc" id="L74">		return smartRefreshed;</span>
+	}
+	public void setSmartRefreshed(boolean smartRefreshed)
+	{
+<span class="fc" id="L78">		this.smartRefreshed = smartRefreshed;</span>
+<span class="fc" id="L79">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -11,10 +11,11 @@ block content
     )
 
     script.
+        window.helpLink = "/sysadmin/audit/audit-notifications";
         let auditNotificationsTable;
         window.domReady.add(function () {
             let url = "/admin/rest/audit/notify";
-            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.AuditNotifyEntity")})];
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.AuditNotifyEntity")})];
             //console.log(columns);
 
             auditNotificationsTable = WJ.DataTable({

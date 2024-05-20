@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Money.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking</a> &gt; <span class="el_source">Money.java</span></div><h1>Money.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Currency;
+import java.util.List;
+
+/**
+ *  Money.java
+ *  
+ *  Represents monetary amount. Based on {@link Long} data type,
+ *  thus avoiding float/double money antipattern, notoriously
+ *  known for imprecise allocation and rounding.
+ *
+ *  Internally, the amount is held in the smallest monetary
+ *  unit of the currency: usually in cents. 
+ *  
+ *  Use getDouble() to obtain the amount in &quot;dollars&quot;
+ *  Use getAmount() to obtain number of &quot;cents&quot;
+ *  
+ *  @see MoneyLongConverter for JPA transformation
+ *  @see RoundingStrategy 
+ *  @see CurrencyConverter
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 3.11.2010 13:48:10
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class Money implements Comparable&lt;Money&gt;
+{
+	private final long amount;
+	private final Currency currency;
+	
+	private Money(long amount, Currency currency)
+<span class="fc" id="L39">	{</span>
+<span class="fc" id="L40">		this.amount = amount;</span>
+<span class="fc" id="L41">		this.currency = currency;</span>
+<span class="fc" id="L42">	}</span>
+	
+	//---------------CREATION METHODS------------------------
+	
+<span class="fc" id="L46">	public static final Money NOTHING = Money.fromEuroCents(0);</span>
+	
+	public static Money fromCents(long amount, Currency currency)
+	{
+<span class="fc" id="L50">		return new Money(amount, currency);</span>
+	}
+	
+	public static Money fromEuroCents(long amount)
+	{
+<span class="fc" id="L55">		return fromCents(amount, Currency.getInstance(&quot;EUR&quot;));</span>
+	}
+	
+	public static Money fromDouble(double amount, Currency currency)
+	{
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">		if (currency.getDefaultFractionDigits() &lt; 1)</span>
+<span class="nc" id="L61">			return new Money((long)amount, currency);</span>
+		
+<span class="fc" id="L63">		long amountAsLong = (long)(Math.round(amount * Math.pow(10.0, currency.getDefaultFractionDigits())));</span>
+<span class="fc" id="L64">		return new Money(amountAsLong, currency);</span>
+	}
+	
+	public static Money fromEuroDouble(double amount)
+	{
+<span class="fc" id="L69">		return fromDouble(amount, Currency.getInstance(&quot;EUR&quot;));</span>
+	}
+	
+	//---------------OPERATIONS------------------------
+	
+	public Money plus(Money whatToAdd)
+	{
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		if (whatToAdd.getCurrency() != getCurrency())</span>
+<span class="fc" id="L77">			throw new IllegalArgumentException(&quot;Cannot add &quot;+this+&quot; and &quot;+whatToAdd);</span>
+<span class="fc" id="L78">		return new Money(amount + whatToAdd.getAmount(), currency);</span>
+	}
+	
+	public Money plus(Money whatToAdd, CurrencyConverter converter)
+	{
+<span class="nc" id="L83">		Money whatToAddInOutCurrency = converter.convert(whatToAdd, this.currency);</span>
+<span class="nc" id="L84">		return new Money(amount + whatToAddInOutCurrency.getAmount(), currency);</span>
+	}
+	
+	public Money minus(Money whatToSubtract)
+	{
+<span class="fc" id="L89">		return plus(new Money(-whatToSubtract.getAmount(), whatToSubtract.getCurrency()));</span>
+	}
+	
+	public Money minus(Money whatToSubtract, CurrencyConverter converter)
+	{
+<span class="nc" id="L94">		return plus(new Money(-whatToSubtract.getAmount(), whatToSubtract.getCurrency()), converter);</span>
+	}
+	
+	public Money times(double scale)
+	{
+<span class="nc" id="L99">		return fromDouble(amount*scale, currency);</span>
+	}
+	
+	public Money divide(double scale)
+	{
+<span class="nc" id="L104">		return fromDouble(amount/scale, currency);</span>
+	}
+	
+	public Money round()
+	{
+<span class="nc" id="L109">		return RoundingStrategies.getRoundingStrategy(currency).round(this);</span>
+	}
+	
+	public Money round(RoundingStrategy rounding)
+	{
+<span class="fc" id="L114">		return rounding.round(this);</span>
+	}
+	
+	public List&lt;Money&gt; splitIntoParts(int numberOfParts)
+	{
+<span class="fc" id="L119">		long leftToAssign = amount;</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">		int signum = amount &gt; 0 ? 1 : -1;</span>
+<span class="fc" id="L121">		List&lt;Money&gt; split = new ArrayList&lt;Money&gt;();</span>
+		
+		//distribute the main part
+<span class="fc bfc" id="L124" title="All 2 branches covered.">		for (int i = 0 ; i &lt; numberOfParts ; i++)</span>
+		{
+<span class="fc" id="L126">			Money part = Money.fromCents(amount / numberOfParts, currency);</span>
+<span class="fc" id="L127">			leftToAssign -= part.getAmount();</span>
+<span class="fc" id="L128">			split.add(part);</span>
+		}
+		
+		//distribute leftovers evenly
+<span class="fc" id="L132">		int asigneeIndex = 0;</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		while(leftToAssign*signum &gt; 0)</span>
+		{
+<span class="fc" id="L135">			Money newPart = split.get(asigneeIndex % numberOfParts).plus(Money.fromCents(signum, currency));</span>
+<span class="fc" id="L136">			split.set(asigneeIndex % numberOfParts, newPart);</span>
+<span class="fc" id="L137">			leftToAssign -= signum;</span>
+<span class="fc" id="L138">			asigneeIndex++;</span>
+<span class="fc" id="L139">		}</span>
+<span class="fc" id="L140">		return split;</span>
+	}
+	
+	//--------------GETTERS AND SETTERS-------------------
+
+	public double getDouble()
+	{
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		if (currency.getDefaultFractionDigits() &lt; 1)</span>
+<span class="nc" id="L148">			return (double)amount;</span>
+		
+<span class="fc" id="L150">		return amount / Math.pow(10.0, currency.getDefaultFractionDigits());</span>
+	}
+
+	public long getAmount()
+	{
+<span class="fc" id="L155">		return amount;</span>
+	}
+
+	public Currency getCurrency()
+	{
+<span class="fc" id="L160">		return currency;</span>
+	}
+	
+	//------------UTILITY METHODS---------------
+	
+	/**
+	 * Compares 2 {@link Money} instances. 
+	 * Work if and only if both instances are of the same currency.
+	 * 
+	 * Use your own {@link Comparator} if currencies differ
+	 */
+	@Override
+	public int compareTo(Money anotherMoney)
+	{
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (anotherMoney.currency != this.currency)</span>
+<span class="nc" id="L175">			throw new IllegalStateException(&quot;Comparing two money of unequal currencies: &quot;+this+&quot; ,&quot;+anotherMoney);</span>
+<span class="nc" id="L176">		return Long.signum(this.amount - anotherMoney.amount);</span>
+	}
+	
+	@Override
+	public int hashCode()
+	{
+<span class="nc" id="L182">		final int prime = 31;</span>
+<span class="nc" id="L183">		int result = 1;</span>
+<span class="nc" id="L184">		result = prime * result + (int) (amount ^ (amount &gt;&gt;&gt; 32));</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		result = prime * result + ((currency == null) ? 0 : currency.hashCode());</span>
+<span class="nc" id="L186">		return result;</span>
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if (this == obj)</span>
+<span class="nc" id="L193">			return true;</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">		if (obj == null)</span>
+<span class="nc" id="L195">			return false;</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">		if (getClass() != obj.getClass())</span>
+<span class="nc" id="L197">			return false;</span>
+<span class="fc" id="L198">		Money other = (Money) obj;</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">		if (amount != other.amount)</span>
+<span class="nc" id="L200">			return false;</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">		if (currency == null)</span>
+		{
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			if (other.currency != null)</span>
+<span class="nc" id="L204">				return false;</span>
+		}
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">		else if (currency != other.currency)</span>
+<span class="nc" id="L207">			return false;</span>
+<span class="fc" id="L208">		return true;</span>
+	}
+
+	@Override
+	public String toString()
+	{
+<span class="fc" id="L214">		return String.format(&quot;%.2f %s&quot;, getDouble(), currency.toString());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

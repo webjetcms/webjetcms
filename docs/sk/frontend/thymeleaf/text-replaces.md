@@ -4,6 +4,7 @@ Text stránky vytvorenej priamo v editore WebJET môže obsahovať špeciálne z
 
 ## Dátum a čas
 
+```html
 <table width="100%" class="ramikTable">
 <thead>
 	<tr>
@@ -50,9 +51,11 @@ Text stránky vytvorenej priamo v editore WebJET môže obsahovať špeciálne z
 	</tr>
 </tbody>
 </table>
+```
 
 ## Texty
 
+```html
 <table width="100%" class="ramikTable">
 	<thead>
 	<tr>
@@ -69,9 +72,11 @@ Text stránky vytvorenej priamo v editore WebJET môže obsahovať špeciálne z
 	</tr>
 	</tbody>
 </table>
+```
 
 ## Parametre a atribúty
 
+```html
 <table width="100%" class="ramikTable">
 <thead>
 	<tr>
@@ -106,12 +111,14 @@ Text stránky vytvorenej priamo v editore WebJET môže obsahovať špeciálne z
 	</tr>
 </tbody>
 </table>
+```
 
 ## Prihlásený používateľ
 
 Údaje o prihlásenom používateľovi (ak existuje sekcia web sídla, ktorá je dostupná len pod heslom).
 Hodnoty je možné použiť na pred vyplnenie hodnôt formulárových polí. Ak nie je prihlásený žiadny používateľ, hodnoty všetkých značiek budú prázdny znak.
 
+```html
 <table width="100%" class="ramikTable">
 <thead>
 	<tr>
@@ -203,3 +210,4 @@ Hodnoty je možné použiť na pred vyplnenie hodnôt formulárových polí. Ak 
 	</tr>
 </tbody>
 </table>
+```

@@ -8,7 +8,6 @@
 %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
-%><%@ taglib uri="/WEB-INF/datetime.tld" prefix="dt"
 %><%
 String brandSuffix = InitServlet.getBrandSuffix();
 %>
@@ -88,7 +87,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
                         <div class="form-group">
                             <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                             <div class="input-icon">
-                                <i class="fa fa-key"></i>
+                                <i class="ti ti-key"></i>
                                 <input type="text" name="token" size="16" maxlength="40" class="form-control placeholder-no-fix" autocomplete="off"/>
                             </div>
                         </div>

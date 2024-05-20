@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2024.18",
+            "perex": "WebJET 2024.18 contains a **new set of icons**, Form easily supplemented with **advanced settings** (recipients, redirects...), applications AB Testing, Audit (awaiting publication, changed pages), Blog, Questionnaires, Calendar of events (approval). Adds **MultiWeb installation support** (separation of domain data) in Templates, Bulk Email and other applications. New library for **browser detection**, there will be minor differences in Statistics-Browsers, but we record browser data anonymously even without Cookies consent.",
+            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"
+        },
+        {
             "title": "Version 2024.0",
             "perex": "WebJET version 2024.0 is identical to version 2023.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
@@ -43,46 +48,6 @@
             "title": "Version 2022.0",
             "perex": "2022.0 brings a security update to Java and JavaScript library dependencies.",
             "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
-        },
-        {
-            "title": "Version 2021.52",
-            "perex": "2021.52 has a new design even for old versions of applications, improves the responsive version, adds new fields to web pages and improves the behavior of page URLs when they are moved to another directory.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202152"
-        },
-        {
-            "title": "Version 2021.47",
-            "perex": "2021.47 adds modified Tooltip, Data Export, Bulk-email/Domain Limits and Banner system to the new design. We added approval notifications when saving the page and improved the mobile version.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202147"
-        },
-        {
-            "title": "Version 2021.45",
-            "perex": "2021.45 brings the display of the list of websites also from subdirectories, improves the display of the administration on mobile devices and adds the application Questions and answers. In addition, it contains many changes under the hood when working with the list of websites (transition to server paging and search, use Spring DATA for database access)",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202145"
-        },
-        {
-            "title": "Version 2021.40",
-            "perex": "2021.40 brings redesigned user, group, and rights group management and a redesigned GDPR application to the WebJET 2021 visual. Additionally, it adds a number of minor improvements and fixes.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202140"
-        },
-        {
-            "title": "Version 2021.24",
-            "perex": "2021.24 adds the possibility of duplicating records in data tables, automatic opening of root directories if the domain contains, for example, only Slovak and English directories (max. 2 directories), enables mass editing in web pages and improves the comfort of work in several places. ",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202124"
-        },
-        {
-            "title": "Version 2021.20",
-            "perex": "2021.20 adds display and configuration of optional fields for the web page and site directory and adds (finally) a button to display the web page to the data table toolbar.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202120"
-        },
-        {
-            "title": "Version 2021.18",
-            "perex": "2021.18 automatically creates a domain System folder, adds tag editing (perex groups), improves the behavior of cell editing and fixes the error of displaying numerical values ​​in the data table. The administration uses the new font Asap.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202118"
-        },
-        {
-            "title": "Version 2021.13",
-            "perex": "2021.13 improves the user experience by increasing the speed of displaying the list of web pages, the ability to enter the ID of the page or directory for its display (including remembering it in the browser's URL address), the ability to set the displayed columns in the data table, translations in JavaScript files and a number of other improvements in the entire WebJET.",
-            "link": "http://docs.webjetcms.sk/v2021/#/CHANGELOG?id=_202113"
         }
     ]
 }

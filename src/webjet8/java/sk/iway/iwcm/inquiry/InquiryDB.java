@@ -92,7 +92,7 @@ public class InquiryDB
 
 		String sql = "SELECT " + (all ? "question_id" : "max(question_id)") + " AS id FROM inquiry " +
 			"WHERE question_group IN (" + StringUtils.join(groupsSQL.toArray(), ", ") + ") " +
-			"AND (date_from < ? OR date_from IS NULL) AND (date_to > ? OR date_to IS NULL) AND question_active = 1 "+CloudToolsForCore.getDomainIdSqlWhere(true);
+			"AND (date_from < ? OR date_from IS NULL) AND (date_to > ? OR date_to IS NULL) AND question_active = "+DB.getBooleanSql(true)+" "+CloudToolsForCore.getDomainIdSqlWhere(true);
 		List<Integer> ids = new ArrayList<>();
 
 		Connection db_conn = DBPool.getConnection(DBPool.getDBName(request));
@@ -1626,9 +1626,7 @@ public class InquiryDB
 	 * @throws IOException
 	 * @throws ServletException
 	 */
-	public static String saveAnswer(
-		HttpServletRequest request,
-		HttpServletResponse response) throws IOException, ServletException {
+	public static String saveAnswer(HttpServletRequest request, HttpServletResponse response) {
 
 		final String fail = "/components/inquiry/fail";
 		final String ok = "/components/inquiry/ok";

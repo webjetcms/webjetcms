@@ -1,0 +1,1143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorKit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorKit.java</span></div><h1>FileArchivatorKit.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
+
+import java.io.File;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import net.sourceforge.stripes.action.FileBean;
+import org.apache.commons.codec.digest.DigestUtils;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *	FileArchivatorKit.java
+ *
+ *
+ * Title			webjet7
+ * Company		Interway s.r.o. (www.interway.sk)
+ * Copyright 	Interway s.r.o. (c) 2001-2015
+ * @author		$Author: jeeff $(prau)
+ * @version		Revision: 1.3  11.2.2015
+ * created		Date: 11.2.2015 14:40:05
+ * modified   	Date: 11.2.2015 14:40:05
+ * Ticket 		Number: #17263
+ */
+public class FileArchivatorKit
+{
+<span class="nc" id="L50">	private Prop prop = Prop.getInstance();</span>
+    private List&lt;String&gt; errorsList;
+
+    public FileArchivatorKit(Prop paramProp)
+<span class="nc" id="L54">    {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if(paramProp != null)</span>
+        {
+<span class="nc" id="L57">            prop = paramProp;</span>
+        }
+<span class="nc" id="L59">    }</span>
+
+    /** Skontroluje ci je modul File Archiv povoleny pre aktualneho usera
+     *
+     */
+    public static boolean isArchivEnabled(HttpServletRequest request)
+    {
+<span class="nc" id="L66">        return isArchivEnabled(UsersDB.getCurrentUser(request));</span>
+    }
+
+    /** Skontroluje ci je modul File Archiv povoleny pre usera
+     *
+     * @param userIdentity Identity
+     */
+    public static boolean isArchivEnabled(Identity userIdentity)
+    {
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        return userIdentity != null &amp;&amp; userIdentity.isEnabledItem(&quot;cmp_file_archiv&quot;);</span>
+    }
+
+	public static String getArchivPath()
+	{
+	    //robi lokalne problem pri zapnutej konf. premennej &quot;enableStaticFilesExternalDir&quot;
+<span class="fc" id="L81">		String defaultArchivPath = &quot;files/archiv/&quot;;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">		if(Tools.isEmpty(Constants.getString(&quot;fileArchivDefaultDirPath&quot;)))</span>
+<span class="nc" id="L83">			return defaultArchivPath;</span>
+
+<span class="fc" id="L85">		return Constants.getString(&quot;fileArchivDefaultDirPath&quot;);</span>
+	}
+
+
+	public static String getInsertLaterPath()
+	{
+<span class="nc" id="L91">		String defaultInsertLaterPath = &quot;files/archiv_insert_later/&quot;;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if(Tools.isEmpty(Constants.getString(&quot;fileArchivInsertLaterDirPath&quot;)))</span>
+<span class="nc" id="L93">			return defaultInsertLaterPath;</span>
+
+<span class="nc" id="L95">		return Constants.getString(&quot;fileArchivInsertLaterDirPath&quot;);</span>
+	}
+
+	public static String getFullInsertLaterPath()
+	{
+<span class="nc" id="L100">		return getArchivPath() + getInsertLaterPath();</span>
+	}
+
+	/** Vrati unikatne meno suboru
+	 *
+	 * @deprecated
+	 * @param file - subor
+	 * @param directoryPath - cesta k suboru
+	 * @param preferredDate - null / preferovany datum
+	 */
+	@Deprecated
+	public static String getUniqueFileName(FileBean file, String directoryPath, String preferredDate)
+	{
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		return getUniqueFileName(file != null ? file.getFileName() : null, directoryPath, preferredDate);</span>
+	}
+
+	public static String getUniqueFileName(String fileNameParam, String directoryPath, String preferredDate)
+	{
+<span class="nc" id="L118">		String dirPath = directoryPath;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if(Tools.isAnyEmpty(fileNameParam, dirPath) == false)</span>
+		{
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if(!dirPath.endsWith(&quot;/&quot;))</span>
+<span class="nc" id="L122">				dirPath += &quot;/&quot;;</span>
+
+<span class="nc" id="L124">			String ext = DB.internationalToEnglish(FileTools.getFileExtension(fileNameParam));</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if(Tools.isNotEmpty(ext)) ext = &quot;.&quot;+ext;</span>
+<span class="nc" id="L126">			String fileName = DocTools.removeChars(FileTools.getFileNameWithoutExtension(fileNameParam), false);</span>
+<span class="nc" id="L127">			int version = 0;</span>
+<span class="nc" id="L128">			int loopSafe = 10000;</span>
+			String str_version;
+<span class="nc" id="L130">			String dateStamp = &quot;&quot;;</span>
+			//funkcia nebola ziadana
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if(Constants.getBoolean(FileArchivatorDB.getConstantsPrefix()+&quot;CreateFileDateStamp&quot;))</span>
+			{
+<span class="nc" id="L134">				dateStamp = getDateStampAsString();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				if(Tools.isNotEmpty(preferredDate))</span>
+<span class="nc" id="L136">					dateStamp = preferredDate;</span>
+			}
+<span class="nc" id="L138">			String fullFileName = fileName+ext;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if(FileTools.isFile(dirPath+fullFileName))</span>
+			{
+				do
+				{
+<span class="nc" id="L143">					version++;</span>
+<span class="nc" id="L144">					str_version = version+&quot;&quot;;</span>
+<span class="nc" id="L145">					fullFileName = fileName+&quot;_v_&quot;+str_version+dateStamp+ext;</span>
+<span class="nc bnc" id="L146" title="All 4 branches missed.">				}while( FileTools.isFile(dirPath+fullFileName) &amp;&amp; version &lt; loopSafe);</span>
+<span class="nc" id="L147">				return fullFileName;</span>
+			}
+<span class="nc" id="L149">			return fileName+ext;</span>
+		}
+<span class="nc" id="L151">		return null;</span>
+	}
+
+	/** vytvori bean pre novy subor, upravi referenciu (referenceId) u starych suborov
+	 *
+	 * @return true ak vsetko prebehlo v poriadku
+	 */
+	public static boolean  setFilePropertiesAfterUpload(FileArchivatorBean newFab, int oldId, boolean uploadLater, HttpServletRequest req)
+	{
+<span class="nc" id="L160">		boolean result = true;</span>
+		//pri nahravani neskor existenciu kontrolujeme skor kvoli multidomain
+<span class="nc bnc" id="L162" title="All 4 branches missed.">		if(uploadLater == false &amp;&amp; !FileTools.isFile(newFab.getFilePath()+newFab.getFileName()))</span>
+<span class="nc" id="L163">			return false;</span>
+
+		//pri nahravani neskor nesetujeme vzdy aktualnu domenu
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if(uploadLater == false)</span>
+<span class="nc" id="L167">			newFab.setDomainId(CloudToolsForCore.getDomainId());</span>
+		//ak sa ma subor nahrat neskor ulozime odkaz na subor ktory ma nahradit
+		else
+<span class="nc" id="L170">			newFab.setReferenceId(oldId);</span>
+
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if(!newFab.save())</span>
+		{
+<span class="nc" id="L174">			Logger.debug(FileArchivatorKit.class, &quot; new FileArchivatorBean(...) !newFab.save() &quot;+newFab.toString());</span>
+<span class="nc" id="L175">			return false;</span>
+		}
+
+<span class="nc" id="L178">		boolean newVersion = false;</span>
+		//ak uz existuje nejaka starsia verzia naseho suboru
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if(oldId &gt; 0)</span>
+		{
+<span class="nc" id="L182">            newVersion = true;</span>
+<span class="nc" id="L183">			FileArchivatorBean oldFab = FileArchivatorDB.getInstance().getById(oldId);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			if(oldFab == null)</span>
+			{
+<span class="nc" id="L186">				Logger.debug(FileArchivatorKit.class, &quot;setFilePropertiesAfterUpload() fileBean == null&quot;);</span>
+<span class="nc" id="L187">				return false;</span>
+			}
+
+			//ak sa ma subor nahrat neskor, to je vsetko
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if(uploadLater)</span>
+<span class="nc" id="L192">				return result;</span>
+
+			//premenujeme (vymenime) subory stary-&gt;novy a novy-&gt;stary
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if(renameFile(newFab.getFilePath(), newFab.getFileName(), oldFab))</span>
+			{
+				//premenujeme v DB
+<span class="nc" id="L198">				String tempNameUrl = oldFab.getFileName();</span>
+<span class="nc" id="L199">				oldFab.setFileName(newFab.getFileName());</span>
+<span class="nc" id="L200">				newFab.setFileName(tempNameUrl);</span>
+				//premenujeme aj cestu
+<span class="nc" id="L202">				tempNameUrl = oldFab.getFilePath();</span>
+<span class="nc" id="L203">				oldFab.setFilePath(newFab.getFilePath());</span>
+<span class="nc" id="L204">				newFab.setFilePath(tempNameUrl);</span>
+				//zmenime referenciu v hlavnom subore
+<span class="nc" id="L206">				oldFab.setReferenceId(newFab.getId());</span>
+				//globalne id je rovnake pre vsetky subory vo vlakne.
+<span class="nc" id="L208">				newFab.setGlobalId(oldFab.getGlobalId());</span>
+<span class="nc bnc" id="L209" title="All 6 branches missed.">				if(!oldFab.save() | !newFab.save())</span>
+<span class="nc" id="L210">					result = false;</span>
+
+				//zmenime referenciu u suborov, ktore na neho odkazuju (a po novom budu odkazovat na novy subor)
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if(!reSetReference(oldId, newFab.getId()))</span>
+<span class="nc" id="L214">					result = false;</span>
+
+				//posunieme order_id o jednu uroven
+<span class="nc" id="L217">				incrementOrderId(newFab.getId());</span>
+				//return result;
+<span class="nc" id="L219">			}</span>
+			else
+            {
+<span class="nc" id="L222">                Logger.debug(FileArchivatorKit.class, &quot;nezbehlo renameFile: &quot;+newFab.getVirtualPath()+&quot; vs. &quot;+oldFab.getVirtualPath());</span>
+<span class="nc" id="L223">                return false;</span>
+            }
+<span class="nc" id="L225">		}</span>
+		else
+		{
+			//ak uz existuju subory s rovnakym hashom, na frontende ponukneme moznosti riesenia
+<span class="nc" id="L229">			List&lt;FileArchivatorBean&gt; sameFilesList = existSameFiles(newFab, true);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if(req!=null)</span>
+			{
+<span class="nc" id="L232">				req.setAttribute(&quot;fileArchivSameFiles&quot;, sameFilesList);</span>
+                //kvoli mfsr potrebujem setovat vzdy
+<span class="nc" id="L234">                req.setAttribute(&quot;fileArchivLastFile&quot;, newFab);</span>
+
+<span class="nc" id="L236">                FileArchivValidator fav = (FileArchivValidator)req.getAttribute(&quot;validator&quot;);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                if(fav == null)</span>
+<span class="nc" id="L238">                    fav = new FileArchivDefaultValidator();</span>
+
+<span class="nc bnc" id="L240" title="All 2 branches missed.">                if(!fav.validatePropertiesAfterUpload(newFab,req))</span>
+                {
+<span class="nc" id="L242">                    Logger.debug(FileArchivatorKit.class, &quot;nezbehlo validatePropertiesAfterUpload: &quot;+newFab.getVirtualPath());</span>
+<span class="nc" id="L243">                    return false;</span>
+                }
+
+            }
+
+			//novemu suboru vo vlakne nastavime nove globalne ID
+<span class="nc" id="L249">			newFab.setGlobalId(generateNextGlobalId());</span>
+<span class="nc" id="L250">			newFab.save();</span>
+		}
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if(req != null) req.setAttribute(&quot;after_save_fab&quot;,newFab);</span>
+<span class="nc" id="L253">		addSaveLogToAdminlog(newFab, newVersion);</span>
+<span class="nc" id="L254">		return result;</span>
+	}
+
+	public static boolean setFilePropertiesAfterUploadReplace(String dirPath, String fileName, int oldId, FileArchivatorBean newFab, HttpServletRequest req)
+	{
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if(!FileTools.isFile(dirPath+fileName))</span>
+<span class="nc" id="L260">			return false;</span>
+
+<span class="nc" id="L262">		newFab.setId(oldId);</span>
+<span class="nc" id="L263">		newFab.setDateInsert(new Date());</span>
+
+		//ak uz existuju subory s rovnakym hashom, na frontende ponukneme moznosti riesenia
+<span class="nc" id="L266">		List&lt;FileArchivatorBean&gt; sameFilesList = existSameFiles(newFab, false);</span>
+<span class="nc" id="L267">		req.setAttribute(&quot;fileArchivSameFiles&quot;, sameFilesList);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		if(sameFilesList != null)</span>
+		{
+<span class="nc" id="L270">			req.setAttribute(&quot;fileArchivLastFile&quot;, newFab);</span>
+		}
+
+<span class="nc" id="L273">        FileArchivValidator fav = (FileArchivValidator)req.getAttribute(&quot;validator&quot;);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        if(fav == null)</span>
+<span class="nc" id="L275">            fav = new FileArchivDefaultValidator();</span>
+
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if(!fav.validateAfterUploadReplace(newFab,req))</span>
+        {
+<span class="nc" id="L279">            Logger.debug(FileArchivatorKit.class, &quot; new FileArchivatorBean(...) !newFab.save() &quot;+newFab.toString());</span>
+<span class="nc" id="L280">            return false;</span>
+        }
+
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if(!newFab.save())</span>
+		{
+<span class="nc" id="L285">			Logger.debug(FileArchivatorKit.class, &quot; new FileArchivatorBean(...) !newFab.save() &quot;+newFab.toString());</span>
+<span class="nc" id="L286">			return false;</span>
+		}
+<span class="nc" id="L288">		addSaveLogToAdminlog(newFab, false, true);</span>
+
+<span class="nc" id="L290">		return true;</span>
+	}
+
+
+	/**
+	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
+	 * BHR: musel som prerobit z Tools.renameFile, pretgradle oze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
+	 */
+	public static boolean renameFile(String dirPath, String fileName, FileArchivatorBean oldFileBean)
+	{
+<span class="nc" id="L300">		boolean renamed = true;</span>
+<span class="nc" id="L301">		IwcmFile oldFile = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath()+oldFileBean.getFileName()));</span>
+<span class="nc" id="L302">		IwcmFile newFile = new IwcmFile(Tools.getRealPath(dirPath+fileName));</span>
+<span class="nc" id="L303">		IwcmFile tmpFile = new IwcmFile(Tools.getRealPath(dirPath+&quot;empty_file_for_rename_only&quot;+getFileExtension(fileName)));</span>
+		try
+		{
+<span class="nc bnc" id="L306" title="All 2 branches missed.">			if(FileTools.copyFile(oldFile, tmpFile) == false)</span>
+			{
+<span class="nc" id="L308">				 Logger.error(FileArchivatorKit.class, &quot;renameFile: nepodarilo sa premenovat &quot;+oldFile.getVirtualPath()+&quot; &gt; &quot;+tmpFile.getVirtualPath());</span>
+<span class="nc" id="L309">				 renamed = false;</span>
+			}
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			if(FileTools.copyFile(newFile, oldFile) == false)</span>
+			{
+<span class="nc" id="L313">				 Logger.error(FileArchivatorKit.class, &quot;renameFile: nepodarilo sa premenovat &quot;+newFile.getVirtualPath()+&quot; &gt; &quot;+oldFile.getVirtualPath());</span>
+<span class="nc" id="L314">				 renamed = false;</span>
+			}
+<span class="nc bnc" id="L316" title="All 2 branches missed.">			if(FileTools.copyFile(tmpFile, newFile) == false)</span>
+			{
+<span class="nc" id="L318">				 Logger.error(FileArchivatorKit.class, &quot;renameFile: nepodarilo sa premenovat &quot;+tmpFile.getVirtualPath()+&quot; &gt; &quot;+newFile.getVirtualPath());</span>
+<span class="nc" id="L319">				 renamed = false;</span>
+			}
+		}
+<span class="nc" id="L322">		catch(Exception e)</span>
+		{
+<span class="nc" id="L324">			renamed = false;</span>
+<span class="nc" id="L325">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="nc bnc" id="L329" title="All 4 branches missed.">			if(renamed &amp;&amp; tmpFile.exists())</span>
+<span class="nc" id="L330">				 tmpFile.delete();</span>
+		}
+<span class="nc" id="L332">		return renamed;</span>
+	}
+
+	public static boolean reSetReference(int oldReferenceId, int newReferenceId)
+	{
+<span class="nc" id="L337">		List&lt;FileArchivatorBean&gt; files = FileArchivatorDB.getByReferenceId(oldReferenceId);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">		if(files != null)</span>
+		{
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			for(FileArchivatorBean file:files)</span>
+			{
+<span class="nc" id="L342">				Logger.debug(FileArchivatorKit.class, &quot;Change reference from &quot;+oldReferenceId+&quot; to &quot;+newReferenceId+&quot; file: &quot;+file.getFilePath()+file.getFileName());</span>
+<span class="nc" id="L343">				file.setReferenceId(newReferenceId);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">				if(!file.save())</span>
+<span class="nc" id="L345">					return false;</span>
+<span class="nc" id="L346">			}</span>
+		}
+<span class="nc" id="L348">		return true;</span>
+	}
+
+	/** Zisti ci sa nejde menit hlavny (aktualny) subor na ktory odkazuju ostatne. napriklad pri editacii viacerymi pouzivatelmi
+	 *
+	 */
+	public static boolean isConcurrentModification(int oldId)
+	{
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if(oldId &gt; 0)</span>
+		{
+<span class="nc" id="L358">			FileArchivatorBean fileBean = FileArchivatorDB.getInstance().getById(oldId);</span>
+<span class="nc bnc" id="L359" title="All 4 branches missed.">			if(fileBean != null &amp;&amp; fileBean.getReferenceId() != -1)</span>
+			{
+<span class="nc" id="L361">				Logger.debug(FileArchivatorKit.class, &quot;Pozor !!! Moze nastat ConcurrentModification pri id: &quot;+oldId+&quot; subor: &quot;+fileBean.getFileName());</span>
+<span class="nc" id="L362">				return true;</span>
+			}
+		}
+<span class="nc" id="L365">		return false;</span>
+	}
+
+	 /**
+	  * @deprecated
+	  */
+	@Deprecated
+	public static String getMD5(File file)
+	{
+<span class="nc" id="L374">		return getMD5(new IwcmFile(file));</span>
+	}
+
+	public static String getMD5(String virtualPath)
+	{
+<span class="nc" id="L379">		return getMD5(new IwcmFile(Tools.getRealPath(virtualPath)));</span>
+	}
+
+	public static String getMD5(IwcmFile iwcmFile)
+	{
+<span class="nc" id="L384">		String md5Hex = &quot;null&quot;;</span>
+<span class="nc bnc" id="L385" title="All 4 branches missed.">		if(iwcmFile == null || iwcmFile.exists() == false)</span>
+		{
+<span class="nc" id="L387">			return md5Hex;</span>
+		}
+
+		try
+		{
+<span class="nc" id="L392">			md5Hex = DigestUtils.md5Hex(new IwcmInputStream(iwcmFile));</span>
+		}
+<span class="nc" id="L394">		catch(Exception exc)</span>
+		{
+<span class="nc" id="L396">			Logger.debug(FileArchivatorKit.class, &quot;Zlyhalo generovanie MD5 odtlacku&quot;);</span>
+<span class="nc" id="L397">			sk.iway.iwcm.Logger.error(exc);</span>
+<span class="nc" id="L398">		}</span>
+<span class="nc" id="L399">		return md5Hex;</span>
+	}
+
+	/** Vrati datum ako String.
+	 *
+	 */
+	public static String getDateStampAsString()
+	{
+<span class="nc" id="L407">		return getDateStampAsString(null);</span>
+	}
+
+	/** Vrati datum a cas ako String.
+	 *
+	 */
+	public static String getDateStampAsString(Date date)
+	{
+<span class="nc" id="L415">		Calendar now = Calendar.getInstance();</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		if(date != null)</span>
+<span class="nc" id="L417">			now.setTime(date);</span>
+<span class="nc" id="L418">		return now.get(Calendar.YEAR) + &quot;.&quot; + (now.get(Calendar.MONTH) + 1) + &quot;.&quot; + now.get(Calendar.DAY_OF_MONTH) + &quot;_&quot; +</span>
+<span class="nc" id="L419">				 now.get(Calendar.HOUR_OF_DAY) + &quot;.&quot; + now.get(Calendar.MINUTE);</span>
+	}
+
+	public static String getFileExtension(String fileName)
+	{
+<span class="nc bnc" id="L424" title="All 2 branches missed.">		if(fileName == null)</span>
+<span class="nc" id="L425">			return &quot;empty&quot;;</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		if(fileName.lastIndexOf(&quot;.&quot;) != -1)</span>
+<span class="nc" id="L427">			return fileName.toLowerCase().substring(fileName.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L428">		return &quot;nul&quot;;</span>
+	}
+
+    public static String getFileExtension(String fileName, boolean allowNull)
+    {
+<span class="nc bnc" id="L433" title="All 2 branches missed.">        if(fileName == null)</span>
+        {
+<span class="nc bnc" id="L435" title="All 2 branches missed.">            if(allowNull)</span>
+<span class="nc" id="L436">                return null;</span>
+<span class="nc" id="L437">            return &quot;empty&quot;;</span>
+        }
+<span class="nc bnc" id="L439" title="All 2 branches missed.">        if(fileName.lastIndexOf(&quot;.&quot;) != -1)</span>
+<span class="nc" id="L440">            return fileName.toLowerCase().substring(fileName.lastIndexOf(&quot;.&quot;));</span>
+
+<span class="nc bnc" id="L442" title="All 2 branches missed.">        if(allowNull)</span>
+<span class="nc" id="L443">            return null;</span>
+
+<span class="nc" id="L445">        return &quot;nul&quot;;</span>
+    }
+
+	public static void incrementOrderId(int referenceId)
+	{
+<span class="nc" id="L450">		DB.execute(&quot;UPDATE file_archiv SET order_id = order_id+1 WHERE reference_id = ? AND order_id &gt;= 0&quot;, referenceId);</span>
+<span class="nc" id="L451">		DB.execute(&quot;UPDATE file_archiv SET order_id = 1 WHERE reference_id = ? AND order_id &lt; 0&quot;, referenceId);</span>
+		//musim tu vymazat cache
+<span class="nc" id="L453">		FileArchivatorKit.deleteFileArchiveCache();</span>
+<span class="nc" id="L454">		Logger.debug(FileArchivatorKit.class, &quot;Increment orderId for referenceId = &quot;+referenceId);</span>
+<span class="nc" id="L455">	}</span>
+
+	public static String[] getDomainNames()
+	{
+<span class="nc" id="L459">		return Tools.getTokens(Constants.getString(&quot;fileArchivDomainsName&quot;), &quot;,&quot;);</span>
+	}
+
+	/** Mazanie za podmienky ze na subor NEexistuje referencia
+	 *
+	 */
+	public static boolean deleteFile(int fabId, UserDetails user)
+	{
+<span class="nc" id="L467">		List&lt;FileArchivatorBean&gt; fabList = FileArchivatorDB.getByReferenceId(fabId);</span>
+<span class="nc bnc" id="L468" title="All 4 branches missed.">		if(fabList == null || fabList.size() == 0)</span>
+		{
+<span class="nc" id="L470">			FileArchivatorBean fabToDelete = FileArchivatorDB.getInstance().getById(fabId);</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">			if(fabToDelete != null)</span>
+			{
+<span class="nc bnc" id="L473" title="All 4 branches missed.">				if(user == null || !user.isFolderWritable(&quot;/&quot;+fabToDelete.getFilePath()))</span>
+				{
+<span class="nc bnc" id="L475" title="All 2 branches missed.">					Logger.debug(FileArchivatorKit.class, &quot;Pouzivatel &quot;+((user != null)?&quot;id: &quot;+user.getUserId():&quot;null&quot;)+&quot; nema pravo na zmazanie suboru: &quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; &quot;);</span>
+<span class="nc" id="L476">					return false;</span>
+				}
+
+<span class="nc" id="L479">				boolean isSuccess = true;</span>
+<span class="nc" id="L480">				IwcmFile iFile = new IwcmFile(Tools.getRealPath(fabToDelete.getFilePath()+fabToDelete.getFileName()));</span>
+<span class="nc bnc" id="L481" title="All 4 branches missed.">				if(iFile.exists() &amp;&amp; iFile.delete() == false)</span>
+				{
+<span class="nc" id="L483">					isSuccess = false;</span>
+<span class="nc" id="L484">					Logger.warn(FileArchivatorKit.class, &quot;Subor :&quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; sa nepodarilo zmazat.&quot;);</span>
+				}
+
+<span class="nc" id="L487">				deletePattern(FileArchivatorDB.getPatern(fabToDelete.getFilePath()+fabToDelete.getFileName()), user);</span>
+
+<span class="nc" id="L489">				String fileDescription = &quot;Subor &quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; zmazany \n &quot;+fabToDelete.toString();</span>
+<span class="nc bnc" id="L490" title="All 4 branches missed.">				if(isSuccess &amp;&amp; fabToDelete.delete())</span>
+				{
+<span class="nc" id="L492">					Adminlog.add(Adminlog.TYPE_FILE_DELETE, fileDescription, -1, -1);</span>
+<span class="nc" id="L493">					return true;</span>
+				}
+
+			}
+		}
+<span class="nc" id="L498">		return false;</span>
+	}
+
+	public static boolean deleteStructure(int fabId,UserDetails user)
+	{
+<span class="nc" id="L503">		boolean isSuccess = true;</span>
+
+		//najskorej zmazeme referencie
+<span class="nc" id="L506">		List&lt;FileArchivatorBean&gt; fabList = FileArchivatorDB.getByReferenceId(fabId);</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">		if(fabList != null)</span>
+		{
+			//ak na niektory z mazanych suborov nemame pravo, nezmazeme ani tie na ktore mame pravo.
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			for(FileArchivatorBean fab:fabList)</span>
+			{
+<span class="nc bnc" id="L512" title="All 4 branches missed.">				if(user == null || !user.isFolderWritable(&quot;/&quot;+fab.getFilePath()))</span>
+				{
+<span class="nc bnc" id="L514" title="All 2 branches missed.">					Logger.debug(FileArchivatorKit.class, &quot;Pouzivatel &quot;+((user != null)?&quot;id: &quot;+user.getUserId():&quot;null&quot;)+&quot; nema pravo na zmazanie suboru (v liste): &quot;+fab.getFilePath()+fab.getFileName()+&quot; &quot;);</span>
+<span class="nc" id="L515">					return false;</span>
+				}
+<span class="nc" id="L517">			}</span>
+
+<span class="nc bnc" id="L519" title="All 2 branches missed.">			for(FileArchivatorBean fab:fabList)</span>
+			{
+<span class="nc" id="L521">				isSuccess = deleteFile(fab, &quot;Sub &quot;, user);</span>
+<span class="nc" id="L522">			}</span>
+		}
+
+<span class="nc bnc" id="L525" title="All 2 branches missed.">		if(!isSuccess)</span>
+<span class="nc" id="L526">			return false;</span>
+
+		//a teraz zmazeme hlavny subor
+<span class="nc" id="L529">		FileArchivatorBean fabToDelete = FileArchivatorDB.getInstance().getById(fabId);</span>
+
+<span class="nc bnc" id="L531" title="All 2 branches missed.">		if(fabToDelete != null)</span>
+		{
+			//prava na zmazanie sa vykonava v metode deleteFile(String ,String );
+			//zmazeme vzor
+<span class="nc" id="L535">			deletePattern(FileArchivatorDB.getPatern(fabToDelete.getFilePath()+fabToDelete.getFileName()),user);</span>
+<span class="nc" id="L536">			isSuccess = deleteFile(fabToDelete,&quot;Hlavny &quot;, user);</span>
+		}
+
+<span class="nc" id="L539">		return isSuccess;</span>
+	}
+
+	/** Ak je bean vzorom (ma vyplnene &quot;reference_to_main&quot;) tak bude zmazany
+	 *
+	 */
+	private static void deletePattern(FileArchivatorBean fabPattern, UserDetails user)
+	{
+<span class="nc bnc" id="L547" title="All 6 branches missed.">		if(fabPattern == null || Tools.isEmpty(fabPattern.getReferenceToMain()) || !Constants.getBoolean(FileArchivatorDB.getConstantsPrefix() + &quot;AutoDeletePattern&quot;))</span>
+<span class="nc" id="L548">			return;</span>
+<span class="nc" id="L549">		deleteFile(fabPattern, &quot;Vzor &quot;, user);</span>
+<span class="nc" id="L550">	}</span>
+
+	/** Skontroluje prava na subory, zmaze subor fyzicky z disku a zmaze aj Bean
+	 *
+	 */
+	private static boolean deleteFile(FileArchivatorBean fabToDelete, String prefixText, UserDetails user)
+	{
+<span class="nc bnc" id="L557" title="All 2 branches missed.">		if(fabToDelete == null)</span>
+		{
+<span class="nc" id="L559">			Logger.debug(FileArchivatorKit.class, prefixText+&quot; FAB je null &quot;);</span>
+<span class="nc" id="L560">			return false;</span>
+		}
+
+<span class="nc bnc" id="L563" title="All 4 branches missed.">		if(user == null || !user.isFolderWritable(&quot;/&quot;+fabToDelete.getFilePath()))</span>
+		{
+<span class="nc bnc" id="L565" title="All 2 branches missed.">			Logger.debug(FileArchivatorKit.class, &quot;Pouzivatel &quot;+((user != null)?&quot;id: &quot;+user.getUserId():&quot;null&quot;)+&quot; nema pravo na zmazanie (&quot;+prefixText+&quot;) suboru: &quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; &quot;);</span>
+<span class="nc" id="L566">			return false;</span>
+		}
+<span class="nc" id="L568">		boolean isSuccess = true;</span>
+<span class="nc" id="L569">		IwcmFile iFile = new IwcmFile(Tools.getRealPath(fabToDelete.getFilePath()+fabToDelete.getFileName()));</span>
+<span class="nc bnc" id="L570" title="All 4 branches missed.">		if(iFile.exists() &amp;&amp; iFile.delete()==false)</span>
+		{
+<span class="nc" id="L572">			isSuccess = false;</span>
+<span class="nc" id="L573">			Logger.debug(FileArchivatorKit.class, prefixText+&quot; subor :&quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; sa nepodarilo zmazat.&quot;);</span>
+		}
+		else
+		{
+			// delete index
+<span class="nc" id="L578">			new SimpleQuery().execute(&quot;delete from documents where external_link = '/&quot; + fabToDelete.getFilePath()+fabToDelete.getFileName() + &quot;'&quot;);</span>
+
+<span class="nc" id="L580">			String fileDescription = &quot;Subor &quot;+fabToDelete.getFilePath()+fabToDelete.getFileName()+&quot; zmazany \n &quot;+fabToDelete.toString();</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">			if(fabToDelete.delete())</span>
+<span class="nc" id="L582">				Adminlog.add(Adminlog.TYPE_FILE_DELETE, fileDescription, user.getUserId(), -1);</span>
+		}
+
+<span class="nc" id="L585">		return isSuccess;</span>
+	}
+
+	/** Zisti ci na subor ktory chceme nahrat uz v databaze neexistovala URL a subor bol zmazany bez zmazania zaznamu o subore
+	 *
+	 */
+	public static boolean existsPathInDB(String path)
+	{
+<span class="nc bnc" id="L593" title="All 4 branches missed.">		if(path != null &amp;&amp; path.lastIndexOf(&quot;/&quot;)+1 &lt; path.length())</span>
+		{
+<span class="nc" id="L595">			String filePath = path.substring(0,path.lastIndexOf(&quot;/&quot;)+1);</span>
+<span class="nc" id="L596">			String fileName = path.substring(path.lastIndexOf(&quot;/&quot;)+1);</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">			return FileArchivatorDB.getByPath(filePath, fileName) != null;</span>
+		}
+<span class="nc" id="L599">		return false;</span>
+	}
+
+	/**Skontroluje konzisteciu suborov, ak niektory chyba, vrati naplneny string. Pozor ! Vypoctovo narocne, prechadza vsetky zaznamy v DB a fyzicky kontroluje ci subory existuju
+	 *
+	 */
+	public static String checkFileConsistency()
+	{
+<span class="nc" id="L607">		StringBuilder result = new StringBuilder();</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">		for(FileArchivatorBean fab: FileArchivatorDB.getInstance().getAll())</span>
+		{
+<span class="nc bnc" id="L610" title="All 2 branches missed.">			if(!FileTools.isFile(fab.getFilePath()+fab.getFileName()))</span>
+<span class="nc" id="L611">				result.append(&quot;Error file &quot;).append(fab.getFilePath()).append(fab.getFileName()).append(&quot; is missing ! Id: &quot;)</span>
+<span class="nc" id="L612">						 .append(fab.getId()).append(&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L613">		}</span>
+<span class="nc" id="L614">		return result.toString();</span>
+	}
+
+	/** Ziska security hash zo stringu, pri chybe vrati prazdny string
+	 *
+	 */
+	public static String getSecurityHash(String input)
+	{
+<span class="fc" id="L622">		String ret = &quot;&quot;;</span>
+		try{
+<span class="fc" id="L624">			String source = input + input.length();</span>
+<span class="fc" id="L625">			MessageDigest md = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="fc" id="L626">			md.update(source.getBytes());</span>
+<span class="fc" id="L627">			byte[] byteData = md.digest();</span>
+<span class="fc" id="L628">			StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L629" title="All 2 branches covered.">			for (byte byteDatum : byteData)</span>
+<span class="fc" id="L630">				sb.append(Integer.toString((byteDatum &amp; 0xff) + 0x100, 16).substring(1));</span>
+<span class="fc" id="L631">			ret = sb.toString();</span>
+		}
+<span class="nc" id="L633">		catch (Exception e)</span>
+		{
+<span class="nc" id="L635">			Logger.debug(FileArchivatorKit.class, &quot;Problem generating security hash. Cause: &quot; + e.getMessage());</span>
+<span class="fc" id="L636">		}</span>
+<span class="fc" id="L637">		return ret;</span>
+	}
+
+	/** Ak uz fyzicky existuje subor s rovnakym hash-om, vratime list beanov, inak null
+	 *
+	 */
+	public static List&lt;FileArchivatorBean&gt; existSameFiles(FileArchivatorBean newFab, boolean removePattern)
+	{
+<span class="nc" id="L645">		List&lt;FileArchivatorBean&gt; returnList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L646">		List&lt;FileArchivatorBean&gt; fabHashList = FileArchivatorDB.getByHash(newFab);</span>
+
+		// fabHashList.size() &gt; 1 preto, lebo 1 je newFab
+<span class="nc bnc" id="L649" title="All 4 branches missed.">		if(fabHashList != null &amp;&amp; fabHashList.size() &gt; 1)</span>
+		{
+
+<span class="nc bnc" id="L652" title="All 2 branches missed.">			for(FileArchivatorBean fab: fabHashList )</span>
+			{
+				//odstranime prave nahraty subor, archivy a vzory
+<span class="nc bnc" id="L655" title="All 8 branches missed.">				if(fab.getId() != newFab.getId() &amp;&amp; fab.getReferenceId() == -1 &amp;&amp; (!removePattern || Tools.isEmpty(fab.getReferenceToMain())))</span>
+				{
+<span class="nc" id="L657">					returnList.add(fab);</span>
+				}
+<span class="nc" id="L659">			}</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">			if(returnList.size() &gt; 0)</span>
+<span class="nc" id="L661">				return returnList;</span>
+		}
+<span class="nc" id="L663">		return null;</span>
+	}
+
+	/** Zmaze celu cache archivu suborov na vsetkych nodoch ak je systemova premenna &quot;fileArchiv-delete-cache-public-node&quot;
+	 *
+	 *
+	 */
+	public static void deleteFileArchiveCache()
+	{
+		//refresh aktualneho nodu node
+<span class="nc" id="L673">		Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix());</span>
+
+		//refresh nodov clustra
+<span class="nc bnc" id="L676" title="All 2 branches missed.">		if(ClusterDB.isServerRunningInClusterMode() &amp;&amp;</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">			Constants.getBoolean(FileArchivatorDB.getCachePrefix()+&quot;delete-cache-public-node&quot;))</span>
+		{
+<span class="nc" id="L679">			 ClusterDB.addRefresh(&quot;sk.iway.iwcm.Cache-&quot; + FileArchivatorDB.getCachePrefix());</span>
+		}
+<span class="nc" id="L681">	}</span>
+
+	public static int generateNextGlobalId()
+	{
+<span class="nc" id="L685">		return PkeyGenerator.getNextValue(&quot;file_archiv_global_id&quot;);//nn_file_archives_global_id</span>
+	}
+
+	/**
+	 * vymazanie aktualneho suboru z vlakna a jeho nahradenie predchadzajucim suborom z vlakna
+	 *
+	 */
+	public static boolean rollback(int fabId, UserDetails user)
+	{
+<span class="nc" id="L694">		boolean result = true;</span>
+<span class="nc" id="L695">		FileArchivatorBean actualFab = FileArchivatorDB.getInstance().getById(fabId);</span>
+<span class="nc bnc" id="L696" title="All 4 branches missed.">        if(user == null || !user.isFolderWritable(&quot;/&quot;+actualFab.getFilePath()))</span>
+        {
+<span class="nc bnc" id="L698" title="All 2 branches missed.">            Logger.debug(FileArchivatorKit.class, &quot;Pouzivatel &quot;+((user != null)?&quot;id: &quot;+user.getUserId():&quot;null&quot;)+&quot; nema pravo na ROLLBACK suboru: &quot;+actualFab.getFilePath()+actualFab.getFileName()+&quot; &quot;);</span>
+<span class="nc" id="L699">            return false;</span>
+        }
+
+<span class="nc" id="L702">		FileArchivatorBean previousFab = FileArchivatorDB.getPrevious(fabId);</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">		if(previousFab != null)</span>
+		{
+
+<span class="nc" id="L706">			IwcmFile iFileActual = new IwcmFile(Tools.getRealPath(actualFab.getFilePath()+actualFab.getFileName()));</span>
+<span class="nc" id="L707">			IwcmFile renamed = new IwcmFile(Tools.getRealPath(actualFab.getFilePath()+actualFab.getFileName()));</span>
+<span class="nc" id="L708">			IwcmFile iFilePrevious = new IwcmFile(Tools.getRealPath(previousFab.getFilePath()+previousFab.getFileName()));</span>
+<span class="nc bnc" id="L709" title="All 8 branches missed.">			if(iFilePrevious.exists() &amp;&amp; iFileActual.exists() &amp;&amp; iFileActual.delete() &amp;&amp; iFilePrevious.renameTo(renamed))</span>
+			{
+<span class="nc" id="L711">				previousFab.setFilePath(actualFab.getFilePath());</span>
+<span class="nc" id="L712">				previousFab.setFileName(actualFab.getFileName());</span>
+<span class="nc" id="L713">				previousFab.setReferenceId(-1);</span>
+<span class="nc" id="L714">				previousFab.setOrderId(-1);</span>
+<span class="nc" id="L715">				int reference = actualFab.getId();</span>
+
+<span class="nc bnc" id="L717" title="All 2 branches missed.">				if(actualFab.delete())</span>
+				{
+<span class="nc bnc" id="L719" title="All 2 branches missed.">					if(previousFab.save())</span>
+					{
+<span class="nc" id="L721">						List&lt;FileArchivatorBean&gt; files = FileArchivatorDB.getByReferenceId(reference);</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">						if(files!=null)</span>
+						{
+<span class="nc bnc" id="L724" title="All 2 branches missed.">							for(FileArchivatorBean file:files)</span>
+							{
+<span class="nc" id="L726">								file.setReferenceId(previousFab.getId());</span>
+<span class="nc" id="L727">								file.setOrderId(file.getOrderId()-1);</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">								if(!file.save())</span>
+								{
+<span class="nc" id="L730">									Logger.error(FileArchivatorKit.class, &quot;Chyba pri editacii vlakna :&quot;+file.toString());</span>
+<span class="nc" id="L731">									result = false;</span>
+								}
+<span class="nc" id="L733">							}</span>
+						}
+<span class="nc" id="L735">                        Adminlog.add(Adminlog.TYPE_FILE_EDIT,&quot;File Archiv ROLLBACK zmeny:&quot;+FileArchivatorKit.getPojoZmeny(previousFab, actualFab), -1, -1);</span>
+<span class="nc" id="L736">						return result;</span>
+					}
+					else
+<span class="nc" id="L739">						Logger.error(FileArchivatorKit.class, &quot;Chyba pri ukladani do DB :&quot;+previousFab.toString());</span>
+				}
+				else
+<span class="nc" id="L742">					Logger.error(FileArchivatorKit.class, &quot;Chyba pri vymazavani z DB :&quot;+actualFab.toString());</span>
+<span class="nc" id="L743">			}</span>
+			else
+<span class="nc" id="L745">				Logger.error(FileArchivatorKit.class, &quot;Chyba pri premenovani suboru :&quot;+previousFab.getFilePath()+actualFab.getFileName()+&quot; na &quot;+actualFab.getFilePath()+actualFab.getFileName());</span>
+<span class="nc" id="L746">		}</span>
+		else
+<span class="nc" id="L748">			Logger.error(FileArchivatorKit.class, &quot;Nepodarilo sa vykonat rollback: neexistujuci hlavny subor, alebo ziadny predchadzajuci subor vo vlakne. Id :&quot;+fabId);</span>
+
+<span class="nc" id="L750">		return false;</span>
+	}
+
+    public static Collection&lt;String&gt; createCollection(String paramName, HttpServletRequest req)
+    {
+<span class="nc" id="L755">        String[] propertyArray = Tools.getTokens(Tools.getParameter(req,paramName), &quot;+&quot;);</span>
+<span class="nc bnc" id="L756" title="All 4 branches missed.">        if(propertyArray != null &amp;&amp; propertyArray.length &gt; 0)</span>
+<span class="nc" id="L757">            return Arrays.asList(propertyArray);</span>
+<span class="nc" id="L758">        return null;</span>
+    }
+
+    public static String getVal(HttpServletRequest request, String parameterName)
+    {
+<span class="nc bnc" id="L763" title="All 2 branches missed.">        if(request.getParameter(parameterName) == null)</span>
+<span class="nc" id="L764">            return &quot;&quot;;</span>
+<span class="nc" id="L765">        return Tools.getParameter(request,parameterName);</span>
+    }
+
+    public static String getIconClass(FileArchivatorBean fab)
+    {
+<span class="nc" id="L770">        String extension = FileArchivatorKit.getFileExtension(fab.getFileName());</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">        if(&quot;.pdf&quot;.equals(extension))</span>
+<span class="nc" id="L772">            return &quot;pdf&quot;;</span>
+<span class="nc bnc" id="L773" title="All 2 branches missed.">        if(&quot;.rtf&quot;.equals(extension))</span>
+<span class="nc" id="L774">            return &quot;rtf&quot;;</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">        if(&quot;.mp3&quot;.equals(extension))</span>
+<span class="nc" id="L776">            return &quot;mp3&quot;;</span>
+<span class="nc bnc" id="L777" title="All 4 branches missed.">        if(&quot;.xls&quot;.equals(extension) || &quot;.xlsx&quot;.equals(extension))</span>
+<span class="nc" id="L778">            return &quot;xls&quot;;</span>
+<span class="nc bnc" id="L779" title="All 4 branches missed.">        if(&quot;.doc&quot;.equals(extension) || &quot;.docx&quot;.equals(extension))</span>
+<span class="nc" id="L780">            return &quot;doc&quot;;</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">        if(&quot;.csv&quot;.equals(extension))</span>
+<span class="nc" id="L782">            return &quot;csv&quot;;</span>
+<span class="nc bnc" id="L783" title="All 2 branches missed.">        if(&quot;.exe&quot;.equals(extension))</span>
+<span class="nc" id="L784">            return &quot;exe&quot;;</span>
+<span class="nc bnc" id="L785" title="All 2 branches missed.">        if(&quot;.txt&quot;.equals(extension))</span>
+<span class="nc" id="L786">            return &quot;txt&quot;;</span>
+<span class="nc bnc" id="L787" title="All 2 branches missed.">        if(&quot;.zip&quot;.equals(extension))</span>
+<span class="nc" id="L788">            return &quot;zip&quot;;</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">        if(&quot;.rar&quot;.equals(extension))</span>
+<span class="nc" id="L790">            return &quot;rar&quot;;</span>
+<span class="nc" id="L791">        return &quot;notFound&quot;;</span>
+    }
+
+    /** bean ulozeny v ResultArchivBean.fab je potrebne ulozit.
+     *
+     * @param fab FileArchivatorBean (Musi mat vyplneny filePath - cestu k subroru bez lomitka na zaciatku (napr files/archiv/89/) a fileName - nazov suboru s priponou (priloha_1.pdf) a userId - id usera ktory subor nahrava)
+     * @param oldId - id suboru, ktory aktualizujeme
+     * @return ResultArchivBean
+     */
+    //prepareAndValidate
+    public ResultArchivBean prepareAndValidate(FileArchivatorBean fab, int oldId, UserDetails user)
+    {
+<span class="nc" id="L803">        return prepareAndValidate(fab, oldId, user, false) ;</span>
+    }
+
+    public ResultArchivBean prepareAndValidate(FileArchivatorBean fab, int oldId, UserDetails user, boolean isEdit)
+    {
+<span class="nc" id="L808">        ResultArchivBean resultBean = new ResultArchivBean();</span>
+<span class="nc bnc" id="L809" title="All 2 branches missed.">        if(errorsList == null)</span>
+<span class="nc" id="L810">            errorsList = new ArrayList&lt;&gt;();</span>
+        else
+<span class="nc" id="L812">            errorsList.clear();</span>
+
+<span class="nc bnc" id="L814" title="All 2 branches missed.">        if(user == null)</span>
+        {
+<span class="nc" id="L816">            return addErrorMessageAndReturnFalse(&quot;error.userNotLogged&quot;);</span>
+        }
+
+<span class="nc bnc" id="L819" title="All 4 branches missed.">        if(!isEdit &amp;&amp; FileArchivatorKit.existsPathInDB(fab.getFilePath()+fab.getFileName()))</span>
+        {
+<span class="nc" id="L821">            return addErrorMessageAndReturnFalse(&quot;components.file_archiv.file_exists&quot;);</span>
+        }
+
+<span class="nc bnc" id="L824" title="All 2 branches missed.">        if(Tools.isEmpty(fab.getVirtualFileName()))</span>
+        {
+<span class="nc" id="L826">            return addErrorMessageAndReturnFalse(&quot;components.file_archiv.file_virtual_cannot_be_empty&quot;);</span>
+        }
+
+<span class="nc" id="L829">        IwcmFile file = new IwcmFile(Tools.getRealPath(fab.getFilePath()+fab.getFileName()));</span>
+
+<span class="nc" id="L831">        fab.setUserId(user.getUserId());</span>
+<span class="nc" id="L832">        fab.setMd5(FileArchivatorKit.getMD5(file));</span>
+<span class="nc" id="L833">        fab.setFileSize(file.length());</span>
+<span class="nc" id="L834">        fab.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L835">        resultBean.setFab(fab);</span>
+        // Logger.debug(SaveFileAction.class, &quot;saveFile() IP: &quot;+Tools.getRemoteIP(getRequest())+&quot; file: &quot;+fileName+&quot;,&quot;+param_oldId_name+&quot;:&quot;+getOldId());
+
+<span class="nc" id="L838">        boolean isDestinationFolderWritable = true;</span>
+        //kontrola prav na zapis do suboru
+<span class="nc bnc" id="L840" title="All 2 branches missed.">        if(!user.isFolderWritable(fab.getFilePath()))</span>
+        {
+<span class="nc" id="L842">            Logger.debug(FileArchivatorKit.class, &quot;User nema pravo na zapis do priecinku:  &quot;+fab.getFilePath());</span>
+<span class="nc" id="L843">            setError(&quot;components.elfinder.commands.upload.error&quot;);</span>
+<span class="nc" id="L844">            isDestinationFolderWritable = false;</span>
+        }
+
+<span class="nc bnc" id="L847" title="All 4 branches missed.">        if (isDestinationFolderWritable &amp;&amp; checkFileProperties(file,fab.getFilePath()+fab.getFileName(),oldId))</span>
+        {
+<span class="nc bnc" id="L849" title="All 2 branches missed.">            if(setFilePropertiesAfterUpload(fab,oldId))</span>
+            {
+<span class="nc" id="L851">                resultBean.setSuccess(true);</span>
+<span class="nc" id="L852">                return resultBean;</span>
+            }
+        }
+
+<span class="nc" id="L856">        resultBean.setErrors(errorsList);</span>
+<span class="nc" id="L857">        resultBean.setSuccess(false);</span>
+<span class="nc" id="L858">        return resultBean;</span>
+    }
+
+    private ResultArchivBean addErrorMessageAndReturnFalse(String propText)
+    {
+<span class="nc" id="L863">        setError(propText);</span>
+<span class="nc" id="L864">        ResultArchivBean rab = new ResultArchivBean();</span>
+<span class="nc" id="L865">        rab.setErrors(errorsList);</span>
+<span class="nc" id="L866">        rab.setSuccess(false);</span>
+<span class="nc" id="L867">        return rab;</span>
+    }
+
+    protected void setError(String key)
+    {
+<span class="nc" id="L872">        addErrorText(prop.getText(key));</span>
+<span class="nc" id="L873">    }</span>
+
+    private void setError(String key, String param1)
+    {
+<span class="nc" id="L877">        addErrorText(prop.getText(key, param1));</span>
+<span class="nc" id="L878">    }</span>
+
+    private void setError(String key, String param1, String param2)
+    {
+<span class="nc" id="L882">        addErrorText(prop.getText(key, param1, param2));</span>
+<span class="nc" id="L883">    }</span>
+
+    private void addErrorText(String text)
+    {
+<span class="nc bnc" id="L887" title="All 2 branches missed.">        if(errorsList == null)</span>
+<span class="nc" id="L888">            errorsList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L889">        errorsList.add(text);</span>
+<span class="nc" id="L890">    }</span>
+
+    public boolean checkFileProperties(net.sourceforge.stripes.action.FileBean fileToCheck, String pathName, int oldId)
+    {
+        // errorsList = new ArrayList&lt;String&gt;();
+<span class="nc bnc" id="L895" title="All 4 branches missed.">        if(fileToCheck == null || fileToCheck.getFileName().length() &lt; 5)</span>
+        {
+<span class="nc" id="L897">            String fileName = &quot;null&quot;;</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">            if(fileToCheck != null)</span>
+            {
+<span class="nc" id="L900">                fileName = fileToCheck.getFileName();</span>
+            }
+<span class="nc" id="L902">            Logger.debug(SaveFileAction.class, &quot;checkFileProperties() fileBean je null alebo ma kratky nazov. Subor: &quot;+fileName);</span>
+<span class="nc" id="L903">            setError(&quot;components.file_archiv.upload.file_not_exists_or_short_name&quot;, fileName);</span>
+<span class="nc" id="L904">            return false;</span>
+        }
+
+<span class="nc bnc" id="L907" title="All 2 branches missed.">        if(!hasAllowedExtensions(fileToCheck,oldId))</span>
+        {
+<span class="nc" id="L909">            return false;</span>
+        }
+
+<span class="nc bnc" id="L912" title="All 2 branches missed.">        if( fileToCheck.getSize() &gt;= getMaxFileSize())</span>
+        {
+<span class="nc" id="L914">            Logger.debug(SaveFileAction.class, &quot;Velkost suboru je prekrocena. Aktualna velkost: &quot;+fileToCheck.getSize()+&quot; maximalna velkost: &quot;+getMaxFileSize());</span>
+<span class="nc" id="L915">            setError(&quot;components.file_archiv.upload.file_is_too_big&quot;, fileToCheck.getSize()+&quot;&quot;, getMaxFileSize()+&quot;&quot;);</span>
+<span class="nc" id="L916">            return false;</span>
+        }
+
+
+        //ak uz existuje referencia v databaze k suboru ktory este len ideme nahrat, tak je to problem. Niekto zmazal subor rucne.
+        //subor nemozeme nahrat pretoze by mohol byt zmazany inym zaznamom v databaze - omylom
+<span class="nc bnc" id="L922" title="All 4 branches missed.">        if(FileArchivatorKit.existsPathInDB(pathName) &amp;&amp; !FileTools.isFile(pathName) )</span>
+        {
+<span class="nc" id="L924">            setError(&quot;components.file_archiv.upload.db_enrty_exists&quot;);</span>
+<span class="nc" id="L925">            return false;</span>
+        }
+
+<span class="nc" id="L928">        return true;</span>
+    }
+
+	 public boolean checkFileProperties(IwcmFile fileToCheck, String pathName, int oldId)
+	 {
+		  // errorsList = new ArrayList&lt;String&gt;();
+<span class="nc bnc" id="L934" title="All 4 branches missed.">		  if(fileToCheck == null || fileToCheck.getName().length() &lt; 5)</span>
+		  {
+<span class="nc" id="L936">				String fileName = &quot;null&quot;;</span>
+<span class="nc bnc" id="L937" title="All 2 branches missed.">				if(fileToCheck != null)</span>
+				{
+<span class="nc" id="L939">					 fileName = fileToCheck.getName();</span>
+				}
+<span class="nc" id="L941">				Logger.debug(SaveFileAction.class, &quot;checkFileProperties() fileBean je null alebo ma kratky nazov. Subor: &quot;+fileName);</span>
+<span class="nc" id="L942">				setError(&quot;components.file_archiv.upload.file_not_exists_or_short_name&quot;, fileName);</span>
+<span class="nc" id="L943">				return false;</span>
+		  }
+
+<span class="nc bnc" id="L946" title="All 2 branches missed.">		  if(!hasAllowedExtensions(fileToCheck.getName(),oldId))</span>
+		  {
+<span class="nc" id="L948">				return false;</span>
+		  }
+
+<span class="nc bnc" id="L951" title="All 2 branches missed.">		  if(fileToCheck.getLength() &gt;= getMaxFileSize())</span>
+		  {
+<span class="nc" id="L953">				Logger.debug(SaveFileAction.class, &quot;Velkost suboru je prekrocena. Aktualna velkost: &quot;+fileToCheck.getLength()+&quot; maximalna velkost: &quot;+getMaxFileSize());</span>
+<span class="nc" id="L954">				setError(&quot;components.file_archiv.upload.file_is_too_big&quot;, fileToCheck.getLength()+&quot;&quot;, getMaxFileSize()+&quot;&quot;);</span>
+<span class="nc" id="L955">				return false;</span>
+		  }
+
+
+		  //ak uz existuje referencia v databaze k suboru ktory este len ideme nahrat, tak je to problem. Niekto zmazal subor rucne.
+		  //subor nemozeme nahrat pretoze by mohol byt zmazany inym zaznamom v databaze - omylom
+<span class="nc bnc" id="L961" title="All 4 branches missed.">		  if(FileArchivatorKit.existsPathInDB(pathName) &amp;&amp; !FileTools.isFile(pathName) )</span>
+		  {
+<span class="nc" id="L963">				setError(&quot;components.file_archiv.upload.db_enrty_exists&quot;);</span>
+<span class="nc" id="L964">				return false;</span>
+		  }
+
+<span class="nc" id="L967">		  return true;</span>
+	 }
+
+    /** Sluzi na validaciu {@link FileArchivatorBean} pred ulozenim. Skontroluje velkost suboru, priponu atd.
+     * @deprecated
+     * @return Ak vrati true, mozeme {@link FileArchivatorBean} ulozit.
+     */
+	@Deprecated
+	 public boolean hasAllowedExtensions(FileBean fileBean, int oldId)
+	 {
+<span class="nc bnc" id="L977" title="All 2 branches missed.">	 	 return hasAllowedExtensions(fileBean != null ? fileBean.getFileName() : null, oldId);</span>
+	 }
+
+    public boolean hasAllowedExtensions(String fileName, int oldId)
+    {
+<span class="nc bnc" id="L982" title="All 2 branches missed.">        if(Tools.isEmpty(fileName))</span>
+        {
+<span class="nc" id="L984">            setError(&quot;components.file_archiv.upload.file_is_null&quot;);</span>
+<span class="nc" id="L985">            return false;</span>
+        }
+
+        //nahravam novu verziu dokumentu, musia ma rovnaku priponu
+<span class="nc bnc" id="L989" title="All 2 branches missed.">        if(oldId &gt; 0)</span>
+        {
+<span class="nc" id="L991">	        FileArchivatorBean fab = FileArchivatorDB.getInstance().getById(oldId);</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">	        if(fab != null)</span>
+	        {
+<span class="nc bnc" id="L994" title="All 2 branches missed.">		        if(getFileExtension(fab.getFileName()).equalsIgnoreCase(getFileExtension(fileName)))</span>
+<span class="nc" id="L995">		        	return true;</span>
+		        else
+<span class="nc" id="L997">		            setError(&quot;components.file_archiv.upload.file_shoud_have_end_with&quot;,getFileExtension(fab.getFileName()));</span>
+	        }
+	        else
+	        {
+<span class="nc" id="L1001">		        setError(&quot;components.file_archiv.upload.wrong_oldId&quot;, String.valueOf(oldId));</span>
+	        }
+<span class="nc" id="L1003">        }</span>
+        else
+        {
+<span class="nc bnc" id="L1006" title="All 2 branches missed.">	        if(Tools.containsOneItem(Tools.getTokens(Constants.getString(&quot;fileArchivAllowExt&quot;), &quot;,&quot;), getFileExtension(fileName)))</span>
+<span class="nc" id="L1007">	        	return true;</span>
+	        else
+	        {
+<span class="nc" id="L1010">		        Logger.debug(SaveFileAction.class, &quot;File &quot;+fileName+&quot; has not allowed extension. Allowed extensions : &quot;+Constants.getString(&quot;fileArchivAllowExt&quot;));</span>
+<span class="nc" id="L1011">		        setError(&quot;components.file_archiv.upload.file_not_allowed_extensions&quot;, Constants.getString(&quot;fileArchivAllowExt&quot;) , getFileExtension(fileName));</span>
+	        }
+        }
+
+<span class="nc" id="L1015">        return false;</span>
+    }
+
+    public static long getMaxFileSize()
+    {
+<span class="nc" id="L1020">        return Tools.getIntValue(Constants.getString(&quot;fileArchivMaxUploadFileSize&quot;), 60000000);</span>
+    }
+
+    public boolean setFilePropertiesAfterUpload(FileArchivatorBean newFab, int oldId)
+    {
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">        if(!FileTools.isFile(newFab.getFilePath()+newFab.getFileName()))</span>
+        {
+<span class="nc" id="L1027">            addErrorText(prop.getText(&quot;components.import_web_pages.import_error&quot;));</span>
+<span class="nc" id="L1028">            return false;</span>
+        }
+
+<span class="nc" id="L1031">        newFab.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+        //ak uz existuje nejaka starsia verzia naseho suboru
+<span class="nc" id="L1034">        boolean result = true;</span>
+<span class="nc" id="L1035">        boolean newVersion = false;</span>
+<span class="nc bnc" id="L1036" title="All 2 branches missed.">        if(oldId &gt; 0)</span>
+        {
+<span class="nc" id="L1038">            newVersion = true;</span>
+<span class="nc" id="L1039">            FileArchivatorBean oldFab = FileArchivatorDB.getInstance().getById(oldId);</span>
+<span class="nc bnc" id="L1040" title="All 2 branches missed.">            if(oldFab == null)</span>
+            {
+<span class="nc" id="L1042">                Logger.debug(FileArchivatorKit.class, &quot;setFilePropertiesAfterUpload() fileBean == null&quot;);</span>
+<span class="nc" id="L1043">                addErrorText(prop.getText(&quot;components.file_archiv.older_file_not_exists&quot;));</span>
+<span class="nc" id="L1044">                return false;</span>
+            }
+
+<span class="nc bnc" id="L1047" title="All 2 branches missed.">            if(!newFab.getFilePath().equals(oldFab.getFilePath()))</span>
+            {
+<span class="nc" id="L1049">                Logger.debug(FileArchivatorKit.class, &quot;zdrojovy a cielovy priecinok, nie su rovnake&quot;);</span>
+<span class="nc" id="L1050">                addErrorText(prop.getText(&quot;components.file_archiv.source_and_destination_file_different&quot;));</span>
+<span class="nc" id="L1051">                return false;</span>
+            }
+
+            //premenujeme (vymenime) subory stary-&gt;novy a novy-&gt;stary
+<span class="nc bnc" id="L1055" title="All 2 branches missed.">            if(FileArchivatorKit.renameFile(newFab.getFilePath(), newFab.getFileName(), oldFab))</span>
+            {
+                //premenujeme v DB
+<span class="nc" id="L1058">                String tempNameUrl = oldFab.getFileName();</span>
+<span class="nc" id="L1059">                oldFab.setFileName(newFab.getFileName());</span>
+<span class="nc" id="L1060">                newFab.setFileName(tempNameUrl);</span>
+                //premenujeme aj cestu
+<span class="nc" id="L1062">                tempNameUrl = oldFab.getFilePath();</span>
+<span class="nc" id="L1063">                oldFab.setFilePath(newFab.getFilePath());</span>
+<span class="nc" id="L1064">                newFab.setFilePath(tempNameUrl);</span>
+                //ak ideme na newFab nastavovat referenciu, musi byt ulozeny aby mal vytvorene ID.
+<span class="nc bnc" id="L1066" title="All 2 branches missed.">                if(newFab.getId() &lt;= 0)</span>
+<span class="nc" id="L1067">                    newFab.save();</span>
+                //zmenime referenciu v hlavnom subore
+<span class="nc" id="L1069">                oldFab.setReferenceId(newFab.getId());</span>
+
+<span class="nc" id="L1071">                newFab.setCategory(oldFab.getCategory());</span>
+<span class="nc" id="L1072">                newFab.setVirtualFileName(oldFab.getVirtualFileName());</span>
+<span class="nc" id="L1073">                newFab.setFieldA(oldFab.getFieldA());</span>
+<span class="nc" id="L1074">                newFab.setFieldB(oldFab.getFieldB());</span>
+
+                //globalne id je rovnake pre vsetky subory vo vlakne.
+<span class="nc" id="L1077">                newFab.setGlobalId(oldFab.getGlobalId());</span>
+<span class="nc bnc" id="L1078" title="All 6 branches missed.">                if(!oldFab.save() | !newFab.save())</span>
+                {
+<span class="nc" id="L1080">                    result = false;</span>
+                }
+                else
+                {
+<span class="nc" id="L1084">                    addSaveLogToAdminlog(newFab, newVersion);</span>
+                }
+
+
+
+                //zmenime referenciu u suborov, ktore na neho odkazuju (a po novom budu odkazovat na novy subor)
+<span class="nc bnc" id="L1090" title="All 2 branches missed.">                if(!FileArchivatorKit.reSetReference(oldId, newFab.getId()))</span>
+<span class="nc" id="L1091">                    result = false;</span>
+
+                //posunieme order_id o jednu uroven
+<span class="nc" id="L1094">                FileArchivatorKit.incrementOrderId(newFab.getId());</span>
+<span class="nc" id="L1095">                return result;</span>
+            }
+            else
+            {
+<span class="nc" id="L1099">                addErrorText(prop.getText(&quot;components.file_archiv.rename_error&quot;));</span>
+<span class="nc" id="L1100">                return false;</span>
+            }
+        }
+        else
+        {
+            //novemu suboru vo vlakne nastavime nove globalne ID
+<span class="nc" id="L1106">            newFab.setGlobalId(FileArchivatorKit.generateNextGlobalId());</span>
+<span class="nc" id="L1107">            addSaveLogToAdminlog(newFab, newVersion);</span>
+<span class="nc" id="L1108">            newFab.save();</span>
+        }
+
+<span class="nc" id="L1111">        return true;</span>
+    }
+
+    private static void addSaveLogToAdminlog(FileArchivatorBean fab, boolean newVersion)
+    {
+<span class="nc" id="L1116">        addSaveLogToAdminlog(fab, newVersion, false);</span>
+<span class="nc" id="L1117">    }</span>
+
+    private static void addSaveLogToAdminlog(FileArchivatorBean fab, boolean newVersion, boolean replace)
+    {
+<span class="nc" id="L1121">        String strNewVersion = &quot;&quot;;</span>
+<span class="nc bnc" id="L1122" title="All 2 branches missed.">        if(newVersion)</span>
+<span class="nc" id="L1123">            strNewVersion = &quot;(Aktualizacia existujuceho suboru)&quot;;</span>
+<span class="nc bnc" id="L1124" title="All 2 branches missed.">        if(replace)</span>
+<span class="nc" id="L1125">            strNewVersion = &quot;(Nahradenie povodneho suboru)&quot;;</span>
+
+<span class="nc" id="L1127">        Adminlog.add(Adminlog.TYPE_FILE_SAVE,&quot;File Archiv &quot;+strNewVersion+&quot; ulozenie : &quot;+fab.toString(),-1,-1);</span>
+<span class="nc" id="L1128">    }</span>
+
+    public static String getPojoZmeny(Object newObj,Object originalObj)
+    {
+<span class="nc bnc" id="L1132" title="All 4 branches missed.">        if(newObj == null || originalObj == null)</span>
+<span class="nc" id="L1133">            return &quot;Bez zmeny&quot;;</span>
+<span class="nc" id="L1134">        BeanDiff diff = new BeanDiff().setNew(newObj).setOriginal(originalObj);</span>
+<span class="nc" id="L1135">        return new BeanDiffPrinter(diff).toString();</span>
+    }
+
+	public List&lt;String&gt; getErrorsList()
+	{
+<span class="nc" id="L1140">		return errorsList;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

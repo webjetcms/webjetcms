@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HTMLNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cvu.html</a> &gt; <span class="el_source">HTMLNode.java</span></div><h1>HTMLNode.java</h1><pre class="source lang-java linenums">/*
+ * HTML Parser
+ * Copyright (C) 1997 David McNicol
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * file COPYING for more details.
+ */
+
+package cvu.html;
+
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Vector;
+
+import sk.iway.iwcm.Logger;
+
+/**
+ * This class represents a single node within an HTML tree. Each node
+ * has a name, zero or more attributes and possibly some content. Nodes
+ * can appear within the content of other nodes. &lt;p&gt;
+ * End tags do not appear since they only indicate 'end-of-content'. To
+ * prevent the system searching for the end of standalone tags, a dynamic
+ * list has been implemented. When the HTMLNode class is resolved
+ * a setup method is called adding a set of default standalone tags
+ * to the list. Standalone tags can then be added and removed dynamically
+ * using static method calls. &lt;p&gt;
+ * The list is the only way the internal code can tell
+ * whether a tag is standalone. If a problem occurs the tree structure
+ * would still be sound, but it would not be accurate, so while the form
+ * of the HTML would be conserved, searches would not operate correctly.
+ * @see HTMLTree
+ * @author &lt;a href=&quot;http://www.strath.ac.uk/~ras97108/&quot;&gt;David McNicol&lt;/a&gt;
+ */
+@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+public class HTMLNode
+{
+
+	private HTMLNode parent;    // Refers to this node's parent.
+	private String name;	    // Stores the name of the HTML node.
+	private AttributeList attr; // List of element's attributes.
+	private Vector children;    // Stores the HTML node's children.
+	private boolean hidden;     // True if the node is not to be printed.
+
+	/**
+	 * Constructs a new HTMLNode.
+	 * @param tag the TagToken representing the start of this node.
+	 * @param standalone true if the tag does not have any content.
+	 * @param src enumeration of tag tokens.
+	 */
+<span class="nc" id="L57">	public HTMLNode (TagToken tag, HTMLNode parent, Enumeration src) {</span>
+
+		// Store the reference to the node's parent.
+<span class="nc" id="L60">		this.parent = parent;</span>
+
+		// Set the node to be unhidden by default.
+<span class="nc" id="L63">		hidden = false;</span>
+
+		// Check if the given tag is null.
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (tag != null) {</span>
+
+			// Store the node's name.
+<span class="nc" id="L69">			name = tag.getName();</span>
+
+			// Store the node's attribute list.
+<span class="nc" id="L72">			attr = tag.getAttributes();</span>
+
+			// Get the node's children if needed.
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (HTMLNode.isStandalone(name))</span>
+<span class="nc" id="L76">				children = null;</span>
+			else
+<span class="nc" id="L78">				children = parseChildren(src);</span>
+		} else {
+
+			// Otherwise, set the name and attributes to null.
+<span class="nc" id="L82">			name = null;</span>
+<span class="nc" id="L83">			attr = null;</span>
+
+			// Get the node's children from the enumeration.
+<span class="nc" id="L86">			children = parseChildren(src);</span>
+		}
+<span class="nc" id="L88">	}</span>
+
+	/**
+	 * Constructs a new, detached HTMLNode with the specified name.
+	 * @param name the name of the new node.
+	 */
+<span class="nc" id="L94">	public HTMLNode (String name) {</span>
+
+		// Store the name of the node.
+<span class="nc" id="L97">		this.name = name;</span>
+
+		// The node will have no parent till it is added to a tree.
+<span class="nc" id="L100">		parent = null;</span>
+
+		// Create a new attribute list.
+<span class="nc" id="L103">		attr = new AttributeList();</span>
+
+		// Create space for children if the node is not standalone.
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (HTMLNode.isStandalone(name))</span>
+<span class="nc" id="L107">			children = null;</span>
+		else
+<span class="nc" id="L109">			children = new Vector();</span>
+<span class="nc" id="L110">	}</span>
+
+	/**
+	 * Returns the name of this node.
+	 */
+	public String getName () {
+<span class="nc" id="L116">		return name;</span>
+	}
+
+	/**
+	 * Returns the node's parent node.
+	 */
+	public HTMLNode getParent () {
+<span class="nc" id="L123">		return parent;</span>
+	}
+
+	/**
+	 * Returns the node's children.
+	 */
+	public Enumeration getChildren () {
+
+		// Return nothing if the node has any children.
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (children == null) return null;</span>
+
+<span class="nc" id="L134">		return children.elements();</span>
+	}
+
+	/**
+	 * Returns true if the node is currently hidden.
+	 */
+	public boolean isHidden () {
+<span class="nc" id="L141">		return hidden;</span>
+	}
+
+	/**
+	 * Hides the node.
+	 */
+	public void hide () {
+<span class="nc" id="L148">		hidden = true;</span>
+<span class="nc" id="L149">	}</span>
+
+	/**
+	 * &quot;Unhides&quot; the node.
+	 */
+	public void unhide () {
+<span class="nc" id="L155">		hidden = false;</span>
+<span class="nc" id="L156">	}</span>
+
+	/**
+	 * Returns the value of the attribute with the given name.
+	 * @param name the name of the attribute.
+	 */
+	public String getAttribute (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (attr == null) return null;</span>
+
+		// Return the value associated with the attribute name.
+<span class="nc" id="L168">		return attr.get(name);</span>
+	}
+
+	/**
+	 * Returns an attribute with all double quote characters
+	 * escaped with a backslash.
+	 * @param name the name of the attribute.
+	 */
+	public String getQuotedAttribute (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (attr == null) return null;</span>
+
+		// Return the quoted version.
+<span class="nc" id="L182">		return attr.getQuoted(name);</span>
+	}
+
+	/**
+	 * Returns a string version of the attribute and its value.
+	 * @param name the name of the attribute.
+	 */
+	public String getAttributeToString (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (attr == null) return null;</span>
+
+		// Return the string version.
+<span class="nc" id="L195">		return attr.toString(name);</span>
+	}
+
+	/**
+	 * Returns a string version of the HTMLNode. If the node is
+	 * currently hidden then return an empty string.
+	 */
+	@Override
+	public String toString () {
+
+		StringBuffer sb;  // Stores the string to be returned.
+		Enumeration list; // List of node's attributes or children.
+
+		// Get a new StringBuffer.
+<span class="nc" id="L209">		sb = new StringBuffer();</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (! hidden) {</span>
+
+			// Write the opening of the tag.
+<span class="nc" id="L214">			sb.append('&lt;');</span>
+
+			// Write the tag's name.
+<span class="nc" id="L217">			sb.append(name);</span>
+
+			// Check if there are any attributes.
+<span class="nc bnc" id="L220" title="All 4 branches missed.">			if (attr != null &amp;&amp; attr.size() &gt; 0) {</span>
+
+				// Print string version of the attributes.
+<span class="nc" id="L223">				sb.append(&quot; &quot; + attr);</span>
+			}
+
+			// Finish off the tag.
+<span class="nc" id="L227">			sb.append('&gt;');</span>
+		}
+
+		// Return if the node is standalone.
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (isStandalone(name)) return sb.toString();</span>
+
+		// Otherwise, check if the node has any children.
+<span class="nc bnc" id="L234" title="All 4 branches missed.">		if (children != null &amp;&amp; children.size() &gt; 0) {</span>
+
+			// Get a list of all of the children.
+<span class="nc" id="L237">			list = children.elements();</span>
+
+<span class="nc bnc" id="L239" title="All 2 branches missed.">			while (list.hasMoreElements()) {</span>
+
+				// Get the next node from the list.
+<span class="nc" id="L242">				Object o = list.nextElement();</span>
+
+				// Write it.
+<span class="nc" id="L245">				sb.append(o.toString());</span>
+<span class="nc" id="L246">			}</span>
+		}
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (! hidden) {</span>
+			// Write the end tag.
+<span class="nc" id="L251">			sb.append(&quot;&lt;/&quot;).append(name).append('&gt;');</span>
+		}
+
+		// Return the string version.
+<span class="nc" id="L255">		return sb.toString();</span>
+	}
+
+	/**
+	 * Sets the node's parent to the specified HTMLNode.
+	 * @param parent the new parent.
+	 */
+	public void setParent (HTMLNode parent) {
+<span class="nc" id="L263">		this.parent = parent;</span>
+<span class="nc" id="L264">	}</span>
+
+	/**
+	 * Returns true if an attribute with the given name exists.
+	 * @param name the name of the attribute.
+	 */
+	public boolean isAttribute (String name) {
+
+		// Check that the attribute list is there.
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		if (attr == null) return false;</span>
+
+		// Check the table for an attribute with that name.
+<span class="nc" id="L276">		return attr.exists(name);</span>
+	}
+
+	/**
+	 * Adds a new attribute to the node's attribute list with
+	 * the specified value. If the attribute already exists the
+	 * old value is overwritten.
+	 * @param name the name of the attribute.
+	 * @param value the value of the attribute.
+	 */
+	public void addAttribute (String name, String value) {
+
+		// Return if the attribute list is not there.
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		if (attr == null) return;</span>
+
+		// Otherwise, add the name/value pair to the list.
+<span class="nc" id="L292">		attr.set(name, value);</span>
+<span class="nc" id="L293">	}</span>
+
+	/**
+	 * Adds an object to the end of this node's content
+	 * @param child the node to be added.
+	 */
+	public void addChild (Object child) {
+
+		// Return if the child is invalid.
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		if (child == null) return;</span>
+
+		// Check that this node has no children.
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if (children == null) return;</span>
+
+		// Add the child if it is a string.
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		if (child instanceof String) {</span>
+
+<span class="nc" id="L310">			children.addElement(child);</span>
+<span class="nc" id="L311">			return;</span>
+		}
+
+		// Add the child and set its parent if it is an HTMLNode.
+<span class="nc bnc" id="L315" title="All 2 branches missed.">		if (child instanceof HTMLNode) {</span>
+
+<span class="nc" id="L317">			children.addElement(child);</span>
+<span class="nc" id="L318">			((HTMLNode) child).setParent(this);</span>
+		}
+<span class="nc" id="L320">	}</span>
+
+	/**
+	 * Removes the specified HTMLNode from the current node's
+	 * list of children.
+	 * @param child the node to be removed.
+	 */
+	public void removeChild (HTMLNode child) {
+
+		// Return if the child is not defined properly
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		if (child == null) return;</span>
+
+		// Return if the list of children is not defined properly.
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		if (children == null) return;</span>
+
+		// Otherwise, remove the child if it is on the list.
+<span class="nc" id="L336">		children.removeElement(child);</span>
+<span class="nc" id="L337">	}</span>
+
+	/**
+	 * Adds an object to this node's content before
+	 * the specified child node.
+	 * @param child the object to be added.
+	 * @param before the node before which the child will be placed.
+	 */
+	public void addChildBefore (Object child, HTMLNode before) {
+
+		int total; // Total number of child nodes.
+		int idx;   // Index of the 'before' node.
+
+		// Return if the child is invalid.
+<span class="nc bnc" id="L351" title="All 2 branches missed.">		if (child == null) return;</span>
+
+		// Return if this node has no children.
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		if (children == null) return;</span>
+
+		// Add the child at the beginning if the before node is
+		// invalid.
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		if (before == null) {</span>
+
+<span class="nc" id="L360">			addChild(child);</span>
+<span class="nc" id="L361">			return;</span>
+		}
+
+<span class="nc" id="L364">		total = children.size();</span>
+<span class="nc" id="L365">		idx = children.indexOf(before);</span>
+
+		// Add the child to the beginning if the 'before' node
+		// was not found.
+<span class="nc bnc" id="L369" title="All 2 branches missed.">		if (idx &lt; 0) idx = 0;</span>
+
+		// Return if the child is not of the right type.
+<span class="nc bnc" id="L372" title="All 4 branches missed.">		if (! ((child instanceof String) ||</span>
+<span class="nc" id="L373">		  (child instanceof HTMLNode))) return;</span>
+
+		// Check if the 'before' node is the last node.
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		if (idx == total - 1) {</span>
+
+			// Add the child to the end of the list.
+<span class="nc" id="L379">			children.addElement(child);</span>
+		} else {
+
+			// Add the child before the 'before' node.
+<span class="nc" id="L383">			children.insertElementAt(child, idx);</span>
+		}
+
+		// If the child is an HTMLNode, set its parent.
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (child instanceof HTMLNode)</span>
+<span class="nc" id="L388">			((HTMLNode) child).setParent(this);</span>
+<span class="nc" id="L389">	}</span>
+
+	/**
+	 * Removes an attribute with the specified name from the
+	 * attribute list.
+	 * @param name the name of the attribute to remove.
+	 */
+	public void removeAttribute (String name) {
+
+		// Return if the attribute list is not there.
+<span class="nc bnc" id="L399" title="All 2 branches missed.">		if (attr == null) return;</span>
+
+		// Otherwise, remove the attribute from the list.
+<span class="nc" id="L402">		attr.unset(name);</span>
+<span class="nc" id="L403">	}</span>
+
+	/**
+	 * Returns the node after this one in the parent's
+	 * list of children.
+	 */
+	public HTMLNode nextSibling () {
+
+		// Return nothing if the node has no parent.
+<span class="nc bnc" id="L412" title="All 2 branches missed.">		if (parent == null) return null;</span>
+
+		// Ask the parent to return the node after this one.
+<span class="nc" id="L415">		return parent.nextChild(this);</span>
+	}
+
+	/**
+	 * Returns the node before this one in the parent's
+	 * list of children.
+	 */
+	public HTMLNode previousSibling () {
+
+		// Return nothing if the node has no parent.
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		if (parent == null) return null;</span>
+
+		// Ask the parent to return the node before this one.
+<span class="nc" id="L428">		return parent.previousChild(this);</span>
+	}
+
+	/**
+	 * Returns the first child of this node.
+	 */
+	public HTMLNode firstChild () {
+
+		Enumeration list; // Enumeration of this node's children.
+		Object curr;	  // Current node from the list.
+
+		// Return nothing if this node has no children.
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		if (children == null) return null;</span>
+
+		// Return the first child node.
+<span class="nc" id="L443">		list = children.elements();</span>
+
+<span class="nc bnc" id="L445" title="All 2 branches missed.">		while (list.hasMoreElements()) {</span>
+
+<span class="nc" id="L447">			curr = list.nextElement();</span>
+
+			// Return the first HTMLNode in the list.
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (curr instanceof HTMLNode)</span>
+<span class="nc" id="L451">				return (HTMLNode) curr;</span>
+		}
+
+		// Return nothing if there were no HTMLNodes in the list.
+<span class="nc" id="L455">		return null;</span>
+	}
+
+	/**
+	 * Returns the HTMLNode after the specified one in this
+	 * nodes content.
+	 * @param child the HTMLNode before the one we want.
+	 */
+	public HTMLNode nextChild (HTMLNode child) {
+
+		Enumeration list;	 // List of this node's children.
+		Object curr;		 // Current object from the list.
+<span class="nc" id="L467">		boolean getNext = false; // True when child has been found.</span>
+
+		// Return nothing if this node has no children.
+<span class="nc bnc" id="L470" title="All 2 branches missed.">		if (children == null) return null;</span>
+
+		// Get a list of this node's children
+<span class="nc" id="L473">		list = children.elements();</span>
+
+<span class="nc bnc" id="L475" title="All 2 branches missed.">		while (list.hasMoreElements()) {</span>
+
+<span class="nc" id="L477">			curr = list.nextElement();</span>
+
+			// Check if we have found the specified child.
+<span class="nc bnc" id="L480" title="All 2 branches missed.">			if (getNext) {</span>
+
+				// Return the next HTMLNode we encounter.
+<span class="nc bnc" id="L483" title="All 2 branches missed.">				if (curr instanceof HTMLNode)</span>
+<span class="nc" id="L484">					return (HTMLNode) curr;</span>
+			} else {
+
+				// Check if we have found the specified child.
+<span class="nc bnc" id="L488" title="All 2 branches missed.">				if (curr == child) getNext = true;</span>
+			}
+		}
+
+<span class="nc" id="L492">		return null;</span>
+	}
+
+	/**
+	 * Returns the HTMLNode before the specified one in this
+	 * nodes content.
+	 * @param child the HTMLNode after the one we want.
+	 */
+	public HTMLNode previousChild (HTMLNode child) {
+
+		Enumeration list;	   // List of this node's children.
+		Object curr;		   // Current object from the list.
+<span class="nc" id="L504">		HTMLNode prev = null;      // Stores last found HTMLNode.</span>
+		//boolean returnPrev = true; // True when child has been found.
+
+		// Return nothing if this node has no children.
+<span class="nc bnc" id="L508" title="All 2 branches missed.">		if (children == null) return null;</span>
+
+		// Get a list of this node's children
+<span class="nc" id="L511">		list = children.elements();</span>
+
+<span class="nc bnc" id="L513" title="All 2 branches missed.">		while (list.hasMoreElements()) {</span>
+
+<span class="nc" id="L515">			curr = list.nextElement();</span>
+
+			// Check if we have found the specified child.
+<span class="nc bnc" id="L518" title="All 2 branches missed.">			if (curr == child) return prev;</span>
+
+			// Check if curr is an HTMLNode.
+<span class="nc bnc" id="L521" title="All 2 branches missed.">			if (curr instanceof HTMLNode) {</span>
+
+				// Make curr the previously found HTMLNode.
+<span class="nc" id="L524">				prev = (HTMLNode) curr;</span>
+			}
+		}
+
+<span class="nc" id="L528">		return null;</span>
+	}
+
+	/**
+	 * Parses the contents of this HTML node from the enumeration
+	 * of tokens provided.
+	 * @param src an enumeration of tokens.
+	 */
+	private Vector parseChildren (Enumeration src) {
+
+		// Create a new Vector to store the contents.
+<span class="nc" id="L539">		Vector store = new Vector();</span>
+
+		// Loop round the enumeration of tokens.
+<span class="nc bnc" id="L542" title="All 2 branches missed.">		while (src.hasMoreElements()) {</span>
+
+			// Get the next token from the enumeration.
+<span class="nc" id="L545">			Object token = src.nextElement();</span>
+
+			// Check if the token is simple text.
+<span class="nc bnc" id="L548" title="All 2 branches missed.">			if (token instanceof TextToken) {</span>
+
+				// Cast the token into type TextToken.
+<span class="nc" id="L551">				TextToken text = (TextToken) token;</span>
+
+				// Add the text string to the vector.
+<span class="nc" id="L554">				store.addElement(text.getText());</span>
+
+<span class="nc" id="L556">				continue;</span>
+			}
+
+			// Check if the token is a tag.
+<span class="nc bnc" id="L560" title="All 2 branches missed.">			if (token instanceof TagToken) {</span>
+
+				// Cast the token into type TagToken.
+<span class="nc" id="L563">				TagToken tag = (TagToken) token;</span>
+
+				// Check if the token is an end tag.
+<span class="nc bnc" id="L566" title="All 2 branches missed.">				if (tag.isEndTag()) {</span>
+
+				  // Break if the end tags name matches.
+<span class="nc bnc" id="L569" title="All 2 branches missed.">				  if (name != null &amp;&amp;</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">				    name.equals(tag.getName())) break;</span>
+
+				  // Otherwise ignore the end tag.
+				  continue;
+				}
+
+				// Otherwise make it into an HTMLNode.
+<span class="nc" id="L577">				HTMLNode he =</span>
+				  new HTMLNode(tag, this, src);
+
+				// Add the node to the vector.
+<span class="nc" id="L581">				store.addElement(he);</span>
+			}
+<span class="nc" id="L583">		}</span>
+
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (store.size() &gt; 0)</span>
+<span class="nc" id="L586">			return store;</span>
+		else
+<span class="nc" id="L588">			return null;</span>
+	}
+
+	/**
+	 * String of default node names which are standalone.
+	 */
+<span class="nc" id="L594">	private static String[] defaultStandaloneList = {</span>
+		&quot;area&quot;, &quot;base&quot;, &quot;basefont&quot;, &quot;bgsound&quot;, &quot;br&quot;,
+		&quot;col&quot;, &quot;dd&quot;, &quot;dl&quot;, &quot;dt&quot;, &quot;font&quot;, &quot;frame&quot;,
+		&quot;hr&quot;, &quot;img&quot;, &quot;input&quot;, &quot;isindex&quot;, &quot;li&quot;,
+		&quot;link&quot;, &quot;meta&quot;, &quot;nextid&quot;, &quot;option&quot;, &quot;overlay&quot;, &quot;p&quot;,
+		&quot;param&quot;, &quot;tab&quot;, &quot;wbr&quot;, &quot;!&quot;, &quot;!--&quot;
+	};
+
+	// Full list of standalone names.
+<span class="nc" id="L603">	private static Vector standaloneList = null;</span>
+
+	// Load the default standalones into the list after class resolution.
+	static {
+<span class="nc" id="L607">		setupStandaloneList();</span>
+<span class="nc" id="L608">	}</span>
+
+	/**
+	 * Utility method which people can use to find out exactly
+	 * which nodes are in the default standalone list. The default
+ 	 * list is printed to the standard output.
+	 */
+	public static void printDefaultStandaloneList () {
+<span class="nc" id="L616">		Logger.debug(HTMLNode.class, Arrays.toString(defaultStandaloneList));</span>
+<span class="nc" id="L617">	}</span>
+
+	/**
+	 * Adds the specified string to the standalone list.
+	 * @param name the new standalone name.
+	 */
+	public static void addStandalone (String name) {
+
+		// Check if the list has been initialized first.
+<span class="nc bnc" id="L626" title="All 2 branches missed.">		if (standaloneList == null) return;</span>
+
+		// Convert the String to lower case.
+<span class="nc" id="L629">		String lc = name.toLowerCase();</span>
+
+		// Check that the list does not have the String already.
+<span class="nc bnc" id="L632" title="All 2 branches missed.">		if (standaloneList.contains(lc)) return;</span>
+
+		// Otherwise add the lowercase string to the list.
+<span class="nc" id="L635">		standaloneList.addElement(lc);</span>
+<span class="nc" id="L636">	}</span>
+
+	/**
+	 * Removes the specified string from the standalone list.
+	 * @param name the standalone name to remove.
+	 */
+	public static void removeStandalone (String name) {
+
+		// Check if the standaloneList has been initialized first.
+<span class="nc bnc" id="L645" title="All 2 branches missed.">		if (standaloneList == null) return;</span>
+
+		// Convert the String to lower case.
+<span class="nc" id="L648">		String lc = name.toLowerCase();</span>
+
+		// Remove the lowercase string from the list.
+<span class="nc" id="L651">		standaloneList.removeElement(lc);</span>
+<span class="nc" id="L652">	}</span>
+
+	/**
+	 * Checks the standalone list to see if it mentions the specified
+	 * tag name and returns true if so.
+	 * @param name the tag name to check against the list.
+	 */
+	public static boolean isStandalone (String name) {
+
+		// Check if the standaloneList has been initialized first.
+<span class="nc bnc" id="L662" title="All 2 branches missed.">		if (standaloneList == null) return true;</span>
+
+		// Otherwise check the list to see if it contains the tag name.
+<span class="nc" id="L665">		return standaloneList.contains(name);</span>
+	}
+
+	/**
+	 * Sets up the standalone vector at runtime using the list of
+	 * default standalone tags. New standalone tags can then be added
+	 * to the vector. &lt;p&gt;
+	 * This method will only be executed once, since it is guarded
+	 * by a private boolean variable.
+	 */
+	private static void setupStandaloneList () {
+
+		// Create a new vector to store the defaults.
+<span class="nc" id="L678">		standaloneList = new Vector(defaultStandaloneList.length);</span>
+
+		// Add all of the strings in the default list.
+<span class="nc bnc" id="L681" title="All 2 branches missed.">		for (int i = 0; i &lt; defaultStandaloneList.length; i++)</span>
+<span class="nc" id="L682">			standaloneList.addElement(defaultStandaloneList[i]);</span>
+<span class="nc" id="L683">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

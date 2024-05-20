@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataDeletingManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.dataDeleting</a> &gt; <span class="el_source">DataDeletingManager.java</span></div><h1>DataDeletingManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.dataDeleting; //NOSONAR
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.system.ConfDB;
+
+/**
+ *	DataDeletingManager.java - vykonava pracu s databazou, maze udaje pre DataDeletingAjaxAction.java
+ *	@Title        webjet4
+ *	@Company      Interway s.r.o. (www.interway.sk)
+ *	@Copyright    Interway s.r.o. (c) 2001-2008
+ *	@author       $Author: jeeff $
+ *	@version      $Revision: 1.6 $
+ *	@created      Date: 26.6.2009 14:55:51
+ *	@modified     $Date: 2010/01/20 10:12:54 $
+ */
+
+public class DataDeletingManager
+{
+<span class="fc" id="L44">	private static SimpleQuery query = new SimpleQuery();</span>
+
+<span class="fc" id="L46">	private static Collection&lt;Integer&gt; allowedAdminlogTypes = new ArrayList&lt;&gt;();</span>
+	static{
+<span class="fc" id="L48">		allowedAdminlogTypes.add(Adminlog.TYPE_SE_SITEMAP);</span>
+<span class="fc" id="L49">		allowedAdminlogTypes.add(Adminlog.TYPE_FORMMAIL);</span>
+<span class="fc" id="L50">		allowedAdminlogTypes.add(Adminlog.TYPE_SENDMAIL);</span>
+<span class="fc" id="L51">		allowedAdminlogTypes.add(Adminlog.TYPE_RUNTIME_ERROR);</span>
+<span class="fc" id="L52">		allowedAdminlogTypes.add(Adminlog.TYPE_JSPERROR);</span>
+<span class="fc" id="L53">		allowedAdminlogTypes.add(Adminlog.TYPE_SQLERROR);</span>
+<span class="fc" id="L54">		allowedAdminlogTypes.add(Adminlog.TYPE_CRON);</span>
+<span class="fc" id="L55">		allowedAdminlogTypes.add(Adminlog.TYPE_CLIENT_SPECIFIC);</span>
+<span class="fc" id="L56">	}</span>
+
+	private DataDeletingManager() {
+		//utiltity class
+	}
+
+	/**
+ 	 * Vymaze vsetky zaznamy v danom casovom obdobi z tabulky table
+ 	 *
+ 	 * @param table 		- 	nazov tabulky, z ktorej chceme data vymazat
+ 	 * @param startDate 	- 	datum zaciatku, od ktoreho chceme data vymazat
+ 	 * @param endDate		- 	datum konca, do ktoreho chceme vsetko vymazat
+	 * @param isActual	informacia o tom, ci sa maju vymazat pri tabulke documents_history vymazat aj aktualne podoby stranky (true - vymazu sa, false - nevymazu sa)
+ 	 *
+ 	 * @return -1 ak nastala chyba pri spojeni s databazou, inak pocet vymazanych riadkov
+ 	 */
+	public static int deleteData(String table, Date startDate, Date endDate, boolean isActual, int type)
+	{
+<span class="nc" id="L74">		return deleteData(table, startDate, endDate, isActual, type, true);</span>
+	}
+
+	public static int deleteData(String table, Date startDate, Date endDate, boolean isActual, int type, boolean optimizeTable)
+	{
+<span class="nc" id="L79">		int retValue = -1;</span>
+
+<span class="nc" id="L81">		Connection db_conn = null;</span>
+<span class="nc" id="L82">		PreparedStatement ps = null;</span>
+
+<span class="nc" id="L84">		String sql = DataDeletingManager.getSqlQueryForTable(table, startDate, endDate, &quot;delete&quot;, isActual);</span>
+
+		try
+		{
+<span class="nc" id="L88">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L89">			ps = db_conn.prepareStatement(sql);</span>
+
+<span class="nc" id="L91">			int psCounter = 1;</span>
+
+			/**
+			 * posunutie daneho datumu na koniec dna z polnoci na 23:59:59 daneho dna kvoli jeho zahrnutiu do filtra vymazania
+			 */
+			//System.out.println(&quot;DEBUG -- DataDeleting -- STARTDATE: \t&quot; + new Timestamp(startDate.getTime()));
+<span class="nc" id="L97">			Calendar cal = new GregorianCalendar();</span>
+<span class="nc" id="L98">			cal.setTime(startDate);</span>
+<span class="nc" id="L99">			int startDay = cal.get(Calendar.DAY_OF_MONTH);</span>
+<span class="nc" id="L100">			int startMonth = cal.get(Calendar.MONTH)+1;</span>
+<span class="nc" id="L101">			int startYear = cal.get(Calendar.YEAR);</span>
+<span class="nc" id="L102">			cal.setTime(endDate);</span>
+<span class="nc" id="L103">			cal.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="nc" id="L104">			cal.set(Calendar.MINUTE, 59);</span>
+<span class="nc" id="L105">			cal.set(Calendar.SECOND, 59);</span>
+<span class="nc" id="L106">			int endDay = cal.get(Calendar.DAY_OF_MONTH);</span>
+<span class="nc" id="L107">			int endMonth = cal.get(Calendar.MONTH)+1;</span>
+<span class="nc" id="L108">			int endYear = cal.get(Calendar.YEAR);</span>
+			//System.out.println(&quot;DEBUG -- DataDeleting -- ENDDATE: \t&quot; + new Timestamp(cal.getTime().getTime()));
+			//ak to nie je pripad, kedy sql statement vysklada funkcia StatDB.getYearTimeSQL(startDate, endDate, true), tak nahrad otazniky
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (sql.indexOf(&quot;week&quot;) == -1)</span>
+			{
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (table.indexOf(&quot;stat_clicks&quot;) != -1){</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">					if((&quot;stat_clicks_&quot;+startYear+&quot;_&quot;+startMonth).compareTo((&quot;stat_clicks_&quot;+endYear+&quot;_&quot;+endMonth))==0){	//ak sa jedna o jeden mesiac a rok</span>
+						//Logger.debug(null, &quot;Jeden mesiac a rok&quot;);
+<span class="nc" id="L116">						ps.setInt(psCounter++, startDay);</span>
+<span class="nc" id="L117">						ps.setInt(psCounter++, endDay);</span>
+					}
+<span class="nc bnc" id="L119" title="All 2 branches missed.">					else if(table.compareTo(&quot;stat_clicks_&quot;+startYear+&quot;_&quot;+startMonth)==0){	//prvy mesiac</span>
+						//Logger.debug(null, &quot;Mazem prvy mesiac v prvom roku: &quot;+sql+startYear+startMonth+startDay);
+<span class="nc" id="L121">						ps.setInt(psCounter++, startDay);</span>
+<span class="nc" id="L122">						ps.setInt(psCounter++, 32);	//zvysok mesiaca</span>
+					}
+<span class="nc bnc" id="L124" title="All 2 branches missed.">					else if(table.compareTo(&quot;stat_clicks_&quot;+endYear+&quot;_&quot;+endMonth)==0){	//posledny mesiac</span>
+						//Logger.debug(null, &quot;mazem posledny mesiac posledneho roku: &quot;+sql+endYear+endMonth+endDay);
+<span class="nc" id="L126">						ps.setInt(psCounter++, 0);</span>
+<span class="nc" id="L127">						ps.setInt(psCounter++, endDay);</span>
+					}
+					else { //vsetky ostatne pripady
+						//Logger.debug(null, &quot;mazem vsetko medzi&quot;);
+<span class="nc" id="L131">						ps.setInt(psCounter++, 0);</span>
+<span class="nc" id="L132">						ps.setInt(psCounter++, 32);</span>
+					}
+				} else{
+<span class="nc" id="L135">					ps.setTimestamp(psCounter++, new Timestamp(startDate.getTime()));</span>
+<span class="nc" id="L136">					ps.setTimestamp(psCounter++, new Timestamp(cal.getTime().getTime()));</span>
+				}
+
+			}
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (sql.indexOf(&quot;actual&quot;) != -1)</span>
+<span class="nc" id="L142">				ps.setBoolean(psCounter++, isActual);</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if(sql.indexOf(ConfDB.ADMINLOG_TABLE_NAME)!= -1){</span>
+				//typ adminlogu
+<span class="nc" id="L146">				ps.setInt(psCounter++, type);</span>
+<span class="nc" id="L147">				table = ConfDB.ADMINLOG_TABLE_NAME;</span>
+			}
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if(sql.indexOf(&quot;WEBJET_ADMINLOG&quot;)!= -1){	//v pripade oracle databazy</span>
+				//typ adminlogu
+<span class="nc" id="L152">				ps.setInt(psCounter++, type);</span>
+<span class="nc" id="L153">				table = &quot;WEBJET_ADMINLOG&quot;;</span>
+			}
+
+<span class="nc" id="L156">			boolean existTable = true;</span>
+
+			try
+			{
+<span class="nc" id="L160">				retValue = ps.executeUpdate();</span>
+
+<span class="nc" id="L162">				if (</span>
+						(
+<span class="nc bnc" id="L164" title="All 2 branches missed.">							table.indexOf(&quot;stat_views_&quot;) != -1 ||</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">							table.indexOf(&quot;stat_error_&quot;) != -1 ||</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">							table.indexOf(&quot;stat_from_&quot;) != -1 ||</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">							table.indexOf(&quot;stat_searchengine_&quot;) != -1 ||</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">							table.indexOf(&quot;stat_clicks_&quot;) != -1</span>
+						)
+<span class="nc bnc" id="L170" title="All 2 branches missed.">							&amp;&amp; Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)</span>
+					)
+				{
+<span class="nc bnc" id="L173" title="All 2 branches missed.">	   			if (DataDeletingManager.isTableEmpty(table))</span>
+	   			{
+<span class="nc" id="L175">	   				Logger.debug(DataDeletingManager.class, &quot;DEBUG: DataDELETING - Dropla sa tabulka  &quot; + table + &quot; -&gt; &quot; + DataDeletingManager.dropTable(table));</span>
+<span class="nc" id="L176">	   				Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;DataDeleting: Table &quot; + table + &quot; was dropped because it was empty.&quot;, -1, -1);</span>
+<span class="nc" id="L177">	   				existTable = false;</span>
+	   			}
+				}
+			}
+<span class="nc" id="L181">			catch(Exception e)</span>
+			{
+<span class="nc bnc" id="L183" title="All 4 branches missed.">				if(e.getMessage().indexOf(&quot;doesn't exist&quot;)!=-1 || e.getMessage().indexOf(&quot;not exist&quot;)!=-1)</span>
+				{
+<span class="nc" id="L185">					Logger.debug(DataDeletingManager.class, &quot;DEBUG: DataDELETING - TABULKA &quot; + table + &quot; NEEXISTUJE!!!!&quot;);	// nastava jedine pri rozdelovani tabulky stat_views</span>
+<span class="nc" id="L186">					return 0;</span>
+				}
+				else {
+<span class="nc" id="L189">					Logger.debug(DataDeletingManager.class, &quot;DEBUG: Neznama chyba!!!!&quot;);	// nastava jedine pri rozdelovani tabulky stat_views</span>
+<span class="nc" id="L190">					return 0;</span>
+				}
+<span class="nc" id="L192">			}</span>
+
+<span class="nc" id="L194">			ps.close();</span>
+
+<span class="nc bnc" id="L196" title="All 4 branches missed.">			if(optimizeTable &amp;&amp; existTable)</span>
+			{
+<span class="nc bnc" id="L198" title="All 2 branches missed.">				if(Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+				{
+<span class="nc" id="L200">					Logger.debug(DataDeletingManager.class, &quot;Optimalizujem mysql tabulku &quot;+table);</span>
+<span class="nc" id="L201">					ps = db_conn.prepareStatement(&quot;OPTIMIZE TABLE &quot;+table);</span>
+<span class="nc" id="L202">					ps.execute();</span>
+<span class="nc" id="L203">					ps.close();</span>
+				}
+<span class="nc bnc" id="L205" title="All 2 branches missed.">				else if(Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+				{
+<span class="nc" id="L207">					Logger.debug(DataDeletingManager.class, &quot;Optimalizujem pgsql tabulku &quot;+table);</span>
+<span class="nc" id="L208">					ps = db_conn.prepareStatement(&quot;REINDEX TABLE &quot;+table);</span>
+<span class="nc" id="L209">					ps.execute();</span>
+<span class="nc" id="L210">					ps.close();</span>
+				}
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				else if(Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+				{
+<span class="nc" id="L214">					Logger.debug(DataDeletingManager.class, &quot;Optimalizujem mssql tabulku &quot;+table);</span>
+<span class="nc" id="L215">					ps = db_conn.prepareStatement(&quot;ALTER INDEX ALL ON &quot;+table+&quot; REORGANIZE&quot;);</span>
+<span class="nc" id="L216">					ps.execute();</span>
+<span class="nc" id="L217">					ps.close();</span>
+				}
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				else if(Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+				{
+<span class="nc" id="L221">					Logger.debug(DataDeletingManager.class, &quot;Optimalizujem oracle tabulku &quot;+table);</span>
+<span class="nc" id="L222">					ps = db_conn.prepareStatement(&quot;alter table &quot;+table+&quot; enable row movement&quot;);</span>
+<span class="nc" id="L223">					ps.execute();</span>
+<span class="nc" id="L224">					ps.close();</span>
+<span class="nc" id="L225">					ps = db_conn.prepareStatement(&quot;alter table &quot;+table+&quot; shrink space&quot;);</span>
+<span class="nc" id="L226">					ps.execute();</span>
+<span class="nc" id="L227">					ps.close();</span>
+<span class="nc" id="L228">					ps = db_conn.prepareStatement(&quot;alter table &quot;+table+&quot; disable row movement&quot;);</span>
+<span class="nc" id="L229">					ps.execute();</span>
+<span class="nc" id="L230">					ps.close();</span>
+				}
+
+			}
+
+<span class="nc" id="L235">			db_conn.close();</span>
+
+<span class="nc" id="L237">			ps = null;</span>
+<span class="nc" id="L238">			db_conn = null;</span>
+
+
+			/**
+			 * Pridanie logu do auditu o vymazani dat
+			 */
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			if(!table.equals(&quot;_adminlog_&quot;))</span>
+<span class="nc" id="L245">				Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;DataDeleting: Data from &quot; + Tools.formatDate(startDate) + &quot; to &quot; + Tools.formatDate(endDate) + &quot; from table &quot; + table +&quot; were deleted.&quot;, -1, -1);</span>
+			else{
+<span class="nc" id="L247">				Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;DataDeleting: Data from &quot; + Tools.formatDate(startDate) + &quot; to &quot; + Tools.formatDate(endDate) + &quot; from table &quot; + table + &quot; of type &quot;+ Prop.getInstance().getText(&quot;components.adminlog.&quot;+ Integer.toString(type)) +&quot; were deleted.&quot;, type, -1);</span>
+			}
+
+
+
+		}
+<span class="nc" id="L253">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L255">			retValue = -1;</span>
+<span class="nc" id="L256">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L263">					ps.close();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L265">					db_conn.close();</span>
+			}
+<span class="nc" id="L267">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L269">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L270">			}</span>
+		}
+<span class="nc" id="L272">		return retValue;</span>
+	}
+
+	/**
+	 * Zistuje, ci existuje tabulka tableName
+	 *
+	 * @param tableName	nazov tabulky
+	 *
+	 * @return true, ak tabulka existuje, inak vrati false
+	 */
+	public static boolean existTable(String tableName)
+	{
+<span class="nc" id="L284">		boolean retValue = false;</span>
+
+<span class="nc" id="L286">		Connection dbConn = null;</span>
+		try
+		{
+<span class="nc" id="L289">			dbConn = DBPool.getConnection();</span>
+
+<span class="nc" id="L291">			DatabaseMetaData dbm = dbConn.getMetaData();</span>
+<span class="nc" id="L292">			ResultSet tables = dbm.getTables(null, null, tableName, null);</span>
+
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			if (tables.next())</span>
+<span class="nc" id="L295">				retValue = true;</span>
+			else
+<span class="nc" id="L297">				retValue = false;</span>
+
+<span class="nc" id="L299">			dbConn.close();</span>
+<span class="nc" id="L300">			dbConn = null;</span>
+
+		}
+<span class="nc" id="L303">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L305">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L311" title="All 2 branches missed.">				if (dbConn != null)</span>
+<span class="nc" id="L312">					dbConn.close();</span>
+			}
+<span class="nc" id="L314">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L316">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L317">			}</span>
+		}
+<span class="nc" id="L319">		return retValue;</span>
+	}
+
+	/**
+	 * Funkcia, ktora vrati spravne sql query pre danu tabulku, kedze nazvy datumov sa v skoro kazdej tabulke lisia (napr. create_date, date_created...).
+	 *
+	 * @param table		nazov tabulky, z ktorej chceme udaje vymazat
+	 * @param startDate	zaciatok obdobia, od ktoreho chceme vymazat udaje
+	 * @param endDate		koniec obdobia, do ktoreho chceme vymazat
+	 * @param type			urcuje aky typ query to je napr. delete alebo select
+	 * @param isActual	informacia o tom, ci sa maju vymazat pri tabulke documents_history vymazat aj aktualne podoby stranky (true - vymazu sa, false - nevymazu sa)
+	 *
+	 * @return Spravny sql dopyt na danu tabulku, ktorym sa vymazu zvolene udaje.
+	 */
+	private static String getSqlQueryForTable(String table, Date startDate, Date endDate, String type, boolean isActual)
+	{
+<span class="fc" id="L335">		StringBuilder sql = new StringBuilder();</span>
+
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">		if (&quot;delete&quot;.equals(type))</span>
+<span class="nc" id="L338">			sql.append(&quot;DELETE&quot;);</span>
+		else
+<span class="fc" id="L340">			sql.append(&quot;SELECT COUNT(*)&quot;);</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">		if(!table.equals(&quot;audit&quot;))</span>
+<span class="fc" id="L342">			sql.append(&quot; FROM &quot; + table + &quot; &quot;);</span>
+		else
+		{
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+			{
+<span class="nc" id="L347">				sql.append(&quot; FROM WEBJET_ADMINLOG &quot;);</span>
+			}
+			else
+			{
+<span class="fc" id="L351">				sql.append(&quot; FROM &quot;).append(ConfDB.ADMINLOG_TABLE_NAME).append(&quot; &quot;);</span>
+			}
+		}
+
+
+<span class="fc bfc" id="L356" title="All 2 branches covered.">		if (&quot;documents_history&quot;.equals(table))</span>
+		{
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">			if (isActual)</span>
+<span class="fc" id="L359">				sql.append(&quot;WHERE date_created BETWEEN ? AND ?&quot;);</span>
+			else
+<span class="nc" id="L361">				sql.append(&quot;WHERE date_created BETWEEN ? AND ? AND actual = ?&quot;);</span>
+		}
+
+<span class="fc bfc" id="L364" title="All 2 branches covered.">		else if (&quot;emails&quot;.equals(table))</span>
+<span class="fc" id="L365">			sql.append(&quot;WHERE sent_date BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L367" title="All 2 branches covered.">		else if (&quot;monitoring&quot;.equals(table))</span>
+<span class="fc" id="L368">			sql.append(&quot;WHERE date_insert BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L370" title="All 2 branches covered.">		else if (table.indexOf(&quot;stat_from&quot;) != -1)</span>
+<span class="fc" id="L371">			sql.append(&quot;WHERE from_time BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L373" title="All 2 branches covered.">		else if (table.indexOf(&quot;stat_searchengine&quot;) != -1)</span>
+<span class="fc" id="L374">			sql.append(&quot;WHERE search_date BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L376" title="All 2 branches covered.">		else if (table.indexOf(&quot;banner_stat_&quot;) != -1)</span>
+<span class="fc" id="L377">			sql.append(&quot;WHERE insert_date BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L379" title="All 2 branches covered.">		else if (table.indexOf(&quot;stat_views&quot;) != -1)</span>
+<span class="fc" id="L380">			sql.append(&quot;WHERE view_time BETWEEN ? AND ?&quot;);</span>
+
+<span class="fc bfc" id="L382" title="All 2 branches covered.">		else if (table.indexOf(&quot;audit&quot;) != -1)</span>
+		{
+<span class="fc" id="L384">			sql.append(&quot;WHERE create_date BETWEEN ? AND ? AND log_type = ? &quot;);</span>
+		}
+
+<span class="fc bfc" id="L387" title="All 2 branches covered.">		else if (table.indexOf(&quot;stat_clicks&quot;) != -1)</span>
+<span class="fc" id="L388">			sql.append(&quot;WHERE day_of_month BETWEEN ? AND ?&quot;);</span>
+		else
+<span class="fc" id="L390">			sql.append(StatDB.getYearTimeSQL(startDate, endDate, true));</span>
+
+		//System.out.println(&quot;\n\nDEBUG: sql - data deleting - &quot; + sql + &quot;\n\n&quot;);
+
+<span class="fc" id="L394">		return sql.toString();</span>
+	}
+
+	/**
+	 * Funkcia, ktora zisti rozsah tabuliek stat_views a pre kazdu zavola mazaciu metodu.
+	 *
+	 * @param startDate	zaciatok obdobia, od ktoreho chceme vymazat udaje
+	 * @param endDate		koniec obdobia, do ktoreho chceme vymazat
+	 *
+	 * @return	Pocet vymazanych riadkov vo vsetkych tabulkach stat_views, ktore zodpovedaju vstupnym datumom.
+	 */
+	public static int deleteTablePartitioning(Date startDate, Date endDate)
+	{
+<span class="nc" id="L407">		return deleteTablePartitioning(&quot;stat_views&quot;, startDate, endDate, false);</span>
+	}
+
+	/**
+	 * Funkcia, ktora zisti rozsah tabuliek tabulky namePartitioningTable a pre kazdu zavola mazaciu metodu.
+	 *
+	 * @param namePartitioningTable	nazov rozdelovanej tabulky(zatial sa rozdeluju stat_views, stat_error, stat_searchengine a stat_from)
+	 * @param startDate					zaciatok obdobia, od ktoreho chceme vymazat udaje
+	 * @param endDate						koniec obdobia, do ktoreho chceme vymazat
+	 *
+	 * @return	Pocet vymazanych riadkov vo vsetkych tabulkach tabulky namePartitioningTable, ktore zodpovedaju vstupnym datumom.
+	 */
+	public static int deleteTablePartitioning(String namePartitioningTable, Date startDate, Date endDate, boolean optimizeTable)
+	{
+<span class="nc" id="L421">		int numberDelRows = 0;</span>
+
+<span class="nc" id="L423">		String[] suffixes = StatNewDB.getTableSuffix(namePartitioningTable, startDate.getTime(), endDate.getTime());</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">		for (int i = 0; i &lt; suffixes.length; i++){</span>
+<span class="nc" id="L425">			numberDelRows += DataDeletingManager.deleteData(namePartitioningTable + suffixes[i], startDate, endDate, false,-1, optimizeTable);</span>
+		}
+
+<span class="nc" id="L428">		return numberDelRows;</span>
+	}
+
+	/**
+	 * Funkcia, ktora zisti rozsah tabuliek stat_views a pre kazdu zavola metodu, ktora zisti pocet poloziek, ktore chce user vymazat.
+	 *
+	 * @param startDate	zaciatok obdobia, od ktoreho chceme vymazat udaje
+	 * @param endDate		koniec obdobia, do ktoreho chceme vymazat
+	 *
+	 * @return	Pocet riadkov vo vsetkych tabulkach stat_views, ktore zodpovedaju vstupnym datumom a ktore chce user vymazat.
+	 */
+	public static int checkTablePartitioning(Date startDate, Date endDate)
+	{
+<span class="nc" id="L441">		return checkTablePartitioning(&quot;stat_views&quot;, startDate, endDate);</span>
+	}
+
+	/**
+	 * Funkcia, ktora zisti rozsah tabuliek rozdelovanej tabulky a pre kazdu zavola metodu, ktora zisti pocet poloziek, ktore chce user vymazat.
+	 *
+	 * @param namePartitioningTable	nazov rozdelovanej tabulky(zatial sa rozdeluju stat_views, stat_error, stat_searchengine a stat_from)
+	 * @param startDate					zaciatok obdobia, od ktoreho chceme vymazat udaje
+	 * @param endDate						koniec obdobia, do ktoreho chceme vymazat
+	 *
+	 * @return	Pocet riadkov vo vsetkych tabulkach rozdelovanej tabulky namePartitioningTable, ktore zodpovedaju vstupnym datumom a ktore chce user vymazat.
+	 */
+	public static int checkTablePartitioning(String namePartitioningTable, Date startDate, Date endDate)
+	{
+<span class="fc" id="L455">		int numberToDelRows = 0;</span>
+<span class="fc" id="L456">		String[] suffixes = StatNewDB.getTableSuffix(namePartitioningTable, startDate.getTime(), endDate.getTime());</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">		for (int i = 0; i &lt; suffixes.length; i++)</span>
+<span class="fc" id="L458">			numberToDelRows += DataDeletingManager.checkData(namePartitioningTable + suffixes[i], startDate, endDate, false, -1);</span>
+
+<span class="fc" id="L460">		return numberToDelRows;</span>
+	}
+
+	/**
+ 	 * Zisti pocty, ktore chce pouzivatel vymazat v danom casovom obdobi z tabulky table
+ 	 *
+ 	 * @param table 		- nazov tabulky, z ktorej chceme data vymazat
+ 	 * @param startDate 	- datum zaciatku, od ktoreho chceme data vymazat
+ 	 * @param endDate		- datum konca, do ktoreho chceme vsetko vymazat
+ 	 *
+ 	 * @return -1 ak nastala chyba pri spojeni s databazou, inak pocet vymazanych riadkov
+ 	 */
+	public static int checkData(String table, Date startDate, Date endDate, boolean isActual, int type)
+	{
+<span class="fc" id="L474">		String sql = DataDeletingManager.getSqlQueryForTable(table, startDate, endDate, &quot;select&quot;, isActual);</span>
+
+		/**
+		 * posunutie daneho datumu na koniec dna z polnoci na 23:59:59 daneho dna kvoli jeho zahrnutiu do filtra vymazania
+		 */
+		//System.out.println(&quot;DEBUG -- DataDeleting -- STARTDATE: \t&quot; + new Timestamp(startDate.getTime()));
+<span class="fc" id="L480">		Calendar cal = new GregorianCalendar();</span>
+<span class="fc" id="L481">		cal.setTime(startDate);</span>
+<span class="fc" id="L482">		int startDay = cal.get(Calendar.DAY_OF_MONTH);</span>
+<span class="fc" id="L483">		int startMonth = cal.get(Calendar.MONTH)+1;</span>
+<span class="fc" id="L484">		int startYear = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L485">		cal.setTime(endDate);</span>
+<span class="fc" id="L486">		cal.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="fc" id="L487">		cal.set(Calendar.MINUTE, 59);</span>
+<span class="fc" id="L488">		cal.set(Calendar.SECOND, 59);</span>
+<span class="fc" id="L489">		int endDay = cal.get(Calendar.DAY_OF_MONTH);</span>
+<span class="fc" id="L490">		int endMonth = cal.get(Calendar.MONTH)+1;</span>
+<span class="fc" id="L491">		int endYear = cal.get(Calendar.YEAR);</span>
+		//System.out.println(&quot;DEBUG -- DataDeleting -- ENDDATE: \t&quot; + new Timestamp(cal.getTime().getTime()));
+
+
+		//check if type is allowed
+<span class="fc bfc" id="L496" title="All 2 branches covered.">		if(table.equals(&quot;audit&quot;)){</span>
+<span class="pc bpc" id="L497" title="1 of 2 branches missed.">			if(isTypeAllowed(type))</span>
+<span class="fc" id="L498">				return query.forInt(sql, new Timestamp(startDate.getTime()), new Timestamp(cal.getTime().getTime()), type);</span>
+			else
+<span class="nc" id="L500">				return -1;</span>
+		}
+
+		// ak je to pripad kontroly aktualnej podoby stranky v tabulke documents_history
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">		if (sql.indexOf(&quot;actual&quot;) != -1)</span>
+		{
+			//System.out.println(&quot;DEBUG: &quot; + sql + &quot;\t&quot; + new Timestamp(startDate.getTime()) + &quot; - &quot; + new Timestamp(cal.getTime().getTime()) + &quot; -- &quot; + isActual);
+<span class="nc" id="L507">			return query.forInt(sql, new Timestamp(startDate.getTime()), new Timestamp(cal.getTime().getTime()), Boolean.valueOf(isActual));</span>
+		}
+
+		//ak to nie je pripad, kedy sql statement vysklada funkcia StatDB.getYearTimeSQL(startDate, endDate, true), tak nahrad otazniky
+<span class="fc bfc" id="L511" title="All 2 branches covered.">		if (sql.indexOf(&quot;week&quot;) == -1)</span>
+		{
+			//System.out.println(sql + &quot;\t&quot; + new Timestamp(startDate.getTime()) + &quot; - &quot; + new Timestamp(cal.getTime().getTime()));
+			try
+			{
+<span class="fc bfc" id="L516" title="All 2 branches covered.">				if (table.indexOf(&quot;stat_clicks&quot;) != -1){</span>
+<span class="pc bpc" id="L517" title="1 of 2 branches missed.">					if((&quot;stat_clicks_&quot;+startYear+&quot;_&quot;+startMonth).compareTo((&quot;stat_clicks_&quot;+endYear+&quot;_&quot;+endMonth))==0){	//ak sa jedna o jeden mesiac a rok</span>
+						//Logger.debug(null, &quot;Jeden mesiac a rok&quot;);
+<span class="fc" id="L519">						return query.forInt(sql, startDay, endDay);</span>
+					}
+<span class="nc bnc" id="L521" title="All 2 branches missed.">					else if(table.compareTo(&quot;stat_clicks_&quot;+startYear+&quot;_&quot;+startMonth)==0){	//prvy mesiac</span>
+						//Logger.debug(null, &quot;Overujem prvy mesiac v prvom roku: &quot;+sql+startYear+startMonth+startDay);
+<span class="nc" id="L523">						return query.forInt(sql, startDay, 32);</span>
+					}
+<span class="nc bnc" id="L525" title="All 2 branches missed.">					else if(table.compareTo(&quot;stat_clicks_&quot;+endYear+&quot;_&quot;+endMonth)==0){	//posledny mesiac</span>
+						//Logger.debug(null, &quot;Overujem posledny mesiac posledneho roku: &quot;+sql+endYear+endMonth+endDay);
+<span class="nc" id="L527">						return query.forInt(sql, 0, endDay);</span>
+					}
+					else { //vsetky ostatne pripady
+						//Logger.debug(null, &quot;Overujem vsetko medzi&quot;);
+<span class="nc" id="L531">						return query.forInt(sql, 0, 32);</span>
+					}
+				} else{
+<span class="fc" id="L534">					return query.forInt(sql, new Timestamp(startDate.getTime()), new Timestamp(cal.getTime().getTime()));</span>
+				}
+			}
+<span class="fc" id="L537">			catch (Exception e)</span>
+			{
+<span class="fc" id="L539">				return 0;	// tabulka neexistuje, bola vymazana. nastava hlavne pri stats_view pri particiovani</span>
+			}
+		}
+
+		try
+		{
+			//System.out.println(sql);
+<span class="fc" id="L546">			return query.forInt(sql);</span>
+		}
+<span class="nc" id="L548">		catch (Exception e)</span>
+		{
+<span class="nc" id="L550">			return 0;	// tabulka neexistuje, bola vymazana. nastava hlavne pri particiovanych tabulkach</span>
+		}
+	}
+
+	private static boolean isTypeAllowed(int type)
+	{
+<span class="fc" id="L556">		return allowedAdminlogTypes.contains(type);</span>
+	}
+
+	/**
+	 * Zisti, ci tabulka, z ktorej sa prave mazalo je prazdna. Tato funkcia sa moze volat len pre tabulky stat_views v pripade ich rozdelovania - statEnableTablePartitioning = true.
+	 *
+	 * @param table	tabulka, o ktorej chceme zistit, ci je prazdna
+	 * @return	true ak je tabulka prazdna, inak false
+	 */
+	private static boolean isTableEmpty(String table)
+	{
+<span class="nc" id="L567">		if (</span>
+				(
+<span class="nc bnc" id="L569" title="All 2 branches missed.">					table.indexOf(&quot;stat_views_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">					table.indexOf(&quot;stat_error_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">					table.indexOf(&quot;stat_from_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">					table.indexOf(&quot;stat_searchengine_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">					table.indexOf(&quot;stat_clicks_&quot;) != -1</span>
+				)
+<span class="nc bnc" id="L575" title="All 2 branches missed.">					|| !Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)</span>
+			)
+<span class="nc" id="L577">			return false;</span>
+
+<span class="nc bnc" id="L579" title="All 2 branches missed.">		if (query.forInt(&quot;SELECT COUNT(*) FROM &quot; + table) == 0)</span>
+<span class="nc" id="L580">			return true;</span>
+
+<span class="nc" id="L582">		return false;</span>
+	}
+
+	/**
+	 * Zmazanie celej tabulky (drop) v pripade, ze je prazdna. Tato funkcia sa moze volat len pre tabulky stat_views v pripade ich rozdelovania - statEnableTablePartitioning = true.
+	 *
+	 * @param table	tabulka, ktoru chceme vymazat
+	 * @return	true ak sa vymazanie podarilo, inak false
+	 */
+	private static boolean dropTable(String table)
+	{
+<span class="nc bnc" id="L593" title="All 4 branches missed.">		if (!table.startsWith(&quot;stat_views_&quot;) || !Constants.getBoolean(&quot;statEnableTablePartitioning&quot;))</span>
+		{
+<span class="nc" id="L595">			if (</span>
+				(
+<span class="nc bnc" id="L597" title="All 2 branches missed.">					table.indexOf(&quot;stat_views_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">					table.indexOf(&quot;stat_error_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">					table.indexOf(&quot;stat_from_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">					table.indexOf(&quot;stat_searchengine_&quot;) == -1 &amp;&amp;</span>
+<span class="nc bnc" id="L601" title="All 2 branches missed.">					table.indexOf(&quot;stat_clicks_&quot;) != -1</span>
+				)
+<span class="nc bnc" id="L603" title="All 2 branches missed.">					|| !Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)</span>
+			) {
+<span class="nc" id="L605">				return false;</span>
+			}
+		}
+		try
+		{
+<span class="nc" id="L610">			query.execute(&quot;DROP TABLE &quot; + table);</span>
+<span class="nc" id="L611">			return true;</span>
+		}
+<span class="nc" id="L613">		catch (Exception e)</span>
+		{
+<span class="nc" id="L615">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L616">			return false;</span>
+		}
+	}
+
+	/**
+	 * Funkcia, ktora vrati list, v ktorom su ulozene informacie o pocte emailov za jednotlive mesiace z rozsahu, ktory si zvolil user.
+	 * Ak sa v mesiaci nenachadza ziadny email, tak sa nevrati resp. vrati sa len informacia o tych mesiacoch, v ktorych je pocet emailov &gt;=1.
+	 *
+	 * @param startDate	zaciatok rozsahu
+	 * @param endDate		koniec rozsahu
+	 *
+	 * @return	list instancii Column, kde v getColumn1() je ulozena informacia o mesiaci v tvare MM/YYYY a v getIntColumn1() samotny pocet emailov v danom obdobi.
+	 */
+	public static List&lt;Column&gt; getEmailsGroupedByMonth(Date startDate, Date endDate)
+	{
+<span class="nc" id="L631">		List&lt;Column&gt; emailMonths = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L633">		String sql = &quot;SELECT MONTH(sent_date), YEAR(sent_date), COUNT(*) from emails WHERE sent_date BETWEEN ? AND ?&quot; +</span>
+				&quot; GROUP BY MONTH(sent_date), YEAR(sent_date) ORDER BY YEAR(sent_date), MONTH(sent_date)&quot;;
+
+<span class="nc bnc" id="L636" title="All 4 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+<span class="nc" id="L637">			sql = &quot;SELECT TO_CHAR(sent_date, 'MM'), TO_CHAR(sent_date, 'YYYY'), COUNT(*) from emails WHERE sent_date BETWEEN ? AND ?&quot; +</span>
+			&quot; GROUP BY TO_CHAR(sent_date, 'MM'), TO_CHAR(sent_date, 'YYYY') ORDER BY TO_CHAR(sent_date, 'YYYY'), TO_CHAR(sent_date, 'MM')&quot;;
+
+
+<span class="nc" id="L641">		Connection db_conn = null;</span>
+<span class="nc" id="L642">		PreparedStatement ps = null;</span>
+<span class="nc" id="L643">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L646">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L647">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L648">			int psCounter = 1;</span>
+<span class="nc" id="L649">			ps.setTimestamp(psCounter++, new Timestamp(startDate.getTime()));</span>
+<span class="nc" id="L650">			ps.setTimestamp(psCounter++, new Timestamp(endDate.getTime()));</span>
+<span class="nc" id="L651">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L653" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L655">				Column col = new Column();</span>
+
+<span class="nc" id="L657">				col.setColumn1(rs.getInt(1) + &quot;/&quot; + rs.getInt(2));</span>
+<span class="nc" id="L658">				col.setIntColumn1(rs.getInt(3));</span>
+
+<span class="nc" id="L660">				emailMonths.add(col);</span>
+<span class="nc" id="L661">			}</span>
+
+<span class="nc" id="L663">			rs.close();</span>
+<span class="nc" id="L664">			ps.close();</span>
+<span class="nc" id="L665">			db_conn.close();</span>
+
+<span class="nc" id="L667">			rs = null;</span>
+<span class="nc" id="L668">			ps = null;</span>
+<span class="nc" id="L669">			db_conn = null;</span>
+		}
+<span class="nc" id="L671">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L673">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L679" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L680">					rs.close();</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L682">					ps.close();</span>
+<span class="nc bnc" id="L683" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L684">					db_conn.close();</span>
+			}
+<span class="nc" id="L686">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L688">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L689">			}</span>
+		}
+
+<span class="nc" id="L692">		return emailMonths;</span>
+	}
+
+	/**
+	 * Funkcia, ktora zo ziskaneho List z funkcie getEmailsGroupedByMonth spravi jeden retazec, ktory sa posle spat na ajax request a zobrazi sa v prisluchajucom divku.
+	 * Sformatuje vystup do tvaru MM/YYYY a zgrupi do odsekov podla rokov.
+	 *
+	 * @param emails list instancii Column, kde v getColumn1() je ulozena informacia o mesiaci v tvare MM/YYYY a v getIntColumn1() samotny pocet emailov v danom obdobi.
+	 *
+	 * @return String v tvare MM/YYYY: 'pocet emailov' &lt;br /&gt; MM/YYYY: 'pocet emailov' &lt;br /&gt; ...
+	 */
+	public static String getEmailsGroupedString(List&lt;Column&gt; emails)
+	{
+<span class="nc" id="L705">		StringBuilder retValue = new StringBuilder();</span>
+<span class="nc bnc" id="L706" title="All 4 branches missed.">		if (emails == null || emails.size() &lt; 1)</span>
+<span class="nc" id="L707">			return retValue.toString();</span>
+<span class="nc" id="L708">		String monthEmail = emails.get(0).getColumn1();</span>
+<span class="nc" id="L709">		String year = monthEmail.substring(monthEmail.length()-4);</span>
+<span class="nc" id="L710">		String delimiter = &quot;&quot;;</span>
+<span class="nc" id="L711">		int index = 0;</span>
+
+<span class="nc" id="L713">		DecimalFormatSymbols separators = new DecimalFormatSymbols(Locale.getDefault());</span>
+<span class="nc" id="L714">		separators.setGroupingSeparator(' ');</span>
+<span class="nc" id="L715">		DecimalFormat nf = new DecimalFormat(&quot;###,###,###&quot;,separators); // kvoli lepsej citatelnosti dlhych cisel, po kazdej tisicke</span>
+
+<span class="nc bnc" id="L717" title="All 2 branches missed.">		for (int i = 0; i &lt; emails.size(); i++)</span>
+		{
+<span class="nc" id="L719">			index = i + 1;</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">			if (index &gt;= emails.size())</span>
+<span class="nc" id="L721">				index = i;</span>
+
+<span class="nc" id="L723">			monthEmail = emails.get(i).getColumn1();</span>
+
+<span class="nc bnc" id="L725" title="All 2 branches missed.">			if (!year.equals(emails.get(index).getColumn1().substring(emails.get(index).getColumn1().length()-4))) //rozdelenie podla rokov</span>
+			{
+<span class="nc" id="L727">				year = emails.get(index).getColumn1().substring(emails.get(index).getColumn1().length()-4);</span>
+<span class="nc" id="L728">				delimiter = &quot;&lt;br /&gt;&quot;;</span>
+			}
+
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			if (monthEmail.length() == 6)	//zarovnanie na MM/YYYY z M/YYYY</span>
+<span class="nc" id="L732">				monthEmail = 0 + monthEmail; //NOSONAR</span>
+<span class="nc" id="L733">			retValue.append(monthEmail).append(&quot;: &quot;).append(nf.format(emails.get(i).getIntColumn1())).append(&quot;&lt;br /&gt;&quot;).append(delimiter);</span>
+<span class="nc" id="L734">			delimiter = &quot;&quot;;</span>
+		}
+<span class="nc" id="L736">		return retValue.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

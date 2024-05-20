@@ -92,7 +92,7 @@ Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
             I.waitForElement("#toast-container-webjet");
             I.clickCss("div.toastr-buttons button.btn.btn-primary");
             DT.waitForLoader();
-            I.see("Úloha sk.iway.iwcm.stat.StatWriteBuffer bola spustená!");
+            I.see("Úloha sk.iway.iwcm.stat.StatWriteBuffer bola spustená");
 
             //wait for DB write
             I.wait(30);

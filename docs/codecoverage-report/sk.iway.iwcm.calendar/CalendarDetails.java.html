@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">CalendarDetails.java</span></div><h1>CalendarDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import sk.iway.iwcm.Constants;
+
+/**
+ *  drzi riadok z tabulky calendar
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.6 $
+ *@created      Utorok, 2002, február 19
+ *@modified     $Date: 2004/02/17 21:37:28 $
+ */
+<span class="nc" id="L19">public class CalendarDetails</span>
+{
+	private int calendarId;
+	private String title;
+	private java.sql.Timestamp from;
+	private java.sql.Timestamp to;
+	private int typeId;
+	private long l_from, l_to;
+
+<span class="nc" id="L28">	private SimpleDateFormat formatter = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="nc" id="L29">	private int bgColorIndex=0;</span>
+	private String type;
+	private String timeRange;
+	private String area;
+	private String city;
+	private String address;
+	private String description;
+	private String info1;
+	private String info2;
+	private String info3;
+	private String info4;
+	private String info5;
+	private int notifyHoursBefore;
+	private String notifyEmails;
+	private String notifySender;
+	private String notifyIntrotext;
+	private boolean notifySendSMS;
+	private String lng;
+	private int creatorId;
+	private int approve;
+	private boolean suggest;
+	private String hashString;
+	private int domainId;
+
+	/**
+	 *  Gets the calendarId attribute of the CalendarDetails object
+	 *
+	 *@return    The calendarId value
+	 */
+	public int getCalendarId()
+	{
+<span class="nc" id="L60">		return calendarId;</span>
+	}
+
+	/**
+	 *  Sets the calendarId attribute of the CalendarDetails object
+	 *
+	 *@param  calendarId  The new calendarId value
+	 */
+	public void setCalendarId(int calendarId)
+	{
+<span class="nc" id="L70">		this.calendarId = calendarId;</span>
+<span class="nc" id="L71">	}</span>
+
+	/**
+	 *  Sets the title attribute of the CalendarDetails object
+	 *
+	 *@param  title  The new title value
+	 */
+	public void setTitle(String title)
+	{
+<span class="nc" id="L80">		this.title = title;</span>
+<span class="nc" id="L81">	}</span>
+
+	/**
+	 *  Gets the title attribute of the CalendarDetails object
+	 *
+	 *@return    The title value
+	 */
+	public String getTitle()
+	{
+<span class="nc" id="L90">		return title;</span>
+	}
+
+	/**
+	 *  Sets the from attribute of the CalendarDetails object
+	 *
+	 *@param  from  The new from value
+	 */
+	public void setFrom(java.sql.Timestamp from)
+	{
+<span class="nc" id="L100">		this.from = from;</span>
+<span class="nc" id="L101">		l_from=from.getTime();</span>
+<span class="nc" id="L102">	}</span>
+
+	/**
+	 *  Gets the from attribute of the CalendarDetails object
+	 *
+	 *@return    The from value
+	 */
+	public java.sql.Timestamp getFrom()
+	{
+<span class="nc" id="L111">		return from;</span>
+	}
+
+	public long getFromLong()
+	{
+<span class="nc" id="L116">		return(l_from);</span>
+	}
+
+	public String getFromString()
+	{
+<span class="nc" id="L121">		return(formatter.format(new Date(l_from)));</span>
+	}
+
+	/**
+	 *  Sets the to attribute of the CalendarDetails object
+	 *
+	 *@param  to  The new to value
+	 */
+	public void setTo(java.sql.Timestamp to)
+	{
+<span class="nc" id="L131">		this.to = to;</span>
+<span class="nc" id="L132">		l_to = to.getTime();</span>
+<span class="nc" id="L133">	}</span>
+
+	/**
+	 *  Gets the to attribute of the CalendarDetails object
+	 *
+	 *@return    The to value
+	 */
+	public java.sql.Timestamp getTo()
+	{
+<span class="nc" id="L142">		return to;</span>
+	}
+
+	public long getToLong()
+	{
+<span class="nc" id="L147">		return(l_to);</span>
+	}
+
+	public String getToString()
+	{
+<span class="nc" id="L152">		return(formatter.format(new Date(l_to)));</span>
+	}
+
+	/**
+	 *  Sets the type attribute of the CalendarDetails object
+	 *
+	 *@param  type  The new type value
+	 */
+	public void setTypeId(int typeId)
+	{
+<span class="nc" id="L162">	 this.typeId = typeId;</span>
+<span class="nc" id="L163">	}</span>
+
+	/**
+	 *  Gets the type attribute of the CalendarDetails object
+	 *
+	 *@return    The type value
+	 */
+	public int getTypeId()
+	{
+<span class="nc" id="L172">	 return typeId;</span>
+	}
+	public void setBgColorIndex(int bgColorIndex)
+	{
+<span class="nc" id="L176">		this.bgColorIndex = bgColorIndex;</span>
+<span class="nc" id="L177">	}</span>
+	public int getBgColorIndex()
+	{
+<span class="nc" id="L180">		return bgColorIndex;</span>
+	}
+
+	public String getCircleImgString(javax.servlet.http.HttpServletRequest request)
+	{
+<span class="nc bnc" id="L185" title="All 2 branches missed.">	  if (typeId &lt;= 5)</span>
+<span class="nc" id="L186">		 return &quot;&lt;img src='/images/kruh_&quot; + typeId + &quot;.gif'&gt;&quot;;</span>
+	  else
+<span class="nc" id="L188">		 return EventTypeDB.getTypeName(typeId, request);</span>
+	}
+	public String getType()
+	{
+<span class="nc" id="L192">		return type;</span>
+	}
+	public void setType(String type)
+	{
+<span class="nc" id="L196">		this.type = type;</span>
+<span class="nc" id="L197">	}</span>
+	public String getTimeRange()
+	{
+<span class="nc" id="L200">		return timeRange;</span>
+	}
+	public void setTimeRange(String timeRange)
+	{
+<span class="nc" id="L204">		this.timeRange = timeRange;</span>
+<span class="nc" id="L205">	}</span>
+	public String getArea()
+	{
+<span class="nc" id="L208">		return area;</span>
+	}
+	public void setArea(String area)
+	{
+<span class="nc" id="L212">		this.area = area;</span>
+<span class="nc" id="L213">	}</span>
+	public String getCity()
+	{
+<span class="nc" id="L216">		return city;</span>
+	}
+	public void setCity(String city)
+	{
+<span class="nc" id="L220">		this.city = city;</span>
+<span class="nc" id="L221">	}</span>
+	public String getAddress()
+	{
+<span class="nc" id="L224">		return address;</span>
+	}
+	public void setAddress(String address)
+	{
+<span class="nc" id="L228">		this.address = address;</span>
+<span class="nc" id="L229">	}</span>
+  public String getDescription() {
+<span class="nc" id="L231">	 return description;</span>
+  }
+  public void setDescription(String description) {
+<span class="nc" id="L234">	 this.description = description;</span>
+<span class="nc" id="L235">  }</span>
+	public String getInfo1()
+	{
+<span class="nc" id="L238">		return info1;</span>
+	}
+	public void setInfo1(String info1)
+	{
+<span class="nc" id="L242">		this.info1 = info1;</span>
+<span class="nc" id="L243">	}</span>
+	public String getInfo2()
+	{
+<span class="nc" id="L246">		return info2;</span>
+	}
+	public void setInfo2(String info2)
+	{
+<span class="nc" id="L250">		this.info2 = info2;</span>
+<span class="nc" id="L251">	}</span>
+	public String getInfo3()
+	{
+<span class="nc" id="L254">		return info3;</span>
+	}
+	public void setInfo3(String info3)
+	{
+<span class="nc" id="L258">		this.info3 = info3;</span>
+<span class="nc" id="L259">	}</span>
+	public String getInfo4()
+	{
+<span class="nc" id="L262">		return info4;</span>
+	}
+	public void setInfo4(String info4)
+	{
+<span class="nc" id="L266">		this.info4 = info4;</span>
+<span class="nc" id="L267">	}</span>
+	public String getInfo5()
+	{
+<span class="nc" id="L270">		return info5;</span>
+	}
+	public void setInfo5(String info5)
+	{
+<span class="nc" id="L274">		this.info5 = info5;</span>
+<span class="nc" id="L275">	}</span>
+	public int getNotifyHoursBefore()
+	{
+<span class="nc" id="L278">		return notifyHoursBefore;</span>
+	}
+	public void setNotifyHoursBefore(int notifyHoursBefore)
+	{
+<span class="nc" id="L282">		this.notifyHoursBefore = notifyHoursBefore;</span>
+<span class="nc" id="L283">	}</span>
+	public String getNotifyEmails()
+	{
+<span class="nc" id="L286">		return notifyEmails;</span>
+	}
+	public void setNotifyEmails(String notifyEmails)
+	{
+<span class="nc" id="L290">		this.notifyEmails = notifyEmails;</span>
+<span class="nc" id="L291">	}</span>
+	public String getNotifySender()
+	{
+<span class="nc" id="L294">		return notifySender;</span>
+	}
+	public void setNotifySender(String notifySender)
+	{
+<span class="nc" id="L298">		this.notifySender = notifySender;</span>
+<span class="nc" id="L299">	}</span>
+	public String getNotifyIntrotext()
+	{
+<span class="nc" id="L302">		return notifyIntrotext;</span>
+	}
+	public void setNotifyIntrotext(String notifyIntrotext)
+	{
+<span class="nc" id="L306">		this.notifyIntrotext = notifyIntrotext;</span>
+<span class="nc" id="L307">	}</span>
+	public boolean isNotifySendSMS()
+	{
+<span class="nc" id="L310">		return notifySendSMS;</span>
+	}
+	public void setNotifySendSMS(boolean notifySendSMS)
+	{
+<span class="nc" id="L314">		this.notifySendSMS = notifySendSMS;</span>
+<span class="nc" id="L315">	}</span>
+	public String getLng()
+	{
+<span class="nc" id="L318">		return lng;</span>
+	}
+	public void setLng(String lng)
+	{
+<span class="nc" id="L322">		this.lng = lng;</span>
+<span class="nc" id="L323">	}</span>
+
+	public int getCreatorId()
+	{
+<span class="nc" id="L327">		return creatorId;</span>
+	}
+
+	public void setCreatorId(int creatorId)
+	{
+<span class="nc" id="L332">		this.creatorId = creatorId;</span>
+<span class="nc" id="L333">	}</span>
+
+	public int getApprove()
+	{
+<span class="nc" id="L337">		return approve;</span>
+	}
+
+	public void setApprove(int approve)
+	{
+<span class="nc" id="L342">		this.approve = approve;</span>
+<span class="nc" id="L343">	}</span>
+
+	public boolean isSuggest()
+	{
+<span class="nc" id="L347">		return suggest;</span>
+	}
+
+	public void setSuggest(boolean suggest)
+	{
+<span class="nc" id="L352">		this.suggest = suggest;</span>
+<span class="nc" id="L353">	}</span>
+
+	public String getHashString() {
+<span class="nc" id="L356">		return hashString;</span>
+	}
+
+	public void setHashString(String hashString) {
+<span class="nc" id="L360">		this.hashString = hashString;</span>
+<span class="nc" id="L361">	}</span>
+
+	public int getDomainId() {
+<span class="nc" id="L364">		return domainId;</span>
+	}
+
+	public void setDomainId(int domainId) {
+<span class="nc" id="L368">		this.domainId = domainId;</span>
+<span class="nc" id="L369">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

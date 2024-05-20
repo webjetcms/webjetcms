@@ -82,14 +82,21 @@ module.exports = {
     },
 
     clearFilter(name) {
+        //for date fields remove from- or to- prefix, there is only one search button
+        if (name.startsWith("from-")) name = name.substring(5);
+        if (name.startsWith("to-")) {
+            name = name.substring(3);
+            I.wait(2);
+        }
+
         I.click({ css: "#dt-filter-labels-link-" + name });
         this.waitForLoader();
     },
 
-    filterSelect(name, value) {
+    filterSelect(name, text) {
         if (name.indexOf(".") != -1) name = name.replace(/\./gi, "\\.");
         I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-" + name + " button.btn-outline-secondary" });
-        I.click(locate('div.dropdown-menu.show .dropdown-item').withText(value));
+        I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
         I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + name });
         this.waitForLoader();
     },

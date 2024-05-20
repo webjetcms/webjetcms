@@ -992,7 +992,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	/**
-	 * datum vytvorenia dokumentu, ako pocet milisekun od 1.1.1970
+	 * last save date as timestamp
 	 * @return
 	 */
 	public long getDateCreated()
@@ -1116,7 +1116,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	/**
-	 * naformatovany datum vytvorenia, format zalezi od konstanty "dateFormat", defaultne dd.MM.yyyy
+	 * formated last save date
 	 * @return
 	 */
 	@JsonIgnore
@@ -1129,8 +1129,14 @@ public class DocBasic implements DocGroupInterface, Serializable
 		return "";
 	}
 
+	@JsonIgnore
+	public String getLastUpdateDate()
+	{
+		return getDateCreatedString();
+	}
+
 	/**
-	 * naformatovany cas vytvorenia, format zalezi od konstanty "timeFormat", defaultne HH:mm
+	 * formated last save time
 	 * @return
 	 */
 	@JsonIgnore
@@ -1141,6 +1147,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			return(Tools.formatTime(dateCreated));
 		}
 		return("");
+	}
+
+	@JsonIgnore
+	public String getLastUpdateTime()
+	{
+		return getTimeCreatedString();
 	}
 
 	public void setPasswordProtected(String passwordProtected)

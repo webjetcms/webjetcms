@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProxyBySocket.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.proxy</a> &gt; <span class="el_source">ProxyBySocket.java</span></div><h1>ProxyBySocket.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.proxy;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.proxy.jpa.ProxyBean;
+import sk.iway.iwcm.doc.DocDB;
+
+/**
+ *  ProxyBySocket.java - proxy pomocou priameho soketoveho spojenia (nemodifikuje request)
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 10.11.2008 14:12:43
+ *@modified     $Date: 2009/04/01 09:11:40 $
+ */
+public class ProxyBySocket
+{
+	private static final String CRLF = &quot;\r\n&quot;;
+
+<span class="nc" id="L36">	protected ProxyBySocket() {</span>
+		//utility class
+<span class="nc" id="L38">	}</span>
+
+	/**
+	 * Vykona proxy podla aktualneho URL
+	 * @param req
+	 * @param response
+	 * @throws ServletException
+	 * @throws IOException
+	 */
+	public static void service(ProxyBean proxy, HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException
+	{
+<span class="nc" id="L49">		Logger.debug(ProxyBySocket.class, &quot;Proxy - service&quot;);</span>
+		//
+		// Connect to &quot;remote&quot; server:
+<span class="nc" id="L52">		Socket sock = null;</span>
+<span class="nc" id="L53">		OutputStream out = null;</span>
+<span class="nc" id="L54">		InputStream in = null;</span>
+<span class="nc" id="L55">		String path = null;</span>
+		//
+		try
+		{
+<span class="nc" id="L59">			String originalURI = req.getRequestURI();</span>
+
+<span class="nc" id="L61">			String localUrl = ProxyDB.getLocalUrl(proxy, originalURI);</span>
+<span class="nc" id="L62">			path = proxy.getRemoteUrl() + originalURI.substring(localUrl.length());</span>
+
+<span class="nc" id="L64">			sock = new Socket(proxy.getRemoteServer(), proxy.getRemotePort()); // !!!!!!!!</span>
+<span class="nc" id="L65">			out = new BufferedOutputStream(sock.getOutputStream());</span>
+<span class="nc" id="L66">			in = new BufferedInputStream(sock.getInputStream());</span>
+
+			// Build up a HTTP request from pure strings:
+<span class="nc" id="L69">			StringBuilder sb = new StringBuilder(200);</span>
+<span class="nc" id="L70">			sb.append(req.getMethod());</span>
+<span class="nc" id="L71">			sb.append(' ');</span>
+
+
+<span class="nc" id="L74">			req.setAttribute(&quot;path_filter_orig_path&quot;, originalURI);</span>
+<span class="nc" id="L75">			req.setAttribute(&quot;path_filter_proxy_path&quot;, path);</span>
+
+<span class="nc" id="L77">			boolean includeIntoPage = Proxy.isIncludeIntoPage(proxy, path);</span>
+
+<span class="nc" id="L79">			String qs = req.getQueryString();</span>
+
+<span class="nc" id="L81">			sb.append(path);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (qs != null)</span>
+			{
+<span class="nc" id="L84">				sb.append('?');</span>
+<span class="nc" id="L85">				appendCleaned(sb, qs);</span>
+			}
+<span class="nc" id="L87">			sb.append(' ');</span>
+<span class="nc" id="L88">			sb.append(&quot;HTTP/1.0&quot;);</span>
+<span class="nc" id="L89">			sb.append(CRLF);</span>
+<span class="nc" id="L90">			Logger.println(ProxyBySocket.class, sb.toString());</span>
+<span class="nc" id="L91">			out.write(sb.toString().getBytes());</span>
+
+<span class="nc" id="L93">			Enumeration&lt;String&gt; en = req.getHeaderNames();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			while (en.hasMoreElements())</span>
+			{
+<span class="nc" id="L96">				String key = en.nextElement();</span>
+				// Filter incoming headers:
+<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (&quot;Host&quot;.equalsIgnoreCase(key))</span>
+				{
+<span class="nc" id="L100">					sb.setLength(0);</span>
+<span class="nc" id="L101">					sb.append(key);</span>
+<span class="nc" id="L102">					sb.append(&quot;: &quot;);</span>
+<span class="nc" id="L103">					sb.append(proxy.getRemoteServer());</span>
+<span class="nc" id="L104">					sb.append(CRLF);</span>
+<span class="nc" id="L105">					Logger.println(ProxyBySocket.class, &quot;header: &quot; + key + &quot;: &quot; + sb + &quot; orig=&quot; + req.getHeader(key));</span>
+<span class="nc" id="L106">					out.write(sb.toString().getBytes());</span>
+				}
+<span class="nc bnc" id="L108" title="All 4 branches missed.">				else if (&quot;Connection&quot;.equalsIgnoreCase(key) || &quot;If-Modified-Since&quot;.equalsIgnoreCase(key) ||</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">							&quot;If-None-Match&quot;.equalsIgnoreCase(key) || &quot;Accept-Encoding&quot;.equalsIgnoreCase(key))</span>
+				{
+					//tieto preskakujem
+<span class="nc" id="L112">					Logger.println(ProxyBySocket.class, &quot;header: SKIP &quot; + key + &quot;: &quot; + req.getHeader(key));</span>
+				}
+				else
+				{
+<span class="nc" id="L116">					sb.setLength(0);</span>
+<span class="nc" id="L117">					sb.append(key);</span>
+<span class="nc" id="L118">					sb.append(&quot;: &quot;);</span>
+<span class="nc" id="L119">					sb.append(req.getHeader(key));</span>
+<span class="nc" id="L120">					sb.append(CRLF);</span>
+<span class="nc" id="L121">					Logger.println(ProxyBySocket.class, &quot;header: &quot; + key + &quot;: &quot; + req.getHeader(key));</span>
+<span class="nc" id="L122">					out.write(sb.toString().getBytes());</span>
+				}
+<span class="nc" id="L124">			}</span>
+			// Finish request header by an empty line
+<span class="nc" id="L126">			out.write(CRLF.getBytes());</span>
+
+			// Copy post data
+<span class="nc" id="L129">			InputStream inr = req.getInputStream();</span>
+<span class="nc" id="L130">			copyStream(inr, out);</span>
+<span class="nc" id="L131">			out.flush();</span>
+<span class="nc" id="L132">			Logger.println(ProxyBySocket.class, &quot;Remote request finished. Reading answer.&quot;);</span>
+			// Now we have finished the outgoing request.
+			// We'll now see, what is coming back from remote:
+			// Get the answer, treat its header and copy the stream data:
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (treatHeader(proxy, in, req, response))</span>
+			{
+<span class="nc" id="L138">				Logger.println(ProxyBySocket.class, &quot;getting response&quot;);</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				if (includeIntoPage)</span>
+				{
+					//vkladam vystup do WebJETu
+
+					// if ( debugFlag ) res.setContentType(&quot;text/plain&quot;);
+					//out = res.getOutputStream();
+<span class="nc" id="L146">					String outputData = fixData(proxy, originalURI, getStreamResponse(in));</span>
+<span class="nc" id="L147">					req.setAttribute(&quot;proxyOutputData&quot;, outputData);</span>
+
+					//ziskaj docid
+					//stranka ma nastavenu takuto virtualnu cestu
+<span class="nc" id="L151">					int docId = DocDB.getInstance().getVirtualPathDocId(originalURI, DocDB.getDomain(req));</span>
+<span class="nc" id="L152">					Logger.debug(ProxyBySocket.class, &quot;Forwarding to: &quot; + originalURI+&quot; (&quot;+docId+&quot;)&quot;);</span>
+<span class="nc" id="L153">					req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+docId).forward(req, response);</span>
+<span class="nc" id="L154">				}</span>
+				else
+				{
+<span class="nc" id="L157">					copyStream(in, response.getOutputStream());</span>
+				}
+			}
+			else
+			{
+<span class="nc" id="L162">				Logger.println(ProxyBySocket.class, &quot;header not treat&quot;);</span>
+			}
+		}
+<span class="nc" id="L165">		catch (IOException e)</span>
+		{
+<span class="nc" id="L167">			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, &quot;Socket opening: &quot; + proxy.getRemoteServer() + &quot;:&quot; + proxy.getRemotePort()+path);</span>
+		}
+		finally
+		{
+			try
+			{
+				// out.close();
+<span class="nc bnc" id="L174" title="All 2 branches missed.">				if(in != null)	in.close();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">				if(sock != null) sock.close();</span>
+			}
+<span class="nc" id="L177">			catch (IOException ignore)</span>
+			{
+<span class="nc" id="L179">				Logger.println(ProxyBySocket.class, &quot;Exception ignore &quot; + ignore);</span>
+<span class="nc" id="L180">			}</span>
+		}
+
+<span class="nc" id="L183">	}</span>
+
+	/**
+	 * Vykona upravy na vyslednom html kode
+	 * @param proxy
+	 * @param originalURI
+	 * @param data
+	 * @return
+	 */
+	private static String fixData(ProxyBean proxy, String originalURI, String data)
+	{
+<span class="nc bnc" id="L194" title="All 4 branches missed.">		if (Tools.isNotEmpty(proxy.getCropStart()) &amp;&amp; Tools.isNotEmpty(proxy.getCropEnd()) &amp;&amp;</span>
+<span class="nc bnc" id="L195" title="All 4 branches missed.">			 data.indexOf(proxy.getCropStart())!=-1 &amp;&amp; data.indexOf(proxy.getCropEnd())!=-1)</span>
+		{
+			try
+			{
+
+<span class="nc" id="L200">				data = ProxyDB.getCleanBodyIncludeStartNoEnd(data, proxy.getCropStart(), proxy.getCropEnd());</span>
+				//odstran zaciatok
+<span class="nc" id="L202">				data = data.substring(data.indexOf(&quot;&gt;&quot;, proxy.getCropStart().length()-1)+1);</span>
+			}
+<span class="nc" id="L204">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L206">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L207">			}</span>
+		}
+
+<span class="nc" id="L210">		data = replaceLinks(proxy, originalURI, data);</span>
+<span class="nc" id="L211">		return data;</span>
+	}
+
+	/**
+	 * Nahradi linky vo vystupnom HTML subore
+	 * @param proxy
+	 * @param data
+	 * @return
+	 */
+	private static String replaceLinks(ProxyBean proxy, String originalURI, String data)
+	{
+<span class="nc" id="L222">		data = data.replace(&quot;http://&quot;+proxy.getRemoteServer(), &quot;&quot;);</span>
+<span class="nc" id="L223">		data = data.replace(&quot;https://&quot;+proxy.getRemoteServer(), &quot;&quot;);</span>
+<span class="nc" id="L224">		data = data.replace(&quot;='&quot;+proxy.getRemoteUrl(), &quot;='&quot;+proxy.getLocalUrl());</span>
+<span class="nc" id="L225">		data = data.replace(&quot;=\&quot;&quot;+proxy.getRemoteUrl(), &quot;=\&quot;&quot;+proxy.getLocalUrl());</span>
+
+<span class="nc" id="L227">		return data;</span>
+	}
+
+	private static void appendCleaned(StringBuilder sb, String str)
+	{
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		for (int i = 0; i &lt; str.length(); i++)</span>
+		{
+<span class="nc" id="L234">			char ch = str.charAt(i);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (ch == ' ')</span>
+<span class="nc" id="L236">				sb.append(&quot;%20&quot;);</span>
+			else
+<span class="nc" id="L238">				sb.append(ch);</span>
+		}
+<span class="nc" id="L240">	}</span>
+
+	/**
+	 * Forward and filter header from backend Request.
+	 */
+	private static boolean treatHeader(ProxyBean proxy, InputStream in, HttpServletRequest req, HttpServletResponse response) throws ServletException
+	{
+<span class="nc" id="L247">		boolean retval = true;</span>
+<span class="nc" id="L248">		byte[] lineBytes = new byte[4096];</span>
+		int len;
+		String line;
+		try
+		{
+			// Read the first line of the request.
+<span class="nc" id="L254">			len = readLine(in, lineBytes);</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">			if (len == -1 || len == 0) throw new ServletException(&quot;No Request found in Data.&quot;);</span>
+
+<span class="nc" id="L257">			String line2 = new String(lineBytes, 0, len);</span>
+<span class="nc" id="L258">			Logger.println(ProxyBySocket.class, &quot;head: &quot; + line2 + &quot; &quot; + len);</span>
+
+			// We mainly skip the header by the foreign server
+			// assuming, that we can handle protocoll mismatch or so!
+			//res.setHeader(&quot;viaJTTP&quot;, &quot;JTTP&quot;);
+			// Some more headers require special care ....
+<span class="nc" id="L264">			boolean firstline = true;</span>
+			// Shortcut evaluation skips the read on first time!
+<span class="nc bnc" id="L266" title="All 4 branches missed.">			while (firstline || ((len = readLine(in, lineBytes)) &gt; 0))</span>
+			{
+<span class="nc" id="L268">				line = new String(lineBytes, 0, len);</span>
+<span class="nc" id="L269">				int colonPos = line.indexOf(':');</span>
+<span class="nc bnc" id="L270" title="All 4 branches missed.">				if (firstline &amp;&amp; colonPos == -1)</span>
+				{
+					// Special first line considerations ...
+<span class="nc" id="L273">					String[] headl = wordStr(line);</span>
+<span class="nc" id="L274">					Logger.println(ProxyBySocket.class, &quot;head: &quot; + line + &quot; &quot; + headl.length);</span>
+					try
+					{
+						//toto ohandluj nejako inak
+						//response.setStatus(Integer.parseInt(headl[1]));
+					}
+					catch (NumberFormatException ignore)
+					{
+						Logger.println(ProxyBySocket.class, &quot;ID exception: &quot; + headl);
+					}
+					catch (Exception panik)
+					{
+						Logger.println(ProxyBySocket.class, &quot;First line invalid!&quot;);
+						return true;
+					}
+<span class="nc" id="L289">				}</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				else if (colonPos != -1)</span>
+				{
+<span class="nc" id="L292">					String head = line.substring(0, colonPos);</span>
+					// Skip LWS (what is LWS)
+<span class="nc" id="L294">					int i = colonPos + 1;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">					while (isLWS(line.charAt(i)))</span>
+<span class="nc" id="L296">						i++;</span>
+<span class="nc" id="L297">					String value = line.substring(i);</span>
+<span class="nc" id="L298">					Logger.println(ProxyBySocket.class, &quot;&lt;&quot; + head + &quot;&gt;=&lt;&quot; + value + &quot;&gt;&quot;);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">					if (head.equalsIgnoreCase(&quot;Location&quot;))</span>
+					{
+<span class="nc" id="L301">						Logger.println(ProxyBySocket.class, &quot;Original location: &quot; + value);</span>
+
+<span class="nc bnc" id="L303" title="All 2 branches missed.">						if (value.startsWith(&quot;http&quot;))</span>
+						{
+<span class="nc" id="L305">							value = value.substring(value.indexOf('/', 10));</span>
+						}
+						//urci nove URL
+<span class="nc bnc" id="L308" title="All 2 branches missed.">						if (value.startsWith(proxy.getRemoteUrl())) value = proxy.getLocalUrl() + value.substring(proxy.getRemoteUrl().length());</span>
+
+						//dopln nasu cestu
+<span class="nc bnc" id="L311" title="All 2 branches missed.">						if (value.charAt(0)!='/') value = proxy.getLocalUrl() + value;</span>
+
+<span class="nc" id="L313">						Logger.println(ProxyBySocket.class, &quot;Redirecting to: &quot; + value);</span>
+
+<span class="nc" id="L315">						response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);</span>
+<span class="nc" id="L316">						response.setHeader(head, value);</span>
+
+					}
+<span class="nc bnc" id="L319" title="All 2 branches missed.">					else if (&quot;Set-Cookie&quot;.equalsIgnoreCase(head))</span>
+					{
+						//Logger.println(ProxyServlet.class, &quot;^- generic.&quot;);
+<span class="nc" id="L322">						response.setHeader(head, value);</span>
+					}
+<span class="nc bnc" id="L324" title="All 2 branches missed.">					else if (head.indexOf(&quot;Authenticate&quot;)!=-1)</span>
+					{
+<span class="nc" id="L326">						response.setStatus(401);</span>
+<span class="nc" id="L327">						response.setHeader(head, value);</span>
+<span class="nc" id="L328">						retval = false;</span>
+					}
+					else
+					{
+						//Logger.println(ProxyServlet.class, &quot;^- generic.&quot;);
+						//response.setHeader(head, value);
+					}
+				}
+				// We do not treat multiline continuation Headers here
+				// which have not occured anywhere yet.
+<span class="nc" id="L338">				firstline = false;</span>
+<span class="nc" id="L339">			}</span>
+		}
+<span class="nc" id="L341">		catch (IOException e)</span>
+		{
+<span class="nc" id="L343">			Logger.println(ProxyBySocket.class, &quot;Header skip problem:&quot;);</span>
+<span class="nc" id="L344">			throw new ServletException(&quot;Header skip problem: &quot; + e.getMessage());</span>
+<span class="nc" id="L345">		}</span>
+<span class="nc" id="L346">		Logger.println(ProxyBySocket.class, &quot;--------------&quot;);</span>
+<span class="nc" id="L347">		return retval;</span>
+	}
+
+	/**
+	 * Read a RFC2616 line from an InputStream:
+	 */
+	private static int readLine(InputStream in, byte[] b) throws IOException
+	{
+<span class="nc" id="L355">		int off2 = 0;</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		while (off2 &lt; b.length)</span>
+		{
+<span class="nc" id="L358">			int r = in.read();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			if (r == -1)</span>
+			{
+<span class="nc bnc" id="L361" title="All 2 branches missed.">				if (off2 == 0)</span>
+<span class="nc" id="L362">					return -1;</span>
+				break;
+			}
+<span class="nc bnc" id="L365" title="All 2 branches missed.">			if (r == 13)</span>
+<span class="nc" id="L366">				continue;</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">			if (r == 10)</span>
+<span class="nc" id="L368">				break;</span>
+<span class="nc" id="L369">			b[off2] = (byte) r;</span>
+<span class="nc" id="L370">			++off2;</span>
+<span class="nc" id="L371">		}</span>
+<span class="nc" id="L372">		return off2;</span>
+	}
+
+	/**
+	 * Copy a file from in to out. Sub-classes can override this in order to do
+	 * filtering of some sort.
+	 */
+	private static void copyStream(InputStream in, OutputStream out) throws IOException
+	{
+<span class="nc" id="L381">		BufferedInputStream bin = new BufferedInputStream(in);</span>
+<span class="nc" id="L382">		Logger.debug(ProxyBySocket.class, &quot;REQUEST: ------------------------------&quot;);</span>
+<span class="nc" id="L383">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L384">		byte[] buff = new byte[8000];</span>
+		int len;
+<span class="nc bnc" id="L386" title="All 2 branches missed.">		while ((len = bin.read(buff)) != -1)</span>
+		{
+<span class="nc" id="L388">			out.write(buff, 0, len);</span>
+<span class="nc" id="L389">			sb.append(new String(buff, 0, len));</span>
+		}
+<span class="nc" id="L391">		Logger.debug(ProxyBySocket.class, sb.toString());</span>
+<span class="nc" id="L392">		Logger.debug(ProxyBySocket.class, &quot;REQUEST KONIEC-------------------------&quot;);</span>
+<span class="nc" id="L393">	}</span>
+
+	private static String getStreamResponse(InputStream in) throws IOException
+	{
+<span class="nc" id="L397">		BufferedInputStream bin = new BufferedInputStream(in);</span>
+<span class="nc" id="L398">		Logger.debug(ProxyBySocket.class, &quot;RESPONSE: ------------------------------&quot;);</span>
+<span class="nc" id="L399">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L400">		byte[] buff = new byte[8000];</span>
+		int len;
+<span class="nc bnc" id="L402" title="All 2 branches missed.">		while ((len = bin.read(buff)) != -1)</span>
+		{
+			//System.out.print((char) b);
+			//out.write(b);
+<span class="nc" id="L406">			sb.append(new String(buff, 0, len));</span>
+		}
+<span class="nc" id="L408">		Logger.debug(ProxyBySocket.class, sb.toString());</span>
+<span class="nc" id="L409">		Logger.debug(ProxyBySocket.class, &quot;RESPONSE KONIEC-------------------------&quot;);</span>
+<span class="nc" id="L410">		return(sb.toString());</span>
+	}
+
+	/**
+	 * Split a blank separated string into
+	 */
+	private static String[] wordStr(String inp)
+	{
+<span class="nc" id="L418">		StringTokenizer tok = new StringTokenizer(inp, &quot; &quot;);</span>
+		int i;
+<span class="nc" id="L420">		int n = tok.countTokens();</span>
+<span class="nc" id="L421">		String[] res = new String[n];</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		for (i = 0; i &lt; n; i++)</span>
+<span class="nc" id="L423">			res[i] = tok.nextToken();</span>
+<span class="nc" id="L424">		return res;</span>
+	}
+
+	/**
+	 * Should identify RFC2616 LWS
+	 */
+	protected static boolean isLWS(char c)
+	{
+<span class="nc bnc" id="L432" title="All 2 branches missed.">		return c == ' ';</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

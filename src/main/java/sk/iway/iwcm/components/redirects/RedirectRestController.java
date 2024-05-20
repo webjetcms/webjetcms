@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
@@ -40,6 +41,19 @@ public class RedirectRestController extends DatatableRestControllerV2<UrlRedirec
         //Redirect this throu spec search
         DatatablePageImpl<UrlRedirectBean> page = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new UrlRedirectBean(), pageable));
         return page;
+    }
+
+    @Override
+    public UrlRedirectBean getOneItem(long id) {
+        UrlRedirectBean item = super.getOneItem(id);
+        if(Constants.getBoolean("multiDomainEnabled") && item != null && item.getId()>0 && item.getDomainName()!=null) {
+            //verify domainName
+            String domainName = CloudToolsForCore.getDomainName();
+            if (Tools.isNotEmpty(item.getDomainName()) && domainName.equals(item.getDomainName())==false) {
+                return null;
+            }
+        }
+        return item;
     }
 
     @Override

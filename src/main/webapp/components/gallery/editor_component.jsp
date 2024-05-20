@@ -190,8 +190,10 @@ function setFileBrowserPath(path) {
 					<div class="col-sm-8">
 						<div class="input-group">
 							<stripes:text name="dir" id="dir" size="60" class="form-control" />
-							<span onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=/images/',400,700,window.screenX+window.outerWidth,window.screenY)" class="input-group-addon btn green">
-								<i class="fa fa-link"></i>
+							<span class="input-group-btn">
+								<span onclick="popupExt('/admin/dialog_select_dir.jsp?rootDir=/images/',400,700,window.screenX+window.outerWidth,window.screenY)" class="input-group-addon btn green">
+									<i class="ti ti-focus-2"></i>
+								</span>
 							</span>
 						</div>
 					</div>

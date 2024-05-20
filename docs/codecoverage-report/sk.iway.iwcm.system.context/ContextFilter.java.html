@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContextFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.context</a> &gt; <span class="el_source">ContextFilter.java</span></div><h1>ContextFilter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.context;
+
+import java.io.IOException;
+import java.net.SocketException;
+import java.util.Collection;
+import java.util.List;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DebugTimer;
+
+/**
+ *  ContextFilter.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 20.7.2012 9:21:26
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+<span class="fc" id="L35">public class ContextFilter implements Filter</span>
+{
+	FilterConfig filterConfig;
+
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException
+   {
+<span class="fc" id="L42">		this.filterConfig = filterConfig;</span>
+<span class="fc" id="L43">   }</span>
+
+	@Override
+	public void destroy()
+   {
+	//
+<span class="fc" id="L49">   }</span>
+
+	@Override
+	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException
+	{
+<span class="fc" id="L54">		boolean debug = Constants.getBoolean(&quot;contextPathDebug&quot;);</span>
+
+<span class="fc" id="L56">		String path = null;</span>
+		try
+		{
+<span class="fc" id="L59">			HttpServletRequest req = (HttpServletRequest) servletRequest;</span>
+			//req.getSession().setAttribute(&quot;websphere&quot;, &quot;1&quot;);
+
+<span class="fc" id="L62">			String contextPathAdmin = Constants.getString(&quot;contextPathAdmin&quot;);</span>
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">			if (isRunning(req)==false &amp;&amp; Tools.isEmpty(contextPathAdmin))</span>
+			{
+<span class="fc" id="L65">				chain.doFilter(servletRequest, servletResponse);</span>
+<span class="fc" id="L66">				return;</span>
+			}
+
+<span class="nc" id="L69">			HttpServletResponse res = (HttpServletResponse) servletResponse;</span>
+<span class="nc" id="L70">			path = req.getRequestURI();</span>
+
+			//pred bypass NESMIE byt citany ziaden parameter!!!
+<span class="nc bnc" id="L73" title="All 6 branches missed.">			if (&quot;true&quot;.equals(servletRequest.getAttribute(&quot;PathFilter.bypass&quot;)) || path.indexOf(&quot;/mp4streaminghttp/&quot;)!=-1 || path.indexOf(&quot;/flvstreaminghttp/&quot;)!=-1)</span>
+			{
+				//request ziadno nemodifikujeme
+				try
+				{
+<span class="nc" id="L78">					chain.doFilter(servletRequest, servletResponse);</span>
+				}
+<span class="nc" id="L80">				catch (SocketException se)</span>
+				{
+					//toto neriesime
+<span class="nc" id="L83">				}</span>
+<span class="nc" id="L84">				return;</span>
+			}
+
+<span class="nc bnc" id="L87" title="All 20 branches missed.">			if (path.endsWith(&quot;/&quot;) || path.endsWith(&quot;.css&quot;) || path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.do&quot;) || path.endsWith(&quot;.html&quot;) || path.endsWith(&quot;.action&quot;) || path.endsWith(&quot;.aspx&quot;) || path.endsWith(&quot;.asp&quot;) || path.endsWith(&quot;.php&quot;))</span>
+			{
+<span class="nc" id="L89">				ContextResponseWrapper wrapper = new ContextResponseWrapper(res,req);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if (debug) Logger.debug(ContextFilter.class, &quot;Changing URL's in path:&quot;+path+&quot; ORIG SESSION ID=&quot;+req.getSession().getId());</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">				if (isRunning(req))</span>
+				{
+					//if (debug) Logger.debug(ContextFilter.class, &quot;Creating request wrapper, session=&quot;+req.getSession().getId()+&quot; path=&quot;+path);
+
+					//bezime na nejakom kontexte, musime ho pridat
+<span class="nc" id="L97">					ContextRequestWrapper contextRequest = new ContextRequestWrapper(req);</span>
+
+					//if (debug) Logger.debug(ContextFilter.class, &quot;docid=&quot;+contextRequest.getParameter(&quot;docid&quot;)+&quot; req1=&quot;+ ((HttpServletRequest)contextRequest).getParameter(&quot;docid&quot;)+&quot; req2=&quot;+((ServletRequest)contextRequest).getParameter(&quot;docid&quot;));
+
+<span class="nc" id="L101">					chain.doFilter(contextRequest, wrapper);</span>
+
+<span class="nc" id="L103">					doFilterAddContextPathImpl(contextRequest, res, path, wrapper, debug);</span>
+<span class="nc" id="L104">				}</span>
+				else
+				{
+					//sme ROOT kontext, ale admin cast bezi na nejakom kontexte, musime ho odstranit z URL adries
+<span class="nc" id="L108">					chain.doFilter(req, wrapper);</span>
+
+<span class="nc" id="L110">					doFilterRemoveContextPathImpl(req, res, path, contextPathAdmin, wrapper, debug);</span>
+				}
+
+<span class="nc" id="L113">			}</span>
+			else
+			{
+<span class="nc" id="L116">				chain.doFilter(servletRequest, servletResponse);</span>
+			}
+		}
+<span class="fc" id="L119">		catch (Exception e)</span>
+		{
+<span class="fc" id="L121">			Logger.println(ContextFilter.class, &quot;CHYBA URL:&quot;+path);</span>
+<span class="fc" id="L122">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L123">		}</span>
+<span class="fc" id="L124">	}</span>
+
+	/**
+	 * Prida k URL adresam, presmerovaniam atd kontext path
+	 * public je to kvoli 404.jsp
+	 * @param req
+	 * @param res
+	 * @param path
+	 * @param wrapper
+	 */
+	public static void doFilterAddContextPathImpl(HttpServletRequest req, HttpServletResponse res, String path, ContextResponseWrapper wrapper, boolean debug)
+	{
+		try
+		{
+			/*
+			Collection&lt;String&gt; cookieHeaders = res.getHeaders(&quot;Set-Cookie&quot;);
+			Logger.debug(ContextFilter.class, &quot;22222222222222 ORIG RESPONSE cookies=&quot;+cookieHeaders);
+			for (String value : cookieHeaders)
+			{
+				Logger.debug(ContextFilter.class, &quot;22222222222222 ORIG RESPONSE cookie HEADER, value=&quot;+value);
+				if (value.contains(&quot;JSESSIONID&quot;))
+				{
+					//Logger.debug(ContextFilter.class, &quot;ADDING ORIG RESPONSE cookie HEADER, value=&quot;+value);
+					//response.addHeader(&quot;Set-Cookie&quot;, value);
+				}
+			}
+			*/
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (wrapper.getRedirectURL() != null)</span>
+			{
+<span class="nc" id="L154">				writeCookies(wrapper, res, req);</span>
+
+<span class="nc bnc" id="L156" title="All 4 branches missed.">				if (wrapper.getRedirectURL().startsWith(req.getContextPath()) || wrapper.getRedirectURL().startsWith(&quot;http&quot;) ||</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">					 wrapper.getRedirectURL().startsWith(&quot;/&quot;)==false)</span>
+				{
+					//pre /wj7/showdoc.do, http://www.sme.sk, savedir.do
+<span class="nc bnc" id="L160" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Redirect URL:&quot;+wrapper.getRedirectURL());</span>
+<span class="nc" id="L161">					res.sendRedirect(wrapper.getRedirectURL());</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L165" title="All 2 branches missed.">					if (Tools.isSecure(req))</span>
+					{
+<span class="nc" id="L167">						String redirUrl = wrapper.getRedirectURL();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">						if (redirUrl.startsWith(&quot;http&quot;)==false) redirUrl = Tools.getBaseHref(req) + redirUrl;</span>
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">						if (debug) Logger.debug(ContextFilter.class, &quot;Redirect URL addcontext:&quot;+redirUrl);</span>
+<span class="nc" id="L171">						res.sendRedirect(redirUrl);</span>
+<span class="nc" id="L172">					}</span>
+					else
+					{
+<span class="nc bnc" id="L175" title="All 2 branches missed.">						if (debug) Logger.debug(ContextFilter.class, &quot;Redirect URL addcontext:&quot;+req.getContextPath()+wrapper.getRedirectURL());</span>
+<span class="nc" id="L176">						res.sendRedirect(req.getContextPath()+wrapper.getRedirectURL());</span>
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+					//Logger.debug(ContextFilter.class, &quot;222222222222222 ORIG RESPONSE HEADER names=&quot;+res);
+					//Logger.debug(ContextFilter.class, &quot;222222222222222 ORIG RESPONSE HEADER names=&quot;+res.getHeaderNames());
+
+					//zakomentovane kvoli WebSphere, pretoze to resetlo aj hlavicky a potom sa neobjavila JSESSIONID hlavicka korektne
+					//res.resetBuffer();
+				}
+				catch (Exception e)
+				{
+					sk.iway.iwcm.Logger.error(e);
+				}
+
+<span class="nc" id="L195">				DebugTimer dt = new DebugTimer(&quot;replacing url: &quot;+path);</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">				if (wrapper.getCharacterEncoding()!=null)</span>
+				{
+<span class="nc bnc" id="L199" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting characterEncoding:&quot;+wrapper.getCharacterEncoding());</span>
+<span class="nc" id="L200">					res.setCharacterEncoding(wrapper.getCharacterEncoding());</span>
+				}
+<span class="nc bnc" id="L202" title="All 2 branches missed.">				if (wrapper.getContentType()!=null)</span>
+				{
+<span class="nc bnc" id="L204" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting contentType:&quot;+wrapper.getContentType());</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">					if (wrapper.getContentType().indexOf(&quot;charset=&quot;)==-1)</span>
+					{
+<span class="nc" id="L207">						res.setContentType(wrapper.getContentType()+&quot;; charset=&quot; + SetCharacterEncodingFilter.selectEncoding(req));</span>
+					}
+					else
+					{
+<span class="nc" id="L211">						res.setContentType(wrapper.getContentType());</span>
+					}
+				}
+<span class="nc bnc" id="L214" title="All 2 branches missed.">				if (wrapper.getLocale()!=null)</span>
+				{
+<span class="nc bnc" id="L216" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting locale:&quot;+wrapper.getLocale());</span>
+<span class="nc" id="L217">					res.setLocale(wrapper.getLocale());</span>
+				}
+				//TODO: zamysliet sa nad tym, co s ostanymi hlavickami
+<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (wrapper.getHeader(&quot;Location&quot;)!=null)</span>
+				{
+<span class="nc" id="L222">					String redirect = wrapper.getHeader(&quot;Location&quot;);</span>
+<span class="nc bnc" id="L223" title="All 4 branches missed.">					if (redirect.toLowerCase().startsWith(&quot;http&quot;)==false &amp;&amp; redirect.startsWith(req.getContextPath())==false) redirect = req.getContextPath()+redirect;</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting Location:&quot;+redirect);</span>
+
+					//odstran dvojity context path
+<span class="nc" id="L227">					redirect = Tools.replace(redirect, req.getContextPath()+req.getContextPath(), req.getContextPath());</span>
+
+<span class="nc" id="L229">					res.setHeader(&quot;Location&quot;, redirect);</span>
+				}
+<span class="nc" id="L231">				setHeader(&quot;Content-Disposition&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L232">				setHeader(&quot;X-Robots-Tag&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L233">				setHeader(&quot;X-UA-Compatible&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L234">				setHeader(&quot;Content-Encoding&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L235">				setHeader(&quot;Cache-Control&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L236">				setHeader(&quot;Pragma&quot;, debug, wrapper, res);</span>
+<span class="nc" id="L237">				setHeader(&quot;Expires&quot;, debug, wrapper, res);</span>
+
+<span class="nc" id="L239">				writeCookies(wrapper, res, req);</span>
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">				if (wrapper.getErrorCode()!=0)</span>
+				{
+<span class="nc bnc" id="L243" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting error:&quot;+wrapper.getErrorCode()+&quot; message=&quot;+wrapper.getErrorMessage());</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">					if (wrapper.getErrorMessage()==null) res.sendError(wrapper.getErrorCode());</span>
+<span class="nc" id="L245">					else res.sendError(wrapper.getErrorCode(), wrapper.getErrorMessage());</span>
+				}
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				else if (wrapper.getStatusCode()!=0)</span>
+				{
+<span class="nc bnc" id="L249" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting status:&quot;+wrapper.getStatusCode());</span>
+<span class="nc" id="L250">					res.setStatus(wrapper.getStatusCode());</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L254" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting status 200&quot;);</span>
+<span class="nc" id="L255">					res.setStatus(HttpServletResponse.SC_OK);</span>
+				}
+
+
+<span class="nc" id="L259">				wrapper.writeResponseToOriginalOutput(req, false);</span>
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (debug) dt.diff(&quot;done&quot;);</span>
+			}
+		}
+<span class="nc" id="L264">		catch (Exception e)</span>
+		{
+<span class="nc" id="L266">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L267">		}</span>
+<span class="nc" id="L268">	}</span>
+
+	private static void setHeader(String name, boolean debug, ContextResponseWrapper wrapper, HttpServletResponse res)
+	{
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		if (wrapper.getHeader(name)!=null)</span>
+		{
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (debug) Logger.debug(ContextFilter.class, &quot;Setting &quot;+name+&quot;:&quot;+wrapper.getHeader(name));</span>
+<span class="nc" id="L275">			res.setHeader(name, wrapper.getHeader(name));</span>
+		}
+<span class="nc" id="L277">	}</span>
+
+	/**
+	 * Tato cast sa pouziva, ak admin cast je na nejakom kontexte a public cast je ako root aplikacia, je to tak v TB
+	 * @param req
+	 * @param res
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+	private void doFilterRemoveContextPathImpl(HttpServletRequest req, HttpServletResponse res, String path, String contextPathAdmin, ContextResponseWrapper wrapper, boolean debug)
+	{
+		try
+		{
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			if (wrapper.getRedirectURL() != null)</span>
+			{
+<span class="nc" id="L292">				writeCookies(wrapper, res, req);</span>
+
+<span class="nc bnc" id="L294" title="All 4 branches missed.">				if (wrapper.getRedirectURL().startsWith(contextPathAdmin) || wrapper.getRedirectURL().indexOf(contextPathAdmin)!=-1)</span>
+				{
+					//pre /wj7/showdoc.do, http://www.sme.sk, savedir.do
+<span class="nc" id="L297">					String redir = removeContextPath(contextPathAdmin, wrapper.getRedirectURL());</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Redirect URL removecontext:&quot;+wrapper.getRedirectURL()+&quot; removed=&quot;+redir);</span>
+<span class="nc" id="L299">					res.sendRedirect(redir);</span>
+<span class="nc" id="L300">				}</span>
+				else
+				{
+<span class="nc bnc" id="L303" title="All 2 branches missed.">					if (Tools.isSecure(req))</span>
+					{
+<span class="nc" id="L305">						String redirUrl = wrapper.getRedirectURL();</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">						if (redirUrl.startsWith(&quot;http&quot;)==false) redirUrl = Tools.getBaseHref(req)+redirUrl;</span>
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">						if (debug) Logger.debug(ContextFilter.class, &quot;INV Redirect URL (nowsecure):&quot;+redirUrl);</span>
+<span class="nc" id="L309">						res.sendRedirect(redirUrl);</span>
+<span class="nc" id="L310">					}</span>
+					else
+					{
+<span class="nc bnc" id="L313" title="All 2 branches missed.">						if (debug) Logger.debug(ContextFilter.class, &quot;INV Redirect URL:&quot;+wrapper.getRedirectURL());</span>
+<span class="nc" id="L314">						res.sendRedirect(wrapper.getRedirectURL());</span>
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+<span class="nc" id="L322">					res.reset();</span>
+				}
+<span class="nc" id="L324">				catch (Exception e)</span>
+				{
+<span class="nc" id="L326">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L327">				}</span>
+
+<span class="nc" id="L329">				DebugTimer dt = new DebugTimer(&quot;INV replacing url: &quot;+path);</span>
+
+<span class="nc" id="L331">				writeCookies(wrapper, res, req);</span>
+
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				if (wrapper.getCharacterEncoding()!=null)</span>
+				{
+<span class="nc bnc" id="L335" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting characterEncoding:&quot;+wrapper.getCharacterEncoding());</span>
+<span class="nc" id="L336">					res.setCharacterEncoding(wrapper.getCharacterEncoding());</span>
+				}
+				else
+				{
+<span class="nc bnc" id="L340" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV characterEncoding is NULL:&quot;+wrapper.getCharacterEncoding());</span>
+				}
+<span class="nc bnc" id="L342" title="All 2 branches missed.">				if (wrapper.getContentType()!=null)</span>
+				{
+<span class="nc bnc" id="L344" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting contentType:&quot;+wrapper.getContentType());</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">					if (wrapper.getContentType().indexOf(&quot;charset=&quot;)==-1)</span>
+					{
+<span class="nc" id="L347">						res.setContentType(wrapper.getContentType()+&quot;; charset=&quot; + SetCharacterEncodingFilter.selectEncoding(req));</span>
+					}
+					else
+					{
+<span class="nc" id="L351">						res.setContentType(wrapper.getContentType());</span>
+					}
+				}
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (wrapper.getLocale()!=null)</span>
+				{
+<span class="nc bnc" id="L356" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting locale:&quot;+wrapper.getLocale());</span>
+<span class="nc" id="L357">					res.setLocale(wrapper.getLocale());</span>
+				}
+				//TODO: zamysliet sa nad tym, co s ostanymi hlavickami
+<span class="nc bnc" id="L360" title="All 2 branches missed.">				if (wrapper.getHeader(&quot;Location&quot;)!=null)</span>
+				{
+<span class="nc" id="L362">					String redirect = wrapper.getHeader(&quot;Location&quot;);</span>
+<span class="nc bnc" id="L363" title="All 4 branches missed.">					if (redirect.startsWith(contextPathAdmin) || redirect.indexOf(contextPathAdmin)!=-1) redirect = removeContextPath(contextPathAdmin, redirect);</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting Location:&quot;+redirect);</span>
+<span class="nc" id="L365">					res.setHeader(&quot;Location&quot;, redirect);</span>
+				}
+<span class="nc bnc" id="L367" title="All 2 branches missed.">				if (wrapper.getHeader(&quot;Content-Disposition&quot;)!=null)</span>
+				{
+<span class="nc bnc" id="L369" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting Content-Disposition:&quot;+wrapper.getHeader(&quot;Content-Disposition&quot;));</span>
+<span class="nc" id="L370">					res.setHeader(&quot;Content-Disposition&quot;, wrapper.getHeader(&quot;Content-Disposition&quot;));</span>
+				}
+<span class="nc bnc" id="L372" title="All 2 branches missed.">				if (wrapper.getHeader(&quot;X-Robots-Tag&quot;)!=null)</span>
+				{
+<span class="nc bnc" id="L374" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;Setting X-Robots-Tag:&quot;+wrapper.getHeader(&quot;Content-Disposition&quot;));</span>
+<span class="nc" id="L375">					res.setHeader(&quot;X-Robots-Tag&quot;, wrapper.getHeader(&quot;X-Robots-Tag&quot;));</span>
+				}
+
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (wrapper.getErrorCode()!=0)</span>
+				{
+<span class="nc bnc" id="L380" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting error:&quot;+wrapper.getErrorCode()+&quot; message=&quot;+wrapper.getErrorMessage());</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">					if (wrapper.getErrorMessage()==null) res.sendError(wrapper.getErrorCode());</span>
+<span class="nc" id="L382">					else res.sendError(wrapper.getErrorCode(), wrapper.getErrorMessage());</span>
+				}
+<span class="nc bnc" id="L384" title="All 2 branches missed.">				else if (wrapper.getStatusCode()!=0)</span>
+				{
+<span class="nc bnc" id="L386" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting status:&quot;+wrapper.getStatusCode());</span>
+<span class="nc" id="L387">					res.setStatus(wrapper.getStatusCode());</span>
+
+					/*
+					if (404==wrapper.getStatusCode())
+					{
+						String contentType = &quot;text/html; charset=&quot; + SetCharacterEncodingFilter.selectEncoding(req);
+						if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting 404 B contentType:&quot;+contentType);
+						res.setCharacterEncoding(SetCharacterEncodingFilter.selectEncoding(req));
+						res.setContentType(contentType);
+					}
+					*/
+				}
+				else
+				{
+<span class="nc bnc" id="L401" title="All 2 branches missed.">					if (debug) Logger.debug(ContextFilter.class, &quot;INV Setting status 200&quot;);</span>
+<span class="nc" id="L402">					res.setStatus(HttpServletResponse.SC_OK);</span>
+				}
+
+<span class="nc" id="L405">				wrapper.writeResponseToOriginalOutput(req, true);</span>
+
+<span class="nc bnc" id="L407" title="All 2 branches missed.">				if (debug) dt.diff(&quot;INV done&quot;);</span>
+			}
+		}
+<span class="nc" id="L410">		catch (Exception e)</span>
+		{
+<span class="nc" id="L412">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L413">		}</span>
+<span class="nc" id="L414">	}</span>
+
+	/**
+	 * Vrati true ak sa pouziva ContextFilter, inak false
+	 * @param request
+	 * @return
+	 */
+	public static boolean isRunning(HttpServletRequest request)
+	{
+<span class="pc bpc" id="L423" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(request.getContextPath()) &amp;&amp; &quot;/&quot;.equals(request.getContextPath())==false) return true;</span>
+<span class="fc" id="L424">		return false;</span>
+	}
+
+	/**
+	 * Opravi cesty pre dany HTML kod
+	 * @param htmlCode
+	 * @return
+	 */
+	public static String addContextPath(String contextPath, String htmlCode)
+	{
+		//DebugTimer dt = new DebugTimer(&quot;replacing, size=&quot;+htmlCode.length());
+
+<span class="pc bpc" id="L436" title="3 of 4 branches missed.">		if (Tools.isEmpty(contextPath) || &quot;/&quot;.equals(contextPath)) return htmlCode;</span>
+
+<span class="nc bnc" id="L438" title="All 8 branches missed.">		if (htmlCode.startsWith(&quot;/&quot;) &amp;&amp; htmlCode.startsWith(contextPath)==false &amp;&amp; htmlCode.length() &lt; 2048 &amp;&amp; htmlCode.indexOf('\n')==-1)</span>
+		{
+			//dt.diff(&quot;replace done JE TO URL: &quot;+htmlCode);
+			//asi sa jedna o samostatnu URL adresu
+<span class="nc" id="L442">			return contextPath+htmlCode;</span>
+		}
+
+		//TODO: spravit optimalnejsie, nielen cez Tools.replace
+<span class="nc" id="L446">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/admin/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/admin/&quot;);</span>
+<span class="nc" id="L447">		htmlCode = Tools.replace(htmlCode, &quot;'/admin/&quot;, &quot;'&quot;+contextPath+&quot;/admin/&quot;);</span>
+<span class="nc" id="L448">		htmlCode = Tools.replace(htmlCode, &quot;/components/&quot;, contextPath+&quot;/components/&quot;);</span>
+<span class="nc" id="L449">		htmlCode = Tools.replace(htmlCode, &quot;'/css/&quot;, &quot;'&quot;+contextPath+&quot;/css/&quot;);</span>
+<span class="nc" id="L450">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/css/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/css/&quot;);</span>
+
+<span class="nc" id="L452">		htmlCode = Tools.replace(htmlCode, &quot;/jscripts/&quot;, contextPath+&quot;/jscripts/&quot;);</span>
+<span class="nc" id="L453">		htmlCode = Tools.replace(htmlCode, &quot;/showdoc.do&quot;, contextPath+&quot;/showdoc.do&quot;);</span>
+<span class="nc" id="L454">		htmlCode = Tools.replace(htmlCode, &quot;/formmail.do&quot;, contextPath+&quot;/formmail.do&quot;);</span>
+<span class="nc" id="L455">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/FormMailAjax.action&quot;, &quot;\&quot;&quot;+contextPath+&quot;/FormMailAjax.action&quot;);</span>
+<span class="nc" id="L456">		htmlCode = Tools.replace(htmlCode, &quot;/preview.do&quot;, contextPath+&quot;/preview.do&quot;);</span>
+<span class="nc" id="L457">		htmlCode = Tools.replace(htmlCode, &quot;/chat.do&quot;, contextPath+&quot;/chat.do&quot;);</span>
+<span class="nc" id="L458">		htmlCode = Tools.replace(htmlCode, &quot;(\&quot;/inquiry.&quot;, &quot;(\&quot;&quot;+contextPath+&quot;/inquiry.&quot;);</span>
+<span class="nc" id="L459">		htmlCode = Tools.replace(htmlCode, &quot;href=\&quot;/&quot;, &quot;href=\&quot;&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L460">		htmlCode = Tools.replace(htmlCode, &quot;href='/&quot;, &quot;href='&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L461">		htmlCode = Tools.replace(htmlCode, &quot;src=\&quot;/&quot;, &quot;src=\&quot;&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L462">		htmlCode = Tools.replace(htmlCode, &quot;src='/&quot;, &quot;src='&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L463">		htmlCode = Tools.replace(htmlCode, &quot;action=\&quot;/&quot;, &quot;action=\&quot;&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L464">		htmlCode = Tools.replace(htmlCode, &quot;url(/&quot;, &quot;url(&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L465">		htmlCode = Tools.replace(htmlCode, &quot;url('/&quot;, &quot;url('&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L466">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/images/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/images/&quot;);</span>
+<span class="nc" id="L467">		htmlCode = Tools.replace(htmlCode, &quot;'/images/&quot;, &quot;'&quot;+contextPath+&quot;/images/&quot;);</span>
+<span class="nc" id="L468">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/thumb/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/thumb/&quot;);</span>
+<span class="nc" id="L469">		htmlCode = Tools.replace(htmlCode, &quot;'/thumb/&quot;, &quot;'&quot;+contextPath+&quot;/thumb/&quot;);</span>
+<span class="nc" id="L470">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/files/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/files/&quot;);</span>
+<span class="nc" id="L471">		htmlCode = Tools.replace(htmlCode, &quot;'/files/&quot;, &quot;'&quot;+contextPath+&quot;/files/&quot;);</span>
+<span class="nc" id="L472">		htmlCode = Tools.replace(htmlCode, &quot;wjPopup('/&quot;, &quot;wjPopup('&quot;+contextPath+&quot;/&quot;);</span>
+<span class="nc" id="L473">		htmlCode = Tools.replace(htmlCode, &quot;\&quot;/templates/&quot;, &quot;\&quot;&quot;+contextPath+&quot;/templates/&quot;);</span>
+<span class="nc" id="L474">		htmlCode = Tools.replace(htmlCode, &quot;'/templates/&quot;, &quot;'&quot;+contextPath+&quot;/templates/&quot;);</span>
+
+		//fix na dvojite nastavenie
+<span class="nc" id="L477">		htmlCode = Tools.replace(htmlCode, contextPath+contextPath, contextPath);</span>
+<span class="nc" id="L478">		htmlCode = Tools.replace(htmlCode, contextPath+contextPath, contextPath);</span>
+<span class="nc" id="L479">		htmlCode = Tools.replace(htmlCode, &quot;!INCLUDE(&quot;+contextPath, &quot;!INCLUDE(&quot;);</span>
+<span class="nc" id="L480">		htmlCode = Tools.replace(htmlCode, contextPath+&quot;/admin/m&quot;+contextPath, contextPath+&quot;/admin/m&quot;);</span>
+<span class="nc" id="L481">		htmlCode = Tools.replace(htmlCode, &quot;/sitemap&quot;+contextPath+&quot;/jscripts/&quot;, &quot;/sitemap/jscripts/&quot;);</span>
+<span class="nc" id="L482">		htmlCode = Tools.replace(htmlCode, &quot;/calendar&quot;+contextPath+&quot;/jscripts/&quot;, &quot;/calendar/jscripts/&quot;);</span>
+<span class="nc" id="L483">		htmlCode = Tools.replace(htmlCode, contextPath+&quot;/thumb&quot;+contextPath, contextPath+&quot;/thumb&quot;);</span>
+<span class="nc" id="L484">		htmlCode = Tools.replace(htmlCode, &quot;/assets&quot;+contextPath+&quot;/admin/&quot;, &quot;/assets/admin/&quot;);</span>
+
+		//Logger.debug(ContextFilter.class, &quot;addContextPath, cp=&quot;+contextPath+&quot; in=&quot;+Constants.getInstallName());
+<span class="nc bnc" id="L487" title="All 2 branches missed.">		if (contextPath.equals(&quot;/&quot;+Constants.getInstallName())==false)</span>
+		{
+			///web/components/web/admin/admin_appstore.jsp
+<span class="nc" id="L490">			htmlCode = Tools.replace(htmlCode, contextPath+&quot;/components&quot;+contextPath+&quot;/admin/&quot;, contextPath+&quot;/components/admin/&quot;);</span>
+			///web/components/infolib/web/admin/admin_migracia_adresar.jsp
+<span class="nc" id="L492">			htmlCode = Tools.replace(htmlCode, &quot;/&quot;+Constants.getInstallName()+contextPath+&quot;/admin/&quot;,  &quot;/&quot;+Constants.getInstallName()+&quot;/admin/&quot;);</span>
+		}
+
+
+		//ajax dotazy priamo na Stripes
+<span class="nc" id="L497">		htmlCode = Tools.replace(htmlCode, &quot;/sk/iway/iwcm&quot;+contextPath+&quot;/components/&quot;, contextPath+&quot;/sk/iway/iwcm/components/&quot;);</span>
+		//cesty v admin casti k pomocnikovi
+<span class="nc" id="L499">		htmlCode = Tools.replace(htmlCode, &quot;='sk&quot;+contextPath+&quot;/&quot;, &quot;='sk/&quot;);</span>
+<span class="nc" id="L500">		htmlCode = Tools.replace(htmlCode, &quot;='cz&quot;+contextPath+&quot;/&quot;, &quot;='cz/&quot;);</span>
+<span class="nc" id="L501">		htmlCode = Tools.replace(htmlCode, &quot;='en&quot;+contextPath+&quot;/&quot;, &quot;='en/&quot;);</span>
+<span class="nc" id="L502">		htmlCode = Tools.replace(htmlCode, &quot;/sk&quot;+contextPath+&quot;/&quot;, &quot;/sk/&quot;);</span>
+<span class="nc" id="L503">		htmlCode = Tools.replace(htmlCode, &quot;/cz&quot;+contextPath+&quot;/&quot;, &quot;/cz/&quot;);</span>
+<span class="nc" id="L504">		htmlCode = Tools.replace(htmlCode, &quot;/en&quot;+contextPath+&quot;/&quot;, &quot;/en/&quot;);</span>
+<span class="nc" id="L505">		htmlCode = Tools.replace(htmlCode, &quot;/imageeditor&quot;+contextPath+&quot;/&quot;, &quot;/imageeditor/&quot;);</span>
+
+		//common adresar s admin castou
+<span class="nc" id="L508">		htmlCode = Tools.replace(htmlCode, &quot;/_common&quot;+contextPath+&quot;/admin&quot;, &quot;/_common/admin&quot;);</span>
+
+		//fixnutie url typu //www.facebook.com
+<span class="nc" id="L511">		htmlCode = Tools.replace(htmlCode, contextPath+&quot;//www.&quot;, &quot;//www.&quot;);</span>
+
+<span class="nc" id="L513">		String contextFilterAddPathReplaces = Constants.getString(&quot;contextFilterAddPathReplaces&quot;);</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">		if (Tools.isNotEmpty(contextFilterAddPathReplaces))</span>
+		{
+<span class="nc" id="L516">			htmlCode = doPathReplace(htmlCode, contextFilterAddPathReplaces, contextPath);</span>
+		}
+
+		//dt.diff(&quot;replace done&quot;);
+
+<span class="nc" id="L521">		return htmlCode;</span>
+	}
+
+	/**
+	 * Vykona nahradu pathReplaces vo formate  stary|novy\n
+	 * pouziva sa pre constants premenne contextFilterAddPathReplaces a contextFilterRemovePathReplaces
+	 * @param htmlCode
+	 * @param pathReplaces
+	 * @param contextPath
+	 * @return
+	 */
+	private static String doPathReplace(String htmlCode, String pathReplaces, String contextPath)
+	{
+		try
+		{
+<span class="nc" id="L536">			String[] replaces = Tools.getTokens(pathReplaces, &quot;\n&quot;);</span>
+<span class="nc bnc" id="L537" title="All 4 branches missed.">			if (replaces==null || replaces.length==0) return htmlCode;</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">			for (String pair : replaces)</span>
+			{
+<span class="nc bnc" id="L540" title="All 2 branches missed.">				if (Tools.isEmpty(pair)) continue;</span>
+
+<span class="nc" id="L542">				pair = Tools.replace(pair, &quot;{CP}&quot;, contextPath);</span>
+
+<span class="nc" id="L544">				String[] pairArray = pair.split(&quot;\\|&quot;);</span>
+<span class="nc bnc" id="L545" title="All 4 branches missed.">				if (pairArray==null || pairArray.length!=2) continue;</span>
+
+<span class="nc" id="L547">				htmlCode = Tools.replace(htmlCode, pairArray[0], pairArray[1]);</span>
+			}
+		}
+<span class="nc" id="L550">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L552">		}</span>
+
+<span class="nc" id="L554">		return htmlCode;</span>
+	}
+
+	/**
+	 * Odstrani z HTML kodu odkaz na ContextPath
+	 * @param contextPath
+	 * @param htmlCode
+	 * @return
+	 */
+	public static String removeContextPath(String contextPath, String htmlCode)
+	{
+<span class="nc bnc" id="L565" title="All 2 branches missed.">		if (Tools.isEmpty(htmlCode)) return htmlCode;</span>
+
+		//Logger.debug(ContextFilter.class, &quot;removeContextPath, html=&quot;+htmlCode);
+
+<span class="nc" id="L569">		htmlCode = Tools.replace(htmlCode, contextPath+&quot;/&quot;, &quot;/&quot;);</span>
+
+<span class="nc" id="L571">		String contextFilterRemovePathReplaces = Constants.getString(&quot;contextFilterRemovePathReplaces&quot;);</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">		if (Tools.isNotEmpty(contextFilterRemovePathReplaces))</span>
+		{
+<span class="nc" id="L574">			htmlCode = doPathReplace(htmlCode, contextFilterRemovePathReplaces, contextPath);</span>
+		}
+
+		//Logger.debug(ContextFilter.class, &quot;removeContextPath, html ret=&quot;+htmlCode);
+
+<span class="nc" id="L579">		return htmlCode;</span>
+	}
+
+	private static void writeCookies(ContextResponseWrapper wrapper, HttpServletResponse response, HttpServletRequest request)
+	{
+		//pridaj session cookie
+		try
+		{
+			//Logger.debug(ContextFilter.class, &quot;setting SESSION ID cookie, id=&quot;+request.getSession().getId());
+			//uz asi netreba, robilo problem na WebSphere, na Tomcate bezi aj bez tohto
+			/*
+			if (request.getSession()!=null &amp;&amp; request.getSession().getId()!=null)
+			{
+				String requestValue = Tools.getCookieValue(request.getCookies(), &quot;JSESSIONID&quot;, null);
+				if (requestValue==null || requestValue.equals(request.getSession().getId())==false)
+				{
+					String cookiePath = request.getContextPath();
+					if (Tools.isEmpty(cookiePath)) cookiePath = &quot;/&quot;;
+
+					//response.addHeader(&quot;Set-Cookie&quot;, &quot;JSESSIONID=&quot;+request.getSession().getId()+&quot;; Path=&quot;+cookiePath+&quot;; HttpOnly&quot;);
+				}
+			}
+			*/
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+		}
+
+<span class="nc" id="L608">		List&lt;Cookie&gt; cookies = wrapper.getCookies();</span>
+<span class="nc bnc" id="L609" title="All 4 branches missed.">		if (cookies != null &amp;&amp; cookies.size()&gt;0)</span>
+		{
+<span class="nc bnc" id="L611" title="All 2 branches missed.">			for (Cookie c : cookies)</span>
+			{
+<span class="nc" id="L613">				Logger.debug(ContextFilter.class, &quot;addCookie: &quot;+c.getName()+&quot; &quot;+c.getPath()+&quot; &quot;+c.getValue());</span>
+
+<span class="nc" id="L615">				Tools.addCookie(c, response, request);</span>
+<span class="nc" id="L616">			}</span>
+		}
+
+<span class="nc" id="L619">		boolean debug = Constants.getBoolean(&quot;contextPathDebug&quot;);</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">		if (debug)</span>
+		{
+<span class="nc" id="L622">			Collection&lt;String&gt; cookieHeaders = response.getHeaders(&quot;Set-Cookie&quot;);</span>
+<span class="nc bnc" id="L623" title="All 2 branches missed.">			for (String value : cookieHeaders)</span>
+			{
+<span class="nc" id="L625">				Logger.debug(ContextFilter.class, &quot;ORIG RESPONSE cookie HEADER, value=&quot;+value);</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">				if (value.contains(&quot;JSESSIONID&quot;))</span>
+				{
+					//Logger.debug(ContextFilter.class, &quot;ADDING ORIG RESPONSE cookie HEADER, value=&quot;+value);
+					//response.addHeader(&quot;Set-Cookie&quot;, value);
+				}
+<span class="nc" id="L631">			}</span>
+		}
+<span class="nc" id="L633">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

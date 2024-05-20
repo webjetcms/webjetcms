@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DmailUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">DmailUtil.java</span></div><h1>DmailUtil.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import sk.iway.iwcm.Cache;
+
+/**
+ * Various util methods for emails/newsletters
+ */
+public class DmailUtil {
+
+    private DmailUtil() {
+        //this is Util class with only static methods
+    }
+
+    /**
+     * Returns unsubscribed emails, cached for 2 minutes (for use during excel import)
+     * @return
+     */
+    public static Set&lt;String&gt; getUnsubscribedEmails() {
+<span class="fc" id="L23">        Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L24">        String cacheKey = &quot;sk.iway.iwcm.dmail.unsubscribedEmails&quot;;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L26">        Set&lt;String&gt; unsubscribedEmailsSet = cache.getObject(cacheKey, Set.class);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (unsubscribedEmailsSet == null) {</span>
+<span class="fc" id="L28">            Map&lt;String, Integer&gt; unsubscribedEmailsTable = EmailDB.getHashtableFromUnsubscribedEmails();</span>
+<span class="fc" id="L29">            unsubscribedEmailsSet = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L30">            unsubscribedEmailsSet.addAll(unsubscribedEmailsTable.keySet());</span>
+<span class="fc" id="L31">            cache.setObjectSeconds(cacheKey, unsubscribedEmailsSet, 120, true);</span>
+        }
+<span class="fc" id="L33">        return unsubscribedEmailsSet;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

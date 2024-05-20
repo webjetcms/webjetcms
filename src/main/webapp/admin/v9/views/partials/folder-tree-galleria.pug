@@ -3,19 +3,15 @@ include ../pug/mixins
 <div class="dt-header-row clearfix">
     <div class="dt-buttons">
         <button class="btn btn-sm buttons-create btn-success buttons-divider" type="button" data-toggle="tooltip modal" data-th-title="\#{button.add}" data-target="#galleryFolderEdit">
-            <span><i class="far fa-plus"></i></span>
+            <span><i class="ti ti-plus"></i></span>
         </button>
 
         <button class="btn btn-sm buttons-selected buttons-edit btn-warning" data-toggle="tooltip modal" data-th-title="\#{button.edit}" data-target="#galleryFolderEdit">
-            <span><i class="far fa-pencil"></i></span>
+            <span><i class="ti ti-pencil"></i></span>
         </button>
 
         <button class="btn btn-sm buttons-selected buttons-remove btn-danger buttons-divider" data-toggle="tooltip" data-th-title="\#{button.delete}">
-            <span><i class="far fa-trash-alt"></i></span>
-        </button>
-
-        <button class="btn btn-sm btn-outline-secondary buttons-refresh" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
-            <span><i class="fa-duotone fa-rotate"></i></span>
+            <span><i class="ti ti-trash"></i></span>
         </button>
 
         <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
@@ -23,12 +19,16 @@ include ../pug/mixins
             <label class="form-check-label is-icon-arrows-v" for="treeAllowDragDrop"></label>
         </div>
 
-        <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
-            <span><i class="far fa-wrench"></i></span>
+        <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
+            <span><i class="ti ti-adjustments-horizontal"></i></span>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
+            <span><i class="ti ti-refresh"></i></span>
         </button>
 
         <button style="display: none;" class="btn btn-sm btn-outline-secondary buttons-settings" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
-            <span><i class="far fa-wrench"></i></span>
+            <span><i class="ti ti-adjustments-horizontal"></i></span>
         </button>
 
     </div>
@@ -60,15 +60,15 @@ include ../pug/mixins
                           option(value=val) #{val}:#{12-val}
                 .col-sm-1.form-group-tooltip
                   button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.treeWidth.tooltip}')
-                    i.far.fa-info-circle
+                    i.ti.ti-info-circle
       .modal-footer.DTE_Footer
         .DTE_Form_Error
         button.btn.btn-link(type='button' onclick='WJ.showHelpWindow()')
-          i.far.fa-question-circle
+          i.ti.ti-info-circle
           |  [[\#{button.help}]]
         button.btn.btn-outline-secondary.btn-close-editor(type='button' data-bs-dismiss='modal')
-          i.fal.fa-times
+          i.ti.ti-x
           |  [[\#{button.cancel}]]
         button#jstree-settings-submit.btn.btn-primary(type='button')
-          i.fal.fa-check
+          i.ti.ti-check
           |  [[\#{button.submit}]]

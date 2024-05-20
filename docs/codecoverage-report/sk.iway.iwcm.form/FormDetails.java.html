@@ -1,0 +1,780 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.form</a> &gt; <span class="el_source">FormDetails.java</span></div><h1>FormDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.form;
+
+import org.apache.struts.util.ResponseUtils;
+import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UserDetails;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+
+/**
+ *  Description of the Class
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.7 $
+ *@created      Streda, 2002, jún 26
+ *@modified     $Date: 2003/12/16 18:36:26 $
+ */
+<span class="fc" id="L28">public class FormDetails</span>
+{
+	private int id;
+	private String formName;
+	private String data;
+	private String files;
+	private String createDateString;
+	private boolean header;
+	private long createDate;
+	private String html;
+	private Map&lt;String, Integer&gt; colNames;
+	private String note;
+<span class="fc" id="L40">	private UserDetails userDetails = null;</span>
+<span class="fc" id="L41">	private long lastExportDate = 0;</span>
+	int docId;
+	private Date doubleOptInDate;
+
+	private Date crDate;
+
+	public Date getCrDate()
+	{
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		return crDate == null ? null : (Date) crDate.clone();</span>
+	}
+
+	public void setCrDate(Date crDate)
+	{
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		this.crDate = crDate == null ? null : (Date) crDate.clone();</span>
+<span class="nc" id="L55">	}</span>
+
+	/**
+	 *  Gets the tableRow attribute of the FormDetails object
+	 *
+	 *@return    The tableRow value
+	 */
+	public String getTableRow()
+	{
+<span class="nc" id="L64">		String begin = &quot;&lt;td class='sort_td'&gt;&quot;;</span>
+<span class="nc" id="L65">		String end = &quot;&lt;/td&gt;&quot;;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (header)</span>
+		{
+<span class="nc" id="L68">			begin = &quot;&lt;td class='sort_thead_td' type='CaseInsensitiveString' nowrap&gt;&quot;;</span>
+<span class="nc" id="L69">			end = &quot;&lt;/td&gt;&quot;;</span>
+		}
+
+<span class="nc" id="L72">		String[] td = getColumnsSortedAsArray();</span>
+
+<span class="nc" id="L74">		int i = td.length;</span>
+		int counter;
+<span class="nc" id="L76">		StringBuilder ret = new StringBuilder();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (counter=0; counter&lt;i; counter++)</span>
+		{
+<span class="nc" id="L79">			String text = td[counter];</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			if (Tools.isEmpty(text))</span>
+			{
+<span class="nc" id="L82">				text = &quot;&amp;nbsp;&quot;;</span>
+			}
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (text.length() &gt; 100)</span>
+			{
+				//text = text.substring(0, 90) + &quot;...&quot;;
+<span class="nc" id="L87">				text = &quot;&lt;div style='width:140px;height:80px;overflow: auto;'&gt;&quot;+text+&quot;&lt;/div&gt;&quot;;</span>
+			}
+<span class="nc" id="L89">			ret.append(begin).append(text).append(end).append('\n');</span>
+		}
+
+<span class="nc" id="L92">		return (ret).toString();</span>
+	}
+
+<span class="fc" id="L95">	private String[] tdCached = null;</span>
+
+	/**
+	 * Vrati hodnoty pre bunky tabulky vypisu presne v poradi ako je hlavicka
+	 * @return
+	 */
+	public String[] getColumnsSortedAsArray()
+	{
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (tdCached != null) return tdCached.clone();</span>
+
+<span class="nc" id="L105">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		String field;
+		int i;
+		Integer iInteger;
+<span class="nc" id="L110">		int counter = 0;</span>
+
+<span class="nc" id="L112">		i = st.countTokens();</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">		if (colNames!=null &amp;&amp; colNames.size()&gt;1)</span>
+		{
+<span class="nc" id="L115">			i = colNames.size();</span>
+		}
+
+<span class="nc" id="L118">		String[] td = new String[i];</span>
+
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L123">			text = st.nextToken();</span>
+<span class="nc" id="L124">			field = null;</span>
+			try
+			{
+<span class="nc" id="L127">				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (i&gt;0)</span>
+				{
+<span class="nc" id="L130">					field = text.substring(0, i);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (i&lt;text.length())</span>
+					{
+<span class="nc" id="L133">						text = text.substring(i+1);</span>
+					}
+				}
+<span class="nc bnc" id="L136" title="All 2 branches missed.">				else if (i==0)</span>
+				{
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					if (text.length() == 1)</span>
+					{
+<span class="nc" id="L140">						text = &quot;&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L144">						text = text.substring(1);</span>
+					}
+				}
+			}
+<span class="nc" id="L148">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L151">			}</span>
+
+			//if (text.compareTo(&quot;\t&quot;)==0) continue;
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (text.trim().length() &lt; 1)</span>
+			{
+<span class="nc" id="L156">				text = &quot;&amp;nbsp;&quot;;</span>
+			}
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			if (header)</span>
+			{
+<span class="nc" id="L160">				text = text.replace('_', ' ');</span>
+			}
+<span class="nc" id="L162">			text = text.trim();</span>
+
+<span class="nc" id="L164">			i = counter;</span>
+<span class="nc bnc" id="L165" title="All 6 branches missed.">			if (colNames!=null &amp;&amp; field!=null &amp;&amp; field.length()&gt;0)</span>
+			{
+<span class="nc" id="L167">				iInteger = colNames.get(field);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				if (iInteger!=null)</span>
+				{
+<span class="nc" id="L170">					i = iInteger.intValue();</span>
+				}
+			}
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (i&lt;td.length)</span>
+			{
+<span class="nc" id="L175">				td[i] = CryptoFactory.decrypt(text);</span>
+			}
+
+<span class="nc" id="L178">			counter++;</span>
+		}
+<span class="nc" id="L180">		tdCached = td;</span>
+<span class="nc" id="L181">		return td;</span>
+	}
+
+	/**
+	 * vrati hodnotu v stlpci daneho mena
+	 * @param name
+	 * @return
+	 */
+	public String getColumn(String columnName)
+	{
+<span class="nc" id="L191">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		String field;
+		int i;
+		//int counter = 0;
+
+<span class="nc" id="L197">		i = st.countTokens();</span>
+<span class="nc bnc" id="L198" title="All 4 branches missed.">		if (colNames!=null &amp;&amp; colNames.size()&gt;1)</span>
+		{
+<span class="nc" id="L200">			i = colNames.size();</span>
+		}
+
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L206">			text = st.nextToken();</span>
+<span class="nc" id="L207">			field = null;</span>
+			try
+			{
+<span class="nc" id="L210">				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">				if (i&gt;0)</span>
+				{
+<span class="nc" id="L213">					field = text.substring(0, i);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">					if (i&lt;text.length())</span>
+					{
+<span class="nc" id="L216">						text = text.substring(i+1);</span>
+					}
+				}
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				else if (i==0)</span>
+				{
+<span class="nc bnc" id="L221" title="All 2 branches missed.">					if (text.length() == 1)</span>
+					{
+<span class="nc" id="L223">						text = &quot;&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L227">						text = text.substring(1);</span>
+					}
+				}
+			}
+<span class="nc" id="L231">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L234">			}</span>
+
+			//if (text.compareTo(&quot;\t&quot;)==0) continue;
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if (text.trim().length() &lt; 1)</span>
+			{
+<span class="nc" id="L239">				text = &quot;&amp;nbsp;&quot;;</span>
+			}
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (header)</span>
+			{
+<span class="nc" id="L243">				text = text.replace('_', ' ');</span>
+			}
+<span class="nc" id="L245">			text = text.trim();</span>
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (columnName.equalsIgnoreCase(field))</span>
+			{
+<span class="nc" id="L249">				return(text);</span>
+			}
+
+			//counter++;
+		}
+
+<span class="nc" id="L255">		return (&quot;&quot;);</span>
+	}
+
+
+	/**
+	 * vrati zoznam stlpcov
+	 * @return
+	 */
+	public List&lt;LabelValueDetails&gt; getColNamesArray()
+	{
+<span class="nc" id="L265">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		String field;
+		int i;
+		Integer iInteger;
+<span class="nc" id="L270">		int counter = 0;</span>
+
+<span class="nc" id="L272">		i = st.countTokens();</span>
+<span class="nc bnc" id="L273" title="All 4 branches missed.">		if (colNames!=null &amp;&amp; colNames.size()&gt;1)</span>
+		{
+<span class="nc" id="L275">			i = colNames.size();</span>
+		}
+
+<span class="nc" id="L278">		String[] td = new String[i];</span>
+
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L283">			text = st.nextToken();</span>
+<span class="nc" id="L284">			field = null;</span>
+			try
+			{
+<span class="nc" id="L287">				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">				if (i&gt;0)</span>
+				{
+<span class="nc" id="L290">					field = text.substring(0, i);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">					if (i&lt;text.length())</span>
+					{
+<span class="nc" id="L293">						text = text.substring(i+1);</span>
+					}
+				}
+<span class="nc bnc" id="L296" title="All 2 branches missed.">				else if (i==0)</span>
+				{
+<span class="nc bnc" id="L298" title="All 2 branches missed.">					if (text.length() == 1)</span>
+					{
+<span class="nc" id="L300">						text = &quot;&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L304">						text = text.substring(1);</span>
+					}
+				}
+			}
+<span class="nc" id="L308">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L311">			}</span>
+
+			//if (text.compareTo(&quot;\t&quot;)==0) continue;
+<span class="nc bnc" id="L314" title="All 2 branches missed.">			if (text.trim().length() &lt; 1)</span>
+			{
+<span class="nc" id="L316">				text = &quot;&amp;nbsp;&quot;;</span>
+			}
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (header)</span>
+			{
+<span class="nc" id="L320">				text = text.replace('_', ' ');</span>
+			}
+<span class="nc" id="L322">			text = text.trim();</span>
+
+<span class="nc" id="L324">			i = counter;</span>
+<span class="nc bnc" id="L325" title="All 6 branches missed.">			if (colNames!=null &amp;&amp; field!=null &amp;&amp; field.length()&gt;0)</span>
+			{
+<span class="nc" id="L327">				iInteger = colNames.get(field);</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">				if (iInteger!=null)</span>
+				{
+<span class="nc" id="L330">					i = iInteger.intValue();</span>
+				}
+			}
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (i&lt;td.length)</span>
+			{
+<span class="nc" id="L335">				td[i] = text;</span>
+			}
+
+<span class="nc" id="L338">			counter++;</span>
+		}
+
+<span class="nc" id="L341">		i = td.length;</span>
+<span class="nc" id="L342">		List&lt;LabelValueDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+		LabelValueDetails lvd;
+		String selected;
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		for (counter=0; counter&lt;i; counter++)</span>
+		{
+<span class="nc" id="L347">			text = td[counter];</span>
+<span class="nc bnc" id="L348" title="All 4 branches missed.">			if (text==null || text.length()&lt;1)</span>
+			{
+<span class="nc" id="L350">				text = &quot;&quot;;</span>
+			}
+<span class="nc" id="L352">			selected=&quot;&quot;;</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">			if (&quot;email&quot;.equals(text))</span>
+			{
+<span class="nc" id="L355">				selected=&quot;selected&quot;;</span>
+			}
+<span class="nc" id="L357">			lvd = new LabelValueDetails(text, selected);</span>
+<span class="nc" id="L358">			ret.add(lvd);</span>
+		}
+
+<span class="nc" id="L361">		return (ret);</span>
+	}
+
+	/**
+	 * Vrati hashtabulku s nazvami a hodnotami poli
+	 * @return
+	 */
+	public Map&lt;String,String&gt; getNameValueTable()
+	{
+<span class="nc" id="L370">		Map&lt;String,String&gt; nameValueTable = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L372">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		String field;
+		int i;
+
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L380">			text = st.nextToken();</span>
+<span class="nc" id="L381">			field = null;</span>
+			try
+			{
+<span class="nc" id="L384">				i = text.indexOf('~');</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">				if (i&gt;0)</span>
+				{
+<span class="nc" id="L387">					field = text.substring(0, i);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if (i&lt;text.length())</span>
+					{
+<span class="nc" id="L390">						text = text.substring(i+1);</span>
+					}
+				}
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				else if (i==0)</span>
+				{
+<span class="nc bnc" id="L395" title="All 2 branches missed.">					if (text.length() == 1)</span>
+					{
+<span class="nc" id="L397">						text = &quot;&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L401">						text = text.substring(1);</span>
+					}
+				}
+
+<span class="nc" id="L405">				nameValueTable.put(field, text);</span>
+			}
+<span class="nc" id="L407">			catch (Exception ex)</span>
+			{
+
+<span class="nc" id="L410">			}</span>
+
+
+		}
+
+<span class="nc" id="L415">		return (nameValueTable);</span>
+	}
+
+
+	/**
+	 *  Gets the createDateHtml attribute of the FormDetails object
+	 *
+	 *@return    The createDateHtml value
+	 */
+	public String getCreateDateHtml()
+	{
+<span class="nc" id="L426">		return(createDateString);</span>
+	}
+
+	/**
+	 *  Gets the createDateXLS attribute of the FormDetails object
+	 *
+	 *@return    The createDateXLS value
+	 */
+	public String getCreateDateXLS()
+	{
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		if (header)</span>
+		{
+<span class="nc" id="L438">			return (&quot;Dátum\t&quot;);</span>
+		}
+		else
+		{
+<span class="nc" id="L442">			return (createDateString + &quot;\t&quot;);</span>
+		}
+	}
+
+	/**
+	 *  Gets the rowCSV attribute of the FormDetails object
+	 *
+	 *@return    The rowCSV value
+	 */
+	public String getRowCSV()
+	{
+<span class="nc" id="L453">		StringBuilder ret = new StringBuilder();</span>
+<span class="nc" id="L454">		String begin = &quot;&quot;;</span>
+<span class="nc" id="L455">		String end = &quot;\t&quot;;</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">		if (header)</span>
+		{
+<span class="nc" id="L458">			begin = &quot;&quot;;</span>
+<span class="nc" id="L459">			end = &quot;\t&quot;;</span>
+		}
+<span class="nc" id="L461">		StringTokenizer st = new StringTokenizer(data, &quot;|&quot;);</span>
+		String text;
+		//bereme aj separatory, takze kazdy druhy je \t
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L466">			text = st.nextToken();</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">			if (text.startsWith(&quot;~&quot;))</span>
+			{
+<span class="nc bnc" id="L469" title="All 2 branches missed.">				if (text.length() == 1)</span>
+				{
+<span class="nc" id="L471">					text = &quot;&quot;;</span>
+				}
+				else
+				{
+<span class="nc" id="L475">					text = text.substring(1);</span>
+				}
+			}
+<span class="nc bnc" id="L478" title="All 2 branches missed.">			if (header)</span>
+			{
+<span class="nc" id="L480">				text = text.replace('_', ' ');</span>
+			}
+<span class="nc" id="L482">			text = text.trim();</span>
+<span class="nc" id="L483">			ret.append(begin).append(text).append(end);</span>
+		}
+<span class="nc" id="L485">		return (ret.append('\n')).toString();</span>
+	}
+
+	/**
+	 *  Gets the tableAttachements attribute of the FormDetails object
+	 *
+	 *@return    The tableAttachements value
+	 */
+	public String getAttachements()
+	{
+<span class="nc" id="L495">		return(getAttachements(&quot;&quot;));</span>
+	}
+
+	public String getAttachements(String baseHref)
+	{
+<span class="pc bpc" id="L500" title="3 of 4 branches missed.">		if (files==null || files.length()&lt;1) return(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L501">		String ret = null;</span>
+<span class="nc" id="L502">		StringTokenizer st = new StringTokenizer(files, &quot;,&quot;);</span>
+		String name;
+		String link;
+		int index;
+<span class="nc" id="L506">		StringBuilder retBuffer = null;</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+		{
+<span class="nc" id="L509">			link = st.nextToken();</span>
+<span class="nc" id="L510">			index = link.indexOf('_');</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">			if (index &gt; 0)</span>
+			{
+				try
+				{
+<span class="nc" id="L515">					name = link.substring(index + 1);</span>
+				}
+<span class="nc" id="L517">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L519">					name = link;</span>
+<span class="nc" id="L520">				}</span>
+			}
+			else
+			{
+<span class="nc" id="L524">				name = link;</span>
+			}
+<span class="nc bnc" id="L526" title="All 2 branches missed.">			if (retBuffer == null)</span>
+			{
+<span class="nc" id="L528">				retBuffer = new StringBuilder();</span>
+<span class="nc" id="L529">				retBuffer.append(&quot;&lt;a class='sort_link' target='_blank' href='&quot;).append(baseHref).append(&quot;/apps/forms/admin/attachment/?name=&quot;).append(link).append(&quot;'&gt;&quot;).append(name).append(&quot;&lt;/a&gt;&quot;);</span>
+			}
+			else
+			{
+<span class="nc" id="L533">				retBuffer.append(&quot;, &lt;a class='sort_link' target='_blank' href='&quot;).append(baseHref)</span>
+<span class="nc" id="L534">				.append(&quot;/apps/forms/admin/attachment/?name=&quot;).append(link).append(&quot;'&gt;&quot;).append(name).append(&quot;&lt;/a&gt;&quot;);</span>
+			}
+
+		}
+<span class="nc bnc" id="L538" title="All 2 branches missed.">		if (retBuffer!=null) ret = retBuffer.toString();</span>
+<span class="nc bnc" id="L539" title="All 2 branches missed.">		if (ret == null)</span>
+		{
+<span class="nc" id="L541">			ret = &quot;&amp;nbsp;&quot;;</span>
+		}
+<span class="nc" id="L543">		return (ret);</span>
+	}
+
+	/**
+	 *  Gets the id attribute of the FormDetails object
+	 *
+	 *@return    The id value
+	 */
+	public int getId()
+	{
+<span class="nc" id="L553">		return id;</span>
+	}
+
+	/**
+	 *  Sets the id attribute of the FormDetails object
+	 *
+	 *@param  id  The new id value
+	 */
+	public void setId(int id)
+	{
+<span class="nc" id="L563">		this.id = id;</span>
+<span class="nc" id="L564">	}</span>
+
+	/**
+	 *  Sets the formName attribute of the FormDetails object
+	 *
+	 *@param  formName  The new formName value
+	 */
+	public void setFormName(String formName)
+	{
+<span class="nc" id="L573">		this.formName = formName;</span>
+<span class="nc" id="L574">	}</span>
+
+	/**
+	 *  Gets the formName attribute of the FormDetails object
+	 *
+	 *@return    The formName value
+	 */
+	public String getFormName()
+	{
+<span class="nc" id="L583">		return formName;</span>
+	}
+
+	/**
+	 *  Sets the data attribute of the FormDetails object
+	 *
+	 *@param  data  The new data value
+	 */
+	public void setData(String data)
+	{
+<span class="nc bnc" id="L593" title="All 4 branches missed.">		if (data.contains(&quot;&lt;&quot;) || data.contains(&quot;&gt;&quot;))</span>
+		{
+			//aktualny kod escapuje znaky uz na urovni IwcmRequest objektu, na stare data ktore mozu obsahovat XSS ale radsej pouzijeme toto
+<span class="nc" id="L596">			this.data = ResponseUtils.filter(data);</span>
+		}
+		else
+		{
+<span class="nc" id="L600">			this.data = data;</span>
+		}
+<span class="nc" id="L602">	}</span>
+
+	/**
+	 *  Gets the data attribute of the FormDetails object
+	 *
+	 *@return    The data value
+	 */
+	public String getData()
+	{
+<span class="nc" id="L611">		return data;</span>
+	}
+
+	/**
+	 *  Sets the files attribute of the FormDetails object
+	 *
+	 *@param  files  The new files value
+	 */
+	public void setFiles(String files)
+	{
+<span class="fc" id="L621">		this.files = files;</span>
+<span class="fc" id="L622">	}</span>
+
+	/**
+	 *  Gets the files attribute of the FormDetails object
+	 *
+	 *@return    The files value
+	 */
+	public String getFiles()
+	{
+<span class="nc" id="L631">		return files;</span>
+	}
+
+	/**
+	 *  Sets the createDateString attribute of the FormDetails object
+	 *
+	 *@param  createDateString  The new createDateString value
+	 */
+	public void setCreateDateString(String createDateString)
+	{
+<span class="nc" id="L641">		this.createDateString = createDateString;</span>
+<span class="nc" id="L642">	}</span>
+
+	/**
+	 *  Gets the createDateString attribute of the FormDetails object
+	 *
+	 *@return    The createDateString value
+	 */
+	public String getCreateDateString()
+	{
+<span class="nc" id="L651">		return createDateString;</span>
+	}
+
+	/**
+	 *  Sets the header attribute of the FormDetails object
+	 *
+	 *@param  header  The new header value
+	 */
+	public void setHeader(boolean header)
+	{
+<span class="nc" id="L661">		this.header = header;</span>
+<span class="nc" id="L662">	}</span>
+
+	/**
+	 *  Gets the header attribute of the FormDetails object
+	 *
+	 *@return    The header value
+	 */
+	public boolean isHeader()
+	{
+<span class="nc" id="L671">		return header;</span>
+	}
+
+	/**
+	 *  Sets the createDate attribute of the FormDetails object
+	 *
+	 *@param  createDate  The new createDate value
+	 */
+	public void setCreateDate(long createDate)
+	{
+<span class="nc" id="L681">		this.createDate = createDate;</span>
+<span class="nc" id="L682">	}</span>
+
+	/**
+	 *  Gets the createDate attribute of the FormDetails object
+	 *
+	 *@return    The createDate value
+	 */
+	public long getCreateDate()
+	{
+<span class="nc" id="L691">		return createDate;</span>
+	}
+
+	/**
+	 *  Sets the html attribute of the FormDetails object
+	 *
+	 *@param  html  The new html value
+	 */
+	public void setHtml(String html)
+	{
+<span class="nc" id="L701">		this.html = html;</span>
+<span class="nc" id="L702">	}</span>
+
+	/**
+	 *  Gets the html attribute of the FormDetails object
+	 *
+	 *@return    The html value
+	 */
+	public String getHtml()
+	{
+<span class="nc" id="L711">		return html;</span>
+	}
+	public void setColNames(Map&lt;String, Integer&gt; colNames)
+	{
+<span class="nc" id="L715">		this.colNames = colNames;</span>
+<span class="nc" id="L716">	}</span>
+	public Map&lt;String, Integer&gt; getColNames()
+	{
+		//do NOT clone() this, callers may want to modify the content!
+<span class="nc" id="L720">		return colNames;</span>
+	}
+	public String getNote()
+	{
+<span class="nc" id="L724">		return note;</span>
+	}
+	public void setNote(String note)
+	{
+<span class="nc" id="L728">		this.note = note;</span>
+<span class="nc" id="L729">	}</span>
+	public sk.iway.iwcm.users.UserDetails getUserDetails()
+	{
+<span class="nc bnc" id="L732" title="All 2 branches missed.">		if (userDetails == null)</span>
+		{
+<span class="nc" id="L734">			userDetails = new UserDetails();</span>
+		}
+<span class="nc" id="L736">		return userDetails;</span>
+	}
+	public void setUserDetails(sk.iway.iwcm.users.UserDetails userDetails)
+	{
+<span class="nc" id="L740">		this.userDetails = userDetails;</span>
+<span class="nc" id="L741">	}</span>
+
+	public long getLastExportDate()
+	{
+<span class="nc" id="L745">		return lastExportDate;</span>
+	}
+
+	public String getLastExportDateString()
+	{
+<span class="nc bnc" id="L750" title="All 2 branches missed.">		if (lastExportDate &gt; 1000)</span>
+		{
+<span class="nc" id="L752">			return(Tools.formatDateTime(lastExportDate));</span>
+		}
+<span class="nc" id="L754">		return &quot;&amp;nbsp;&quot;;</span>
+	}
+
+	public void setLastExportDate(long lastExportDate)
+	{
+<span class="nc" id="L759">		this.lastExportDate = lastExportDate;</span>
+<span class="nc" id="L760">	}</span>
+
+	public int getDocId()
+	{
+<span class="nc" id="L764">		return docId;</span>
+	}
+
+	public void setDocId(int docId)
+	{
+<span class="nc" id="L769">		this.docId = docId;</span>
+<span class="nc" id="L770">	}</span>
+
+	public Date getDoubleOptInDate() {
+<span class="nc" id="L773">		return doubleOptInDate;</span>
+	}
+
+	public void setDoubleOptInDate(Date doubleOptInDate) {
+<span class="nc" id="L777">		this.doubleOptInDate = doubleOptInDate;</span>
+<span class="nc" id="L778">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

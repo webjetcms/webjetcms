@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.io</a> &gt; <span class="el_source">IwcmInputStream.java</span></div><h1>IwcmInputStream.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.io;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
+
+/**
+ * IwcmInputStream.java
+ *
+ * @Title webjet4
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2008
+ * @author $Author: jeeff $
+ * @version $Revision: 1.6 $
+ * @created Date: 24.6.2008 12:46:59
+ * @modified $Date: 2009/05/11 10:10:50 $
+ */
+public class IwcmInputStream extends InputStream
+{
+	private File file;
+<span class="pc" id="L32">	private boolean isDBStorage = false;</span>
+<span class="pc" id="L33">	private boolean isJarPackaging = false;</span>
+<span class="pc" id="L34">	private FileInputStream in = null;</span>
+<span class="pc" id="L35">	private InputStream is = null;</span>
+<span class="pc" id="L36">	private int step = 0;</span>
+<span class="pc" id="L37">	private int readedBlockCount = 0;</span>
+	private ArrayList&lt;Integer&gt; nodeIds;
+<span class="pc" id="L39">	private int fatId=-1;</span>
+
+	public IwcmInputStream(File f) throws FileNotFoundException
+<span class="fc" id="L42">	{</span>
+<span class="fc" id="L43">		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());</span>
+
+<span class="fc" id="L45">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="fc" id="L46">		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);</span>
+<span class="fc" id="L47">		file = f;</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">		if (isJarPackaging)</span>
+		{
+<span class="nc" id="L50">			is = JarPackaging.getInputStream(virtualPath);</span>
+		}
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">		else if (!isDBStorage)</span>
+		{
+<span class="fc" id="L54">			in = new FileInputStream(f);</span>
+		}
+<span class="fc" id="L56">	}</span>
+
+	public IwcmInputStream(IwcmFile f) throws FileNotFoundException
+	{
+<span class="fc" id="L60">		this(new File(f.getPath()));</span>
+<span class="fc" id="L61">	}</span>
+
+	public IwcmInputStream(File f,int fatId)
+<span class="nc" id="L64">	{</span>
+<span class="nc" id="L65">		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());</span>
+<span class="nc" id="L66">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="nc" id="L67">		file=new File(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (fatId &gt; 0) this.fatId=fatId;</span>
+<span class="nc" id="L69">	}</span>
+
+	public IwcmInputStream(String virtualPath,int fatId)
+<span class="nc" id="L72">	{</span>
+<span class="nc" id="L73">		this.fatId=fatId;</span>
+<span class="nc" id="L74">		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+<span class="nc" id="L75">		file=new File(Tools.getRealPath(virtualPath));</span>
+<span class="nc" id="L76">	}</span>
+
+	public IwcmInputStream(String filename) throws FileNotFoundException
+	{
+<span class="fc" id="L80">		this(filename, false);</span>
+<span class="fc" id="L81">	}</span>
+
+	public IwcmInputStream(String virtualPath, boolean isVirtualPath) throws FileNotFoundException
+<span class="fc" id="L84">	{</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (isVirtualPath)</span>
+		{
+<span class="nc" id="L87">			isDBStorage = IwcmFsDB.useDBStorage(virtualPath);</span>
+		}
+		else
+		{
+<span class="fc" id="L91">			isDBStorage = IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(virtualPath));</span>
+		}
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (!isDBStorage)</span>
+		{
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">			if (!isVirtualPath)</span>
+			{
+<span class="fc" id="L97">				in = new FileInputStream(new File(virtualPath));</span>
+			}
+			else
+			{
+<span class="nc" id="L101">				in = new FileInputStream(new File(Tools.getRealPath(virtualPath)));</span>
+			}
+		}
+		else
+		{
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (!isVirtualPath)</span>
+			{
+<span class="nc" id="L108">				file = new File(virtualPath);</span>
+			}
+			else
+			{
+<span class="nc" id="L112">				file = new File(Tools.getRealPath(virtualPath));</span>
+			}
+		}
+<span class="fc" id="L115">	}</span>
+
+	@Override
+	public int read() throws IOException
+	{
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (!loadFile())</span>
+			{
+<span class="nc" id="L124">				return -1;</span>
+			}
+<span class="nc" id="L126">			step++;</span>
+<span class="nc" id="L127">			return is.read();</span>
+		}
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L131">			return is.read();</span>
+		}
+		else
+		{
+<span class="fc" id="L135">			return in.read();</span>
+		}
+	}
+
+	@Override
+	public int read(byte[] result) throws IOException
+	{
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (!loadFile())</span>
+			{
+<span class="nc" id="L146">				return -1;</span>
+			}
+<span class="nc" id="L148">			int bytesRead = is.read(result);</span>
+<span class="nc" id="L149">			step += bytesRead;</span>
+<span class="nc" id="L150">			return bytesRead;</span>
+		}
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L154">			return is.read(result);</span>
+		}
+		else
+		{
+<span class="fc" id="L158">			return in.read(result);</span>
+		}
+	}
+
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException
+	{
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			if (!loadFile())</span>
+			{
+<span class="nc" id="L169">				return -1;</span>
+			}
+<span class="nc" id="L171">			int bytesRead = is.read(b, off, len);</span>
+<span class="nc" id="L172">			step += bytesRead;</span>
+			//Logger.debug(IwcmInputStream.class, &quot;read step=&quot;+step+&quot; bytesRead=&quot;+bytesRead);
+<span class="nc" id="L174">			return bytesRead;</span>
+		}
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L178">			return is.read(b, off, len);</span>
+		}
+		else
+		{
+<span class="fc" id="L182">			return in.read(b, off, len);</span>
+		}
+	}
+
+	@Override// close je potrebne zavolat,inak zostavaju otvorene spojenia do databazy.
+	public void close() throws IOException
+	{
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">		if (isDBStorage)</span>
+		{
+			try
+			{
+<span class="nc bnc" id="L193" title="All 2 branches missed.">				if (is!=null) is.close();</span>
+			}
+<span class="nc" id="L195">			catch (Exception e)</span>
+			{
+<span class="nc" id="L197">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L198">			}</span>
+		}
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">		else if (isJarPackaging)</span>
+		{
+<span class="nc" id="L202">			is.close();</span>
+		}
+		else
+		{
+<span class="fc" id="L206">			in.close();</span>
+		}
+<span class="fc" id="L208">	}</span>
+
+	private boolean loadFile() throws IOException //TODO:dynamicka velkost blokov
+	{
+<span class="nc bnc" id="L212" title="All 4 branches missed.">		if (step &gt;= IwcmFsDB.getBlockSize() || is == null)// uz sme precitali cely blok alebo este ziaden</span>
+		{
+<span class="nc" id="L214">			String virtualPath = IwcmFsDB.getVirtualPath(file.getPath());</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (IwcmFsDB.getFatIdTable().get(virtualPath) == null)</span>
+<span class="nc" id="L216">				throw new FileNotFoundException(virtualPath);</span>
+<span class="nc" id="L217">			Connection db_conn = null;</span>
+<span class="nc" id="L218">			PreparedStatement ps = null;</span>
+<span class="nc" id="L219">			ResultSet rs = null;</span>
+			try
+			{
+<span class="nc" id="L222">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if (nodeIds == null)</span>
+				{
+<span class="nc" id="L226">					nodeIds = new ArrayList&lt;Integer&gt;();</span>
+<span class="nc" id="L227">					ps = db_conn.prepareStatement(&quot;select node_id from file_data where file_fat_id = ? order by node_id asc&quot;);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">					if (fatId&gt;0)</span>
+					{
+<span class="nc" id="L230">						ps.setInt(1, fatId);</span>
+					}
+					else
+					{
+<span class="nc" id="L234">						ps.setInt(1, IwcmFsDB.getFatIdTable().get(virtualPath));</span>
+					}
+<span class="nc" id="L236">					rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L239">						nodeIds.add(rs.getInt(&quot;node_id&quot;));//precitame a ulozime do listu node_id vsetkych blokov daneho suboru</span>
+					}
+<span class="nc" id="L241">					rs.close();</span>
+<span class="nc" id="L242">					rs = null;</span>
+<span class="nc" id="L243">					ps.close();</span>
+<span class="nc" id="L244">					ps = null;</span>
+				}
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">				if (nodeIds.size()==0) //prazdny subor.</span>
+				{
+<span class="nc bnc" id="L249" title="All 2 branches missed.">					if (!existsInDb(IwcmFsDB.getFatIdTable().get(virtualPath)))</span>
+					{
+<span class="nc" id="L251">						db_conn.close();</span>
+<span class="nc" id="L252">						db_conn = null;</span>
+
+<span class="nc" id="L254">						IwcmFsDB.loadHashTables(true);</span>
+<span class="nc" id="L255">						nodeIds=null;</span>
+<span class="nc" id="L256">						return loadFile();</span>
+					}
+<span class="nc" id="L258">					return false;</span>
+				}
+
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (readedBlockCount&gt;=nodeIds.size())</span>
+				{
+<span class="nc" id="L263">					db_conn.close();</span>
+<span class="nc" id="L264">					db_conn = null;</span>
+
+<span class="nc" id="L266">					throw new Exception(&quot;Nesúhlasi počet blokov, a velkosť suboru.&quot;);</span>
+				}
+				//Logger.debug(IwcmInputStream.class, &quot;Reading block &quot;+readedBlockCount);
+
+<span class="nc" id="L270">				ps = db_conn.prepareStatement(&quot;select data from file_data where node_id = ? &quot;);</span>
+<span class="nc" id="L271">				ps.setInt(1, nodeIds.get(readedBlockCount));//vyberieme nasleduci blok</span>
+<span class="nc" id="L272">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L275">					InputStream dbis = rs.getBinaryStream(&quot;data&quot;);</span>
+					//precitaj data do buffera a prehod na IS, aby sme mohli zavret DB spojenie
+<span class="nc" id="L277">					ByteArrayOutputStream baos = new ByteArrayOutputStream(IwcmFsDB.getBlockSize());</span>
+					//nacitaj
+<span class="nc" id="L279">					byte buff[] = new byte[64000];</span>
+					int readed;
+<span class="nc bnc" id="L281" title="All 2 branches missed.">					while ((readed = dbis.read(buff))!=-1)</span>
+					{
+<span class="nc" id="L283">						baos.write(buff, 0, readed);</span>
+					}
+<span class="nc" id="L285">					is = new ByteArrayInputStream(baos.toByteArray());</span>
+				}
+<span class="nc" id="L287">				rs.close();</span>
+<span class="nc" id="L288">				ps.close();</span>
+<span class="nc" id="L289">				db_conn.close();</span>
+
+<span class="nc" id="L291">				step = 0;</span>
+
+<span class="nc" id="L293">				rs = null;</span>
+<span class="nc" id="L294">				ps = null;</span>
+<span class="nc" id="L295">				db_conn = null;</span>
+			}
+<span class="nc" id="L297">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L299">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L305" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L306">						rs.close();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L308">						ps.close();</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L310">						db_conn.close();</span>
+				}
+<span class="nc" id="L312">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L314">				}</span>
+			}
+
+<span class="nc" id="L317">			readedBlockCount++;</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (is == null)</span>
+			{
+<span class="nc" id="L320">				throw new FileNotFoundException(file.getPath());</span>
+			}
+		}
+<span class="nc" id="L323">		return true;</span>
+	}
+
+	public boolean existsInDb(int fatId)
+	{
+<span class="nc" id="L328">		Connection db_conn = null;</span>
+<span class="nc" id="L329">		PreparedStatement ps = null;</span>
+<span class="nc" id="L330">		ResultSet rs = null;</span>
+		try
+		{
+<span class="nc" id="L333">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L334">			ps = db_conn.prepareStatement(&quot;select file_fat_id from file_fat where file_fat_id = ?&quot;);</span>
+<span class="nc" id="L335">			ps.setInt(1, fatId);</span>
+<span class="nc" id="L336">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L339">				return true;</span>
+			}
+<span class="nc" id="L341">			rs.close();</span>
+<span class="nc" id="L342">			ps.close();</span>
+<span class="nc" id="L343">			db_conn.close();</span>
+<span class="nc" id="L344">			rs = null;</span>
+<span class="nc" id="L345">			ps = null;</span>
+<span class="nc" id="L346">			db_conn = null;</span>
+		}
+<span class="nc" id="L348">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L350">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L356" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L357">					rs.close();</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L359">					ps.close();</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L361">					db_conn.close();</span>
+			}
+<span class="nc" id="L363">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L365">			}</span>
+		}
+<span class="nc" id="L367">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

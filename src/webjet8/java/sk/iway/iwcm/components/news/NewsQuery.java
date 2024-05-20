@@ -148,6 +148,17 @@ public class NewsQuery
 				}
 				sql.append(limit);
 			}
+			else if (Constants.DB_TYPE==Constants.DB_PGSQL)
+			{
+				sql.append("LIMIT ");
+				sql.append(limit);
+				int finalOffset = (offset>0?offset:0)+initialOffset;
+				if (finalOffset>0)
+				{
+					sql.append(" OFFSET ").append(finalOffset).append(" ");
+				}
+
+			}
 			else if (Constants.DB_TYPE==Constants.DB_ORACLE)
 			{
 				StringBuilder oraclePaging = new StringBuilder();

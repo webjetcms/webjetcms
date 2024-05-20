@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorAction.java</span></div><h1>FileArchivatorAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
+
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.HandlesEvent;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * FileArchivatorAction.java
+ *
+ *
+ *  Title       webjet7
+ *  Company     Interway s.r.o. (www.interway.sk)
+ *  Copyright   Interway s.r.o. (c) 2001-2015
+ *  @author     $Author: jeeff $(prau)
+ *  @version    Revision: 1.3 14.2.2015
+ *  created     Date: 14.2.2015 9:21:33
+ *  modified    Date: 14.2.2015 9:21:33
+ *  Ticket Number: #17263
+ */
+<span class="nc" id="L25">public class FileArchivatorAction extends WebJETActionBean</span>
+{
+	private FileArchivatorBean fab;
+
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+<span class="nc" id="L32">		super.setContext(context);</span>
+<span class="nc" id="L33">		Identity user = UsersDB.getCurrentUser(context.getRequest());</span>
+<span class="nc bnc" id="L34" title="All 4 branches missed.">		if (user == null || !user.isAdmin())</span>
+		{
+<span class="nc" id="L36">			Logger.debug(FileArchivatorAction.class, &quot;User not loged, or user is not admin&quot;);</span>
+<span class="nc" id="L37">			return;</span>
+		}
+<span class="nc" id="L39">		int id = Tools.getIntValue(getRequest().getParameter(&quot;fab.rpackageId&quot;), -1); //manazer kategorii</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if(id &lt; 1) id = Tools.getIntValue(getRequest().getParameter(&quot;edit&quot;), -1); //editacia zaznamu</span>
+		// Logger.debug(FileArchivatorBean.class,&quot;id from reqest: &quot;+ id);
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (id &gt; 0)</span>
+		{
+<span class="nc" id="L44">			fab = FileArchivatorDB.getInstance().getById(id);</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">			if(fab != null &amp;&amp; fab.getId() &gt; 0)</span>
+<span class="nc" id="L46">				fab.setNote(Tools.replace(Tools.replace(Tools.replace(Tools.replace(fab.getNote(),&quot;&amp;lt;&quot;,&quot;&lt;&quot;),&quot;&amp;gt;&quot;,&quot;&gt;&quot;),&quot;&amp;quot;&quot;,&quot;\&quot;&quot;),&quot;&amp;nbsp;&quot;,&quot; &quot;));</span>
+		}
+<span class="nc" id="L48">	}</span>
+
+	@HandlesEvent(&quot;save&quot;)
+	public Resolution save()
+	{
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if(!isAdminLogged())</span>
+		{
+<span class="nc" id="L55">			return (new ForwardResolution(&quot;/admin/logon.jsp&quot;));</span>
+		}
+
+<span class="nc" id="L58">		FileArchivValidator fav = (FileArchivValidator)getRequest().getAttribute(&quot;validator&quot;);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if(fav == null)</span>
+<span class="nc" id="L60">            fav = new FileArchivDefaultValidator();</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if(!fav.validateActionSave(fab,getRequest()))</span>
+<span class="nc" id="L63">            return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+
+<span class="nc" id="L65">		FileArchivatorBean oldFab = FileArchivatorDB.getInstance().getById(fab.getId());</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if(oldFab != null)</span>
+		{
+<span class="nc" id="L68">			fab.setFileName(oldFab.getFileName());</span>
+<span class="nc" id="L69">			fab.setFilePath(oldFab.getFilePath());</span>
+<span class="nc" id="L70">			fab.setOrderId(oldFab.getOrderId());</span>
+<span class="nc" id="L71">			fab.setReferenceId(oldFab.getReferenceId());</span>
+<span class="nc" id="L72">			fab.setUserId(oldFab.getUserId());</span>
+<span class="nc" id="L73">		    fab.setDateInsert(oldFab.getDateInsert());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		    if(getRequest().getParameter(&quot;setMd5&quot;) != null) fab.setMd5(oldFab.getMd5());</span>
+<span class="nc" id="L75">		    fab.setUploaded(oldFab.getUploaded());</span>
+<span class="nc" id="L76">		    fab.setDateUploadLater(oldFab.getDateUploadLater());</span>
+<span class="nc" id="L77">		    fab.setEmails(oldFab.getEmails());</span>
+<span class="nc" id="L78">		    fab.setGlobalId(oldFab.getGlobalId());</span>
+<span class="nc" id="L79">		    fab.setFileSize(oldFab.getFileSize());</span>
+<span class="nc" id="L80">		    fab.setReferenceToMain(oldFab.getReferenceToMain());</span>
+<span class="nc" id="L81">			fab.setDomainId(CloudToolsForCore.getDomainId());</span>
+		}
+<span class="nc" id="L83">		String changes = FileArchivatorKit.getPojoZmeny(fab,oldFab);</span>
+<span class="nc" id="L84">		boolean saved = fab.save();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if(saved)</span>
+        {
+<span class="nc" id="L87">            Adminlog.add(Adminlog.TYPE_FILE_EDIT,&quot;File Archiv zmeny:&quot;+changes,-1,-1);</span>
+        }
+<span class="nc" id="L89">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+	}
+
+	public FileArchivatorBean getFab()
+	{
+<span class="nc" id="L94">		return fab;</span>
+	}
+
+	public void setFab(FileArchivatorBean fab)
+	{
+<span class="nc" id="L99">		this.fab = fab;</span>
+<span class="nc" id="L100">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

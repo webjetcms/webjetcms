@@ -20,6 +20,7 @@ V administrácii je väčšina testov datatabuľky zhodná vo forme ```CRUD (Cre
   - overenie povinných polí
 - vyhľadanie pridaného záznamu
 - editácia záznamu
+- kontrola medzi-doménového oddelenia záznamov
 - vyhľadanie editovaného záznamu
 - zmazanie záznamu
 - overenie zápisu auditných záznamov
@@ -113,6 +114,8 @@ Voliteľné možnosti:
 - ```container``` - možnosť definovať CSS selektor kontajnera, v ktorej je datatabuľka vložená (potrebné definovať pre vnorenú datatabuľku).
 - ```containerModal``` - možnosť definovať CSS selektor kontajnera dialógového okna datatable editora (potrebné definovať pre vnorenú datatabuľku).
 - ```skipRefresh``` - ak je nastavené na ```true``` nevykoná sa obnovenie web stránky po pridaní záznamu.
+- ```skipSwitchDomain``` - ak je nastavené na ```true``` nevykoná sa kontrola medzi-doménového oddelenia záznamov.
+- ```switchDomainName``` - možnosť definovať inú doménu ako je predvolená ```mirroring.tau27.iway.sk``` pre kontrolu medzi-doménového oddelenia záznamov.
 - ```createSteps``` - funkcia pridávajúca kroky testovania pri vytvorí nového záznamu.
 - ```afterCreateSteps``` - funkcia je vykonaná po uložení nového záznamu. Ak tabuľka nemá žiadne povinné polia je možné nastavením ```requiredFields.push("string1");options.testingData[0] = string1;``` pole zadefinovať a nastaviť mu hodnotu.
 - ```editSteps``` - funkcia pridávajúca kroky testovania pri editácii záznamu.

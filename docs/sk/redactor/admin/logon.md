@@ -24,4 +24,4 @@ Odkaz na odhlásenie sa nachádza v hlavičke administrácie v pravej hornej ča
 
 Kliknutím na ikonu odhlásenia sa odhlásite z WebJET CMS. Z dôvodu bezpečnosti odporúčame, aby ste sa **vždy po skončení práce odhlásili** a nielen zatvorili okno v prehliadači.
 
-Upozornenie: pri menšej veľkosti okna sa nezobrazuje hlavička, kliknite na ikonu hamburger menu ![](icon-hamburger.png ":no-zoom") pre zobrazenie hlavičky.
+**Upozornenie:** pri menšej veľkosti okna sa nezobrazuje hlavička, kliknite na ikonu hamburger menu ![](icon-hamburger.png ":no-zoom") pre zobrazenie hlavičky.

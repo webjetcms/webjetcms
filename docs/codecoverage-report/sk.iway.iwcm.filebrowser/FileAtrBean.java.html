@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileAtrBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.filebrowser</a> &gt; <span class="el_source">FileAtrBean.java</span></div><h1>FileAtrBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.filebrowser;
+
+import java.text.DecimalFormat;
+import java.util.StringTokenizer;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+
+/**
+ *  Bean popisujuci atribut suboru (vratane definicii)
+ *
+ *@Title        WebJET 4.0
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Streda, 2003, október 15
+ *@modified     $Date: 2004/02/20 21:38:21 $
+ */
+<span class="nc" id="L20">public class FileAtrBean</span>
+{
+	private int atrId;
+	private String atrName;
+	private String atrDescription;
+	private String atrDefaultValue;
+	private int atrType;
+	private int valueInt;
+	private boolean valueBool;
+	private String valueString;
+	private int orderPriority;
+	private String atrGroup;
+	private String trueValue;
+	private String falseValue;
+	private String link;
+	private String fileName;
+	private static final DecimalFormat decimalFormat;
+
+	static
+	{
+<span class="nc" id="L40">		decimalFormat = new DecimalFormat(&quot;0.##&quot;);</span>
+<span class="nc" id="L41">	}</span>
+
+	/**
+	 * vygeneruje HTML podobu atributu
+	 * @return
+	 */
+	public String getHtml()
+	{
+<span class="nc" id="L49">		StringBuilder ret = new StringBuilder();</span>
+<span class="nc" id="L50">		String actualValue = &quot;&quot;;</span>
+		//ak mame docid, znamena to, ze uz to ma v DB nejaku hodnotu
+<span class="nc bnc" id="L52" title="All 4 branches missed.">		if (link!=null &amp;&amp; link.length() &gt; 1)</span>
+		{
+<span class="nc" id="L54">			actualValue = getValue();</span>
+		}
+<span class="nc" id="L56">		StringTokenizer st = new StringTokenizer(atrDefaultValue, &quot;,&quot;);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (st.countTokens()&gt;1)</span>
+		{
+<span class="nc" id="L59">			ret.append(&quot;&lt;select name='atr_&quot;).append(atrId).append(&quot;'&gt;&quot;).append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
+			String tmp, selected;
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+			{
+<span class="nc" id="L63">				tmp = st.nextToken().trim();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				if (atrType==FileAtrDB.TYPE_BOOL)</span>
+				{
+<span class="nc bnc" id="L66" title="All 4 branches missed.">					if (&quot;true&quot;.equalsIgnoreCase(tmp) || &quot;yes&quot;.equalsIgnoreCase(tmp))</span>
+					{
+<span class="nc" id="L68">						tmp = &quot;true&quot;;</span>
+					}
+					else
+					{
+<span class="nc" id="L72">						tmp = &quot;false&quot;;</span>
+					}
+				}
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				if (tmp.compareTo(actualValue)==0)</span>
+				{
+<span class="nc" id="L77">					selected = &quot; selected&quot;;</span>
+				}
+				else
+				{
+<span class="nc" id="L81">					selected = &quot;&quot;;</span>
+				}
+<span class="nc" id="L83">				ret.append(&quot;&lt;option value='&quot;).append(tmp).append('\'').append(selected).append('&gt;').append(tmp).append(&quot;&lt;/option&gt;&quot;);</span>
+			}
+<span class="nc" id="L85">			ret.append(&quot;&lt;/select&gt;&quot;);</span>
+		}
+		else
+		{
+<span class="nc bnc" id="L89" title="All 4 branches missed.">			if (link==null || link.length() &lt; 1)</span>
+			{
+<span class="nc" id="L91">				actualValue = atrDefaultValue;</span>
+			}
+<span class="nc" id="L93">			ret.append(&quot;&lt;input name='atr_&quot;).append(atrId).append(&quot;' value='&quot;).append(actualValue).append(&quot;'&gt;&quot;);</span>
+		}
+<span class="nc" id="L95">		return (ret.toString());</span>
+	}
+
+	/**
+	 * ziska hodnotu ako string
+	 * @return
+	 */
+	public String getValue()
+	{
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (atrType==FileAtrDB.TYPE_INT)</span>
+		{
+<span class="nc" id="L106">			return(Integer.toString(valueInt));</span>
+		}
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		else if (atrType==FileAtrDB.TYPE_BOOL)</span>
+		{
+<span class="nc" id="L110">			return(Boolean.toString(valueBool));</span>
+		}
+<span class="nc" id="L112">		return(valueString);</span>
+	}
+
+	public String getValueHtml()
+	{
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (atrType==FileAtrDB.TYPE_INT)</span>
+		{
+<span class="nc" id="L119">			return(Integer.toString(valueInt));</span>
+		}
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		else if (atrType==FileAtrDB.TYPE_BOOL)</span>
+		{
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (valueBool == true)</span>
+			{
+<span class="nc bnc" id="L125" title="All 4 branches missed.">				if (trueValue!=null &amp;&amp; trueValue.length()&gt;0)</span>
+				{
+<span class="nc" id="L127">					return(trueValue);</span>
+				}
+			}
+			else
+			{
+<span class="nc bnc" id="L132" title="All 4 branches missed.">				if (falseValue!=null &amp;&amp; falseValue.length()&gt;0)</span>
+				{
+<span class="nc" id="L134">					return(falseValue);</span>
+				}
+			}
+<span class="nc" id="L137">			return(Boolean.toString(valueBool));</span>
+		}
+<span class="nc" id="L139">		return(valueString);</span>
+	}
+
+
+	/**
+	 *  Gets the atrId attribute of the AtrBean object
+	 *
+	 *@return    The atrId value
+	 */
+	public int getAtrId()
+	{
+<span class="nc" id="L150">		return atrId;</span>
+	}
+
+	/**
+	 *  Sets the atrId attribute of the AtrBean object
+	 *
+	 *@param  atrId  The new atrId value
+	 */
+	public void setAtrId(int atrId)
+	{
+<span class="nc" id="L160">		this.atrId = atrId;</span>
+<span class="nc" id="L161">	}</span>
+
+	/**
+	 *  Sets the atrName attribute of the AtrBean object
+	 *
+	 *@param  atrName  The new atrName value
+	 */
+	public void setAtrName(String atrName)
+	{
+<span class="nc" id="L170">		this.atrName = atrName;</span>
+<span class="nc" id="L171">	}</span>
+
+	/**
+	 *  Gets the atrName attribute of the AtrBean object
+	 *
+	 *@return    The atrName value
+	 */
+	public String getAtrName()
+	{
+<span class="nc" id="L180">		return atrName;</span>
+	}
+
+	/**
+	 *  Sets the atrDescription attribute of the AtrBean object
+	 *
+	 *@param  atrDescription  The new atrDescription value
+	 */
+	public void setAtrDescription(String atrDescription)
+	{
+<span class="nc" id="L190">		this.atrDescription = atrDescription;</span>
+<span class="nc" id="L191">	}</span>
+
+	/**
+	 *  Gets the atrDescription attribute of the AtrBean object
+	 *
+	 *@return    The atrDescription value
+	 */
+	public String getAtrDescription()
+	{
+<span class="nc" id="L200">		return atrDescription;</span>
+	}
+
+	/**
+	 *  Sets the atrDefaultValue attribute of the AtrBean object
+	 *
+	 *@param  atrDefaultValue  The new atrDefaultValue value
+	 */
+	public void setAtrDefaultValue(String atrDefaultValue)
+	{
+<span class="nc" id="L210">		this.atrDefaultValue = atrDefaultValue;</span>
+<span class="nc" id="L211">	}</span>
+
+	/**
+	 *  Gets the atrDefaultValue attribute of the AtrBean object
+	 *
+	 *@return    The atrDefaultValue value
+	 */
+	public String getAtrDefaultValue()
+	{
+<span class="nc" id="L220">		return atrDefaultValue;</span>
+	}
+
+	/**
+	 *  Sets the atrType attribute of the AtrBean object
+	 *
+	 *@param  atrType  The new atrType value
+	 */
+	public void setAtrType(int atrType)
+	{
+<span class="nc" id="L230">		this.atrType = atrType;</span>
+<span class="nc" id="L231">	}</span>
+
+	/**
+	 *  Gets the atrType attribute of the AtrBean object
+	 *
+	 *@return    The atrType value
+	 */
+	public int getAtrType()
+	{
+<span class="nc" id="L240">		return atrType;</span>
+	}
+
+	/**
+	 *  Sets the docId attribute of the AtrBean object
+	 *
+	 *@param  docId  The new docId value
+	 */
+
+	/**
+	 *  Gets the docId attribute of the AtrBean object
+	 *
+	 *@return    The docId value
+	 */
+
+	/**
+	 *  Sets the valueString attribute of the AtrBean object
+	 *
+	 *@param  valueString  The new valueString value
+	 */
+	public void setValueString(String valueString)
+	{
+<span class="nc" id="L262">		this.valueString = valueString;</span>
+<span class="nc" id="L263">	}</span>
+
+	/**
+	 *  Gets the valueString attribute of the AtrBean object
+	 *
+	 *@return    The valueString value
+	 */
+	public String getValueString()
+	{
+<span class="nc" id="L272">		return valueString;</span>
+	}
+
+	/**
+	 *  Sets the valueInt attribute of the AtrBean object
+	 *
+	 *@param  valueInt  The new valueInt value
+	 */
+	public void setValueInt(int valueInt)
+	{
+<span class="nc" id="L282">		this.valueInt = valueInt;</span>
+<span class="nc" id="L283">	}</span>
+
+	/**
+	 *  Gets the valueInt attribute of the AtrBean object
+	 *
+	 *@return    The valueInt value
+	 */
+	public int getValueInt()
+	{
+<span class="nc" id="L292">		return valueInt;</span>
+	}
+
+	/**
+	 *  Sets the valueBool attribute of the AtrBean object
+	 *
+	 *@param  valueBool  The new valueBool value
+	 */
+	public void setValueBool(boolean valueBool)
+	{
+<span class="nc" id="L302">		this.valueBool = valueBool;</span>
+<span class="nc" id="L303">	}</span>
+
+	/**
+	 *  Gets the valueBool attribute of the AtrBean object
+	 *
+	 *@return    The valueBool value
+	 */
+	public boolean isValueBool()
+	{
+<span class="nc" id="L312">		return valueBool;</span>
+	}
+	public void setOrderPriority(int orderPriority)
+	{
+<span class="nc" id="L316">		this.orderPriority = orderPriority;</span>
+<span class="nc" id="L317">	}</span>
+	public int getOrderPriority()
+	{
+<span class="nc" id="L320">		return orderPriority;</span>
+	}
+	public void setAtrGroup(String atrGroup)
+	{
+<span class="nc" id="L324">		this.atrGroup = atrGroup;</span>
+<span class="nc" id="L325">	}</span>
+	public String getAtrGroup()
+	{
+<span class="nc" id="L328">		return atrGroup;</span>
+	}
+	public String getTrueValue()
+	{
+<span class="nc" id="L332">		return trueValue;</span>
+	}
+	public void setTrueValue(String trueValue)
+	{
+<span class="nc" id="L336">		this.trueValue = trueValue;</span>
+<span class="nc" id="L337">	}</span>
+	public String getFalseValue()
+	{
+<span class="nc" id="L340">		return falseValue;</span>
+	}
+	public void setFalseValue(String falseValue)
+	{
+<span class="nc" id="L344">		this.falseValue = falseValue;</span>
+<span class="nc" id="L345">	}</span>
+	public void setLink(String link)
+	{
+<span class="nc" id="L348">		this.link = link;</span>
+<span class="nc" id="L349">	}</span>
+	public String getLink()
+	{
+<span class="nc" id="L352">		return link;</span>
+	}
+	public void setFileName(String fileName)
+	{
+<span class="nc" id="L356">		this.fileName = fileName;</span>
+<span class="nc" id="L357">	}</span>
+	public String getFileName()
+	{
+<span class="nc" id="L360">		return fileName;</span>
+	}
+
+	public String getIcon()
+	{
+<span class="nc" id="L365">		String icon = &quot;/components/_common/mime/default.gif&quot;;</span>
+		try
+		{
+<span class="nc" id="L368">			String ext = getFileName().substring(getFileName().lastIndexOf('.') + 1).toLowerCase();</span>
+<span class="nc" id="L369">			ext = ext.trim().toLowerCase();</span>
+<span class="nc" id="L370">			IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;));</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">			if (f.exists())</span>
+			{
+<span class="nc" id="L373">				icon = &quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;;</span>
+			}
+		}
+<span class="nc" id="L376">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L378">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L379">		}</span>
+<span class="nc" id="L380">		return(icon);</span>
+	}
+
+	public String getLength()
+	{
+<span class="nc" id="L385">		double lengthDouble = 0;</span>
+<span class="nc" id="L386">		IwcmFile f = new IwcmFile(Tools.getRealPath(getLink()));</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (f!=null)</span>
+		{
+<span class="nc" id="L389">			lengthDouble = f.length();</span>
+		}
+<span class="nc" id="L391">		String length = &quot;&quot;;</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		if (lengthDouble &gt; (1024 * 1024))</span>
+		{
+<span class="nc" id="L394">			length = decimalFormat.format(lengthDouble / (1024 * 1024)) + &quot; MB&quot;;</span>
+		}
+<span class="nc bnc" id="L396" title="All 2 branches missed.">		else if (lengthDouble &gt; 1024)</span>
+		{
+<span class="nc" id="L398">			length = decimalFormat.format(lengthDouble / 1024) + &quot; kB&quot;;</span>
+		}
+		else
+		{
+<span class="nc" id="L402">			length = decimalFormat.format(lengthDouble) + &quot; B&quot;;</span>
+		}
+<span class="nc" id="L404">		return(length);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

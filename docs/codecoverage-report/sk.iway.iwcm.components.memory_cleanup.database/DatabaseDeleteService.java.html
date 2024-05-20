@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseDeleteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.memory_cleanup.database</a> &gt; <span class="el_source">DatabaseDeleteService.java</span></div><h1>DatabaseDeleteService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.memory_cleanup.database;
+
+import org.springframework.stereotype.Service;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.dataDeleting.DataDeletingManager;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.utils.Pair;
+
+import java.util.*;
+
+/**
+ * Trieda sluziaca na vykonavanie funkcionalit mazania pamate.
+ *
+ * @author pgajdos
+ * @since 24.07.2020
+ */
+@Service
+public class DatabaseDeleteService {
+
+<span class="fc" id="L22">    public DatabaseDeleteService() {</span>
+        //konstruktor
+<span class="fc" id="L24">    }</span>
+
+    private DatabaseDeleteBean buildStatBean(Prop prop, String key, String tableName, boolean tablePartitioning) {
+<span class="fc" id="L27">        return DatabaseDeleteBean.builder().name(prop.getText(key)).tableName(tableName).groupId(1).tablePartitioning(tablePartitioning).build();</span>
+    }
+
+    private DatabaseDeleteBean buildAuditBean(Prop prop, int typeId) {
+<span class="fc" id="L31">        return DatabaseDeleteBean.builder().name(prop.getText(&quot;components.adminlog.&quot;+typeId)).tableName(&quot;audit&quot;).groupId(5).typeId(typeId).build();</span>
+    }
+
+    /**
+     * Vrati zoznam vsetkych moznosti mazania dat, ako pocet na zmazanie je 0, realne nevykona nacitanie poctu zaznamov z DB
+     * @param prop
+     * @return
+     */
+    public List&lt;DatabaseDeleteBean&gt; getAllItems(Prop prop) {
+<span class="fc" id="L40">        List&lt;DatabaseDeleteBean&gt; items = new ArrayList&lt;&gt;();</span>
+
+        //statistika
+<span class="fc" id="L43">        items.add(buildStatBean(prop, &quot;stat_menu.searchEngines&quot;, &quot;stat_searchengine&quot;, true));</span>
+<span class="fc" id="L44">        items.add(buildStatBean(prop, &quot;components.data.deleting.stats.userlogon&quot;, &quot;stat_userlogon&quot;, false));</span>
+<span class="fc" id="L45">        items.add(buildStatBean(prop, &quot;components.data.deleting.stats.referers&quot;, &quot;stat_from&quot;, true));</span>
+<span class="fc" id="L46">        items.add(buildStatBean(prop, &quot;stat_menu.invalidPages&quot;, &quot;stat_error&quot;, true));</span>
+<span class="fc" id="L47">        items.add(buildStatBean(prop, &quot;components.data.deleting.stats.view&quot;, &quot;stat_views&quot;, true));</span>
+<span class="fc" id="L48">        items.add(buildStatBean(prop, &quot;components.stat.heat_map.title&quot;, &quot;stat_clicks&quot;, true));</span>
+<span class="fc" id="L49">        items.add(buildStatBean(prop, &quot;components.memory_cleanup.banner_clicks&quot;, &quot;banner_stat_clicks&quot;, false));</span>
+<span class="fc" id="L50">        items.add(buildStatBean(prop, &quot;components.memory_cleanup.banner_views&quot;, &quot;banner_stat_views&quot;, false));</span>
+<span class="fc" id="L51">        items.add(buildStatBean(prop, &quot;components.memory_cleanup.banner_day_views&quot;, &quot;banner_stat_views_day&quot;, false));</span>
+
+<span class="fc" id="L53">        items.add(DatabaseDeleteBean.builder().name(prop.getText(&quot;components.data.deleting.emails&quot;)).groupId(2).tableName(&quot;emails&quot;).build());</span>
+<span class="fc" id="L54">        items.add(DatabaseDeleteBean.builder().name(prop.getText(&quot;components.data.deleting.documentHistory&quot;)).groupId(3).tableName(&quot;documents_history&quot;).build());</span>
+<span class="fc" id="L55">        items.add(DatabaseDeleteBean.builder().name(prop.getText(&quot;components.data.deleting.monitoring&quot;)).groupId(4).tableName(&quot;monitoring&quot;).build());</span>
+
+        //audit
+<span class="fc" id="L58">        items.add(buildAuditBean(prop, 100)); //SE_SITEMAP</span>
+<span class="fc" id="L59">        items.add(buildAuditBean(prop, 120)); //FORMMAIL</span>
+<span class="fc" id="L60">        items.add(buildAuditBean(prop, 130)); //SENDMAIL</span>
+<span class="fc" id="L61">        items.add(buildAuditBean(prop, 140)); //JSPERROR</span>
+<span class="fc" id="L62">        items.add(buildAuditBean(prop, 150)); //SQLERROR</span>
+<span class="fc" id="L63">        items.add(buildAuditBean(prop, 170)); //RUNTIME_ERROR</span>
+<span class="fc" id="L64">        items.add(buildAuditBean(prop, 230)); //CRON</span>
+<span class="fc" id="L65">        items.add(buildAuditBean(prop, 99999)); //CLIENT_SPECIFIC</span>
+
+        //nastav idecka
+<span class="fc" id="L68">        int counter = 1;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        for (DatabaseDeleteBean b : items) {</span>
+<span class="fc" id="L70">            b.setId(Long.valueOf(counter));</span>
+<span class="fc" id="L71">            counter++;</span>
+<span class="fc" id="L72">        }</span>
+
+<span class="fc" id="L74">        return items;</span>
+    }
+
+    /**
+     * nazvy skupiny a jeho id oznacenia. Vyuzitie pri selectoch v datatabulke.
+     *
+     * @return List obsahujuci meno a id skupiny zaznamov.
+     */
+    List&lt;LabelValueDetails&gt; getGroupNames(Prop prop) {
+<span class="fc" id="L83">        return Arrays.asList(</span>
+<span class="fc" id="L84">                new LabelValueDetails(prop.getText(&quot;components.data.deleting.stats&quot;), &quot;1&quot;),</span>
+<span class="fc" id="L85">                new LabelValueDetails(prop.getText(&quot;components.data.deleting.emails&quot;), &quot;2&quot;),</span>
+<span class="fc" id="L86">                new LabelValueDetails(prop.getText(&quot;components.data.deleting.documentHistory&quot;), &quot;3&quot;),</span>
+<span class="fc" id="L87">                new LabelValueDetails(prop.getText(&quot;components.data.deleting.monitoring&quot;), &quot;4&quot;),</span>
+<span class="fc" id="L88">                new LabelValueDetails(prop.getText(&quot;components.data.deleting.audit.menu&quot;), &quot;5&quot;));</span>
+    }
+
+    /**
+     * vrati zoznam moznosti mazania vratane poctu zaznamov na zmazanie za zvolene obdobie
+     * @param from - datum zaciatku mazania dat
+     * @param to - datum konca mazania dat
+     * @param prop
+     * @return
+     */
+    List&lt;DatabaseDeleteBean&gt; getMemoryCleanupEntities(Date from, Date to, Prop prop) {
+<span class="fc" id="L99">        List&lt;DatabaseDeleteBean&gt; items = getAllItems(prop);</span>
+
+<span class="pc bpc" id="L101" title="3 of 6 branches missed.">        if (from != null &amp;&amp; to != null &amp;&amp; to.getTime()&gt;from.getTime()) {</span>
+<span class="fc" id="L102">            Pair&lt;Date, Date&gt; datePair = new Pair&lt;&gt;(from, to);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            for (DatabaseDeleteBean entity : items) {</span>
+<span class="fc" id="L104">                entity.setFrom(datePair.first);</span>
+<span class="fc" id="L105">                entity.setTo(datePair.second);</span>
+<span class="pc bpc" id="L106" title="1 of 4 branches missed.">                if (entity.isTablePartitioning() &amp;&amp; Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)) {</span>
+<span class="fc" id="L107">                    entity.setNumberOfEntriesToDelete(DataDeletingManager.checkTablePartitioning(entity.getTableName(), datePair.first, datePair.second));</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                } else if (entity.getTypeId()&lt;1) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">                    if (&quot;documents_history&quot;.equals(entity.getTableName())) {</span>
+<span class="fc" id="L110">                        entity.setNumberOfEntriesToDelete(DataDeletingManager.checkData(entity.getTableName(), datePair.first, datePair.second, true, -1));</span>
+                    } else {
+<span class="fc" id="L112">                        entity.setNumberOfEntriesToDelete(DataDeletingManager.checkData(entity.getTableName(), datePair.first, datePair.second, false, -1));</span>
+                    }
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                } else if (&quot;audit&quot;.equals(entity.getTableName())) {</span>
+<span class="fc" id="L115">                    entity.setNumberOfEntriesToDelete(DataDeletingManager.checkData(entity.getTableName(), datePair.first, datePair.second, false, entity.getTypeId()));</span>
+                }
+<span class="fc" id="L117">            }</span>
+        }
+<span class="fc" id="L119">        return items;</span>
+    }
+
+    /**
+     * Metoda sluzi na zmazanie dat. Nemazu sa samotne MemoryCleanupDateDependentEntity, tie predstavuju len skupiny
+     * pod ktorymi su ulozene realne zaznamy na mazanie.
+     *
+     * @param entity objekt, ktoreho data sa maju zmazat
+     * @return boolean pre potvrdenie mazania.
+     */
+    boolean delete(DatabaseDeleteBean entity) {
+        try {
+<span class="nc" id="L131">            Pair&lt;Date, Date&gt; datePair = new Pair&lt;&gt;(entity.getFrom(), entity.getTo());</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">            if (entity.isTablePartitioning() &amp;&amp; Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)) {</span>
+<span class="nc" id="L133">                DataDeletingManager.deleteTablePartitioning(entity.getTableName(), datePair.first, datePair.second, true);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            } else if (entity.getTypeId()&lt;1) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                if (&quot;documents_history&quot;.equals(entity.getTableName())) {</span>
+<span class="nc" id="L136">                    DataDeletingManager.deleteData(entity.getTableName(), datePair.first, datePair.second, true, -1, true);</span>
+                } else {
+<span class="nc" id="L138">                    DataDeletingManager.deleteData(entity.getTableName(), datePair.first, datePair.second, false, -1, true);</span>
+                }
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            } else if (&quot;audit&quot;.equals(entity.getTableName())) {</span>
+<span class="nc" id="L141">                DataDeletingManager.deleteData(entity.getTableName(), datePair.first, datePair.second, false, entity.getTypeId(), true);</span>
+            }
+<span class="nc" id="L143">        } catch (Exception e) {</span>
+<span class="nc" id="L144">            Logger.error(DatabaseDeleteService.class, &quot;Error deleting entries for &quot; + entity.getTableName() + &quot;. Error message is: &quot; + e.getMessage() + &quot;.&quot;);</span>
+<span class="nc" id="L145">            return false;</span>
+<span class="nc" id="L146">        }</span>
+<span class="nc" id="L147">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

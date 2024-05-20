@@ -79,7 +79,7 @@ Scenario('media-zakladne testy', async ({I, DTE, DataTables}) => {
         },
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
-        },
+        }
     });
 });
 
@@ -122,7 +122,8 @@ Scenario('media tabulka v stranke', async ({I, DataTables, DT, DTE, Browser}) =>
         skipRefresh: true,
         editSteps: function(I, options) {
             mediaEditSteps(I, DTE, options, true);
-        }
+        },
+        skipSwitchDomain: true
     });
 });
 

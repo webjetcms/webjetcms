@@ -1,0 +1,58 @@
+{
+    "allowedLicenses": [
+      {
+        "moduleLicense": "Apache License, Version 2.0"
+      },
+      {
+        "moduleLicense": "MIT License"
+      },
+      {
+        "moduleLicense": "GNU Lesser General Public License version 2"
+      },
+      {
+        "moduleLicense": "Eclipse Public License - v 1.0"
+      },
+      {
+        "moduleLicense": "Eclipse Public License - v 2.0"
+      },
+      {
+        "moduleLicense": "Eclipse Distribution License - v 1.0"
+      },
+      {
+        "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
+      },
+      {
+        "moduleLicense": "GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1"
+      },
+      {
+        "moduleLicense": "GNU Lesser General Public License"
+      },
+      {
+        "moduleLicense": "LGPL"
+      },
+      {
+        "moduleLicense": "LGPL-2.1"
+      },
+      {
+        "moduleLicense": "Oracle Free Use Terms and Conditions (FUTC)"
+      },
+      {
+        "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0"
+      },
+      {
+        "moduleLicense": "The 3-Clause BSD License"
+      },
+      {
+        "moduleLicense": "BSD Zero Clause License"
+      },
+      {
+        "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1"
+      },
+      {
+        "moduleLicense": "PUBLIC DOMAIN"
+      },
+      {
+        "moduleLicense": null
+      }
+    ]
+  }

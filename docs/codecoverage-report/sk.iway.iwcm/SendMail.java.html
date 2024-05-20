@@ -1,0 +1,1163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SendMail.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">SendMail.java</span></div><h1>SendMail.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import com.amazonaws.services.simpleemail.AWSJavaMailTransport;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.utils.Pair;
+
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.activation.URLDataSource;
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.Document;
+import javax.swing.text.EditorKit;
+import javax.swing.text.ElementIterator;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLEditorKit;
+import java.io.*;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.*;
+
+//import sk.iway.intranet.dms.DmsNotify;
+
+/**
+ *  Odosielanie emailu, priklad telnet spojenia:
+
+EHLO tau19.iway.sk
+MAIL FROM:noreply@interway.sk
+RCPT TO:veronika.husarova@employment.gov.sk
+DATA
+From:noreply@interway.sk
+To:veronika.husarova@employment.gov.sk
+Subject:test
+
+Test
+.
+QUIT
+
+ *
+ *@Title        magma-web
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.13 $
+ *@created      Nedeďż˝e, 2003, februďż˝r 2
+ *@modified     $Date: 2004/03/23 19:23:05 $
+ */
+<span class="nc" id="L57">public class SendMail</span>
+{
+
+	/**
+     * Comment for &lt;code&gt;AUTOREPLY_DAEMON&lt;/code&gt;
+     */
+    	public static final String AUTOREPLY_SUBJECT = &quot;AUTOREPLY-&quot;;
+	public static final String EMAIL_PROTECTION_SENDER_KEY = &quot;emailProtectionSenderEmail&quot;;
+	public static final String EMAIL_PROTECTION_SENDER_NAME_KEY = &quot;emailProtectionSenderName&quot;;
+
+	public static boolean send(String fromName, String fromEmail, String toEmail, String subject, String text)
+	{
+<span class="fc" id="L69">		return (send(fromName, fromEmail, toEmail, null, null, subject, text, null));</span>
+	}
+
+	public static boolean send(String fromName, String fromEmail, String toEmail, String subject, String text, HttpServletRequest request)
+	{
+<span class="fc" id="L74">		String baseHref = Tools.getBaseHref(request)+&quot;/&quot;;</span>
+<span class="fc" id="L75">		return (send(fromName, fromEmail, toEmail, null, null, null, subject, text, baseHref, null));</span>
+	}
+
+	public static boolean send(String fromName, String fromEmail, String toEmail, String subject, String text, String attachments)
+	{
+<span class="nc" id="L80">		return (send(fromName, fromEmail, toEmail, null, null, subject, text, attachments));</span>
+	}
+
+	public static boolean send(String fromName, String fromEmail, String toEmail, String ccEmail, String bccEmail, String subject, String text, String attachments)
+	{
+<span class="fc" id="L85">		return(send(fromName, fromEmail, toEmail, null, ccEmail, bccEmail, subject, text, null, attachments));</span>
+	}
+
+	public static boolean send(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList)
+	{
+<span class="fc" id="L90">		return sendCapturingException(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, attachmentsList).first;</span>
+	}
+
+	 public static Pair&lt;Boolean, Exception&gt; sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList)
+	 {
+<span class="fc" id="L95">		  return sendCapturingException(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, attachmentsList, true);</span>
+	 }
+
+	 public static Pair&lt;Boolean, Exception&gt; sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList, boolean sendLaterWhenException)
+	 {
+<span class="fc" id="L100">		  return sendCapturingException(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, attachmentsList, sendLaterWhenException, true);</span>
+	 }
+
+	/**
+	 * Odoslanie emailu
+	 * @param senderName - meno odosielatela emailu
+	 * @param senderEmail - email odosielatela emailu
+	 * @param recipientEmail - email prijemcu
+	 * @param replyTo - email pre pole replyTo, alebo null
+	 * @param subject - predmet
+	 * @param message - body emailu, moze byt v HTML formate, vratane odkazov na obrazky a linky
+	 * @param baseHref - base HTTP adresa (aby bolo mozne nalinkovat obrazky a spravit relativne linky)
+	 * @param attachmentsList - zoznam priloh vo formate url_adresa1;nazov_suboru_do_emailu1;url_adresa2;nazov_suboru_do_emailu2;
+	 * @param sendLaterWhenException - ak je true, tak pri exception pri odosielani, ulozi e-mail pre neskorsie odoslanie
+	 * @param writeToAuditLog - ak je false, tak sa posle len e-mail, ale nezapise sa nic do auditlogu
+	 * @return true, ak sa email podarilo odoslat, inak false
+	 * @throws Exception
+	 */
+	public static Pair&lt;Boolean, Exception&gt; sendCapturingException(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String attachmentsList, boolean sendLaterWhenException, boolean writeToAuditLog)
+	{
+<span class="pc bpc" id="L120" title="3 of 4 branches missed.">		if (&quot;false&quot;.equals(Constants.getString(&quot;useSMTPServer&quot;)) &amp;&amp; writeToAuditLog) // mail neodosleme ale ulozime do db pre \odoslanie na inom node, okrem pripadu, ze potrebujeme odoslat chybu sposobenu pri dosiahnuti maximalenho poctu DB spojeni</span>
+		{
+<span class="nc" id="L122">			Logger.debug(SendMail.class, &quot;useSMTPServer=false -&gt; sending later. &quot; );</span>
+<span class="nc" id="L123">			boolean result = sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);</span>
+<span class="nc" id="L124">			return Pair.of(result, null);</span>
+		}
+
+		//debugMail
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;debugEmail&quot;)))</span>
+		{
+<span class="nc" id="L130">			Logger.debug(SendMail.class, &quot;debugEmail=&quot;+Constants.getString(&quot;debugEmail&quot;));</span>
+<span class="nc" id="L131">			recipientEmail = Constants.getString(&quot;debugEmail&quot;);</span>
+		}
+		//pridanie ContextPath pre admin cast (ak je nastavene)
+<span class="pc bpc" id="L134" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;contextPathAdmin&quot;)) &amp;&amp; message.indexOf(&quot;://cms&quot;)!=-1)</span>
+		{
+<span class="nc" id="L136">			message = ContextFilter.addContextPath(Constants.getString(&quot;contextPathAdmin&quot;), message);</span>
+<span class="nc" id="L137">			subject = ContextFilter.addContextPath(Constants.getString(&quot;contextPathAdmin&quot;), subject);</span>
+		}
+
+<span class="fc" id="L140">		Prop prop = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+
+		//vynimka helpdesk@websupport.sk je kvoli Cloudu a notifikaciam na WebSupport kedy nam odmietaju emaili z noreply@webjet.eu spracovat
+<span class="pc bpc" id="L143" title="3 of 4 branches missed.">		if (Tools.isEmail(Constants.getString(EMAIL_PROTECTION_SENDER_KEY)) &amp;&amp; &quot;helpdesk@websupport.sk&quot;.equals(recipientEmail)==false)</span>
+		{
+<span class="nc" id="L145">			String from = Constants.getString(EMAIL_PROTECTION_SENDER_KEY);</span>
+<span class="nc" id="L146">			String oldSender = senderEmail;</span>
+<span class="nc" id="L147">			senderEmail = from;</span>
+
+<span class="nc" id="L149">			String defaultName = Constants.getString(EMAIL_PROTECTION_SENDER_NAME_KEY);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (Tools.isNotEmpty(defaultName)) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				if (defaultName.equalsIgnoreCase(&quot;same-as-email&quot;)) {</span>
+<span class="nc" id="L152">					senderName = from;</span>
+				}
+				else {
+<span class="nc" id="L155">					senderName = defaultName;</span>
+				}
+			}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">			if (!from.equals(oldSender))</span>
+			{
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (Tools.isEmpty(replyTo))</span>
+<span class="nc" id="L162">					replyTo = oldSender;</span>
+				//else - replyTo nemoze obsahovat viacero email adries!
+				//	replyTo += &quot;,&quot;+oldSender;
+			}
+		}
+
+<span class="fc" id="L168">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">		if (requestBean != null)</span>
+		{
+<span class="fc bfc" id="L171" title="All 2 branches covered.">			if (Tools.isEmpty(baseHref)) baseHref = requestBean.getBaseHref();</span>
+		}
+<span class="pc bfc" id="L173" title="All 2 branches covered.">		if (Tools.isEmpty(baseHref)) try { baseHref = Tools.getBaseHref(null); } catch (Exception ex) {}</span>
+
+		//ak je &lt;img src='xxxx' tak sa to nezobrazi v mozille
+		try
+		{
+<span class="fc" id="L178">			int start = message.indexOf(&quot;src='&quot;);</span>
+			int end;
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">			while (start != -1)</span>
+			{
+<span class="nc" id="L182">				end = message.indexOf(&quot;'&quot;, start+6);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				if (end &gt; start)</span>
+				{
+<span class="nc" id="L185">					message = message.substring(0, start) + &quot;src=\&quot;&quot; + message.substring(start+5, end) + &quot;\&quot;&quot; + message.substring(end+1);</span>
+					//Logger.println(this,message);
+				}
+				else
+				{
+					//ukonci cyklus
+					break;
+				}
+			}
+		}
+<span class="nc" id="L195">		catch (Exception e)</span>
+		{
+<span class="nc" id="L197">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L198">		}</span>
+
+<span class="pc bpc" id="L200" title="1 of 4 branches missed.">		if (baseHref!=null &amp;&amp; baseHref.length()&gt;8)</span>
+		{
+			//uprav to z adresy http://www.interway.sk/nieco/stranka.html na http://www.interway.sk
+<span class="fc" id="L203">			int i = baseHref.indexOf('/', 9);</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">			if (i!=-1)</span>
+			{
+<span class="fc" id="L206">				baseHref = baseHref.substring(0, i);</span>
+<span class="fc" id="L207">				Logger.println(SendMail.class,&quot;baseHref: &quot; + baseHref);</span>
+			}
+		}
+
+		//oprav linky
+<span class="fc" id="L212">		message = SendMail.createAbsolutePath(message, baseHref);</span>
+
+<span class="fc" id="L214">		Properties props = System.getProperties();</span>
+<span class="fc" id="L215">		props.put(&quot;mail.smtp.host&quot;, Constants.getString(&quot;smtpServer&quot;));</span>
+<span class="fc" id="L216">        props.put(&quot;mail.mime.charset&quot;, SetCharacterEncodingFilter.getEncoding());</span>
+
+<span class="fc" id="L218">		Session ms = getSession(props);</span>
+
+
+		try
+		{
+			//ak nie je zadany odosielatel, domyslime si ho
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">			if (Tools.isEmpty(senderEmail))</span>
+			{
+<span class="nc" id="L226">				senderEmail = recipientEmail;</span>
+			}
+
+			//uprav email formatu lubos@balat.sk,pokus@interway.sk pretoze
+			//niekedy je sender rovnaky ako prijemca
+<span class="fc" id="L231">			senderEmail = getFirstEmailAddress(senderEmail);</span>
+		}
+<span class="nc" id="L233">		catch (Exception e)</span>
+		{
+<span class="nc" id="L235">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L236">		}</span>
+
+<span class="fc bfc" id="L238" title="All 2 branches covered.">		if (subject.indexOf(&quot;WebJET restart&quot;)==-1)</span>
+		{
+
+			//Logger.println(this,&quot;SendMailMultipart from:&quot;+senderName+&quot; &lt;&quot;+senderEmail+&quot;&gt; to:&quot;+recipientEmail);
+<span class="fc" id="L242">			Logger.debug(SendMail.class,&quot;SendMail[&quot;+Constants.getInstallName()+&quot;]: sending email from: &quot; + senderEmail + &quot; to: &quot; + recipientEmail+&quot; subject: &quot;+subject+&quot;|&quot;);</span>
+
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">			if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+			{
+<span class="nc" id="L246">				Logger.debug(SendMail.class, &quot;email from:&quot; + senderEmail + &quot; to:&quot; + recipientEmail+&quot; subject:&quot;+subject + &quot; body:&quot;+message);</span>
+			}
+
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">			if(writeToAuditLog)</span>
+			{
+<span class="pc bpc" id="L251" title="5 of 6 branches missed.">				 if (&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; message.indexOf(&quot;Heslo:&quot;)==-1 &amp;&amp; message.indexOf(&quot;Password:&quot;)==-1)</span>
+				 {
+					  //pre cloud (mimo dmailu) logujeme aj telo emailu
+<span class="nc" id="L254">					  Adminlog.add(Adminlog.TYPE_SENDMAIL, &quot;email from:&quot; + senderEmail + &quot; to:&quot; + recipientEmail+&quot; subject:&quot;+subject + &quot; body:&quot;+message, -1, -1);</span>
+				 }
+				 else
+				 {
+<span class="fc" id="L258">					  Adminlog.add(Adminlog.TYPE_SENDMAIL, &quot;email from:&quot; + senderEmail + &quot; to:&quot; + recipientEmail+&quot; subject:&quot;+subject, -1, -1);</span>
+				 }
+			}
+		}
+
+		try
+		{
+<span class="fc" id="L265">			Message mes = new MimeMessage(ms);</span>
+
+
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">			if (subject.startsWith(AUTOREPLY_SUBJECT))</span>
+			{
+<span class="nc" id="L270">			    mes.setHeader(&quot;X-Autoreply&quot;,AUTOREPLY_SUBJECT);</span>
+			}
+
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">			if (senderEmail.length() &gt; 0)</span>
+			{
+<span class="fc" id="L275">				mes.setFrom(new InternetAddress(senderEmail, senderName));</span>
+			}
+			else
+			{
+<span class="nc" id="L279">				mes.setFrom(new InternetAddress(&quot;bez.emailu@interway.sk&quot;));</span>
+			}
+
+			//mes.setFrom(new InternetAddress(senderEmail, DB.internationalToEnglish(senderName)));
+<span class="fc" id="L283">			mes.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail, false));</span>
+			try
+			{
+<span class="pc bpc" id="L286" title="3 of 4 branches missed.">				if (replyTo != null &amp;&amp; replyTo.indexOf('@') != -1)</span>
+				{
+<span class="nc" id="L288">					InternetAddress[] rt = new InternetAddress[1];</span>
+<span class="nc" id="L289">					replyTo = getFirstEmailAddress(replyTo);</span>
+<span class="nc" id="L290">					rt[0] = new InternetAddress(DB.internationalToEnglish(replyTo));</span>
+<span class="nc" id="L291">					mes.setReplyTo(rt);</span>
+				}
+<span class="pc bpc" id="L293" title="3 of 4 branches missed.">				if (ccEmail != null &amp;&amp; ccEmail.indexOf('@')!=-1)</span>
+				{
+<span class="nc" id="L295">					InternetAddress[] ccAddrs = InternetAddress.parse(ccEmail, false);</span>
+<span class="nc" id="L296">					mes.setRecipients(Message.RecipientType.CC, ccAddrs);</span>
+				}
+<span class="pc bpc" id="L298" title="3 of 4 branches missed.">				if (bccEmail != null &amp;&amp; bccEmail.indexOf('@')!=-1)</span>
+				{
+<span class="nc" id="L300">					InternetAddress[] bccAddrs = InternetAddress.parse(bccEmail, false);</span>
+<span class="nc" id="L301">					mes.setRecipients(Message.RecipientType.BCC, bccAddrs);</span>
+				}
+			}
+<span class="nc" id="L304">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L306">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L307">			}</span>
+
+<span class="fc" id="L309">			String emailEncoding = Constants.getString(&quot;emailEncoding&quot;);</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">			if (Tools.isEmpty(emailEncoding))</span>
+			{
+<span class="fc" id="L312">				emailEncoding = SetCharacterEncodingFilter.getEncoding();</span>
+			}
+
+<span class="fc" id="L315">			mes.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));</span>
+<span class="fc" id="L316">			mes.setSentDate(new java.util.Date());</span>
+
+
+<span class="pc bpc" id="L319" title="1 of 4 branches missed.">			if (isHtmlContent(message) || Tools.isNotEmpty(attachmentsList))</span>
+			{
+<span class="fc" id="L321">				Multipart mpart = new MimeMultipart(&quot;mixed&quot;);</span>
+<span class="fc" id="L322">				Multipart attachments = new MimeMultipart();</span>
+<span class="fc" id="L323">				Multipart related = new MimeMultipart();</span>
+<span class="fc" id="L324">				message = putInlineAttachments(attachments, related, message, baseHref);</span>
+
+<span class="fc" id="L326">				boolean attachFiles = true;</span>
+				String serverPath;
+				String fileName;
+<span class="fc" id="L329">				StringTokenizer st = null;</span>
+<span class="fc" id="L330">				long size = 0;</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(attachmentsList))   //skontroluj normalne attachmenty</span>
+				{
+<span class="nc" id="L333">					st = new StringTokenizer(attachmentsList, &quot;;&quot;);</span>
+
+<span class="nc" id="L335">					IwcmFile file = null;</span>
+<span class="nc bnc" id="L336" title="All 4 branches missed.">					while (st.hasMoreTokens() &amp;&amp; attachFiles)   //zisti velkosti priloh</span>
+					{
+<span class="nc" id="L338">						serverPath = st.nextToken();</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">						if (st.hasMoreTokens())</span>
+						{
+<span class="nc" id="L341">							file = IwcmFile.fromVirtualPath(serverPath);</span>
+							//try absolute path otherwise
+<span class="nc bnc" id="L343" title="All 2 branches missed.">							if (!file.exists()) file = new IwcmFile(serverPath);</span>
+
+<span class="nc" id="L345">							size += file.length();</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">							if (size &gt; Constants.getLong(&quot;maxSizeOfAttachments&quot;))</span>
+							{
+<span class="nc" id="L348">								attachFiles = false;   //ak je velkost prilohy vacsia ako stanovena hranica, prilohy k mailu nepripojim</span>
+							}
+						}
+
+					}
+				}
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">				if (!attachFiles)</span>
+				{
+<span class="nc" id="L356">					message += prop.getText(&quot;email.too_large_attachments&quot;);</span>
+				}
+
+				// create wrap if we have related attachments - images in html
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">				if (related.getCount() &gt; 0)</span>
+				{
+<span class="nc" id="L362">					Logger.println(SendMail.class, &quot;mam nejake related, posielam&quot;);</span>
+<span class="nc" id="L363">					putMessagePart(mpart, message, related);</span>
+				} else
+				{
+<span class="fc" id="L366">					putMessagePart(mpart, message, null);</span>
+				}
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">				for (int i = 0; i &lt; attachments.getCount(); i++)</span>
+				{
+<span class="nc" id="L370">					mpart.addBodyPart(attachments.getBodyPart(i));</span>
+				}
+				//nahod normalne attachmenty
+<span class="pc bpc" id="L373" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(attachmentsList))</span>
+				{
+<span class="nc bnc" id="L375" title="All 2 branches missed.">					if (attachFiles)</span>
+					{
+<span class="nc" id="L377">						st = new StringTokenizer(attachmentsList, &quot;;&quot;);</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">						while (st.hasMoreTokens())</span>
+						{
+<span class="nc" id="L380">							serverPath = st.nextToken();</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">							if (st.hasMoreTokens())</span>
+							{
+<span class="nc" id="L383">								fileName = st.nextToken();</span>
+<span class="nc" id="L384">								SendMail.attFile(serverPath, fileName, mpart);</span>
+							}
+						}
+					}
+				}
+
+<span class="fc" id="L390">				mes.setContent(mpart);</span>
+<span class="fc" id="L391">			}</span>
+			else
+			{
+				//je to plain text email
+<span class="fc" id="L395">				mes.setContent(message, &quot;text/plain; charset=&quot;+emailEncoding);</span>
+			}
+
+			try
+			{
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">				if (Constants.getBoolean(&quot;sendMailSaveEmail&quot;)) {</span>
+<span class="nc" id="L401">					saveEmailToFile(mes);</span>
+				}
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">				else if (Constants.getBoolean(&quot;useAmazonSES&quot;))</span>
+				{
+<span class="nc" id="L405">					AWSJavaMailTransport transport = new AWSJavaMailTransport(ms, null);</span>
+<span class="nc" id="L406">					transport.connect();</span>
+<span class="nc" id="L407">					transport.sendMessage(mes,null);</span>
+<span class="nc" id="L408">					transport.close();</span>
+<span class="nc" id="L409">				}</span>
+				else
+				{
+<span class="fc" id="L412">					Transport.send(mes);</span>
+				}
+<span class="fc" id="L414">				Logger.debug(SendMail.class,&quot;email odoslany&quot;);</span>
+<span class="fc" id="L415">				return Pair.of(true, null);</span>
+			}
+<span class="nc" id="L417">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L419" title="All 2 branches missed.">				if (subject.indexOf(&quot;WebJET restart&quot;)==-1)</span>
+				{
+<span class="nc" id="L421">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L422">					Adminlog.add(Adminlog.TYPE_SENDMAIL, &quot;ERROR sending email (from: &quot;+senderEmail+&quot;, to: &quot;+recipientEmail+&quot;, cc: &quot;+ccEmail+&quot;, bcc: &quot;+bccEmail+&quot;, subject: &quot;+subject+&quot;) ex:&quot;+ex.getMessage()+&quot;\n\n&quot;+Logger.getStackTrace(ex), -1, -1);</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">					if (sendLaterWhenException) //mail ulozim pre neskorsie poslanie</span>
+					{
+<span class="nc" id="L425">						Logger.debug(SendMail.class, &quot;sendLaterWhenException=true -&gt; sending later.&quot; );</span>
+<span class="nc" id="L426">						sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, null, null, attachmentsList);</span>
+					}
+				}
+<span class="nc" id="L429">				return Pair.of(false, ex);</span>
+			}
+		}
+<span class="nc" id="L432">		catch (Exception e)</span>
+		{
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if (subject.indexOf(&quot;WebJET restart&quot;)==-1)</span>
+			{
+<span class="nc" id="L436">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L437">                Adminlog.add(Adminlog.TYPE_SENDMAIL, &quot;ERROR sending email (from: &quot;+senderEmail+&quot;, to: &quot;+recipientEmail+&quot;, cc: &quot;+ccEmail+&quot;, bcc: &quot;+bccEmail+&quot;, subject: &quot;+subject+&quot;) ex:&quot;+e.getMessage()+&quot;\n\n&quot;+Logger.getStackTrace(e), -1, -1);</span>
+			}
+<span class="nc" id="L439">			return Pair.of(false, e);</span>
+		}
+	}
+
+	private static void saveEmailToFile(Message mes) {
+<span class="nc" id="L444">		String sendMailSaveEmailPath = Constants.getString(&quot;sendMailSaveEmailPath&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">		if (Tools.isEmpty(sendMailSaveEmailPath)) {</span>
+<span class="nc" id="L446">			Logger.debug(SendMail.class, &quot;sendMailSaveEmailPath is not configured&quot;);</span>
+<span class="nc" id="L447">			return;</span>
+		}
+
+<span class="nc" id="L450">		Logger.debug(SendMail.class, String.format(&quot;Email neodosielam, zapisujem do: %s&quot;, sendMailSaveEmailPath));</span>
+<span class="nc" id="L451">		String realPath = Tools.getRealPath(sendMailSaveEmailPath);</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">		if (!realPath.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L453">			realPath += &quot;/&quot;;</span>
+		}
+
+<span class="nc" id="L456">		File file = new File(realPath + new Date().getTime() + &quot;.eml&quot;);</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">		if (!file.getParentFile().exists()) {</span>
+<span class="nc" id="L458">			file.getParentFile().mkdirs();</span>
+		}
+		try {
+<span class="nc" id="L461">			FileOutputStream fileOutputStream = new FileOutputStream(file);</span>
+<span class="nc" id="L462">			mes.writeTo(fileOutputStream);</span>
+<span class="nc" id="L463">			fileOutputStream.close();</span>
+
+<span class="nc" id="L465">			Logger.debug(SendMail.class, &quot;Email zapisany&quot;);</span>
+<span class="nc" id="L466">		} catch (IOException | MessagingException e) {</span>
+<span class="nc" id="L467">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L468">		}</span>
+<span class="nc" id="L469">	}</span>
+
+	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time)
+	{
+<span class="nc" id="L473">		return sendLater(senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, message, baseHref, date, time,null);</span>
+	}
+
+	/**
+	 * Oneskorene odoslanie emailu
+	 * @param senderName
+	 * @param senderEmail
+	 * @param recipientEmail
+	 * @param replyTo
+	 * @param subject
+	 * @param message
+	 * @param baseHref
+	 * @param date
+	 * @param time
+	 * @return
+	 */
+	public static boolean sendLater(String senderName, String senderEmail, String recipientEmail, String replyTo, String ccEmail, String bccEmail, String subject, String message, String baseHref, String date, String time,String attachments)
+	{
+		//pridanie ContextPath pre admin cast (ak je nastavene)
+<span class="nc bnc" id="L492" title="All 4 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;contextPathAdmin&quot;)) &amp;&amp; message.indexOf(&quot;://cms&quot;)!=-1)</span>
+		{
+<span class="nc" id="L494">			message = ContextFilter.addContextPath(Constants.getString(&quot;contextPathAdmin&quot;), message);</span>
+<span class="nc" id="L495">			subject = ContextFilter.addContextPath(Constants.getString(&quot;contextPathAdmin&quot;), subject);</span>
+		}
+
+		//uloz si parametre do DB a posli to v stanovenom case
+		try
+		{
+<span class="nc" id="L501">			Connection db_conn = DBPool.getConnection();</span>
+			try
+			{
+<span class="nc" id="L504">				PreparedStatement ps = db_conn.prepareStatement(&quot;INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;);</span>
+				try
+				{
+<span class="nc" id="L507">					int counter = 1;</span>
+<span class="nc" id="L508">					ps.setString(counter++, recipientEmail);</span>
+<span class="nc" id="L509">					ps.setString(counter++, recipientEmail);</span>
+<span class="nc" id="L510">					ps.setString(counter++, senderName);</span>
+<span class="nc" id="L511">					ps.setString(counter++, senderEmail);</span>
+<span class="nc" id="L512">					ps.setString(counter++, subject);</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">					ps.setString(counter++, (baseHref == null) ? &quot;&quot; : baseHref);</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">					if (Tools.isEmpty(attachments))</span>
+					{
+<span class="nc" id="L516">						ps.setString(counter++, null);</span>
+					}
+					else
+					{
+<span class="nc" id="L520">						ps.setString(counter++, attachments);</span>
+					}
+<span class="nc" id="L522">					ps.setInt(counter++, 0);</span>
+<span class="nc" id="L523">					ps.setString(counter++, null);</span>
+<span class="nc" id="L524">					ps.setInt(counter++, -1);</span>
+<span class="nc" id="L525">					ps.setTimestamp(counter++, new Timestamp(Tools.getNow()));</span>
+<span class="nc bnc" id="L526" title="All 4 branches missed.">					if (Tools.isNotEmpty(date) &amp;&amp; Tools.isNotEmpty(time))</span>
+					{
+<span class="nc" id="L528">						ps.setTimestamp(counter++, new Timestamp(DB.getTimestamp(date, time)));</span>
+					}
+					else
+					{
+<span class="nc" id="L532">						ps.setNull(counter++, Types.TIMESTAMP);</span>
+					}
+<span class="nc" id="L534">					DB.setClob(ps, counter++, message);</span>
+<span class="nc" id="L535">					ps.setString(counter++, replyTo);</span>
+<span class="nc" id="L536">					ps.setString(counter++, ccEmail);</span>
+<span class="nc" id="L537">					ps.setString(counter++, bccEmail);</span>
+<span class="nc" id="L538">					ps.execute();</span>
+				}
+<span class="nc" id="L540">				finally { ps.close(); }</span>
+			}
+<span class="nc" id="L542">			finally { db_conn.close(); }</span>
+		}
+<span class="nc" id="L544">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L546">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L547">			Adminlog.add(Adminlog.TYPE_SENDMAIL, &quot;ERROR sending email later ex:&quot;+ex.getMessage(), -1, -1);</span>
+<span class="nc" id="L548">		}</span>
+
+<span class="nc" id="L550">		return(true);</span>
+	}
+
+	/**
+	 * Ziska zoznam inline priloh (obrazkov)
+	 * @param htmlCode
+	 * @return
+	 */
+	public static List&lt;String&gt; getInlineAttachments(String htmlCode)
+	{
+		//Logger.println(this,&quot;Getting INLINE attachments from mail&quot;);
+<span class="fc" id="L561">		EditorKit kit = new HTMLEditorKit();</span>
+<span class="fc" id="L562">		Document doc = kit.createDefaultDocument();</span>
+		// The Document class does not yet
+		// handle charset's properly.
+<span class="fc" id="L565">		doc.putProperty(&quot;IgnoreCharsetDirective&quot;, Boolean.TRUE);</span>
+
+<span class="fc" id="L567">		List&lt;String&gt; att = new ArrayList&lt;&gt;();</span>
+		try
+		{
+			// Create a reader on the HTML content.
+<span class="fc" id="L571">			Reader rd = new StringReader(htmlCode);</span>
+			// Parse the HTML.
+<span class="fc" id="L573">			kit.read(rd, doc, 0);</span>
+			// Iterate through the elements
+			// of the HTML document.
+<span class="fc" id="L576">			ElementIterator it = new ElementIterator(doc);</span>
+			javax.swing.text.Element elem;
+<span class="fc bfc" id="L578" title="All 2 branches covered.">			while ((elem = it.next()) != null)</span>
+			{
+<span class="pc bpc" id="L580" title="1 of 2 branches missed.">				if (elem.getName().equals(&quot;img&quot;))</span>
+				{
+<span class="nc" id="L582">					String src = (String) elem.getAttributes().getAttribute(HTML.Attribute.SRC);</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">					if (Tools.isEmpty(src))</span>
+					{
+<span class="nc" id="L585">						continue;</span>
+					}
+					//Logger.println(this,src);
+<span class="nc" id="L588">					att.add(src);</span>
+				}
+				//jeeff: test na atribut background
+<span class="pc bpc" id="L591" title="1 of 2 branches missed.">				if (elem.getAttributes().getAttribute(HTML.Attribute.BACKGROUND) != null)</span>
+				{
+<span class="nc" id="L593">					String src = (String) elem.getAttributes().getAttribute(HTML.Attribute.BACKGROUND);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">					if (Tools.isEmpty(src))</span>
+					{
+<span class="nc" id="L596">						continue;</span>
+					}
+					//Logger.println(this,src);
+<span class="nc" id="L599">					att.add(src);</span>
+<span class="nc" id="L600">				}</span>
+			}
+		}
+<span class="nc" id="L603">		catch (Exception e)</span>
+		{
+<span class="nc" id="L605">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L606">		}</span>
+<span class="fc" id="L607">		return(att);</span>
+	}
+
+	/**
+	 * Prida do emailu Inline obrazky
+	 * @param atts
+	 * @param related
+	 * @param message
+	 * @param baseHref
+	 * @return
+	 * @throws Exception
+	 */
+	private static String putInlineAttachments(Multipart atts, Multipart related, String message, String baseHref) throws Exception
+	{
+<span class="fc" id="L621">		String rt = message;</span>
+		try
+		{
+<span class="fc" id="L624">			List&lt;String&gt; att = getInlineAttachments(message);</span>
+
+<span class="fc" id="L626">			Iterator&lt;String&gt; iter = att.iterator();</span>
+			String url;
+			IwcmFile f;
+			FileDataSource fds;
+			URL u;
+			URLDataSource uds;
+			MimeBodyPart at;
+<span class="pc bpc" id="L633" title="1 of 2 branches missed.">			while (iter.hasNext())</span>
+			{
+<span class="nc" id="L635">				url = iter.next();</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">				if (url.startsWith(&quot;http&quot;))</span>
+				{
+					//url = sk.iway.URLPathEncoder.encode(url);
+<span class="nc" id="L639">					url = Tools.replace(url, &quot; &quot;, &quot;%20&quot;);</span>
+
+					//inline attachment
+<span class="nc" id="L642">					String downloadUrl = url;</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">					if (url.indexOf(&quot;http&quot;)==-1)</span>
+					{
+<span class="nc" id="L645">						downloadUrl = baseHref + url;</span>
+					}
+<span class="nc" id="L647">					downloadUrl = Tools.natUrl(downloadUrl);</span>
+<span class="nc" id="L648">					u = new URL(downloadUrl);</span>
+
+<span class="nc" id="L650">					Logger.println(SendMail.class,&quot;ATT url: &quot; + downloadUrl);</span>
+<span class="nc" id="L651">					uds = new URLDataSource(u);</span>
+<span class="nc" id="L652">					at = new MimeBodyPart();</span>
+<span class="nc" id="L653">					at.setDataHandler(new DataHandler(uds));</span>
+<span class="nc" id="L654">				}</span>
+				else
+				{
+<span class="nc bnc" id="L657" title="All 2 branches missed.">					if (url.charAt(0)!='/')</span>
+					{
+<span class="nc" id="L659">						url = &quot;/&quot; + url;</span>
+					}
+
+					//ak mame multidomain fixni cesty
+<span class="nc" id="L663">					String localUrl = url;</span>
+					//tento try neodstranujte, moze nastat indexOufOfBounds v casti baseHref.indexOf
+					try
+					{
+<span class="nc bnc" id="L667" title="All 2 branches missed.">						if (Tools.isNotEmpty(baseHref))</span>
+						{
+<span class="nc" id="L669">							String domain = baseHref.substring(baseHref.indexOf(&quot;://&quot;));</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">							if (domain.indexOf(':')!=-1) domain = domain.substring(0, domain.indexOf(':'));</span>
+<span class="nc" id="L671">							localUrl = MultiDomainFilter.rewriteUrlToLocal(url, MultiDomainFilter.getDomainAlias(domain));</span>
+<span class="nc" id="L672">							Logger.debug(SendMail.class, &quot;Trying to fix multidomain: url=&quot;+url+&quot; local=&quot;+localUrl+&quot; domain=&quot;+domain+&quot; basehref=&quot;+baseHref);</span>
+						}
+					}
+<span class="nc" id="L675">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L677">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L678">					}</span>
+
+<span class="nc" id="L680">					f = new IwcmFile((Tools.getRealPath(localUrl)));</span>
+
+<span class="nc bnc" id="L682" title="All 4 branches missed.">					if (IwcmFsDB.useDBStorage(localUrl) &amp;&amp; f.exists())</span>
+					{
+<span class="nc" id="L684">						File tempFile = new File(IwcmFsDB.getTempFilePath(f.getPath()));</span>
+<span class="nc bnc" id="L685" title="All 4 branches missed.">						if (tempFile.exists()==false || tempFile.lastModified() &gt; f.lastModified())</span>
+						{
+<span class="nc" id="L687">							IwcmFsDB.writeFileToDisk(new File(f.getPath()), tempFile);</span>
+						}
+					}
+
+<span class="nc bnc" id="L691" title="All 6 branches missed.">					if (f.exists() &amp;&amp; f.canRead() &amp;&amp; f.isFile())</span>
+					{
+<span class="nc" id="L693">						Logger.println(SendMail.class,&quot;ATT file: &quot; + url + &quot; path=&quot;+f.getAbsolutePath());</span>
+<span class="nc bnc" id="L694" title="All 2 branches missed.">						if (IwcmFsDB.useDBStorage(url))</span>
+						{
+<span class="nc" id="L696">						fds = new FileDataSource(new File(IwcmFsDB.getTempFilePath(f.getPath())));</span>
+						}
+						else
+						{
+<span class="nc" id="L700">							fds = new FileDataSource(new File(f.getAbsolutePath()));</span>
+						}
+
+<span class="nc" id="L703">						at = new MimeBodyPart();</span>
+<span class="nc" id="L704">						at.setDataHandler(new DataHandler(fds));</span>
+					}
+					else
+					{
+						//je to nejaky virtualny obrazok, je mozne ho asi len stiahnut
+<span class="nc" id="L709">						url = Tools.replace(url, &quot; &quot;, &quot;%20&quot;);</span>
+
+						//inline attachment
+<span class="nc" id="L712">						String downloadUrl = url;</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">						if (url.indexOf(&quot;http&quot;)==-1)</span>
+						{
+<span class="nc" id="L715">							downloadUrl = baseHref + url;</span>
+						}
+
+<span class="nc" id="L718">						Logger.debug(SendMail.class,&quot;ATT url: &quot; + downloadUrl);</span>
+
+<span class="nc" id="L720">						downloadUrl = Tools.natUrl(downloadUrl);</span>
+<span class="nc" id="L721">						u = new URL(downloadUrl);</span>
+
+<span class="nc" id="L723">						uds = new URLDataSource(u);</span>
+<span class="nc" id="L724">						at = new MimeBodyPart();</span>
+<span class="nc" id="L725">						at.setDataHandler(new DataHandler(uds));</span>
+					}
+				}
+
+				//ponechame povodne URL obrazku
+<span class="nc" id="L730">				boolean dmailDisableInlineImages = Constants.getBoolean(&quot;dmailDisableInlineImages&quot;);</span>
+<span class="nc" id="L731">				String trackGif = Constants.getString(&quot;dmailTrackopenGif&quot;);</span>
+
+<span class="nc" id="L733">				boolean whitelisted = false;</span>
+<span class="nc" id="L734">				String dmailWhitelistImageDomains = Constants.getString(&quot;dmailWhitelistImageDomains&quot;);</span>
+<span class="nc bnc" id="L735" title="All 4 branches missed.">				if (Tools.isNotEmpty(dmailWhitelistImageDomains) &amp;&amp; url.startsWith(&quot;http&quot;))</span>
+				{
+					try
+					{
+<span class="nc" id="L739">						String domain = url.substring(url.indexOf(&quot;:&quot;)+3, url.indexOf(&quot;/&quot;, 8));</span>
+<span class="nc" id="L740">						Logger.debug(SendMail.class, &quot;Testing whitelist domain:&quot;+domain);</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">						if (dmailWhitelistImageDomains.indexOf(domain)!=-1) whitelisted = true;</span>
+					}
+<span class="nc" id="L743">					catch (Exception e)</span>
+					{
+<span class="nc" id="L745">						sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L746">					}</span>
+				}
+
+<span class="nc bnc" id="L749" title="All 8 branches missed.">				if(dmailDisableInlineImages || (Tools.isNotEmpty(trackGif) &amp;&amp; url.indexOf(trackGif)!=-1) || whitelisted)</span>
+				{
+<span class="nc bnc" id="L751" title="All 2 branches missed.">					if (url.indexOf(&quot;http&quot;)==-1)</span>
+					{
+<span class="nc" id="L753">						url = Tools.replace(url, &quot;%20&quot;, &quot; &quot;);</span>
+<span class="nc" id="L754">						String newUrl = baseHref + url;</span>
+<span class="nc" id="L755">						rt = Tools.replace(rt, url, newUrl);</span>
+<span class="nc" id="L756">					}</span>
+				}
+				else
+				{
+<span class="nc" id="L760">					String hash = putAsInline(rt, url);</span>
+<span class="nc" id="L761">					Logger.println(SendMail.class,&quot;hash: &quot; + hash);</span>
+<span class="nc bnc" id="L762" title="All 4 branches missed.">					if (hash != null &amp;&amp; at != null)</span>
+					{
+<span class="nc" id="L764">						rt = Tools.replace(rt, url, &quot;cid:WebJET.&quot; + hash);</span>
+
+<span class="nc" id="L766">						String onlyFile = onlyFile(url);</span>
+<span class="nc bnc" id="L767" title="All 4 branches missed.">						if (onlyFile!=null &amp;&amp; onlyFile.toLowerCase().endsWith(&quot;.png&quot;))</span>
+						{
+							//toto linux server niekedy nepozna
+<span class="nc" id="L770">							at.setHeader(&quot;Content-Type&quot;, &quot;image/png; name=&quot;+onlyFile);</span>
+						}
+
+<span class="nc" id="L773">						at.setHeader(&quot;Content-ID&quot;, &quot;&lt;WebJET.&quot; + hash + &quot;&gt;&quot;);</span>
+<span class="nc" id="L774">						at.setHeader(&quot;Content-Disposition&quot;, &quot;inline;\n filename=\&quot;&quot;+onlyFile+&quot;\&quot;&quot;);</span>
+<span class="nc" id="L775">						related.addBodyPart(at);</span>
+<span class="nc" id="L776">						Logger.println(SendMail.class,&quot;pridane&quot;);</span>
+					}
+				}
+<span class="nc" id="L779">			}</span>
+		}
+<span class="nc" id="L781">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L783">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+<span class="nc" id="L786">		{</span>
+
+<span class="pc" id="L788">		}</span>
+<span class="fc" id="L789">		return rt;</span>
+	}
+
+	/**
+	 * Prida do emailu message part
+	 * @param mp
+	 * @param message
+	 * @param related
+	 * @throws MessagingException
+	 */
+	private static void putMessagePart(Multipart mp, String message, Multipart related) throws MessagingException
+	{
+<span class="fc" id="L801">		MimeMultipart content = new MimeMultipart(&quot;alternative&quot;);</span>
+<span class="pc bpc" id="L802" title="1 of 2 branches missed.">		String txtVersion = isHtmlContent(message) ? sk.iway.Html2Text.html2text(message) : message;</span>
+
+<span class="fc" id="L804">		String emailEncoding = Constants.getString(&quot;emailEncoding&quot;);</span>
+<span class="pc bpc" id="L805" title="1 of 2 branches missed.">		if (Tools.isEmpty(emailEncoding))</span>
+		{
+<span class="fc" id="L807">			emailEncoding = SetCharacterEncodingFilter.getEncoding();</span>
+		}
+
+<span class="pc bpc" id="L810" title="2 of 4 branches missed.">		if (txtVersion != null &amp;&amp; txtVersion.length() &gt; 3)</span>
+		{
+<span class="fc" id="L812">			MimeBodyPart text = new MimeBodyPart();</span>
+
+<span class="fc" id="L814">			txtVersion = Tools.replace(txtVersion, &quot;&amp;lt;&quot;, &quot;&lt;&quot;);</span>
+<span class="fc" id="L815">			txtVersion = Tools.replace(txtVersion, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
+
+			//outlook maze nove riadky, fixuje sa to pridanim 2 medzier na kazdy novy riadok
+			//http://www.masternewmedia.org/newsletter_publishing/newsletter_formatting/remove_line_breaks_issue_Microsoft_Outlook_2003_when_publishing_text_newsletters_20051217.htm
+<span class="fc" id="L819">			txtVersion = Tools.replace(txtVersion, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L820">			txtVersion = Tools.replace(txtVersion, &quot;\n&quot;, &quot;\n  &quot;);</span>
+<span class="pc bpc" id="L821" title="1 of 2 branches missed.">			if (txtVersion.startsWith(&quot;  &quot;)==false) txtVersion = &quot;  &quot;+txtVersion;</span>
+
+<span class="fc" id="L823">			text.setText(txtVersion, emailEncoding);</span>
+<span class="fc" id="L824">			text.setHeader(&quot;MIME-Version&quot;, &quot;1.0&quot;);</span>
+<span class="fc" id="L825">			text.setHeader(&quot;Content-Type&quot;, &quot;text/plain; charset=&quot;+emailEncoding);</span>
+			//text.setContent(message, &quot;text/plain; charset=windows-1250&quot;);
+			//mp.addBodyPart(text);
+<span class="fc" id="L828">			content.addBodyPart(text);</span>
+		}
+<span class="pc bpc" id="L830" title="1 of 2 branches missed.">		if (message != null) {</span>
+<span class="fc" id="L831">			String det = message.toLowerCase();</span>
+<span class="pc bpc" id="L832" title="1 of 2 branches missed.">			if (isHtmlContent(det))</span>
+			{
+<span class="pc bpc" id="L834" title="1 of 2 branches missed.">				if (det.indexOf(&quot;&lt;html&quot;)==-1)</span>
+				{
+<span class="fc" id="L836">					message = &quot;&lt;html&gt;&lt;body&gt;&quot; + message + &quot;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+				}
+
+<span class="pc bpc" id="L839" title="3 of 4 branches missed.">				if (related != null &amp;&amp; related.getCount() &gt; 0)</span>
+				{
+<span class="nc" id="L841">					Multipart rela = new MimeMultipart(&quot;related&quot;);</span>
+<span class="nc" id="L842">					MimeBodyPart html = new MimeBodyPart();</span>
+<span class="nc" id="L843">					html.setContent(message, &quot;text/html; charset=&quot;+emailEncoding);</span>
+<span class="nc" id="L844">					html.setHeader(&quot;MIME-Version&quot;, &quot;1.0&quot;);</span>
+<span class="nc" id="L845">					html.setHeader(&quot;Content-Type&quot;, &quot;text/html; charset=&quot;+emailEncoding);</span>
+<span class="nc" id="L846">					rela.addBodyPart(html);</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">					for (int i = 0; i &lt; related.getCount(); i++)</span>
+					{
+<span class="nc" id="L849">						rela.addBodyPart(related.getBodyPart(i));</span>
+					}
+<span class="nc" id="L851">					MimeBodyPart wrap = new MimeBodyPart();</span>
+<span class="nc" id="L852">					wrap.setContent(rela);</span>
+<span class="nc" id="L853">					content.addBodyPart(wrap);</span>
+<span class="nc" id="L854">				}</span>
+				else
+				{
+<span class="fc" id="L857">					MimeBodyPart html = new MimeBodyPart();</span>
+<span class="fc" id="L858">					html.setContent(message, &quot;text/html; charset=&quot;+emailEncoding);</span>
+<span class="fc" id="L859">					html.setHeader(&quot;MIME-Version&quot;, &quot;1.0&quot;);</span>
+<span class="fc" id="L860">					html.setHeader(&quot;Content-Type&quot;, &quot;text/html; charset=&quot;+emailEncoding);</span>
+					//mp.addBodyPart(html);
+<span class="fc" id="L862">					content.addBodyPart(html);</span>
+				}
+			}
+		}
+		//mp.setContent(content);
+		//mp.addBodyPart(content);
+<span class="fc" id="L868">		MimeBodyPart wrap = new MimeBodyPart();</span>
+<span class="fc" id="L869">		wrap.setContent(content);</span>
+		// HERE'S THE KEY
+<span class="fc" id="L871">		mp.addBodyPart(wrap);</span>
+<span class="fc" id="L872">	}</span>
+
+	/**
+	 * Otestuje, ci zadany test je HTML kod
+	 * @param html
+	 * @return
+	 */
+	public static boolean isHtmlContent(String html)
+	{
+<span class="pc bpc" id="L881" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(html)) {</span>
+<span class="fc" id="L882">			String htmlLC = html.toLowerCase();</span>
+<span class="fc bfc" id="L883" title="All 2 branches covered.">			if (htmlLC.indexOf(&quot;&lt;br&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L884" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;div&gt;&quot;)!=-1) return true;</span>
+<span class="fc bfc" id="L885" title="All 2 branches covered.">			if (htmlLC.indexOf(&quot;&lt;/p&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L886" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/h&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L887" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/a&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L888" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;img &quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L889" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/b&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L890" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/strong&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L891" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/ul&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L892" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/ol&gt;&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L893" title="1 of 2 branches missed.">			if (htmlLC.indexOf(&quot;&lt;/td&gt;&quot;)!=-1) return true;</span>
+		}
+
+<span class="fc" id="L896">		return false;</span>
+	}
+
+	/**
+	 * Vypocita HASH hodnotu pre inline prilohu
+	 * @param message
+	 * @param iurl
+	 * @return
+	 */
+	private static String putAsInline(String message, String iurl)
+	{
+<span class="nc" id="L907">		String rt = null;</span>
+<span class="nc bnc" id="L908" title="All 2 branches missed.">		if (message.indexOf(iurl) != -1)</span>
+		{
+<span class="nc" id="L910">			rt = String.valueOf(iurl.hashCode());</span>
+			// nemozeme pouzit replace all pretoze &quot;regular expression&quot; je aktivne
+			// aj
+			// na X? a to moze byt sucast URL
+			// message = replaceAll(message,iurl,&quot;cid:&quot;+rt);
+		}
+<span class="nc" id="L916">		return rt;</span>
+	}
+
+
+	/**
+	 * Vrati nazov suboru z cesty
+	 * @param f
+	 * @return
+	 */
+	private static String onlyFile(String f)
+	{
+		try
+		{
+			//odstran image?v=aaaa z URL
+<span class="nc" id="L930">			int questionMark = f.indexOf(&quot;?&quot;);</span>
+<span class="nc bnc" id="L931" title="All 2 branches missed.">			if (questionMark &gt; 0)</span>
+			{
+<span class="nc" id="L933">				f = f.substring(0, questionMark);</span>
+			}
+
+<span class="nc" id="L936">			f = java.net.URLDecoder.decode(f, SetCharacterEncodingFilter.getEncoding());</span>
+		}
+<span class="nc" id="L938">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L940">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L941">		}</span>
+<span class="nc" id="L942">		f = f.replace('\\', '/');</span>
+<span class="nc" id="L943">		int pos = f.lastIndexOf('/');</span>
+<span class="nc bnc" id="L944" title="All 2 branches missed.">		if (pos == -1)</span>
+		{
+<span class="nc" id="L946">			return(DocTools.removeChars(f));</span>
+		}
+<span class="nc" id="L948">		return(DocTools.removeChars(f.substring(pos + 1)));</span>
+	}
+
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  serverPath            Description of the Parameter
+	 *@param  fileName              Description of the Parameter
+	 *@param  mp  Description of the Parameter
+	 */
+	public static void attFile(String serverPath, String fileName, Multipart mp)
+	{
+<span class="nc bnc" id="L961" title="All 2 branches missed.">		if (serverPath.contains(&quot;dms&quot;)){</span>
+            //toto nemoze byt povolene, pretoze to nepojde na WJ kde nie su DMS triedy, treba prerobit na reflectin DmsNotify.attDmsFile(fileName,mp);
+		}
+		else
+		{
+<span class="nc" id="L966">			Logger.println(SendMail.class,&quot;attaching: &quot;+serverPath+&quot; fileName=&quot;+fileName);</span>
+			try
+			{
+<span class="nc" id="L969">				IwcmFile file = IwcmFile.fromVirtualPath(serverPath);</span>
+				//try absolute path otherwise
+<span class="nc bnc" id="L971" title="All 2 branches missed.">				if (!file.exists()) file = new IwcmFile(serverPath);</span>
+
+<span class="nc bnc" id="L973" title="All 2 branches missed.">				if (file.exists())</span>
+				{
+<span class="nc" id="L975">					MimeBodyPart mbp2 = new MimeBodyPart();</span>
+
+<span class="nc" id="L977">					FileDataSource fds = null;</span>
+
+<span class="nc bnc" id="L979" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(file.getAbsolutePath())))</span>
+					{
+<span class="nc" id="L981">						IwcmFsDB.writeFileToDisk(new File(file.getAbsolutePath()),new File(IwcmFsDB.getTempFilePath(file.getAbsolutePath())));</span>
+<span class="nc" id="L982">						fds=new FileDataSource(IwcmFsDB.getTempFilePath(file.getAbsolutePath()));</span>
+					}
+					else
+					{
+<span class="nc" id="L986">						fds=new FileDataSource(file.getAbsolutePath());</span>
+					}
+
+<span class="nc" id="L989">					String mimeType = Constants.getServletContext().getMimeType(file.getName().toLowerCase());</span>
+<span class="nc bnc" id="L990" title="All 2 branches missed.">					if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+
+<span class="nc" id="L992">					mbp2.setDataHandler(new DataHandler(fds));</span>
+<span class="nc" id="L993">					mbp2.setHeader(&quot;Content-Type&quot;, mimeType);</span>
+<span class="nc" id="L994">					String emailEncoding = Constants.getString(&quot;emailEncoding&quot;);</span>
+<span class="nc bnc" id="L995" title="All 2 branches missed.">					if (Tools.isEmpty(emailEncoding))</span>
+<span class="nc" id="L996">						emailEncoding = SetCharacterEncodingFilter.getEncoding();</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">					mbp2.setFileName(MimeUtility.encodeText(Tools.isNotEmpty(fileName) ? fileName : file.getName(), emailEncoding, null));</span>
+
+<span class="nc" id="L999">					mp.addBodyPart(mbp2);</span>
+
+<span class="nc" id="L1001">					Logger.println(SendMail.class,&quot;done&quot;);</span>
+				}
+			}
+<span class="nc" id="L1004">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L1006">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1007">			}</span>
+		}
+
+<span class="nc" id="L1010">	}</span>
+
+	/**
+	 * Vrati kodovanie pre email podla nastavenia servera, alebo ak nie je prazdne podla konfiguracnej premennej emailEncoding
+	 * @return
+	 */
+	public String getEncoding()
+	{
+<span class="nc" id="L1018">		String emailEncoding = Constants.getString(&quot;emailEncoding&quot;);</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">		if (Tools.isEmpty(emailEncoding))</span>
+		{
+<span class="nc" id="L1021">			emailEncoding = SetCharacterEncodingFilter.getEncoding();</span>
+		}
+<span class="nc" id="L1023">		return emailEncoding;</span>
+	}
+
+	/**
+	 * Vytvori absolutne cesty v zadanom HTML kode
+	 * @param htmlCode - HTML kod
+	 * @param basePath - absolutna adresa, bez koncoveho /, napr. http://www.iway.sk
+	 * @return
+	 */
+	public static String createAbsolutePath(String htmlCode, String basePath)
+	{
+<span class="pc bpc" id="L1034" title="1 of 2 branches missed.">		if (basePath == null)</span>
+		{
+<span class="nc" id="L1036">			return(htmlCode);</span>
+		}
+
+		//Logger.println(this,&quot;replace: &quot; + htmlCode);
+
+		//ak je tam uz base path, tak ju zrus, inak tam bude 2x
+		//htmlCode = Tools.replace(htmlCode, basePath, &quot;&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;url(images/&quot;, &quot;url(&quot;+basePath+&quot;/images/&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;url(/images/&quot;, &quot;url(&quot;+basePath+&quot;/images/&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;\&quot;/images/&quot;, &quot;\&quot;&quot;+basePath+&quot;/images/&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;\&quot;/files/&quot;, &quot;\&quot;&quot;+basePath+&quot;/files/&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;\&quot;/css/&quot;, &quot;\&quot;&quot;+basePath+&quot;/css/&quot;);
+		//htmlCode = Tools.replace(htmlCode, &quot;/showdoc.do&quot;, &quot;\&quot;&quot;+basePath+&quot;/showdoc.do&quot;);
+<span class="fc" id="L1049">		htmlCode = Tools.replace(htmlCode, &quot;href=\&quot;/&quot;, &quot;href=\&quot;&quot; + basePath + &quot;/&quot;);</span>
+<span class="fc" id="L1050">		htmlCode = Tools.replace(htmlCode, &quot;href='/&quot;, &quot;href='&quot; + basePath + &quot;/&quot;);</span>
+<span class="fc" id="L1051">		htmlCode = Tools.replace(htmlCode, &quot;action=\&quot;/&quot;, &quot;action=\&quot;&quot; + basePath + &quot;/&quot;);</span>
+<span class="fc" id="L1052">		htmlCode = Tools.replace(htmlCode, &quot;action='/&quot;, &quot;action='&quot; + basePath + &quot;/&quot;);</span>
+
+		//replace URL v texte
+<span class="fc" id="L1055">		htmlCode = Tools.replace(htmlCode, &quot;target=\&quot;_blank\&quot;&gt;/&quot;, &quot;target=\&quot;_blank\&quot;&gt;&quot;+basePath+&quot;/&quot;);</span>
+
+		//Logger.println(this,&quot;-------replaced: &quot; + htmlCode);
+
+<span class="fc" id="L1059">		return(htmlCode);</span>
+	}
+
+	public static String createAbsolutePath(String htmlCode, HttpServletRequest request)
+	{
+<span class="fc" id="L1064">		String basePath = Tools.getBaseHref(request);</span>
+<span class="fc" id="L1065">		return(createAbsolutePath(htmlCode, basePath));</span>
+	}
+
+	/**
+	 * @param props
+	 * @return
+	 */
+	public static Session getSession(Properties props)
+	{
+<span class="pc bpc" id="L1074" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;useAmazonSES&quot;)==false) {</span>
+<span class="fc" id="L1075">			String port = &quot;25&quot;;</span>
+<span class="pc bpc" id="L1076" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;smtpPort&quot;)))</span>
+			{
+<span class="nc" id="L1078">				props.setProperty(&quot;mail.smtp.port&quot;, Constants.getString(&quot;smtpPort&quot;));</span>
+<span class="nc" id="L1079">				port=Constants.getString(&quot;smtpPort&quot;);</span>
+			}
+			else
+			{
+<span class="fc" id="L1083">				props.setProperty(&quot;mail.smtp.port&quot;, port);</span>
+			}
+
+<span class="fc" id="L1086">			int smtpConnectionTimeoutMillis = Constants.getInt(&quot;smtpConnectionTimeoutMillis&quot;);</span>
+<span class="pc bpc" id="L1087" title="1 of 2 branches missed.">			if(smtpConnectionTimeoutMillis &gt; 0)</span>
+			{
+<span class="fc" id="L1089">				props.put(&quot;mail.smtp.connectiontimeout&quot;, smtpConnectionTimeoutMillis);</span>
+			}
+
+<span class="pc bpc" id="L1092" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;smtpUseSSL&quot;))</span>
+			{
+<span class="nc" id="L1094">				props.put(&quot;mail.smtp.socketFactory.port&quot;, port);</span>
+<span class="nc" id="L1095">				props.put(&quot;mail.smtp.socketFactory.class&quot;, &quot;javax.net.ssl.SSLSocketFactory&quot;);</span>
+<span class="nc" id="L1096">				props.put(&quot;mail.smtp.ssl.checkserveridentity&quot;, true);</span>
+<span class="nc" id="L1097">				props.put(&quot;mail.smtp.socketFactory.fallback&quot;, &quot;false&quot;);</span>
+			}
+			// office365 (ak je port 587, smtpUseTLS musi byt true)
+<span class="pc bpc" id="L1100" title="1 of 2 branches missed.">			else if(Constants.getBoolean(&quot;smtpUseTLS&quot;))</span>
+			{
+<span class="nc" id="L1102">				props.put(&quot;mail.smtp.starttls.enable&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1103">				String smtpTLSVersion = Constants.getString(&quot;smtpTLSVersion&quot;);</span>
+<span class="nc bnc" id="L1104" title="All 2 branches missed.">				if (Tools.isNotEmpty(smtpTLSVersion)) props.put(&quot;mail.smtp.ssl.protocols&quot;, smtpTLSVersion);</span>
+			}
+		}
+
+		Session ms;
+<span class="pc bpc" id="L1109" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;smtpUser&quot;)) &amp;&amp;  Tools.isNotEmpty(Constants.getString(&quot;smtpPassword&quot;)))</span>
+		{
+			final class WJAuthenticator extends javax.mail.Authenticator
+			{
+				private final PasswordAuthentication authentication;
+
+				public WJAuthenticator()
+<span class="nc" id="L1116">				{</span>
+
+<span class="nc" id="L1118">					String username = Constants.getString(&quot;smtpUser&quot;);</span>
+<span class="nc" id="L1119">					String password = Constants.getString(&quot;smtpPassword&quot;);</span>
+<span class="nc" id="L1120">					authentication = new PasswordAuthentication(username, password);</span>
+<span class="nc" id="L1121">				}</span>
+
+				@Override
+				protected PasswordAuthentication getPasswordAuthentication()
+				{
+<span class="nc" id="L1126">					return authentication;</span>
+				}
+			}
+<span class="nc" id="L1129">			props.setProperty(&quot;mail.smtp.auth&quot;, &quot;true&quot;);</span>
+
+			//ziskanie getDefaultInstance nam na Exchange vracalo chybu INFO: java.lang.SecurityException: Access to default session denied
+<span class="nc" id="L1132">			ms = Session.getInstance(props, new WJAuthenticator());</span>
+		}
+<span class="pc bpc" id="L1134" title="1 of 2 branches missed.">		else if (Constants.getBoolean(&quot;useAmazonSES&quot;)</span>
+<span class="nc bnc" id="L1135" title="All 2 branches missed.">					&amp;&amp;  Tools.isNotEmpty(Constants.getString(&quot;amazonAccessKey&quot;))</span>
+<span class="nc bnc" id="L1136" title="All 2 branches missed.">					&amp;&amp;  Tools.isNotEmpty(Constants.getString(&quot;amazonSecretKey&quot;))) {</span>
+<span class="nc" id="L1137">					props.put(&quot;mail.aws.user&quot;, Constants.getString(&quot;amazonAccessKey&quot;));</span>
+<span class="nc" id="L1138">					props.put(&quot;mail.aws.password&quot;, Constants.getString(&quot;amazonSecretKey&quot;));</span>
+
+<span class="nc bnc" id="L1140" title="All 2 branches missed.">					if(Tools.isNotEmpty(Constants.getString(&quot;amazonEmailServiceHost&quot;))) props.put(&quot;mail.aws.host&quot;, Constants.getString(&quot;amazonEmailServiceHost&quot;));</span>
+
+<span class="nc" id="L1142">					ms = Session.getDefaultInstance(props,null);</span>
+		} else {
+<span class="fc" id="L1144">			ms = Session.getDefaultInstance(props,null);</span>
+		}
+<span class="fc" id="L1146">		return ms;</span>
+	}
+
+	/**
+	 * Ziska prvu email adresu zo stringu typu meno@domena.sk,ine@domena.sk (pre polia, ktore mozu mat len jeden email ako from a replyTo)
+	 * @param email
+	 * @return
+	 */
+	public static String getFirstEmailAddress(String email) {
+<span class="fc" id="L1155">		int i = email.indexOf(',');</span>
+<span class="pc bpc" id="L1156" title="1 of 2 branches missed.">		if (i!=-1)</span>
+		{
+<span class="nc" id="L1158">			email = email.substring(0, i);</span>
+		}
+<span class="fc" id="L1160">		return email;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

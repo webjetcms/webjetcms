@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultHashCalculator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.epayments</a> &gt; <span class="el_source">DefaultHashCalculator.java</span></div><h1>DefaultHashCalculator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.epayments;
+
+import java.security.KeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+
+import cryptix.provider.key.RawSecretKey;
+import cryptix.util.core.Hex;
+import xjava.security.Cipher;
+import xjava.security.IllegalBlockSizeException;
+
+/**
+ *  DefaultHashCalculator.java
+ *
+ *		Calculates hashString out of a given String.
+ *		Uses a default SHA/DES encrypting combination
+ *
+ *	used by:
+ *		{@link TatraPayInformation}
+ *		{@link VubEplatbyInformation}
+ *		{@link UniPlatbaInformation}
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: murbanec $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 27.8.2009 18:52:31
+ *@modified     $Date: 2009/08/27 17:10:01 $
+ */
+<span class="nc" id="L32">class DefaultHashCalculator</span>
+{
+	static String calculateHash(String toBeEncrypted, String privateKey)
+	{
+<span class="nc" id="L36">		String sign = &quot;&quot;;</span>
+		try
+		{
+<span class="nc" id="L39">			MessageDigest hash = MessageDigest.getInstance(&quot;SHA-1&quot;);</span>
+<span class="nc" id="L40">			byte bytesHash[] = hash.digest(toBeEncrypted.getBytes());</span>
+<span class="nc" id="L41">			Cipher des = Cipher.getInstance(&quot;DES/ECB&quot;, &quot;Cryptix&quot;);</span>
+
+<span class="nc" id="L43">			des.initEncrypt(new RawSecretKey(&quot;DES&quot;, privateKey.getBytes()));</span>
+<span class="nc" id="L44">			byte bytesSIGN[] = des.crypt(bytesHash, 0, 8);</span>
+<span class="nc" id="L45">			sign = Hex.dumpString(bytesSIGN);</span>
+		}
+<span class="nc" id="L47">		catch (NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L48">		catch (NoSuchProviderException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L49">		catch (KeyException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L50">		catch (IllegalBlockSizeException e){sk.iway.iwcm.Logger.error(e);}</span>
+
+<span class="nc" id="L52">		return sign.trim();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

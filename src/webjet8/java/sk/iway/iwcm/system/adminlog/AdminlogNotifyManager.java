@@ -14,7 +14,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.audit.AuditNotifyEntity;
+import sk.iway.iwcm.system.audit.jpa.AuditNotifyEntity;
 
 /**
  *	AdminlogNotifyManager.java - vykonava pracu s databazou, posiela e-mail

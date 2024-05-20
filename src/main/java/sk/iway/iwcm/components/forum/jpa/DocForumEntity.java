@@ -293,8 +293,10 @@ public class DocForumEntity implements Serializable {
     }
 
     public String getSubject() {
-        if (subject == null || subject.trim().length() < 1)
-            return ("Bez nadpisu");
+        if (subject == null || subject.trim().length() < 1) {
+            sk.iway.iwcm.i18n.Prop prop = sk.iway.iwcm.i18n.Prop.getInstance();
+            return prop.getText("components.forum.empty_subject");
+        }
 
         return subject;
     }

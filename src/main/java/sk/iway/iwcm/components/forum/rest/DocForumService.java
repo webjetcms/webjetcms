@@ -85,10 +85,10 @@ public class DocForumService {
     public static List<LabelValue> getStatusIconOptions(Prop prop) {
 		List<LabelValue> icons = new ArrayList<>();
 
-        icons.add(new LabelValue("<i class=\"fa-regular fa-circle-check\" style=\"color: #00be9f;\"></i> " + prop.getText("apps.forum.icon.confirmed"), "confirmed:true"));
-        icons.add(new LabelValue("<i class=\"fa-regular fa-circle-xmark\" style=\"color: #ff4b58;\"></i> " + prop.getText("apps.forum.icon.non_confirmed"), "confirmed:false"));
-        icons.add(new LabelValue("<i class=\"fa-solid fa-lock\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.non_active"), "active:false"));
-        icons.add(new LabelValue("<i class=\"fa-regular fa-trash-can-undo\" style=\"color: #fabd00;\"></i> " + prop.getText("apps.forum.icon.deleted"), "deleted:true"));
+        icons.add(new LabelValue("<i class=\"ti ti-circle-check\" style=\"color: #00be9f;\"></i> " + prop.getText("apps.forum.icon.confirmed"), "confirmed:true"));
+        icons.add(new LabelValue("<i class=\"ti ti-circle-x\" style=\"color: #ff4b58;\"></i> " + prop.getText("apps.forum.icon.non_confirmed"), "confirmed:false"));
+        icons.add(new LabelValue("<i class=\"ti ti-lock\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.non_active"), "active:false"));
+        icons.add(new LabelValue("<i class=\"ti ti-trash\" style=\"color: #fabd00;\"></i> " + prop.getText("apps.forum.icon.deleted"), "deleted:true"));
 
 		return icons;
 	}
@@ -380,14 +380,14 @@ public class DocForumService {
 			if (Constants.getBoolean("forumReallyDeleteMessages"))
 				simpleQuery = "DELETE FROM document_forum WHERE forum_id IN (" + fIds + ")" + domainSql; //HARD DELETE
 			else
-				simpleQuery = "UPDATE document_forum SET deleted = 1 WHERE forum_id IN (" + fIds + ") " + domainSql + " AND deleted < 1"; //SOFT DELETE (update)
+				simpleQuery = "UPDATE document_forum SET deleted = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ") " + domainSql; //SOFT DELETE (update)
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
 
 			Logger.debug(DocForumService.class, "deleteMessage sql=" + simpleQuery);
 		} else if(actionType == ActionType.RECOVER) {
-			simpleQuery = "UPDATE document_forum SET deleted = 0 WHERE forum_id IN (" + fIds + ")" + domainSql + " AND deleted > 0";
+			simpleQuery = "UPDATE document_forum SET deleted = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
@@ -396,28 +396,28 @@ public class DocForumService {
 		}
 
 		else if(actionType == ActionType.APPROVE) {
-			simpleQuery = "UPDATE document_forum SET confirmed = 1 WHERE forum_id IN (" + fIds + ")" + domainSql + " AND confirmed < 1";
+			simpleQuery = "UPDATE document_forum SET confirmed = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
 		}
 
 		else if(actionType == ActionType.REJECT) {
-			simpleQuery = "UPDATE document_forum SET confirmed = 0 WHERE forum_id IN (" + fIds + ")" + domainSql + " AND confirmed > 0";
+			simpleQuery = "UPDATE document_forum SET confirmed = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
 		}
 
 		else if(actionType == ActionType.LOCK) {
-			simpleQuery = "UPDATE document_forum SET active = 0 WHERE forum_id IN (" + fIds + ")" + domainSql + " AND active > 0";
+			simpleQuery = "UPDATE document_forum SET active = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
 		}
 
 		else if(actionType == ActionType.UNLOCK) {
-			simpleQuery = "UPDATE document_forum SET active = 1 WHERE forum_id IN (" + fIds + ")" + domainSql + " AND active < 1";
+			simpleQuery = "UPDATE document_forum SET active = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
 
 			//Specification for user if is not admin
 			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
@@ -795,7 +795,7 @@ public class DocForumService {
 			if(Constants.DB_TYPE == Constants.DB_ORACLE)
 				sql.append(" rownum = 1 AND ");
 			sql.append("doc_id=?" + domain + " AND forum_id IN (" + childForumIdsString + ")" + " ORDER BY question_date DESC");
-			if (Constants.DB_TYPE == Constants.DB_MYSQL)
+			if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 				sql.append(" LIMIT 1");
 
 			Date lastPostDate = (new SimpleQuery()).forDate(sql.toString(), docId);
@@ -984,7 +984,7 @@ public class DocForumService {
 
 		//Prepare sql query
 		String sql = "SELECT * FROM document_forum WHERE doc_id=? AND parent_id=-1" + CloudToolsForCore.getDomainIdSqlWhere(true);
-		if (showDeleted == false) sql += " AND deleted = 0";
+		if (showDeleted == false) sql += " AND deleted = "+DB.getBooleanSql(false);
 		if (Tools.isNotEmpty(flagSearch)) {
 			sql += " AND flag LIKE ?";
 			params.add(flagSearch + "%");

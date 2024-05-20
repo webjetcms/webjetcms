@@ -1,0 +1,1198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ForumDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.forum</a> &gt; <span class="el_source">ForumDB.java</span></div><h1>ForumDB.java</h1><pre class="source lang-java linenums">
+package sk.iway.iwcm.forum;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Transformer;
+import org.apache.lucene.document.Document;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
+import sk.iway.iwcm.components.forum.jpa.ForumGroupEntity;
+import sk.iway.iwcm.components.forum.rest.DocForumService;
+import sk.iway.iwcm.components.forum.rest.ForumGroupService;
+import sk.iway.iwcm.components.rating.jpa.RatingEntity;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.fulltext.LuceneQuery;
+import sk.iway.iwcm.system.fulltext.indexed.Forums;
+import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * Diskusne forum
+ *
+ * @Title WebJET
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2002
+ * @author unascribed
+ * @version 1.0
+ * @created Sobota, 2002, december 21
+ * @modified $Date: 2003/11/11 15:25:21 $
+ */
+public class ForumDB
+{
+<span class="nc" id="L65">	protected ForumDB() {</span>
+		//utility class
+<span class="nc" id="L67">	}</span>
+
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int doc_id)
+	{
+<span class="nc" id="L71">		return (getForumFieldsForDoc(request, doc_id, true, 0, true));</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int doc_id, boolean onlyConfirmed)
+	{
+<span class="nc" id="L76">		return (getForumFieldsForDoc(request, doc_id, onlyConfirmed, 0));</span>
+	}
+
+	/**
+	 * vrati zoznam vsetkych otazok pre dane docId
+	 *
+	 * @param request
+	 * @param doc_id
+	 * @param onlyConfirmed
+	 *            - ak true, zo zoznamu vyhodi nepotvrdene
+	 * @return
+	 */
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int doc_id, boolean onlyConfirmed, int parentId)
+	{
+<span class="nc" id="L90">		return (getForumFieldsForDoc(request, doc_id, onlyConfirmed, parentId, true, false));</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int doc_id, boolean onlyConfirmed, int parentId, boolean sortAscending)
+	{
+<span class="nc" id="L95">		return getForumFieldsForDoc(request, doc_id, onlyConfirmed, parentId, sortAscending, false);</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumFieldsForDoc(HttpServletRequest request, int doc_id, boolean onlyConfirmed, int parentId, boolean sortAscending, boolean showDeleted) {
+<span class="fc" id="L99">		return DocForumService.getForumFieldsForDoc(request, doc_id, onlyConfirmed, parentId, sortAscending, showDeleted, false);</span>
+	}
+
+	/**
+	 * vrati ForumDetails pre zadane forumId
+	 *
+	 * @param forumId
+	 * @return
+	 */
+	public static DocForumEntity getForumBean(HttpServletRequest request, int forumId)
+	{
+<span class="fc" id="L110">		return (getForumBean(request, forumId, true));</span>
+	}
+
+	public static DocForumEntity getForumBean(HttpServletRequest request, int forumId, boolean sortAscending) {
+		//HttpServletRequest request - NOT USED, probably historicly for back compatibility
+
+<span class="fc" id="L116">		return DocForumService.getForumBean(forumId, sortAscending);</span>
+	}
+
+	/**
+	 * Vrati posledne zadany prispevok zadaneho fora
+	 *
+	 * @param doc_id
+	 *            - id web stranky / fora
+	 * @return
+	 */
+	public static DocForumEntity getLastMessage(int doc_id)
+	{
+<span class="nc" id="L128">		return DocForumService.getLastMessage(doc_id);</span>
+	}
+
+	/**
+	 * Rekurzivna metoda. Vymaze zadany prispevok a jeho odpovede z DB.
+	 *
+	 * @param forumId
+	 *            - id prispevku
+	 * @return
+	 */
+	public static boolean deleteMessage(int forumId, int docId, Identity user) {
+<span class="fc" id="L139">		return DocForumService.docForumRecursiveAction(DocForumService.ActionType.DELETE, forumId, docId, user);</span>
+	}
+
+	/**
+	 * vrati ForumGroupBean pre zadane docId - data z tab. forum, ak neexistuje
+	 * definicia, vrati defaultnu
+	 *
+	 * @param docId
+	 *            - stranka, ku ktorej je pridane forum
+	 * @return
+	 */
+	public static ForumGroupEntity getForum(int docId)
+	{
+<span class="fc" id="L152">		return getForum(docId, false);</span>
+	}
+
+	/**
+	 * vrati ForumGroupBean pre zadane docId - data z tab. forum
+	 *
+	 * @param docId - id stranky
+	 * @param returnNull - ak je nastavene na false a zaznam neexistuje, vrati default zaznam
+	 * @return
+	 */
+	public static ForumGroupEntity getForum(int docId, boolean returnNull) {
+<span class="fc" id="L163">		return ForumGroupService.getForum(docId, returnNull);</span>
+	}
+
+	/**
+	 * Potvrdi prispevok diskusie
+	 *
+	 * @param forumId
+	 * @return
+	 */
+	public static boolean forumApprove(int forumId, int docId, Identity user)
+	{
+<span class="nc" id="L174">		return DocForumService.docForumRecursiveAction(DocForumService.ActionType.APPROVE, forumId, docId, user);</span>
+	}
+
+	/**
+	 * Vrati zoznam schvalenych podtem pre dane forum
+	 *
+	 * @param docId
+	 * @return
+	 */
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId)
+	{
+<span class="nc" id="L185">		return (getForumTopics(docId, true));</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId, boolean onlyConfirmed)
+	{
+<span class="nc" id="L190">		return (getForumTopics(docId, true, false));</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId, boolean onlyConfirmed, boolean showDeleted)
+	{
+<span class="fc" id="L195">		return getForumTopics(docId, onlyConfirmed, showDeleted, null);</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId, boolean onlyConfirmed, boolean showDeleted, String flagSearch)
+	{
+<span class="fc" id="L200">		return getForumTopics(docId, onlyConfirmed, showDeleted, flagSearch, ForumSortBy.LastPost);</span>
+	}
+
+	public static List&lt;DocForumEntity&gt; getForumTopics(int docId, boolean onlyConfirmed, boolean showDeleted, String flagSearch, ForumSortBy sortBy)
+	{
+<span class="fc" id="L205">		return DocForumService.getForumTopics(docId, onlyConfirmed, showDeleted, flagSearch, sortBy);</span>
+	}
+
+	/**
+	 * Vrati forumId podtemy, cize spravy, ktora ma parentId=-1
+	 *
+	 * @param forumId
+	 */
+	public static int getForumMessageParent(int forumId, int docId)
+	{
+		List&lt;DocForumEntity&gt; msgList;
+
+		try
+		{
+<span class="pc bpc" id="L219" title="1 of 4 branches missed.">			if (forumId &gt; 0 &amp;&amp; docId &gt; 0)</span>
+			{
+<span class="fc" id="L221">				msgList = DocForumService.getForumFieldsForDoc(null, docId, true, -1, true, false, true);</span>
+				// Logger.println(this,msgList.size());
+<span class="fc" id="L223">				forumId = findParentRecursive(msgList, forumId);</span>
+
+			}
+		}
+<span class="nc" id="L227">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L229">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L230">		}</span>
+<span class="fc" id="L231">		return forumId;</span>
+	}
+
+	/**
+	 * Rekurzivne vyhlada forumId podtemy
+	 *
+	 * @param msgList
+	 * @param parentId
+	 * @return
+	 */
+	private static int findParentRecursive(List&lt;DocForumEntity&gt; msgList, int parentId) {
+<span class="fc" id="L242">		return DocForumService.findParentRecursive(msgList, parentId);</span>
+	}
+
+	/**
+	 * Zvysi statistiku videni diskusie
+	 *
+	 * @param forumId
+	 */
+	public static void updateForumStatViews(int forumId)
+	{
+<span class="fc" id="L252">		Connection db_conn = null;</span>
+<span class="fc" id="L253">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">			if (forumId &gt; 0)</span>
+			{
+<span class="fc" id="L258">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L259">				String sql = &quot;UPDATE document_forum SET stat_views=stat_views+1 WHERE forum_id=? AND parent_id=-1&quot; + CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L260">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L261">				ps.setInt(1, forumId);</span>
+<span class="fc" id="L262">				ps.execute();</span>
+<span class="fc" id="L263">				ps.close();</span>
+<span class="fc" id="L264">				db_conn.close();</span>
+<span class="fc" id="L265">				ps = null;</span>
+<span class="fc" id="L266">				db_conn = null;</span>
+			}
+		}
+<span class="nc" id="L269">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L271">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L280">			catch (Exception ex2)</span>
+<span class="fc" id="L281">			{}</span>
+		}
+<span class="fc" id="L283">	}</span>
+
+	/**
+	 * Ziska stat. udaje o fore, do ForumBean-u sa setne iba last post a replies
+	 * (celk pocet sprav)
+	 *
+	 * @param docId
+	 * @return
+	 */
+	public static DocForumEntity getForumStat(int docId) {
+<span class="fc" id="L293">		return DocForumService.getForumStat(docId);</span>
+	}
+
+	/**
+	 * Uzatvori/otvori podtemu diskusie
+	 *
+	 * @param forumId
+	 * @param close
+	 *            - ak je TRUE, diskusia sa zatvori, ak FALSE diskusia sa otvori
+	 * @return
+	 */
+	public static boolean closeForumTopic(int forumId, boolean close)
+	{
+<span class="nc" id="L306">		boolean ret = false;</span>
+<span class="nc" id="L307">		Connection db_conn = null;</span>
+<span class="nc" id="L308">		PreparedStatement ps = null;</span>
+
+		try
+		{
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (forumId &gt; 0)</span>
+			{
+<span class="nc" id="L314">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L315">				ps = db_conn.prepareStatement(&quot;UPDATE document_forum SET active=? WHERE forum_id=?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;&quot;);</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				ps.setBoolean(1, !close);</span>
+<span class="nc" id="L317">				ps.setInt(2, forumId);</span>
+
+<span class="nc" id="L319">				ps.execute();</span>
+<span class="nc" id="L320">				ps.close();</span>
+<span class="nc" id="L321">				db_conn.close();</span>
+<span class="nc" id="L322">				ps = null;</span>
+<span class="nc" id="L323">				db_conn = null;</span>
+<span class="nc" id="L324">				ret = true;</span>
+			}
+
+		}
+<span class="nc" id="L328">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L330">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L336" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L339">			catch (Exception ex2)</span>
+<span class="nc" id="L340">			{}</span>
+		}
+
+<span class="nc bnc" id="L343" title="All 2 branches missed.">		Adminlog.add(Adminlog.TYPE_FORUM_CLOSE, (close ? &quot;Zatvorila &quot; : &quot;Otvorila&quot;) + &quot; sa diskusia&quot;, forumId, -1);</span>
+
+<span class="nc" id="L345">		return (ret);</span>
+	}
+
+	/**
+	 * Vyhladavanie vo fore
+	 *
+	 * @param docId
+	 *            - id stranky s forom
+	 * @param searchStr
+	 *            - retazec co sa hlada
+	 * @param userId
+	 *            - ak je zadane hladaju sa prispevky od tohto pouzivatela
+	 *            (docId je vtedy ignorovane)
+	 * @return
+	 */
+	public static List&lt;ForumSearchBean&gt; searchForum(int docId, String searchStr, int userId)
+	{
+<span class="nc" id="L362">		List&lt;ForumSearchBean&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L363" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;luceneForumsSearch&quot;) &amp;&amp; Tools.isNotEmpty(searchStr))</span>
+		{
+<span class="nc" id="L365">			LuceneQuery query = new LuceneQuery(new Forums());</span>
+			// List&lt;Query&gt; numericQueries = new LinkedList&lt;Query&gt;();
+<span class="nc" id="L367">			StringBuilder queryString = new StringBuilder();</span>
+<span class="nc" id="L368">			boolean hasCriteria = false;</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchStr))</span>
+			{
+<span class="nc" id="L372">				queryString.append(&quot;( subject:(\&quot;&quot;);</span>
+<span class="nc" id="L373">				queryString.append(searchStr);</span>
+<span class="nc" id="L374">				queryString.append(&quot;\&quot;) OR question:(\&quot;&quot;);</span>
+<span class="nc" id="L375">				queryString.append(searchStr);</span>
+<span class="nc" id="L376">				queryString.append(&quot;\&quot;))&quot;);</span>
+<span class="nc" id="L377">				hasCriteria = true;</span>
+			}
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (docId &gt; 0)</span>
+			{
+<span class="nc bnc" id="L382" title="All 2 branches missed.">				if (hasCriteria) queryString.append(&quot; AND &quot;);</span>
+<span class="nc" id="L383">				queryString.append(&quot; doc_id:&quot;);</span>
+<span class="nc" id="L384">				queryString.append(docId);</span>
+<span class="nc" id="L385">				hasCriteria = true;</span>
+			}
+
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (userId &gt; 0)</span>
+			{
+<span class="nc bnc" id="L390" title="All 2 branches missed.">				if (hasCriteria) queryString.append(&quot; AND &quot;);</span>
+<span class="nc" id="L391">				queryString.append(&quot; user_id:[&quot; + userId + &quot; TO &quot; + userId + &quot;]&quot;);</span>
+<span class="nc" id="L392">				hasCriteria = true;</span>
+			}
+			// FIX-ME: problem, ked zadam user_id 1 tak mi selectne aj prispevky
+			// s user_id -1 -&gt; problem v indexovani? v indexe je ale spravna
+			// hodnota..
+<span class="nc" id="L397">			results.addAll(CollectionUtils.collect(query.documents(queryString.toString()), new Transformer&lt;Document, ForumSearchBean&gt;()</span>
+<span class="nc" id="L398">			{</span>
+
+				@Override
+				public ForumSearchBean transform(Document doc)
+				{
+<span class="nc" id="L403">					ForumSearchBean fsb = new ForumSearchBean();</span>
+<span class="nc" id="L404">					fsb.setForumId(Tools.getIntValue(doc.getFieldable(&quot;forum_id&quot;).stringValue(), -1));</span>
+<span class="nc" id="L405">					fsb.setForumName(doc.getFieldable(&quot;title&quot;).stringValue());</span>
+<span class="nc" id="L406">					fsb.setDocId(Tools.getIntValue(doc.getFieldable(&quot;doc_id&quot;).stringValue(), -1));</span>
+<span class="nc" id="L407">					fsb.setParentId(Tools.getIntValue(doc.getFieldable(&quot;parent_id&quot;).stringValue(), -1));</span>
+<span class="nc" id="L408">					fsb.setSubject(doc.getFieldable(&quot;subject&quot;).stringValue());</span>
+<span class="nc" id="L409">					fsb.setQuestion(doc.getFieldable(&quot;question&quot;).stringValue());</span>
+<span class="nc" id="L410">					fsb.setAutorFullName(doc.getFieldable(&quot;author_name&quot;).stringValue());</span>
+<span class="nc" id="L411">					fsb.setAutorEmail(doc.getFieldable(&quot;author_email&quot;).stringValue());</span>
+<span class="nc" id="L412">					fsb.setFlag(doc.getFieldable(&quot;flag&quot;).stringValue());</span>
+<span class="nc" id="L413">					fsb.setUserId(Tools.getIntValue(doc.getFieldable(&quot;user_id&quot;).stringValue(), -1));</span>
+<span class="nc" id="L414">					fsb.setQuestionDate(Tools.formatDateTimeSeconds(LuceneUtils.luceneDateToDate(doc.getFieldable(&quot;question_date&quot;).stringValue())));</span>
+<span class="nc" id="L415">					return fsb;</span>
+				}
+			}));
+<span class="nc" id="L418">			Logger.debug(ForumDB.class, &quot;Results: &quot; + results.size());</span>
+<span class="nc" id="L419">		}</span>
+		else
+		{
+<span class="nc" id="L422">			Connection db_conn = null;</span>
+<span class="nc" id="L423">			PreparedStatement ps = null;</span>
+<span class="nc" id="L424">			ResultSet rs = null;</span>
+<span class="nc" id="L425">			ForumSearchBean fsb = null;</span>
+			try
+			{
+
+<span class="nc" id="L429">				db_conn = DBPool.getConnection();</span>
+				StringBuilder sql;
+<span class="nc bnc" id="L431" title="All 6 branches missed.">				if (docId &gt; 0 &amp;&amp; Tools.isNotEmpty(searchStr) &amp;&amp; userId == -1)</span>
+				{
+<span class="nc" id="L433">					sql = new StringBuilder(&quot;SELECT d.title, f.* &quot;).append(</span>
+<span class="nc" id="L434">							&quot;FROM document_forum f, documents d &quot;).append(</span>
+<span class="nc" id="L435">							&quot;WHERE f.doc_id=d.doc_id AND f.confirmed=&quot;+DB.getBooleanSql(true)+&quot; AND f.deleted=&quot;+DB.getBooleanSql(false)+&quot; &quot; + CloudToolsForCore.getDomainIdSqlWhere(true, &quot;f&quot;));</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">					if (docId &gt; 0) sql.append(&quot;AND f.doc_id=? AND &quot;);</span>
+<span class="nc" id="L437">					sql.append(&quot;(f.subject LIKE ? OR f.question LIKE ?) &quot;).append(</span>
+							&quot;ORDER BY stat_last_post DESC&quot;);
+
+<span class="nc" id="L440">					ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L441">					int i = 1;</span>
+
+<span class="nc bnc" id="L443" title="All 2 branches missed.">					if (docId &gt; 0) ps.setInt(i++, docId);</span>
+<span class="nc" id="L444">					ps.setString(i++, &quot;%&quot; + searchStr + &quot;%&quot;);</span>
+<span class="nc" id="L445">					ps.setString(i++, &quot;%&quot; + searchStr + &quot;%&quot;);</span>
+<span class="nc" id="L446">					rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L449">						fsb = toForumSearchBean(rs);</span>
+<span class="nc" id="L450">						results.add(fsb);</span>
+					}
+<span class="nc" id="L452">					rs.close();</span>
+<span class="nc" id="L453">					ps.close();</span>
+<span class="nc" id="L454">					rs = null;</span>
+<span class="nc" id="L455">					ps = null;</span>
+<span class="nc" id="L456">				}</span>
+<span class="nc bnc" id="L457" title="All 6 branches missed.">				else if (docId &lt; 1 &amp;&amp; Tools.isNotEmpty(searchStr) &amp;&amp; userId == -1)</span>
+				{
+<span class="nc" id="L459">					sql = new StringBuilder(&quot;SELECT d.title, f.* &quot;).append(</span>
+<span class="nc" id="L460">							&quot;FROM document_forum f, documents d &quot;).append(</span>
+<span class="nc" id="L461">							&quot;WHERE f.doc_id=d.doc_id AND f.confirmed=&quot;+DB.getBooleanSql(true)+&quot; &quot;+ CloudToolsForCore.getDomainIdSqlWhere(true, &quot;f&quot;)</span>
+<span class="nc" id="L462">									+ &quot; AND f.deleted=&quot;+DB.getBooleanSql(false)+&quot; AND (f.subject LIKE ? OR f.question LIKE ?) &quot;).append(</span>
+							&quot;ORDER BY stat_last_post DESC&quot;);
+
+<span class="nc" id="L465">					ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L466">					ps.setString(1, &quot;%&quot; + searchStr + &quot;%&quot;);</span>
+<span class="nc" id="L467">					ps.setString(2, &quot;%&quot; + searchStr + &quot;%&quot;);</span>
+
+<span class="nc" id="L469">					rs = ps.executeQuery();</span>
+					// Logger.println(this,&quot;SQL: &quot;+sql+&quot;\n RS: &quot;+rs.next());
+<span class="nc bnc" id="L471" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+						// Logger.println(this,&quot;Iterujem... forumID= &quot;+rs.getInt(&quot;forum_id&quot;));
+<span class="nc" id="L474">						fsb = toForumSearchBean(rs);</span>
+<span class="nc" id="L475">						results.add(fsb);</span>
+					}
+<span class="nc" id="L477">					rs.close();</span>
+<span class="nc" id="L478">					ps.close();</span>
+<span class="nc" id="L479">					rs = null;</span>
+<span class="nc" id="L480">					ps = null;</span>
+				}
+<span class="nc bnc" id="L482" title="All 2 branches missed.">				else if (userId &gt; 0)</span>
+				{
+<span class="nc" id="L484">					sql = new StringBuilder(&quot;SELECT d.title, f.* &quot;).append(</span>
+<span class="nc" id="L485">							&quot;FROM document_forum f, documents d &quot;).append(</span>
+<span class="nc" id="L486">							&quot;WHERE f.doc_id=d.doc_id AND f.confirmed=&quot;+DB.getBooleanSql(true)+&quot; &quot; + CloudToolsForCore.getDomainIdSqlWhere(true, &quot;f&quot;) + &quot; AND f.deleted=&quot;+DB.getBooleanSql(false)+&quot; AND f.user_id=? &quot;).append(</span>
+							&quot;ORDER BY stat_last_post DESC&quot;);
+
+<span class="nc" id="L489">					ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L490">					ps.setInt(1, userId);</span>
+
+<span class="nc" id="L492">					rs = ps.executeQuery();</span>
+					// Logger.println(this,&quot;SQL: &quot;+sql+&quot;\n RS: &quot;+rs.next());
+<span class="nc bnc" id="L494" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L496">						fsb = toForumSearchBean(rs);</span>
+<span class="nc" id="L497">						results.add(fsb);</span>
+					}
+<span class="nc" id="L499">					rs.close();</span>
+<span class="nc" id="L500">					ps.close();</span>
+<span class="nc" id="L501">					rs = null;</span>
+<span class="nc" id="L502">					ps = null;</span>
+					// aktualizuj pocet prispevkov pouzivatela (mohla nastat
+					// chyba v pocitani forum_rank a tu je dobre miesto to
+					// opravit)
+
+<span class="nc" id="L507">					ps = db_conn.prepareStatement(&quot;UPDATE users SET forum_rank=? WHERE user_id=?&quot;);</span>
+<span class="nc" id="L508">					ps.setInt(1, results.size());</span>
+<span class="nc" id="L509">					ps.setInt(2, userId);</span>
+<span class="nc" id="L510">					ps.execute();</span>
+<span class="nc" id="L511">					ps.close();</span>
+<span class="nc" id="L512">					ps = null;</span>
+				}
+<span class="nc" id="L514">				db_conn.close();</span>
+<span class="nc" id="L515">				db_conn = null;</span>
+			}
+<span class="nc" id="L517">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L519">				sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L525" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+				}
+<span class="nc" id="L529">				catch (Exception ex2)</span>
+<span class="nc" id="L530">				{}</span>
+			}
+		}
+<span class="nc" id="L533">		return (results);</span>
+	}
+
+	/**
+	 * @param rs
+	 * @return
+	 * @throws SQLException
+	 */
+	private static ForumSearchBean toForumSearchBean(ResultSet rs) throws SQLException
+	{
+<span class="nc" id="L543">		ForumSearchBean fsb = new ForumSearchBean();</span>
+<span class="nc" id="L544">		fsb.setForumId(rs.getInt(&quot;forum_id&quot;));</span>
+<span class="nc" id="L545">		fsb.setForumName(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L546">		fsb.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L547">		fsb.setParentId(rs.getInt(&quot;parent_id&quot;));</span>
+<span class="nc" id="L548">		fsb.setSubject(DB.getDbString(rs, &quot;subject&quot;));</span>
+<span class="nc" id="L549">		fsb.setQuestion(DB.getDbString(rs, &quot;question&quot;));</span>
+<span class="nc" id="L550">		fsb.setAutorFullName(DB.getDbString(rs, &quot;author_name&quot;));</span>
+<span class="nc" id="L551">		fsb.setAutorEmail(DB.getDbString(rs, &quot;author_email&quot;));</span>
+<span class="nc" id="L552">		fsb.setFlag(DB.getDbString(rs, &quot;flag&quot;));</span>
+<span class="nc" id="L553">		fsb.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L554">		fsb.setQuestionDate(DB.getDbDateTime(rs, &quot;question_date&quot;));</span>
+<span class="nc" id="L555">		return fsb;</span>
+	}
+
+	/**
+	 *
+	 * @param lastPost
+	 * @param lastLogon
+	 * @return
+	 */
+	public static boolean compareDates(String lastPost, String lastLogon)
+	{
+<span class="nc" id="L566">		boolean ret = false;</span>
+<span class="nc" id="L567">		long lPost = 0;</span>
+<span class="nc" id="L568">		long lLogon = 0;</span>
+
+		try
+		{
+<span class="nc" id="L572">			StringTokenizer st = new StringTokenizer(lastPost);</span>
+<span class="nc bnc" id="L573" title="All 4 branches missed.">			if (st.hasMoreTokens() &amp;&amp; st.countTokens() == 2) lPost = DB.getTimestamp(st.nextToken(), st.nextToken());</span>
+
+<span class="nc" id="L575">			st = new StringTokenizer(lastLogon);</span>
+<span class="nc bnc" id="L576" title="All 4 branches missed.">			if (st.hasMoreTokens() &amp;&amp; st.countTokens() == 2) lLogon = DB.getTimestamp(st.nextToken(), st.nextToken());</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">			if (lPost &gt; lLogon) ret = true;</span>
+			/*
+			 * Calendar cal = Calendar.getInstance();
+			 * cal.setTimeInMillis(lPost); Logger.println(this,&quot;Post: &quot;
+			 * +cal.getTime()); cal.setTimeInMillis(lLogon);
+			 * Logger.println(this,&quot;Logon: &quot; +cal.getTime());
+			 */
+		}
+<span class="nc" id="L585">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L587">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L588">		}</span>
+
+<span class="nc" id="L590">		return ret;</span>
+	}
+
+	public static void updateForumStatInfo(int docId, int forumId) {
+<span class="nc" id="L594">		DocForumService.updateForumStatInfo(docId, forumId);</span>
+<span class="nc" id="L595">	}</span>
+
+	public static String getParentIds(int topicId, int docId)
+	{
+<span class="nc" id="L599">		StringBuilder parentIds = new StringBuilder(&quot;-1&quot;);</span>
+<span class="nc" id="L600">		Connection db_conn = null;</span>
+<span class="nc" id="L601">		PreparedStatement ps = null;</span>
+<span class="nc" id="L602">		ResultSet rs = null;</span>
+
+<span class="nc" id="L604">		List&lt;DocForumEntity&gt; ids = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="nc" id="L607">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L608">			ps = db_conn.prepareStatement(&quot;SELECT forum_id, parent_id FROM document_forum WHERE doc_id=? AND deleted = 0&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;&quot;);</span>
+<span class="nc" id="L609">			ps.setInt(1, docId);</span>
+<span class="nc" id="L610">			rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L612" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L614">				DocForumEntity fb = new DocForumEntity();</span>
+<span class="nc" id="L615">				fb.setId(rs.getLong(&quot;forum_id&quot;));</span>
+<span class="nc" id="L616">				fb.setParentId(rs.getInt(&quot;parent_id&quot;));</span>
+<span class="nc" id="L617">				ids.add(fb);</span>
+<span class="nc" id="L618">			}</span>
+<span class="nc" id="L619">			rs.close();</span>
+<span class="nc" id="L620">			ps.close();</span>
+<span class="nc" id="L621">			db_conn.close();</span>
+<span class="nc" id="L622">			rs = null;</span>
+<span class="nc" id="L623">			ps = null;</span>
+<span class="nc" id="L624">			db_conn = null;</span>
+
+			// rekurzivne ziskaj zoznam
+<span class="nc" id="L627">			List&lt;DocForumEntity&gt; sorted = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L628">			getParentIds(ids, sorted, topicId);</span>
+
+			// prehod to na String
+<span class="nc bnc" id="L631" title="All 2 branches missed.">			for (DocForumEntity fb : sorted)</span>
+<span class="nc" id="L632">				parentIds.append(',').append(fb.getForumId());</span>
+		}
+<span class="nc" id="L634">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L636">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L642" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L646">			catch (Exception ex2)</span>
+<span class="nc" id="L647">			{}</span>
+		}
+<span class="nc" id="L649">		return (parentIds).toString();</span>
+	}
+
+	private static void getParentIds(List&lt;DocForumEntity&gt; all, List&lt;DocForumEntity&gt; ret, int parentId) {
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		for (DocForumEntity fb : all) {</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">			if (fb.getParentId() == parentId) {</span>
+<span class="nc" id="L655">				ret.add(fb);</span>
+<span class="nc" id="L656">				getParentIds(all, ret, fb.getForumId());</span>
+			}
+<span class="nc" id="L658">		}</span>
+<span class="nc" id="L659">	}</span>
+
+	/**
+	 * Vrati datum predposledneho loginu usera uvedeneho v tab. stat_userlogon
+	 *
+	 * @param userId
+	 * @return
+	 */
+	public static String getUserLastLogon(int userId)
+	{
+<span class="nc" id="L669">		String ret = null;</span>
+<span class="nc" id="L670">		Connection db_conn = null;</span>
+<span class="nc" id="L671">		PreparedStatement ps = null;</span>
+<span class="nc" id="L672">		ResultSet rs = null;</span>
+		String sql;
+		try
+		{
+<span class="nc bnc" id="L676" title="All 2 branches missed.">			if (userId &gt; 0)</span>
+			{
+<span class="nc" id="L678">				sql = &quot;SELECT logon_time FROM stat_userlogon WHERE user_id=? ORDER BY logon_time DESC&quot;;</span>
+<span class="nc" id="L679">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L680">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L681">				ps.setInt(1, userId);</span>
+<span class="nc" id="L682">				rs = ps.executeQuery();</span>
+
+				// preskocime prvy zaznam - sucasna session
+<span class="nc" id="L685">				rs.next();</span>
+
+<span class="nc bnc" id="L687" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L689">					ret = DB.getDbDateTime(rs, &quot;logon_time&quot;);</span>
+				}
+				// Logger.println(this,&quot;---&gt;USER: &quot;+userId+
+				// &quot;  LAST LOGON: &quot;+ret);
+<span class="nc" id="L693">				rs.close();</span>
+<span class="nc" id="L694">				ps.close();</span>
+<span class="nc" id="L695">				db_conn.close();</span>
+<span class="nc" id="L696">				rs = null;</span>
+<span class="nc" id="L697">				ps = null;</span>
+<span class="nc" id="L698">				db_conn = null;</span>
+			}
+		}
+<span class="nc" id="L701">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L703">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L709" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L713">			catch (Exception ex2)</span>
+<span class="nc" id="L714">			{}</span>
+		}
+		// usr.setLastLogon(DB.getDbDateTime(rs, &quot;last_logon&quot;));
+
+<span class="nc" id="L718">		return ret;</span>
+	}
+
+	/**
+	 * vrati pocet tem vo fore
+	 *
+	 * @param docId
+	 * @return
+	 */
+	public static int getForumTopicsCount(int docId)
+	{
+<span class="nc" id="L729">		int ret = 0;</span>
+<span class="nc" id="L730">		PreparedStatement ps = null;</span>
+<span class="nc" id="L731">		ResultSet rs = null;</span>
+<span class="nc" id="L732">		Connection db_conn = null;</span>
+		try
+		{
+<span class="nc" id="L735">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">			if (docId &gt; 0)</span>
+			{
+
+<span class="nc" id="L739">				ps = db_conn.prepareStatement(&quot;SELECT COUNT(forum_id) AS pocet FROM document_forum WHERE doc_id=? AND parent_id=-1 AND confirmed=? AND deleted=?&quot;</span>
+<span class="nc" id="L740">						+ CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;&quot;);</span>
+<span class="nc" id="L741">				ps.setInt(1, docId);</span>
+<span class="nc" id="L742">				ps.setBoolean(2, true);</span>
+<span class="nc" id="L743">				ps.setBoolean(3, false);</span>
+<span class="nc" id="L744">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L745" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L747">					ret = rs.getInt(&quot;pocet&quot;);</span>
+				}
+<span class="nc" id="L749">				rs.close();</span>
+<span class="nc" id="L750">				ps.close();</span>
+<span class="nc" id="L751">				rs = null;</span>
+<span class="nc" id="L752">				ps = null;</span>
+			}
+<span class="nc" id="L754">			db_conn.close();</span>
+<span class="nc" id="L755">			db_conn = null;</span>
+		}
+<span class="nc" id="L757">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L759">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L765" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L766" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L767" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L769">			catch (Exception ex2)</span>
+<span class="nc" id="L770">			{}</span>
+		}
+<span class="nc" id="L772">		return ret;</span>
+	}
+
+	/**
+	 * vrati pocet vsetkych prispevkov vo fore
+	 *
+	 * @param docId
+	 * @return
+	 */
+	public static int getForumPostsCount(int docId)
+	{
+<span class="nc" id="L783">		PreparedStatement ps = null;</span>
+<span class="nc" id="L784">		int ret = 0;</span>
+<span class="nc" id="L785">		ResultSet rs = null;</span>
+<span class="nc" id="L786">		Connection db_conn = null;</span>
+		try
+		{
+<span class="nc" id="L789">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L790" title="All 2 branches missed.">			if (docId &gt; 0)</span>
+			{
+
+<span class="nc" id="L793">				ps = db_conn.prepareStatement(&quot;SELECT COUNT(forum_id) AS pocet FROM document_forum WHERE doc_id=? AND confirmed=? AND deleted=?&quot;</span>
+<span class="nc" id="L794">						+ CloudToolsForCore.getDomainIdSqlWhere(true) + &quot;&quot;);</span>
+<span class="nc" id="L795">				ps.setInt(1, docId);</span>
+<span class="nc" id="L796">				ps.setBoolean(2, true);</span>
+<span class="nc" id="L797">				ps.setBoolean(3, false);</span>
+<span class="nc" id="L798">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L799" title="All 2 branches missed.">				while (rs.next())</span>
+				{
+<span class="nc" id="L801">					ret = rs.getInt(&quot;pocet&quot;);</span>
+				}
+<span class="nc" id="L803">				rs.close();</span>
+<span class="nc" id="L804">				ps.close();</span>
+<span class="nc" id="L805">				rs = null;</span>
+<span class="nc" id="L806">				ps = null;</span>
+			}
+<span class="nc" id="L808">			db_conn.close();</span>
+<span class="nc" id="L809">			db_conn = null;</span>
+		}
+<span class="nc" id="L811">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L813">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L819" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L821" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L823">			catch (Exception ex2)</span>
+<span class="nc" id="L824">			{}</span>
+		}
+<span class="nc" id="L826">		return ret;</span>
+	}
+
+	/**
+	 * vrati datum a autora posledneho prispevku
+	 *
+	 * @param docId
+	 * @return
+	 */
+	public static String[] getForumLastPostDate(int docId)
+	{
+<span class="nc" id="L837">		String[] ret = null;</span>
+<span class="nc" id="L838">		PreparedStatement ps = null;</span>
+<span class="nc" id="L839">		ResultSet rs = null;</span>
+<span class="nc" id="L840">		Connection db_conn = null;</span>
+		try
+		{
+<span class="nc" id="L843">			db_conn = DBPool.getConnection();</span>
+<span class="nc bnc" id="L844" title="All 2 branches missed.">			if (docId &gt; 0)</span>
+			{
+<span class="nc" id="L846">				String sql = &quot;SELECT question_date, author_name, user_id FROM document_forum WHERE doc_id=? AND confirmed=? AND deleted=?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true)</span>
+						+ &quot; ORDER BY forum_id DESC&quot;;
+<span class="nc bnc" id="L848" title="All 4 branches missed.">				if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)</span>
+				{
+<span class="nc" id="L850">					sql += &quot; LIMIT 1&quot;;</span>
+				}
+
+<span class="nc" id="L853">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L854">				ps.setInt(1, docId);</span>
+<span class="nc" id="L855">				ps.setBoolean(2, true);</span>
+<span class="nc" id="L856">				ps.setBoolean(3, false);</span>
+<span class="nc" id="L857">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L858" title="All 2 branches missed.">				if (rs.next())</span>
+				{
+<span class="nc" id="L860">					ret = new String[]</span>
+<span class="nc" id="L861">					{ Tools.formatDateTime(rs.getTimestamp(&quot;question_date&quot;).getTime()), rs.getString(&quot;author_name&quot;), rs.getString(&quot;user_id&quot;) };</span>
+				}
+<span class="nc" id="L863">				rs.close();</span>
+<span class="nc" id="L864">				ps.close();</span>
+<span class="nc" id="L865">				rs = null;</span>
+<span class="nc" id="L866">				ps = null;</span>
+			}
+<span class="nc" id="L868">			db_conn.close();</span>
+<span class="nc" id="L869">			db_conn = null;</span>
+		}
+<span class="nc" id="L871">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L873">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L879" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L881" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+			}
+<span class="nc" id="L883">			catch (Exception ex2)</span>
+<span class="nc" id="L884">			{}</span>
+		}
+
+<span class="nc" id="L887">		return ret;</span>
+	}
+
+	/**
+	 * Vrati nastavene limity pre nahratie suboru do fora so zadanym docId
+	 *
+	 * @param docId
+	 * @param request
+	 * @return
+	 */
+	public static LabelValueDetails getUploadLimits(int docId, HttpServletRequest request)
+	{
+<span class="fc" id="L899">		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L900" title="1 of 2 branches missed.">		if (user == null) return null;</span>
+
+<span class="fc" id="L902">		LabelValueDetails uploadLimitsSession = null;</span>
+<span class="fc" id="L903">		uploadLimitsSession = (LabelValueDetails) request.getSession().getAttribute(&quot;ForumDB.uploadLimits&quot;);</span>
+<span class="fc" id="L904">		request.getSession().removeAttribute(&quot;ForumDB.uploadLimits&quot;);</span>
+
+		// ziskaj stranku
+<span class="fc" id="L907">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L908">		DocDetails doc = docDB.getDoc(docId);</span>
+<span class="pc bpc" id="L909" title="1 of 2 branches missed.">		if (doc == null) return uploadLimitsSession;</span>
+
+<span class="fc" id="L911">		int start = doc.getData().indexOf(&quot;!INCLUDE(&quot;);</span>
+<span class="fc" id="L912">		int end = doc.getData().indexOf(&quot;)!&quot;);</span>
+<span class="pc bpc" id="L913" title="2 of 4 branches missed.">		if (start == -1 || end &lt;= start) return uploadLimitsSession;</span>
+
+<span class="fc" id="L915">		start = doc.getData().indexOf(&quot;,&quot;, start);</span>
+<span class="pc bpc" id="L916" title="2 of 4 branches missed.">		if (start == -1 || end &lt;= start) return uploadLimitsSession;</span>
+
+<span class="fc" id="L918">		PageParams pageParams = new PageParams(doc.getData().substring(start + 1, end));</span>
+
+<span class="fc" id="L920">		String allowedFileTypes = pageParams.getValue(&quot;allowedFileTypes&quot;, null);</span>
+<span class="fc" id="L921">		int allowedFileSizeKB = pageParams.getIntValue(&quot;allowedFileSizeKB&quot;, 0);</span>
+<span class="fc" id="L922">		String fileUploadDir = pageParams.getValue(&quot;fileUploadDir&quot;, null);</span>
+
+<span class="pc bpc" id="L924" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(user.getUserGroupsIds()))</span>
+		{
+<span class="fc" id="L926">			StringTokenizer st = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L927" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+			{
+<span class="fc" id="L929">				int userGroupId = Tools.getIntValue(st.nextToken(), 0);</span>
+<span class="pc bpc" id="L930" title="1 of 2 branches missed.">				if (userGroupId &gt; 0)</span>
+				{
+<span class="fc" id="L932">					String fileTypes = pageParams.getValue(&quot;allowedFileTypes-&quot; + userGroupId, null);</span>
+<span class="pc bpc" id="L933" title="1 of 2 branches missed.">					if (fileTypes != null) allowedFileTypes = fileTypes;</span>
+
+<span class="fc" id="L935">					int fileSize = pageParams.getIntValue(&quot;allowedFileSizeKB-&quot; + userGroupId, 0);</span>
+<span class="pc bpc" id="L936" title="1 of 2 branches missed.">					if (fileSize &gt; 0) allowedFileSizeKB = fileSize;</span>
+
+<span class="fc" id="L938">					String uploadDir = pageParams.getValue(&quot;fileUploadDir-&quot; + userGroupId, null);</span>
+<span class="pc bpc" id="L939" title="1 of 2 branches missed.">					if (uploadDir != null) fileUploadDir = uploadDir;</span>
+				}
+<span class="fc" id="L941">			}</span>
+		}
+<span class="pc bpc" id="L943" title="1 of 2 branches missed.">		if (allowedFileTypes == null) return uploadLimitsSession;</span>
+
+<span class="fc" id="L945">		LabelValueDetails lvd = new LabelValueDetails();</span>
+<span class="fc" id="L946">		lvd.setValue(allowedFileTypes.replace('+', ',').toLowerCase());</span>
+<span class="fc" id="L947">		lvd.setInt1(allowedFileSizeKB);</span>
+<span class="fc" id="L948">		lvd.setValue2(fileUploadDir);</span>
+
+<span class="fc" id="L950">		return lvd;</span>
+	}
+
+	/**
+	 * Zobrazi zoznam clankov zoradenych podla poctu prispevkov v diskusii. Ak
+	 * existuju clanky s rovnakym poctom prispevkov, zoradi ich podla poctu
+	 * hlasujucich citatelov.
+	 *
+	 * @param docsLength
+	 *            - pocet zobrazenych clankov
+	 * @param period
+	 *            - pocet dni dozadu za ktore sa statistika berie
+	 * @param minUsers
+	 *            - minimalny pocet prispevkov v diskusii
+	 * @param groupIds
+	 *            - id adresara v ktorom sa sledovane clanky nachadzaju
+	 * @param includeSubGroups
+	 *            - ak je true, beru sa aj podadresare
+	 * @return
+	 */
+	public static List&lt;RatingEntity&gt; getTopForums(int docsLength, int period, int minUsers, String groupIds, boolean includeSubGroups)
+	{
+<span class="nc" id="L972">		List&lt;RatingEntity&gt; topPages = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L974">		Connection db_conn = null;</span>
+<span class="nc" id="L975">		PreparedStatement ps = null;</span>
+<span class="nc" id="L976">		ResultSet rs = null;</span>
+		RatingEntity rBean;
+
+		try
+		{
+<span class="nc" id="L981">			DebugTimer dt = new DebugTimer(&quot;ForumDB.getTopForums&quot;);</span>
+
+			// priprav si hashtabulku povolenych adresarov
+<span class="nc" id="L984">			Map&lt;Integer, Integer&gt; availableGroups = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L985">			boolean doGroupsCheck = false;</span>
+<span class="nc" id="L986">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc bnc" id="L987" title="All 2 branches missed.">			if (Tools.isNotEmpty(groupIds))</span>
+			{
+<span class="nc" id="L989">				StringTokenizer st = new StringTokenizer(groupIds, &quot;,+; &quot;);</span>
+<span class="nc bnc" id="L990" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+				{
+<span class="nc" id="L992">					int groupId = Tools.getIntValue(st.nextToken(), 0);</span>
+<span class="nc bnc" id="L993" title="All 2 branches missed.">					if (groupId &gt; 0)</span>
+					{
+<span class="nc" id="L995">						doGroupsCheck = true;</span>
+
+<span class="nc" id="L997">						availableGroups.put(groupId, 1);</span>
+<span class="nc bnc" id="L998" title="All 2 branches missed.">						if (includeSubGroups)</span>
+						{
+							// najdi child grupy
+<span class="nc" id="L1001">							List&lt;GroupDetails&gt; searchGroupsArray = groupsDB.getGroupsTree(groupId, false, false);</span>
+<span class="nc bnc" id="L1002" title="All 2 branches missed.">							for (GroupDetails group : searchGroupsArray)</span>
+							{
+<span class="nc bnc" id="L1004" title="All 4 branches missed.">								if (group != null &amp;&amp; group.isInternal() == false)</span>
+								{
+<span class="nc" id="L1006">									availableGroups.put(group.getGroupId(), 1);</span>
+								}
+<span class="nc" id="L1008">							}</span>
+						}
+					}
+<span class="nc" id="L1011">				}</span>
+			}
+
+<span class="nc" id="L1014">			dt.diff(&quot;availableGroups=&quot; + availableGroups.size());</span>
+
+<span class="nc" id="L1016">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1017">			cal.add(Calendar.DAY_OF_MONTH, -period);</span>
+
+<span class="nc" id="L1019">			String sql = &quot;SELECT doc_id, COUNT(doc_id) AS clicks, MAX(question_date) AS question_date &quot;;</span>
+<span class="nc" id="L1020">			sql += &quot;FROM document_forum WHERE question_date &gt;= ? AND confirmed=? AND deleted=?&quot; + CloudToolsForCore.getDomainIdSqlWhere(true) + &quot; GROUP BY doc_id&quot;;</span>
+
+<span class="nc" id="L1022">			Logger.debug(ForumDB.class, &quot;sql:&quot; + sql);</span>
+<span class="nc" id="L1023">			Logger.debug(ForumDB.class, &quot;fromDate:&quot; + Tools.formatDate(cal.getTime()));</span>
+
+<span class="nc" id="L1025">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1026">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1027">			ps.setTimestamp(1, new Timestamp(cal.getTimeInMillis()));</span>
+<span class="nc" id="L1028">			ps.setBoolean(2, true);</span>
+<span class="nc" id="L1029">			ps.setBoolean(3, false);</span>
+<span class="nc" id="L1030">			rs = ps.executeQuery();</span>
+
+			DocDetails testDoc;
+<span class="nc" id="L1033">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L1034">			List&lt;RatingEntity&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1035" title="All 2 branches missed.">			while (rs.next())</span>
+			{
+<span class="nc" id="L1037">				rBean = new RatingEntity();</span>
+<span class="nc" id="L1038">				rBean.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+
+<span class="nc" id="L1040">				testDoc = docDB.getBasicDocDetails(rBean.getDocId(), false);</span>
+<span class="nc bnc" id="L1041" title="All 4 branches missed.">				if (testDoc == null || testDoc.isAvailable() == false) continue;</span>
+
+				// kontrola na groupids
+<span class="nc bnc" id="L1044" title="All 2 branches missed.">				if (doGroupsCheck)</span>
+				{
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">					if (availableGroups.get(testDoc.getGroupId()) == null) continue;</span>
+				}
+
+<span class="nc" id="L1049">				rBean.setDocTitle(testDoc.getTitle());</span>
+<span class="nc" id="L1050">				rBean.setRatingStat(rs.getInt(&quot;clicks&quot;));</span>
+<span class="nc" id="L1051">				rBean.setTotalUsers(rBean.getRatingStat());</span>
+
+<span class="nc" id="L1053">				Date d = rs.getTimestamp(&quot;question_date&quot;);</span>
+<span class="nc bnc" id="L1054" title="All 2 branches missed.">				if(d != null) rBean.setInsertDate(d);</span>
+
+<span class="nc bnc" id="L1056" title="All 4 branches missed.">				if (minUsers &gt; 0 &amp;&amp; rBean.getTotalUsers() &lt; minUsers) continue;</span>
+
+<span class="nc" id="L1058">				list.add(rBean);</span>
+<span class="nc" id="L1059">			}</span>
+<span class="nc" id="L1060">			rs.close();</span>
+<span class="nc" id="L1061">			ps.close();</span>
+
+<span class="nc" id="L1063">			rs = null;</span>
+<span class="nc" id="L1064">			ps = null;</span>
+
+<span class="nc" id="L1066">			dt.diff(&quot;sorting&quot;);</span>
+
+			// usortuj to podla poctu prispevkov a nazvu
+
+<span class="nc" id="L1070">			Collections.sort(list, new Comparator&lt;RatingEntity&gt;() {</span>
+
+				@Override
+				public int compare(RatingEntity r1, RatingEntity r2)
+				{
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">					if (r1.getTotalUsers() == r2.getTotalUsers())</span>
+					{
+						// return r1.getDocTitle().compareTo(r2.getDocTitle());
+						// vratim usporiadane podla novsieho ratingu
+<span class="nc bnc" id="L1079" title="All 2 branches missed.">						if (r2.getInsertDateLong() &gt; r1.getInsertDateLong()) return 1;</span>
+<span class="nc bnc" id="L1080" title="All 2 branches missed.">						else if (r2.getInsertDateLong() &lt; r1.getInsertDateLong()) return -1;</span>
+<span class="nc" id="L1081">						return 0;</span>
+					}
+
+<span class="nc" id="L1084">					return r2.getTotalUsers() - r1.getTotalUsers();</span>
+				}
+
+			});
+
+			// sprav z toho skrateny zoznam
+<span class="nc bnc" id="L1090" title="All 2 branches missed.">			if (docsLength &lt; 1) topPages = list;</span>
+			else
+			{
+<span class="nc bnc" id="L1093" title="All 4 branches missed.">				for (int i = 0; (i &lt; docsLength &amp;&amp; i &lt; list.size()); i++)</span>
+				{
+<span class="nc" id="L1095">					topPages.add(list.get(i));</span>
+				}
+			}
+
+<span class="nc" id="L1099">			dt.diff(&quot;done, size: &quot; + topPages.size());</span>
+		}
+<span class="nc" id="L1101">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1103">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L1109" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L1111" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+			}
+<span class="nc" id="L1113">			catch (Exception ex2)</span>
+<span class="nc" id="L1114">			{}</span>
+		}
+
+<span class="nc" id="L1117">		return (topPages);</span>
+	}
+
+	/**
+	 * Rekurzivna metoda. Obnovi zadany prispevok a jeho odpovede z DB.
+	 *
+	 * @param forumId
+	 *            - id prispevku
+	 * @return
+	 */
+	public static boolean recoverMessage(int forumId, int docId, Identity user) {
+<span class="nc" id="L1128">		return DocForumService.docForumRecursiveAction(DocForumService.ActionType.RECOVER, forumId, docId, user);</span>
+	}
+
+	/**
+	 * Update stlpcu forum_count, pre konkretne doc_id
+	 *
+	 * @param doc_id
+	 * @param forum_count
+	 */
+	public static void setForumCountForDocIds(int doc_id, int forum_count)
+	{
+<span class="nc" id="L1139">		new SimpleQuery().execute(&quot;UPDATE documents SET forum_count = ? WHERE doc_id = ?&quot;, forum_count, doc_id);</span>
+<span class="nc" id="L1140">	}</span>
+
+	/**
+	 * Test forum, if it's active, by given docId.
+	 * @param docId - ID of the page where the forum is located
+	 * @return - return true if isActive, else false
+	 */
+	public static boolean isActive(int docId) {
+<span class="fc" id="L1148">		return ForumGroupService.isActive(docId);</span>
+	}
+
+	/**
+	 * Vrati mi hash tabulku s userID a forumRank pre userov, ktori patria do
+	 * skupiny userGroup
+	 *
+	 * @param userGroup
+	 * @return
+	 */
+	public static Hashtable&lt;String, String&gt; getForumRanks(int userGroup)
+	{
+<span class="nc" id="L1160">		Hashtable&lt;String, String&gt; ranks = new Hashtable&lt;String, String&gt;();</span>
+
+		try
+		{
+<span class="nc bnc" id="L1164" title="All 2 branches missed.">			for (UserDetails user : UsersDB.getUsersByGroup(userGroup))</span>
+			{
+<span class="nc" id="L1166">				ranks.put(Integer.toString(user.getUserId()), Integer.toString(user.getForumRank()));</span>
+<span class="nc" id="L1167">			}</span>
+		}
+<span class="nc" id="L1169">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1171">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1172">		}</span>
+<span class="nc" id="L1173">		return ranks;</span>
+	}
+
+	//Pri týchto metódch sa nenašli žiadne referencie v projekte ani žiaden výskyt v súboroch v časti ./src/main/webapp/
+	//Odstránené - sivan - #55649
+		//public static List&lt;ForumBean&gt; getForumFieldsForDocAndUser(HttpServletRequest request, int docId, int userId)
+		//public static List&lt;ForumBean&gt; getForumFieldsForDocAndUsers(HttpServletRequest request, int docId, List&lt;UserDetails&gt; users)
+		//private static void recursiveSort(List&lt;ForumBean&gt; unsorted, List&lt;ForumBean&gt; sorted, int level, int parent)
+		//public static List&lt;ForumBean&gt; getForumTopicsByUserId(int docId, boolean onlyConfirmed, boolean showDeleted, String flagSearch, ForumSortBy sortBy)
+		//public static ForumBean getForumStatNormal(int docId)
+		//public static boolean isTopicHot(int docId, int topicId, int hours, int postCount)
+		//public static int getParentTopId(HttpServletRequest request, int topicId, int docId)
+		//public static int getParentId(HttpServletRequest request, int topicId, int docId)
+		//public static List&lt;Integer&gt; getChildIds(int topicId, int docId)
+		//public static int saveForumQuestion(int docId, int parentId, String subject, String question, String authorName, String email, String remoteIp, boolean sendNotification, int userId)
+		//public static void recountForumCountForDocIds()
+		//public static int getCountMessagesByUserId(int docId, int userId)
+		//public static int getLastUserForumMessageFromForum(int docId, int userId)
+		//public static List&lt;ForumBean&gt; getLastMessagesFromForum(int numberOf, int docId)
+		//public static List&lt;ForumBean&gt; getLastMessages(int docsLength, String groupIds, boolean includeSubGroups)
+		//public static List&lt;ForumBean&gt; getChildren(HttpServletRequest request, int topicId, int docId)
+		//public static List&lt;Integer&gt; getChildrenIds(HttpServletRequest request, int topicId, int docId)
+		//public static Map&lt;String, String&gt; getForumRanks(int userGroup)
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

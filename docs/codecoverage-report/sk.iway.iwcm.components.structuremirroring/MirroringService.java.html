@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MirroringService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.structuremirroring</a> &gt; <span class="el_source">MirroringService.java</span></div><h1>MirroringService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.structuremirroring;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+
+/**
+ * Vseobecna trieda pre mirrorovanie struktury. Synchronizuju sa zadane ID adresarov
+ * (nemusi sa jednat o ROOT adresare, ak jed ich oznacujeme ako korenove - je to tak z pohladu  mirroringu).
+ *
+ * Zosynchronizovane adresare/stranky NESMU byt vymazane, musia byt oznacene ako nezobrazovat
+ *
+ * Synchronizuje sa:
+ * - vytvorenie/zmazanie
+ * - presunutie v strukture
+ * - zmena poradia (sort_priority)
+ *
+ * EUSTREAMNW-84
+ */
+public class MirroringService {
+
+   private MirroringService() {
+      //tools class
+   }
+
+   /**
+    * Overi, ci je mirrorovanie vobec zapnuta/nakonfigurovane
+    * @return
+    */
+   public static boolean isEnabled(int groupId) {
+<span class="fc" id="L39">      String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
+
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">      if (Tools.isEmpty(mirroringConfig)) return false;</span>
+
+      //over, ci niektory z parent adresarov je v konfiguracii
+<span class="fc" id="L44">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L45">      List&lt;GroupDetails&gt; parents = groupsDB.getParentGroups(groupId, true);</span>
+<span class="fc" id="L46">      String lines[] = Tools.getTokens(mirroringConfig, &quot;\n&quot;);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">      for (String line : lines) {</span>
+         //odstan poznamku
+<span class="fc" id="L49">         String ids = line;</span>
+<span class="fc" id="L50">         int i = line.indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">         if (i&gt;0) ids = line.substring(0, i);</span>
+
+<span class="fc" id="L53">         int mapping[] = Tools.getTokensInt(ids, &quot;,&quot;);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">         for (int id : mapping) {</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            for (GroupDetails parent : parents) {</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">               if (parent.getGroupId()==id) return true;</span>
+<span class="fc" id="L57">            }</span>
+         }
+      }
+<span class="fc" id="L60">      return false;</span>
+   }
+
+   /**
+    * Vrati ostatne mapovane adresare pre zadane groupId
+    * - v zozname je odstraneny GroupDetails s groupId zhodnym s parametrom groupId
+    * - ak je parametr groupId korenovy adresar nastaveny v mapovani vrati ostatne adresare z mapovania
+    * - ak sa nejedna o korenovy adresar z mapovania, vrati ostatne adresare podla syncId
+    * @param groupId
+    * @return
+    */
+   public static List&lt;GroupDetails&gt; getMappingForGroup(int groupId) {
+<span class="fc" id="L72">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L73">      List&lt;GroupDetails&gt; mapped = new ArrayList&lt;&gt;();</span>
+      //najskor over, ci to nie je root grupa podla mappingu
+
+<span class="fc" id="L76">      int rootIds[] = getRootIds(groupId);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">      if (rootIds != null) {</span>
+         //prebehni ich a pridaj do listu
+<span class="fc bfc" id="L79" title="All 2 branches covered.">         for (int rootGroup : rootIds) {</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            if (rootGroup == groupId) continue;</span>
+<span class="fc" id="L81">            GroupDetails group = groupsDB.getGroup(rootGroup);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (group != null) mapped.add(group);</span>
+         }
+      } else {
+<span class="fc" id="L85">         GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">         if (group != null &amp;&amp; group.getSyncId()&gt;0) {</span>
+<span class="fc" id="L87">            List&lt;GroupDetails&gt; groupsBySync = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());</span>
+<span class="fc" id="L88">            mapped.addAll(groupsBySync);</span>
+         }
+      }
+
+<span class="fc" id="L92">      return mapped;</span>
+   }
+
+   /**
+    * Vrati mapovanie pre zadane groupId
+    * @param groupId - ID adresara, POZOR jedna sa o jeden z nastavenych adresarov, cize ROOT adresar
+    * @return
+    */
+   public static int[] getRootIds(int groupId) {
+      //format zapisu: id,id,id:POZNAMKA\n
+<span class="fc" id="L102">      String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
+<span class="fc" id="L103">      String lines[] = Tools.getTokens(mirroringConfig, &quot;\n&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">      for (String line : lines) {</span>
+         //odstan poznamku
+<span class="fc" id="L106">         String ids = line;</span>
+<span class="fc" id="L107">         int i = line.indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">         if (i&gt;0) ids = line.substring(0, i);</span>
+
+<span class="fc" id="L110">         int mapping[] = Tools.getTokensInt(ids, &quot;,&quot;);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">         for (int id : mapping) {</span>
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">            if (id &gt; 0 &amp;&amp; id == groupId) {</span>
+               //nasli sme riadok
+<span class="fc" id="L114">               return mapping;</span>
+            }
+         }
+      }
+<span class="fc" id="L118">      return null;</span>
+   }
+
+   /**
+    * V zozname syncedGroups najde taky, ktory vyhovuje vetve stromu zadanej pomocou group (ked mame mapovanie typu SK,EN,DE,FR)
+    * @param group
+    * @param syncedGroups
+    * @return
+    */
+   public static GroupDetails selectMappedGroup(GroupDetails group, List&lt;GroupDetails&gt; syncedGroups) {
+      //ziskaj zoznam parent adresarov
+<span class="fc" id="L129">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L130">      List&lt;GroupDetails&gt; parentGroups = groupsDB.getParentGroups(group.getGroupId(), true);</span>
+      //preiteruj parent grupy, kym nenajdes nejake mapovanie, ideme od najnizsej urovne
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">      for (GroupDetails rootGroup : parentGroups) {</span>
+         //ako prve musime prebehnut jednotlive riadky mapovania a vobec identifikovat riadok v ktorom je nase mapovanie
+         //robime to tak, ze iterujeme cez parent grupy a snazime sa najst root mapovanie
+<span class="fc" id="L135">         int rootIds[] = getRootIds(rootGroup.getGroupId());</span>
+         //rootGroup je najdena hlavna grupa mapovania, preto ju volame rootGroup
+<span class="fc bfc" id="L137" title="All 2 branches covered.">         if (rootIds != null) {</span>
+            //super, nasli sme riadok mapovania, teraz preiteruj syncedGroups a najdi taku, ktora patri do nasej vetvy
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            for (GroupDetails synced : syncedGroups) {</span>
+<span class="fc" id="L140">               List&lt;GroupDetails&gt; syncedParentGroups = groupsDB.getParentGroups(synced.getGroupId(), true);</span>
+<span class="fc" id="L141">               syncedParentGroups.add(synced);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">               for (GroupDetails syncedParent : syncedParentGroups) {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                  if (syncedParent.getGroupId()==rootGroup.getGroupId()) return synced;</span>
+<span class="fc" id="L144">               }</span>
+<span class="fc" id="L145">            }</span>
+         }
+<span class="fc" id="L147">      }</span>
+<span class="nc" id="L148">      return null;</span>
+   }
+
+   /**
+    * Vyvolane po zmene konfiguracie, nastavi sync_id pre korenove adresare v konfiguracii
+    */
+   public static void checkRootGroupsConfig() {
+      //preiteruj riadky konfiguracie a over/nastav zadanym adresarom syncid
+      //format zapisu: id,id,id:POZNAMKA\n
+<span class="fc" id="L157">      String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
+<span class="fc" id="L158">      String lines[] = Tools.getTokens(mirroringConfig, &quot;\n&quot;);</span>
+<span class="fc" id="L159">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">      for (String line : lines) {</span>
+         //odstan poznamku
+<span class="fc" id="L162">         String ids = line;</span>
+<span class="fc" id="L163">         int i = line.indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">         if (i&gt;0) ids = line.substring(0, i);</span>
+
+<span class="fc" id="L166">         int mapping[] = Tools.getTokensInt(ids, &quot;,&quot;);</span>
+<span class="fc" id="L167">         int syncId = 0;</span>
+<span class="fc" id="L168">         int defaultDocSyncId = 0;</span>
+<span class="fc" id="L169">         StringBuilder groupIdsList = new StringBuilder();</span>
+<span class="fc" id="L170">         StringBuilder defaultDocIdsList = new StringBuilder();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">         for (int id : mapping) {</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            if (id &gt; 0) {</span>
+<span class="fc" id="L173">               GroupDetails group = groupsDB.getGroup(id);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">               if (group == null) continue;</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">               if (group.getSyncId()&gt;0) syncId = group.getSyncId();</span>
+
+<span class="fc bfc" id="L178" title="All 2 branches covered.">               if (groupIdsList.length()&gt;0) groupIdsList.append(&quot;,&quot;);</span>
+<span class="fc" id="L179">               groupIdsList.append(String.valueOf(group.getGroupId()));</span>
+
+               //ziskaj hlavnu stranku adresara
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">               if (group.getDefaultDocId()&gt;0) {</span>
+<span class="fc" id="L183">                  int docSyncId = DocMirroringServiceV9.getSyncId(group.getDefaultDocId());</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                  if (docSyncId&gt;0) defaultDocSyncId = docSyncId;</span>
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                  if (defaultDocIdsList.length()&gt;0) defaultDocIdsList.append(&quot;,&quot;);</span>
+<span class="fc" id="L187">                  defaultDocIdsList.append(String.valueOf(group.getDefaultDocId()));</span>
+               }
+            }
+         }
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">         if (groupIdsList.length()&gt;0) {</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">            if (syncId==0) syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
+            //nastav syncId vsetkym v riadku
+<span class="fc" id="L194">            new SimpleQuery().execute(&quot;UPDATE groups SET sync_id=? WHERE group_id IN (&quot;+groupIdsList.toString()+&quot;)&quot;, syncId);</span>
+         }
+         //nastav sync aj pre hlavnu stranku adresara
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">         if (defaultDocIdsList.length()&gt;0) {</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">            if (defaultDocSyncId==0) defaultDocSyncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
+            //nastav syncId vsetkym v riadku
+<span class="fc" id="L200">            new SimpleQuery().execute(&quot;UPDATE documents SET sync_id=? WHERE doc_id IN (&quot;+defaultDocIdsList.toString()+&quot;)&quot;, defaultDocSyncId);</span>
+         }
+      }
+      //refreshni GroupsDB
+<span class="fc" id="L204">      GroupsDB.getInstance(true);</span>
+<span class="fc" id="L205">      DocDB.getInstance(true);</span>
+<span class="fc" id="L206">   }</span>
+
+   public static void forceReloadTree() {
+<span class="fc" id="L209">      RequestBean.setAttribute(&quot;forceReloadTree&quot;, Boolean.TRUE);</span>
+<span class="fc" id="L210">   }</span>
+
+   /**
+    * Clear syncId property in database for all groups and documents in tree
+    * @param rootGroupId - ID of root group
+    */
+   public static void clearSyncId(int rootGroupId) {
+<span class="fc" id="L217">      GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc" id="L219">      List&lt;GroupDetails&gt; groups = groupsDB.getGroupsTree(rootGroupId, true, true);</span>
+      //convert group.getGroupId to comma separated String
+<span class="fc" id="L221">      String groupIds = &quot;&quot;;</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">      for(GroupDetails group : groups) {</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">          if(groupIds.isEmpty()==false) groupIds += &quot;,&quot;;</span>
+<span class="fc" id="L224">          groupIds += group.getGroupId();</span>
+<span class="fc" id="L225">      }</span>
+
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">      if (Tools.isNotEmpty(groupIds)) {</span>
+         //update database
+<span class="fc" id="L229">         (new SimpleQuery()).execute(&quot;UPDATE groups SET sync_id=0 WHERE group_id IN (&quot;+groupIds+&quot;)&quot;);</span>
+<span class="fc" id="L230">         (new SimpleQuery()).execute(&quot;UPDATE documents SET sync_id=0 WHERE group_id IN (&quot;+groupIds+&quot;)&quot;);</span>
+      }
+<span class="fc" id="L232">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -4,6 +4,8 @@ Zoznam dostupných atribútov pri zobrazení stránky
 
 ## Web stránka
 
+Údaje zobrazenej web stránky
+
 <table width="100%" class="ramikTable">
 <thead>
 	<tr>
@@ -321,7 +323,7 @@ Pri zobrazení stránky WebJET vkladá nasledovné objekty, tie môžete použi�
 - [ninja](../../../javadoc/sk/iway/iwcm/doc/ninja/Ninja.html) - doplnkové atribúty a funkcie pre [Ninja šablónu](../ninja-starter-kit/README.md)
 - [docDetails](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html) - objekt zobrazenej web stránky
 - [docDetailsOriginal](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html) - ak je zobrazená prihlasovacia stránka obsahuje pôvodnú (zaheslovanú) stránku
-- [groupDetails](../../../javadoc/sk/iway/iwcm/doc/GroupDetails.html) - objekt adresára aktuálne zobrazenej web stránky
+- [pageGroupDetails](../../../javadoc/sk/iway/iwcm/doc/GroupDetails.html) - objekt adresára aktuálne zobrazenej web stránky
 - [tempDetails](../../../javadoc/sk/iway/iwcm/doc/TemplateDetails.html) - objekt šablóny aktuálne zobrazenej web stránky
 - [templatesGroupDetails](../../../javadoc/sk/iway/iwcm/doc/TemplatesGroupBean.html) - objekt skupiny šablón zobrazenej web stránky
 

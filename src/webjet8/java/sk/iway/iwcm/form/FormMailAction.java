@@ -21,6 +21,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.captcha.Captcha;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
@@ -611,6 +612,11 @@ public class FormMailAction extends HttpServlet
 									}
 								}
 								skipToTag = tagToken.getSkipToTag(skipToTag);
+								String htmlClass = tagToken.getAttribute("class");
+								if (htmlClass != null && htmlClass.contains("formsimple-wysiwyg")) {
+									//use original value of the field
+									request.setAttribute(tagToken.getAttribute("name")+"-unescape", "true");
+								}
 
 								Logger.debug(FormMailAction.class, "TagToken name="+tagToken.getName()+" for="+tagToken.getAttribute("for"));
 								if ("label".equalsIgnoreCase(tagToken.getName()))
@@ -1449,7 +1455,7 @@ public class FormMailAction extends HttpServlet
 			{
 				//ked mame nastaveny interceptor je potrebne vojst nizsie aj ked nie je vyplneny email formularu (lebo sa to niekomu nezdalo vhodne)
 				//je to tak preto, aby sa interceptor vobec zavolal (TB-specific)
-				recipients = Constants.getString("emailProtectionSenderEmail");
+				if ("nobody@nowhere.com".equals(recipients)==false) recipients = Constants.getString("emailProtectionSenderEmail");
 			}
 
 			if (emailAllowed && "nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
@@ -1643,7 +1649,7 @@ public class FormMailAction extends HttpServlet
 							while (st.hasMoreTokens())
 							{
 								field = st.nextToken();
-								value = DB.internationalToEnglish(recode(request.getParameter(field)));
+								value = ResponseUtils.filter(DB.internationalToEnglish(recode(request.getParameter(field)))).replace("\n", " ").replace("\r", " ");
 								msg.setHeader(field, value);
 							}
 						}
@@ -1924,7 +1930,13 @@ public class FormMailAction extends HttpServlet
 
 		StringBuilder ret = null;
 
-		String[] params = request.getParameterValues(name);
+		String[] params;
+		if (request.getAttribute(name+"-unescape")!=null) {
+			params = new String[1];
+			params[0] = AllowSafeHtmlAttributeConverter.sanitize( ((IwcmRequest)request).getOriginalParameter(name) );
+		} else {
+			params = request.getParameterValues(name);
+		}
 		if (params != null) {
 			String param = null;
 			int size = 0;

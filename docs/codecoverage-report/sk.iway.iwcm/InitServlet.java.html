@@ -1,0 +1,1665 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InitServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">InitServlet.java</span></div><h1>InitServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.ConfigurableDataSource;
+
+import cryptix.provider.key.RawSecretKey;
+import cryptix.util.core.Hex;
+import sk.iway.Password;
+import sk.iway.iwcm.dmail.Sender;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.i18n.IwayProperties;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.FileCache;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.io.JarPackaging;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.UpdateDatabase;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
+import sk.iway.iwcm.system.cron.CronDB;
+import sk.iway.iwcm.system.cron.CronFacade;
+import sk.iway.iwcm.system.cron.CronTask;
+import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
+import sk.iway.iwcm.system.proxy.WebJETProxySelector;
+import sk.iway.iwcm.users.UserGroupsDB;
+/**
+ *  Inicializacia systemu, nastavenie databazy, overenie licencie
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.28 $
+ *@created      Nedela, 2002, jun 9
+ *@modified     $Date: 2004/03/22 08:09:03 $
+ */
+//@WebServlet(name = &quot;iwcminit&quot;, urlPatterns = {&quot;/init&quot;}, loadOnStartup = 1)
+<span class="fc" id="L66">public class InitServlet extends HttpServlet</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = 3175770407979840865L;
+
+<span class="fc" id="L73">	private static String actualVersion = &quot;2024.0-SNAPSHOT.{minor.number} {build.date}&quot;;</span>
+
+	private static final int DOMAIN_LEN = 10;
+
+<span class="fc" id="L77">	private static String[] domain = null;</span>
+
+<span class="fc" id="L79">	private static boolean valid = false;</span>
+
+<span class="fc" id="L81">	private static int licenseId = -1;</span>
+
+<span class="fc" id="L83">	private static boolean webjetInitialized = false;</span>
+<span class="fc" id="L84">	private static boolean webjetConfigured = false;</span>
+
+<span class="fc" id="L86">	private static final Date SERVER_START_DATETIME = new Date();</span>
+
+<span class="fc" id="L88">	private transient ClusterRefresher clusterRefresher = null;</span>
+
+<span class="fc" id="L90">	private static String contextDbName = null;</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@exception  ServletException  Description of the Exception
+	 */
+	@Override
+	public void init() throws ServletException
+	{
+<span class="fc" id="L100">		DebugTimer dt = new DebugTimer(&quot;InitServlet.init&quot;);</span>
+
+<span class="fc" id="L102">		Logger.debug(getClass(),&quot;init start&quot;);</span>
+<span class="fc" id="L103">		setContextDbName(getServletContext().getInitParameter(&quot;webjetDbname&quot;));</span>
+<span class="fc" id="L104">		Logger.debug(getClass(),&quot;contextDbName=&quot;+contextDbName);</span>
+<span class="fc" id="L105">		Constants.clearValues();</span>
+		//inicializuj casti pre nove verzie WebJETu
+<span class="fc" id="L107">		ConstantsV9.clearValuesWebJet9();</span>
+
+<span class="fc" id="L109">		String dbName = getInitParameter(&quot;dbName&quot;);</span>
+		//Constants.addDomains(dbName, domains);
+
+<span class="pc bpc" id="L112" title="3 of 4 branches missed.">		if (dbName == null || dbName.length() &lt; 1)</span>
+		{
+<span class="fc" id="L114">			dbName = &quot;iwcm&quot;;</span>
+		}
+<span class="fc" id="L116">		Logger.println(this, &quot;dbName=&quot;+dbName);</span>
+
+<span class="fc" id="L118">		Logger.println(this, &quot;-----------------------------------------------&quot;);</span>
+<span class="fc" id="L119">		Logger.println(this, &quot;WebJET initializing, root: &quot; + getServletContext().getRealPath(&quot;/&quot;));</span>
+<span class="fc" id="L120">		Logger.println(this, &quot;&quot;);</span>
+
+<span class="fc" id="L122">		int days_remaining = 0;</span>
+<span class="fc" id="L123">		setLicenseId(-1);</span>
+<span class="fc" id="L124">		String modulesEnableList = null;</span>
+
+<span class="fc" id="L126">		Connection db_conn = null;</span>
+		try
+		{
+			//toto potrebujeme nastavit pred DB inicializaciou
+<span class="fc" id="L130">			String mariaDbDefaultEngine = getInitParameter(&quot;mariaDbDefaultEngine&quot;, null);</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(mariaDbDefaultEngine)) Constants.setString(&quot;mariaDbDefaultEngine&quot;, mariaDbDefaultEngine);</span>
+
+<span class="fc" id="L133">			Logger.println(this,&quot;Checking database connection: &quot;);</span>
+<span class="fc" id="L134">			db_conn = DBPool.getConnection(dbName);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">			if (db_conn == null)</span>
+			{
+<span class="nc" id="L137">				Logger.println(this,&quot;   Database connection: [FAILED]&quot;);</span>
+<span class="nc" id="L138">				Logger.println(this,&quot;ERROR: Server halted (Database connection failed).&quot;);</span>
+<span class="nc" id="L139">				return;</span>
+			}
+
+<span class="fc" id="L142">			Logger.println(this,&quot;   Database connection: [OK]&quot;);</span>
+
+			//String serverType = getInitParameter(&quot;serverType&quot;, db_conn);
+
+<span class="fc" id="L146">			Map&lt;String, String&gt; databaseValues = getDatabaseValues(db_conn);</span>
+
+<span class="fc" id="L148">			db_conn.close();</span>
+<span class="fc" id="L149">			db_conn = null;</span>
+
+			try
+			{
+				//nastavenie proxy
+<span class="fc" id="L154">				String proxyHost = getInitParameter(&quot;proxyHost&quot;, databaseValues);</span>
+
+<span class="pc bpc" id="L156" title="3 of 4 branches missed.">				if (proxyHost != null &amp;&amp; proxyHost.length() &gt; 1)</span>
+				{
+<span class="nc" id="L158">					int proxyPort = Tools.getIntValue(getInitParameter(&quot;proxyPort&quot;, databaseValues), 0);</span>
+<span class="nc" id="L159">					String proxyUser = getInitParameter(&quot;proxyUser&quot;, databaseValues);</span>
+<span class="nc" id="L160">					String proxyPassword = getInitParameter(&quot;proxyPassword&quot;, databaseValues);</span>
+<span class="nc" id="L161">					String proxyHostsException = getInitParameter(&quot;proxyHostsException&quot;, databaseValues);</span>
+<span class="nc" id="L162">					String proxyHostHttps = getInitParameter(&quot;proxyHostHttps&quot;, databaseValues);</span>
+<span class="nc" id="L163">				int proxyPortHttps = Tools.getIntValue(getInitParameter(&quot;proxyPortHttps&quot;, databaseValues), 0);</span>
+
+				//ak mame prazdne pouzi rovnake ako pre http, ak chceme vypnut httpS proxy treba v konfigu nastavit host na X a port na 1, vtedy sa nepouzije
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					if (Tools.isEmpty(proxyHostHttps)) proxyHostHttps = proxyHost;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					if (proxyPortHttps == 0) proxyPortHttps = proxyPort;</span>
+
+<span class="nc" id="L169">					WebJETProxySelector.initProxy(proxyHost, proxyPort, proxyUser, proxyPassword, proxyHostsException, proxyHostHttps, proxyPortHttps);</span>
+				}
+			}
+<span class="nc" id="L172">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L174">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L175">			}</span>
+
+			//automaticke nastavenie JarPackaging ak existuje JAR subor (aby sa dala DB pouzivat aj pri standardnom vyvoji vo WJ)
+<span class="fc" id="L178">			JarPackaging.initialize();</span>
+
+			//testni kluc
+			try
+			{
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">				if (databaseValues.size() &lt; 1) {</span>
+<span class="nc" id="L184">					Logger.println(this,&quot;ERROR: not configured&quot;);</span>
+<span class="nc" id="L185">					webjetConfigured = false;</span>
+<span class="nc" id="L186">					throw new Exception(&quot;Not configured&quot;);</span>
+				}
+<span class="fc" id="L188">				webjetConfigured = true;</span>
+
+<span class="fc" id="L190">				xjava.security.Cipher alg = null;</span>
+				try
+				{
+<span class="fc" id="L193">					java.security.Security.addProvider(new cryptix.provider.Cryptix());</span>
+					//alg = xjava.security.Cipher.getInstance(&quot;Rijndael&quot;, &quot;Cryptix&quot;);
+<span class="fc" id="L195">					alg = xjava.security.Cipher.getInstance(new cryptix.provider.cipher.Rijndael(), null, null);</span>
+				}
+<span class="nc" id="L197">				catch (Exception e)</span>
+				{
+<span class="nc" id="L199">					System.out.println(&quot;Error instancing Cryptix &quot; + e.getMessage()); //NOSONAR</span>
+<span class="nc" id="L200">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L201">				}</span>
+
+
+<span class="fc" id="L204">				String license = getInitParameter(&quot;license&quot;, databaseValues);</span>
+
+<span class="pc bpc" id="L206" title="2 of 4 branches missed.">				if (license == null || license.length() &lt; 10)</span>
+				{
+<span class="nc" id="L208">					Logger.println(this,&quot;ERROR: missing license&quot;);</span>
+<span class="nc" id="L209">					throw new Exception(&quot;Missing license&quot;);</span>
+				}
+
+				//skontroluj licenciu
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">				if (license.length()&gt;32)</span>
+				{
+					//uprav podla udajov
+<span class="fc" id="L216">					int pos = Tools.getIntValue(Character.toString(license.charAt(0)), -1);</span>
+<span class="fc" id="L217">					int len = Tools.getIntValue(Character.toString(license.charAt(1)), -1);</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">					if (len==-1)</span>
+					{
+<span class="nc bnc" id="L220" title="All 2 branches missed.">						if ('a'==license.charAt(1)) len=10;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">						else if ('b'==license.charAt(1)) len=11;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">						else if ('c'==license.charAt(1)) len=12;</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">						else if ('d'==license.charAt(1)) len=13;</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">						else if ('e'==license.charAt(1)) len=14;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">						else if ('f'==license.charAt(1)) len=15;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">						else if ('g'==license.charAt(1)) len=16;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">						else if ('h'==license.charAt(1)) len=17;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">						else if ('i'==license.charAt(1)) len=18;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">						else if ('j'==license.charAt(1)) len=19;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">						else if ('k'==license.charAt(1)) len=20;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">						else if ('l'==license.charAt(1)) len=21;</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">						else if ('m'==license.charAt(1)) len=22;</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">						else if ('n'==license.charAt(1)) len=23;</span>
+					}
+<span class="pc bpc" id="L235" title="2 of 4 branches missed.">					if (pos &lt; 1 || len &lt; 1)</span>
+					{
+<span class="nc" id="L237">						Logger.println(this,&quot;ERROR: wrong license&quot;);</span>
+<span class="nc" id="L238">						throw new Exception();</span>
+					}
+					//ziskaj podstring
+<span class="fc" id="L241">					StringBuilder licData = new StringBuilder(license.substring(pos+2, pos+len+2));</span>
+					//Logger.println(this,&quot;licData=&quot;+licData);
+
+					//uprav license
+<span class="fc" id="L245">					license = license.substring(2, pos+2) + license.substring(pos+len+2);</span>
+					//Logger.println(this,&quot;license=&quot;+license);
+
+<span class="fc" id="L248">					licData.append(&quot;                               &quot;);</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">					if (licData.charAt(0)=='0') Constants.setString(&quot;wjVersion&quot;, &quot;B&quot;);</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">					else if (licData.charAt(0)=='1') Constants.setString(&quot;wjVersion&quot;, &quot;P&quot;);</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">					else if (licData.charAt(0)=='2') Constants.setString(&quot;wjVersion&quot;, &quot;E&quot;);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">					else if (licData.charAt(0)=='3') Constants.setString(&quot;wjVersion&quot;, &quot;C&quot;);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">					else if (licData.charAt(0)=='4') Constants.setString(&quot;wjVersion&quot;, &quot;I&quot;);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">					else if (licData.charAt(0)=='5') Constants.setString(&quot;wjVersion&quot;, &quot;D&quot;);</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">					else if (licData.charAt(0)=='6') Constants.setString(&quot;wjVersion&quot;, &quot;M&quot;);</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">					else if (licData.charAt(0)=='7') Constants.setString(&quot;wjVersion&quot;, &quot;O&quot;);</span>
+
+<span class="fc" id="L258">					modulesEnableList = licData.substring(1).trim();</span>
+				}
+
+				//dekoduj licenciu
+				//Logger.println(this,&quot;----&gt;&quot;+license);
+<span class="fc" id="L263">				String decoded = decrypt(license, alg);</span>
+				//Logger.println(this,&quot;====&gt;&quot;+decoded);
+<span class="fc" id="L265">				String[] domainDecoded = new String[1];</span>
+<span class="fc" id="L266">				domainDecoded[0] = decoded.substring(0, DOMAIN_LEN);</span>
+
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">				if (domainDecoded[0].lastIndexOf('#') != -1)</span>
+				{
+<span class="fc" id="L270">					domainDecoded[0] = domainDecoded[0].substring(domainDecoded[0].lastIndexOf('#') + 1);</span>
+				}
+<span class="fc" id="L272">				setDomain(domainDecoded);</span>
+
+<span class="fc" id="L274">				decoded = align(decoded, 16, false);</span>
+
+				//dekoduj datum
+<span class="fc" id="L277">				String s_date = decoded.substring(DOMAIN_LEN, DOMAIN_LEN + 3);</span>
+
+<span class="fc" id="L279">				String s_month = s_date.substring(0, 1);</span>
+<span class="fc" id="L280">				String s_year = &quot;20&quot; + s_date.substring(1);</span>
+
+				//Logger.println(this,&quot;m=&quot;+s_month+&quot; y=&quot;+s_year+&quot; decoded=&quot;+decoded);
+
+				int month;
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">				if (s_month.compareTo(&quot;A&quot;) == 0)</span>
+				{
+<span class="nc" id="L287">					month = 10;</span>
+				}
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">				else if (s_month.compareTo(&quot;B&quot;) == 0)</span>
+				{
+<span class="nc" id="L291">					month = 11;</span>
+				}
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">				else if (s_month.compareTo(&quot;C&quot;) == 0)</span>
+				{
+<span class="nc" id="L295">					month = 12;</span>
+				}
+				else
+				{
+<span class="fc" id="L299">					month = Integer.parseInt(s_month);</span>
+				}
+<span class="fc" id="L301">				int year = Integer.parseInt(s_year);</span>
+
+<span class="fc" id="L303">				Calendar cal = Calendar.getInstance();</span>
+
+<span class="fc" id="L305">				long l_now = cal.getTime().getTime();</span>
+
+<span class="fc" id="L307">				cal.set(Calendar.YEAR, year);</span>
+<span class="fc" id="L308">				cal.set(Calendar.MONTH, month-1);</span>
+<span class="fc" id="L309">				cal.set(Calendar.DAY_OF_MONTH, 1);</span>
+<span class="fc" id="L310">				cal.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="fc" id="L311">				cal.set(Calendar.MINUTE, 59);</span>
+<span class="fc" id="L312">				cal.set(Calendar.SECOND, 59);</span>
+				//cal.add(Calendar.DAY_OF_YEAR, -1);
+
+				//InitServlet.calendarValidUntil = cal;
+
+<span class="fc" id="L317">				SimpleDateFormat formatter = new SimpleDateFormat(Constants.getString(&quot;dateTimeFormat&quot;));</span>
+<span class="fc" id="L318">				Logger.println(this,&quot;License is valid until: &quot; + formatter.format(cal.getTime()));</span>
+
+<span class="fc" id="L320">				long l_license = cal.getTime().getTime();</span>
+
+<span class="fc" id="L322">				long diff = l_license - l_now;</span>
+
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">				if (diff &lt; 0)</span>
+				{
+<span class="nc" id="L326">					Logger.println(this,&quot;ERROR: License is out of date, please contact\n  InterWay (www.interway.sk)\n  for new license.&quot;);</span>
+<span class="nc" id="L327">					return;</span>
+				}
+
+<span class="fc" id="L330">				days_remaining = (int) (diff / 86400000L);</span>
+<span class="fc" id="L331">				Logger.println(this,&quot;Remaining: &quot; + days_remaining + &quot; days&quot;);</span>
+
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">				if (days_remaining &lt; 29)</span>
+				{
+<span class="nc" id="L335">					Logger.println(this,&quot;License will expire soon, please contact\n  InterWay (www.interway.sk)\n  for new license.&quot;);</span>
+				}
+
+<span class="fc" id="L338">				String sLicId = decoded.substring(DOMAIN_LEN + 3);</span>
+				//dekoduj
+<span class="fc" id="L340">				byte[] b = sLicId.getBytes();</span>
+<span class="fc" id="L341">				int i = b[2] - 32;</span>
+<span class="fc" id="L342">				int num = i * 4096;</span>
+
+<span class="fc" id="L344">				i = b[1] - 32;</span>
+<span class="fc" id="L345">				num = num + (i * 64);</span>
+
+<span class="fc" id="L347">				i = b[0] - 32;</span>
+<span class="fc" id="L348">				num = num + i;</span>
+
+<span class="fc" id="L350">				setLicenseId(num);</span>
+
+				//konektni sa na license server a over licenciu
+<span class="fc" id="L353">				boolean serverValid = false;</span>
+<span class="fc" id="L354">				String serverDomain = &quot;&quot;;</span>
+<span class="fc" id="L355">				int serverChalenge = -1;</span>
+<span class="fc" id="L356">				boolean connectSuccess = false;</span>
+				try
+				{
+<span class="fc" id="L359">					Logger.println(this,&quot;Verifying license, please wait...&quot;);</span>
+<span class="fc" id="L360">					String pDocRoot = URLEncoder.encode(getServletContext().getRealPath(&quot;/&quot;)+&quot;;&quot;+dbName+&quot;;&quot;+getInitParameter(&quot;installName&quot;, databaseValues), &quot;windows-1250&quot;);</span>
+<span class="fc" id="L361">					String urlStr = &quot;http://license.interway.sk/verify.do?id=&quot; + num + &quot;&amp;sdt=&quot; + l_now + &quot;&amp;docRoot=&quot; + pDocRoot;</span>
+					//System.out.println(urlStr);
+<span class="fc" id="L363">					URL url = new URL(urlStr);</span>
+
+<span class="fc" id="L365">					URLConnection conn = url.openConnection();</span>
+
+<span class="fc" id="L367">					conn.setDoOutput(true);</span>
+<span class="fc" id="L368">					conn.setDefaultUseCaches(false);</span>
+<span class="fc" id="L369">					conn.setUseCaches(false);</span>
+
+<span class="fc" id="L371">					conn.setRequestProperty(&quot;Content-Type&quot;, &quot;text/plain; charset=windows-1250&quot;);</span>
+<span class="fc" id="L372">					conn.setRequestProperty(&quot;Cache-Control&quot;, &quot;no-cache&quot;);</span>
+
+<span class="fc" id="L374">					BufferedReader br = null;</span>
+					try
+					{
+<span class="fc" id="L377">						br = new BufferedReader(new InputStreamReader(conn.getInputStream(), Constants.FILE_ENCODING));</span>
+						String msg;
+<span class="fc bfc" id="L379" title="All 2 branches covered.">						while ((msg = br.readLine()) != null)</span>
+						{
+							//System.out.println(&quot;SERVER RESPONSE: &quot;+msg);
+
+<span class="fc bfc" id="L383" title="All 2 branches covered.">							if (msg.compareTo(&quot;valid=true&quot;) == 0)</span>
+							{
+<span class="fc" id="L385">								serverValid = true;</span>
+<span class="fc" id="L386">								connectSuccess = true;</span>
+							}
+<span class="fc bfc" id="L388" title="All 2 branches covered.">							if (msg.startsWith(&quot;domain=&quot;))</span>
+							{
+<span class="fc" id="L390">								serverDomain = msg.substring(7);</span>
+<span class="fc" id="L391">								connectSuccess = true;</span>
+							}
+<span class="fc bfc" id="L393" title="All 2 branches covered.">							if (msg.startsWith(&quot;chalenge=&quot;))</span>
+							{
+<span class="fc" id="L395">								serverChalenge = Integer.parseInt(msg.substring(9));</span>
+<span class="fc" id="L396">								connectSuccess = true;</span>
+							}
+						}
+					}
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">					finally { if (br != null) br.close(); }</span>
+				}
+<span class="nc" id="L402">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L404">					connectSuccess = false;</span>
+<span class="fc" id="L405">				}</span>
+
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">				if (connectSuccess)</span>
+				{
+					//over integritu kluca
+<span class="fc" id="L410">					b = license.getBytes();</span>
+<span class="fc" id="L411">					int sum = 0;</span>
+					int len;
+<span class="fc" id="L413">					len = b.length;</span>
+
+<span class="fc bfc" id="L415" title="All 2 branches covered.">					for (i = 0; i &lt; len; i++)</span>
+					{
+<span class="fc" id="L417">						sum = sum + b[i];</span>
+					}
+
+					//System.out.println(&quot;SERVER LEN=&quot;+len+&quot; sum=&quot;+sum);
+
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">					if (sum != serverChalenge)</span>
+					{
+<span class="nc" id="L424">						Logger.println(this,&quot;ERROR: server challenge different!&quot;);</span>
+<span class="nc" id="L425">						throw new Exception();</span>
+					}
+
+<span class="pc bpc" id="L428" title="1 of 2 branches missed.">					if (!serverDomain.endsWith(InitServlet.domain[0]))</span>
+					{
+<span class="nc" id="L430">						Logger.println(this,&quot;ERROR: invalid domain!&quot;);</span>
+<span class="nc" id="L431">						throw new Exception();</span>
+					}
+
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">					if (serverValid == false)</span>
+					{
+<span class="nc" id="L436">						Logger.println(this,&quot;ERROR: license is invalid&quot;);</span>
+<span class="nc" id="L437">						throw new Exception();</span>
+					}
+				}
+
+<span class="fc" id="L441">				dt.diff(&quot;License is verifyied.&quot;);</span>
+<span class="fc" id="L442">				InitServlet.setValid(true);</span>
+
+				//nacitaj dalsie licencie, ak existuju
+<span class="fc" id="L445">				String licenseDomains = getInitParameter(&quot;licenseDomains&quot;, databaseValues);</span>
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(licenseDomains))</span>
+				{
+<span class="fc" id="L448">					List&lt;String&gt; domainList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L449">					domainList.add(domainDecoded[0]);</span>
+<span class="fc" id="L450">					String[] licenseDomainsArr = Tools.getTokens(licenseDomains, &quot;,\n&quot;);</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">					for (String domainKey : licenseDomainsArr)</span>
+					{
+<span class="pc bpc" id="L453" title="1 of 2 branches missed.">						if (domainKey.indexOf(&quot;:&quot;)&gt;0) domainKey = domainKey.substring(domainKey.indexOf(&quot;:&quot;)+1); //NOSONAR</span>
+						//System.out.println(&quot;domainKey=&quot;+domainKey);
+<span class="fc" id="L455">						decoded = decrypt(domainKey, alg);</span>
+<span class="fc" id="L456">						domainList.add(decoded);</span>
+					}
+<span class="fc" id="L458">					domainDecoded = domainList.toArray(new String[0]);</span>
+<span class="fc" id="L459">					setDomain(domainDecoded);</span>
+				}
+
+<span class="fc bfc" id="L462" title="All 2 branches covered.">				for (i = 0; i&lt;InitServlet.domain.length; i++)</span>
+				{
+<span class="fc" id="L464">					Logger.println(this, &quot;License domain: &quot; + InitServlet.domain[i]);</span>
+				}
+			}
+<span class="nc" id="L467">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L469" title="All 2 branches missed.">				if (&quot;Missing license&quot;.equals(ex.getMessage())) {</span>
+					//start as open source license
+<span class="nc" id="L471">					Constants.setString(&quot;wjVersion&quot;, &quot;O&quot;);</span>
+<span class="nc" id="L472">					InitServlet.setValid(true);</span>
+
+<span class="nc" id="L474">					Logger.println(this,&quot;License: OpenSource/Community&quot;);</span>
+
+<span class="nc" id="L476">					String[] domainDecoded = new String[1];</span>
+<span class="nc" id="L477">					domainDecoded[0] = &quot;&quot;;</span>
+<span class="nc" id="L478">					setDomain(domainDecoded);</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">				} else if (&quot;Not configured&quot;.equals(ex.getMessage())) {</span>
+<span class="nc" id="L480">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L481">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L482">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L483">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L484">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L485">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L486">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L487">					Logger.println(this,&quot;ERROR: Server not configured.&quot;);</span>
+<span class="nc" id="L488">					return;</span>
+				} else {
+<span class="nc" id="L490">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L491">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L492">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L493">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L494">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L495">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L496">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L497">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L498">					Logger.println(this,&quot;ERROR: Server halted (license is not valid).&quot;);</span>
+<span class="nc" id="L499">					return;</span>
+				}
+<span class="fc" id="L501">			}</span>
+
+<span class="fc" id="L503">			String installName = getInitParameter(&quot;installName&quot;, databaseValues);</span>
+<span class="pc bpc" id="L504" title="2 of 4 branches missed.">			if (installName == null || installName.trim().length() &lt; 1)</span>
+			{
+				try
+				{
+<span class="nc" id="L508">					String path = getServletContext().getRealPath(&quot;/&quot;);</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">					if (path != null)</span>
+					{
+<span class="nc" id="L511">						File f = new File(path);</span>
+<span class="nc" id="L512">						installName = f.getName();</span>
+<span class="nc" id="L513">						installName = Tools.replace(installName, &quot;.sk&quot;, &quot;&quot;);</span>
+<span class="nc" id="L514">						installName = Tools.replace(installName, &quot;.cz&quot;, &quot;&quot;);</span>
+<span class="nc" id="L515">						installName = Tools.replace(installName, &quot;.com&quot;, &quot;&quot;);</span>
+<span class="nc" id="L516">						installName = Tools.replace(installName, &quot;www.&quot;, &quot;&quot;);</span>
+					}
+				}
+<span class="nc" id="L519">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L521">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L522">				}</span>
+<span class="nc" id="L523">				Logger.println(this,&quot;guesing install name: &quot;+installName);</span>
+			}
+
+<span class="fc" id="L526">			Constants.setInstallName(installName);</span>
+<span class="fc" id="L527">			Logger.setInstallName(installName);</span>
+
+<span class="fc" id="L529">			dt.diff(&quot;Before loadConstants&quot;);</span>
+<span class="fc" id="L530">			loadConstants(databaseValues);</span>
+<span class="fc" id="L531">			dt.diff(&quot;After loadConstants&quot;);</span>
+
+<span class="fc" id="L533">			String clusterMyNodeName = getInitParameter(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc" id="L534">			int webjetNodeId = Tools.getIntValue(System.getProperty(&quot;webjetNodeId&quot;), -1);</span>
+<span class="pc bpc" id="L535" title="1 of 2 branches missed.">			if (webjetNodeId==-1) webjetNodeId = Tools.getIntValue(System.getenv(&quot;webjetNodeId&quot;), -1);</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">			if (webjetNodeId==-1) webjetNodeId = Tools.getIntValue(getInitParameter(&quot;webjetNodeId&quot;, null),-1);</span>
+<span class="pc bpc" id="L537" title="2 of 4 branches missed.">			if (Tools.isEmpty(clusterMyNodeName) &amp;&amp; webjetNodeId&gt;=0)</span>
+			{
+<span class="nc" id="L539">				clusterMyNodeName = &quot;node&quot;+webjetNodeId;</span>
+<span class="nc" id="L540">				Logger.println(this,&quot;INIT: pkeyGenOffset=&quot;+webjetNodeId);</span>
+<span class="nc" id="L541">				Constants.setInt(&quot;pkeyGenOffset&quot;, webjetNodeId);</span>
+			}
+			//v dockeri v rezime auto pouzijeme hostname ako nodeId
+<span class="pc bpc" id="L544" title="1 of 2 branches missed.">			if (&quot;auto&quot;.equals(Constants.getString(&quot;clusterNames&quot;)))</span>
+			{
+<span class="fc" id="L546">				clusterMyNodeName = trimHostname(System.getenv(&quot;HOSTNAME&quot;));</span>
+<span class="pc bpc" id="L547" title="1 of 2 branches missed.">				if (Tools.isEmpty(clusterMyNodeName))</span>
+				{
+					try
+					{
+<span class="fc" id="L551">						InetAddress ip = InetAddress.getLocalHost();</span>
+<span class="fc" id="L552">						String hostname = ip.getHostName();</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">						if (Tools.isNotEmpty(hostname))</span>
+						{
+							//MacBook-Pro-uzivatela-Lubos -&gt; MacBook-Pro-Lubos
+<span class="fc" id="L556">							hostname = Tools.replace(hostname, &quot;-uzivatela-&quot;, &quot;-&quot;);</span>
+							//odstran aj pomlcky
+<span class="fc" id="L558">							hostname = Tools.replace(hostname, &quot;-&quot;, &quot;&quot;);</span>
+<span class="fc" id="L559">							clusterMyNodeName = trimHostname(hostname);</span>
+						}
+<span class="nc" id="L561">						else clusterMyNodeName = trimHostname(ip.getHostAddress());</span>
+<span class="nc" id="L562">					} catch (Exception ex) {</span>
+<span class="nc" id="L563">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L564">					}</span>
+				}
+<span class="pc bpc" id="L566" title="1 of 2 branches missed.">				if (Tools.isEmpty(clusterMyNodeName)) clusterMyNodeName = trimHostname(&quot;auto-&quot;+Tools.getNow());</span>
+
+				//if it's default value change it to 1 to always load pkeyGen value from DB
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">				if (Constants.getInt(&quot;pkeyGenBlockSize&quot;)==10) Constants.setInt(&quot;pkeyGenBlockSize&quot;, 1);</span>
+			}
+<span class="pc bpc" id="L571" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(clusterMyNodeName))</span>
+			{
+<span class="fc" id="L573">				Logger.println(this,&quot;INIT: clusterMyNodeName=&quot;+clusterMyNodeName);</span>
+<span class="fc" id="L574">				Constants.setString(&quot;clusterMyNodeName&quot;, clusterMyNodeName);</span>
+<span class="fc" id="L575">				ClusterDB.cleanup();</span>
+			}
+<span class="nc" id="L577">			else Constants.setString(&quot;clusterMyNodeName&quot;, &quot;&quot;);</span>
+
+<span class="fc" id="L579">			String clusterMyNodeType = getInitParameter(&quot;clusterMyNodeType&quot;);</span>
+<span class="pc bpc" id="L580" title="2 of 4 branches missed.">			if (Tools.isEmpty(clusterMyNodeType) &amp;&amp; &quot;public&quot;.equals(System.getProperty(&quot;webjetNodeType&quot;)))</span>
+			{
+<span class="nc" id="L582">				clusterMyNodeType = &quot;public&quot;;</span>
+			}
+
+<span class="pc bpc" id="L585" title="1 of 2 branches missed.">			if (FileTools.isDirectory(&quot;/admin&quot;)==false) clusterMyNodeType = &quot;public&quot;;</span>
+
+<span class="pc bpc" id="L587" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(clusterMyNodeType))</span>
+			{
+<span class="nc" id="L589">				Logger.println(this,&quot;INIT: clusterMyNodeType=&quot;+clusterMyNodeType);</span>
+<span class="nc" id="L590">				Constants.setString(&quot;clusterMyNodeType&quot;, clusterMyNodeType);</span>
+			}
+<span class="fc" id="L592">			else Constants.setString(&quot;clusterMyNodeType&quot;, &quot;full&quot;);</span>
+
+			//aby sme v clustri mohli mat admin cast za NTLM autorizaciou
+<span class="fc" id="L595">			String NTLMDomainController = getInitParameter(&quot;NTLMDomainController&quot;);</span>
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(NTLMDomainController))</span>
+			{
+<span class="nc" id="L598">				Logger.println(this,&quot;INIT: NTLMDomainController=&quot;+NTLMDomainController);</span>
+<span class="nc" id="L599">				Constants.setString(&quot;NTLMDomainController&quot;, NTLMDomainController);</span>
+			}
+
+			//v clustri mozeme mat tuto hodnotu pre niektore nody rozdielnu
+<span class="fc" id="L603">			String baseHrefLoopback = getInitParameter(&quot;baseHrefLoopback&quot;);</span>
+<span class="pc bpc" id="L604" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(baseHrefLoopback))</span>
+			{
+<span class="nc" id="L606">				Logger.println(this,&quot;INIT: baseHrefLoopback=&quot;+baseHrefLoopback);</span>
+<span class="nc" id="L607">				Constants.setString(&quot;baseHrefLoopback&quot;, baseHrefLoopback);</span>
+			}
+
+			//moznost nastavenia separatne pre verejne nody cez Tomcat ako -DwebjetLuceneIndexDir=WEB-INF/lucene_index/node1/
+<span class="fc" id="L611">			String luceneIndexDir = System.getProperty(&quot;webjetLuceneIndexDir&quot;);</span>
+<span class="pc bpc" id="L612" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(luceneIndexDir))</span>
+			{
+<span class="nc" id="L614">				Logger.println(this,&quot;INIT: luceneIndexDir=&quot;+luceneIndexDir);</span>
+<span class="nc" id="L615">				Constants.setString(&quot;luceneIndexDir&quot;, luceneIndexDir);</span>
+			}
+
+<span class="fc" id="L618">			Logger.println(this,&quot;Constants loaded&quot;);</span>
+<span class="fc" id="L619">			dt.diff(&quot;Constants loaded&quot;);</span>
+
+<span class="fc" id="L621">			Logger.setWJLogLevel(Constants.getString(&quot;logLevel&quot;));</span>
+
+<span class="fc" id="L623">			Tools.reinitialize();</span>
+
+			//toto musime vykonat, kedze JPA sa inicializuje uz skor z defaultneho nastavenia (a potom ignoruje loadnute hodnoty)
+<span class="fc" id="L626">			DB.resetHtmlAllowedFields();</span>
+
+			//reinit iwfsdb
+<span class="fc" id="L629">			IwcmFsDB.init();</span>
+
+			//musime aj reloadnut text.properties
+<span class="pc bpc" id="L632" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;propInstallNames&quot;)))</span>
+			{
+<span class="nc" id="L634">				Prop.getInstance(true);</span>
+			}
+
+			/**
+			 *	Inicializacia Stripes od WebJET 7 na tomto mieste kvoli moznosti mat
+				*	pre rozne instalacie WJ rozne properties na tom istom tomcatovi, predtym sa to ukladalo do System.setProperty
+				*/
+
+<span class="fc" id="L642">			StringBuilder packages = new StringBuilder(&quot;sk.iway.iwcm.system,&quot;)</span>
+<span class="fc" id="L643">													.append(&quot;sk.iway.iwcm.stripes,&quot;)</span>
+<span class="fc" id="L644">													.append(&quot;sk.iway.iwcm.components,&quot;)</span>
+<span class="fc" id="L645">													.append(&quot;sk.iway.iwcm.components.welcome,&quot;)</span>
+<span class="fc" id="L646">													.append(&quot;sk.iway.iwcm.components.uschovna,&quot;)</span>
+<span class="fc" id="L647">													.append(&quot;sk.iway.iwcm.components.sharepoint,&quot;)</span>
+<span class="fc" id="L648">													.append(&quot;sk.iway.iwcm.i18n,&quot;)</span>
+<span class="fc" id="L649">													.append(&quot;sk.iway.iwcm.form,&quot;)</span>
+<span class="fc" id="L650">													.append(&quot;sk.iway.magzilla,&quot;)</span>
+<span class="fc" id="L651">													.append(&quot;sk.iway.iwcm.users,&quot;)</span>
+<span class="fc" id="L652">													.append(&quot;sk.iway.iwcm.gallery,&quot;)</span>
+<span class="fc" id="L653">													.append(&quot;sk.iway.iwcm.inquiry,&quot;)</span>
+<span class="fc" id="L654">													.append(&quot;sk.iway.iwcm.mobile,&quot;)</span>
+<span class="fc" id="L655">													.append(&quot;sk.iway.iwcm.dmail,&quot;)</span>
+<span class="fc" id="L656">													.append(&quot;sk.iway.&quot;).append(Constants.getInstallName());</span>
+
+<span class="fc" id="L658">			String addPackages = Constants.getString(&quot;stripesAddPackages&quot;);</span>
+
+<span class="pc bpc" id="L660" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(addPackages))</span>
+			{
+<span class="nc" id="L662">				addPackages = Tools.replace(addPackages, &quot;.*&quot;, &quot;&quot;);</span>
+<span class="nc" id="L663">				packages.append(',').append(addPackages);</span>
+			}
+
+
+<span class="fc" id="L667">			Logger.println(InitServlet.class, &quot;Stripes init, packages = &quot; + packages);</span>
+
+			//System.setProperty(&quot;ActionResolver.Packages&quot;, packages); //
+<span class="fc" id="L670">			Constants.setString(&quot;stripes.ActionResolver.Packages&quot;, packages.toString());</span>
+
+			/*
+				ukoncena inicializacia Stripes balickov
+				*/
+
+<span class="pc bpc" id="L676" title="1 of 2 branches missed.">			if (&quot;false&quot;.equals(getInitParameter(&quot;useSMTPServer&quot;)))</span>
+			{
+<span class="nc" id="L678">				Constants.setString(&quot;useSMTPServer&quot;,&quot;false&quot;);</span>
+			}
+<span class="pc bpc" id="L680" title="1 of 2 branches missed.">			else if (&quot;true&quot;.equals(getInitParameter(&quot;useSMTPServer&quot;)))</span>
+			{
+				//we must explicitly check true because of empty/other value
+<span class="nc" id="L683">				Constants.setString(&quot;useSMTPServer&quot;,&quot;true&quot;);</span>
+			}
+
+<span class="fc" id="L686">			String smtpServer = System.getProperty(&quot;webjetSmtpServer&quot;);</span>
+<span class="pc bpc" id="L687" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(smtpServer))</span>
+			{
+<span class="nc" id="L689">				Logger.println(this,&quot;INIT: smtpServer=&quot;+smtpServer);</span>
+<span class="nc" id="L690">				Constants.setString(&quot;smtpServer&quot;, smtpServer);</span>
+			}
+
+<span class="fc" id="L693">			Constants.setServletContext(getServletContext());</span>
+
+<span class="fc" id="L695">			loadVersion();</span>
+
+<span class="fc" id="L697">			Constants.setString(&quot;defaultEncoding&quot;, SetCharacterEncodingFilter.encoding);</span>
+<span class="fc" id="L698">			Logger.println(InitServlet.class, &quot;Setting defaultEncoding to &quot;+Constants.getString(&quot;defaultEncoding&quot;));</span>
+<span class="fc" id="L699">			Logger.println(this,&quot;update database call&quot;);</span>
+
+<span class="fc" id="L701">			dt.diff(&quot;before update database&quot;);</span>
+<span class="fc" id="L702">			UpdateDatabase.update();</span>
+<span class="fc" id="L703">			dt.diff(&quot;after update database, cp=&quot;+PathFilter.getCustomPath());</span>
+
+<span class="fc" id="L705">			String logLevels = Constants.getString(&quot;logLevels&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L706" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(logLevels)) {</span>
+<span class="fc" id="L707">				Logger.setWJLogLevels(Logger.getLogLevelsMap(logLevels));</span>
+			}
+
+			try
+			{
+<span class="pc bpc" id="L712" title="1 of 2 branches missed.">				if (Tools.isEmpty(PathFilter.getCustomPath()))</span>
+				{
+					//posli email
+<span class="fc" id="L715">					StringBuilder emailBody = new StringBuilder();</span>
+
+<span class="fc" id="L717">					Logger.println(this, &quot;get hostname&quot;);</span>
+<span class="fc" id="L718">					String serverName = InetAddress.getLocalHost().getHostName();</span>
+<span class="fc" id="L719">					Logger.println(this, &quot;get hostname done&quot;);</span>
+<span class="fc" id="L720">					emailBody.append(&quot;ServerName: &quot;).append(serverName).append('\n');</span>
+					//emailBody += &quot;ServerIP: &quot; + InetAddress.getLocalHost().getHostAddress() + &quot;\n&quot;;
+
+<span class="fc" id="L723">					InetAddress[] ipecky = InetAddress.getAllByName(serverName);</span>
+					int i;
+<span class="fc bfc" id="L725" title="All 2 branches covered.">					for (i = 0; i &lt; ipecky.length; i++)</span>
+					{
+<span class="fc" id="L727">						emailBody.append(&quot;ServerIP[&quot;).append(i + 1).append(&quot;]: &quot;).append(ipecky[i].getHostAddress()).append(' ').append(ipecky[i].getHostName()).append('\n');</span>
+					}
+
+<span class="fc" id="L730">					dt.diff(&quot;mam ipecky&quot;);</span>
+
+<span class="fc" id="L732">					emailBody.append(&quot;InstallName: &quot;).append(Constants.getString(&quot;installName&quot;)).append(&quot;\n&quot;);</span>
+<span class="pc bpc" id="L733" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(Constants.getLogInstallName())) emailBody.append(&quot;LogInstallName: &quot;).append(Constants.getLogInstallName()).append(&quot;\n&quot;);</span>
+<span class="fc" id="L734">					emailBody.append(&quot;wjVersion: &quot;).append(Constants.getString(&quot;wjVersion&quot;)).append('\n');</span>
+<span class="fc" id="L735">					emailBody.append(&quot;version: &quot;).append(getActualVersionLong()).append('\n');</span>
+<span class="fc" id="L736">					emailBody.append(&quot;Remaining: &quot;).append(days_remaining).append('\n');</span>
+<span class="fc" id="L737">					emailBody.append(&quot;LicenseID: &quot;).append(licenseId).append('\n');</span>
+<span class="fc" id="L738">					emailBody.append(&quot;Domain: &quot;).append(InitServlet.domain[0]).append('\n');</span>
+<span class="fc" id="L739">					emailBody.append(&quot;Web root: &quot;).append(getServletContext().getRealPath(&quot;/&quot;)).append('\n');</span>
+<span class="fc" id="L740">					emailBody.append(&quot;user: &quot;).append(System.getProperty(&quot;user.name&quot;)).append('\n');</span>
+<span class="fc" id="L741">					String logInstallNameSuffix = &quot;&quot;;</span>
+<span class="pc bpc" id="L742" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(Constants.getLogInstallName())) logInstallNameSuffix = &quot;/&quot;+Constants.getLogInstallName();</span>
+<span class="fc" id="L743">					SendMail.send(&quot;WebJET&quot;, &quot;restart@webjetcms.sk&quot;, &quot;lubos.balat@interway.sk&quot;, &quot;WebJET restart [&quot; + Constants.getString(&quot;installName&quot;) + logInstallNameSuffix + &quot;] &quot;+actualVersion+&quot; rem: &quot; + days_remaining + &quot; server: &quot; + InetAddress.getLocalHost().getHostName(), emailBody.toString());</span>
+
+<span class="fc" id="L745">					dt.diff(&quot;after email send&quot;);</span>
+				}
+<span class="nc" id="L747">			} catch (Exception ex) {</span>
+				//silent
+<span class="fc" id="L749">			}</span>
+		}
+<span class="nc" id="L751">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L753">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L754">			Logger.println(this,&quot;   Database connection: [FAILED]&quot;);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="pc bpc" id="L760" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L761">					db_conn.close();</span>
+			}
+<span class="nc" id="L763">			catch (Exception ex2)</span>
+			{
+<span class="fc" id="L765">			}</span>
+		}
+
+<span class="fc" id="L768">		Logger.println(InitServlet.class, &quot;Initializing pkey generator&quot;);</span>
+
+<span class="fc" id="L770">		Constants.setServletContext(getServletContext());</span>
+
+		//inicializuj PkeyGenerator
+<span class="fc" id="L773">		PkeyGenerator.getInstance();</span>
+<span class="fc" id="L774">		dt.diff(&quot;after pkey generator&quot;);</span>
+
+<span class="fc" id="L776">		Logger.println(InitServlet.class, &quot;Initializing sender&quot;);</span>
+
+<span class="fc" id="L778">		Sender sender = Sender.getInstance();</span>
+<span class="pc bpc" id="L779" title="2 of 4 branches missed.">		if (sender!=null &amp;&amp; sender.getToSendCount() &gt; 0)</span>
+		{
+<span class="nc" id="L781">			Logger.println(this,&quot;Emails in queue: &quot; + sender.getToSendCount());</span>
+		}
+
+<span class="fc" id="L784">		dt.diff(&quot;after sender&quot;);</span>
+
+<span class="fc" id="L786">		Logger.println(InitServlet.class, &quot;Initializing docDB&quot;);</span>
+
+<span class="fc" id="L788">		DocDB.getInstance();</span>
+<span class="fc" id="L789">		UserGroupsDB.getInstance();</span>
+
+<span class="fc" id="L791">		dt.diff(&quot;after docDB&quot;);</span>
+
+		//toto tu uz netreba, kedze to zbehne pri instancii GroupsDB az na konci
+		//GroupsDB.getInstance(true);
+<span class="fc" id="L795">		Modules.getInstance(modulesEnableList, true);</span>
+
+		//nacitaj chranene adresare
+<span class="fc" id="L798">		PathFilter.reloadProtectedDirs();</span>
+
+		//SendMailMultipart.sendLater(&quot;Janko Hraďż˝ko&quot;, &quot;jeeff@jeeff.sk&quot;, &quot;lubos@balat.sk&quot;, null, &quot;Predmet ďż˝ďż˝čťžďż˝ďż˝ďż˝ďż˝&quot;, &quot;Toto je body... ďż˝ďż˝čťžďż˝ďż˝ďż˝ďż˝ &lt;img src=\&quot;/images/wjlogo.gif\&quot;&gt;&lt;br&gt; ahoj &lt;b&gt;TUCNE&lt;/b&gt;&lt;a href='/showdoc.do?docid=4'&gt;ODKAZ&lt;/a&gt;&quot;, &quot;http://iwcm.interway.sk&quot;, &quot;18.11.2004&quot;, &quot;14:32&quot;);
+
+		// JRASKA: inicializacia Eclipselink JPA
+		try
+		{
+<span class="fc" id="L805">			Logger.debugMemInfo();</span>
+
+<span class="fc" id="L807">			DBPool.jpaInitialize();</span>
+
+<span class="fc" id="L809">			Logger.debugMemInfo();</span>
+		}
+<span class="nc" id="L811">		catch (RuntimeException ex2)</span>
+		{
+<span class="nc" id="L813">			Logger.println(this,&quot; [FAIL]&quot;);</span>
+<span class="nc" id="L814">			sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L815">		}</span>
+
+<span class="fc" id="L817">		dt.diff(&quot;after JPA&quot;);</span>
+
+<span class="fc" id="L819">		UpdateDatabase.updateAfterInit();</span>
+
+<span class="fc" id="L821">		dt.diff(&quot;after update afret init&quot;);</span>
+
+<span class="fc" id="L823">		String clusterNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+
+<span class="fc" id="L825">		StringBuilder logMessage = new StringBuilder();</span>
+<span class="fc" id="L826">		logMessage.append(&quot;InitServlet: &quot;).append(getServletContext().getRealPath(&quot;/&quot;)).append(&quot;\n&quot;);</span>
+<span class="fc" id="L827">		logMessage.append(&quot;user: &quot;).append(System.getProperty(&quot;user.name&quot;)).append(&quot;\n&quot;);</span>
+<span class="pc bpc" id="L828" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(clusterNodeName)) logMessage.append(&quot;node:&quot;).append(clusterNodeName).append(&quot;\n&quot;);</span>
+<span class="fc" id="L829">		logMessage.append(&quot;version: &quot;).append(getActualVersionLong());</span>
+<span class="fc" id="L830">		Adminlog.add(Adminlog.TYPE_INIT, logMessage.toString(), -1, -1);</span>
+
+<span class="fc" id="L832">		clusterRefresher = new ClusterRefresher();</span>
+
+<span class="fc" id="L834">		dt.diff(&quot;after cluster refresher&quot;);</span>
+
+		//spusti cron4j
+		try
+		{
+<span class="fc" id="L839">			CronFacade cf = CronFacade.getInstance();</span>
+<span class="fc" id="L840">			cf.setTaskSource(new WebjetDatabaseTaskSource());</span>
+<span class="fc" id="L841">			cf.start();</span>
+
+			//spustim tie ktore sa maju spustit hned po starte
+<span class="fc" id="L844">			List&lt;CronTask&gt; startupTasks = CronDB.getCronTasksRunAtStartup();</span>
+<span class="pc bpc" id="L845" title="1 of 2 branches missed.">			if(startupTasks != null)</span>
+			{
+<span class="pc bpc" id="L847" title="1 of 2 branches missed.">				for(CronTask t : startupTasks)</span>
+				{
+<span class="nc bnc" id="L849" title="All 6 branches missed.">					if(ClusterDB.isServerRunningInClusterMode()==false || &quot;all&quot;.equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))</span>
+					{
+<span class="nc" id="L851">						Logger.println(InitServlet.class, &quot;Spustam cron {&quot;+t.getId()+&quot;} &quot;+t.getTask()+&quot; &quot;+t.getParams());</span>
+<span class="nc" id="L852">						cf.runSimpleTaskOnce(t);</span>
+					}
+<span class="nc" id="L854">				}</span>
+			}
+		}
+<span class="nc" id="L857">		catch (Exception e)</span>
+		{
+<span class="nc" id="L859">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L860">		}</span>
+
+		//Logger.println(this,&quot;---------------- INIT DONE --------------&quot;);
+
+<span class="fc" id="L864">		dt.diff(&quot;Init done&quot;);</span>
+
+<span class="fc" id="L866">		WebJETProxySelector.setAuthenticator();</span>
+
+<span class="fc" id="L868">		PathFilter.prepareTemplates();</span>
+
+<span class="fc" id="L870">		FileCache.init();</span>
+
+<span class="fc" id="L872">		Logger.println(this,&quot;---------------- INIT DONE, version: &quot;+getActualVersionLong()+&quot; --------------&quot;);</span>
+
+
+		/*Logger.println(InitServlet.class, &quot;ZISKAVAM 3 DB SPOJENIA A NEZATVARAM&quot;);
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();
+		DBPool.getConnection();*/
+
+		//zavolanie localconf pri lokalnom developmente
+<span class="pc bpc" id="L887" title="1 of 2 branches missed.">		if (FileTools.isFile(&quot;/localconf.jsp&quot;))</span>
+		{
+<span class="nc" id="L889">			Logger.println(this,&quot;VOLAM localconf.jsp&quot;);</span>
+			//String localconf = Tools.downloadUrl(&quot;http://iwcm.interway.sk:8080/localconf.jsp&quot;);
+<span class="nc" id="L891">			Tools.setTimeout(() -&gt; Tools.downloadUrl(&quot;http://iwcm.interway.sk:8080/localconf.jsp&quot;), 30000);</span>
+<span class="nc" id="L892">			Tools.setTimeout(() -&gt; Tools.downloadUrl(&quot;http://iwcm.interway.sk/localconf.jsp&quot;), 35000);</span>
+			//Logger.println(this,&quot;VOLAM localconf.jsp, vystup:\n&quot;+localconf);
+		}
+
+		//aby sa inicializoval SK properties subor za kazdych okolnosti (je default)
+<span class="fc" id="L897">		Tools.setTimeout(() -&gt; Prop.getInstance(&quot;sk&quot;), 5000);</span>
+
+		//delete old struts-config.xml if we user jar packaging
+<span class="fc" id="L900">		deleteOldStrutsConfig();</span>
+
+<span class="fc" id="L902">		dt.diff(&quot;DONE&quot;);</span>
+
+<span class="fc" id="L904">		setWebjetInitialized(true);</span>
+<span class="fc" id="L905">	}</span>
+
+	/**
+	 *  Description of the Method
+	 */
+	@Override
+	public void destroy()
+	{
+<span class="fc" id="L913">		setWebjetInitialized(false);</span>
+
+<span class="fc" id="L915">		Logger.println(this,&quot;Destroying Cron4j&quot;);</span>
+<span class="fc" id="L916">		CronFacade.getInstance().stop();</span>
+<span class="fc" id="L917">		Logger.println(this,&quot;Cron 4j destroyed&quot;);</span>
+
+<span class="fc" id="L919">		Sender sender = Sender.getInstance();</span>
+<span class="pc bpc" id="L920" title="1 of 2 branches missed.">		if (sender != null)</span>
+		{
+<span class="fc" id="L922">			sender.cancelTask();</span>
+		}
+
+<span class="fc" id="L925">		SpamProtection.destroy();</span>
+
+<span class="pc bpc" id="L927" title="1 of 2 branches missed.">		if (clusterRefresher != null)</span>
+		{
+<span class="fc" id="L929">			clusterRefresher.cancelTask();</span>
+<span class="fc" id="L930">			clusterRefresher = null;</span>
+		}
+
+		//JRASKA destroy JPA
+<span class="fc" id="L934">		DBPool.jpaDestroy();</span>
+
+		try
+		{
+<span class="fc" id="L938">			DataSource ds = DBPool.getInstance().getDataSource(&quot;iwcm&quot;);</span>
+<span class="pc bpc" id="L939" title="1 of 2 branches missed.">			if (ds instanceof ConfigurableDataSource)</span>
+			{
+<span class="fc" id="L941">				ConfigurableDataSource cds = (ConfigurableDataSource)ds;</span>
+<span class="fc" id="L942">				cds.printStackTraces();</span>
+			}
+		}
+<span class="nc" id="L945">		catch (SQLException e)</span>
+		{
+<span class="nc" id="L947">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L948">		}</span>
+
+<span class="fc" id="L950">		DBPool.getInstance().destroy(false);</span>
+<span class="fc" id="L951">	}</span>
+
+	/**
+	 * Nahra z properties suboru aktualnu verziu podla build time
+	 */
+	private void loadVersion()
+	{
+<span class="fc" id="L958">		String buildDate = &quot;&quot;;</span>
+<span class="fc" id="L959">		String minorVersion = &quot;&quot;;</span>
+		try
+		{
+<span class="fc" id="L962">			IwcmFile propFile = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/build.properties&quot;));</span>
+<span class="fc" id="L963">			IwayProperties prop = new IwayProperties();</span>
+<span class="fc" id="L964">			prop.load(propFile);</span>
+
+<span class="fc" id="L966">			buildDate = prop.getProperty(&quot;build.date&quot;);</span>
+<span class="fc" id="L967">			minorVersion = prop.getProperty(&quot;minor.number&quot;);</span>
+		}
+<span class="nc" id="L969">		catch (Exception e)</span>
+		{
+<span class="nc" id="L971">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L972">		}</span>
+
+<span class="fc" id="L974">		setActualVersion(Tools.replace(InitServlet.actualVersion, &quot;{build.date}&quot;, buildDate));</span>
+<span class="fc" id="L975">		setActualVersion(Tools.replace(InitServlet.actualVersion, &quot;{minor.number}&quot;, minorVersion));</span>
+<span class="fc" id="L976">	}</span>
+
+	private Map&lt;String, String&gt; getDatabaseValues(Connection db_conn)
+	{
+<span class="fc" id="L980">		Map&lt;String, String&gt; databaseValues = new Hashtable&lt;&gt;();</span>
+		try
+		{
+<span class="fc" id="L983">			PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT * FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; ORDER BY name&quot;);</span>
+<span class="fc" id="L984">			ResultSet rs = ps.executeQuery();</span>
+			String name;
+			String value;
+<span class="fc bfc" id="L987" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc" id="L989">				name = DB.getDbString(rs, &quot;name&quot;);</span>
+<span class="fc" id="L990">				value = DB.getDbString(rs, &quot;value&quot;);</span>
+
+<span class="fc" id="L992">				databaseValues.put(name, value);</span>
+			}
+<span class="fc" id="L994">			rs.close();</span>
+<span class="fc" id="L995">			ps.close();</span>
+<span class="fc" id="L996">			rs = null;</span>
+<span class="fc" id="L997">			ps = null;</span>
+		}
+<span class="nc" id="L999">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1001">			sk.iway.iwcm.Logger.error(InitServlet.class, ex.getMessage());</span>
+<span class="fc" id="L1002">		}</span>
+
+<span class="fc" id="L1004">		return databaseValues;</span>
+	}
+
+	public void loadConstants(Map&lt;String, String&gt; databaseValues)
+	{
+		try
+		{
+<span class="fc" id="L1011">			Map&lt;String, String&gt; skipValues = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L1013">			int i = getInt(&quot;rootGroupId&quot;, databaseValues);</span>
+<span class="fc" id="L1014">			skipValues.put(&quot;rootGroupId&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1015" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1017">				Constants.setInt(&quot;rootGroupId&quot;, i);</span>
+			}
+<span class="fc" id="L1019">			i = getInt(&quot;tempGroupId&quot;, databaseValues);</span>
+<span class="fc" id="L1020">			skipValues.put(&quot;tempGroupId&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1021" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1023">				Constants.setInt(&quot;tempGroupId&quot;, i);</span>
+			}
+<span class="fc" id="L1025">			i = getInt(&quot;menuGroupId&quot;, databaseValues);</span>
+<span class="fc" id="L1026">			skipValues.put(&quot;menuGroupId&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1027" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1029">				Constants.setInt(&quot;menuGroupId&quot;, i);</span>
+			}
+<span class="fc" id="L1031">			i = getInt(&quot;headerFooterGroupId&quot;, databaseValues);</span>
+<span class="fc" id="L1032">			skipValues.put(&quot;headerFooterGroupId&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1033" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1035">				Constants.setInt(&quot;headerFooterGroupId&quot;, i);</span>
+			}
+<span class="fc" id="L1037">			i = getInt(&quot;newDocumentId&quot;, databaseValues);</span>
+<span class="fc" id="L1038">			skipValues.put(&quot;newDocumentId&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L1039">			Constants.setInt(&quot;newDocumentId&quot;, i);</span>
+
+			//pkeyGenerator
+<span class="fc" id="L1042">			i = getInt(&quot;pkeyGenIncrement&quot;, databaseValues);</span>
+<span class="fc" id="L1043">			skipValues.put(&quot;pkeyGenIncrement&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1044" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1046">				Constants.setInt(&quot;pkeyGenIncrement&quot;, i);</span>
+			}
+			//nacitame z web.xml kedze v clustri je spolocna DB
+<span class="fc" id="L1049">			i = Tools.getIntValue(getInitParameter(&quot;pkeyGenOffset&quot;), 0);</span>
+<span class="fc" id="L1050">			skipValues.put(&quot;pkeyGenOffset&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1051" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
+			{
+<span class="nc" id="L1053">				Constants.setInt(&quot;pkeyGenOffset&quot;, i);</span>
+			}
+
+<span class="fc" id="L1056">			String linkType = getInitParameter(&quot;linkType&quot;, databaseValues);</span>
+<span class="fc" id="L1057">			skipValues.put(&quot;linkType&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1058" title="3 of 4 branches missed.">			if (linkType != null &amp;&amp; linkType.equalsIgnoreCase(&quot;html&quot;))</span>
+			{
+<span class="nc" id="L1060">				Constants.setInt(&quot;linkType&quot;, Constants.LINK_TYPE_HTML);</span>
+			}
+<span class="pc bpc" id="L1062" title="3 of 4 branches missed.">			else if (linkType != null &amp;&amp; linkType.equalsIgnoreCase(&quot;docid&quot;))</span>
+			{
+<span class="nc" id="L1064">				Constants.setInt(&quot;linkType&quot;, Constants.LINK_TYPE_DOCID);</span>
+			}
+
+<span class="fc" id="L1067">			String param = getInitParameter(&quot;imagesRootDir&quot;, databaseValues);</span>
+<span class="fc" id="L1068">			skipValues.put(&quot;imagesRootDir&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1069" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">				if (&quot;/&quot;.equals(param))</span>
+				{
+<span class="nc" id="L1073">					param = &quot;&quot;;</span>
+				}
+<span class="nc" id="L1075">				Constants.setString(&quot;imagesRootDir&quot;, param);</span>
+			}
+
+<span class="fc" id="L1078">			param = getInitParameter(&quot;galleryDirName&quot;, databaseValues);</span>
+<span class="fc" id="L1079">			skipValues.put(&quot;galleryDirName&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1080" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L1082" title="All 2 branches missed.">				if (&quot;/&quot;.equals(param))</span>
+				{
+<span class="nc" id="L1084">					param = &quot;&quot;;</span>
+				}
+<span class="nc" id="L1086">				Constants.setString(&quot;galleryDirName&quot;, param);</span>
+			}
+
+<span class="fc" id="L1089">			param = getInitParameter(&quot;filesRootDir&quot;, databaseValues);</span>
+<span class="fc" id="L1090">			skipValues.put(&quot;filesRootDir&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1091" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc bnc" id="L1093" title="All 2 branches missed.">				if (&quot;/&quot;.equals(param))</span>
+				{
+<span class="nc" id="L1095">					param = &quot;&quot;;</span>
+				}
+<span class="nc" id="L1097">				Constants.setString(&quot;filesRootDir&quot;, param);</span>
+			}
+
+<span class="fc" id="L1100">			param = getInitParameter(&quot;adminCheckUserGroups&quot;, databaseValues);</span>
+<span class="fc" id="L1101">			skipValues.put(&quot;adminCheckUserGroups&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1102" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc" id="L1104">				Constants.setBoolean(&quot;adminCheckUserGroups&quot;, param);</span>
+			}
+
+<span class="fc" id="L1107">			param = getInitParameter(&quot;adminRequireSSL&quot;, databaseValues);</span>
+<span class="fc" id="L1108">			skipValues.put(&quot;adminRequireSSL&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1109" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc" id="L1111">				Constants.setBoolean(&quot;adminRequireSSL&quot;, param);</span>
+			}
+
+<span class="fc" id="L1114">			param = getInitParameter(&quot;exportFlash&quot;, databaseValues);</span>
+<span class="fc" id="L1115">			skipValues.put(&quot;exportFlash&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1116" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc" id="L1118">				Constants.setBoolean(&quot;exportFlash&quot;, param);</span>
+			}
+
+<span class="fc" id="L1121">			param = getInitParameter(&quot;exportDocsHtml&quot;, databaseValues);</span>
+<span class="fc" id="L1122">			skipValues.put(&quot;exportDocsHtml&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1123" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc" id="L1125">				Constants.setBoolean(&quot;exportDocsHtml&quot;, param);</span>
+			}
+
+<span class="fc" id="L1128">			param = getInitParameter(&quot;editorEnableXHTML&quot;, databaseValues);</span>
+<span class="fc" id="L1129">			skipValues.put(&quot;editorEnableXHTML&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1130" title="3 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="nc" id="L1132">				Constants.setBoolean(&quot;editorEnableXHTML&quot;, param);</span>
+			}
+
+<span class="fc" id="L1135">			param = getInitParameter(&quot;statEnableOld&quot;, databaseValues);</span>
+<span class="fc" id="L1136">			skipValues.put(&quot;statEnableOld&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L1137" title="2 of 4 branches missed.">			if (param != null &amp;&amp; param.length() &gt; 0)</span>
+			{
+<span class="fc" id="L1139">				Constants.setBoolean(&quot;statEnableOld&quot;, param);</span>
+			}
+
+			//Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe)
+<span class="pc bpc" id="L1143" title="1 of 2 branches missed.">			if(&quot;true&quot;.equals(getInitParameter(&quot;constantsAliasSearch&quot;, databaseValues)))</span>
+<span class="nc" id="L1144">				Constants.setConstantsAliasSearch(true);</span>
+			else
+<span class="fc" id="L1146">				Constants.setConstantsAliasSearch(false);</span>
+
+
+			String name;
+			String value;
+
+<span class="fc" id="L1152">			List&lt;LabelValueDetails&gt; names = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1153" title="All 2 branches covered.">			for (Map.Entry&lt;String, String&gt; entry : databaseValues.entrySet())</span>
+			{
+<span class="fc" id="L1155">				name = entry.getKey();</span>
+<span class="fc" id="L1156">				value = entry.getValue();</span>
+
+<span class="fc bfc" id="L1158" title="All 2 branches covered.">				if (skipValues.get(name)==null)</span>
+				{
+<span class="fc" id="L1160">					names.add(new LabelValueDetails(name, value));</span>
+				}
+				else
+				{
+<span class="fc" id="L1164">					Logger.println(this,&quot;skipping: &quot; + name);</span>
+				}
+<span class="fc" id="L1166">			}</span>
+
+			//Inicializacia WJ podla runtime parametrov (#20549)
+<span class="fc" id="L1169">			Properties systemProperties = System.getProperties();</span>
+<span class="fc" id="L1170">			String prefix = &quot;webjet.&quot;;</span>
+<span class="pc bpc" id="L1171" title="1 of 2 branches missed.">			if(systemProperties!=null)</span>
+			{
+<span class="fc bfc" id="L1173" title="All 2 branches covered.">				for(Map.Entry&lt;Object, Object&gt; prop : systemProperties.entrySet())</span>
+				{
+<span class="pc bpc" id="L1175" title="1 of 2 branches missed.">					if(prop.getKey()==null)</span>
+<span class="nc" id="L1176">						continue;</span>
+<span class="fc" id="L1177">					name = prop.getKey().toString();</span>
+
+<span class="pc bpc" id="L1179" title="1 of 2 branches missed.">					if(prop.getValue()==null)</span>
+<span class="nc" id="L1180">						value=null;</span>
+					else
+<span class="fc" id="L1182">						value=prop.getValue().toString();</span>
+
+					//pridame iba tie s prefixom webjet. a odstranime prefix
+<span class="pc bpc" id="L1185" title="1 of 4 branches missed.">					if(name.startsWith(prefix) &amp;&amp; name.length()&gt;prefix.length())</span>
+<span class="fc" id="L1186">						names.add(new LabelValueDetails(name.substring(prefix.length()), value));</span>
+<span class="fc" id="L1187">				}</span>
+			}
+
+			//Inicializacia WJ podla enviroment parametrov (#20549)
+<span class="fc" id="L1191">			Map&lt;String, String&gt; envProperties = System.getenv();</span>
+<span class="fc" id="L1192">			prefix = &quot;webjet_&quot;;</span>
+<span class="pc bpc" id="L1193" title="1 of 2 branches missed.">			if(envProperties!=null)</span>
+			{
+<span class="fc bfc" id="L1195" title="All 2 branches covered.">				for(Map.Entry&lt;String, String&gt; prop : envProperties.entrySet())</span>
+				{
+<span class="pc bpc" id="L1197" title="1 of 2 branches missed.">					if(prop.getKey()==null)</span>
+<span class="nc" id="L1198">						continue;</span>
+<span class="fc" id="L1199">					name = prop.getKey();</span>
+
+<span class="pc bpc" id="L1201" title="1 of 2 branches missed.">					if(prop.getValue()==null)</span>
+<span class="nc" id="L1202">						value=null;</span>
+					else
+<span class="fc" id="L1204">						value=prop.getValue();</span>
+
+					//pridame iba tie s prefixom webjet. a odstranime prefix
+<span class="pc bpc" id="L1207" title="3 of 4 branches missed.">					if(name.startsWith(prefix) &amp;&amp; name.length()&gt;prefix.length())</span>
+<span class="nc" id="L1208">						names.add(new LabelValueDetails(name.substring(prefix.length()), value));</span>
+<span class="fc" id="L1209">				}</span>
+			}
+
+			//iteruj cez names a nahraj hodnoty z web.xml / databazy
+<span class="fc bfc" id="L1213" title="All 2 branches covered.">			for (LabelValueDetails lvd : names)</span>
+			{
+<span class="fc" id="L1215">				value = getInitParameter(lvd.getLabel(), databaseValues);</span>
+<span class="pc bpc" id="L1216" title="1 of 2 branches missed.">				if (value != null)</span>
+				{
+					//?? je to INT?
+					//Logger.println(this,&quot;INIT SYSPROP/ENV: &quot; + lvd.getLabel()+&quot;=&quot;+value);
+<span class="fc bfc" id="L1220" title="All 4 branches covered.">					if (&quot;true&quot;.equals(value) || &quot;false&quot;.equals(value))</span>
+					{
+<span class="fc" id="L1222">						boolean boolValue = false;</span>
+<span class="fc bfc" id="L1223" title="All 2 branches covered.">						if (&quot;true&quot;.equals(value)) boolValue = true;</span>
+<span class="fc" id="L1224">						Constants.setBoolean(lvd.getLabel(), boolValue);</span>
+<span class="fc" id="L1225">					}</span>
+					else
+					{
+<span class="fc" id="L1228">						Constants.setString(lvd.getLabel(), value);</span>
+					}
+				}
+<span class="fc" id="L1231">			}</span>
+
+		}
+<span class="nc" id="L1234">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L1236">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1237">		}</span>
+<span class="fc" id="L1238">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  request  Description of the Parameter
+	 *@return          Description of the Return Value
+	 */
+	public static boolean verify(HttpServletRequest request)
+	{
+<span class="pc bpc" id="L1248" title="1 of 2 branches missed.">		if (!valid)</span>
+		{
+<span class="nc" id="L1250">			return (false);</span>
+		}
+		//false to not use alias because using alias you can use license from another domain
+<span class="fc" id="L1253">		String serverName = Tools.getServerName(request, false);</span>
+
+		//default allowed domains
+<span class="pc bpc" id="L1256" title="5 of 6 branches missed.">		if (serverName.equals(&quot;iwcm.interway.sk&quot;) || serverName.equals(&quot;neweb.interway.sk&quot;) || serverName.equals(&quot;localhost&quot;) ||</span>
+<span class="nc bnc" id="L1257" title="All 6 branches missed.">			serverName.endsWith(&quot;.iway.sk&quot;) || serverName.endsWith(&quot;.iway.local&quot;) || serverName.endsWith(&quot;.iwcp.dev&quot;))</span>
+		{
+<span class="fc" id="L1259">			return (true);</span>
+		}
+<span class="nc bnc" id="L1261" title="All 2 branches missed.">		if (domain != null)</span>
+		{
+<span class="nc bnc" id="L1263" title="All 2 branches missed.">			if (domain.length==1)</span>
+			{
+<span class="nc bnc" id="L1265" title="All 2 branches missed.">				if (serverName.endsWith(domain[0])) {</span>
+<span class="nc" id="L1266">					return (true);</span>
+				}
+			}
+			else
+			{
+				//Logger.println(this,&quot;verify: domain=&quot;+domain+&quot; request=&quot;+request.getServerName());
+<span class="nc bnc" id="L1272" title="All 2 branches missed.">				for (int i = 0; i &lt; domain.length; i++) {</span>
+<span class="nc bnc" id="L1273" title="All 2 branches missed.">					if (serverName.endsWith(domain[i])) {</span>
+<span class="nc" id="L1274">						return (true);</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L1279">		Logger.println(InitServlet.class,&quot;Refusing: &quot; + serverName + &quot; original=&quot; + request.getServerName());</span>
+<span class="nc" id="L1280">		Logger.println(InitServlet.class,&quot;The license doesn't allow this domain.&quot;);</span>
+<span class="nc" id="L1281">		return (false);</span>
+	}
+
+	/**
+	 *  Gets the int attribute of the InitServlet object
+	 *
+	 *@param  name  Description of the Parameter
+	 *@return       The int value
+	 */
+	private int getInt(String name, Map&lt;String, String&gt; databaseValues)
+	{
+<span class="fc" id="L1292">		String value = getInitParameter(name, databaseValues);</span>
+<span class="pc bpc" id="L1293" title="1 of 2 branches missed.">		if (value != null)</span>
+		{
+			try
+			{
+<span class="nc" id="L1297">				int i = Integer.parseInt(value);</span>
+<span class="nc" id="L1298">				return (i);</span>
+			}
+<span class="nc" id="L1300">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L1302">				Logger.error(this,&quot;ERROR: Init param &quot; + name + &quot; must contain NUMBER&quot;);</span>
+<span class="nc" id="L1303">				return (-1);</span>
+			}
+		}
+<span class="fc" id="L1306">		return (-1);</span>
+	}
+
+	private String getInitParameter(String name, Map&lt;String, String&gt; databaseValues)
+	{
+<span class="fc" id="L1311">		String value = null;</span>
+<span class="fc" id="L1312">		String source = null;</span>
+
+<span class="fc bfc" id="L1314" title="All 2 branches covered.">		if (databaseValues != null)</span>
+		{
+<span class="fc" id="L1316">			value = databaseValues.get(name);</span>
+<span class="fc bfc" id="L1317" title="All 2 branches covered.">			if (value != null) source = &quot;db&quot;;</span>
+		}
+
+		//moznost nastavenia cez system premenne, typicky JAVA_OPTS -Dwebjet.nazov=Hodnota...
+<span class="fc" id="L1321">		String valueSystem = System.getProperty(&quot;webjet.&quot;+name);</span>
+<span class="fc bfc" id="L1322" title="All 2 branches covered.">		if (Tools.isNotEmpty(valueSystem))</span>
+		{
+<span class="fc" id="L1324">			value = valueSystem;</span>
+<span class="fc" id="L1325">			source = &quot;SystemProperty webjet.&quot;;</span>
+		}
+		else
+		{
+<span class="fc" id="L1329">			valueSystem = System.getProperty(&quot;webjet_&quot; + name);</span>
+<span class="pc bpc" id="L1330" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(valueSystem))</span>
+			{
+<span class="nc" id="L1332">				value = valueSystem;</span>
+<span class="nc" id="L1333">				source = &quot;SystemProperty webjet_&quot;;</span>
+			}
+		}
+
+		//moznost nastavenia cez enviroment premennu (ala nova premenna prostredia, cize napr. set webjet_useSMTPServer=false v sh scripte)
+<span class="fc" id="L1338">		String valueEnv = System.getenv(&quot;webjet_&quot;+name);</span>
+<span class="pc bpc" id="L1339" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(valueEnv))</span>
+		{
+<span class="nc" id="L1341">			value = valueEnv;</span>
+<span class="nc" id="L1342">			source = &quot;ENV webjet_&quot;;</span>
+		}
+
+		//moznost nastavenia custom hodnoty cez web.xml ako webjet-NAZOV_PREMENNEJ
+<span class="fc" id="L1346">		String valueCustom = getInitParameter(&quot;webjet-&quot;+name);</span>
+<span class="pc bpc" id="L1347" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(valueCustom))</span>
+		{
+<span class="nc" id="L1349">			value = valueCustom;</span>
+<span class="nc" id="L1350">			source = &quot;InitParameter webjet-&quot;;</span>
+		}
+
+		//moznost nastavenia custom hodnoty v &lt;Content elemente server.xml &lt;Parameter name=&quot;webjet_XXX&quot; value=&quot;vvv&quot; override=&quot;true&quot;/&gt;
+<span class="fc" id="L1354">		String valueContext = getServletContext().getInitParameter(&quot;webjet_&quot;+name);</span>
+<span class="pc bpc" id="L1355" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(valueContext))</span>
+		{
+<span class="nc" id="L1357">			value = valueContext;</span>
+<span class="nc" id="L1358">			source = &quot;InitParameter-context webjet_&quot;;</span>
+		}
+
+<span class="fc bfc" id="L1361" title="All 2 branches covered.">		if (value==null)</span>
+		{
+<span class="fc" id="L1363">			value = getInitParameter(name);</span>
+<span class="pc bpc" id="L1364" title="1 of 2 branches missed.">			if (value != null)</span>
+			{
+<span class="nc" id="L1366">				Logger.println(this,&quot;INIT (xml): &quot; + name + &quot;=&quot; + value);</span>
+			}
+		}
+		else
+		{
+<span class="fc" id="L1371">			source = &quot; (&quot;+source+&quot;)&quot;;</span>
+<span class="fc" id="L1372">			Logger.println(this,&quot;INIT&quot;+source+&quot;: &quot; + name + &quot;=&quot; + value);</span>
+		}
+
+		//value - is considered as empty
+<span class="pc bpc" id="L1376" title="1 of 4 branches missed.">		if (&quot;db&quot;.equals(source)==false &amp;&amp; &quot;-&quot;.equals(value)) value = &quot;&quot;;</span>
+
+<span class="fc" id="L1378">		value = ConfDB.tryDecrypt(value);</span>
+
+<span class="fc" id="L1380">		return(value);</span>
+	}
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@param  text    Description of the Parameter
+	 *@param  length  Description of the Parameter
+	 *@param  right   Description of the Parameter
+	 *@return         Description of the Return Value
+	 */
+	private String align(String text, int length, boolean right)
+	{
+<span class="pc bpc" id="L1393" title="1 of 2 branches missed.">		if (right)</span>
+		{
+<span class="nc bnc" id="L1395" title="All 2 branches missed.">			if (text.length() &lt; length)</span>
+			{
+<span class="nc" id="L1397">				text = &quot;#####################################&quot; + text;</span>
+			}
+<span class="nc bnc" id="L1399" title="All 2 branches missed.">			if (text.length() &gt; length)</span>
+			{
+<span class="nc" id="L1401">				text = text.substring(text.length() - length);</span>
+			}
+<span class="nc" id="L1403">			return (text);</span>
+		}
+		else
+		{
+<span class="pc bpc" id="L1407" title="1 of 2 branches missed.">			if (text.length() &lt; length)</span>
+			{
+<span class="fc" id="L1409">				text = text + &quot;                                              &quot;;</span>
+			}
+<span class="pc bpc" id="L1411" title="1 of 2 branches missed.">			if (text.length() &gt; length)</span>
+			{
+<span class="fc" id="L1413">				text = text.substring(0, length);</span>
+			}
+<span class="fc" id="L1415">			return (text);</span>
+		}
+	}
+
+	/**
+	 *  Desifrovanie hesla
+	 *
+	 *@param  password       zasifrovane heslo
+	 *@return                heslo
+	 *@exception  Exception  Description of the Exception
+	 */
+	private String decrypt(String password, xjava.security.Cipher alg) throws Exception
+	{
+<span class="pc bpc" id="L1428" title="1 of 2 branches missed.">		if (password == null)</span>
+		{
+<span class="nc" id="L1430">			return (&quot;&quot;);</span>
+		}
+<span class="pc bpc" id="L1432" title="1 of 2 branches missed.">		if (password.length() &lt; 10)</span>
+		{
+<span class="nc" id="L1434">			return (password);</span>
+		}
+<span class="pc bpc" id="L1436" title="1 of 2 branches missed.">		if (alg == null) return &quot;&quot;;</span>
+
+<span class="fc" id="L1438">		byte[] pass = Password.toByteArray(password);</span>
+		byte[] dct;
+		String b;
+
+<span class="fc" id="L1442">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L1443">		sb.append(&quot;5f456cad56789c6d51b8987b&quot;);</span>
+<span class="fc" id="L1444">		sb.insert(0, &quot;ab256c5a325d6c6a&quot;);</span>
+<span class="fc" id="L1445">		sb.append(&quot;654d654c89a987b951cbacdb&quot;);</span>
+
+<span class="fc" id="L1447">		RawSecretKey key = new RawSecretKey(&quot;Rijndael&quot;, Hex.fromString(sb.toString()));</span>
+
+<span class="fc" id="L1449">		alg.initDecrypt(key);</span>
+<span class="fc" id="L1450">		dct = alg.crypt(pass);</span>
+<span class="fc" id="L1451">		b = Hex.toString(dct);</span>
+
+<span class="fc" id="L1453">		String decoded = new String(Password.toByteArray(b)).trim();</span>
+<span class="fc" id="L1454">		return (decoded);</span>
+	}
+
+	public static boolean restart()
+	{
+<span class="nc" id="L1459">		boolean ret = false;</span>
+
+<span class="nc" id="L1461">		touch(&quot;/WEB-INF/lib/webjet-8.7-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1462">		touch(&quot;/WEB-INF/lib/webjet-8.8-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1463">		touch(&quot;/WEB-INF/lib/webjet-8.9-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1464">		touch(&quot;/WEB-INF/lib/webjet-2021.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1465">		touch(&quot;/WEB-INF/lib/webjet-2022.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1466">		touch(&quot;/WEB-INF/lib/webjet-2023.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1467">		touch(&quot;/WEB-INF/lib/webjet-2024.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1468">		touch(&quot;/WEB-INF/lib/webjet-2025.0-SNAPSHOT.jar&quot;);</span>
+
+<span class="nc" id="L1470">		touch(&quot;/WEB-INF/lib/wjstripes-1.6.0-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1471">		touch(&quot;/WEB-INF/lib/wjcron4j-2.2.5-SNAPSHOT.jar&quot;);</span>
+<span class="nc" id="L1472">		touch(&quot;/WEB-INF/lib/wjdisplaytag-1.2-SNAPSHOT.jar&quot;);</span>
+
+<span class="nc" id="L1474">		File f = new File(Tools.getRealPath(&quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet.class&quot;));</span>
+<span class="nc bnc" id="L1475" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1477">			ret = true;</span>
+		}
+
+<span class="nc" id="L1480">		f = new File(Tools.getRealPath(&quot;/WEB-INF/web.xml&quot;));</span>
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1483">			ret = true;</span>
+		}
+
+<span class="nc" id="L1486">		f = new File(Tools.getRealPath(&quot;/WEB-INF/classes/sk/updater/ResponseServlet.class&quot;));</span>
+<span class="nc bnc" id="L1487" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1489">			ret = true;</span>
+		}
+
+<span class="nc" id="L1492">		f = new File(Tools.getRealPath(&quot;/WEB-INF/classes/sk/updater/InitServlet.class&quot;));</span>
+<span class="nc bnc" id="L1493" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1495">			ret = true;</span>
+		}
+
+<span class="nc" id="L1498">		f = new File(Tools.getRealPath(&quot;/WEB-INF/classes/sk/iway/iwcm/setup/SetupSaveAction.class&quot;));</span>
+<span class="nc bnc" id="L1499" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1501">			ret = true;</span>
+		}
+
+<span class="nc" id="L1504">		f = new File(Tools.getRealPath(&quot;/WEB-INF/classes/sk/iway/iwcm/setup/SetupAction.class&quot;));</span>
+<span class="nc bnc" id="L1505" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1507">			ret = true;</span>
+		}
+
+<span class="nc" id="L1510">		Logger.println(InitServlet.class,&quot;RESTART request ret=&quot;+ret);</span>
+<span class="nc" id="L1511">		Logger.error(InitServlet.class,&quot;RESTART request ret=&quot;+ret);</span>
+
+<span class="nc" id="L1513">		return(ret);</span>
+	}
+
+	private static boolean touch(String url) {
+<span class="nc" id="L1517">		boolean ret = false;</span>
+<span class="nc" id="L1518">		File f = new File(Tools.getRealPath(url));</span>
+<span class="nc bnc" id="L1519" title="All 2 branches missed.">		if (f.exists())</span>
+		{
+<span class="nc" id="L1521">			Logger.println(InitServlet.class,&quot;RESTART request InitServlet &quot; + f.getAbsolutePath());</span>
+<span class="nc" id="L1522">			f.setLastModified(Tools.getNow()); //NOSONAR</span>
+<span class="nc" id="L1523">			ret = true;</span>
+		}
+<span class="nc" id="L1525">		return ret;</span>
+	}
+
+	public static int getLicenseId()
+	{
+<span class="fc" id="L1530">		return(licenseId);</span>
+	}
+
+	public static String getActualVersionLong()
+	{
+<span class="fc" id="L1535">		StringBuilder ver = new StringBuilder(actualVersion);</span>
+
+<span class="fc" id="L1537">		String wjVersion = Constants.getString(&quot;wjVersion&quot;);</span>
+<span class="pc bpc" id="L1538" title="2 of 4 branches missed.">		if (&quot;E&quot;.equals(wjVersion) &amp;&amp; &quot;zaskis&quot;.equals(Constants.getInstallName())) ver.append(&quot; Unlimited&quot;);</span>
+<span class="pc bpc" id="L1539" title="2 of 4 branches missed.">		else if (&quot;E&quot;.equals(wjVersion) &amp;&amp; &quot;zsr&quot;.equals(Constants.getInstallName())) ver.append(&quot; Unlimited&quot;);</span>
+<span class="pc bpc" id="L1540" title="1 of 2 branches missed.">		else if (&quot;E&quot;.equals(wjVersion)) ver.append(&quot; Enterprise&quot;);</span>
+<span class="nc bnc" id="L1541" title="All 2 branches missed.">		else if (&quot;P&quot;.equals(wjVersion)) ver.append(&quot; Professional&quot;);</span>
+<span class="nc bnc" id="L1542" title="All 2 branches missed.">		else if (&quot;D&quot;.equals(wjVersion)) ver.append(&quot; MSG&quot;);</span>
+<span class="nc bnc" id="L1543" title="All 2 branches missed.">		else if (&quot;I&quot;.equals(wjVersion)) ver.append(&quot; NET&quot;);</span>
+<span class="nc bnc" id="L1544" title="All 2 branches missed.">		else if (&quot;C&quot;.equals(wjVersion)) ver.append(&quot; Cestovka&quot;);</span>
+<span class="nc bnc" id="L1545" title="All 4 branches missed.">		else if (&quot;M&quot;.equals(wjVersion) &amp;&amp; &quot;cloud&quot;.equals(Constants.getInstallName())) ver.append(&quot; Cloud&quot;);</span>
+<span class="nc bnc" id="L1546" title="All 2 branches missed.">		else if (&quot;M&quot;.equals(wjVersion)) ver.append(&quot; Multiweb&quot;);</span>
+<span class="nc bnc" id="L1547" title="All 2 branches missed.">		else if (&quot;O&quot;.equals(wjVersion)) ver.append(&quot; Community (Open Source)&quot;);</span>
+<span class="nc" id="L1548">		else ver.append(&quot; Basic&quot;);</span>
+
+<span class="fc" id="L1550">		String nodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="pc bpc" id="L1551" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(nodeName)) ver.append(&quot; (&quot;).append(nodeName).append(&quot; / &quot;).append(Constants.getString(&quot;clusterMyNodeType&quot;)).append(')');</span>
+
+<span class="fc" id="L1553">		String tomcat = System.getProperty(&quot;iway.tomcat&quot;);</span>
+<span class="pc bpc" id="L1554" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(tomcat)) ver.append(&quot; server: &quot;).append(tomcat);</span>
+
+<span class="fc" id="L1556">		return(ver.toString());</span>
+	}
+
+    /**
+     * Vrati suffix WebJET brandu pre logo, pre Intranet vrati net, pre dmail vrati msg inak cms
+     * @return
+     */
+	public static String getBrandSuffix()
+    {
+<span class="fc" id="L1565">        String wjVersion = Constants.getString(&quot;wjVersion&quot;);</span>
+
+<span class="pc bpc" id="L1567" title="1 of 2 branches missed.">        if (&quot;I&quot;.equals(wjVersion)) return &quot;net&quot;;</span>
+<span class="pc bpc" id="L1568" title="1 of 2 branches missed.">        else if (&quot;D&quot;.equals(wjVersion)) return &quot;msg&quot;;</span>
+
+<span class="fc" id="L1570">        return &quot;cms&quot;;</span>
+    }
+
+	public static boolean isWebjetInitialized()
+	{
+<span class="fc" id="L1575">		return webjetInitialized;</span>
+	}
+
+	/**
+	 * Returns true if WebJET is configured (has records in conf table)
+	 * @return
+	 */
+	public static boolean isWebjetConfigured()
+	{
+<span class="fc" id="L1584">		return webjetConfigured;</span>
+	}
+
+	public static void setContextDbName(String name)
+	{
+<span class="fc" id="L1589">		contextDbName = name;</span>
+<span class="fc" id="L1590">	}</span>
+
+	public static String getContextDbName()
+	{
+<span class="fc" id="L1594">		return contextDbName;</span>
+	}
+
+	public static boolean isTypeCloud()
+	{
+<span class="fc" id="L1599">		return &quot;M&quot;.equals(Constants.getString(&quot;wjVersion&quot;));</span>
+	}
+
+	private static void setActualVersion(String version) {
+<span class="fc" id="L1603">		InitServlet.actualVersion = version;</span>
+<span class="fc" id="L1604">	}</span>
+
+	private static void setLicenseId(int id) {
+<span class="fc" id="L1607">		InitServlet.licenseId = id;</span>
+<span class="fc" id="L1608">	}</span>
+
+	private static void setDomain(String[] domain) {
+<span class="fc" id="L1611">		InitServlet.domain = domain;</span>
+<span class="fc" id="L1612">	}</span>
+
+	public static boolean isValid() {
+<span class="nc" id="L1615">		return valid;</span>
+	}
+
+	private static void setValid(boolean valid) {
+<span class="fc" id="L1619">		InitServlet.valid = valid;</span>
+<span class="fc" id="L1620">	}</span>
+
+	private static void setWebjetInitialized(boolean webjetInitialized) {
+<span class="fc" id="L1623">		InitServlet.webjetInitialized = webjetInitialized;</span>
+<span class="fc" id="L1624">	}</span>
+
+	public static Date getServerStartDatetime() {
+<span class="fc" id="L1627">		return SERVER_START_DATETIME;</span>
+	}
+
+	private void deleteOldStrutsConfig() {
+		try {
+<span class="fc" id="L1632">			String virtualPath = &quot;/WEB-INF/struts-config.xml&quot;;</span>
+<span class="pc bpc" id="L1633" title="3 of 4 branches missed.">			if (Constants.getBoolean(&quot;enableJspJarPackaging&quot;) &amp;&amp; JarPackaging.isJarPackaging(virtualPath)==false) {</span>
+				//struts-config.xml is on file system, delete it and use one from jar file
+<span class="nc" id="L1635">				File f = new File(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L1636" title="All 2 branches missed.">				if (f.exists()) f.delete();</span>
+			}
+<span class="nc" id="L1638">		} catch (Exception ex) {</span>
+<span class="nc" id="L1639">			Logger.error(InitServlet.class, ex);</span>
+<span class="fc" id="L1640">		}</span>
+<span class="fc" id="L1641">	}</span>
+
+	/**
+	 * Trim hostname to 16 chars from start, or if clusterHostnameTrimFromEnd=true from end
+	 * On k8s hostnames have random values on end of the name (not from start like standard domains)
+	 * @param hostname
+	 * @return
+	 */
+	private String trimHostname(String hostname) {
+<span class="fc bfc" id="L1650" title="All 2 branches covered.">		if (Tools.isEmpty(hostname)) return hostname;</span>
+
+<span class="pc bpc" id="L1652" title="3 of 4 branches missed.">		if (Constants.getBoolean(&quot;clusterHostnameTrimFromEnd&quot;) &amp;&amp; hostname.length()&gt;16) {</span>
+<span class="nc" id="L1653">			hostname = hostname.substring(hostname.length()-16);</span>
+		} else {
+<span class="fc" id="L1655">			hostname = DB.prepareString(hostname, 16);</span>
+		}
+
+<span class="fc" id="L1658">		return hostname;</span>
+	}
+
+	public static String getActualVersion() {
+<span class="fc" id="L1662">		return actualVersion;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

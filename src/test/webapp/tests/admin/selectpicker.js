@@ -214,14 +214,12 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DT, DTE, Document
     DTE.waitForEditor("userGroupsDataTable");
     I.click("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", 1280, 270, 5);
+    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 5);
 
     DTE.cancel();
     I.click("Obchodní partneri");
     DTE.waitForEditor("userGroupsDataTable");
     I.click("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", 1280, 270, 5);
-
-
+    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 5);
 });

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NumberKeywordsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.rest</a> &gt; <span class="el_source">NumberKeywordsRestController.java</span></div><h1>NumberKeywordsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.rest;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.seo.jpa.NumberKeywordsDTO;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.rest.StatService;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/seo/number-keywords&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_seo')&quot;)
+@Datatable
+public class NumberKeywordsRestController extends DatatableRestControllerV2&lt;NumberKeywordsDTO, Long&gt; {
+
+    @Autowired
+    public NumberKeywordsRestController() {
+<span class="fc" id="L31">        super(null);</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public Page&lt;NumberKeywordsDTO&gt; getAllItems(Pageable pageable) {
+<span class="nc" id="L36">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="nc" id="L37">        DatatablePageImpl&lt;NumberKeywordsDTO&gt; page = new DatatablePageImpl&lt;&gt;( SeoService.getNumberKeywordsTableData(filter) );</span>
+<span class="nc" id="L38">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;NumberKeywordsDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, NumberKeywordsDTO search) {
+<span class="fc" id="L43">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+<span class="fc" id="L44">        DatatablePageImpl&lt;NumberKeywordsDTO&gt; page = new DatatablePageImpl&lt;&gt;(SeoService.getNumberKeywordsTableData(filter));</span>
+<span class="fc" id="L45">        return page;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/barChartData&quot;,
+        params={&quot;rootDir&quot;, &quot;webPage&quot;})
+    @ResponseBody
+    public List&lt;NumberKeywordsDTO&gt; getLineChartData(
+                @RequestParam(&quot;rootDir&quot;) int rootGroupId,
+                @RequestParam(&quot;webPage&quot;) int webPageId) {
+
+<span class="fc" id="L56">        FilterHeaderDto filter = new FilterHeaderDto();</span>
+<span class="fc" id="L57">        filter.setRootGroupId(Tools.getIntValue(rootGroupId, -1));</span>
+<span class="fc" id="L58">        filter.setWebPageId(Tools.getIntValue(webPageId, -1));</span>
+<span class="fc" id="L59">        return SeoService.getNumberKeywordsBarChartData(filter);</span>
+    }
+
+    @Override
+    public void beforeSave(NumberKeywordsDTO entity) {
+<span class="nc" id="L64">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L65">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

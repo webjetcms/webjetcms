@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizQuestionEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz.jpa</a> &gt; <span class="el_source">QuizQuestionEntity.java</span></div><h1>QuizQuestionEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz.jpa;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+
+@Entity
+@Table(name = &quot;quiz_questions&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
+<span class="fc" id="L42">public class QuizQuestionEntity implements Serializable {</span>
+    
+    @Id
+    @Column(name = &quot;id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_quiz_questions&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;question&quot;)
+	@NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;components.quiz.statistics.table.question&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				type = &quot;quill&quot;
+			)
+		}
+    )
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @Size(max = 500)
+    private String question;
+
+    @Column(name = &quot;right_answer&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;components.quiz.type.right_answer&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_1&quot;, value = &quot;1&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_2&quot;, value = &quot;2&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_3&quot;, value = &quot;3&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_4&quot;, value = &quot;4&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_5&quot;, value = &quot;5&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.quiz.option_6&quot;, value = &quot;6&quot;)
+				}
+			)
+		}
+    )
+    @NotNull
+	private Integer rightAnswer;
+
+    @Column(name = &quot;image_url&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, 
+        title = &quot;components.quiz.result.imageUrl&quot;,
+		className = &quot;image&quot;,
+		renderFormat = &quot;dt-format-image&quot;
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @Size(max = 255)
+    private String imageUrl;
+
+    @Column(name = &quot;sort_order&quot;)
+    @DataTableColumn( 
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.position&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+    @NotNull
+	private Integer position;
+
+    //
+        @Column(name = &quot;quiz_id&quot;)
+        @DataTableColumn( inputType = DataTableColumnType.HIDDEN )
+        private Integer quizId;
+
+        //JOIN with QuizEntity (tabel quiz)
+        @ManyToOne
+        @JoinColumn(name=&quot;quiz_id&quot;, insertable=false, updatable=false)
+        @JsonIgnore
+        private QuizEntity quiz;
+
+    //
+        @JsonIgnore
+        @JsonManagedReference(value=&quot;quizQuestion&quot;)
+        @OneToMany(mappedBy = &quot;quizQuestion&quot;, fetch = FetchType.LAZY, cascade={CascadeType.ALL}, orphanRemoval = true)
+        private List&lt;QuizAnswerEntity&gt; quizAnswers;
+
+    //Options and rates (aka answers and points)
+    @Column(name = &quot;option1&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_1&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option1;
+
+    @Column(name = &quot;rate1&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_1&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+	private Integer rate1;
+
+    @Column(name = &quot;option2&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_2&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option2;
+
+    @Column(name = &quot;rate2&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_2&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+	private Integer rate2;
+
+    @Column(name = &quot;option3&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_3&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option3;
+
+    @Column(name = &quot;rate3&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_3&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+	private Integer rate3;
+
+    @Column(name = &quot;option4&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_4&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option4;
+
+    @Column(name = &quot;rate4&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_4&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+	private Integer rate4;
+
+    @Column(name = &quot;option5&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_5&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option5;
+
+    @Column(name = &quot;rate5&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_5&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;) }
+			)
+		}
+    )
+    @Min(0)
+	private Integer rate5;
+
+    @Column(name = &quot;option6&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title = &quot;components.quiz.option_6&quot;
+    )
+    @Size(max = 255)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String option6;
+
+    @Column(name = &quot;rate6&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = &quot;components.quiz.rate_6&quot;
+    )
+    @Min(0)
+	private Integer rate6;
+
+    public int getMaxRate() {
+<span class="fc" id="L255">        int maxRate = 0;</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        for(int i = 1; i &lt;= 6; i++) {</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">            if(maxRate &lt; getRate(i)) {</span>
+<span class="fc" id="L258">                maxRate = getRate(i);</span>
+            }
+        }
+<span class="fc" id="L261">        return maxRate;</span>
+    }
+
+    public int getRate(int index) {
+        Integer rate;
+<span class="pc bpc" id="L266" title="1 of 7 branches missed.">		switch (index) {</span>
+<span class="fc" id="L267">			case 1: rate = getRate1(); break;</span>
+<span class="fc" id="L268">			case 2: rate = getRate2(); break;</span>
+<span class="fc" id="L269">			case 3: rate = getRate3(); break;</span>
+<span class="fc" id="L270">			case 4: rate = getRate4(); break;</span>
+<span class="fc" id="L271">			case 5: rate = getRate5(); break;</span>
+<span class="fc" id="L272">			case 6: rate = getRate6(); break;</span>
+<span class="nc" id="L273">			default: return 0;</span>
+		}
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        return rate == null ? 0 : rate;</span>
+	}
+
+    public String getOption(int index) {
+<span class="pc bpc" id="L279" title="1 of 7 branches missed.">        switch (index) {</span>
+<span class="fc" id="L280">            case 1: return getOption1();</span>
+<span class="fc" id="L281">            case 2: return getOption2();</span>
+<span class="fc" id="L282">            case 3: return getOption3();</span>
+<span class="fc" id="L283">            case 4: return getOption4();</span>
+<span class="fc" id="L284">            case 5: return getOption5();</span>
+<span class="fc" id="L285">            case 6: return getOption6();</span>
+<span class="nc" id="L286">            default: return &quot;&quot;;</span>
+        }
+    }
+
+    public int getSortOrder() {
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">        return position == null ? 0 : position;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

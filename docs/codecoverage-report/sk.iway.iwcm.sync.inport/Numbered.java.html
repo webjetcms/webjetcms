@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Numbered.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">Numbered.java</span></div><h1>Numbered.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * Cislovany prvok v zozname. Pouzijeme, ked chceme iterovat prvky zoznamu, ale
+ * potrebujeme vediet aj poradove cislo.
+ * 
+ * &lt;pre&gt;
+ * String[] wordArray = { &quot;zero&quot;, &quot;one&quot;, &quot;two&quot; };
+ * for (Numbered&amp;lt;String&amp;gt; numWord : Numbered.array(wordArray))
+ * {
+ * 	System.out.println(&quot;&quot; + numWord.number + &quot; = &quot; + numWord.item);
+ * }
+ * List&amp;lt;String&amp;gt; wordList = Arrays.asList(wordArray);
+ * for (Numbered&amp;lt;String&amp;gt; numWord : Numbered.list(wordList))
+ * {
+ * 	System.out.println(&quot;&quot; + numWord.number + &quot; = &quot; + numWord.item);
+ * }
+ * &lt;/pre&gt;
+ * 
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2012
+ * @author $Author: jeeff vbur $
+ * @version $Revision: 1.3 $
+ * @created Date: 29.6.2012 11:56:44
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+public class Numbered&lt;T&gt;
+{
+	public final int number;
+	public final T item;
+
+	Numbered(int number, T item)
+<span class="fc" id="L38">	{</span>
+<span class="fc" id="L39">		this.number = number;</span>
+<span class="fc" id="L40">		this.item = item;</span>
+<span class="fc" id="L41">	}</span>
+
+	/**
+	 * Prisposobi dany zoznam na ocislovanie v prikaze &quot;for&quot;. 
+	 * 
+	 * @param list
+	 * @return
+	 */
+	public static &lt;T&gt; Iterable&lt;Numbered&lt;T&gt;&gt; list(final List&lt;T&gt; list)
+	{
+<span class="fc" id="L51">		return new Iterable&lt;Numbered&lt;T&gt;&gt;()</span>
+<span class="fc" id="L52">		{</span>
+<span class="fc" id="L53">			final List&lt;T&gt; itemList = list;</span>
+
+			@Override
+			public Iterator&lt;Numbered&lt;T&gt;&gt; iterator()
+			{
+<span class="fc" id="L58">				return new Iterator&lt;Numbered&lt;T&gt;&gt;()</span>
+<span class="fc" id="L59">				{</span>
+<span class="fc" id="L60">					private int number = 0;</span>
+<span class="fc" id="L61">					final Iterator&lt;T&gt; itemIterator = itemList.iterator();</span>
+
+					@Override
+					public boolean hasNext()
+					{
+<span class="fc" id="L66">						return itemIterator.hasNext();</span>
+					}
+
+					@Override
+					public Numbered&lt;T&gt; next()
+					{
+<span class="fc" id="L72">						return new Numbered&lt;T&gt;(number++, itemIterator.next());</span>
+					}
+
+					/**
+					 * Vymaze polozku; v cislovani sa vsak pokracuje podla povodneho poradia.
+					 * Ak povodny zoznam nepodporuje vymazavanie, ani tento nebude.
+					 */
+					@Override
+					public void remove()
+					{
+<span class="nc" id="L82">						itemIterator.remove();</span>
+<span class="nc" id="L83">					}</span>
+
+				};
+			}
+
+		};
+	}
+
+	/**
+	 * Prisposobi dane pole na ocislovanie v prikaze &quot;for&quot;. 
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static &lt;T&gt; Iterable&lt;Numbered&lt;T&gt;&gt; array(T[] array)
+	{
+<span class="fc" id="L99">		return list(Arrays.asList(array));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

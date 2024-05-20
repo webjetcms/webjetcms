@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">TopRestController.java</span></div><h1>TopRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.StatGraphNewDB;
+import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.jpa.TopDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/top&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat|cmp_abtesting')&quot;)
+@Datatable
+public class TopRestController extends DatatableRestControllerV2&lt;TopDTO, Long&gt; {
+    private static final int MAX_SIZE = 100;
+    private static final int PIE_CHART_SIZE = 10;
+    private FilterHeaderDto filter;
+
+    @Autowired
+    public TopRestController() {
+<span class="fc" id="L40">        super(null);</span>
+<span class="fc" id="L41">    }</span>
+
+    @Override
+    public void beforeSave(TopDTO entity) {
+<span class="nc" id="L45">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L46">    }</span>
+
+    @Override
+    public Page&lt;TopDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="nc" id="L51">        filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="nc" id="L52">        DatatablePageImpl&lt;TopDTO&gt; page = new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems());</span>
+<span class="nc" id="L53">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;TopDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, TopDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L59">        filter = StatService.processMapToStatFilter(params, null);</span>
+
+<span class="fc" id="L61">        DatatablePageImpl&lt;TopDTO&gt; page = new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems());</span>
+<span class="fc" id="L62">        return page;</span>
+    }
+
+    private List&lt;TopDTO&gt; getDataAndConvertIntoPageItems() {
+<span class="fc" id="L66">        List&lt;TopDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if(filter.getChartType() == ChartType.NOT_CHART) {</span>
+<span class="fc" id="L68">            return columnsToPageItems(</span>
+<span class="fc" id="L69">                StatNewDB.getTopPages(MAX_SIZE, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId(), null, filter.getFilterBotsOut()));</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        } else if(filter.getChartType()  == ChartType.PIE) {</span>
+<span class="fc" id="L71">            return columnsToPieChartData(</span>
+<span class="fc" id="L72">                StatNewDB.getTopPages(MAX_SIZE, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId(), null, filter.getFilterBotsOut()));</span>
+        }
+<span class="nc" id="L74">        return items;</span>
+    }
+
+    private List&lt;TopDTO&gt; columnsToPieChartData(List&lt;Column&gt; columns) {
+<span class="fc" id="L78">        List&lt;TopDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+        //First pieChartSize - 1 convert and push int list
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">        for(int i = 0; i &lt; PIE_CHART_SIZE -1 &amp;&amp; i &lt; columns.size(); i++) {</span>
+<span class="fc" id="L82">            Column column = columns.get(i);</span>
+<span class="fc" id="L83">            TopDTO item = new TopDTO();</span>
+<span class="fc" id="L84">            String[] fullPathNameArr = column.getColumn6().split(&quot;/&quot;);</span>
+<span class="fc" id="L85">            item.setName(fullPathNameArr[fullPathNameArr.length - 1]);</span>
+<span class="fc" id="L86">            item.setVisits(column.getIntColumn3());</span>
+<span class="fc" id="L87">            items.add(item);</span>
+        }
+
+        //Rest of visits values accumulate
+<span class="fc" id="L91">        int accVisits = 0;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for(int i = PIE_CHART_SIZE; i &lt; columns.size(); i++) {</span>
+<span class="fc" id="L93">            Column column = columns.get(i);</span>
+<span class="fc" id="L94">            accVisits += column.getIntColumn3();</span>
+        }
+
+        //Create last chart value as combination of the rest
+<span class="fc" id="L98">        TopDTO item = new TopDTO();</span>
+<span class="fc" id="L99">        item.setVisits(accVisits);</span>
+<span class="fc" id="L100">        item.setName(&quot;Other&quot;);</span>
+
+        //Set this last value into list
+<span class="fc" id="L103">        items.add(item);</span>
+
+<span class="fc" id="L105">        return items;</span>
+    }
+
+    private List&lt;TopDTO&gt; columnsToPageItems(List&lt;Column&gt; columns) {
+<span class="fc" id="L109">        List&lt;TopDTO&gt; items = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L111">        int orderCount = 1;</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L113">            TopDTO item = new TopDTO();</span>
+<span class="fc" id="L114">            item.setOrder(orderCount);</span>
+<span class="fc" id="L115">            item.setName(column.getColumn6());</span>
+<span class="fc" id="L116">            item.setVisits(column.getIntColumn3());</span>
+<span class="fc" id="L117">            item.setSessions(column.getIntColumn4());</span>
+<span class="fc" id="L118">            item.setUniqueUsers(column.getIntColumn5());</span>
+<span class="fc" id="L119">            item.setDocId(Integer.parseInt(column.getColumn1()));</span>
+<span class="fc" id="L120">            orderCount++;</span>
+<span class="fc" id="L121">            items.add(item);</span>
+<span class="fc" id="L122">        }</span>
+<span class="fc" id="L123">        return items;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/lineChartData&quot;,
+        params={&quot;dayDate&quot;, &quot;rootDir&quot;, &quot;filterBotsOut&quot;})
+    @ResponseBody
+    public Map&lt;String, List&lt;TopDTO&gt;&gt; getLineChartData(
+                @RequestParam(&quot;dayDate&quot;) String stringRange,
+                @RequestParam(&quot;rootDir&quot;) int rootGroupId,
+                @RequestParam(&quot;filterBotsOut&quot;) boolean filterBotsOut) {
+
+<span class="fc" id="L135">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L136">        Map&lt;String,  Map&lt;Date, Number&gt;&gt; hashTableData = StatGraphNewDB.getTimeData(5, dateRangeArr[0], dateRangeArr[1], rootGroupId, null, &quot;top5&quot;, filterBotsOut);</span>
+<span class="fc" id="L137">        return hashtableToLineChartData(hashTableData);</span>
+    }
+
+    private Map&lt;String, List&lt;TopDTO&gt;&gt; hashtableToLineChartData(Map&lt;String,  Map&lt;Date, Number&gt;&gt; hashtable) {
+        //represent chart data
+<span class="fc" id="L142">        Map&lt;String, List&lt;TopDTO&gt;&gt; chartData = new HashMap&lt;&gt;();</span>
+
+        //setOfKeys represent page names
+<span class="fc" id="L145">        Set&lt;String&gt; setOfKeys = hashtable.keySet();</span>
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for(String key : setOfKeys) {</span>
+            //items is list of TopDTO values for one page
+<span class="fc" id="L149">            List&lt;TopDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L150">            Map&lt;Date, Number&gt; dayViews = hashtable.get(key);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
+<span class="fc" id="L152">                TopDTO item = new TopDTO();</span>
+<span class="fc" id="L153">                item.setName(key);</span>
+<span class="fc" id="L154">                item.setDayDate(entry.getKey());</span>
+<span class="fc" id="L155">                item.setVisits(entry.getValue().intValue());</span>
+<span class="fc" id="L156">                items.add(item);</span>
+<span class="fc" id="L157">            }</span>
+<span class="fc" id="L158">            chartData.put(key, items);</span>
+<span class="fc" id="L159">        }</span>
+<span class="fc" id="L160">        return chartData;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

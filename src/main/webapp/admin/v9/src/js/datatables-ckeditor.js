@@ -76,7 +76,7 @@ export class DatatablesCkEditor {
 
 		this.myWindow.resizeDialogCK = function(width, height)
 		{
-			console.log("resizeDialogCK, width=", width, " height=", height);
+			//console.log("resizeDialogCK, width=", width, " height=", height);
 			if (typeof that.ckEditorObject != 'undefined' && that.ckEditorObject.dialog.getCurrent() != null) {
 				ckEditorObject.dialog.getCurrent().resize(width, height);
 			}
@@ -1872,7 +1872,7 @@ export class DatatablesCkEditor {
 		//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
 		if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
 
-		var windowInnerHeight = that.myWindow.innerHeight;
+		var windowInnerHeight = $(that.myWindow).height(); //on phone height was not correct: that.myWindow.innerHeight;
 		var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
 		var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
 		var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));

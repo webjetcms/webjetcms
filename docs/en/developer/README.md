@@ -1,3 +1,3 @@
-# Developer documentation
+# Documentation for WebJET CMS programmer
 
-English translation is work in progress, please use [Slovak version](../sk/) instead.
+The documentation in this section is intended for the WebJET CMS core and application programmer.

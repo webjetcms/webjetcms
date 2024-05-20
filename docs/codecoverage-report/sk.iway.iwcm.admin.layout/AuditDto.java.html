@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">AuditDto.java</span></div><h1>AuditDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.AdminlogBean;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+@Getter
+@Setter
+public class AuditDto {
+    private String type;
+    private String description;
+    private String date;
+    private int createdByUserId;
+    private String createdByUserName;
+    private String createdByUserLogin;
+
+<span class="fc" id="L22">    public AuditDto(AdminlogBean adminlog) {</span>
+<span class="fc" id="L23">        type = Prop.getInstance().getText(&quot;components.adminlog.&quot;+adminlog.getLogType());</span>
+<span class="fc" id="L24">        description = DB.prepareString(adminlog.getDescription(), 100);</span>
+<span class="fc" id="L25">        date = Tools.formatDateTime(adminlog.getCreateDate());</span>
+<span class="fc" id="L26">        createdByUserId = adminlog.getUserId();</span>
+<span class="fc" id="L27">        UserDetails user = UsersDB.getUser(createdByUserId);</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (user != null) {</span>
+<span class="fc" id="L29">            createdByUserName = user.getFullName();</span>
+<span class="fc" id="L30">            createdByUserLogin = user.getLogin();</span>
+        }
+<span class="fc" id="L32">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

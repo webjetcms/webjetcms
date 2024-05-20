@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Cache.java</span></div><h1>Cache.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.users.UserDetails;
+
+
+/**
+ *  Cache.java - cache pre casto pouzivane objekty, ktorych generovanie je pomale
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2004
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.16 $
+ *@created      $Date: 2009/06/02 06:15:56 $
+ *@modified     $Date: 2009/06/02 06:15:56 $
+ */
+public class Cache
+{
+	/**
+	 * A list of objects which will be notified about any change in the cached objects
+	 */
+<span class="fc" id="L31">	private static final List&lt;CacheListener&gt; listeners = new Vector&lt;&gt;();</span>
+
+	/**
+	 * Subscribes to the new events in Cache
+	 *
+	 * @param theListener
+	 */
+	public static void subscribe(CacheListener theListener)
+	{
+<span class="fc" id="L40">		listeners.add(theListener);</span>
+<span class="fc" id="L41">	}</span>
+
+	/**
+	 * No longer willing to hear about new events in Cache
+	 * @param theListener
+	 */
+	public static void unsubscribe(CacheListener theListener)
+	{
+<span class="nc" id="L49">		listeners.remove(theListener);</span>
+<span class="nc" id="L50">	}</span>
+
+	/**
+	 * Nazov, pod ktorym sa tento objekt nachadza v ServletContexte
+	 */
+	public static final String CONTEXT_NAME = &quot;sk.iway.iwcm.Cache&quot;;
+
+	private Hashtable&lt;String, CacheBean&gt; objectCache; //NOSONAR
+
+	//timestamp poslednej kontroly nepotrebnych objektov
+<span class="fc" id="L60">	private long lastRemoveTime = 0;</span>
+	//pocet ms v ktorych sa bude vykonavat kontrola nepotrebnych objektov
+<span class="fc" id="L62">	private long REMOVE_CHECK = 300000; //NOSONAR</span>
+
+	//pocet ms pre ktore sa pouzije smart refresh
+<span class="fc" id="L65">	private long SMART_REFRESH_TIME = 30000; //NOSONAR</span>
+
+	/**
+	 * Vrati instanciu Cache
+	 * @return
+	 */
+	public static Cache getInstance()
+	{
+<span class="fc" id="L73">		return(getInstance(false));</span>
+	}
+
+	/**
+	 * Vrati instanciu chache
+	 * @param forceRefresh - ak je true, vytvori sa nanovo (zabudne stare objekty)
+	 * @return
+	 */
+	public static synchronized Cache getInstance(boolean forceRefresh)
+	{
+		//try to get it from server space
+<span class="fc bfc" id="L84" title="All 2 branches covered.">		if (forceRefresh == false)</span>
+		{
+<span class="fc" id="L86">			Object o = Constants.getServletContext().getAttribute(CONTEXT_NAME);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">			if (o instanceof Cache)</span>
+			{
+<span class="fc" id="L89">				Cache cache = (Cache)o;</span>
+<span class="fc" id="L90">				return (cache);</span>
+			}
+		}
+<span class="fc" id="L93">		return (new Cache());</span>
+	}
+
+	/**
+	 * Privatny konstruktor, Cache musi byt ziskana cez getInstance()
+	 */
+	private Cache()
+<span class="fc" id="L100">	{</span>
+<span class="fc" id="L101">		Logger.println(this,&quot;Cache: constructor [&quot;+Constants.getInstallName()+&quot;]&quot;);</span>
+<span class="fc" id="L102">		objectCache = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L104">		REMOVE_CHECK = Constants.getInt(&quot;cacheRemoveCheckSeconds&quot;) * 1000L;</span>
+<span class="fc" id="L105">		SMART_REFRESH_TIME = Constants.getInt(&quot;cacheSmartRefreshSeconds&quot;) * 1000L;</span>
+
+<span class="fc" id="L107">		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);</span>
+<span class="fc" id="L108">	}</span>
+
+	private void removeCheck()
+	{
+<span class="fc" id="L112">		long currentTime = System.currentTimeMillis();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">		if (lastRemoveTime+REMOVE_CHECK &gt; currentTime) return;</span>
+
+<span class="fc" id="L115">		lastRemoveTime = System.currentTimeMillis();</span>
+
+<span class="fc" id="L117">		List&lt;String&gt; removeNames = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="fc" id="L120">			Logger.debug(Cache.class, &quot;removeCheck&quot;);</span>
+
+<span class="fc" id="L122">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+			{
+<span class="fc" id="L125">				CacheBean cb = e.nextElement();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">				if (cb.getExpiryTime() &lt; currentTime)</span>
+				{
+<span class="fc" id="L128">					removeNames.add(cb.getName());</span>
+				}
+<span class="fc" id="L130">			}</span>
+		}
+<span class="nc" id="L132">		catch (Exception ex)</span>
+		{
+
+<span class="fc" id="L135">		}</span>
+
+<span class="fc" id="L137">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		while (iter.hasNext())</span>
+		{
+<span class="fc" id="L140">			removeObject(iter.next());</span>
+		}
+
+<span class="fc" id="L143">	}</span>
+
+	/**
+	 * Vymaze celu cache
+	 *
+	 */
+	public void clearAll()
+	{
+		try
+		{
+<span class="fc" id="L153">			Enumeration&lt;String&gt; e = objectCache.keys();</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+			{
+<span class="fc" id="L156">				removeObject(e.nextElement());</span>
+			}
+		}
+<span class="nc" id="L159">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L161">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L162">		}</span>
+
+<span class="fc" id="L164">		objectCache = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L165">	}</span>
+
+	/**
+	 * Vrati pocet poloziek v cache
+	 * @return
+	 */
+	public int getSize()
+	{
+<span class="fc" id="L173">		return(objectCache.size());</span>
+	}
+
+	/**
+	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas expiroval)
+	 * @param name - symbolicke meno objektu v cache
+	 * @return
+	 */
+	public Object getObject(String name)
+	{
+<span class="fc" id="L183">		removeCheck();</span>
+
+		//Logger.println(this,&quot;Cache.getObject(&quot;+name+&quot;)&quot;);
+
+<span class="fc" id="L187">		Object object = objectCache.get(name);</span>
+<span class="fc" id="L188">		Object returnObject = null;</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">		if (object != null)</span>
+		{
+<span class="fc" id="L191">			CacheBean cb = (CacheBean)object;</span>
+<span class="fc" id="L192">			long currentTime = Tools.getNow();</span>
+			//Logger.debug(this, &quot;Cache.getObject(&quot;+name+&quot;) - object found now=&quot;  + currentTime + &quot; exp=&quot; + cb.getExpiryTime() + &quot; diff=&quot;+(cb.getExpiryTime() - currentTime));
+<span class="fc bfc" id="L194" title="All 2 branches covered.">			if (cb.getExpiryTime() &gt; currentTime)</span>
+			{
+<span class="pc bpc" id="L196" title="1 of 4 branches missed.">				if (cb.isAllowSmartRefresh() &amp;&amp; cb.isSmartRefreshed()==false &amp;&amp;</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">					 (cb.getExpiryTime()-(SMART_REFRESH_TIME)) &lt; System.currentTimeMillis())</span>
+				{
+					//30 sekund pred vyprsanim vratime null
+<span class="fc" id="L200">					cb.setSmartRefreshed(true);</span>
+
+					//Logger.debug(Cache.class, &quot;SmartRefresh: &quot;+cb.getName());
+
+<span class="fc" id="L204">					return null;</span>
+				}
+				//Logger.debug(this, &quot;mam v cache: &quot; + name);
+<span class="fc" id="L207">				returnObject = cb.getObject();</span>
+			}
+			else
+			{
+				//Logger.debug(this, &quot;Removing expired object &quot;+name);
+				//vyhod objekt z cache
+<span class="fc" id="L213">				removeObject(name);</span>
+			}
+		}
+
+<span class="fc" id="L217">		return(returnObject);</span>
+	}
+
+	/**
+	 * vrati objekt uz pretypovany (nemam rad ked musim po vrateni objekt pretypovavat :) )
+	 * @param name
+	 * @param type
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public &lt;R extends Object&gt; R getObject(String name, Class&lt;R&gt; type)
+	{
+<span class="fc" id="L229">		Object result = getObject(name);</span>
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
+		{
+<span class="fc" id="L232">			return (R) result;</span>
+		}
+<span class="fc" id="L234">		return null;</span>
+	}
+
+	/**
+	 * Vrati zoznam vsetkych klucov z cache
+	 * @return
+	 */
+	public Enumeration&lt;String&gt; getAllKeys()
+	{
+<span class="nc" id="L243">		return objectCache.keys();</span>
+	}
+
+	/**
+	 * Vrati zoznam vsetkych objektov v cache
+	 * @return
+	 */
+	public Enumeration&lt;CacheBean&gt; getAllElements()
+	{
+<span class="fc" id="L252">		return objectCache.elements();</span>
+	}
+
+	/**
+	 * Vlozi objekt do cache
+	 * @param name - symbolicke meno objektu v cache
+	 * @param object - objekt, ktory sa ma vlozit
+	 * @param cacheInMinutes - pocet minut, pocas ktorych sa objekt bude v cache nachadzat
+	 */
+	public void setObject(String name, Object object, int cacheInMinutes)
+	{
+<span class="fc" id="L263">		setObjectSeconds(name, object, cacheInMinutes*60);</span>
+<span class="fc" id="L264">	}</span>
+
+	/**
+	 * Vlozi objekt do cache, pouzije SMART Refresh
+	 * @param name - symbolicke meno objektu v cache
+	 * @param object - objekt, ktory sa ma vlozit
+	 * @param cacheInSeconds - pocet sekund, pocas ktorych sa objekt uchova
+	 */
+	public void setObjectSeconds(String name, Object object, int cacheInSeconds)
+	{
+<span class="fc" id="L274">		setObjectSeconds(name, object, cacheInSeconds, true);</span>
+<span class="fc" id="L275">	}</span>
+
+	/**
+	 * Vlozi objekt do cache
+	 * @param name - symbolicke meno objektu v cache
+	 * @param object - objekt, ktory sa ma vlozit
+	 * @param cacheInSeconds - pocet sekund, pocas ktorych sa objekt uchova
+	 * @param allowSmartRefresh - ak je nastavene na true, tak tesne pred vyprsanim objektu
+	 * 			zo session je vratene null, aby dany thread mohol objekt znova naplnit (SmartCahce)
+	 */
+	public void setObjectSeconds(String name, Object object, int cacheInSeconds, boolean allowSmartRefresh)
+	{
+<span class="fc" id="L287">		long expiryTime = Tools.getNow() + (1000 * cacheInSeconds);</span>
+<span class="fc" id="L288">		setObjectByExpiry(name, object, expiryTime, allowSmartRefresh);</span>
+<span class="fc" id="L289">	}</span>
+
+	/**
+	 * Vlozi objekt do cache s nastavenym casom expiracie
+	 * @param name
+	 * @param object
+	 * @param expiryTime
+	 * @param allowSmartRefresh
+	 */
+	public void setObjectByExpiry(String name, Object object, long expiryTime, boolean allowSmartRefresh)
+	{
+<span class="fc" id="L300">		CacheBean cb = new CacheBean();</span>
+<span class="fc" id="L301">		cb.setName(name);</span>
+<span class="fc" id="L302">		cb.setObject(object);</span>
+<span class="fc" id="L303">		cb.setExpiryTime(expiryTime);</span>
+<span class="fc" id="L304">		cb.setAllowSmartRefresh(allowSmartRefresh);</span>
+
+		//Logger.println(this,&quot;Cache.setObject(&quot;+name+&quot;) &quot; + Tools.getNow() + &quot; exp=&quot; + expiryTime);
+
+		//vloz ho do HashTabulky
+<span class="fc" id="L309">		removeObject(name);</span>
+
+<span class="fc" id="L311">		objectCache.put(name, cb);</span>
+
+<span class="fc" id="L313">		synchronized (listeners)</span>
+		{
+<span class="fc bfc" id="L315" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
+			{
+				try{
+<span class="fc" id="L318">					theListener.objectAdded(cb);</span>
+<span class="pc" id="L319">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="fc" id="L320">			}</span>
+<span class="fc" id="L321">		}</span>
+<span class="fc" id="L322">	}</span>
+
+	/**
+	 * Nastavi uz existujucemu objektu v cache novy cas expiracie
+	 * @param name
+	 * @param expiryTime
+	 */
+	public void setObjectExpiryTime(String name, long expiryTime) {
+<span class="fc" id="L330">		CacheBean cb = objectCache.get(name);</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">		if (cb != null) {</span>
+<span class="fc" id="L332">			cb.setExpiryTime(expiryTime);</span>
+		}
+<span class="fc" id="L334">	}</span>
+
+	public void removeObject(String name)
+	{
+<span class="fc" id="L338">		removeObject(name, false);</span>
+<span class="fc" id="L339">	}</span>
+
+	/**
+	 * Odstrani zadany objekt z cahce. Ak je refreshCluster true odstani sa aj z ostatnych nodov clustra
+	 * @param name
+	 * @param refreshCluster
+	 */
+	public void removeObject(String name, boolean refreshCluster)
+	{
+		//najskor refresh, lebo na tomto node nemusi existovat
+<span class="fc bfc" id="L349" title="All 2 branches covered.">		if (refreshCluster)</span>
+		{
+<span class="fc" id="L351">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache-&quot; + name, 250));</span>
+<span class="fc" id="L352">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache, key= &quot; + name, -1, -1);</span>
+		}
+
+<span class="fc" id="L355">		Object o = objectCache.get(name);</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">		if (o == null)</span>
+<span class="fc" id="L357">			return;</span>
+
+<span class="fc" id="L359">		CacheBean theBean = (CacheBean)o;</span>
+
+<span class="fc" id="L361">		synchronized (listeners)</span>
+		{
+<span class="fc bfc" id="L363" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
+			{
+				try{
+<span class="fc" id="L366">					theListener.objectRemoved(theBean);</span>
+<span class="pc" id="L367">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="fc" id="L368">			}</span>
+<span class="fc" id="L369">		}</span>
+
+<span class="fc" id="L371">		objectCache.remove(name);</span>
+<span class="fc" id="L372">	}</span>
+
+	/**
+	 * Vymaze z cache objekty zacinajuce na dane meno
+	 * @param name
+	 */
+	public void removeObjectStartsWithName(String name)
+	{
+<span class="fc" id="L380">		removeObjectStartsWithName(name, false);</span>
+<span class="fc" id="L381">	}</span>
+
+	/**
+	 * Vymaze z cache objekty zacinajuce na dane meno. Ak je refreshCluster true odstani sa aj z ostatnych nodov clustra
+	 * @param name
+	 * @param refreshCluster
+	 */
+	public void removeObjectStartsWithName(String name, boolean refreshCluster)
+	{
+<span class="fc" id="L390">		List&lt;String&gt; removeNames = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="fc" id="L393">			Logger.debug(Cache.class, &quot;removeObjectStartsWithName: &quot;+name);</span>
+
+<span class="fc" id="L395">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+			{
+<span class="fc" id="L398">				CacheBean cb = e.nextElement();</span>
+<span class="fc bfc" id="L399" title="All 2 branches covered.">				if (cb.getName().startsWith(name))</span>
+				{
+<span class="fc" id="L401">					removeNames.add(cb.getName());</span>
+				}
+<span class="fc" id="L403">			}</span>
+		}
+<span class="nc" id="L405">		catch (Exception ex)</span>
+		{
+
+<span class="fc" id="L408">		}</span>
+
+<span class="fc bfc" id="L410" title="All 2 branches covered.">		if (refreshCluster) {</span>
+<span class="fc" id="L411">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache:startsWithName-&quot; + name, 250));</span>
+<span class="fc" id="L412">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache:startsWithName, key= &quot; + name, -1, -1);</span>
+		}
+
+<span class="fc" id="L415">		removeObject(name, false);</span>
+
+<span class="fc" id="L417">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">		while (iter.hasNext())</span>
+		{
+<span class="fc" id="L420">			removeObject(iter.next(), false);</span>
+		}
+<span class="fc" id="L422">	}</span>
+
+	/**
+	 * Stiahne url a ulozi ho do cache na cacheInMinutes minut. Podporuje iba GET
+	 * @param url - url adresa stranky (sluzi aj ako kluc do cache)
+	 * @param cacheInMinutes - pocet minut, pocas ktorych sa bude drzat v cache
+	 * @return
+	 */
+	public String downloadUrl(String url, int cacheInMinutes)
+	{
+		//meno v cache
+<span class="nc" id="L433">		String name = &quot;downloadUrl.&quot;+url;</span>
+
+<span class="nc" id="L435">		Object o = getObject(name);</span>
+<span class="nc bnc" id="L436" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; o!=null &amp;&amp; o instanceof String)</span>
+		{
+			//parada, mame to v cache
+<span class="nc" id="L439">			String data = (String)o;</span>
+<span class="nc" id="L440">			return(data);</span>
+		}
+
+		//stiahni to a uloz do cache
+<span class="nc" id="L444">		String data = Tools.downloadUrl(url);</span>
+<span class="nc bnc" id="L445" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; data != null &amp;&amp; data.length()&gt;0)</span>
+		{
+<span class="nc" id="L447">			setObject(name, data, cacheInMinutes);</span>
+		}
+
+<span class="nc" id="L450">		return(data);</span>
+	}
+
+	public void onDocChange(DocDetails doc)
+	{
+<span class="fc" id="L455">		String cacheOnDocCahngeMode = Constants.getString(&quot;cacheOnDocCahngeMode&quot;);</span>
+<span class="pc bpc" id="L456" title="5 of 6 branches missed.">		if (Tools.isEmpty(cacheOnDocCahngeMode) || cacheOnDocCahngeMode.length()&lt;2 || &quot;none&quot;.equalsIgnoreCase(cacheOnDocCahngeMode)) return;</span>
+
+<span class="nc bnc" id="L458" title="All 2 branches missed.">		if (&quot;all&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+		{
+			try
+			{
+<span class="nc" id="L462">				Logger.debug(Cache.class, &quot;onDocChange, removing ALL &quot;);</span>
+<span class="nc" id="L463">				clearAll();</span>
+			}
+<span class="nc" id="L465">			catch (Exception e)</span>
+			{
+<span class="nc" id="L467">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L468">				Cache.getInstance(true);</span>
+<span class="nc" id="L469">			}</span>
+		}
+<span class="nc bnc" id="L471" title="All 4 branches missed.">		else if (&quot;include&quot;.equalsIgnoreCase(cacheOnDocCahngeMode) || &quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+		{
+			try
+			{
+<span class="nc" id="L475">				List&lt;String&gt; objNamesToRemove = new ArrayList&lt;&gt;();</span>
+
+				//priprav zoznam
+<span class="nc" id="L478">				Enumeration&lt;String&gt; e = objectCache.keys();</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">				while (e.hasMoreElements())</span>
+				{
+<span class="nc" id="L481">					String objName = e.nextElement();</span>
+
+<span class="nc bnc" id="L483" title="All 2 branches missed.">					if (&quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+					{
+<span class="nc" id="L485">						objName = objName.toLowerCase();</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">						if (objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot;,&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot; &quot;)!=-1 ||</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid='&quot;+doc.getGroupId()+&quot;'&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=\&quot;&quot;+doc.getGroupId()+&quot;\&quot;&quot;)!=-1</span>
+						)
+						{
+<span class="nc" id="L492">							objNamesToRemove.add(objName);</span>
+						}
+					}
+					else
+					{
+<span class="nc bnc" id="L497" title="All 4 branches missed.">						if (objName.indexOf(&quot;!INCLUDE&quot;)!=-1 || objName.indexOf(&quot;writeTag_&quot;)!=-1) objNamesToRemove.add(objName);</span>
+					}
+<span class="nc" id="L499">				}</span>
+
+				//vymaz data
+<span class="nc bnc" id="L502" title="All 2 branches missed.">				for (String objName : objNamesToRemove)</span>
+				{
+<span class="nc" id="L504">					CacheBean c = objectCache.get(objName);</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">					if (c == null) continue;</span>
+
+<span class="nc bnc" id="L507" title="All 2 branches missed.">					if (c.isAllowSmartRefresh())</span>
+					{
+<span class="nc" id="L509">						Logger.debug(Cache.class, &quot;onDocChange, smart removing &quot;+objName);</span>
+						//nastav cas pre refreshnutie na aktualny+SMART refresh-sekunda aby sa najblizsie objekt refreshol
+<span class="nc" id="L511">						c.setExpiryTime(System.currentTimeMillis()+SMART_REFRESH_TIME-1000);</span>
+					}
+					else
+					{
+<span class="nc" id="L515">						Logger.debug(Cache.class, &quot;onDocChange, removing &quot;+objName);</span>
+<span class="nc" id="L516">						removeObject(objName);</span>
+					}
+<span class="nc" id="L518">				}</span>
+			}
+<span class="nc" id="L520">			catch (Exception e)</span>
+			{
+<span class="nc" id="L522">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L523">				Cache.getInstance(true);</span>
+<span class="nc" id="L524">			}</span>
+		}
+<span class="nc" id="L526">	}</span>
+
+	/**
+	 * Ziska timestamp expiracie objektu z cache, vrati null, ak sa objekt v cache nenachadza (alebo cas expiroval)
+	 * @param name - symbolicke meno objektu v cache
+	 * @return
+	 */
+	public Long getObjectExpiryTime(String name)
+	{
+<span class="nc" id="L535">		removeCheck();</span>
+
+		//Logger.println(this,&quot;Cache.getObject(&quot;+name+&quot;)&quot;);
+
+<span class="nc" id="L539">		Object object = objectCache.get(name);</span>
+<span class="nc" id="L540">		Long returnObject = null;</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">		if (object != null)</span>
+		{
+<span class="nc" id="L543">			CacheBean cb = (CacheBean)object;</span>
+			//Logger.println(this,&quot;Cache.setObject(&quot;+name+&quot;) - object found &quot;  + Tools.getNow() + &quot; exp=&quot; + cb.getExpiryTime());
+<span class="nc bnc" id="L545" title="All 2 branches missed.">			if (cb.getExpiryTime() &gt; System.currentTimeMillis())</span>
+			{
+				//Logger.println(this,&quot;mam v cache: &quot; + name);
+<span class="nc" id="L548">				returnObject = cb.getExpiryTime();</span>
+			}
+			else
+			{
+				//vyhod objekt z cache
+<span class="nc" id="L553">				removeObject(name);</span>
+			}
+		}
+
+<span class="nc" id="L557">		return(returnObject);</span>
+	}
+
+	/**
+	 * Vrati prefix klucov pre zadaneho usera
+	 * @param user
+	 * @return
+	 */
+	private String getUserPrefix(UserDetails user)
+	{
+<span class="fc" id="L567">		String loginName = &quot;notLoggedUser&quot;;</span>
+<span class="pc bpc" id="L568" title="1 of 2 branches missed.">		if (user != null) loginName = user.getLogin();</span>
+
+<span class="fc" id="L570">		return &quot;usr.&quot;+loginName+&quot;.&quot;;</span>
+	}
+
+	/**
+	 * Vlozi objekt do cache pre daneho pouzivatela
+	 * @param user - prihlaseny pouzivatel
+	 * @param name - symbolicke meno objektu v cache
+	 * @param object - objekt, ktory sa ma vlozit
+	 * @param cacheInMinutes - pocet minut, pocas ktorych sa objekt bude v cache nachadzat
+	 */
+	public void setUserObject(UserDetails user, String name, Object object, int cacheInMinutes)
+	{
+<span class="nc" id="L582">		setObjectSeconds(getUserPrefix(user) + name, object, cacheInMinutes*60);</span>
+<span class="nc" id="L583">	}</span>
+
+	/**
+	 * vrati objekt uz pretypovany (nemam rad ked musim po vrateni objekt pretypovavat :) )
+	 * @param user - prihlaseny pouzivatel
+	 * @param name
+	 * @param type
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public &lt;R extends Object&gt; R getUserObject(UserDetails user, String name, Class&lt;R&gt; type)
+	{
+<span class="nc" id="L595">		Object result = getUserObject(user, name);</span>
+<span class="nc bnc" id="L596" title="All 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
+		{
+<span class="nc" id="L598">			return (R) result;</span>
+		}
+<span class="nc" id="L600">		return null;</span>
+	}
+
+	/**
+	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas expiroval)
+	 * @param user - prihlaseny pouzivatel
+	 * @param name - symbolicke meno objektu v cache
+	 * @return
+	 */
+	public Object getUserObject(UserDetails user, String name)
+	{
+<span class="nc" id="L611">		return getObject(getUserPrefix(user)+name);</span>
+	}
+
+	/**
+	 * Odstrani z cache vsetky objekty zadaneho pouzivatela
+	 * @param user
+	 */
+	public void removeUserAllUserObjects(UserDetails user)
+	{
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">		if (user != null)</span>
+		{
+<span class="fc" id="L622">			removeObjectStartsWithName(getUserPrefix(user), true);</span>
+		}
+<span class="fc" id="L624">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

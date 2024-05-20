@@ -27,25 +27,28 @@ var walk = function(dir, done) {
         } else {
             if(path.extname(path.basename(file)) === ".md" && !path.basename(file).startsWith('_') && path.basename(file).indexOf('tests-todo')==-1){
 
-                //console.log("dirname", __dirname);
+                console.log("dirname:", __dirname);
                 let cleanDir = path.dirname(file.replace(__dirname, suffix));
 
                 if(cleanDir == '/'){
                     cleanDir = "";
                 }
 
-                console.log(cleanDir);
+                console.log("dir: "+cleanDir);
 
-                let urlPath = url+cleanDir+"/"+path.basename(file).replace('.md',"");
+                if (cleanDir.indexOf("node_modules") == -1 && cleanDir.indexOf("javadoc") == -1) {
 
-                results.push({
+                  let urlPath = url+cleanDir+"/"+path.basename(file).replace('.md',"");
 
-                    // format the file to a valid URL
-                    url: urlPath,
+                  results.push({
 
-                    // Last modified time for google sitemap
-                    lastModified: stat.ctime
-                  });
+                      // format the file to a valid URL
+                      url: urlPath,
+
+                      // Last modified time for google sitemap
+                      lastModified: stat.ctime
+                    });
+                }
             }
 
           if (!--pending) done(null, results);

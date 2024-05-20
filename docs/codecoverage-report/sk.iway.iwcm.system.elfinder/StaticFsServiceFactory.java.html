@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaticFsServiceFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">StaticFsServiceFactory.java</span></div><h1>StaticFsServiceFactory.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import cn.bluejoe.elfinder.service.FsServiceFactory;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+
+<span class="fc" id="L11">public class StaticFsServiceFactory implements FsServiceFactory</span>
+{
+	@Override
+	public FsService getFileService(HttpServletRequest request, ServletContext servletContext)
+	{
+<span class="fc" id="L16">		Logger.debug(StaticFsServiceFactory.class, &quot;getFileService, req=&quot;+request+&quot; context=&quot;+servletContext);</span>
+		
+<span class="fc" id="L18">		int type = FsService.TYPE_ALL;</span>
+<span class="fc bfc" id="L19" title="All 2 branches covered.">		if (&quot;images&quot;.equals(request.getParameter(&quot;volumes&quot;))) type = FsService.TYPE_IMAGES;</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">		else if (&quot;link&quot;.equals(request.getParameter(&quot;volumes&quot;))) type = FsService.TYPE_LINK;</span>
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">		else if (&quot;files&quot;.equals(request.getParameter(&quot;volumes&quot;))) type = FsService.TYPE_FILES;</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">		else if(&quot;pages&quot;.equals(request.getParameter(&quot;volumes&quot;))) type = FsService.TYPE_PAGES;</span>
+		
+<span class="fc" id="L24">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">		if (rb != null)</span>
+		{
+<span class="fc" id="L27">			rb.setRequest(request);</span>
+		}
+		
+<span class="fc" id="L30">		FsService _fsService = new FsService(type);</span>
+		
+<span class="fc" id="L32">		return _fsService;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

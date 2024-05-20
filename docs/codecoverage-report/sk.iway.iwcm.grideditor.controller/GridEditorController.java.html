@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GridEditorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.grideditor.controller</a> &gt; <span class="el_source">GridEditorController.java</span></div><h1>GridEditorController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.grideditor.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.doc.TemplatesGroupBean;
+import sk.iway.iwcm.doc.TemplatesGroupDB;
+import sk.iway.iwcm.grideditor.dto.BlockDto;
+import sk.iway.iwcm.grideditor.dto.CategoryDto;
+import sk.iway.iwcm.grideditor.dto.GroupDto;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
+
+@RestController
+@RequestMapping(&quot;/admin/grideditor&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuWebpages')&quot;)
+<span class="fc" id="L40">public class GridEditorController {</span>
+<span class="fc" id="L41">    private String textKeyPrefix = &quot;components.grideditor.textkey.&quot;;</span>
+
+    /**
+     * vrati vsetky FAVORITE bloky.
+     * @param request
+     * @return
+     */
+    @RequestMapping(path = &quot;/templates/favorite&quot;, method = RequestMethod.GET, produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;List&lt;CategoryDto&gt;&gt; getTempaltesFavoriteJSON(@RequestParam(required = false) Integer templateGroupId, HttpServletRequest request) {
+
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if ( !isUserAllowed(request) ) return null;</span>
+
+<span class="fc" id="L53">        List&lt;CategoryDto&gt; categoryList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L55">        String rootDirPath = getFavouritesDirPath(templateGroupId, request) + &quot;data/&quot;;</span>
+<span class="fc" id="L56">        IwcmFile dir = new IwcmFile(Tools.getRealPath(rootDirPath));</span>
+
+<span class="pc bpc" id="L58" title="3 of 4 branches missed.">        if (dir.exists() &amp;&amp; dir.canRead()){</span>
+<span class="nc" id="L59">            categoryList = getCategoryList(request, dir, rootDirPath, true );</span>
+        }
+<span class="fc" id="L61">        return ResponseEntity.ok( categoryList );</span>
+    }
+
+    /**
+     * vrati vsetky kategorie vratane vsetkych skupin a blokov aj s html kodmi.
+     * @param request
+     * @return
+     */
+    @RequestMapping(path = &quot;/templates/library&quot;, method = RequestMethod.GET, produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;List&lt;CategoryDto&gt;&gt; getTempaltesLibraryJSON(@RequestParam(required = false) Integer templateGroupId, HttpServletRequest request) {
+
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if ( !isUserAllowed(request) ) return null;</span>
+
+<span class="fc" id="L74">        List&lt;CategoryDto&gt; categoryList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L76">        String rootDirPath = getDataDirPath(templateGroupId, request);</span>
+<span class="fc" id="L77">        IwcmFile dir = new IwcmFile(Tools.getRealPath(rootDirPath));</span>
+
+<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if (dir.exists() &amp;&amp; dir.canRead()){</span>
+<span class="fc" id="L80">            categoryList = getCategoryList(request, dir, rootDirPath, true );</span>
+        }
+<span class="fc" id="L82">        return ResponseEntity.ok( categoryList );</span>
+    }
+
+    private List&lt;CategoryDto&gt; getCategoryList(HttpServletRequest request, IwcmFile dir, String rootDirPath, boolean includeBlocks){
+<span class="fc" id="L86">        List&lt;CategoryDto&gt; categoryList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L88">        IwcmFile categories[] = FileTools.sortFilesByName(dir.listFiles());</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (int i=0; i&lt;categories.length; i++)</span>
+        {
+<span class="fc" id="L92">            CategoryDto cat = getCategoryObjectForSelectGroup(request, categories[i], rootDirPath, includeBlocks);</span>
+<span class="fc" id="L93">            categoryList.add(cat);</span>
+        }
+<span class="fc" id="L95">        return categoryList;</span>
+    }
+
+
+
+
+
+    @RequestMapping(path = &quot;/categories&quot;, method = RequestMethod.GET, produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;List&lt;CategoryDto&gt;&gt; getSelectGroupJSON(@RequestParam(required = false) Integer templateGroupId, HttpServletRequest request) {
+
+<span class="nc" id="L105">        List&lt;CategoryDto&gt; categoryList = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if ( !isUserAllowed(request) ){</span>
+<span class="nc" id="L108">            return null;</span>
+        }
+
+<span class="nc" id="L111">        String rootDirPath = getDataDirPath(templateGroupId, request);</span>
+<span class="nc" id="L112">        IwcmFile dir = new IwcmFile(Tools.getRealPath(rootDirPath));</span>
+
+<span class="nc bnc" id="L114" title="All 4 branches missed.">        if (dir.exists() &amp;&amp; dir.canRead()){</span>
+<span class="nc" id="L115">            categoryList = getCategoryList(request, dir, rootDirPath, false );</span>
+        }
+<span class="nc" id="L117">        return ResponseEntity.ok( categoryList );</span>
+    }
+
+
+    /**
+     * Vrati cestu k adresaru s html subormi sablony,
+     * ak je zadane templateGroupId tak z /templates/installName/MENO_SABLONY/data/
+     * inak z /components/grideditor/data/
+     *
+     */
+    private String getDataDirPath(Integer templateGroupId, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">        if (templateGroupId != null &amp;&amp; templateGroupId.intValue()&gt;0)</span>
+        {
+<span class="fc" id="L131">            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());</span>
+<span class="pc bpc" id="L132" title="2 of 4 branches missed.">            if (tgroup != null &amp;&amp; Tools.isNotEmpty(tgroup.getDirectory()))</span>
+            {
+                //skus pohladat v dist adresari
+<span class="fc" id="L135">                String templateDataDirPath = WriteTagToolsForCore.getCustomPath(&quot;/templates/&quot;+tgroup.getDirectory()+&quot;/dist/pagebuilder/&quot;, request);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">                if (FileTools.exists(templateDataDirPath))</span>
+                {
+<span class="nc" id="L138">                    Logger.debug(GridEditorController.class, &quot;getDataDirPath, returning &quot;+templateDataDirPath);</span>
+<span class="nc" id="L139">                    return templateDataDirPath;</span>
+                }
+                //ak neexistuje dist, skus priamo pagebuilder adresar v sablone
+<span class="fc" id="L142">                templateDataDirPath = WriteTagToolsForCore.getCustomPath(&quot;/templates/&quot;+tgroup.getDirectory()+&quot;/pagebuilder/&quot;, request);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">                if (FileTools.exists(templateDataDirPath))</span>
+                {
+<span class="fc" id="L145">                    Logger.debug(GridEditorController.class, &quot;getDataDirPath, returning &quot;+templateDataDirPath);</span>
+<span class="fc" id="L146">                    return templateDataDirPath;</span>
+                }
+            }
+        }
+
+        //ak neexistuju pre sablonu pouzi default
+<span class="fc" id="L152">        String dataDirPath = WriteTagToolsForCore.getCustomPath(&quot;/components/grideditor/data/&quot;, request);</span>
+<span class="fc" id="L153">        Logger.debug(GridEditorController.class, &quot;getDataDirPath, returning &quot;+dataDirPath);</span>
+<span class="fc" id="L154">        return dataDirPath;</span>
+    }
+
+    /**
+     * Vrati cestu k adresaru pre oblubene bloky (ulozene pouzivatelom),
+     * ak je zadane templateGroupId tak z /files/protected/grideditor/MENO_SABLONY/
+     * inak /files/protected/grideditor/
+     */
+    private String getFavouritesDirPath(Integer templateGroupId, HttpServletRequest request)
+    {
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">        if (templateGroupId != null &amp;&amp; templateGroupId.intValue()&gt;0)</span>
+        {
+<span class="fc" id="L166">            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());</span>
+<span class="pc bpc" id="L167" title="2 of 4 branches missed.">            if (tgroup != null &amp;&amp; Tools.isNotEmpty(tgroup.getDirectory()))</span>
+            {
+<span class="fc" id="L169">                String templateFavDirPath = WriteTagToolsForCore.getCustomPath(&quot;/files/protected/pagebuilder/&quot;+tgroup.getDirectory()+&quot;/&quot;, request);</span>
+                //tu na rozdiel od citania pripravenych blokov netestujeme, ci adresar existuje, ak nie, tak ho ulozenie vytvori
+<span class="fc" id="L171">                Logger.debug(GridEditorController.class, &quot;getFavouritesDirPath, returning &quot;+templateFavDirPath);</span>
+<span class="fc" id="L172">                return templateFavDirPath;</span>
+            }
+        }
+
+        //ak neexistuju pre sablonu pouzi default
+<span class="nc" id="L177">        String favDirPath = WriteTagToolsForCore.getCustomPath(&quot;/files/protected/grideditor/&quot;, request);</span>
+<span class="nc" id="L178">        Logger.debug(GridEditorController.class, &quot;getFavouritesDirPath, returning &quot;+favDirPath);</span>
+<span class="nc" id="L179">        return favDirPath;</span>
+    }
+
+
+    /**
+     * Vrati novy vytvoreny objekt GroupDto, ktory sa vklada do json pre selectGroup
+     * @param request
+     * @param file
+     * @param rootDirPath
+     * @param catId
+     * @return - objekt GroupDto, ktory sa vklada do json pre selectGroup
+     */
+    private GroupDto getGroupObjectForSelectGroup(HttpServletRequest request, IwcmFile file, String rootDirPath, String catId, boolean includeBlocks){
+<span class="fc" id="L192">        GroupDto group = new GroupDto();</span>
+
+<span class="fc" id="L194">        String virtualPath = file.getVirtualPath();</span>
+<span class="fc" id="L195">        String filePathNoExtension = FileTools.getFilePathWithoutExtension(virtualPath);</span>
+<span class="fc" id="L196">        String groupId = filePathNoExtension.replace(rootDirPath,&quot;&quot;);</span>
+<span class="fc" id="L197">        String textKey = groupId.replace(catId+&quot;/&quot;,&quot;&quot;);</span>
+<span class="fc" id="L198">        String imagePath = getImagePath(filePathNoExtension, request);</span>
+
+<span class="fc" id="L200">        textKey = getTextKey(request, textKey);</span>
+
+<span class="fc" id="L202">        group.setId(encodeId(groupId));</span>
+<span class="fc" id="L203">        group.setFilePath(filePathNoExtension);</span>
+<span class="fc" id="L204">        group.setTextKey(textKey);</span>
+<span class="fc" id="L205">        group.setImagePath(imagePath);</span>
+
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if(file.isFile()){</span>
+
+<span class="nc" id="L209">            String fileType = FileTools.getFileExtension(virtualPath);</span>
+
+<span class="nc bnc" id="L211" title="All 3 branches missed.">            switch(fileType){</span>
+                case &quot;txt&quot;:
+                case &quot;html&quot;:
+<span class="nc" id="L214">                    group.setAction(&quot;block&quot;);</span>
+<span class="nc" id="L215">                    break;</span>
+                case &quot;js&quot;:
+<span class="nc" id="L217">                    group.setAction(&quot;script&quot;);</span>
+<span class="nc" id="L218">                    break;</span>
+                default:
+                    //group.setAction(&quot;unknown-action&quot;);
+                    // TODO: ostatne ignorujeme?
+                    // ake files este mozme zobrat?
+<span class="nc" id="L223">                    return null;</span>
+            }
+
+<span class="nc" id="L226">            String content = FileTools.readFileContent(virtualPath, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L227">            String style = getBlockStyle(virtualPath);</span>
+
+<span class="nc" id="L229">            group.setStyle(style);</span>
+<span class="nc" id="L230">            group.setContent(content);</span>
+<span class="nc" id="L231">            group.setPremium( isPremium(groupId) );</span>
+<span class="nc" id="L232">        }else {</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            if(includeBlocks){</span>
+<span class="fc" id="L234">                List&lt;BlockDto&gt; blockList = getBlockList(request, rootDirPath, groupId.replace(catId+&quot;/&quot;,&quot;&quot;));</span>
+<span class="fc" id="L235">                group.setBlocks(blockList);</span>
+            }
+        }
+
+<span class="fc" id="L239">        return group;</span>
+    }
+
+    /**
+     * Vrati novy vytvoreny objekt CategoryDto, ktory sa vklada do json pre selectGroup
+     * @param f
+     * @param rootDirPath
+     * @return - objekt CategoryDto, ktory sa vklada do json pre selectGroup
+     */
+    private CategoryDto getCategoryObjectForSelectGroup(HttpServletRequest request, IwcmFile f, String rootDirPath, boolean includeBlocks){
+<span class="fc" id="L249">        CategoryDto cat = new CategoryDto();</span>
+
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if(f.isDirectory()){</span>
+<span class="fc" id="L252">            String catId = FileTools.getFilePathWithoutExtension(f.getVirtualPath()).replace(rootDirPath,&quot;&quot;);</span>
+<span class="fc" id="L253">            catId = encodeId(catId);</span>
+<span class="fc" id="L254">            List&lt;GroupDto&gt; groupList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L255">            IwcmFile dir = new IwcmFile(Tools.getRealPath(rootDirPath + f.getName()));</span>
+
+<span class="pc bpc" id="L257" title="2 of 4 branches missed.">            if (dir.exists() &amp;&amp; dir.canRead()){</span>
+<span class="fc" id="L258">                IwcmFile groups[] = FileTools.sortFilesByName(dir.listFiles());</span>
+
+
+<span class="fc bfc" id="L261" title="All 2 branches covered.">                for(int j = 0; j &lt; groups.length; j++) {</span>
+<span class="fc" id="L262">                    GroupDto group = getGroupObjectForSelectGroup(request,groups[j], rootDirPath, catId, includeBlocks);</span>
+
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">                    if( group != null) groupList.add(group);</span>
+                }
+            }
+
+<span class="fc" id="L268">            String textKey = getTextKey( request, f.getName() );</span>
+
+<span class="fc" id="L270">            cat.setId(catId);</span>
+<span class="fc" id="L271">            cat.setTextKey(textKey);</span>
+<span class="fc" id="L272">            cat.setGroups(groupList);</span>
+<span class="pc bnc" id="L273" title="All 2 branches missed.">        } else if (f.isFile())  {</span>
+            // TODO: tuna ziaden file nema byt - nejak upozorni
+        }
+<span class="fc" id="L276">        return cat;</span>
+    }
+
+    @RequestMapping(path = &quot;/category&quot;, method = RequestMethod.POST, produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;CategoryDto&gt; getSidebarJSON(@RequestParam(required = false) Integer templateGroupId, @RequestParam String categoryDirId, HttpServletRequest request) {
+
+<span class="nc" id="L282">        CategoryDto category = new CategoryDto();</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        if ( !isUserAllowed(request) ){</span>
+<span class="nc" id="L285">            return null;</span>
+        }
+
+<span class="nc" id="L288">        String categoryDirName = decodeId(categoryDirId);</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if(!Tools.isEmpty(categoryDirName)) {</span>
+<span class="nc" id="L291">            List&lt;GroupDto&gt; groupList = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L293">            String rootDirPath = getDataDirPath(templateGroupId, request) + categoryDirName;</span>
+<span class="nc" id="L294">            IwcmFile dir = new IwcmFile(Tools.getRealPath(rootDirPath));</span>
+
+<span class="nc bnc" id="L296" title="All 4 branches missed.">            if (dir.exists() &amp;&amp; dir.canRead()) {</span>
+
+<span class="nc" id="L298">                IwcmFile groups[] = FileTools.sortFilesByName(dir.listFiles());</span>
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                for (int i = 0; i &lt; groups.length; i++) {</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                    if(groups[i].isDirectory()) {</span>
+                        // TODO: toto je teraz asi prve z dvoch overeni - odstranit to druhe.
+<span class="nc" id="L303">                        GroupDto group = getGroupObjectForSideBar(request, groups[i], rootDirPath, categoryDirName);</span>
+<span class="nc" id="L304">                        groupList.add(group);</span>
+                    }
+                }
+            }else {
+                // dany priecinok neexistuje
+            }
+            //TODO: do setId by malo dat podla mna categoryDirId, nie categoryDirName
+<span class="nc" id="L311">            category.setId(encodeId(categoryDirName));</span>
+<span class="nc" id="L312">            category.setTextKey( getTextKey(request, categoryDirName) );</span>
+<span class="nc" id="L313">            category.setGroups(groupList);</span>
+        }
+<span class="nc" id="L315">        return ResponseEntity.ok( category );</span>
+    }
+
+    /**
+     * Vrati novy vytvoreny objekt BlockDto, ktory sa vklada do json pre SideBar
+     * @param blockFile
+     * @param rootDirPath
+     * @param groupDirName
+     * @return - objekt BlockDto, ktory sa vklada do json pre SideBar
+     */
+    private BlockDto getBlockObjectForSideBar(HttpServletRequest request, IwcmFile blockFile, String rootDirPath, String groupDirName){
+<span class="fc" id="L326">        BlockDto block = new BlockDto();</span>
+
+<span class="fc" id="L328">        String virtualPath = blockFile.getVirtualPath();</span>
+<span class="fc" id="L329">        String filePathNoExtension = FileTools.getFilePathWithoutExtension(virtualPath);</span>
+<span class="fc" id="L330">        String blockId = filePathNoExtension.replace(rootDirPath+&quot;/&quot;,&quot;&quot;);</span>
+<span class="fc" id="L331">        String textKey = blockId.replace(groupDirName+&quot;/&quot;,&quot;&quot;);</span>
+<span class="fc" id="L332">        textKey = getTextKey(request, textKey);</span>
+<span class="fc" id="L333">        String imagePath = getImagePath(filePathNoExtension, request);</span>
+<span class="fc" id="L334">        String style = getBlockStyle(virtualPath);</span>
+
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (imagePath.indexOf(&quot;default&quot;)==-1)</span>
+        {
+<span class="fc" id="L338">            imagePath = &quot;/thumb&quot;+imagePath+&quot;?ip=1&amp;w=330&quot;;</span>
+        }
+
+<span class="fc" id="L341">        String html = &quot;&quot;;</span>
+<span class="fc" id="L342">        String action = &quot;&quot;;</span>
+
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        switch( FileTools.getFileExtension(virtualPath) ){</span>
+            case &quot;html&quot;:
+                // Fallthrough
+            case  &quot;txt&quot;:
+<span class="fc" id="L348">                html = FileTools.readFileContent(virtualPath, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L349">                action = &quot;block&quot;;</span>
+<span class="fc" id="L350">                break;</span>
+            default:
+                // TODO: co s ostatnymi?
+<span class="fc" id="L353">                return null;</span>
+        }
+
+<span class="fc" id="L356">        block.setStyle(style);</span>
+<span class="fc" id="L357">        block.setAction(action);</span>
+<span class="fc" id="L358">        block.setFilePath(filePathNoExtension);</span>
+<span class="fc" id="L359">        block.setId(encodeId(blockId));</span>
+<span class="fc" id="L360">        block.setTextKey(textKey);</span>
+<span class="fc" id="L361">        block.setImagePath(imagePath);</span>
+<span class="fc" id="L362">        block.setContent(html);</span>
+<span class="fc" id="L363">        block.setPremium( isPremium(blockId) );</span>
+
+<span class="fc" id="L365">        return block;</span>
+    }
+
+    private List&lt;BlockDto&gt; getBlockList(HttpServletRequest request, String rootDirPath,String groupDirName ){
+<span class="fc" id="L369">        List&lt;BlockDto&gt; blockList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L370">        IwcmFile tempDir = new IwcmFile(Tools.getRealPath(rootDirPath+&quot;/&quot;+groupDirName));</span>
+
+<span class="fc" id="L372">        IwcmFile blocks[] = FileTools.sortFilesByName(tempDir.listFiles());</span>
+
+<span class="fc bfc" id="L374" title="All 2 branches covered.">        for (int j = 0; j &lt; blocks.length; j++) {</span>
+<span class="fc" id="L375">            BlockDto block = getBlockObjectForSideBar(request, blocks[j], rootDirPath, groupDirName);</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">            if(block != null) blockList.add(block);</span>
+        }
+
+<span class="fc" id="L379">        return blockList;</span>
+    }
+
+    /**
+     * Vrati novy vytvoreny objekt GroupDto, ktory sa vklada do json pre SideBar
+     * @param f
+     * @param rootDirPath
+     * @param categoryDirName
+     * @return - objekt GroupDto, ktory sa vklada do json pre SideBar
+     */
+    private GroupDto getGroupObjectForSideBar(HttpServletRequest request, IwcmFile f, String rootDirPath, String categoryDirName ){
+<span class="nc" id="L390">        GroupDto group = new GroupDto();</span>
+<span class="nc" id="L391">        String groupDirName = f.getName();</span>
+
+<span class="nc bnc" id="L393" title="All 2 branches missed.">        if(f.isDirectory()){</span>
+<span class="nc" id="L394">            List&lt;BlockDto&gt; blockList = getBlockList(request,rootDirPath,groupDirName);</span>
+
+<span class="nc" id="L396">            String textKey = categoryDirName+&quot;/&quot;+groupDirName;</span>
+
+            // TODO: tuna je zasa id naplnane obycajnym textom.
+<span class="nc" id="L399">            group.setId(encodeId(textKey) );</span>
+<span class="nc" id="L400">            group.setTextKey( getTextKey(request, textKey));</span>
+<span class="nc" id="L401">            group.setBlocks(blockList);</span>
+<span class="nc bnc" id="L402" title="All 2 branches missed.">        }else if(f.isFile()){</span>
+            // TODO toto je subor v danom tabe - asi sa ma vylistovat len v selectGroup a nie v sidebare
+            // popripade mozme vytvorit fiktivny priecinok(tuna objekt GroupDto) - NAJPOUZIVANEJSIE - a tam by sme dali tieto files
+        }
+<span class="nc" id="L406">        return group;</span>
+    }
+
+    @RequestMapping(path = &quot;/delete/element&quot;, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; deleteElement(HttpServletRequest request, String filePath, Integer templateGroupId){
+<span class="nc" id="L411">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L413" title="All 6 branches missed.">        if(filePath==null || templateGroupId == null || request == null){</span>
+<span class="nc" id="L414">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L415">            result.put(&quot;reason&quot;,&quot;wrong params&quot;);</span>
+<span class="nc" id="L416">            return ResponseEntity.ok(result);</span>
+        }
+
+<span class="nc" id="L419">        String allowedPath = getFavouritesDirPath(templateGroupId,request);</span>
+<span class="nc bnc" id="L420" title="All 4 branches missed.">        if(filePath.startsWith(allowedPath)==false || FileBrowserTools.hasForbiddenSymbol(filePath)){</span>
+<span class="nc" id="L421">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L422">            result.put(&quot;reason&quot;,&quot;filePath not allowed: &quot;+filePath);</span>
+<span class="nc" id="L423">            return ResponseEntity.ok(result);</span>
+        }
+
+<span class="nc" id="L426">        filePath = Tools.getRealPath(filePath + &quot;.html&quot;);</span>
+
+<span class="nc" id="L428">        IwcmFile file = new IwcmFile(filePath);</span>
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        if(file.exists()){</span>
+<span class="nc" id="L431">            boolean delete = file.delete();</span>
+<span class="nc" id="L432">            result.put(&quot;result&quot;,delete);</span>
+
+<span class="nc bnc" id="L434" title="All 2 branches missed.">            if(delete){</span>
+<span class="nc" id="L435">                Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor file deleted: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L436">                Logger.debug(GridEditorController.class, &quot;mazem subor: &quot; + filePath);</span>
+
+                //  DELETE SAVED STYLES
+<span class="nc" id="L439">                filePath = filePath.replaceFirst(&quot;/data/&quot;,&quot;/data_style/&quot;);</span>
+<span class="nc" id="L440">                file = new IwcmFile(filePath);</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">                if(file.exists()){</span>
+<span class="nc" id="L442">                    boolean stylesDeleted= file.delete();</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">                    if(delete) {</span>
+<span class="nc" id="L444">                        result.put(&quot;styles_deleted&quot;, stylesDeleted);</span>
+<span class="nc" id="L445">                        Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor file deleted: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L446">                        Logger.debug(GridEditorController.class, &quot;mazem subor: &quot; + filePath);</span>
+                    }else {
+<span class="nc" id="L448">                        result.put(&quot;styles_reason&quot;,&quot;Error occured when deleting styles file &quot;+filePath);</span>
+<span class="nc" id="L449">                        Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor unsuccessful file delete: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L450">                        Logger.debug(GridEditorController.class, &quot;nepodarilo sa zmazat subor: &quot; + filePath);</span>
+                    }
+<span class="nc" id="L452">                }else {</span>
+<span class="nc" id="L453">                    result.put(&quot;styles_deleted&quot;,false);</span>
+<span class="nc" id="L454">                    result.put(&quot;styles_reason&quot;,&quot;Style file does not exist&quot;);</span>
+<span class="nc" id="L455">                    Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor unsuccessful file delete: &quot; + filePath+&quot;. File does not exists.&quot;, -1, -1);</span>
+<span class="nc" id="L456">                    Logger.debug(GridEditorController.class, &quot;nepodarilo sa zmazat subor, pretoze neexistuje: &quot; + filePath);</span>
+                }
+            }else {
+<span class="nc" id="L459">                result.put(&quot;reason&quot;,&quot;Error occured when deleting file &quot;+filePath);</span>
+<span class="nc" id="L460">                Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor unsuccessful file delete: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L461">                Logger.debug(GridEditorController.class, &quot;nepodarilo sa zmazat subor: &quot; + filePath);</span>
+            }
+<span class="nc" id="L463">        }else {</span>
+<span class="nc" id="L464">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L465">            result.put(&quot;reason&quot;,&quot;File does not exist&quot;);</span>
+<span class="nc" id="L466">            Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;NPB / Grideditor unsuccessful file delete: &quot; + filePath+&quot;. File does not exists.&quot;, -1, -1);</span>
+<span class="nc" id="L467">            Logger.debug(GridEditorController.class, &quot;nepodarilo sa zmazat subor, pretoze neexistuje: &quot; + filePath);</span>
+        }
+
+<span class="nc" id="L470">        return ResponseEntity.ok(result);</span>
+    }
+
+
+    @RequestMapping(path = &quot;/save/element&quot;, method = RequestMethod.POST, produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; saveElement(HttpServletRequest request, String html, String name, String type, String style, @RequestParam(required = false) Integer templateGroupId) {
+
+<span class="nc" id="L477">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L479" title="All 2 branches missed.">        if ( !isUserAllowed(request) ){</span>
+<span class="nc" id="L480">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L481">            result.put(&quot;reason&quot;,&quot;user not allowed&quot;);</span>
+<span class="nc" id="L482">            return ResponseEntity.ok(result);</span>
+        }
+
+<span class="nc bnc" id="L485" title="All 4 branches missed.">        if(Tools.isEmpty(html) || Tools.isEmpty(name)){</span>
+<span class="nc" id="L486">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L487">            result.put(&quot;html&quot;,html);</span>
+<span class="nc" id="L488">            result.put(&quot;name&quot;,name);</span>
+<span class="nc" id="L489">            result.put(&quot;reason&quot;,&quot;one of required parameters is empty&quot;);</span>
+<span class="nc" id="L490">            return ResponseEntity.ok(result);</span>
+        }
+
+<span class="nc bnc" id="L493" title="All 2 branches missed.">        if(FileBrowserTools.hasForbiddenSymbol(name)){</span>
+<span class="nc" id="L494">            result.put(&quot;result&quot;,false);</span>
+<span class="nc" id="L495">            result.put(&quot;reason&quot;,&quot;Name contains not allowed character&quot;);</span>
+<span class="nc" id="L496">            return ResponseEntity.ok(result);</span>
+        }
+
+<span class="nc" id="L499">        name = DB.internationalToEnglish(name).toLowerCase().replace(&quot; &quot;, &quot;_&quot;);</span>
+<span class="nc" id="L500">        name = DocTools.removeChars(name);</span>
+
+<span class="nc" id="L502">        String dirToSaveTo = &quot;undefined&quot;; // je to element na celu sirku -&gt; zacina na &lt;section</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">        if(Tools.isEmpty(type)) {</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">            if (html.indexOf(&quot;&lt;section &quot;) == 0) dirToSaveTo = &quot;full_width&quot;;</span>
+<span class="nc bnc" id="L505" title="All 4 branches missed.">            if (html.contains(&quot;container&quot;) &amp;&amp; html.indexOf(&quot;container&quot;) &lt; html.indexOf(&quot;&gt;&quot;)) dirToSaveTo = &quot;container&quot;;</span>
+<span class="nc bnc" id="L506" title="All 4 branches missed.">            if (html.contains(&quot;col-&quot;) &amp;&amp; html.indexOf(&quot;col-&quot;) &lt; html.indexOf(&quot;&gt;&quot;)) dirToSaveTo = &quot;column&quot;;</span>
+        }else {
+<span class="nc" id="L508">            dirToSaveTo = type;</span>
+        }
+
+<span class="nc" id="L511">        int suffix_counter = 1;</span>
+<span class="nc" id="L512">        String dirPath = getFavouritesDirPath(templateGroupId, request) + &quot;data/&quot; +dirToSaveTo + &quot;/&quot;;</span>
+<span class="nc" id="L513">        String fileName = name;</span>
+<span class="nc" id="L514">        String filePath = dirPath+fileName+&quot;.html&quot;;</span>
+<span class="nc" id="L515">        IwcmFile file = new IwcmFile(Tools.getRealPath(filePath));</span>
+
+<span class="nc bnc" id="L517" title="All 2 branches missed.">        while(file.exists()){</span>
+<span class="nc" id="L518">            fileName = name+&quot;(&quot;+suffix_counter+++&quot;)&quot;;</span>
+<span class="nc" id="L519">            filePath = dirPath+fileName+&quot;.html&quot;;</span>
+<span class="nc" id="L520">            file = new IwcmFile(Tools.getRealPath(filePath));</span>
+        }
+
+<span class="nc" id="L523">        boolean saved = FileTools.saveFileContent(filePath,html,&quot;UTF-8&quot;);</span>
+
+<span class="nc bnc" id="L525" title="All 2 branches missed.">        if (saved) {</span>
+<span class="nc" id="L526">            Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;NPB / Grideditor file created: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L527">            Logger.debug(GridEditorController.class, &quot;ukladam subor: &quot; + filePath);</span>
+        }
+        else {
+<span class="nc" id="L530">            Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;NPB / Grideditor file NOT created correctly: &quot; + filePath, -1, -1);</span>
+<span class="nc" id="L531">            Logger.debug(GridEditorController.class, &quot;Nepodarilo sa ulozit subor: &quot; + filePath);</span>
+        }
+
+        // style
+<span class="nc bnc" id="L535" title="All 4 branches missed.">        boolean isStyleIncluded = ( style != null &amp;&amp; style.indexOf(&quot;&lt;style&quot;)==0 );</span>
+<span class="nc" id="L536">        String styleFilePath = getFavouritesDirPath(templateGroupId, request) + &quot;data_style/&quot; + dirToSaveTo + &quot;/&quot; + fileName+&quot;.html&quot;;</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">        if( isStyleIncluded ){</span>
+
+<span class="nc" id="L539">            boolean styleSaved = FileTools.saveFileContent(styleFilePath,style,&quot;UTF-8&quot;);</span>
+
+<span class="nc bnc" id="L541" title="All 2 branches missed.">            if (styleSaved) {</span>
+<span class="nc" id="L542">                Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;NPB / Grideditor style file created: &quot; + styleFilePath, -1, -1);</span>
+<span class="nc" id="L543">                Logger.debug(GridEditorController.class, &quot;ukladam style subor: &quot; + styleFilePath);</span>
+            }
+            else {
+<span class="nc" id="L546">                Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;NPB / Grideditor style file NOT created correctly: &quot; + styleFilePath, -1, -1);</span>
+<span class="nc" id="L547">                Logger.debug(GridEditorController.class, &quot;Nepodarilo sa ulozit style subor: &quot; + styleFilePath);</span>
+            }
+        }
+
+
+
+
+<span class="nc" id="L554">        result.put(&quot;result&quot;,true);</span>
+<span class="nc" id="L555">        result.put(&quot;saved&quot;,saved);</span>
+<span class="nc" id="L556">        result.put(&quot;filePath&quot;,filePath);</span>
+<span class="nc" id="L557">        result.put(&quot;fileName&quot;,fileName);</span>
+<span class="nc bnc" id="L558" title="All 2 branches missed.">        if(isStyleIncluded) {</span>
+<span class="nc" id="L559">            result.put(&quot;styleFilePath&quot;,styleFilePath);</span>
+<span class="nc" id="L560">            result.put(&quot;style&quot;,style);</span>
+        }
+<span class="nc" id="L562">        result.put(&quot;html&quot;,html);</span>
+
+<span class="nc" id="L564">        return ResponseEntity.ok(result);</span>
+    }
+
+
+    /**
+     * Vrati style element pre element ulozeny vo favorites
+     * @param blockPath
+     * @return
+     */
+    private String getBlockStyle(String blockPath)
+    {
+<span class="pc bpc" id="L575" title="1 of 2 branches missed.">        if(blockPath.startsWith(&quot;/files/protected/&quot;))</span>
+        {
+<span class="nc" id="L577">            String stylePath = blockPath.replace(&quot;/data/&quot;, &quot;/data_style/&quot;);</span>
+<span class="nc" id="L578">            IwcmFile file = new IwcmFile(Tools.getRealPath(stylePath));</span>
+
+<span class="nc bnc" id="L580" title="All 4 branches missed.">            if( file.exists() &amp;&amp; file.isFile() ){</span>
+<span class="nc" id="L581">                return FileTools.readFileContent(stylePath, &quot;UTF-8&quot;);</span>
+            }
+        }
+<span class="fc" id="L584">        return &quot;&quot;;</span>
+    }
+
+
+    /**
+     * Overi, ci vkladany blok nieje premiovy.
+     * @param id
+     * @return - zatial stale FALSE
+     */
+    private boolean isPremium(String id){
+        // TODO: dokoncit verifikaciu
+<span class="fc" id="L595">        return false;</span>
+    }
+
+    /**
+     * Vrati string zakodovany v base64.
+     * @param input
+     * @return - string - text zakodovany v base64
+     */
+    private String encodeId(String input){
+<span class="fc" id="L604">        return new String( Base64.encodeBase64(input.getBytes()) );</span>
+    }
+
+    /**
+     * Vrati string dekodovany z base64.
+     * @param id
+     * @return - string - text dekodovany z base64
+     */
+    private String decodeId(String id){
+<span class="nc" id="L613">        return new String( Base64.decodeBase64(id.getBytes()) );</span>
+    }
+
+    /**
+     * Vrati obrazok k danemu suboru - ak neexistuje, vrati default obrazok
+     * @param filePath - cesta k obrazku bez extension
+     * @return - String
+     */
+    private String getImagePath (String filePath, HttpServletRequest request){
+
+<span class="fc" id="L623">        Logger.debug(GridEditorController.class, &quot;getImagePath, filePath=&quot;+filePath);</span>
+
+        // AK EXISTUJE JPG
+<span class="fc" id="L626">        String path = filePath + &quot;.jpg&quot;;</span>
+<span class="fc" id="L627">        IwcmFile img = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="fc" id="L628">        Logger.debug(GridEditorController.class, &quot;getImagePath, testing jpg=&quot;+img.getAbsolutePath());</span>
+<span class="fc bfc" id="L629" title="All 2 branches covered.">        if (img.exists()) return path;</span>
+
+        // AK EXISTUJE PNG
+<span class="fc" id="L632">        path = filePath + &quot;.png&quot;;</span>
+<span class="fc" id="L633">        img = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="fc" id="L634">        Logger.debug(GridEditorController.class, &quot;getImagePath, testing png=&quot;+img.getAbsolutePath());</span>
+<span class="pc bpc" id="L635" title="1 of 2 branches missed.">        if (img.exists()) return path;</span>
+
+
+        // AK EXISTUJE SVG
+<span class="fc" id="L639">        path = filePath + &quot;.svg&quot;;</span>
+<span class="fc" id="L640">        img = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="fc" id="L641">        Logger.debug(GridEditorController.class, &quot;getImagePath, testing svg=&quot;+img.getAbsolutePath());</span>
+<span class="pc bpc" id="L642" title="1 of 2 branches missed.">        if (img.exists()) return path;</span>
+
+        // AK NEEXISTUJE ANI JEDEN, vrat default obrazok
+<span class="fc" id="L645">        path = getDataDirPath(null, request) + &quot;default.png&quot;;</span>
+<span class="fc" id="L646">        img = new IwcmFile(Tools.getRealPath(path));</span>
+
+<span class="fc" id="L648">        return path;</span>
+    }
+
+    private boolean isUserAllowed(HttpServletRequest request){
+<span class="fc" id="L652">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L653" title="2 of 4 branches missed.">        return ( user!=null &amp;&amp; user.isAdmin() );</span>
+    }
+
+    private String getTextKey(HttpServletRequest request, String textKey){
+
+
+<span class="fc" id="L659">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L660">        String value = prop.getText(Tools.replace( textKeyPrefix+Tools.replace(textKey, &quot;/&quot;, &quot;.&quot;) , &quot;..&quot;, &quot;.&quot;));</span>
+
+        // ak nema taky kluc - vrat relativnu cestu od /grideditor/data/
+<span class="pc bpc" id="L663" title="1 of 2 branches missed.">        if(value.indexOf(textKeyPrefix) == 0)</span>
+        {
+<span class="fc" id="L665">            String keyFixed = textKey;</span>
+            try
+            {
+<span class="fc" id="L668">                int lomka = keyFixed.lastIndexOf(&quot;/&quot;);</span>
+<span class="fc bfc" id="L669" title="All 2 branches covered.">                if (lomka &gt; 0) keyFixed = keyFixed.substring(lomka + 1);</span>
+<span class="fc" id="L670">                keyFixed = Tools.replace(keyFixed, &quot;_&quot;, &quot; &quot;);</span>
+            }
+<span class="pc" id="L672">            catch (Exception ex) {}</span>
+<span class="fc" id="L673">            return keyFixed;</span>
+        }
+
+<span class="nc" id="L676">        return value;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

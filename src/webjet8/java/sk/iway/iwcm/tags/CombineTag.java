@@ -65,7 +65,7 @@ public final class CombineTag extends BodyTagSupport
 				"/admin/skins/webjet8/assets/admin/layout/scripts/layout.js,"+
 				"/admin/skins/webjet8/assets/admin/pages/scripts/components-dropdowns.js";
 
-	public static String FILES_ADMIN_STANDARD_CSS = "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,"+
+	public static String FILES_ADMIN_STANDARD_CSS = "/admin/skins/webjet8/assets/global/plugins/tabler/css/tabler-icons.min.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.min.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/uniform/css/uniform.default.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css,"+
@@ -276,7 +276,7 @@ public final class CombineTag extends BodyTagSupport
 		else if ("adminStandardCssWj9".equals(set))
 		{
 			files = CombineTag.FILES_ADMIN_STANDARD_CSS;
-			files = Tools.replace(files, "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,");
+			//files = Tools.replace(files, "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,");
 		}
 		else if ("adminInlineJs".equals(set))
 		{

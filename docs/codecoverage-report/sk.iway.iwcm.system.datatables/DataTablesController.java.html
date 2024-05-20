@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTablesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatables</a> &gt; <span class="el_source">DataTablesController.java</span></div><h1>DataTablesController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatables;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  DataTablesController.java
+ *
+ *  DataTablesController serve as an universal entry point for displaying any data with DataTables.
+ *  For example of implementation see package sk.iway.iwcm.components.enumerations
+ *
+ *  Title        webjet8
+ *  Company      Interway a.s. (www.interway.sk)
+ *  Copyright    Interway a.s (c) 2001-2018
+ *  author       $Author: mhruby $
+ *  version      $Revision: 1.0 $
+ *  created      Date: 27.03.2018 12:00:00
+ *  modified     $Date: 27.03.2018 12:0:00 $
+ */
+
+@RestController
+@RequestMapping(&quot;/admin/rest/datatables/&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.isAdmin()&quot;)
+<span class="fc" id="L41">public class DataTablesController {</span>
+
+    /**
+     * Index service that lookup controller from url and then display all rows from database
+     * @param string class i.e. sk.iway.iwcm.components.enumerations.EnumerationDataController
+     * @return
+     */
+    @GetMapping(path = &quot;{string}/list&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;Object&gt; index(@PathVariable String string, HttpServletRequest request) {
+<span class="nc" id="L50">        DataTablesWrapper wrapper = new DataTablesWrapper();</span>
+        try
+        {
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L54">            Class&lt;? extends DataTablesInterface&gt; c = (Class&lt;? extends DataTablesInterface&gt;)Class.forName(string);</span>
+<span class="nc" id="L55">            DataTablesInterface dataTables = c.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L56">            wrapper.setData(dataTables.list(request));</span>
+<span class="nc" id="L57">        } catch(Exception e){</span>
+<span class="nc" id="L58">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">        return ResponseEntity.ok(wrapper);</span>
+    }
+
+    /**
+     * Save service that lookup controller from url and then save/edit row in database.
+     * @param string class i.e. sk.iway.iwcm.components.enumerations.EnumerationDataController
+     * @param request
+     * @return
+     */
+    @RequestMapping(path = &quot;{string}/save&quot;, method = {RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity&lt;Object&gt; save(@PathVariable String string, HttpServletRequest request) {
+<span class="nc" id="L71">        DataTablesWrapper wrapper = new DataTablesWrapper();</span>
+        try
+        {
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L75">            Class&lt;? extends DataTablesInterface&gt; c = (Class&lt;? extends DataTablesInterface&gt;)Class.forName(string);</span>
+<span class="nc" id="L76">            DataTablesInterface dataTables = c.getDeclaredConstructor().newInstance();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            if (dataTables.canSave(UsersDB.getCurrentUser(request)))</span>
+            {
+<span class="nc" id="L79">                List&lt;Object&gt; list = null;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                if (&quot;upload&quot;.equals(request.getParameter(&quot;action&quot;)))</span>
+                {
+<span class="nc" id="L82">                    dataTables.upload(request);</span>
+
+<span class="nc" id="L84">                    Map&lt;String, String&gt; filesTable = dataTables.getFiles();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                    if (filesTable!=null)</span>
+                    {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                        for (Map.Entry&lt;String, String&gt; entry : filesTable.entrySet())</span>
+                        {
+<span class="nc" id="L89">                            String fileUrl = entry.getValue();</span>
+<span class="nc" id="L90">                            IwcmFile f = new IwcmFile(Tools.getRealPath(fileUrl));</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                            if (f.exists())</span>
+                            {
+<span class="nc" id="L93">                                wrapper.addUpload(fileUrl);</span>
+                            }
+<span class="nc" id="L95">                        }</span>
+                    }
+<span class="nc" id="L97">                }</span>
+                else
+                {
+<span class="nc" id="L100">                    list = dataTables.save(request, parseData(request.getParameterMap()));</span>
+                }
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (list == null) {</span>
+<span class="nc" id="L104">                    Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L105">                    wrapper.setFieldErrors(dataTables.getFieldErrors(), prop);</span>
+<span class="nc" id="L106">                    wrapper.setError(dataTables.getError(), prop);</span>
+                }
+<span class="nc" id="L108">                wrapper.setData(list);</span>
+<span class="nc" id="L109">            } else {</span>
+<span class="nc" id="L110">                return ResponseEntity.status(403).body(null);</span>
+            }
+<span class="nc" id="L112">        } catch(Exception e){</span>
+<span class="nc" id="L113">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L114">        }</span>
+<span class="nc" id="L115">        return ResponseEntity.ok(wrapper);</span>
+    }
+
+    /**
+     * Parser for input form data from DataTables Editor.
+     * Form input:
+     *
+     * action: create|edit|delete
+     * data[0][id]: -1
+     * data[0][typeName]: abc
+     * data[0][type][id]: 163
+     * data[1][id]: 1
+     * data[1][typeName]: efg
+     * data[1][type][id]: 164
+     *
+     * converts to
+     * mainMap.get(0) =&gt; testMap
+     *
+     * testMap.get(&quot;action&quot;) =&gt; create|edit|delete
+     * testMap.get(&quot;id&quot;) =&gt; -1
+     * testMap.get(&quot;typeName) =&gt; abc
+     * testMap.get(&quot;typeid&quot;) =&gt; 163
+     *
+     * @param parameterMap
+     * @return
+     */
+
+    private Map&lt;Integer, Map&lt;String, String&gt;&gt; parseData (Map&lt;String, String[]&gt; parameterMap) {
+<span class="nc" id="L143">        Map&lt;Integer, Map&lt;String, String&gt;&gt; tempMap = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (parameterMap.get(&quot;action&quot;) != null) {</span>
+<span class="nc" id="L145">            String action = parameterMap.get(&quot;action&quot;)[0];</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            for (Map.Entry&lt;String, String[]&gt; item : parameterMap.entrySet())</span>
+            {
+                //preskakujeme __sfu=1&amp;__setf=1&amp;__token=xxxx
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (item.getKey().startsWith(&quot;__&quot;)) continue;</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                if (!item.getKey().equals(&quot;action&quot;)) {</span>
+<span class="nc" id="L152">                    String[] parts = item.getKey().substring(4).replace(&quot;\\[&quot;, &quot;&quot;).split(&quot;\\]&quot;);</span>
+                    Map&lt;String,String&gt; map;
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                    if (tempMap.containsKey(Tools.getIntValue(parts[0],-1))) {</span>
+<span class="nc" id="L155">                        map = tempMap.get(Tools.getIntValue(parts[0],-1));</span>
+                    } else {
+<span class="nc" id="L157">                        map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L158">                        map.put(&quot;action&quot;, action);</span>
+<span class="nc" id="L159">                        tempMap.put(Tools.getIntValue(parts[0],-1),map);</span>
+                    }
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                    if (parts.length &gt; 2)</span>
+<span class="nc" id="L162">                        map.put(parts[parts.length-2] + parts[parts.length-1], String.join(&quot;,&quot;, item.getValue()));</span>
+                    else
+<span class="nc" id="L164">                        map.put(parts[parts.length-1], String.join(&quot;,&quot;, item.getValue()));</span>
+                }
+<span class="nc" id="L166">            }</span>
+        }
+<span class="nc" id="L168">        return tempMap;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,7 +1,7 @@
 # 'Tools'
 Balíček statických pomocných funkcií.
 
-`Verzia 1.1.0` [Changelog](#changelog)
+`Verzia 1.1.0`, [Changelog](#changelog)
 
 ### Opis fungovania:
 

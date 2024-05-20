@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">OpenCommandExecutor.java</span></div><h1>OpenCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import cn.bluejoe.elfinder.service.FsVolume;
+import sk.iway.iwcm.Tools;
+
+<span class="fc" id="L17">public class OpenCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="fc bfc" id="L23" title="All 2 branches covered.">		boolean init = request.getParameter(&quot;init&quot;) != null;</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">		boolean tree = request.getParameter(&quot;tree&quot;) != null;</span>
+<span class="fc" id="L25">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="fc" id="L26">		String startPath = request.getParameter(&quot;startPath&quot;);</span>
+
+<span class="fc" id="L28">		Map&lt;String, FsItemEx&gt; files = new LinkedHashMap&lt;String, FsItemEx&gt;();</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">		if (init)</span>
+		{
+<span class="fc" id="L31">			json.put(&quot;api&quot;, 2.1);</span>
+<span class="fc" id="L32">			json.put(&quot;netDrivers&quot;, new Object[0]);</span>
+		}
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">		if (tree)</span>
+		{
+<span class="fc bfc" id="L37" title="All 2 branches covered.">			for (FsVolume v : fsService.getVolumes())</span>
+			{
+<span class="fc" id="L39">				FsItemEx root = new FsItemEx(v.getRoot(), fsService);</span>
+<span class="fc" id="L40">				files.put(root.getHash(), root);</span>
+<span class="fc" id="L41">				addSubfolders(files, root);</span>
+			}
+		}
+		
+<span class="fc" id="L45">		FsItemEx cwd = findCwd(fsService, target);</span>
+		
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">		if (Tools.isNotEmpty(startPath) &amp;&amp; files.size() &gt; 0) {</span>
+			
+<span class="nc bnc" id="L49" title="All 2 branches missed.">			if (startPath.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L50">				startPath = startPath.substring(0, startPath.length() - 1);</span>
+			}
+			
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			for (Map.Entry&lt;String, FsItemEx&gt; file : files.entrySet())</span>
+			{
+<span class="nc" id="L55">				FsItemEx item = file.getValue();</span>
+<span class="nc" id="L56">				String path = item.getPath(); </span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">				if (path.equals(startPath)) {</span>
+<span class="nc" id="L58">					cwd = findCwd(fsService, file.getKey());</span>
+<span class="nc" id="L59">					break;</span>
+				}
+<span class="nc" id="L61">			}</span>
+		}
+		
+		// LPA zakomentovane pretoze elfinder uz nepotrebuje cwd - #20705 - wj8 - elfinder update
+		//files.put(cwd.getHash(), cwd);
+<span class="fc" id="L66">		addChildren(files, cwd);</span>
+
+<span class="fc" id="L68">		json.put(&quot;files&quot;, files2JsonArray(request, files.values()));</span>
+<span class="fc" id="L69">		json.put(&quot;cwd&quot;, getFsItemInfo(request, cwd));</span>
+<span class="fc" id="L70">		json.put(&quot;options&quot;, getOptions(request, cwd));</span>
+<span class="fc" id="L71">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,45 @@
+<div class="sidebar-section">Web designer</div>
+
+- [:point\_left: Back to Home](/?back)
+- Templates
+	- [The way the page is displayed](/frontend/templates/README.md)
+	- [Templates](/frontend/templates/templates.md)
+	- [Template groups](/frontend/templates/template-groups.md)
+	- [Setting up templates](/frontend/setup/README.md)
+- Optional fields
+	- [Settings](/frontend/webpages/customfields/README.md)
+- Thymeleaf templates
+	- [Home](/frontend/thymeleaf/README.md)
+	- [Attributes, conditions and cycles](/frontend/thymeleaf/statements.md)
+	- [Tags WebJET CMS](/frontend/thymeleaf/tags.md)
+	- [List of available attributes](/frontend/thymeleaf/webjet-objects.md)
+	- [Text replacement](/frontend/thymeleaf/text-replaces.md)
+- JSP templates
+	- [Basic template](/frontend/jsp/README.md)
+- Ninja Starter Kit
+	- [Home](/frontend/ninja-starter-kit/README.md)
+	- [Settings](/frontend/ninja-starter-kit/temp-group/README.md)
+	- [Basic code](/frontend/ninja-starter-kit/ninja-bp/README.md)
+	- Available objects
+		- [Information about the site](/frontend/ninja-starter-kit/ninja-jv/page/README.md)
+		- [Template information](/frontend/ninja-starter-kit/ninja-jv/temp/README.md)
+		- [Information about the project](/frontend/ninja-starter-kit/ninja-jv/temp-group/README.md)
+		- [Information about the device](/frontend/ninja-starter-kit/ninja-jv/user-agent/README.md)
+		- [Information about WebJET CMS](/frontend/ninja-starter-kit/ninja-jv/webjet/README.md)
+		- [Tuning mode](/frontend/ninja-starter-kit/ninja-jv/debug/README.md)
+	- JavaScript
+		- [Settings](/frontend/ninja-starter-kit/ninja-js/settings/README.md)
+		- [Events](/frontend/ninja-starter-kit/ninja-js/events/README.md)
+		- [Features](/frontend/ninja-starter-kit/ninja-js/functions/README.md)
+	- Styles
+		- [Nomenclature](/frontend/ninja-starter-kit/ninja-cs/naming/README.md)
+- Customising applications
+	- [Edit JSP file](/frontend/customize-apps/README.md)
+- PageBuilder
+	- [Home](/frontend/page-builder/README.md)
+	- [Settings](/frontend/page-builder/settings.md)
+	- [Blocks](/frontend/page-builder/blocks.md)
+- Excerpts
+	- [Sample templates](/frontend/examples/README.md)
+	- [Bare template](/frontend/examples/template-bare/README.md)
+	- [Creative template](/frontend/examples/templates-creative/README.md)

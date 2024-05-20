@@ -347,11 +347,7 @@ public class ExportManager
 			String sql;
 			DocDetails doc;
 			String usersTablePrefix = Constants.getString("usersTablePrefix");
-			if (Constants.DB_TYPE == Constants.DB_MSSQL)
-			{
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN "+usersTablePrefix+"users u ON d.author_id=u.user_id WHERE group_id=" + groupId + " ORDER BY " + order.toString();
-			}
-			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
+			if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d, "+usersTablePrefix+"users u WHERE d.author_id=u.user_id(+) AND group_id=" + groupId + " ORDER BY " + order.toString();
 			}

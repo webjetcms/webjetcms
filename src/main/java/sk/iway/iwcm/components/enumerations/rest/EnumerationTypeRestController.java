@@ -75,7 +75,7 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
         EnumerationTypeBean entity;
 
         if(id == -1) entity = new EnumerationTypeBean();
-        else entity = enumerationTypeRepository.getNonHiddenByEnumId((int)id);
+        else entity = enumerationTypeRepository.getNonHiddenByEnumId((int)id, false);
 
         processFromEntity(entity, ProcessItemAction.GETONE);
 
@@ -130,9 +130,9 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
 
     @Override
     public boolean deleteItem(EnumerationTypeBean entity, long id) {
-        enumerationTypeRepository.deleteEnumTypeById(entity.getEnumerationTypeId());
+        enumerationTypeRepository.deleteEnumTypeById(entity.getEnumerationTypeId(), true);
         //"Delete" all created EnumerationData's under this EnumerationType
-        enumerationDataRepository.deleteAllEnumDataByEnumTypeId(entity.getEnumerationTypeId());
+        enumerationDataRepository.deleteAllEnumDataByEnumTypeId(entity.getEnumerationTypeId(), true);
 
         Adminlog.add(Adminlog.TYPE_UPDATEDB, "DELETE/HIDE:\nid: "+id+"\nname: "+entity.getTypeName(), (int)id, -1);
         Cache.getInstance().removeObjectStartsWithName("enumeration.");

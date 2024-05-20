@@ -1,5 +1,14 @@
 @charset "UTF-8";
 
+body.modal-open {
+    padding-right: 0px !important;
+    .modal-backdrop {
+        height: auto;
+        bottom: 0px;
+        top: 0px;
+    }
+}
+
 .modal {
     &-title {
         text-align: right;
@@ -29,8 +38,8 @@
             font-size: 80%;
             width: 100%;
             padding-top: 0px !important;
-            margin-top: -8px !important;
-            margin-bottom: 8px;
+            margin-top: 0px !important;
+            margin-bottom: 4px;
         }
     }
     &-body {
@@ -217,7 +226,7 @@
                 border-color: transparent;
             }
             i.jstree-icon.jstree-checkbox {
-                font-family: $fa-font-name;
+                font-family: $ti-font-name-filled;
                 font-weight: 400;
                 font-style: normal;
                 font-variant: normal;
@@ -225,23 +234,24 @@
                 background-image: none;
             }
             a.jstree-anchor i.jstree-icon.jstree-checkbox:before {
-                content: "\f0c8"
+                content: $ti-icon-square;
+                font-family: $ti-font-name-filled;
+                font-weight: 400;
             }
             a.jstree-anchor.jstree-clicked i.jstree-icon.jstree-checkbox:before {
-                content: "\f14a"
+                content: $ti-icon-checkbox;
             }
             a.jstree-anchor i.jstree-icon.jstree-checkbox.jstree-undetermined:before {
-                font-family: 'Font Awesome 6 Duotone';
-                font-weight: 900;
-                content: "\f0c8";
+                font-family: $ti-font-name-filled;
+                font-weight: 400;
+                content: $ti-icon-square;
                 position: absolute;
             }
             a.jstree-anchor i.jstree-icon.jstree-checkbox.jstree-undetermined:after {
-                font-family: 'Font Awesome 6 Duotone';
-                font-weight: 900;
-                content: "\10f0c8";
-                color: var(--fa-secondary-color, inherit);
-                opacity: var(--fa-secondary-opacity, 0.4);
+                font-family: $ti-font-name-filled;
+                font-weight: 400;
+                content: $ti-icon-square-filled;
+                color: #ccc;
             }
             .jstree-default .jstree-search {
                 color: $primary;
@@ -257,8 +267,8 @@
     }
     &-header {
         display: block;
-        padding-top: 30px;
-        padding-bottom: 30px;
+        padding-top: 8px;
+        padding-bottom: 8px;
         .md-breadcrumb {
             border: 0;
             background-color: transparent;
@@ -274,18 +284,27 @@
 
         button.close, div.maximize {
             position: absolute;
-            right: 5px;
-            top: 0px;
+            right: 4px;
+            top: 3px;
             cursor: pointer;
             color: $nice-gray-300;
-            font-size: 13px;
+            font-size: 15px;
 
             &:hover {
                 color: $nice-black;
             }
         }
         div.maximize {
-            right: 22px;
+            right: 25px;
+        }
+    }
+
+    &-footer {
+        padding-top: 0px;
+        padding-bottom: 8px;
+        div.DTE_Form_Buttons {
+            margin-top: 0px;
+            margin-bottom: 0px;
         }
     }
 
@@ -296,7 +315,7 @@
                 max-width: $modal-xl;
             }
 
-            div.maximize i.fa-window-minimize {
+            div.maximize i.ti-arrows-minimize {
                 display: none;
             }
 
@@ -323,10 +342,10 @@
                 }
 
                 div.maximize {
-                    i.fa-window-maximize {
+                    i.ti-arrows-maximize {
                         display: none;
                     }
-                    i.fa-window-minimize {
+                    i.ti-arrows-minimize {
                         display: inline-block;
                     }
                 }
@@ -371,6 +390,24 @@
             .small {
                 margin-top: 10px;
                 color:$secondary;
+            }
+        }
+
+        .DTE_Body {
+            i.ti-info-circle {
+                font-size: 20px;
+                vertical-align: text-bottom;
+            }
+            div.DTE_Field_InputControl button.btn-outline-secondary {
+                i.ti {
+                    font-size: 20px;
+                    vertical-align: text-bottom;
+                }
+            }
+            div.DTE_Field_Type_jsTree div.DTE_Field_InputControl button.btn-outline-secondary i.ti {
+                font-size: 18px;
+                display: inline-block;
+                margin-top: 4px;
             }
         }
 
@@ -422,6 +459,11 @@
                         color: $btn-link-color;
                     }
                 }
+            }
+            .ti {
+                font-size: 20px;
+                display: inline-block;
+                vertical-align: text-top;
             }
         }
 
@@ -668,6 +710,9 @@ div.DTE_Bubble_Background {
 }
 
 @media (max-width: ($bp-tablet - 1)) {
+    .jstree {
+        height: auto !important;
+    }
     .modal.DTED {
         .modal-dialog {
             max-width: 100%;
@@ -692,8 +737,8 @@ div.DTE_Bubble_Background {
         }
 
         .modal-footer {
-            padding-top: 0;
-            padding-bottom: 5px;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
 
         .modal-dialog-scrollable {
@@ -704,8 +749,8 @@ div.DTE_Bubble_Background {
             max-height: 100%;
 
             .modal-content {
-                height: 100%;
-                max-height: 100%;
+                height: 100vh;
+                max-height: 100vh;
 
                 div.modal-body-bg {
                     min-height: 100%;
@@ -726,10 +771,13 @@ div.DTE_Bubble_Background {
         div.DTE_Action_Edit h5.modal-title, div.DTE_Action_Create h5.modal-title {
             display: none;
         }
+        .cke_top {
+            overflow: scroll;
+        }
         .cke_top span.cke_toolbox {
             max-height: 55px;
             min-height: auto;
-            overflow: scroll;
+            width: 1100px;
         }
 
         .modal-footer {
@@ -743,6 +791,7 @@ div.DTE_Bubble_Background {
             .DTE_Form_Buttons {
                 margin-top: 1px;
                 margin-bottom: 1px;
+                display: contents;
 
                 .btn {
                     line-height: 18px;
@@ -753,7 +802,7 @@ div.DTE_Bubble_Background {
 }
 
 @media (max-width: ($bp-dinosaur - 1)) {
-    .modal {
+    .modal.DTED {
         .modal-dialog {
             margin: 0;
         }
@@ -780,6 +829,7 @@ div.DTE_Bubble_Background {
 
                 .form-group.row {
                     margin-top: 0px;
+                    margin-bottom: 0px;
                 }
 
                 hr {
@@ -804,13 +854,15 @@ div.DTE_Bubble_Background {
             }
 
             .modal-content {
-                max-height: 100%;
+                //otherwise window is moved up in webpages list
+                //max-height: 100vh;
             }
         }
 
         .col-form-label {
             text-align: left;
             padding-bottom: 0px;
+            padding-right: 50px; //padding for tooltip
 
             .DTE_Label_Info {
                 display: inline-block;
@@ -983,10 +1035,15 @@ html.in-iframe-show-table {
 .DTE_Action_Edit div.DTE_Field.hideOnEdit {
     display: none !important;
 }
-.DTE_Field.disabled .form-control, .field-type-disabled, .field-type-uuid, .field-type-uuid:focus {
+.DTE_Field.disabled .form-control, .field-type-disabled, .field-type-uuid, .field-type-uuid:focus, .DTE_Field.multiweb-noteditable .form-control {
     background-color: #F3F3F6;
     border-color: #868EA5;
     opacity: 1;
+}
+
+.DTE_Field.multiweb-noteditable .form-control {
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 #jstreeSettingsModal {

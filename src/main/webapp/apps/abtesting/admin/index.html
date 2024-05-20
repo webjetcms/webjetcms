@@ -1,0 +1,58 @@
+<script data-th-inline="javascript">
+    var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
+    let url = "/admin/rest/web-pages";
+</script>
+<script type="text/javascript">
+    var abTestingDataTable;
+
+    window.domReady.add(function () {
+        window.helpLink = "/redactor/apps/abtesting/README";
+
+        WJ.breadcrumb({
+            id: "newsBreadcrumb",
+            tabs: [
+                {
+                    url: '/apps/abtesting/admin/',
+                    title: '[[#{components.abtesting.ab_page_list}]]',
+                    active: true
+                }
+            ]
+        });
+
+        window.importWebPagesDatatable().then(module => {
+            //Hide author name
+            window.WJ.DataTable.mergeColumns(webpageColumns, { name: "authorName", visible: false });
+
+            //Make TITLE regular text column (cant do edit)
+            webpageColumns.forEach((element, index, array) => {
+                if(element.name === 'title') {
+                    delete element.renderFormatLinkTemplate;
+                    delete element.renderFormatPrefix;
+                }
+            });
+
+            let wpdInstance = new module.WebPagesDatatable({
+                url: WJ.urlAddParam(url, "isABtestingVersion", true),
+                columns: webpageColumns,
+                id: "abTestingDataTable",
+                serverSide: false
+            });
+            abTestingDataTable = wpdInstance.createDatatable();
+
+            abTestingDataTable.hideButton("create");
+            abTestingDataTable.hideButton("remove");
+            abTestingDataTable.hideButton("edit");
+            abTestingDataTable.hideButton("celledit");
+            abTestingDataTable.hideButton("import");
+            abTestingDataTable.hideButton("duplicate");
+        });
+    });
+</script>
+
+<style>
+    .buttons-abtest {
+        display: none !important;
+    }
+</style>
+
+<table id="abTestingDataTable" class="datatableInit table"></table>

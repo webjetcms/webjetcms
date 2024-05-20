@@ -4,7 +4,9 @@ import java.util.Date;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 
 @Getter
@@ -41,6 +43,9 @@ public class FilterHeaderDto {
 
     //Process rootGroupId into query + subTrees
     public static String groupIdToQuery(Integer groupId) {
+
+        groupId = CloudToolsForCore.fixRootGroupId(groupId);
+
         if(groupId == null || groupId == -1)
             return "";
         else {
@@ -63,5 +68,16 @@ public class FilterHeaderDto {
 
     public String toString() {
         return "from="+Tools.formatDate(dateFrom)+" to="+Tools.formatDate(dateTo)+" rootGroup="+rootGroupId+" filterBots="+filterBotsOut;
+    }
+
+    public Integer getRootGroupId() {
+        return CloudToolsForCore.fixRootGroupId(rootGroupId);
+    }
+
+    public String getRootGroupIdQuery() {
+        if (InitServlet.isTypeCloud()) {
+            return groupIdToQuery(getRootGroupId());
+        }
+        return rootGroupIdQuery;
     }
 }

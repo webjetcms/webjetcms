@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleAuthenticatorKey.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.googleauth</a> &gt; <span class="el_source">GoogleAuthenticatorKey.java</span></div><h1>GoogleAuthenticatorKey.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.googleauth;
+
+/**
+ *  GoogleAuthenticatorKey.java
+ *
+ *@Title        webjet8
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2017
+ *@author       $Author: jeeff mminda $
+ *@version      $Revision: 1.3 $
+ *@created      Date: Jun 5, 2017 9:46:12 AM
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * This class is a JavaBean used by the GoogleAuthenticator library to represent
+ * a secret key.
+ * &lt;p/&gt;
+ * This class is immutable.
+ * &lt;p/&gt;
+ * Instance of this class should only be constructed by the GoogleAuthenticator
+ * library.
+ *
+ * @author Enrico M. Crisostomo
+ * @version 1.0
+ * @see GoogleAuthenticator
+ * @since 1.0
+ */
+public final class GoogleAuthenticatorKey {
+
+    /**
+     * The format string to generate the URL of a Google-provided QR bar code.
+     *
+     * @deprecated Use GoogleAuthenticatorQRGenerator instead.
+     */
+    @Deprecated
+    private static final String QR_FORMAT =
+            &quot;https://chart.googleapis.com/chart?chs=200x200&amp;chld=M%%7C0&amp;cht=qr&amp;&quot;
+                    + &quot;chl=otpauth://totp/%s@%s%%3Fsecret%%3D%s&quot;;
+
+    /**
+     * The secret key in Base32 encoding.
+     */
+    private final String key;
+
+    /**
+     * The verification code at time = 0 (the UNIX epoch).
+     */
+    private final int verificationCode;
+
+    /**
+     * The list of scratch codes.
+     */
+    private final List&lt;Integer&gt; scratchCodes;
+
+    /**
+     * The constructor with package visibility.
+     *
+     * @param secretKey    the secret key in Base32 encoding.
+     * @param code         the verification code at time = 0 (the UNIX epoch).
+     * @param scratchCodes the list of scratch codes.
+     */
+    /* package */ GoogleAuthenticatorKey(
+            String secretKey, int code,
+<span class="nc" id="L67">            List&lt;Integer&gt; scratchCodes) {</span>
+<span class="nc" id="L68">        key = secretKey;</span>
+<span class="nc" id="L69">        verificationCode = code;</span>
+<span class="nc" id="L70">        this.scratchCodes = new ArrayList&lt;&gt;(scratchCodes);</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Returns the URL of a Google-provided QR barcode to be loaded into the
+     * Google Authenticator application. The user scans this bar code with the
+     * application on their smart phones or manually enter the secret manually.
+     *
+     * @param user   the user to assign the secret key to.
+     * @param host   the host to assign the secret key to.
+     * @param secret the secret key in Base32 encoding.
+     * @return the URL of a Google-provided QR barcode to be loaded into the
+     * Google Authenticator application.
+     * @deprecated Use GoogleAuthenticatorQRGenerator##getOtpAuthURL instead.
+     */
+    @SuppressWarnings(&quot;deprecation, unused&quot;)
+    @Deprecated
+    public static String getQRBarcodeURL(String user, String host, String secret) {
+<span class="nc" id="L88">        return String.format(QR_FORMAT, user, host, secret);</span>
+    }
+
+    /**
+     * Get the list of scratch codes.
+     *
+     * @return the list of scratch codes.
+     */
+    public List&lt;Integer&gt; getScratchCodes() {
+<span class="nc" id="L97">        return scratchCodes;</span>
+    }
+
+    /**
+     * Returns the secret key in Base32 encoding.
+     *
+     * @return the secret key in Base32 encoding.
+     */
+    public String getKey() {
+<span class="nc" id="L106">        return key;</span>
+    }
+
+    /**
+     * Returns the verification code at time = 0 (the UNIX epoch).
+     *
+     * @return the verificationCode at time = 0 (the UNIX epoch).
+     */
+    public int getVerificationCode() {
+<span class="nc" id="L115">        return verificationCode;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

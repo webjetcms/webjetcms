@@ -60,7 +60,7 @@
                         <div class="DTE_Form_Buttons">
                             <span class="buttons-footer-left">
                                 <button type="button" class="btn btn-link" @click="$WJ.showHelpWindow()">
-                                    <i class="far fa-question-circle"></i>{{ this.$WJ.translate('button.help') }}
+                                    <i class="ti ti-help me-1"></i>{{ this.$WJ.translate('button.help') }}
                                 </button>
                             </span>
                             <button
@@ -68,9 +68,9 @@
                                 type="button"
                                 class="btn btn-outline-secondary btn-close-editor"
                             >
-                                <i class="fal fa-times"></i> {{ this.$WJ.translate('button.cancel') }}</button
+                                <i class="ti ti-x"></i> {{ this.$WJ.translate('button.cancel') }}</button
                             ><button @click="addBookmark()" class="btn btn-primary" tabindex="0">
-                                <i class="fal fa-check"></i> {{ this.$WJ.translate('button.add') }}
+                                <i class="ti ti-check"></i> {{ this.$WJ.translate('button.add') }}
                             </button>
                         </div>
                     </div>

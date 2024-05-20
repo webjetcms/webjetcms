@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestaurantMenuService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.restaurant_menu.rest</a> &gt; <span class="el_source">RestaurantMenuService.java</span></div><h1>RestaurantMenuService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.restaurant_menu.rest;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.restaurant_menu.jpa.AlergenBean;
+import sk.iway.iwcm.components.restaurant_menu.jpa.RestaurantMenuEditorFields;
+import sk.iway.iwcm.components.restaurant_menu.jpa.RestaurantMenuEntity;
+import sk.iway.iwcm.components.restaurant_menu.jpa.RestaurantMenuRepository;
+import sk.iway.iwcm.i18n.Prop;
+
+<span class="nc" id="L22">public class RestaurantMenuService {</span>
+
+    /**
+     * Set time part of calendar to 00:00:00.000
+     * @param cal
+     */
+    private static void nullTimePart(Calendar cal) {
+<span class="fc" id="L29">        cal.set(Calendar.HOUR, 0);</span>
+<span class="fc" id="L30">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L31">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L32">        cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L33">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L34">    }</span>
+
+    /**
+     * NULL - return actual date,
+     * String - parse to date,
+     * Date - keep date,
+     * else - return actual date,
+     *
+     * ALL DATE ARE WITHOUT TIME PART -&gt; just like in DB
+     * @param menuDay
+     * @return
+     */
+    public static Date getMenuDate(Object menuDay) {
+<span class="fc" id="L47">        Calendar cal = Calendar.getInstance();</span>
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if(menuDay == null) {</span>
+<span class="fc" id="L50">            cal.setTime(new Date());</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        } else if(menuDay instanceof String) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            if(Tools.isEmpty((String) menuDay)) {</span>
+<span class="nc" id="L53">                cal.setTime( new Date() );</span>
+<span class="nc" id="L54">            } else cal.setTimeInMillis( Long.parseLong((String) menuDay) );</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        } else if(menuDay instanceof Date) {</span>
+<span class="fc" id="L56">            cal.setTime((Date) menuDay);</span>
+<span class="nc" id="L57">        } else { cal.setTime(new Date()); }</span>
+
+<span class="fc" id="L59">        nullTimePart(cal);</span>
+<span class="fc" id="L60">        return cal.getTime();</span>
+    }
+
+    /**
+     * Get list of all alergens as List&lt;AlergenBean&gt;
+     * @param request
+     * @return
+     */
+    public static List&lt;AlergenBean&gt; getAlergenBeans(HttpServletRequest request) {
+<span class="fc" id="L69">        List&lt;AlergenBean&gt; alergens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L70">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for(int i = 1; i &lt;= Constants.getInt(&quot;restaurantMenu.alergensCount&quot;); i++) {</span>
+<span class="fc" id="L73">            alergens.add(</span>
+<span class="fc" id="L74">                new AlergenBean(i, prop.getText(&quot;components.restaurant_menu.alergen&quot; + i))</span>
+            );
+        }
+
+<span class="fc" id="L78">        return alergens;</span>
+    }
+
+    /**
+     * Sort menu by dayDate then by mealCathegory then by priority
+     * @param menuEntities
+     * @param addStyle - if true, add addRowClass (for FE in week mode)
+     * @return
+     */
+    public static List&lt;RestaurantMenuEntity&gt; sortMenu(List&lt;RestaurantMenuEntity&gt; menuEntities, boolean addStyle) {
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">        if (menuEntities == null || menuEntities.isEmpty()) return menuEntities;</span>
+
+        //Perform sort
+<span class="fc" id="L91">        menuEntities = menuEntities.stream().sorted(</span>
+<span class="fc" id="L92">            Comparator.comparing(</span>
+<span class="fc" id="L93">                (RestaurantMenuEntity entity) -&gt; entity.getDayDate()</span>
+<span class="fc" id="L94">            ).thenComparing(</span>
+<span class="fc" id="L95">                (RestaurantMenuEntity entity) -&gt; entity.getEditorFields().getMealCathegory()</span>
+<span class="fc" id="L96">            ).thenComparing(</span>
+<span class="fc" id="L97">                (RestaurantMenuEntity entity) -&gt; entity.getPriority()</span>
+            )
+<span class="fc" id="L99">        ).collect(Collectors.toList());</span>
+
+        //Add style's -&gt; style is changed when we came from one day to another day menuStyle_0 / menuStyle_1
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if(addStyle) {</span>
+<span class="fc" id="L103">            String dayOfWeek = null;</span>
+<span class="fc" id="L104">            int type = 0;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for(RestaurantMenuEntity menu : menuEntities) {</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                if(dayOfWeek == null)</span>
+<span class="fc" id="L107">                    dayOfWeek = menu.getEditorFields().getDayOfWeek();</span>
+
+<span class="fc bfc" id="L109" title="All 2 branches covered.">                if(dayOfWeek.equals(menu.getEditorFields().getDayOfWeek())) {</span>
+<span class="fc" id="L110">                    menu.getEditorFields().addRowClass(&quot;menuStyle_&quot; + type);</span>
+                } else {
+<span class="fc" id="L112">                    dayOfWeek = menu.getEditorFields().getDayOfWeek();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                    type = type == 0 ? 1 : 0;</span>
+<span class="fc" id="L114">                    menu.getEditorFields().addRowClass(&quot;menuStyle_&quot; + type);</span>
+                }
+<span class="fc" id="L116">            }</span>
+        }
+
+<span class="fc" id="L119">        return menuEntities;</span>
+    }
+
+    /**
+     * Process params and prepare date range based on menuType
+     * @param params
+     */
+    public static void processParams(Map&lt;String, String&gt; params) {
+<span class="fc" id="L127">        String dateRange = null;</span>
+<span class="fc" id="L128">        String menuType = null;</span>
+
+        //Get values from params entry
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            if(entry.getKey().equalsIgnoreCase(&quot;searchDayDate&quot;)) {</span>
+<span class="fc" id="L133">                dateRange = entry.getValue();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">            } else if(entry.getKey().equalsIgnoreCase(&quot;menuType&quot;)) {</span>
+<span class="fc" id="L135">                menuType = entry.getValue();</span>
+            }
+<span class="fc" id="L137">        }</span>
+
+        //Cant work with empty date range
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if(dateRange == null) return;</span>
+
+        //Because records are set in DB without time part, it's enough to add 1 minute, to get records for this date
+        //Prepare range gonna have 7 days (week menuType) or 1 day
+<span class="fc" id="L144">        dateRange = prepareDateRange(dateRange, menuType, true); //-&gt; with prefix because its for params map</span>
+
+<span class="fc" id="L146">        params.put(&quot;searchDayDate&quot;, dateRange);</span>
+<span class="fc" id="L147">    }</span>
+
+    /**
+     * Prepare date range based on menuType.
+     *
+     * menuType = null or days -&gt; 1 day range,
+     * menuType = week -&gt; 7 days range,
+     *
+     * Range is allways + 1m (minute) -&gt; because records are set in DB without time part
+     * @param dateRange - can be with or without prefix &quot;:daterange&quot; MUST BE ALLWAY only FROM value
+     * @param menuType
+     * @param withPrefix - true add prefix &quot;:daterange&quot; (its for params map)
+     * @return - return range FROM - TO based on input value and menuType
+     */
+    private static String prepareDateRange(String dateRange, String menuType, boolean withPrefix) {
+        //Can contain daterange: prefix + value FROM (only FROM)
+<span class="fc" id="L163">        dateRange = dateRange.replaceFirst(&quot;daterange:&quot;, &quot;&quot;);</span>
+
+        //Prepare calendar instance and set time to 00:00:00.000
+<span class="fc" id="L166">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L167">        cal.setTimeInMillis(Long.parseLong( dateRange ));</span>
+<span class="fc" id="L168">        nullTimePart(cal);</span>
+
+        //If type is not set or is set to days -&gt; 1 day range
+<span class="pc bpc" id="L171" title="1 of 4 branches missed.">        if(menuType == null || menuType.equalsIgnoreCase(&quot;days&quot;)) {</span>
+            //Just one day -&gt; we must do a range with just 1 minute
+<span class="fc" id="L173">            cal.add(Calendar.MINUTE, 1);</span>
+<span class="fc" id="L174">            dateRange += &quot;-&quot; + cal.getTimeInMillis();</span>
+        } else {
+            //Week range based allways from MONDAY to SUNDAY (allways 7 days) -&gt; doe not matter, what day of weeek was selected
+<span class="fc" id="L177">            int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);</span>
+
+            //Preapre ranged based on day of week
+<span class="fc bfc" id="L180" title="All 2 branches covered.">            if(dayOfWeek == 2) { //Monday</span>
+<span class="fc" id="L181">                dateRange = cal.getTimeInMillis() + &quot;-&quot;;</span>
+<span class="fc" id="L182">                cal.add( Calendar.DAY_OF_YEAR, 6);</span>
+<span class="fc" id="L183">                cal.add(Calendar.MINUTE, 1);  //Must be add</span>
+<span class="fc" id="L184">                dateRange += cal.getTimeInMillis();</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">            } else if(dayOfWeek == 1) { //Sunday</span>
+<span class="nc" id="L186">                cal.add(Calendar.DAY_OF_YEAR, -6);</span>
+<span class="nc" id="L187">                dateRange = cal.getTimeInMillis() + &quot;-&quot;;</span>
+<span class="nc" id="L188">                cal.add(Calendar.DAY_OF_YEAR, 6);</span>
+<span class="nc" id="L189">                cal.add(Calendar.MINUTE, 1);  //Must be add</span>
+<span class="nc" id="L190">                dateRange += cal.getTimeInMillis();</span>
+            } else { //Else
+<span class="fc" id="L192">                int diff = dayOfWeek - 2;</span>
+<span class="fc" id="L193">                cal.add(Calendar.DAY_OF_YEAR, -diff);</span>
+<span class="fc" id="L194">                dateRange = cal.getTimeInMillis() + &quot;-&quot;;</span>
+<span class="fc" id="L195">                cal.add(Calendar.DAY_OF_YEAR, 6);</span>
+<span class="fc" id="L196">                cal.add(Calendar.MINUTE, 1); //Must be add</span>
+<span class="fc" id="L197">                dateRange += cal.getTimeInMillis();</span>
+            }
+        }
+
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        if(withPrefix) return &quot;daterange:&quot; + dateRange;</span>
+<span class="fc" id="L202">        else return dateRange;</span>
+    }
+
+    /**
+     * Get list of RestaurantMenuEntity's (menu for one day) based on day. EditorFields is iniialized. Values in list are sorted.
+     * @param day
+     * @param prop
+     * @return
+     */
+    public static List&lt;RestaurantMenuEntity&gt; getByDate(Date day, Prop prop) {
+        //Get data for day
+<span class="fc" id="L213">        RestaurantMenuRepository rmr = Tools.getSpringBean(&quot;restaurantMenuRepository&quot;, RestaurantMenuRepository.class);</span>
+<span class="fc" id="L214">        List&lt;RestaurantMenuEntity&gt; menuEntities = rmr.findAllByDayDateAndDomainId( getMenuDate(day), CloudToolsForCore.getDomainId() );</span>
+
+        //Inicialize editor fields
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        for(RestaurantMenuEntity menuEntity : menuEntities) {</span>
+<span class="nc" id="L218">            RestaurantMenuEditorFields editorFields = new RestaurantMenuEditorFields();</span>
+<span class="nc" id="L219">            editorFields.fromRestaurantMenuEntity(menuEntity, prop);</span>
+<span class="nc" id="L220">        }</span>
+
+        //Return sorted list
+<span class="fc" id="L223">        return sortMenu(menuEntities, false);</span>
+    }
+
+    /**
+     * Based on input datepickerWeek, get all records in week. EditorFields is iniialized. Values in list are sorted.
+     * @param datepickerWeek - accepted formats: yyyy-Www, ww-yyyy (for back compatibility)
+     * @param prop
+     * @return
+     */
+    private static List&lt;RestaurantMenuEntity&gt; getWeekByDate(String datepickerWeek, Prop prop) {
+<span class="fc" id="L233">        Calendar cal = Calendar.getInstance();</span>
+
+        //Prepare calendar instance based on week-year / year-week string
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">        if(Tools.isEmpty(datepickerWeek)) {</span>
+            //Default today
+<span class="nc" id="L238">            cal.setTime(new Date());</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        } else if(datepickerWeek.matches(&quot;[0-9]+-W[0-9]+&quot;)) {</span>
+            //Format yyyy-Www
+<span class="fc" id="L241">            String yearWeekArr[] = datepickerWeek.split(&quot;-W&quot;);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            if(yearWeekArr.length == 2) {</span>
+<span class="fc" id="L243">                cal.set(Calendar.YEAR, Integer.parseInt(yearWeekArr[0]));</span>
+<span class="fc" id="L244">                cal.set(Calendar.WEEK_OF_YEAR, Integer.parseInt(yearWeekArr[1]));</span>
+<span class="fc" id="L245">                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);</span>
+<span class="nc" id="L246">            } else cal.setTime(new Date());</span>
+<span class="pc bnc" id="L247" title="All 2 branches missed.">        } else if(datepickerWeek.matches(&quot;[0-9]+-[0-9]+&quot;)) {</span>
+            //Format ww-yyyy
+<span class="nc" id="L249">            String weekYearArr[] = datepickerWeek.split(&quot;-&quot;);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">            if(weekYearArr.length == 2) {</span>
+<span class="nc" id="L251">                cal.set(Calendar.YEAR, Integer.parseInt(weekYearArr[1]));</span>
+<span class="nc" id="L252">                cal.set(Calendar.WEEK_OF_YEAR, Integer.parseInt(weekYearArr[0]));</span>
+<span class="nc" id="L253">                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);</span>
+<span class="nc" id="L254">            } else cal.setTime(new Date());</span>
+<span class="nc" id="L255">        } else cal.setTime(new Date());</span>
+
+        //Prepare date range arr
+<span class="fc" id="L258">        String dateRange = prepareDateRange(&quot;&quot; + cal.getTimeInMillis(), &quot;week&quot;, false);</span>
+<span class="fc" id="L259">        String dateRangeArr[] = dateRange.split(&quot;-&quot;);</span>
+
+        //Get all records in date range
+<span class="fc" id="L262">        RestaurantMenuRepository rmr = Tools.getSpringBean(&quot;restaurantMenuRepository&quot;, RestaurantMenuRepository.class);</span>
+<span class="fc" id="L263">        List&lt;RestaurantMenuEntity&gt; weekMenus = rmr.findAllByDayDateBetweenAndDomainId(</span>
+<span class="fc" id="L264">            new Date(Long.parseLong(dateRangeArr[0])),</span>
+<span class="fc" id="L265">            new Date(Long.parseLong(dateRangeArr[1])),</span>
+<span class="fc" id="L266">            CloudToolsForCore.getDomainId()</span>
+        );
+
+        //Inicialize editor fields
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        for(RestaurantMenuEntity menuEntity : weekMenus) {</span>
+<span class="fc" id="L271">            RestaurantMenuEditorFields editorFields = new RestaurantMenuEditorFields();</span>
+<span class="fc" id="L272">            editorFields.fromRestaurantMenuEntity(menuEntity, prop);</span>
+<span class="fc" id="L273">        }</span>
+
+        //Return sorted list
+<span class="fc" id="L276">        return sortMenu(weekMenus, false);</span>
+    }
+
+    /**
+     *  Based on input datepickerWeek, get all records in week. EditorFields is iniialized. Values in list are sorted.
+     *
+     * List of entities is grouped by day. Each day is one list in list.
+     *
+     * @param datepickerWeek - accepted formats: yyyy-Www, ww-yyyy (for back compatibility)
+     * @param prop
+     * @return
+     */
+    public static List&lt;List&lt;RestaurantMenuEntity&gt;&gt; getParsedWeekByDate(String datepickerWeek, Prop prop) {
+        //Get data for week taht are sorted and editor fields are inicialized
+<span class="fc" id="L290">        List&lt;RestaurantMenuEntity&gt; all = getWeekByDate(datepickerWeek, prop);</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">        if(all == null) return new ArrayList&lt;&gt;();</span>
+
+        //Group by day (meke list of lists)
+<span class="fc" id="L294">        List&lt;List&lt;RestaurantMenuEntity&gt;&gt; week = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L295">        int actualIndex = 0;</span>
+<span class="fc" id="L296">        Date actualDate = null;</span>
+
+<span class="fc bfc" id="L298" title="All 2 branches covered.">        for(RestaurantMenuEntity entity : all) {</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">            if(actualDate == null) {</span>
+<span class="fc" id="L300">                actualDate = entity.getDayDate();</span>
+<span class="fc" id="L301">                week.add(new ArrayList&lt;&gt;());</span>
+            }
+
+<span class="fc bfc" id="L304" title="All 2 branches covered.">            if(actualDate.compareTo(entity.getDayDate()) == 0) {</span>
+<span class="fc" id="L305">                week.get(actualIndex).add(entity);</span>
+            } else {
+<span class="fc" id="L307">                actualDate = entity.getDayDate();</span>
+<span class="fc" id="L308">                actualIndex++;</span>
+<span class="fc" id="L309">                week.add(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L310">                week.get(actualIndex).add(entity);</span>
+            }
+<span class="fc" id="L312">        }</span>
+<span class="fc" id="L313">        return week;</span>
+    }
+
+    /***************************** FE METHODS *************************************/
+
+    /**
+     * Prepare value for week datpicekr. Accepted formats: yyyy-Www, ww-yyyy (for back compatibility).
+     *
+     * If value is null/empty -&gt; return actual week,
+     * @param value
+     * @return Allways return yyyy-Www
+     */
+    public static String getWeekDateValue(String value) {
+<span class="fc bfc" id="L326" title="All 2 branches covered.">        if(Tools.isEmpty(value)) return getDefaulWeekDateValue();</span>
+
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if(value.matches(&quot;[0-9]+-[0-9]+&quot;)) {</span>
+            //FROM ww-yyyy (50-2023) to yyyy-Www (2023-W50)
+<span class="nc" id="L330">            String[] valueArr = value.split(&quot;-&quot;);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">            if(valueArr.length == 2)</span>
+<span class="nc" id="L332">                return valueArr[1] + &quot;-W&quot; + valueArr[0];</span>
+<span class="pc" id="L333">        } else return value;</span>
+
+        //Some problem, return default date
+<span class="nc" id="L336">        return getDefaulWeekDateValue();</span>
+    }
+
+    /**
+     * Return actual week in format yyyy-Www
+     * @return
+     */
+    private static String getDefaulWeekDateValue() {
+<span class="fc" id="L344">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L345">        cal.setTime(new Date());</span>
+
+<span class="fc" id="L347">        return cal.get(Calendar.YEAR) + &quot;-W&quot; + cal.get(Calendar.WEEK_OF_YEAR);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

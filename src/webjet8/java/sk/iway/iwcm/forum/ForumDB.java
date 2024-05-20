@@ -432,7 +432,7 @@ public class ForumDB
 				{
 					sql = new StringBuilder("SELECT d.title, f.* ").append(
 							"FROM document_forum f, documents d ").append(
-							"WHERE f.doc_id=d.doc_id AND f.confirmed=1 AND f.deleted=0 " + CloudToolsForCore.getDomainIdSqlWhere(true, "f"));
+							"WHERE f.doc_id=d.doc_id AND f.confirmed="+DB.getBooleanSql(true)+" AND f.deleted="+DB.getBooleanSql(false)+" " + CloudToolsForCore.getDomainIdSqlWhere(true, "f"));
 					if (docId > 0) sql.append("AND f.doc_id=? AND ");
 					sql.append("(f.subject LIKE ? OR f.question LIKE ?) ").append(
 							"ORDER BY stat_last_post DESC");
@@ -458,8 +458,8 @@ public class ForumDB
 				{
 					sql = new StringBuilder("SELECT d.title, f.* ").append(
 							"FROM document_forum f, documents d ").append(
-							"WHERE f.doc_id=d.doc_id AND f.confirmed=1" + CloudToolsForCore.getDomainIdSqlWhere(true, "f")
-									+ " AND f.deleted=0 AND (f.subject LIKE ? OR f.question LIKE ?) ").append(
+							"WHERE f.doc_id=d.doc_id AND f.confirmed="+DB.getBooleanSql(true)+" "+ CloudToolsForCore.getDomainIdSqlWhere(true, "f")
+									+ " AND f.deleted="+DB.getBooleanSql(false)+" AND (f.subject LIKE ? OR f.question LIKE ?) ").append(
 							"ORDER BY stat_last_post DESC");
 
 					ps = db_conn.prepareStatement(sql.toString());
@@ -483,7 +483,7 @@ public class ForumDB
 				{
 					sql = new StringBuilder("SELECT d.title, f.* ").append(
 							"FROM document_forum f, documents d ").append(
-							"WHERE f.doc_id=d.doc_id AND f.confirmed=1" + CloudToolsForCore.getDomainIdSqlWhere(true, "f") + " AND f.deleted=0 AND f.user_id=? ").append(
+							"WHERE f.doc_id=d.doc_id AND f.confirmed="+DB.getBooleanSql(true)+" " + CloudToolsForCore.getDomainIdSqlWhere(true, "f") + " AND f.deleted="+DB.getBooleanSql(false)+" AND f.user_id=? ").append(
 							"ORDER BY stat_last_post DESC");
 
 					ps = db_conn.prepareStatement(sql.toString());
@@ -845,9 +845,9 @@ public class ForumDB
 			{
 				String sql = "SELECT question_date, author_name, user_id FROM document_forum WHERE doc_id=? AND confirmed=? AND deleted=?" + CloudToolsForCore.getDomainIdSqlWhere(true)
 						+ " ORDER BY forum_id DESC";
-				if (Constants.DB_TYPE == Constants.DB_MYSQL)
+				if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)
 				{
-					sql += " LIMIT 0, 1";
+					sql += " LIMIT 1";
 				}
 
 				ps = db_conn.prepareStatement(sql);

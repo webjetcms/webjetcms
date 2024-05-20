@@ -87,7 +87,7 @@ if (!isFck)
 				<div class="input-group">
 					<input type="text" id="image1" name="image1" class="form-control" value="<%=ResponseUtils.filter(pageParams.getValue("image1", ""))%>" placeholder="<iwcm:text key="editor.perex.image"/> 1">
 					<span class="input-group-addon btn green" onclick="openImageDialogWindow('contentBlockForm', 'image1', '')" >
-                 		<i class="fa fa-image"></i>
+                 		<i class="ti ti-photo"></i>
               	</span>
 				</div>
 			</div>
@@ -102,7 +102,7 @@ if (!isFck)
 				<div class="input-group">
 					<input type="text" id="image2" name="image2" class="form-control col-md-6 " value="<%=ResponseUtils.filter(pageParams.getValue("image2", ""))%>" placeholder="<iwcm:text key="editor.perex.image"/> 1">
 					<span class="input-group-addon btn green" onclick="openImageDialogWindow('contentBlockForm', 'image2', '')" >
-                 		<i class="fa fa-image"></i>
+                 		<i class="ti ti-photo"></i>
               	</span>
 				</div>
 			</div>

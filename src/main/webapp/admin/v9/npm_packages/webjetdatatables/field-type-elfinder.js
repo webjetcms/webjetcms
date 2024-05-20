@@ -26,11 +26,11 @@ export function typeElfinder() {
             var isImage = false;
             if (conf.className != null && conf.className.indexOf("image")!=-1) {
                 isImage = true;
-                prependHtmlCode = '<span class="input-group-text"><i class="far fa-image"></i></span>';
+                prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
                 //console.log("is image class=", conf.className);
             }
 
-            var htmlCode = $('<div class="input-group">'+prependHtmlCode+'<input type="text" class="form-control"><button class="btn btn-outline-secondary" type="button" data-toggle="tooltip" title="'+WJ.translate('button.select')+'"><i class="far fa-crosshairs"></i></button></div>');
+            var htmlCode = $('<div class="input-group">'+prependHtmlCode+'<input type="text" class="form-control"><button class="btn btn-outline-secondary" type="button" data-toggle="tooltip" title="'+WJ.translate('button.select')+'"><i class="ti ti-focus-2"></i></button></div>');
 
             conf._input = htmlCode.find("input.form-control");
             if (typeof conf.attr != undefined && conf.attr != null) {

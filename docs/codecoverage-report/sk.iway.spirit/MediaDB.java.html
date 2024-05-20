@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.spirit</a> &gt; <span class="el_source">MediaDB.java</span></div><h1>MediaDB.java</h1><pre class="source lang-java linenums">package sk.iway.spirit;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.servlet.http.HttpSession;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.filebrowser.EditForm;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
+import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaGroupBean;
+
+/**
+ *  MediaDB.java - praca s mediami k roznym tabulkam
+ *
+ *@Title        WebJET - SpiritDesign
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.7 $
+ *@created      Date: 6.9.2005 12:57:18
+ *@modified     $Date: 2010/02/17 11:37:51 $
+ */
+public class MediaDB extends JpaDB&lt;Media&gt;
+{
+	public MediaDB()
+	{
+<span class="fc" id="L54">		super(Media.class);</span>
+<span class="fc" id="L55">	}</span>
+
+	/**
+	 * Ziska zadane medium
+	 * @deprecated - pouzite verziu bez session
+	 */
+	@Deprecated
+	public static Media getMedia(HttpSession session, int mediaId)
+	{
+<span class="nc" id="L64">		return getMedia(mediaId);</span>
+	}
+
+	/**
+	 * Ziska zadane medium
+	 */
+	public static Media getMedia(int mediaId)
+	{
+<span class="nc" id="L72">		return JpaTools.findFirstByMatchingProperty(Media.class, &quot;id&quot;, mediaId);</span>
+	}
+
+	/**
+	 * Ziska zoznam medii pre danu tabulku, kluc a skupinu
+	 * @param tableName - nazov tabulky
+	 * @param pkId - primarny kluc, podla ktoreho sa vybera (alebo -1)
+	 * @param mediaGroup - skupina pre ktoru data vyberame (alebo null)
+	 */
+	public static List&lt;Media&gt; getMedia(HttpSession session, String tableName, int pkId, String mediaGroup)
+	{
+<span class="fc" id="L83">		return getMedia(session, tableName, pkId, mediaGroup, 0);</span>
+	}
+
+	public static List&lt;Media&gt; getMedia(HttpSession session, String tableName, int pkId, String mediaGroup, long lastUpdate)
+	{
+<span class="fc" id="L88">		return getMedia(session, tableName, pkId, mediaGroup, lastUpdate, true);</span>
+	}
+
+	public static List&lt;Media&gt; getMedia(HttpSession session, String tableName, int pkIdParam, String mediaGroup, long lastUpdate, boolean checkAvailability)
+	{
+<span class="fc" id="L93">		List&lt;MediaGroupBean&gt; selectedGroups = new ArrayList&lt;&gt;();</span>
+
+		try
+		{
+<span class="fc bfc" id="L97" title="All 2 branches covered.">			if (Tools.isNotEmpty(mediaGroup))</span>
+			{
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(mediaGroup)){</span>
+<span class="fc" id="L100">					String[] groupsArr = mediaGroup.split(&quot;,&quot;);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">					for(String g : groupsArr){</span>
+<span class="fc" id="L102">						MediaGroupBean group = null;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">						if(Tools.getIntValue(g, -1) &gt; -1){</span>
+<span class="fc" id="L104">							group = MediaDB.getGroup(Tools.getIntValue(g, -1));</span>
+						}
+						else{
+<span class="fc" id="L107">							group = MediaDB.getGroup(g);</span>
+						}
+<span class="fc bfc" id="L109" title="All 2 branches covered.">						if(group!=null){</span>
+<span class="fc" id="L110">							selectedGroups.add(group);</span>
+						}
+					}
+				}
+			}
+		}
+<span class="nc" id="L116">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L118">		    sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L119">		}</span>
+
+
+<span class="fc" id="L122">		return getMediaByMediaGroups(session, tableName, pkIdParam, selectedGroups, lastUpdate, checkAvailability);</span>
+	}
+
+	/**
+	 * Vrati zoznam medii podla listu skupin
+	 * @param session
+	 * @param tableName
+	 * @param pkIdParam
+	 * @param mediaGroups
+	 * @param lastUpdate
+	 * @param checkAvailability
+	 * @return
+	 */
+	public static List&lt;Media&gt; getMediaByMediaGroups(HttpSession session, String tableName, int pkIdParam, List&lt;MediaGroupBean&gt; mediaGroups, long lastUpdate, boolean checkAvailability)
+	{
+<span class="fc" id="L137">	    int pkId = pkIdParam;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (&quot;documents&quot;.equals(tableName))</span>
+        {
+            //podpora pre stranky vo viacerych adresaroch
+<span class="fc" id="L141">            int masterId = MultigroupMappingDB.getMasterDocId(pkId);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            if (masterId&gt;0) pkId = masterId;</span>
+        }
+
+<span class="fc" id="L145">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+		try
+		{
+<span class="fc" id="L148">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L149">			ReadAllQuery dbQuery = new ReadAllQuery(Media.class, builder);</span>
+
+<span class="fc" id="L151">			Expression expr = builder.get(&quot;mediaFkTableName&quot;).equal(tableName);</span>
+			//fast loading preto, aby na pluske nemohli nacitat celu DB pri preview neulozeneho clanku
+<span class="pc bpc" id="L153" title="3 of 4 branches missed.">			if (pkId &gt; 0 || Constants.getBoolean(&quot;galleryUseFastLoading&quot;)==true) expr = expr.and(builder.get(&quot;mediaFkId&quot;).equal(Integer.valueOf(pkId)));</span>
+
+<span class="pc bpc" id="L155" title="1 of 4 branches missed.">			if (mediaGroups!=null &amp;&amp; mediaGroups.size()&gt;0) expr = expr.and(builder.anyOf(&quot;groups&quot;).in(mediaGroups));</span>
+
+<span class="fc" id="L157">			dbQuery.setSelectionCriteria(expr);</span>
+			//dbQuery.addAscendingOrdering(&quot;mediaGroup&quot;);
+<span class="fc" id="L159">			dbQuery.addAscendingOrdering(&quot;mediaSortOrder&quot;);</span>
+<span class="fc" id="L160">			dbQuery.dontUseDistinct();</span>
+
+<span class="fc" id="L162">			Query query = em.createQuery(dbQuery);</span>
+
+<span class="fc" id="L164">			List&lt;Media&gt; records = JpaDB.getResultList(query);</span>
+
+<span class="fc bfc" id="L166" title="All 2 branches covered.">			if (lastUpdate &gt; 0) records = filterByLastUpdateDate(records, lastUpdate);</span>
+<span class="fc bfc" id="L167" title="All 4 branches covered.">			if (checkAvailability &amp;&amp; &quot;documents&quot;.equals(tableName)) records = filterByAvailability(records, session);</span>
+
+<span class="fc" id="L169">			return records;</span>
+
+<span class="nc" id="L171">		}catch (Exception e) {</span>
+<span class="nc" id="L172">			sk.iway.iwcm.Logger.error(e);</span>
+		}finally{
+<span class="fc" id="L174">			em.close();</span>
+		}
+
+<span class="nc" id="L177">		return Collections.emptyList();</span>
+
+	}
+
+	/**
+	 * Odfiltruje media starsie ako zadany datum
+	 * @param mediaAll - list medii
+	 * @param lastUpdate - datum zmeny web stranky, vratia sa len novsie ako tento datum
+	 */
+	public static List&lt;Media&gt; filterByLastUpdateDate(List&lt;Media&gt; mediaAll, long lastUpdate)
+	{
+<span class="fc" id="L188">		List&lt;Media&gt; filtered = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L190" title="All 2 branches covered.">		for (Media m : mediaAll)</span>
+		{
+<span class="pc bpc" id="L192" title="1 of 4 branches missed.">			if (m.getLastUpdate()==null || m.getLastUpdate().getTime()&lt;=lastUpdate)</span>
+			{
+<span class="fc" id="L194">				filtered.add(m);</span>
+			}
+<span class="fc" id="L196">		}</span>
+
+<span class="fc" id="L198">		return filtered;</span>
+	}
+
+	/**
+	 * Skontroluje existenciu a prava na jednotlive linky (interne, externe ponecha ako su)
+	 * @param mediaAll
+	 * @param session
+	 * @return
+	 */
+	public static List&lt;Media&gt; filterByAvailability(List&lt;Media&gt; mediaAll, HttpSession session)
+	{
+<span class="fc" id="L209">		String mode = Constants.getString(&quot;mediaCheckAvailabilityMode&quot;);</span>
+<span class="pc bpc" id="L210" title="2 of 4 branches missed.">		if (Tools.isEmpty(mode) || &quot;none&quot;.equals(mode)) return mediaAll;</span>
+
+<span class="fc" id="L212">		DebugTimer dt = new DebugTimer(&quot;MediaDB.filterByAvailability&quot;);</span>
+
+<span class="fc" id="L214">		List&lt;Media&gt; filtered = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L216">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L217">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L218">		Identity user = UsersDB.getCurrentUser(session);</span>
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">		for (Media m : mediaAll)</span>
+		{
+<span class="fc" id="L222">			dt.diff(&quot;checking &quot;+m.getMediaLink());</span>
+
+			//externe, alebo nedefinovane linky pridame automaticky
+<span class="pc bpc" id="L225" title="2 of 8 branches missed.">			if (Tools.isEmpty(m.getMediaLink()) || m.getMediaLink().toLowerCase().startsWith(&quot;http&quot;) || m.getMediaLink().startsWith(&quot;/images&quot;) || m.getMediaLink().startsWith(&quot;javascript:&quot;))</span>
+			{
+<span class="fc" id="L227">				filtered.add(m);</span>
+<span class="fc" id="L228">				continue;</span>
+			}
+
+<span class="pc bpc" id="L231" title="3 of 4 branches missed.">			if (m.getMediaLink().startsWith(&quot;/files&quot;) || m.getMediaLink().startsWith(&quot;/archiv&quot;))</span>
+			{
+<span class="fc" id="L233">				IwcmFile f = new IwcmFile(Tools.getRealPath(m.getMediaLink()));</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">				if (!f.exists()) continue;</span>
+
+<span class="nc bnc" id="L236" title="All 2 branches missed.">				if (&quot;fast&quot;.equals(mode))</span>
+				{
+<span class="nc" id="L238">					filtered.add(m);</span>
+<span class="nc" id="L239">					continue;</span>
+				}
+
+<span class="nc" id="L242">				EditForm protectedForm = PathFilter.isPasswordProtected(m.getMediaLink(), null, session);</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">				if (protectedForm == null || protectedForm.isAccessibleFor(user))</span>
+				{
+<span class="nc" id="L245">					filtered.add(m);</span>
+				}
+				continue;
+			}
+
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			if (rb != null)</span>
+			{
+				//asi ide o web stranku, skontrolujme jej existenciu a prava
+<span class="nc" id="L253">				int accessDocId = docDB.getVirtualPathDocId(m.getMediaLink(), rb.getDomain());</span>
+
+				//stranka neexistuje (je zmazana)
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				if (accessDocId &lt; 1) continue;</span>
+
+<span class="nc bnc" id="L258" title="All 2 branches missed.">				if (&quot;fast&quot;.equals(mode))</span>
+				{
+<span class="nc" id="L260">					filtered.add(m);</span>
+<span class="nc" id="L261">					continue;</span>
+				}
+
+<span class="nc" id="L264">				DocDetails accessDoc = docDB.getBasicDocDetails(accessDocId, false);</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">				if (accessDoc == null) continue;</span>
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				if (DocDB.canAccess(accessDoc, user))</span>
+				{
+<span class="nc" id="L269">					filtered.add(m);</span>
+				}
+				continue;
+			}
+
+			//je to nejaky iny podivny subor
+<span class="nc" id="L275">			filtered.add(m);</span>
+<span class="nc" id="L276">		}</span>
+
+<span class="fc" id="L278">		dt.diff(&quot;done&quot;);</span>
+
+<span class="fc" id="L280">		return filtered;</span>
+	}
+
+	/**
+	 * Kontrola na existenciu suboru pre vypis v editore
+	 */
+	public static boolean isExists(Media m)
+	{
+<span class="nc bnc" id="L288" title="All 8 branches missed.">		if (Tools.isEmpty(m.getMediaLink()) || m.getMediaLink().toLowerCase().contains(&quot;://&quot;) || m.getMediaLink().startsWith(&quot;/images&quot;) || m.getMediaLink().startsWith(&quot;javascript:&quot;))</span>
+		{
+<span class="nc" id="L290">			return true;</span>
+		}
+
+		try
+		{
+<span class="nc bnc" id="L295" title="All 6 branches missed.">			if (m.getMediaLink().startsWith(&quot;/files&quot;) || m.getMediaLink().startsWith(&quot;/archiv&quot;) || m.getMediaLink().startsWith(&quot;/images&quot;))</span>
+			{
+<span class="nc" id="L297">				IwcmFile f = new IwcmFile(Tools.getRealPath(m.getMediaLink()));</span>
+<span class="nc" id="L298">				return f.exists();</span>
+			}
+		}
+<span class="nc" id="L301">		catch (Exception e)</span>
+		{
+<span class="nc" id="L303">			return false;</span>
+<span class="nc" id="L304">		}</span>
+
+<span class="nc" id="L306">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (rb != null)</span>
+		{
+<span class="nc" id="L309">			DocDB docDB = DocDB.getInstance();</span>
+
+			//asi ide o web stranku, skontrolujme jej existenciu a prava
+<span class="nc" id="L312">			int accessDocId = docDB.getVirtualPathDocId(m.getMediaLink(), rb.getDomain());</span>
+
+			//stranka neexistuje (je zmazana)
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (accessDocId &lt; 1) return false;</span>
+		}
+
+<span class="nc" id="L318">		return true;</span>
+	}
+
+	/**
+	 * Aktualizuje media, ktore obsahuje linku povodneho URL na nove URL
+	 */
+	public static void updateLink(String origUrl, String newUrl)
+	{
+<span class="nc" id="L326">		List&lt;Media&gt; mediaLink = JpaTools.findByMatchingProperty(Media.class, &quot;mediaLink&quot;, origUrl);</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (mediaLink != null)</span>
+		{
+<span class="nc bnc" id="L329" title="All 2 branches missed.">			for (Media m : mediaLink)</span>
+			{
+<span class="nc bnc" id="L331" title="All 2 branches missed.">				if (m.getMediaLink().equalsIgnoreCase(origUrl))</span>
+				{
+<span class="nc" id="L333">					m.setMediaLink(newUrl);</span>
+<span class="nc" id="L334">					m.save();</span>
+				}
+<span class="nc" id="L336">			}</span>
+		}
+
+
+<span class="nc" id="L340">	}</span>
+
+	/**
+	 * Aktualizuje media, ktore obsahuje thumb obrazok povodneho URL na nove URL
+	 */
+	public static void updateThumb(String origUrl, String newUrl)
+	{
+<span class="nc" id="L347">		List&lt;Media&gt; mediaLink = JpaTools.findByMatchingProperty(Media.class, &quot;mediaThumbLink&quot;, origUrl);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (mediaLink != null)</span>
+		{
+<span class="nc bnc" id="L350" title="All 2 branches missed.">			for (Media m : mediaLink)</span>
+			{
+<span class="nc bnc" id="L352" title="All 2 branches missed.">				if (m.getMediaThumbLink().equalsIgnoreCase(origUrl))</span>
+				{
+<span class="nc" id="L354">					m.setMediaThumbLink(newUrl);</span>
+<span class="nc" id="L355">					m.save();</span>
+				}
+<span class="nc" id="L357">			}</span>
+		}
+<span class="nc" id="L359">	}</span>
+
+	public static List&lt;MediaGroupBean&gt; getGroups()
+	{
+<span class="fc" id="L363">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L364">		List&lt;MediaGroupBean&gt; groups = new ArrayList&lt;&gt;();</span>
+		try {
+<span class="fc" id="L366">			ReadAllQuery readAllQuery = new ReadAllQuery(MediaGroupBean.class);</span>
+<span class="fc" id="L367">			Expression e = readAllQuery.getExpressionBuilder();</span>
+<span class="fc" id="L368">			readAllQuery.setSelectionCriteria(e);</span>
+<span class="fc" id="L369">			Query query = em.createQuery(readAllQuery);</span>
+<span class="fc" id="L370">			groups = JpaDB.getResultList(query);</span>
+<span class="nc" id="L371">		} catch (Exception e) {</span>
+<span class="nc" id="L372">			sk.iway.iwcm.Logger.error(e);</span>
+		} finally {
+<span class="fc" id="L374">			em.close();</span>
+		}
+<span class="fc" id="L376">		return groups;</span>
+	}
+
+
+	public static List&lt;MediaGroupBean&gt; getGroups(int groupId){
+<span class="fc" id="L381">		List&lt;MediaGroupBean&gt; groups = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L383" title="All 2 branches covered.">		for(MediaGroupBean mediaGroup : getGroups()){</span>
+<span class="fc" id="L384">			String availableGroups =  mediaGroup.getAvailableGroups();</span>
+<span class="fc bfc" id="L385" title="All 4 branches covered.">			if(availableGroups == null || &quot;&quot;.equals(availableGroups)){</span>
+<span class="fc" id="L386">				groups.add(mediaGroup);</span>
+			}else{
+
+<span class="fc" id="L389">				String[] groupsArray = availableGroups.split(&quot;,&quot;);</span>
+<span class="fc" id="L390">				String groupsWithSubgroups = &quot;&quot;;</span>
+
+<span class="fc bfc" id="L392" title="All 2 branches covered.">				for(String group: groupsArray){</span>
+<span class="fc" id="L393">					groupsWithSubgroups+=DocDB.getSubgroups(Tools.getIntValue(group, -1));</span>
+				}
+<span class="fc" id="L395">				groupsArray = groupsWithSubgroups.split(&quot;,&quot;);</span>
+<span class="fc" id="L396">				List&lt;String&gt; groupsList = Arrays.asList(groupsArray);</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">				if(groupsList.indexOf(groupId+&quot;&quot;) &gt; -1){</span>
+<span class="fc" id="L398">					groups.add(mediaGroup);</span>
+				}
+			}
+<span class="fc" id="L401">		}</span>
+
+<span class="fc" id="L403">		return groups;</span>
+	}
+
+	@SuppressWarnings({&quot;unchecked&quot;, &quot;rawtypes&quot;})
+	public static MediaGroupBean getGroup(int mediaGroupId)
+	{
+<span class="fc" id="L409">		Pair[] properties = new Pair[]{</span>
+<span class="fc" id="L410">				new Pair&lt;&gt;(&quot;id&quot;, mediaGroupId)</span>
+		};
+<span class="fc" id="L412">		MediaGroupBean group = JpaTools.findFirstByProperties(MediaGroupBean.class, properties);</span>
+<span class="fc" id="L413">		return group;</span>
+	}
+
+	@SuppressWarnings({&quot;unchecked&quot;, &quot;rawtypes&quot;})
+	public static MediaGroupBean getGroup(String mediaGroupName)
+	{
+<span class="fc" id="L419">		Pair[] properties = new Pair[]{</span>
+				new Pair&lt;&gt;(&quot;mediaGroupName&quot;, mediaGroupName)
+		};
+<span class="fc" id="L422">		MediaGroupBean group = JpaTools.findFirstByProperties(MediaGroupBean.class, properties);</span>
+<span class="fc" id="L423">		return group;</span>
+	}
+
+	public static boolean saveMediaGroup(int mediaGroupId, String mediaGroupName, String availableGroups){
+		//edit
+<span class="nc bnc" id="L428" title="All 2 branches missed.">		if(mediaGroupId &gt; -1){</span>
+<span class="nc" id="L429">			MediaGroupBean mediaGroup = MediaDB.getGroup(mediaGroupId);</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">			if(mediaGroup!=null){</span>
+<span class="nc" id="L431">				mediaGroup.setAvailableGroups(availableGroups);</span>
+<span class="nc" id="L432">				mediaGroup.setMediaGroupName(mediaGroupName);</span>
+<span class="nc" id="L433">				return mediaGroup.save();</span>
+<span class="nc" id="L434">		} else return false;</span>
+		}else{
+<span class="nc" id="L436">			MediaGroupBean newMediaGroup = new MediaGroupBean();</span>
+<span class="nc" id="L437">			newMediaGroup.setMediaGroupName(mediaGroupName);</span>
+<span class="nc" id="L438">			newMediaGroup.setAvailableGroups(availableGroups);</span>
+<span class="nc" id="L439">			return newMediaGroup.save();</span>
+		}
+
+
+	}
+
+	public static boolean deleteMediaGroup(int mediaGroupId){
+<span class="nc" id="L446">		MediaGroupBean mediaGroup = getGroup(mediaGroupId);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		if(mediaGroup!=null){</span>
+			//mediaGroup.setMedias(null);
+<span class="nc" id="L449">			mediaGroup.save();</span>
+<span class="nc" id="L450">			return   mediaGroup.delete();</span>
+		}
+<span class="nc" id="L452">		else return false;</span>
+	}
+	public static Media duplicateMedia(int mediaId){
+<span class="nc" id="L455">		Media media = getMedia(mediaId);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">		if(media!=null){</span>
+<span class="nc" id="L457">			media.setId(-1L);</span>
+<span class="nc" id="L458">			media.setMediaSortOrder(MediaDB.getLastOrder(media.getMediaFkId(), &quot;documents&quot;)+10);</span>
+			//media.save(); // chcem iba vratit duplikat
+<span class="nc" id="L460">			return media;</span>
+		}
+<span class="nc" id="L462">		return null;</span>
+	}
+
+	public static void importGropus(){
+<span class="nc" id="L466">		List&lt;Media&gt; media = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L468">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+		try {
+<span class="nc" id="L470">			ReadAllQuery readAllQuery = new ReadAllQuery(Media.class);</span>
+<span class="nc" id="L471">			Expression e = readAllQuery.getExpressionBuilder();</span>
+<span class="nc" id="L472">			readAllQuery.setSelectionCriteria(e);</span>
+<span class="nc" id="L473">			Query query = em.createQuery(readAllQuery);</span>
+<span class="nc" id="L474">			media = JpaDB.getResultList(query);</span>
+<span class="nc" id="L475">		} catch (Exception e) {</span>
+<span class="nc" id="L476">			sk.iway.iwcm.Logger.error(e);</span>
+		} finally {
+<span class="nc" id="L478">			em.close();</span>
+		}
+
+<span class="nc" id="L481">		Logger.info(MediaDB.class, &quot;Size: &quot;+media.size());</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">		for (Media m: media){</span>
+<span class="nc" id="L483">			Logger.info(MediaDB.class, &quot;Media ID: &quot;+m.getMediaId());</span>
+<span class="nc" id="L484">			String oldGroups = m.getMediaGroup();</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			if(oldGroups == null) continue;</span>
+<span class="nc" id="L486">			String[] oldGroupsArray = oldGroups.split(&quot;,&quot;);</span>
+
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			for(String g: oldGroupsArray){</span>
+<span class="nc" id="L489">				MediaGroupBean newGroup = MediaDB.getGroup(g);</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">				if(newGroup == null){</span>
+<span class="nc" id="L491">					newGroup = new MediaGroupBean();</span>
+<span class="nc" id="L492">					newGroup.setMediaGroupName(g);</span>
+<span class="nc" id="L493">					Logger.info(MediaDB.class, &quot;---&gt; Vytvaram novu media skupinu: &quot;+newGroup.getMediaGroupName()+&quot;&lt;br&gt;&quot;);</span>
+
+				}
+<span class="nc" id="L496">				m.addGroup(newGroup);</span>
+<span class="nc" id="L497">				Logger.info(MediaDB.class, &quot;Priradujem media skupinu: &quot;+newGroup.getMediaGroupName()+&quot; ku mediu &quot;+m.getMediaTitleSk()+&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L498">				m.save();</span>
+			}
+<span class="nc" id="L500">		}</span>
+<span class="nc" id="L501">	}</span>
+
+	/**
+	 *
+	 * @param mediaFkId required
+	 * @return najvyssi sortOrder medii v stranke
+	 */
+	public static int getLastOrder(int mediaFkId, String mediaFkTableName){
+<span class="fc" id="L509">		int sortOrder = 0;</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">		if(mediaFkId == -1) return  sortOrder;</span>
+
+<span class="fc" id="L512">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L513">		Media medium = null;</span>
+
+		try {
+<span class="fc" id="L516">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+<span class="fc" id="L518">			ReadAllQuery dbQuery = new ReadAllQuery(Media.class, builder);</span>
+<span class="fc" id="L519">			Expression expr = builder.get(&quot;mediaFkId&quot;).equal(mediaFkId);</span>
+<span class="fc" id="L520">			expr = expr.and(builder.get(&quot;mediaFkTableName&quot;).equal(mediaFkTableName));</span>
+
+<span class="fc" id="L522">			dbQuery.setSelectionCriteria(expr);</span>
+<span class="fc" id="L523">			dbQuery.addOrdering(builder.get(&quot;mediaSortOrder&quot;).descending());</span>
+
+<span class="fc" id="L525">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc bfc" id="L526" title="All 2 branches covered.">			if (query.getResultList().size()&gt;0)	medium = (Media) query.getResultList().get(0);</span>
+
+<span class="nc" id="L528">		} catch (Exception e) {</span>
+<span class="nc" id="L529">			sk.iway.iwcm.Logger.error(e);</span>
+		} finally {
+<span class="fc" id="L531">			em.close();</span>
+		}
+
+<span class="fc bfc" id="L534" title="All 2 branches covered.">		if(medium != null) sortOrder = medium.getMediaSortOrder();</span>
+
+<span class="fc" id="L536">		return sortOrder;</span>
+	}
+
+    public static List&lt;Media&gt; getMedia(DocDetails doc, String groups) {
+<span class="nc" id="L540">        int docId = doc.getDocId();</span>
+<span class="nc" id="L541">        List&lt;Media&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L542">        files = MediaDB.getMedia(null, &quot;documents&quot;, docId, groups, doc.getDateCreated());</span>
+<span class="nc" id="L543">        return files;</span>
+    }
+
+	public static JSONObject toJsonObject(List&lt;Media&gt; mediaList)
+	{
+<span class="nc" id="L548">		JSONObject output = new JSONObject();</span>
+
+		try
+		{
+<span class="nc" id="L552">			JSONArray outputJsonArray = toJsonArray(mediaList);</span>
+<span class="nc" id="L553">			output.put(&quot;data&quot;, outputJsonArray);</span>
+<span class="nc" id="L554">		} catch (JSONException e)</span>
+		{
+<span class="nc" id="L556">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L557">		}</span>
+
+<span class="nc" id="L559">		return output;</span>
+	}
+
+	public static JSONArray toJsonArray(List&lt;Media&gt; mediaList)
+	{
+<span class="nc" id="L564">		JSONArray outputJsonArray = new JSONArray();</span>
+<span class="nc" id="L565">		mediaList.forEach(medium-&gt;{</span>
+<span class="nc" id="L566">			JSONObject j = new JSONObject();</span>
+<span class="nc" id="L567">			JSONArray groupArray = new JSONArray();</span>
+<span class="nc" id="L568">			medium.getGroups().forEach(group-&gt;{</span>
+<span class="nc" id="L569">				JSONObject g = new JSONObject();</span>
+				try {
+<span class="nc" id="L571">					g.put(&quot;label&quot;, group.getMediaGroupName());</span>
+<span class="nc" id="L572">				} catch (JSONException e) {</span>
+<span class="nc" id="L573">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L574">				}</span>
+				try {
+<span class="nc" id="L576">					g.put(&quot;value&quot;, group.getMediaGroupId());</span>
+<span class="nc" id="L577">				} catch (JSONException e) {</span>
+<span class="nc" id="L578">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L579">				}</span>
+<span class="nc" id="L580">				groupArray.put(g);</span>
+<span class="nc" id="L581">			});</span>
+			try {
+<span class="nc" id="L583">				j.put(&quot;id&quot;, medium.getMediaId());</span>
+<span class="nc" id="L584">				j.put(&quot;order&quot;, medium.getMediaSortOrder());</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">				j.put(&quot;title&quot;, medium.getMediaTitleSk() != null ? medium.getMediaTitleSk() : &quot;&quot;);</span>
+<span class="nc" id="L586">				j.put(&quot;thumbLink&quot;, medium.getMediaThumbLink());</span>
+<span class="nc" id="L587">				j.put(&quot;link_url&quot;, medium.getMediaLink());</span>
+<span class="nc bnc" id="L588" title="All 4 branches missed.">				j.put(&quot;link_exist&quot;, (MediaDB.isExists(medium) &amp;&amp; Tools.isNotEmpty(medium.getMediaLink()))?&quot;true&quot;: &quot;false&quot;);</span>
+
+<span class="nc" id="L590">				j.put(&quot;group&quot;, medium.getGroupsToString());</span>
+<span class="nc" id="L591">				j.put(&quot;groupsArray&quot;,groupArray);</span>
+
+<span class="nc" id="L593">				outputJsonArray.put(j);</span>
+<span class="nc" id="L594">			} catch (JSONException e) {</span>
+<span class="nc" id="L595">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L596">			}</span>
+<span class="nc" id="L597">		});</span>
+
+
+<span class="nc" id="L600">		return outputJsonArray;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

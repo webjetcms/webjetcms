@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeleteServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DeleteServlet.java</span></div><h1>DeleteServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.system.spring.SpringUrlMapping;
+
+@WebServlet(name = &quot;DelDoc&quot;,
+        urlPatterns = {&quot;/admin/docdel.do&quot;}
+)
+<span class="nc" id="L20">public class DeleteServlet extends HttpServlet {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+<span class="nc" id="L27">        Logger.println(DeleteServlet.class,&quot;DeleteServlet  CALLED - GET&quot;);</span>
+<span class="nc" id="L28">        execute(request,response); //NOSONAR</span>
+<span class="nc" id="L29">    }</span>
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+<span class="nc" id="L34">        Logger.println(DeleteServlet.class,&quot;DeleteServlet  CALLED - POST&quot;);</span>
+<span class="nc" id="L35">        execute(request,response); //NOSONAR</span>
+<span class="nc" id="L36">    }</span>
+
+    public void execute(
+                                 HttpServletRequest request,
+                                 HttpServletResponse response)
+            throws IOException, ServletException
+    {
+
+        try
+        {
+<span class="nc" id="L46">            String result = deleteDoc(request, -1);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if(&quot;logon_admin&quot;.equals(result)){</span>
+<span class="nc" id="L48">                SpringUrlMapping.redirectToLogon(response);</span>
+<span class="nc" id="L49">                return ;</span>
+            }
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            else if(&quot;success&quot;.equals(result))</span>
+            {
+<span class="nc" id="L53">                String redirect = Tools.sanitizeHttpHeaderParam(request.getParameter(&quot;returl&quot;));</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                if(Tools.isNotEmpty(redirect))</span>
+                {
+<span class="nc" id="L56">                    response.sendRedirect(redirect);</span>
+<span class="nc" id="L57">                    return;</span>
+                }
+                //request.getRequestDispatcher(&quot;success&quot;).forward(request,response);
+<span class="nc" id="L60">                response.sendRedirect(&quot;/admin/webpages/&quot;);</span>
+<span class="nc" id="L61">                return;</span>
+            }
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            else if(&quot;error_admin&quot;.equals(result)){</span>
+<span class="nc" id="L64">                request.getRequestDispatcher(&quot;/admin/error.jsp&quot;).forward(request,response);</span>
+
+<span class="nc" id="L66">                return ;</span>
+            }
+
+<span class="nc" id="L69">        } catch (Exception e) {</span>
+<span class="nc" id="L70">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L71">        }</span>
+
+
+<span class="nc" id="L74">        response.sendRedirect(&quot;/admin/webpages/&quot;);</span>
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * Zmaze / presunie web stranku do kosa
+     * @param request - moze byt NULL pre API volanie (vyzaduje ale korektne nastaveny RequestBean, neda sa teda volat z CRON ulohy)
+     * @param delDocId -&gt; ak je rovne -1 tak sa pouzije docId z requestu, v opacnom pripade pouzije prislusnu hodnotu delDocId
+     * @return
+     * @throws IOException
+     * @throws ServletException
+     */
+    public static String deleteDoc(HttpServletRequest request, int delDocId)
+    {
+<span class="nc" id="L87">        return deleteDoc(request, delDocId, true);</span>
+    }
+
+    /**
+     * Zmaze / presunie web stranku do kosa
+     * @param request - moze byt NULL pre API volanie (vyzaduje ale korektne nastaveny RequestBean, neda sa teda volat z CRON ulohy)
+     * @param delDocId -&gt; ak je rovne -1 tak sa pouzije docId z requestu, v opacnom pripade pouzije prislusnu hodnotu delDocId
+     * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
+     * @return
+     * @throws IOException
+     * @throws ServletException
+     */
+    public static String deleteDoc(HttpServletRequest request, int delDocId, boolean publishEvents)
+    {
+<span class="nc" id="L101">        DocDetails doc = DocDB.getInstance().getDoc(delDocId);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (doc != null) {</span>
+<span class="nc" id="L103">            EditorService editorService = Tools.getSpringBean(&quot;editorService&quot;, EditorService.class);</span>
+<span class="nc" id="L104">            boolean deleted = editorService.deleteWebpage(doc, publishEvents);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (deleted) return &quot;success&quot;;</span>
+        }
+<span class="nc" id="L107">        return &quot;error_admin&quot;;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

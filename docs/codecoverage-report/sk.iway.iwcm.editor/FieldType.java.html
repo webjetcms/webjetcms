@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FieldType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">FieldType.java</span></div><h1>FieldType.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+
+import sk.iway.iwcm.Tools;
+
+<span class="fc" id="L5">public enum FieldType {</span>
+<span class="fc" id="L6">    TEXT,</span>
+<span class="fc" id="L7">    SELECT,</span>
+<span class="fc" id="L8">    IMAGE,</span>
+<span class="fc" id="L9">    LINK,</span>
+<span class="fc" id="L10">    AUTOCOMPLETE,</span>
+    //JICH - add
+<span class="fc" id="L12">    HIDDEN,</span>
+    //JICH - add end
+    //LPA
+<span class="fc" id="L15">    NONE,</span>
+<span class="fc" id="L16">    DIR,</span>
+<span class="fc" id="L17">    TEXTAREA,</span>
+    //just text label
+<span class="fc" id="L19">    LABEL,</span>
+<span class="fc" id="L20">    DATE,</span>
+<span class="fc" id="L21">    NUMBER,</span>
+<span class="fc" id="L22">    BOOLEAN,</span>
+<span class="fc" id="L23">    UUID</span>
+    ;
+
+    public static FieldType asFieldType(String str) {
+
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (Tools.isEmpty(str)) {</span>
+<span class="nc" id="L29">            return null;</span>
+        }
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (str.contains(&quot;:&quot;)) {</span>
+<span class="fc" id="L33">            str = str.substring(0, str.indexOf(&quot;:&quot;));</span>
+        }
+
+<span class="fc bfc" id="L36" title="All 8 branches covered.">        if (str.startsWith(&quot;docsIn&quot;) || str.contains(&quot;|&quot;) || str.startsWith(&quot;enumeration&quot;) || str.startsWith(&quot;multiple&quot;)) {</span>
+<span class="fc" id="L37">            return FieldType.SELECT;</span>
+        }
+
+        //JICH - add
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (str.startsWith(&quot;custom-dialog&quot;)) {</span>
+<span class="nc" id="L42">            return FieldType.HIDDEN;</span>
+        }
+        //JICH - add end
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (FieldType me : FieldType.values()) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            if (me.name().equalsIgnoreCase(str))</span>
+<span class="fc" id="L48">                return me;</span>
+        }
+
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if (&quot;none&quot;.equals(str)) return FieldType.NONE;</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (&quot;textarea&quot;.equals(str)) return FieldType.TEXTAREA;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (&quot;label&quot;.equals(str)) return FieldType.LABEL;</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if (&quot;date&quot;.equals(str)) return FieldType.DATE;</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (&quot;number&quot;.equals(str)) return FieldType.NUMBER;</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (&quot;boolean&quot;.equals(str)) return FieldType.BOOLEAN;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (&quot;uuid&quot;.equals(str)) return FieldType.UUID;</span>
+
+<span class="fc" id="L59">        return FieldType.TEXT;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

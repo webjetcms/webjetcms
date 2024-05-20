@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocAtrDefEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc.attributes.jpa</a> &gt; <span class="el_source">DocAtrDefEntity.java</span></div><h1>DocAtrDefEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc.attributes.jpa;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.ActiveRecordRepository;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name = &quot;doc_atr_def&quot;)
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DOC_ATTRIBUTES)
+<span class="fc" id="L38">public class DocAtrDefEntity extends ActiveRecordRepository {</span>
+
+    @PrePersist
+    public void prePersist() {
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (domainId==null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L43">    }</span>
+
+    @Id
+    @Column(name = &quot;atr_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_doc_atr_def&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @Column(name = &quot;atr_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;user.admin_edit.atrName&quot;
+    )
+    @NotBlank
+    @Size(max = 255)
+    private String name;
+
+    @Column(name = &quot;order_priority&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;user.admin_edit.orderPriority&quot;
+    )
+    private Integer orderPriority;
+
+    @Column(name = &quot;atr_description&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;user.admin_edit.atrDescription&quot;
+    )
+    @Size(max = 255)
+    private String description;
+
+    @Column(name = &quot;atr_default_value&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;user.admin_edit.atrDefaultValue&quot;
+    )
+    private String defaultValue;
+
+    @Column(name = &quot;atr_type&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;user.admin_edit.atrType&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;STRING&quot;, value = &quot;0&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;INT&quot;, value = &quot;1&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;BOOL&quot;, value = &quot;2&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;DOUBLE&quot;, value = &quot;3&quot;)
+                }
+            )
+        }
+    )
+    private Integer type;
+
+    @Column(name = &quot;atr_group&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;user.admin_edit.atrGroup&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/webpages/attributes/def/autocomplete&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-ac-min-length&quot;, value = &quot;1&quot;)
+				}
+			)
+		}
+    )
+    @Size(max = 32)
+    private String group;
+
+    @Column(name = &quot;true_value&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;user.admin_edit.trueValue&quot;
+    )
+    @Size(max = 255)
+    private String trueValue;
+
+    @Column(name = &quot;false_value&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;user.admin_edit.falseValue&quot;
+    )
+    @Size(max = 255)
+    private String falseValue;
+
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+
+    public void setId(Long id) {
+<span class="fc" id="L136">		this. id = id;</span>
+<span class="fc" id="L137">	}</span>
+
+    /**
+     * We don't want to send docAtrEntities to frontend, because it's not needed to be there in attrDefinition page
+     */
+    @JsonManagedReference(value=&quot;atrDef&quot;)
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = &quot;atrDef&quot;)
+    private List&lt;DocAtrEntity&gt; docAtrEntities;
+
+    /**
+     * For webPage we need to send DocAtrEntity value, as we have @JsonIgnore on docAtrEntities
+     * we need to fill this field with first value from docAtrEntities on backend
+     */
+    @Transient
+    private DocAtrEntity docAtrEntityFirst;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -97,7 +97,7 @@ export class EditorPreview {
                 ) {
 
                 //pridaj btn Nahlad
-                let previewButton = '<button class="btn btn-warning btn-preview" onclick="previewPage();" style="margin-right: 16px; margin-left: 0px;"><i class="far fa-eye"></i> '+window.WJ.translate("editor.preview")+'</button>';
+                let previewButton = '<button class="btn btn-warning btn-preview" onclick="previewPage();" style="margin-right: 16px; margin-left: 0px;"><i class="ti ti-eye"></i> '+window.WJ.translate("editor.preview")+'</button>';
                 $('#'+self.webpagesDatatable.DATA.id+'_modal div.DTE_Form_Buttons span.buttons-footer-left').prepend(previewButton);
 
             }

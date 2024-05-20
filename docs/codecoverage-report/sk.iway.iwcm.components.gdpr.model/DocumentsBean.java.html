@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocumentsBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gdpr.model</a> &gt; <span class="el_source">DocumentsBean.java</span></div><h1>DocumentsBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gdpr.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.components.gdpr.GdprModule;
+import sk.iway.iwcm.database.ActiveRecord;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+
+@Entity
+@Table(name = &quot;documents&quot;)
+<span class="fc" id="L21">public class DocumentsBean extends ActiveRecord implements GdprModel {</span>
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_documents&quot;)
+    @Column(name = &quot;doc_id&quot;)
+    private int id;
+    private String title;
+    private String data;
+    @Column(name = &quot;data_asc&quot;)
+    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    private String dataAsc;
+    @Column(name = &quot;group_id&quot;)
+    private int groupId;
+
+    public int getId() {
+<span class="fc" id="L35">        return id;</span>
+    }
+
+    public void setId(int id) {
+<span class="nc" id="L39">        this.id = id;</span>
+<span class="nc" id="L40">    }</span>
+
+    public String getTitle() {
+<span class="nc" id="L43">        return title;</span>
+    }
+
+    public void setTitle(String title) {
+<span class="nc" id="L47">        this.title = title;</span>
+<span class="nc" id="L48">    }</span>
+
+    public String getData() {
+<span class="nc" id="L51">        return data;</span>
+    }
+
+    public void setData(String data) {
+<span class="nc" id="L55">        this.data = data;</span>
+<span class="nc" id="L56">    }</span>
+
+    public String getDataAsc() {
+<span class="nc" id="L59">        return dataAsc;</span>
+    }
+
+    public void setDataAsc(String dataAsc) {
+<span class="nc" id="L63">        this.dataAsc = dataAsc;</span>
+<span class="nc" id="L64">    }</span>
+
+    public int getGroupId() {
+<span class="fc" id="L67">        return groupId;</span>
+    }
+
+    public void setGroupId(int groupId) {
+<span class="nc" id="L71">        this.groupId = groupId;</span>
+<span class="nc" id="L72">    }</span>
+
+    public String getLinkDelete(HttpServletRequest request)
+    {
+<span class="fc" id="L76">        return &quot;jstreeDeleteDocByDocIdCustom(&quot;+getGroupId()+&quot;,&quot;+getId()+&quot;,this)&quot;;</span>
+    }
+
+    public String getLinkView(HttpServletRequest request)
+    {
+<span class="fc" id="L81">        return DocDB.getInstance().getDocLink(getId(),request);</span>
+    }
+
+    public String getName()
+    {
+<span class="fc" id="L86">        return title;</span>
+    }
+
+    @Override
+    public String getLink() {
+<span class="fc" id="L91">        return &quot;/admin/webpages?docid=&quot; + getId();</span>
+    }
+
+    @Override
+    public String getText(List&lt;GdprRegExpBean&gt; regexps) {
+<span class="fc" id="L96">        List&lt;String&gt; texts = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L97">        texts.add(title);</span>
+<span class="fc" id="L98">        texts.add(data);</span>
+<span class="fc" id="L99">        texts.add(dataAsc);</span>
+<span class="fc" id="L100">        return GdprModule.getText(regexps, texts);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

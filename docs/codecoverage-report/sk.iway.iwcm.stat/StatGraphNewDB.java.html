@@ -1,0 +1,833 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatGraphNewDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatGraphNewDB.java</span></div><h1>StatGraphNewDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.seo.Bot;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.monitoring.MonitoringBean;
+//import java.util.*;
+/**
+ *  StatGraphNewDB.java
+ *
+ *@Title        WebJET
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2005
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.33 $
+ *@created      Date: 11.1.2005 13:16:49
+ *@modified     $Date: 2010/02/17 11:37:18 $
+ */
+public class StatGraphNewDB
+{
+	public static final int NUMBER_OF_VALUES = 2000;
+
+<span class="nc" id="L47">	protected StatGraphNewDB() {</span>
+		//utility class
+<span class="nc" id="L49">	}</span>
+
+
+//	======================== GENEROVANIE GRAFOV ===============================
+
+	/**
+	 *  Funkcia na naplnenie mnoziny dat, ktore sa pouziju pri vykresleni casoveho grafu historie navstev vyhladavacich botov
+	 *
+	 *@param  rows		  zoznam vsetkych vyhladavacich botov, ktori pristupili na stranku spolu s ich poctom navstev
+	 *@param  max_size  Pocet prvych mx_size vyhladavacich botov s najvacsim poctom navstev
+	 *@param  from      Od kedy je pocitana historia pristupov
+	 *@param  to        Do kedy je pocitana historia pristupov
+	 *@param  groupId   Identifikacne cislo adresara, z ktoreho chceme statistiku
+	 *@return           vrati sa mnozina dat typu {@link TimeSeriesCollection}
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getBotsTimeData(List&lt;Bot&gt; rows, int max_size, java.util.Date from, java.util.Date to, int groupId)
+	{
+<span class="nc" id="L66">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+
+<span class="nc" id="L68">		Bot[] bots = new Bot[max_size];</span>
+<span class="nc" id="L69">		Map&lt;Date, Integer&gt; visitDays = new Hashtable&lt;&gt;();</span>
+		Date day;
+
+		// na naplnenie prvych max_size botov sa pouzije uz existujuci zoznam vsetkych botov ulozeny v session
+<span class="nc" id="L73">		int count = 0;</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		for (Bot bot : rows)</span>
+		{
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (count &gt;= max_size)</span>
+<span class="nc" id="L77">				break;</span>
+<span class="nc" id="L78">			bots[count] = bot;</span>
+<span class="nc" id="L79">			count++;</span>
+<span class="nc" id="L80">		}</span>
+<span class="nc" id="L81">		max_size = count; //uprav max_size podla realneho poctu zaznamov</span>
+
+		//mame zoznam botov, potrebujeme historiu pristupov
+<span class="nc" id="L84">		count = 0;</span>
+		Map&lt;Date, Number&gt; bts;
+
+<span class="nc" id="L87">		Connection db_conn = null;</span>
+<span class="nc" id="L88">		PreparedStatement ps = null;</span>
+<span class="nc" id="L89">		ResultSet rs = null;</span>
+		StringBuilder sql;
+
+<span class="nc" id="L92">		String[] suffixes = StatNewDB.getTableSuffix(from.getTime(), to.getTime());</span>
+
+		// pre kazdeho z max_size botov sa spocitaju jeho pristupy na stranku, jedna session = jeden pristup,
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		while (count &lt; max_size)</span>
+		{
+			//bts = new TimeSeries(bots[count].getName());
+<span class="nc" id="L99">			bts = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L101">			visitDays.clear();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			for (int s=0; s&lt;suffixes.length; s++)</span>
+			{
+<span class="nc" id="L104">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L106">				sql = new StringBuilder(&quot;SELECT MAX(s.view_time) AS visit_time FROM stat_views&quot;);</span>
+<span class="nc" id="L107">				sql.append(suffixes[s]).append(&quot; s &quot;);</span>
+<span class="nc" id="L108">				sql.append(&quot;WHERE s.browser_id = ? AND s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;);</span>
+
+<span class="nc" id="L110">				sql.append(StatDB.getRootGroupWhere(&quot;s.group_id&quot;, groupId));</span>
+
+<span class="nc" id="L112">				sql.append(&quot; GROUP BY s.session_id&quot;);</span>
+
+				try
+				{
+<span class="nc" id="L116">					ps = StatNewDB.prepareStatement(db_conn, sql.toString());</span>
+<span class="nc" id="L117">					ps.setInt(1, bots[count].getBotId());</span>
+<span class="nc" id="L118">					ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L119">					ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+
+<span class="nc" id="L121">					rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">					while (rs.next())</span>
+					{
+<span class="nc" id="L124">						day = rs.getTimestamp(&quot;visit_time&quot;);</span>
+
+<span class="nc" id="L126">						Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L127">						calendar.setTime(day);</span>
+<span class="nc" id="L128">						calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="nc" id="L129">						calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L130">						calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L131">						calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="nc" id="L132">						day = calendar.getTime();</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">						if (!visitDays.containsKey(day))</span>
+<span class="nc" id="L135">							visitDays.put(day, 1);</span>
+						else
+						{
+<span class="nc" id="L138">							visitDays.put(day, (visitDays.get(day)+1));</span>
+						}
+<span class="nc" id="L140">					}</span>
+
+<span class="nc" id="L142">					rs.close();</span>
+<span class="nc" id="L143">					ps.close();</span>
+<span class="nc" id="L144">					db_conn.close();</span>
+
+<span class="nc" id="L146">					rs = null;</span>
+<span class="nc" id="L147">					ps = null;</span>
+<span class="nc" id="L148">					db_conn = null;</span>
+				}
+<span class="nc" id="L150">				catch (Exception ex)</span>
+				{
+<span class="nc bnc" id="L152" title="All 2 branches missed.">					if (!StatNewDB.createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+				}
+				finally
+				{
+					try
+					{
+<span class="nc bnc" id="L158" title="All 2 branches missed.">						if (rs != null)</span>
+<span class="nc" id="L159">							rs.close();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L161">							ps.close();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L163">							db_conn.close();</span>
+					}
+<span class="nc" id="L165">					catch (Exception ex2)</span>
+					{
+<span class="nc" id="L167">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L168">					}</span>
+				}
+			}
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			for (Map.Entry&lt;Date, Integer&gt; me: visitDays.entrySet())</span>
+			{
+				try
+				{
+<span class="nc" id="L175">					bts.put(me.getKey(), me.getValue());</span>
+				}
+<span class="nc" id="L177">				catch (Exception ex)</span>
+				{
+<span class="nc" id="L179">					Logger.error(StatGraphDB.class,&quot;getBotsTimeData: period already exist: &quot;+me.getKey().toString());</span>
+<span class="nc" id="L180">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L181">				}</span>
+<span class="nc" id="L182">			}</span>
+
+<span class="nc" id="L184">			collection.put(bots[count].getName(), bts);</span>
+
+<span class="nc" id="L186">			count++;</span>
+		}
+<span class="nc" id="L188">		return (collection);</span>
+	}
+
+	/**
+	 *  Funkcia na naplnenie mnoziny dat, ktore sa pouziju pri vykresleni casoveho grafu historie navstev vyhladavacich botov
+	 *
+	 *@param  rows		  zoznam vsetkych vyhladavacich botov, ktori pristupili na stranku spolu s ich poctom navstev
+	 *@param  max_size  Pocet prvych mx_size vyhladavacich botov s najvacsim poctom navstev
+	 *@param  from      Od kedy je pocitana historia pristupov
+	 *@param  to        Do kedy je pocitana historia pristupov
+	 *@param  groupId   Identifikacne cislo adresara, z ktoreho chceme statistiku
+	 *@return           vrati sa mnozina dat typu {@link TimeSeriesCollection}
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getPositionHistoryData(List&lt;Column&gt; rows, String keyword, java.util.Date from, java.util.Date to, int groupId)
+	{
+<span class="nc" id="L203">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+
+		Date visitDay;
+
+		Map&lt;Date, Number&gt; bts;
+
+<span class="nc" id="L209">		bts = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		for (Column position : rows)</span>
+		{
+<span class="nc" id="L213">			visitDay = position.getDateColumn1();</span>
+
+<span class="nc" id="L215">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L216">			cal.setTime(visitDay);</span>
+<span class="nc" id="L217">			cal.set(Calendar.HOUR_OF_DAY, cal.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="nc" id="L218">			cal.set(Calendar.MINUTE, cal.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L219">			cal.set(Calendar.SECOND, cal.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L220">		  	cal.set(Calendar.MILLISECOND, cal.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="nc" id="L221">			visitDay = cal.getTime();</span>
+
+			try
+			{
+<span class="nc" id="L225">				bts.put(visitDay, position.getIntColumn1());</span>
+			}
+<span class="nc" id="L227">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L229">				Logger.error(StatGraphDB.class,&quot;getPositionHistoryData: period already exist: &quot;+visitDay.toString());</span>
+<span class="nc" id="L230">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L231">			}</span>
+<span class="nc" id="L232">		}</span>
+<span class="nc" id="L233">		collection.put(keyword, bts);</span>
+
+<span class="nc" id="L235">		return (collection);</span>
+	}
+
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getTimeData( int max_size, java.util.Date from, java.util.Date to, int rootGroupId, String docList, String type)
+	{
+<span class="nc" id="L240">		return getTimeData(max_size, from, to, rootGroupId, docList, type, false);</span>
+	}
+
+	/**
+	 * Vytvori casovy graf s ciarami, ak docList obsahuje zoznam docID, tak sa vygeneruje graf so statistikou pre
+	 * dane docID. V pripade ze je docList prazdny, beru sa do uvahy top stranky.
+	 *
+	 * @param max_size - udava pocet, kolko stranok sa ma v grafe zobrazit
+	 * @param from - dolna hranica vybraneho obdobia pre zobrazenie statistiky
+	 * @param to - horna hranica vybraneho obdobia pre zobrazenie statistiky
+	 * @param rootGroupId - groupID, ktore sa budu brat do uvahy
+	 * @param docList - zoznam docID, ktorym sa zobrazi statistika
+	 * @param type - typ vypisu grafu (momentalne sa vykonava iba vyber top stranok)
+	 * @return
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getTimeData( int max_size, java.util.Date from, java.util.Date to, int rootGroupId,
+																	String docList, String type, boolean withoutBots)
+	{
+<span class="fc" id="L258">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; collection = new Hashtable&lt;&gt;();</span>
+
+<span class="fc" id="L260">		Map&lt;Integer, Column&gt; topPagesTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L261">		List&lt;Column&gt; topPages = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L263">		String whitelistedQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">		if(withoutBots)</span>
+<span class="nc" id="L265">			whitelistedQuery = StatNewDB.getWhiteListedUAQuery();</span>
+
+<span class="fc" id="L267">		String[] suffixes = StatNewDB.getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+<span class="fc" id="L270">			Connection db_conn = null;</span>
+<span class="fc" id="L271">			PreparedStatement ps = null;</span>
+<span class="fc" id="L272">			ResultSet rs = null;</span>
+			try
+			{
+				//TODO: pri rozdeleni statistik nemusi byt presne z dovodu max_size citaneho podla prveho obdobia
+
+<span class="fc" id="L277">				db_conn = DBPool.getConnection();</span>
+
+				StringBuilder sql;
+<span class="pc bpc" id="L280" title="3 of 4 branches missed.">				if (Tools.isNotEmpty(docList) &amp;&amp; &quot;-1&quot;.equals(docList)==false)</span>
+				{
+<span class="nc" id="L282">					sql = new StringBuilder(&quot;SELECT s.doc_id, COUNT(s.doc_id) AS views&quot;).append(</span>
+<span class="nc" id="L283">							&quot; FROM stat_views&quot;).append(suffixes[s]).append(&quot; s&quot;);</span>
+
+
+<span class="nc" id="L286">					StringTokenizer st = new StringTokenizer(docList, &quot;,&quot;);</span>
+					int documentID;
+<span class="nc" id="L288">					int poc = 0;</span>
+<span class="nc" id="L289">					sql.append(&quot; WHERE view_time&gt;=? AND view_time&lt;=? AND s.doc_id IN (&quot;);</span>
+
+<span class="nc bnc" id="L291" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
+					{
+<span class="nc" id="L293">						documentID = Integer.parseInt(st.nextToken());</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">						if (documentID &gt; 0)</span>
+						{
+<span class="nc bnc" id="L296" title="All 2 branches missed.">							if (poc &gt; 0)</span>
+							{
+<span class="nc" id="L298">								sql.append(&quot;, '&quot;).append(documentID).append('\'');</span>
+							}
+							else
+							{
+<span class="nc" id="L302">								sql.append('\'').append(documentID).append('\'');</span>
+							}
+<span class="nc" id="L304">							poc++;</span>
+						}
+					}
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">					if (poc &gt; 0) sql.append(&quot;) &quot;);</span>
+<span class="nc" id="L309">					else sql.append(&quot;-1) &quot;);</span>
+
+<span class="nc" id="L311">					sql.append( &quot; GROUP BY s.doc_id&quot;);</span>
+<span class="nc" id="L312">					sql.append(&quot; ORDER BY views DESC&quot;);</span>
+<span class="nc" id="L313">				}</span>
+				else
+				{
+<span class="fc" id="L316">					sql = new StringBuilder(&quot;SELECT s.doc_id, COUNT(s.doc_id) AS views&quot;).append(</span>
+<span class="fc" id="L317">							&quot; FROM stat_views&quot;).append(suffixes[s]).append(&quot; s&quot;).append(</span>
+							&quot; WHERE view_time&gt;=? AND view_time&lt;=? &quot;);
+<span class="fc" id="L319">					sql.append(StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId));</span>
+<span class="fc" id="L320">					sql.append(whitelistedQuery);</span>
+<span class="fc" id="L321">					sql.append(&quot; GROUP BY s.doc_id&quot;);</span>
+<span class="fc" id="L322">					sql.append(&quot; ORDER BY views DESC&quot;);</span>
+				}
+
+<span class="fc" id="L325">				Logger.debug(StatGraphNewDB.class,sql.toString());</span>
+
+<span class="fc" id="L327">				ps = StatNewDB.prepareStatement(db_conn, sql.toString());</span>
+<span class="fc" id="L328">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L329">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+<span class="fc" id="L331">				rs = ps.executeQuery();</span>
+
+<span class="fc" id="L333">				int count = 0;</span>
+<span class="pc bpc" id="L334" title="1 of 4 branches missed.">				while (rs.next() &amp;&amp; count &lt; max_size)</span>
+				{
+<span class="fc" id="L336">					int docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="fc" id="L337">					Column col = topPagesTable.get(docId);</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">					if (col==null)</span>
+					{
+<span class="fc" id="L340">						col = new Column();</span>
+<span class="fc" id="L341">						col.setIntColumn1(docId);</span>
+<span class="fc" id="L342">						col.setIntColumn2(rs.getInt(&quot;views&quot;));</span>
+<span class="fc" id="L343">						topPagesTable.put(Integer.valueOf(docId), col);</span>
+<span class="fc" id="L344">						topPages.add(col);</span>
+					}
+					else
+					{
+<span class="nc" id="L348">						col.setIntColumn2(col.getIntColumn2()+rs.getInt(&quot;views&quot;));</span>
+					}
+					//Logger.println(this,&quot;Top docs: &quot;+rs.getInt(&quot;s.doc_id&quot;));
+<span class="fc" id="L351">					count++;</span>
+<span class="fc" id="L352">				}</span>
+<span class="fc" id="L353">				rs.close();</span>
+<span class="fc" id="L354">				ps.close();</span>
+<span class="fc" id="L355">				db_conn.close();</span>
+<span class="fc" id="L356">				rs = null;</span>
+<span class="fc" id="L357">				ps = null;</span>
+<span class="fc" id="L358">				db_conn = null;</span>
+			}
+<span class="nc" id="L360">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L362" title="All 2 branches missed.">				if (!StatNewDB.createStatTablesFromError(ex.getMessage(), suffixes[s])) sk.iway.iwcm.Logger.error(ex);</span>
+			}
+			finally
+			{
+				try
+				{
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L369">						rs.close();</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L371">						ps.close();</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L373">						db_conn.close();</span>
+				}
+<span class="nc" id="L375">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L377">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L378">				}</span>
+			}
+		}
+
+		//usporiadaj podla poctu
+
+<span class="fc" id="L384">		Collections.sort(topPages, new Comparator&lt;Column&gt;() {</span>
+			@Override
+			public int compare(Column c1, Column c2)
+			{
+<span class="fc" id="L388">				return (c2.getIntColumn2() - c1.getIntColumn2());</span>
+			}
+
+		});
+
+		try
+		{
+			StringBuilder sql;
+
+<span class="fc" id="L397">			DocDB docDB = DocDB.getInstance();</span>
+
+<span class="fc" id="L399">			Calendar cal = Calendar.getInstance();</span>
+			Map&lt;Date, Number&gt; bts_views;
+
+<span class="fc" id="L402">			Iterator&lt;Column&gt; iter = topPages.iterator();</span>
+<span class="fc" id="L403">			int count = 0;</span>
+<span class="pc bpc" id="L404" title="1 of 4 branches missed.">			while (iter.hasNext() &amp;&amp; count++&lt;max_size)</span>
+			{
+<span class="fc" id="L406">				Column col = iter.next();</span>
+<span class="fc" id="L407">				int docId = col.getIntColumn1();</span>
+				//title = (String) topPages.get(docID);
+
+				//bts_views = new TimeSeries(docDB.getBasicDocDetails(docId, true).getTitle());
+<span class="fc" id="L411">				bts_views = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L413" title="All 2 branches covered.">				for (int s=0; s&lt;suffixes.length; s++)</span>
+				{
+<span class="fc" id="L415">					Connection db_conn = null;</span>
+<span class="fc" id="L416">					PreparedStatement ps = null;</span>
+<span class="fc" id="L417">					ResultSet rs = null;</span>
+					try
+					{
+<span class="fc" id="L420">						db_conn = DBPool.getConnection();</span>
+
+<span class="fc" id="L422">						sql = new StringBuilder(&quot;SELECT s.doc_id, COUNT(s.doc_id) AS views, &quot;);</span>
+<span class="fc" id="L423">						sql.append(StatNewDB.getDMYSelect(&quot;s.view_time&quot;));</span>
+<span class="fc" id="L424">						sql.append(&quot; FROM stat_views&quot;).append(suffixes[s]).append(&quot; s WHERE s.doc_id=? AND s.view_time&gt;=? AND s.view_time&lt;=? &quot;).append(whitelistedQuery);</span>
+<span class="fc" id="L425">						sql.append(&quot; GROUP BY s.doc_id, &quot;).append(StatNewDB.getDMYGroupBy(&quot;s.view_time&quot;)).append(&quot; ORDER BY views DESC&quot;);</span>
+
+<span class="fc" id="L427">						Logger.debug(StatGraphNewDB.class, &quot;sql 2:&quot;+sql.toString());</span>
+
+<span class="fc" id="L429">						ps = StatNewDB.prepareStatement(db_conn, sql.toString());</span>
+<span class="fc" id="L430">						ps.setInt(1, docId);</span>
+<span class="fc" id="L431">						ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L432">						ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L433">						rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L434" title="All 2 branches covered.">						while (rs.next())</span>
+						{
+<span class="fc" id="L436">							cal.clear();</span>
+<span class="fc" id="L437">							cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L438">							cal.set(Calendar.YEAR, rs.getInt(&quot;vt_year&quot;));</span>
+<span class="fc" id="L439">							cal.set(Calendar.MONTH, rs.getInt(&quot;vt_month&quot;)-1);</span>
+<span class="fc" id="L440">							cal.set(Calendar.DAY_OF_MONTH, rs.getInt(&quot;vt_day&quot;));</span>
+							try
+							{
+<span class="fc" id="L443">								Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L444">								calendar.setTime(cal.getTime());</span>
+<span class="fc" id="L445">								calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L446">								calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));</span>
+<span class="fc" id="L447">								calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));</span>
+<span class="fc" id="L448">								calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="fc" id="L449">								Date day = calendar.getTime();</span>
+
+<span class="fc" id="L451">								bts_views.put(day, Integer.valueOf(rs.getInt(&quot;views&quot;)));</span>
+							}
+<span class="nc" id="L453">							catch (Exception ex)</span>
+							{
+<span class="nc" id="L455">								Logger.error(StatGraphNewDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L456">								sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L457">							}</span>
+							//Logger.println(this,&quot;------\nVypis RS:\nDocID: &quot;+rs.getInt(&quot;doc_id&quot;)+&quot;\nTITLE: &quot;+title+&quot;\nDATE: &quot;+rs.getInt(&quot;vt_day&quot;)+&quot;-&quot;+rs.getInt(&quot;vt_month&quot;)+&quot;-&quot;+rs.getInt(&quot;vt_year&quot;)+&quot;\nVIDENI: &quot;+rs.getInt(&quot;views&quot;));
+							//Logger.println(this,&quot;Calendar: &quot;+cal.getTime());
+						}
+<span class="fc" id="L461">						rs.close();</span>
+<span class="fc" id="L462">						ps.close();</span>
+<span class="fc" id="L463">						db_conn.close();</span>
+<span class="fc" id="L464">						rs = null;</span>
+<span class="fc" id="L465">						ps = null;</span>
+<span class="fc" id="L466">						db_conn = null;</span>
+					}
+<span class="nc" id="L468">					catch (Exception ex)</span>
+					{
+<span class="nc" id="L470">						sk.iway.iwcm.Logger.error(ex);</span>
+					}
+					finally
+					{
+						try
+						{
+<span class="pc bpc" id="L476" title="1 of 2 branches missed.">							if (rs != null)</span>
+<span class="nc" id="L477">								rs.close();</span>
+<span class="pc bpc" id="L478" title="1 of 2 branches missed.">							if (ps != null)</span>
+<span class="nc" id="L479">								ps.close();</span>
+<span class="pc bpc" id="L480" title="1 of 2 branches missed.">							if (db_conn != null)</span>
+<span class="nc" id="L481">								db_conn.close();</span>
+						}
+<span class="nc" id="L483">						catch (Exception ex2)</span>
+						{
+<span class="fc" id="L485">						}</span>
+					}
+				}
+
+<span class="fc" id="L489">				collection.put(docDB.getBasicDocDetails(docId, true).getTitle() ,bts_views);</span>
+<span class="fc" id="L490">			}</span>
+		}
+<span class="nc" id="L492">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L494">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L495">		}</span>
+<span class="fc" id="L496">		return (collection);</span>
+	}
+
+	/**
+	 * Vytvori casovy graf s ciarami s informaciou o pocte udajov udanych v parametre type v jednotlive dni.
+	 * Ak je type nastaveny na withCluster, tak potom sa vytvori graf o pocte sessions pre jednotlive uzly clustera. Inak sa vytvori vseobecna statistika.
+	 *
+	 * @param rows			zoznam informacii(MonitoringBean) z tabulky monitoring
+	 * @param nodeName	Informacia o tom, ze ci sa statistika robi s ohladom na cluster(nodeName = nazov daneho uzla clusteru) alebo nie (nodeName = -1)
+	 * @param type			Typ zaznamenanych udajov, pre ktore sa vykresli graf (sessions, cache, dbActive, dbIdle, freeMem, usedMem, totalMem, cpuUsage)
+	 * @param request		Poziadavka, z ktorej sa urci aktualne pouzivane Properties
+	 *
+	 * @return
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getMonitoringViewsTimeData(List&lt;MonitoringBean&gt; rows, String nodeName, String type, HttpServletRequest request)
+	{
+<span class="nc" id="L512">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; timeSeriesTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L513">		List&lt;String&gt; clusters = new ArrayList&lt;&gt;();</span>
+		//Map&lt;Hour, Long&gt; monHours = new Hashtable&lt;Hour, Long&gt;();			//kluc je hodina a hodnota je sucet hodnot typu monitorovacej informacie v danej hodine
+		//Map&lt;Hour, Integer&gt; monNumbers = new Hashtable&lt;Hour, Integer&gt;();//kluc je hodina a hodnota je mnozstvo ulozenych informacii v danej hodine, aby sa dal vypocitat avg
+<span class="nc" id="L516">		Map&lt;Date, Long&gt; monHours = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L517">		Map&lt;Date, Integer&gt; monNumbers = new Hashtable&lt;&gt;();</span>
+
+<span class="nc bnc" id="L519" title="All 2 branches missed.">		if (Tools.isEmpty(nodeName))</span>
+<span class="nc" id="L520">			clusters = ClusterDB.getClusterNodeNamesExpandedAuto();</span>
+		else
+<span class="nc" id="L522">			clusters.add(nodeName);</span>
+
+<span class="nc bnc" id="L524" title="All 2 branches missed.">		if (clusters.size() &lt; 1)</span>
+<span class="nc" id="L525">			clusters.add(Constants.getString(&quot;clusterMyNodeName&quot;));</span>
+
+<span class="nc" id="L527">		HashMap&lt;Date, Number&gt; bts_viewsTotal = new HashMap&lt;&gt;();</span>
+
+
+<span class="nc bnc" id="L530" title="All 2 branches missed.">		for (int i = 0; i &lt; clusters.size(); i++)</span>
+		{
+<span class="nc" id="L532">			Logger.debug(StatGraphNewDB.class, &quot;Preparing data for node:&quot;+clusters.get(i));</span>
+
+<span class="nc bnc" id="L534" title="All 4 branches missed.">			if (rows != null &amp;&amp; rows.size() &gt; 0)</span>
+			{
+<span class="nc" id="L536">				HashMap&lt;Date, Number&gt; bts_views = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L538">				monHours.clear();</span>
+<span class="nc" id="L539">				monNumbers.clear();</span>
+
+<span class="nc bnc" id="L541" title="All 2 branches missed.">				for (MonitoringBean monInfo : rows)</span>
+				{
+					try
+					{
+<span class="nc" id="L545">						Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L546">						cal.setTime(monInfo.getDateInsert());</span>
+<span class="nc" id="L547">					  	cal.set(Calendar.MILLISECOND, cal.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="nc" id="L548">						Date second = cal.getTime();</span>
+
+						//if(!&quot;-1&quot;.equals(nodeName))	// Ak je to urcene pre jeden vybrany node
+<span class="nc bnc" id="L551" title="All 4 branches missed.">						if (monInfo.getNodeName()!=null &amp;&amp; !monInfo.getNodeName().equals(clusters.get(i)))	// ak sa to nerovna prave danemu vybranemu node, ignoruj hodnotu</span>
+<span class="nc" id="L552">								continue;	// prejdi na dalsiu informaciu monInfo zo zoznamu</span>
+
+<span class="nc bnc" id="L554" title="All 2 branches missed.">						if (&quot;sessions&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L556" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;Sessions&quot;);</span>
+<span class="nc" id="L557">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getSessions());</span>
+						}
+<span class="nc bnc" id="L559" title="All 2 branches missed.">						else if (&quot;cache&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L561" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;Cache&quot;);</span>
+<span class="nc" id="L562">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getCache());</span>
+						}
+
+<span class="nc bnc" id="L565" title="All 2 branches missed.">						else if (&quot;dbActive&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L567" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;DbActive&quot;);</span>
+<span class="nc" id="L568">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getDbActive());</span>
+						}
+<span class="nc bnc" id="L570" title="All 2 branches missed.">						else if (&quot;dbIdle&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L572" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;DbIdle&quot;);</span>
+<span class="nc" id="L573">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getDbIdle());</span>
+						}
+
+<span class="nc bnc" id="L576" title="All 2 branches missed.">						else if (&quot;freeMem&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L578" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;MemFree&quot;);</span>
+<span class="nc" id="L579">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getMemFree()/1024/1024D);</span>
+						}
+<span class="nc bnc" id="L581" title="All 2 branches missed.">						else if (&quot;usedMem&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L583" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;UsedMem&quot;);</span>
+<span class="nc" id="L584">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getUsedMem()/1024/1024D);</span>
+						}
+<span class="nc bnc" id="L586" title="All 2 branches missed.">						else if (&quot;totalMem&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L588" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) StatGraphNewDB.updateMaxValueInHashTable(monHours, monInfo, &quot;MemTotal&quot;);</span>
+<span class="nc" id="L589">							else addValue(bts_views, bts_viewsTotal, second, monInfo.getMemTotal()/1024/1024D);</span>
+						}
+<span class="nc bnc" id="L591" title="All 2 branches missed.">						else if (&quot;cpuUsage&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L593" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) {StatGraphNewDB.addMonInfoToHashTable(monHours, monNumbers, monInfo, &quot;CpuUsage&quot;); }</span>
+<span class="nc" id="L594">							else {addValue(bts_views, bts_viewsTotal, second, monInfo.getCpuUsage()); }</span>
+						}
+<span class="nc bnc" id="L596" title="All 2 branches missed.">						else if (&quot;processUsage&quot;.equals(type))</span>
+						{
+<span class="nc bnc" id="L598" title="All 2 branches missed.">							if(rows.size() &gt; NUMBER_OF_VALUES) {StatGraphNewDB.addMonInfoToHashTable(monHours, monNumbers, monInfo, &quot;ProcessUsage&quot;); }</span>
+<span class="nc" id="L599">							else {addValue(bts_views, bts_viewsTotal, second, monInfo.getProcessUsage()); }</span>
+						}
+<span class="nc" id="L601">					} catch (Exception ex)</span>
+					{
+<span class="nc" id="L603">						sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L604">					}</span>
+<span class="nc" id="L605">				}</span>
+
+				//tu sa prerata ak je vela zaznamov na bod na &quot;priemernu&quot; hodnotu
+<span class="nc bnc" id="L608" title="All 4 branches missed.">				if (monHours != null &amp;&amp; monHours.size() &gt; 0)</span>
+				{
+<span class="nc" id="L610">					Date tHour = null;</span>
+<span class="nc bnc" id="L611" title="All 2 branches missed.">					for (Map.Entry&lt;Date, Long&gt; me : monHours.entrySet())</span>
+					{
+						try
+						{
+<span class="nc" id="L615">							tHour = me.getKey();</span>
+
+							//Logger.debug(StatGraphNewDB.class, &quot;tHour=&quot;+tHour.toString()+&quot; value=&quot;+me.getValue());
+
+<span class="nc bnc" id="L619" title="All 2 branches missed.">							if (type.contains(&quot;Mem&quot;))	// ak je udaj vyjadrujuci pamat, treba ho vydelit na zobrazenie MB</span>
+<span class="nc" id="L620">								addValue(bts_views, bts_viewsTotal, tHour, (((double)me.getValue() )/1024/1024));</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">							else if(type.contains(&quot;Usage&quot;)){</span>
+<span class="nc" id="L622">								addValue(bts_views, bts_viewsTotal, tHour, ((double)monHours.get(tHour) / monNumbers.get(tHour)));	//priemerna hodnota pre CpuUsage a ProcessUsage</span>
+							} else{
+<span class="nc" id="L624">								Logger.debug(null, &quot;addValue&quot;);</span>
+<span class="nc" id="L625">								addValue(bts_views, bts_viewsTotal, tHour, me.getValue());	//spocita hodnoty v jednotlivych clusteroch</span>
+
+							//System.out.println(tHour + &quot;:&quot; + ((double)monHours.get(tHour) / monNumbers.get(tHour)));
+							}
+						}
+<span class="nc" id="L630">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L632">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L633">						}</span>
+<span class="nc" id="L634">					}</span>
+				}
+
+<span class="nc" id="L637">				timeSeriesTable.put(clusters.get(i), bts_views);</span>
+				//collection.addSeries(bts_views);
+			}
+
+			//if(&quot;-1&quot;.equals(nodeName))
+			//	break;
+		}
+
+<span class="nc bnc" id="L645" title="All 4 branches missed.">		if (clusters.size()&gt;1 &amp;&amp; bts_viewsTotal!=null) timeSeriesTable.put(&quot;Total&quot;, bts_viewsTotal);</span>
+
+<span class="nc" id="L647">		return timeSeriesTable;</span>
+	}
+
+	/**
+	 * V clustri nam bezi iteracia viac krat preto musime hodnoty nascitat
+	 * @param bts_views
+	 * @param tHour
+	 * @param value
+	 */
+	private static void addValue(HashMap&lt;Date, Number&gt; bts_views, HashMap&lt;Date, Number&gt; bts_viewsTotal, Date tHour, double value)
+	{
+<span class="nc" id="L658">		Number tmp = bts_views.get(tHour);</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">		if(tmp!=null)</span>
+<span class="nc" id="L660">			bts_views.put(tHour, tmp.doubleValue() + value);</span>
+		else
+<span class="nc" id="L662">			bts_views.put(tHour, value);</span>
+
+<span class="nc" id="L664">		tmp = bts_viewsTotal.get(tHour);</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">		if(tmp!=null)</span>
+<span class="nc" id="L666">			bts_viewsTotal.put(tHour, tmp.doubleValue() + value);</span>
+		else
+<span class="nc" id="L668">			bts_viewsTotal.put(tHour, value);</span>
+<span class="nc" id="L669">	}</span>
+
+	/**
+	 * Funkcia, ktora prislusnu hodnotu z monInfo nacita a porovna s aktualnou max hodnotou v map a ked je mensia aktualizuje
+	 *
+	 * @param monHours	hash tabulka uchovavajuca si sucet danych hodnot pre jednotlive hodiny
+	 * @param monInfo		monitoring bean uchovavajuci si monitorovaciu informaciu
+	 * @param meth			metoda, ktora sa bude volat cez reflection na zaklade vstupneho parametra
+	 *
+	 * @author kmarton
+	 */
+	@SuppressWarnings(&quot;java:S3878&quot;)
+	private static void updateMaxValueInHashTable(Map&lt;Date, Long&gt; monHours, MonitoringBean monInfo, String meth)
+	{
+		//Hour hour = new Hour(monInfo.getDateInsert());
+
+<span class="nc" id="L685">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L686">		cal.setTime(monInfo.getDateInsert());</span>
+<span class="nc" id="L687">		cal.set(Calendar.MINUTE, cal.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L688">		cal.set(Calendar.SECOND, cal.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L689">	  	cal.set(Calendar.MILLISECOND, cal.getActualMinimum(Calendar.MILLISECOND));</span>
+<span class="nc" id="L690">		Date hour = cal.getTime();</span>
+
+		try
+		{
+<span class="nc" id="L694">         Class&lt;MonitoringBean&gt; c = MonitoringBean.class;</span>
+<span class="nc" id="L695">         Method m = c.getDeclaredMethod(&quot;get&quot; + meth, new Class[]{});	//aby to bolo univerzalne - pre viacero metod -&gt; viacero grafov</span>
+
+<span class="nc" id="L697">         Long actualValue = monHours.get(hour);</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">			if (actualValue == null)</span>
+<span class="nc" id="L699">				monHours.put(hour, ((Number)m.invoke(monInfo, new Object[]{})).longValue());</span>
+			else
+			{
+<span class="nc" id="L702">				long newValue = ((Number)m.invoke(monInfo, new Object[]{})).longValue();</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				if (actualValue.longValue() &lt; newValue)</span>
+				{
+<span class="nc" id="L705">					monHours.put(hour, newValue);</span>
+				}
+			}
+      }
+<span class="nc" id="L709">      catch (Exception e)</span>
+      {
+<span class="nc" id="L711">         sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L712">      }</span>
+<span class="nc" id="L713">	}</span>
+
+
+	/**
+	 * Funkcia, ktora prislusnu hodnotu z monInfo nacita pomocou metody meth a ulozi do hash tabulky monHours a zvysi jej pocet v has tabulke monNumbers.
+	 *
+	 * @param monHours	hash tabulka uchovavajuca si sucet danych hodnot pre jednotlive hodiny
+	 * @param monNumbers	hash tabulka uchovavajuca si pocet spocitanych hodnot v danej hodine
+	 * @param monInfo		monitoring bean uchovavajuci si monitorovaciu informaciu
+	 * @param meth			metoda, ktora sa bude volat cez reflection na zaklade vstupneho parametra
+	 *
+	 * @author kmarton
+	 */
+	@SuppressWarnings(&quot;java:S3878&quot;)
+	private static void addMonInfoToHashTable(Map&lt;Date, Long&gt; monHours, Map&lt;Date, Integer&gt; monNumbers, MonitoringBean monInfo, String meth)
+	{
+		//Hour hour = new Hour(monInfo.getDateInsert());
+<span class="nc" id="L730">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L731">		cal.setTime(monInfo.getDateInsert());</span>
+<span class="nc" id="L732">		cal.set(Calendar.MINUTE, cal.getActualMinimum(Calendar.MINUTE));</span>
+<span class="nc" id="L733">		cal.set(Calendar.SECOND, cal.getActualMinimum(Calendar.SECOND));</span>
+<span class="nc" id="L734">	  	cal.set(Calendar.MILLISECOND, cal.getActualMinimum(Calendar.MILLISECOND));</span>
+
+<span class="nc" id="L736">		Date hour = cal.getTime();</span>
+
+		try
+		{
+<span class="nc" id="L740">         Class&lt;MonitoringBean&gt; c = MonitoringBean.class;</span>
+<span class="nc" id="L741">         Method m = c.getDeclaredMethod(&quot;get&quot; + meth, new Class[]{});</span>
+
+<span class="nc bnc" id="L743" title="All 2 branches missed.">			if (!monHours.containsKey(hour))</span>
+<span class="nc" id="L744">				monHours.put(hour, ((Number)m.invoke(monInfo, new Object[]{})).longValue());</span>
+			else
+			{
+<span class="nc" id="L747">				monHours.put(hour, (monHours.get(hour) + ((Number)m.invoke(monInfo, new Object[]{})).longValue()));</span>
+			}
+
+<span class="nc bnc" id="L750" title="All 2 branches missed.">			if (!monNumbers.containsKey(hour))</span>
+<span class="nc" id="L751">				monNumbers.put(hour, 1);</span>
+			else
+			{
+<span class="nc" id="L754">				monNumbers.put(hour, (monNumbers.get(hour) + 1));</span>
+			}
+      }
+<span class="nc" id="L757">      catch (Exception e)</span>
+      {
+<span class="nc" id="L759">         sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L760">      }</span>
+<span class="nc" id="L761">	}</span>
+
+	/**
+	 * Vytvori casovy graf s ciarami, ak docList obsahuje zoznam docID, tak sa vygeneruje graf so statistikou pre
+	 * dane docID. V pripade ze je docList prazdny, beru sa do uvahy top stranky.
+	 *
+	 * @param max_size - udava pocet, kolko stranok sa ma v grafe zobrazit
+	 * @param from - dolna hranica vybraneho obdobia pre zobrazenie statistiky
+	 * @param to - horna hranica vybraneho obdobia pre zobrazenie statistiky
+	 * @param rootGroupId - groupID, ktore sa budu brat do uvahy
+	 * @param docList - zoznam docID, ktorym sa zobrazi statistika
+	 * @param type - typ vypisu grafu (momentalne sa vykonava iba vyber top stranok)
+	 * @return
+	 */
+	public static Map&lt;String,  Map&lt;Date, Number&gt;&gt; getViewMonthsTimeData(String title, List&lt;Column&gt; rows, int colIndex, String type, HttpServletRequest request)
+	{
+		//TimeSeriesCollection collection = new TimeSeriesCollection();
+<span class="nc" id="L778">		Map&lt;String,  Map&lt;Date, Number&gt;&gt; timeSeriesTable = new Hashtable&lt;&gt;();</span>
+		try
+		{
+
+<span class="nc" id="L782">			Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+<span class="nc" id="L783">			String[] legend = {prop.getText(&quot;stat.graph.viewsTitle&quot;), prop.getText(&quot;stat.graph.sessionsTitle&quot;), prop.getText(&quot;stat.graph.unique_users&quot;)};</span>
+
+<span class="nc bnc" id="L785" title="All 2 branches missed.">			if (rows != null)</span>
+			{
+
+				//iteruj po jednotlivych riadkoch
+				int value;
+<span class="nc" id="L790">				int i = 0;</span>
+<span class="nc" id="L791">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L792">				cal.clear();</span>
+
+<span class="nc bnc" id="L794" title="All 2 branches missed.">				for (i=0; i&lt;3; i++)</span>
+				{
+					//TimeSeries bts_views = new TimeSeries(legend[i]);
+<span class="nc" id="L797">					Map&lt;Date, Number&gt; bts_views = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L799" title="All 2 branches missed.">					for (Column col : rows)</span>
+					{
+<span class="nc" id="L801">						cal.set(Calendar.YEAR, col.getIntColumn1());</span>
+<span class="nc" id="L802">						cal.set(Calendar.MONTH, col.getIntColumn2()-1);</span>
+<span class="nc" id="L803">						cal.set(Calendar.DATE, 15);</span>
+<span class="nc" id="L804">						value = col.getIntColumn(i+3);</span>
+
+						try
+						{
+							//bts_views.add(new Day(new java.util.Date(cal.getTime().getTime())), value);
+<span class="nc" id="L809">							bts_views.put(new java.util.Date(cal.getTime().getTime()), value);</span>
+						}
+<span class="nc" id="L811">						catch (Exception ex)</span>
+						{
+<span class="nc" id="L813">							Logger.error(StatGraphNewDB.class,&quot;getTimeData: period allready exist: &quot;+cal.getTime().toString());</span>
+<span class="nc" id="L814">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L815">						}</span>
+						//Logger.println(this,&quot;Calendar: &quot;+cal.getTime());
+<span class="nc" id="L817">					}</span>
+					//collection.addSeries(bts_views);
+<span class="nc" id="L819">					timeSeriesTable.put(legend[i], bts_views);</span>
+
+				}
+			}
+
+		}
+<span class="nc" id="L825">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L827">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L828">		}</span>
+		//return (collection);
+<span class="nc" id="L830">		return (timeSeriesTable);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

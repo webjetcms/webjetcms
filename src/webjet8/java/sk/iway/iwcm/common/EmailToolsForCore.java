@@ -28,7 +28,7 @@ public class EmailToolsForCore {
     {
         try
         {
-            new SimpleQuery().execute("DELETE FROM emails_unsubscribed WHERE email = ?", email);
+            new SimpleQuery().execute("DELETE FROM emails_unsubscribed WHERE email = ? AND domain_id=?", email, CloudToolsForCore.getDomainId());
             Adminlog.add(Adminlog.TYPE_DATA_DELETING, "Unsubscribed email deleted, email="+email, -1, -1);
             return true;
         }
@@ -46,7 +46,7 @@ public class EmailToolsForCore {
 
         try
         {
-            new SimpleQuery().execute("INSERT INTO emails_unsubscribed (email, create_date) VALUES (?,?)", email, new Date());
+            new SimpleQuery().execute("INSERT INTO emails_unsubscribed (email, create_date, domain_id) VALUES (?,?,?)", email, new Date(), CloudToolsForCore.getDomainId());
             return true;
         }
         catch (Exception e)
@@ -60,7 +60,7 @@ public class EmailToolsForCore {
     {
         try
         {
-            new SimpleQuery().execute("DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ?", id);
+            new SimpleQuery().execute("DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ? AND domain_id=?", id, CloudToolsForCore.getDomainId());
             Adminlog.add(Adminlog.TYPE_DATA_DELETING, "Unsubscribed email deleted, id="+id, id, -1);
             return true;
         }

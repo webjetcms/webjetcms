@@ -11,6 +11,7 @@
   - [Položka v menu admin časti](/custom-apps/admin-menu-item/)
   - [Zoznam web stránok/noviniek](/custom-apps/news/)
   - [Používatelia](/custom-apps/apps/user/README.md)
+  - [Konfigurácia](/custom-apps/config/README.md)
 - Spring MVC
   - [Aplikácia vo web stránke](/custom-apps/spring-mvc/)
   - [Admin s nahratím súboru](/custom-apps/spring-mvc/admin-with-upload.md)

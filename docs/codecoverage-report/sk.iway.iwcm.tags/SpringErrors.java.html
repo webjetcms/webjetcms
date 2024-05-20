@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringErrors.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">SpringErrors.java</span></div><h1>SpringErrors.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.spring.webjet_component.WebjetError;
+import sk.iway.iwcm.system.spring.webjet_component.WebjetErrors;
+
+<span class="nc" id="L17">public class SpringErrors extends BodyTagSupport {</span>
+
+    private static final long serialVersionUID = 1L;
+
+<span class="nc" id="L21">    private String wrapper = &quot;div&quot;;</span>
+<span class="nc" id="L22">    private String listTag = &quot;ul&quot;;</span>
+<span class="nc" id="L23">    private String itemTag = &quot;li&quot;;</span>
+
+    private Map&lt;String, String&gt; wrapperOptionsMap;
+    private Map&lt;String, String&gt; listTagOptionsMap;
+    private Map&lt;String, String&gt; itemTagOptionsMap;
+
+    private HttpServletRequest request;
+
+    public int doEndTag() throws JspException {
+
+<span class="nc" id="L33">        request = (HttpServletRequest) pageContext.getRequest();</span>
+<span class="nc" id="L34">        List&lt;WebjetError&gt; errors = getErrors();</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (errors.isEmpty()) {</span>
+<span class="nc" id="L37">            return super.doEndTag();</span>
+        }
+
+<span class="nc" id="L40">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L42">        String wrapper = getWrapper();</span>
+<span class="nc" id="L43">        String listTag = getListTag();</span>
+<span class="nc" id="L44">        String itemTag = getItemTag();</span>
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (Tools.isNotEmpty(wrapper)) {</span>
+<span class="nc" id="L47">            sb.append(&quot;&lt;&quot;)</span>
+<span class="nc" id="L48">                .append(getWrapper())</span>
+<span class="nc" id="L49">                .append(getOptions(getWrapperOptionsMap()))</span>
+<span class="nc" id="L50">                .append(&quot;&gt;&quot;);</span>
+        }
+
+        //this.writeDefaultAttributes(tagWriter);
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (Tools.isNotEmpty(listTag)) {</span>
+<span class="nc" id="L56">            sb.append(&quot;&lt;&quot;)</span>
+<span class="nc" id="L57">                .append(getListTag())</span>
+<span class="nc" id="L58">                .append(getOptions(getListTagOptionsMap()))</span>
+<span class="nc" id="L59">                .append(&quot;&gt;&quot;);</span>
+        }
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (WebjetError error : errors) {</span>
+<span class="nc" id="L63">            String field = error.getField();</span>
+<span class="nc" id="L64">            String message = error.getMessage();</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (Tools.isNotEmpty(itemTag)) {</span>
+<span class="nc" id="L67">                sb.append(&quot;&lt;&quot;)</span>
+<span class="nc" id="L68">                    .append(getItemTag())</span>
+<span class="nc" id="L69">                    .append(getOptions(getItemTagOptionsMap()))</span>
+<span class="nc" id="L70">                    .append(&quot;&gt;&quot;);</span>
+            }
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (Tools.isNotEmpty(field)) {</span>
+<span class="nc" id="L74">                sb.append(error.getField()).append(&quot; - &quot;);</span>
+            }
+
+<span class="nc" id="L77">            sb.append(message);</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (Tools.isNotEmpty(itemTag)) {</span>
+<span class="nc" id="L80">                sb.append(&quot;&lt;/&quot;)</span>
+<span class="nc" id="L81">                    .append(getItemTag())</span>
+<span class="nc" id="L82">                    .append(&quot;&gt;&quot;);</span>
+            }
+<span class="nc" id="L84">        }</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (Tools.isNotEmpty(listTag)) {</span>
+<span class="nc" id="L87">            sb.append(&quot;&lt;/&quot;)</span>
+<span class="nc" id="L88">                .append(getListTag())</span>
+<span class="nc" id="L89">                .append(&quot;&gt;&quot;);</span>
+        }
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (Tools.isNotEmpty(wrapper)) {</span>
+<span class="nc" id="L93">            sb.append(&quot;&lt;/&quot;)</span>
+<span class="nc" id="L94">                .append(getWrapper())</span>
+<span class="nc" id="L95">                .append(&quot;&gt;&quot;);</span>
+        }
+
+        try {
+<span class="nc" id="L99">            pageContext.getOut().write(sb.toString());</span>
+<span class="nc" id="L100">        } catch (IOException e) {</span>
+<span class="nc" id="L101">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L102">        }</span>
+
+<span class="nc" id="L104">        return super.doEndTag();</span>
+    }
+
+    private String getOptions(Map&lt;String, String&gt; options) {
+<span class="nc" id="L108">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        if (options != null &amp;&amp; !options.isEmpty()) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (Map.Entry&lt;String, String&gt; entry : options.entrySet()) {</span>
+<span class="nc" id="L112">                sb.append(&quot; &quot;).append(entry.getKey()).append(&quot;=\&quot;&quot;).append(entry.getValue()).append(&quot;\&quot;&quot;);</span>
+<span class="nc" id="L113">            }</span>
+        }
+
+<span class="nc" id="L116">        return sb.toString();</span>
+    }
+
+    private List&lt;WebjetError&gt; getErrors() throws JspException {
+<span class="nc" id="L120">        List&lt;WebjetError&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L122" title="All 4 branches missed.">        if (request.getAttribute(&quot;errors&quot;) != null &amp;&amp; request.getAttribute(&quot;errors&quot;).getClass().isAssignableFrom(WebjetErrors.class)) {</span>
+<span class="nc" id="L123">            WebjetErrors errors = (WebjetErrors) request.getAttribute(&quot;errors&quot;);</span>
+<span class="nc" id="L124">            List&lt;WebjetError&gt; errorsList = errors.getErrors();</span>
+<span class="nc" id="L125">            result.addAll(errorsList);</span>
+        }
+
+<span class="nc" id="L128">        return result;</span>
+    }
+
+    public String getWrapper() {
+<span class="nc" id="L132">        return wrapper;</span>
+    }
+
+    public void setWrapper(String wrapper) {
+<span class="nc" id="L136">        this.wrapper = wrapper;</span>
+<span class="nc" id="L137">    }</span>
+
+    public String getListTag() {
+<span class="nc" id="L140">        return listTag;</span>
+    }
+
+    public void setListTag(String listTag) {
+<span class="nc" id="L144">        this.listTag = listTag;</span>
+<span class="nc" id="L145">    }</span>
+
+    public String getItemTag() {
+<span class="nc" id="L148">        return itemTag;</span>
+    }
+
+    public void setItemTag(String itemTag) {
+<span class="nc" id="L152">        this.itemTag = itemTag;</span>
+<span class="nc" id="L153">    }</span>
+
+    public void setWrapperOptions(String wrapperOptions) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        if (wrapperOptionsMap == null) {</span>
+<span class="nc" id="L157">            wrapperOptionsMap = new HashMap&lt;&gt;();</span>
+        }
+<span class="nc" id="L159">        addToMap(wrapperOptionsMap, wrapperOptions);</span>
+<span class="nc" id="L160">    }</span>
+
+    public void setListTagOptions(String listTagOptions) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (listTagOptionsMap == null) {</span>
+<span class="nc" id="L164">            listTagOptionsMap = new HashMap&lt;&gt;();</span>
+        }
+<span class="nc" id="L166">        addToMap(listTagOptionsMap, listTagOptions);</span>
+<span class="nc" id="L167">    }</span>
+
+    public void setItemTagOptions(String itemTagOptions) {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (itemTagOptionsMap == null) {</span>
+<span class="nc" id="L171">            itemTagOptionsMap = new HashMap&lt;&gt;();</span>
+        }
+<span class="nc" id="L173">        addToMap(itemTagOptionsMap, itemTagOptions);</span>
+<span class="nc" id="L174">    }</span>
+
+    public Map&lt;String, String&gt; getWrapperOptionsMap() {
+<span class="nc" id="L177">        return wrapperOptionsMap;</span>
+    }
+
+    public Map&lt;String, String&gt; getListTagOptionsMap() {
+<span class="nc" id="L181">        return listTagOptionsMap;</span>
+    }
+
+    public Map&lt;String, String&gt; getItemTagOptionsMap() {
+<span class="nc" id="L185">        return itemTagOptionsMap;</span>
+    }
+
+    private void addToMap(Map&lt;String, String&gt; map, String str) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (!str.contains(&quot;=&quot;)) {</span>
+<span class="nc" id="L190">            return;</span>
+        }
+
+<span class="nc" id="L193">        String[] arr = Tools.getTokens(str, &quot;,&quot;);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        for (String val : arr) {</span>
+<span class="nc" id="L195">            String[] values = Tools.getTokens(val, &quot;=&quot;);</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            if (values.length == 2) {</span>
+<span class="nc" id="L198">                map.put(values[0], values[1]);</span>
+            }
+        }
+<span class="nc" id="L201">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

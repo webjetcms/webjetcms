@@ -183,7 +183,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 				<label for="statStartDateMenu" class="popisok2 form-label"><iwcm:text key="stat.time"/>:</label>
 				<div class="input-group date date-picker">
 					<input type="text" size="10" maxlength="12" id="statStartDateMenu" name="startDate" value="<%=startDateString%>" class="form-control" />
-					<span class="input-group-btn"><button class="btn default" type="button"><i class="fa fa-calendar"></i></button></span>
+					<span class="input-group-btn"><button class="btn default" type="button"><i class="ti ti-calendar"></i></button></span>
 				</div>
 			</div>
 		</div>
@@ -192,7 +192,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 				<label class="control-label display-block">&nbsp;</label>
 				<div class="input-group date date-picker">
 					<input type="text" size="10" maxlength="12" id="statEndDateMenu" name="endDate" value="<%=endDateString%>"  class="form-control" />
-					<span class="input-group-btn"><button class="btn default" type="button"><i class="fa fa-calendar"></i></button></span>
+					<span class="input-group-btn"><button class="btn default" type="button"><i class="ti ti-calendar"></i></button></span>
 				</div>
 			</div>
 		</div>

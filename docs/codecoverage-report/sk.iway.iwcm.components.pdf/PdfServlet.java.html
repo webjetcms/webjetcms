@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.pdf</a> &gt; <span class="el_source">PdfServlet.java</span></div><h1>PdfServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.pdf;
+
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.PdfTools;
+
+@WebServlet(name = &quot;pdfServlet&quot;, urlPatterns = {&quot;/to.pdf/*&quot;, &quot;/topdf/*&quot;})
+<span class="fc" id="L17">public class PdfServlet extends HttpServlet {</span>
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    {
+        //ak to islo napriamo tak to zhadzovalo IIS ISAPI filter!!!
+<span class="fc" id="L24">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+
+<span class="fc" id="L26">        int docId = Tools.getDocId(req);</span>
+
+<span class="fc" id="L28">        boolean ok = PdfTools.getPdfVersion(docId, req, baos);</span>
+
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if (ok)</span>
+        {
+<span class="nc bnc" id="L32" title="All 4 branches missed.">            if(req.getParameter(&quot;renderAsRtf&quot;) != null &amp;&amp; req.getParameter(&quot;renderAsRtf&quot;).toLowerCase().equals(&quot;true&quot;) )</span>
+<span class="nc" id="L33">                res.setContentType(&quot;html/rtf&quot;);</span>
+            else
+<span class="nc" id="L35">                res.setContentType(&quot;application/pdf&quot;);</span>
+
+            //aby to islo aj v IE6: http://www.alagad.com/go/blog-entry/error-internet-explorer-cannot-download-filename-from-webserver
+<span class="nc" id="L38">            res.setHeader(&quot;Pragma&quot;, &quot;public&quot;);</span>
+<span class="nc" id="L39">            res.setHeader(&quot;Cache-Control&quot;, &quot;max-age=0&quot;);</span>
+
+<span class="nc" id="L41">            res.setContentLength(baos.size());</span>
+<span class="nc" id="L42">            res.getOutputStream().write(baos.toByteArray());</span>
+<span class="nc" id="L43">            res.getOutputStream().flush();</span>
+<span class="nc" id="L44">            res.getOutputStream().close();</span>
+        }
+        else
+        {
+<span class="fc" id="L48">            req.getRequestDispatcher(&quot;/404.jsp&quot;).forward(req, res);</span>
+        }
+
+<span class="fc" id="L51">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

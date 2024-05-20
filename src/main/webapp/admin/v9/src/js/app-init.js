@@ -45,7 +45,8 @@ function initClosure() {
         damping: 0.2
     });
 
-    Scrollbar.initAll();
+    const scrollbarMain = Scrollbar.init(document.querySelector('.ly-content-wrapper .ly-content'));
+    window.scrollbarMain = scrollbarMain;
     Scrollbar.detachStyle();
 
     // =======================
@@ -149,7 +150,7 @@ function initClosure() {
     $("div.js-sidebar-toggler").on("click", function(e) {
         $("div.ly-sidebar").toggleClass("active");
         $("div.ly-page-wrapper").toggleClass("active");
-        $(this).children("i").toggleClass("fa-times");
+        $(this).children("i").toggleClass("ti-x");
     });
 
     // =======================
@@ -310,7 +311,7 @@ function initClosure() {
 
                     if (typeof window.selectedNode != undefined && window.selectedNode != null) {
                         //podla selectedNode nastav tlacidla (prava)
-                        if (window.selectedNode.icon.indexOf("folder-times")!=-1) {
+                        if (window.selectedNode.icon.indexOf("ti-folder-x")!=-1) {
                             $('.tree-col .dt-header-row .buttons-create').addClass("disabled");
                             $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
                             $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
@@ -551,7 +552,7 @@ function initClosure() {
                         {
                             "title": WJ.translate("menu.logout"),
                             "cssClass": "btn btn-primary",
-                            "icon": "far fa-sign-out",
+                            "icon": "ti ti-logout",
                             "click": "window.location.href=$('.js-logout-toggler').attr('href')"
                         }
                     ]);

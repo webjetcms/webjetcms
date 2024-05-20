@@ -202,6 +202,13 @@ public class DataDeletingManager
 					ps.execute();
 					ps.close();
 				}
+				else if(Constants.DB_TYPE == Constants.DB_PGSQL)
+				{
+					Logger.debug(DataDeletingManager.class, "Optimalizujem pgsql tabulku "+table);
+					ps = db_conn.prepareStatement("REINDEX TABLE "+table);
+					ps.execute();
+					ps.close();
+				}
 				else if(Constants.DB_TYPE == Constants.DB_MSSQL)
 				{
 					Logger.debug(DataDeletingManager.class, "Optimalizujem mssql tabulku "+table);
@@ -626,7 +633,7 @@ public class DataDeletingManager
 		String sql = "SELECT MONTH(sent_date), YEAR(sent_date), COUNT(*) from emails WHERE sent_date BETWEEN ? AND ?" +
 				" GROUP BY MONTH(sent_date), YEAR(sent_date) ORDER BY YEAR(sent_date), MONTH(sent_date)";
 
-		if (Constants.DB_TYPE == Constants.DB_ORACLE)
+		if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
 			sql = "SELECT TO_CHAR(sent_date, 'MM'), TO_CHAR(sent_date, 'YYYY'), COUNT(*) from emails WHERE sent_date BETWEEN ? AND ?" +
 			" GROUP BY TO_CHAR(sent_date, 'MM'), TO_CHAR(sent_date, 'YYYY') ORDER BY TO_CHAR(sent_date, 'YYYY'), TO_CHAR(sent_date, 'MM')";
 

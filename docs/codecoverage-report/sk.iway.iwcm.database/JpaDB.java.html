@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.database</a> &gt; <span class="el_source">JpaDB.java</span></div><h1>JpaDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.database;
+
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.utils.Pair;
+
+/**
+ *  JpaDB.java
+ *
+ *  Basic read, update, insert and delete operations for a JPA bean
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2011
+ *@author       $Author: marosurbanec $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 28.2.2011 11:52:59
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+public class JpaDB&lt;T extends ActiveRecordBase&gt;
+{
+	private final Class&lt;T&gt; clazz;
+<span class="fc" id="L42">	protected String dbName = &quot;iwcm&quot;;</span>
+
+	public JpaDB(Class&lt;T&gt; clazz)
+<span class="fc" id="L45">	{</span>
+<span class="fc" id="L46">		this.clazz = clazz;</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">		if (clazz.isAnnotationPresent(DataSource.class))</span>
+		{
+<span class="nc" id="L49">			dbName = clazz.getAnnotation(DataSource.class).name();</span>
+		}
+<span class="fc" id="L51">	}</span>
+
+	public JpaDB(Class&lt;T&gt; clazz, String dbName)
+<span class="fc" id="L54">	{</span>
+<span class="fc" id="L55">		this.clazz = clazz;</span>
+<span class="fc" id="L56">		this.dbName = dbName;</span>
+<span class="fc" id="L57">	}</span>
+
+	public static &lt;T extends ActiveRecordBase&gt; JpaDB&lt;T&gt; of(Class&lt;T&gt; clazz)
+	{
+<span class="nc" id="L61">		return new JpaDB&lt;T&gt;(clazz);</span>
+	}
+
+	public T getById(int id)
+	{
+		//musime vyrobit novy EntityManager, pretoze ten threadovy em.find zatvori a potom nemusime mat otvoreny em dalej v kode (napr. v helpdesku)
+<span class="fc" id="L67">		EntityManager threadEm = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="fc" id="L68">		EntityManager em = threadEm.getEntityManagerFactory().createEntityManager();</span>
+
+		T obj;
+<span class="fc" id="L71">		Long idLong = null;</span>
+		//pre ActiveRecordRepository musime posielat ID ako long
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		if (clazz.getSuperclass().isAssignableFrom(ActiveRecordRepository.class)) idLong = Long.valueOf(id);</span>
+
+<span class="pc bpc" id="L75" title="2 of 6 branches missed.">		if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+		{
+<span class="fc" id="L77">			Map&lt;String,Object&gt;  hashMap = new HashMap&lt;String,Object&gt;();</span>
+<span class="fc" id="L78">			hashMap.put(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">			if (idLong == null) obj = em.find(clazz, id, hashMap);</span>
+<span class="nc" id="L80">			else obj = em.find(clazz, idLong, hashMap);</span>
+<span class="fc" id="L81">		}</span>
+		else
+		{
+<span class="fc bfc" id="L84" title="All 2 branches covered.">			if (idLong == null) obj = em.find(clazz, id);</span>
+<span class="fc" id="L85">			else obj = em.find(clazz, idLong);</span>
+		}
+
+		//pre istotu
+<span class="pc bpc" id="L89" title="2 of 4 branches missed.">		if (em != null &amp;&amp; em.isOpen()) em.close();</span>
+
+<span class="fc" id="L91">		return obj;</span>
+	}
+
+	public List&lt;T&gt; getAll()
+	{
+<span class="fc" id="L96">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="fc" id="L97">		ReadAllQuery dbQuery = new ReadAllQuery(clazz);</span>
+
+<span class="pc bpc" id="L99" title="2 of 6 branches missed.">        if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+<span class="fc" id="L100">			return find(&quot;domainId&quot;, CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L102">		Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L103">		List&lt;T&gt; records = JpaDB.getResultList(query);</span>
+
+<span class="fc" id="L105">		return records;</span>
+	}
+
+	public long getCount()
+	{
+<span class="nc" id="L110">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="nc bnc" id="L111" title="All 6 branches missed.">        if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+        {
+<span class="nc" id="L113">            Query query = em.createQuery(&quot;select count(e) from &quot; + clazz.getSimpleName() + &quot; e WHERE e.domainId = :domainId&quot;).setParameter(&quot;domainId&quot;,CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L114">            return Long.parseLong(query.getSingleResult().toString());</span>
+        }
+<span class="nc" id="L116">		return Long.parseLong(em.createQuery(&quot;select count(e) from &quot; + clazz.getSimpleName() + &quot; e&quot;).getSingleResult().toString());</span>
+	}
+
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	public List getValues(String property)
+	{
+<span class="nc" id="L122">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+		try
+		{
+<span class="nc bnc" id="L125" title="All 6 branches missed.">            if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+            {
+<span class="nc" id="L127">                Query query = em.createQuery(&quot;select distinct e.&quot; + property + &quot; FROM &quot; + clazz.getSimpleName() + &quot; e WHERE e.domainId = :domainId ORDER BY e.&quot; + property).setParameter(&quot;domainId&quot;,CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L128">                return JpaDB.getResultList(query);</span>
+            }
+<span class="nc" id="L130">			return em.createQuery(&quot;select distinct e.&quot; + property + &quot; FROM &quot; + clazz.getSimpleName() + &quot; e ORDER BY e.&quot; + property).getResultList();</span>
+		}
+		finally
+		{
+<span class="nc" id="L134">			em.close();</span>
+		}
+
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public boolean save(T...entities)
+	{
+<span class="fc" id="L142">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="fc" id="L143">		em.getTransaction().begin();</span>
+        try
+		{
+<span class="fc bfc" id="L146" title="All 2 branches covered.">			for (T entity : entities)</span>
+			{
+<span class="pc bpc" id="L148" title="2 of 6 branches missed.">                if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+                {
+                    try
+                    {
+<span class="fc" id="L152">                        Method method = clazz.getMethod(&quot;getDomainId&quot;);</span>
+<span class="fc" id="L153">                        int domainIdSave = (Integer) method.invoke(entity);</span>
+<span class="pc bpc" id="L154" title="3 of 4 branches missed.">                        if(CloudToolsForCore.getDomainId() != domainIdSave &amp;&amp; domainIdSave != 0)</span>
+                        {
+<span class="nc" id="L156">                            Logger.debug(this,&quot;Pokus o ulozenie zaznamu mimo domainId (&quot;+domainIdSave+&quot;). Spravna domainId = &quot;+CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L157">                            return false;</span>
+                        }
+<span class="nc" id="L159">                    }catch(Exception exc)</span>
+                    {
+<span class="nc" id="L161">                        sk.iway.iwcm.Logger.error(exc);</span>
+<span class="fc" id="L162">                    }</span>
+                }
+
+<span class="fc bfc" id="L165" title="All 2 branches covered.">					 if (entity instanceof ActiveRecord)</span>
+					 {
+<span class="fc" id="L167">						 ActiveRecord entityAR = (ActiveRecord)entity;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">						 if(entityAR.getId() &lt; 1)</span>
+						 {
+<span class="fc" id="L170">							entityAR.setId(0);</span>
+<span class="fc" id="L171">							 em.persist(entity);</span>
+						 }
+						 else
+						 {
+<span class="fc" id="L175">							 entity = em.merge(entity);</span>
+						 }
+<span class="fc" id="L177">					 }</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">					 else if (entity instanceof ActiveRecordRepository)</span>
+					 {
+<span class="fc" id="L180">						ActiveRecordRepository entityR = (ActiveRecordRepository)entity;</span>
+<span class="pc bpc" id="L181" title="1 of 4 branches missed.">						 if(entityR.getId() == null || entityR.getId().longValue()&lt; 1)</span>
+						 {
+<span class="fc" id="L183">							entityR.setId(0L);</span>
+<span class="fc" id="L184">							em.persist(entity);</span>
+						 }
+						 else
+						 {
+<span class="fc" id="L188">							entity = em.merge(entity);</span>
+						 }
+					 }
+			}
+
+<span class="fc" id="L193">			em.getTransaction().commit();</span>
+
+<span class="fc" id="L195">			return true;</span>
+		}
+<span class="nc" id="L197">		catch (Exception e)</span>
+		{
+			try
+			{
+<span class="nc" id="L201">				em.getTransaction().rollback();</span>
+			}
+<span class="nc" id="L203">			catch (Exception e2)</span>
+			{
+
+<span class="nc" id="L206">			}</span>
+<span class="nc" id="L207">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="fc" id="L211">			JpaTools.getEclipseLinkEntityManager(dbName).close();</span>
+		}
+<span class="nc" id="L213">		return false;</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public boolean delete(T...entities)
+	{
+<span class="fc" id="L219">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);</span>
+<span class="fc" id="L220">		em.getTransaction().begin();</span>
+		try
+		{
+<span class="fc bfc" id="L223" title="All 2 branches covered.">			for (T entity : entities)</span>
+			{
+<span class="fc" id="L225">				entity = em.merge(entity);</span>
+<span class="fc" id="L226">				em.remove(entity);</span>
+			}
+
+<span class="fc" id="L229">			em.getTransaction().commit();</span>
+<span class="fc" id="L230">			return true;</span>
+<span class="nc" id="L231">		}catch (Exception e) {</span>
+<span class="nc" id="L232">			em.getTransaction().rollback();</span>
+<span class="nc" id="L233">			sk.iway.iwcm.Logger.error(e);</span>
+		}finally{
+<span class="fc" id="L235">			JpaTools.getEclipseLinkEntityManager(dbName).close();</span>
+		}
+<span class="nc" id="L237">		return false;</span>
+	}
+
+	public void deleteByIds(int...ids)
+	{
+<span class="nc" id="L242">		JpaTools.batchDelete(clazz, ids);</span>
+<span class="nc" id="L243">	}</span>
+
+	public List&lt;T&gt; find(String property, Object value)
+	{
+<span class="fc" id="L247">		return JpaTools.findByMatchingProperty(clazz, property, value);</span>
+	}
+
+	public T findFirst(String property, Object value)
+	{
+<span class="pc bpc" id="L252" title="3 of 6 branches missed.">        if((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) &amp;&amp; Constants.getString(&quot;jpaFilterByDomainIdBeanList&quot;).indexOf(clazz.getName()) != -1)</span>
+        {
+			  @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L255">            List&lt;T&gt; listProp = findByProperties(new Pair&lt;String, Object&gt;(property, value), new Pair&lt;String, Object&gt;(&quot;domainId&quot;, CloudToolsForCore.getDomainId()));</span>
+<span class="nc bnc" id="L256" title="All 4 branches missed.">            if(listProp != null &amp;&amp; listProp.size() &gt; 0)</span>
+<span class="nc" id="L257">                return listProp.get(0);</span>
+<span class="nc" id="L258">            return null;</span>
+        }
+<span class="fc" id="L260">		return JpaTools.findFirstByMatchingProperty(clazz, property, value);</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public List&lt;T&gt; findByProperties(Pair&lt;String, ? extends Object&gt;... properties)
+	{
+<span class="nc" id="L266">		return JpaTools.findByProperties(clazz, properties);</span>
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public T findFirstByProperties(Pair&lt;String, ? extends Object&gt;... properties)
+	{
+<span class="fc" id="L272">		return JpaTools.findFirstByProperties(clazz, properties);</span>
+	}
+
+	/**
+	 * Vrati zoznam objektov, ktore splnaju zadane podmienky.
+	 * Priklad:
+	 * &lt;code&gt;
+	 * class ExampleDB extends JpaDB&amp;lt;ExampleBean&amp;gt;
+	 * {
+	 *   public List&amp;lt;ExampleBean&amp;gt; getExamples(String nameFilter) {
+	 *     return findBy(filterSubstring(&quot;name&quot;), nameFilter);
+	 *   }
+	 * }
+	 * &lt;/code&gt;
+	 *
+	 * @ see filterSubstring
+	 * @ see filterIn
+	 *
+	 * @param conditions
+	 * @return
+	 */
+	public List&lt;T&gt; findBy(JpaTools.Condition... conditions)
+	{
+<span class="nc" id="L295">		return findBy((Integer) null, conditions);</span>
+	}
+
+	public List&lt;T&gt; findBy(Integer maxRows, JpaTools.Condition... conditions)
+	{
+<span class="nc" id="L300">		return JpaTools.findBy(clazz, maxRows, conditions);</span>
+	}
+
+	// conditions:
+
+	protected static JpaTools.Condition filterNull(final String property)
+	{
+<span class="nc" id="L307">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc" id="L312">				return object.getField(property).isNull();</span>
+			}
+
+		};
+	}
+
+	protected static JpaTools.Condition filterNotNull(final String property)
+	{
+<span class="nc" id="L320">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc" id="L325">				return object.getField(property).isNull().not();</span>
+			}
+
+		};
+	}
+
+	/**
+	 * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny) alebo ak sa hodnota vlastnosti rovna danej hodnote.
+	 *
+	 * @param property
+	 * @param value
+	 * @return
+	 */
+	protected static JpaTools.Condition filterEquals(final String property, final String value)
+	{
+<span class="fc" id="L340">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">				return Tools.isEmpty(value) ? null : object.getField(property).equal(value);</span>
+			}
+
+		};
+	}
+
+	protected static JpaTools.Condition filterEquals(final String property, final int value)
+	{
+<span class="fc" id="L353">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="fc" id="L358">				return object.getField(property).equal(value);</span>
+			}
+
+		};
+	}
+
+	protected static JpaTools.Condition filterEquals(final String property, final boolean value)
+	{
+<span class="nc" id="L366">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc" id="L371">				return object.getField(property).equal(value);</span>
+			}
+
+		};
+	}
+
+	/**
+	 * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny) alebo ak hodnota vlastnosti obsahuje tento podretazec.
+	 *
+	 * @param property   nazov vlastnosti
+	 * @param substring  hladany podretazec
+	 * @return
+	 */
+	protected static JpaTools.Condition filterSubstring(final String property, final String substring)
+	{
+<span class="fc" id="L386">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="pc bpc" id="L391" title="1 of 2 branches missed.">				return Tools.isEmpty(substring) ? null : object.getField(property).containsSubstring(substring);</span>
+			}
+
+		};
+	}
+
+    /**
+     * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny) alebo ak hodnota vlastnosti obsahuje tento podretazec, nezalezi na velkosti pismen.
+     *
+     * @param property   nazov vlastnosti
+     * @param substring  hladany podretazec
+     * @return
+     */
+    protected static JpaTools.Condition filterSubstringIgnoringCase(final String property, final String substring)
+    {
+<span class="nc" id="L406">        return new JpaTools.Condition() {</span>
+
+            @Override
+            public Expression applyTo(Expression object)
+            {
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                return Tools.isEmpty(substring) ? null : object.getField(property).containsSubstringIgnoringCase(substring);</span>
+            }
+
+        };
+    }
+
+	/**
+	 * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny zoznam) alebo ak hodnota vlastnosti je v tomto zozname.
+	 *
+	 * @param property
+	 * @param values
+	 * @return
+	 */
+	public static JpaTools.Condition filterIn(final String property, final Collection&lt;String&gt; values)
+	{
+<span class="nc" id="L426">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc bnc" id="L431" title="All 2 branches missed.">				return Tools.isEmpty(values) ? null : object.getField(property).in(values);</span>
+			}
+
+		};
+	}
+
+	/**
+	 * Podmienka je splnena, ak filter nie je zadany (null alebo prazdny zoznam) alebo ak hodnota vlastnosti nie je v tomto zozname.
+	 *
+	 * @param property
+	 * @param values
+	 * @return
+	 */
+	protected static JpaTools.Condition filterNotIn(final String property, final Collection&lt;String&gt; values)
+	{
+<span class="fc" id="L446">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">				return Tools.isEmpty(values) ? null : object.getField(property).not().in(values);</span>
+			}
+
+		};
+	}
+
+	/**
+	 * Podmienka je splnena, ak hodnota vlastnosti je v danom intervale (vratane oboch krajnych hodnot).
+	 *
+	 * @param property
+	 * @param minValue
+	 * @param maxValue
+	 * @return
+	 */
+	protected static JpaTools.Condition filterBetween (final String property, final int minValue, final int maxValue)
+	{
+<span class="nc" id="L467">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+
+<span class="nc" id="L473">				    return object.getField(property).between(minValue, maxValue);</span>
+			}
+
+		};
+	}
+
+	protected static JpaTools.Condition filterBetween(final String property, final BigDecimal minValue, final BigDecimal maxValue)
+	{
+<span class="nc" id="L481">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc" id="L486">				return and(</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">					(null == minValue) ? null : object.getField(property).greaterThanEqual(minValue),</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">					(null == maxValue) ? null : object.getField(property).lessThanEqual(maxValue)</span>
+				);
+			}
+
+		};
+	}
+
+	protected static JpaTools.Condition filterBetween(final String property, final Date minValue, final Date maxValue)
+	{
+<span class="nc" id="L497">		return new JpaTools.Condition() {</span>
+
+			@Override
+			public Expression applyTo(Expression object)
+			{
+<span class="nc" id="L502">				return and(</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">					(null == minValue) ? null : object.getField(property).greaterThanEqual(minValue),</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">					(null == maxValue) ? null : object.getField(property).lessThanEqual(maxValue)</span>
+				);
+			}
+
+		};
+	}
+
+	/**
+	 * Spojenie dvoch Expression cez &quot;AND&quot;, zabezpecene proti hodnotam &quot;null&quot;.
+	 * Pomocka pre metody &quot;filter...&quot;
+	 *
+	 * @param e1
+	 * @param e2
+	 * @return
+	 */
+	public static Expression and(Expression e1, Expression e2)
+	{
+<span class="pc bpc" id="L521" title="1 of 4 branches missed.">		return (null == e1) ? e2 : (null == e2) ? e1 : e1.and(e2);</span>
+	}
+
+	/**
+	 * Spojenie dvoch Expression cez &quot;OR&quot;, zabezpecene proti hodnotam &quot;null&quot;.
+	 * Pomocka pre metody &quot;filter...&quot;
+	 *
+	 * @param e1
+	 * @param e2
+	 * @return
+	 */
+	public static Expression or(Expression e1, Expression e2)
+	{
+<span class="nc bnc" id="L534" title="All 4 branches missed.">		return (null == e1) ? e2 : (null == e2) ? e1 : e1.or(e2);</span>
+	}
+
+	@SuppressWarnings({&quot;rawtypes&quot;, &quot;unchecked&quot;})
+	public static &lt;T&gt; List&lt;T&gt; getResultList(Query q) {
+<span class="fc" id="L539">		List list = q.getResultList();</span>
+<span class="fc" id="L540">		return list;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -73,6 +73,8 @@ public class JpaDBConfig {
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);
         else if (Constants.DB_TYPE == Constants.DB_MSSQL)
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);
+        else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+            properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
         else
             properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
 

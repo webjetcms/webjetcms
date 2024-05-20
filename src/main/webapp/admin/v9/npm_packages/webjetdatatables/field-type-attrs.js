@@ -27,7 +27,7 @@ export function typeAttrs() {
                     ${getHtmlForField(value)}
                 </div>
                 <div class="col-sm-1">
-                    <button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" data-html="true" title="${value.description}"><i class="far fa-info-circle"></i></button>
+                    <button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" data-html="true" title="${value.description}"><i class="ti ti-info-circle"></i></button>
                 </div>
             </div>`);
             container.append(htmlCode);

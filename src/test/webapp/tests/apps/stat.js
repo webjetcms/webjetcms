@@ -40,8 +40,8 @@ Scenario("visits", ({ I, DT }) => {
     //change from stat days to stat weeks
     I.click("#statsDataTable_extfilter button[data-stat-type=weeks]");
 
-    DT.checkTableRow("statsDataTable", 1, ["5", "2 022", "22", "116", "38", "1"]);
-    DT.checkTableRow("statsDataTable", 2, ["4", "2 022", "21", "448", "136", "1"]);
+    DT.checkTableRow("statsDataTable", 1, ["6", "2 022", "22", "79", "27", "1"]);
+    DT.checkTableRow("statsDataTable", 2, ["5", "2 022", "21", "410", "124", "1"]);
 
     within("#statsDataTable_extfilter", () => {
         I.fillField({css: "input.dt-filter-from-dayDate"}, "01.05.2022");
@@ -50,8 +50,8 @@ Scenario("visits", ({ I, DT }) => {
     });
     I.dtWaitForLoader()
 
-    DT.checkTableRow("statsDataTable", 2, ["13", "2 022", "30", "533", "229", "1"]);
-    DT.checkTableRow("statsDataTable", 3, ["12", "2 022", "29", "649", "252", "1"]);
+    DT.checkTableRow("statsDataTable", 2, ["13", "2 022", "29", "583", "217", "1"]);
+    DT.checkTableRow("statsDataTable", 3, ["12", "2 022", "28", "637", "294", "1"]);
 
     //change from stat weeks to stat months
     I.click("#statsDataTable_extfilter button[data-stat-type=months]");
@@ -216,8 +216,8 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.dontSeeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
     I.seeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("Jet portal 4") );
     I.say("Check the icons");
-    I.seeElement( locate('//*[@id="1"]/a').withChild("i.jstree-icon.fa-folder-times") );
-    I.seeElement( locate('//*[@id="67"]/a').withChild("i.jstree-icon.fa-folder") );
+    I.seeElement( locate('//*[@id="1"]/a').withChild("i.jstree-icon.ti-folder-x") );
+    I.seeElement( locate('//*[@id="67"]/a').withChild("i.jstree-icon.ti-folder-filled") );
 
     I.say("Check that folder without permision (the one with X icon) can't be selected");
     //Nothing should happen

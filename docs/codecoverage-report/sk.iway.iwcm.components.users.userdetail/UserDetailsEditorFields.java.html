@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsEditorFields.java</span></div><h1>UserDetailsEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.MenuService;
+import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.components.users.groups_approve.GroupsApproveEntity;
+import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.editor.rest.Field;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.elfinder.DirTreeItem;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class UserDetailsEditorFields extends BaseEditorFields {
+
+<span class="fc" id="L45">    public UserDetailsEditorFields(){</span>
+        //konstruktor
+<span class="fc" id="L47">    }</span>
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;user.permissions.label&quot;, tab = &quot;groupsTab&quot;, visible = false, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.admin.editUserGroups&quot;),
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] permisions;
+
+    //Signalize, if we want send email to user, about adding him into new userGroup
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;users.send_all_user_groups_emails&quot;, sortAfter = &quot;&quot;, tab = &quot;groupsTab&quot;, hidden = true)
+    private boolean sendAllUserGroupsEmails;
+
+    //there will be saved userGroupIds before save (old values) to compare and find newly added groups
+    private String beforeSaveUserGroupIds;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;groupedit.type_email&quot;, tab = &quot;groupsTab&quot;, visible = false, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;menu.email&quot;),
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] emails;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.editableGroups.label&quot;, tab = &quot;rightsTab&quot;, visible=false, filter=false, orderable=false, className = &quot;dt-tree-group-array-alldomains&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.group.rights&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addGroup&quot;) })
+    })
+    private List&lt;GroupDetails&gt; editableGroups;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.editablePages.label&quot;, tab = &quot;rightsTab&quot;, visible=false, filter=false, orderable=false, className = &quot;dt-tree-page-array-alldomains&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;editor.json.addPage&quot;) })
+    })
+    private List&lt;DocDetails&gt; editablePages;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;approvingTab&quot;,
+        hidden = true,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/groups-approve?userId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.users.groups_approve.GroupsApproveEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;)
+            }
+        )
+    })
+    private List&lt;GroupsApproveEntity&gt; groupsApprove;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.writableFolders.label&quot;, tab = &quot;rightsTab&quot;, hidden = true, className = &quot;dt-tree-dir-array&quot;, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.menu.writableFolders&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;useredit.addGroup&quot;)
+        })
+    })
+    private List&lt;DirTreeItem&gt; writableFolders;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;users.perm_groups&quot;, tab = &quot;rightsTab&quot;, renderFormat = &quot;dt-format-select&quot;, visible = false, orderable = false,
+    editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;),
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;users.perm_groups&quot;) },
+            label = &quot;users.perm_groups.label&quot;
+        )
+        }
+    )
+    private Integer[] permGroups;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSTREE, title = &quot;components.user.righrs.user_group_rights&quot;, tab = &quot;rightsTab&quot;, hidden = true,
+    editor = {
+        @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.user.permissions&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-jstree-name&quot;, value = &quot;jstreePerms&quot;) }) })
+    private String[] enabledItems;
+
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;[[#{components.user.login}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        hidden = true,
+        sortAfter = &quot;allowLoginEnd&quot;,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-import-updateByColumn&quot;, value = &quot;login&quot;) })
+        }
+    )
+    //pole pre zobrazenie loginu v DT za lastName, v editore chovane
+    public String login;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;[[#{user.admin.password.allowWeak}]]&quot;,
+        tab = &quot;personalInfo&quot;,
+        sortAfter = &quot;password&quot;,
+        hidden = true
+    )
+    private Boolean allowWeakPassword;
+
+    //List of free fields
+    public List&lt;Field&gt; fieldsDefinition;
+
+    //Show groupsApprove As combination of approve mode and group full path
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = &quot;components.users.approving&quot;,
+        className = &quot;allow-html&quot;,
+        visible = false,
+        hiddenEditor = true,
+        orderable = false,
+        filter = false,
+        tab = &quot;approvingTab&quot;)
+    private String groupsApproveShow;
+
+    private void getModeText(int approveMode, StringBuilder sb, Prop prop) {
+<span class="pc bpc" id="L158" title="1 of 5 branches missed.">        switch (approveMode) {</span>
+            case 0:
+<span class="fc" id="L160">                sb.append(&quot;[&quot;).append(prop.getText(&quot;useredit.approveMode.approve&quot;)).append(&quot;]&quot;);</span>
+<span class="fc" id="L161">                break;</span>
+            case 1:
+<span class="fc" id="L163">                sb.append(&quot;[&quot;).append(prop.getText(&quot;useredit.approveMode.notify&quot;)).append(&quot;]&quot;);</span>
+<span class="fc" id="L164">                break;</span>
+            case 2:
+<span class="fc" id="L166">                sb.append(&quot;[&quot;).append(prop.getText(&quot;useredit.approveMode.none&quot;)).append(&quot;]&quot;);</span>
+<span class="fc" id="L167">                break;</span>
+            case 3:
+<span class="fc" id="L169">                sb.append(&quot;[&quot;).append(prop.getText(&quot;useredit.approveMode.level2&quot;)).append(&quot;]&quot;);</span>
+                break;
+        }
+<span class="fc" id="L172">    }</span>
+
+    public void fromUserDetailsEntity(UserDetailsEntity userDetailsOriginal, boolean loadSubQueries, HttpServletRequest request, GroupsApproveRepository groupsApproveRepository) {
+
+        //Get list of free fields
+<span class="fc" id="L177">        fieldsDefinition = getFields(userDetailsOriginal, &quot;user&quot;, 'E');</span>
+
+        //Set user groups Ids into arrays permisions and eMails
+<span class="fc" id="L180">        int[] userGroupsIds = Tools.getTokensInt(userDetailsOriginal.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="fc" id="L181">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(userGroupsIds);</span>
+<span class="fc" id="L182">        permisions = splitPermsEmails.get(0);</span>
+<span class="fc" id="L183">        emails = splitPermsEmails.get(1);</span>
+
+<span class="fc" id="L185">        int userId = -1;</span>
+<span class="pc bpc" id="L186" title="1 of 4 branches missed.">        if (userDetailsOriginal.getId() != null &amp;&amp; userDetailsOriginal.getId().intValue() &gt; 0) {</span>
+<span class="fc" id="L187">            userId = userDetailsOriginal.getId().intValue();</span>
+
+            //Allready set permGroups so we can see them in table (dont wait or loadSubQueries)
+
+            //Set permission groups
+<span class="fc" id="L192">            List&lt;PermissionGroupBean&gt; userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups</span>
+
+            //If group size is bigger than 0, push them into permGroup field (this group will be checked in the list of all group)
+<span class="fc bfc" id="L195" title="All 2 branches covered.">            if(userPermGroups.size() &gt; 0) {</span>
+<span class="fc" id="L196">                permGroups = new Integer[userPermGroups.size()];</span>
+
+<span class="fc" id="L198">                int userPermGroupsCount = 0;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                for(PermissionGroupBean userPermGroup : userPermGroups) {</span>
+
+<span class="fc" id="L201">                    permGroups[userPermGroupsCount] = userPermGroup.getUserPermGroupId();</span>
+<span class="fc" id="L202">                    userPermGroupsCount++;</span>
+<span class="fc" id="L203">                }</span>
+            }
+        }
+
+<span class="fc" id="L207">        Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        if(userId &gt; 0) {</span>
+<span class="fc" id="L209">            List&lt;GroupsApproveEntity&gt; groups = groupsApproveRepository.findByUserId(userId);</span>
+<span class="fc" id="L210">            StringBuilder sb = new StringBuilder(&quot;&quot;);</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            for(GroupsApproveEntity group : groups) {</span>
+<span class="fc" id="L212">                getModeText(group.getApproveMode(), sb, prop);</span>
+<span class="fc" id="L213">                sb.append(&quot; &quot;);</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(&quot;:&quot;);</span>
+<span class="fc" id="L215">                sb.append(group.getGroup().getFullPath()).append(&quot;&lt;br /&gt;&quot;);</span>
+<span class="fc" id="L216">            }</span>
+<span class="fc" id="L217">            groupsApproveShow = sb.toString();</span>
+        }
+
+        //Set editable groups Ids into List editableGroups
+<span class="fc" id="L221">        editableGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L222">        int[] editableGroupsIds = Tools.getTokensInt(userDetailsOriginal.getEditableGroups(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if(editableGroupsIds.length &gt; 0) {</span>
+<span class="fc" id="L224">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            for(int editableGroupId : editableGroupsIds) {</span>
+<span class="fc" id="L227">                GroupDetails tmp = groupsDB.getGroup(editableGroupId);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">                if (tmp != null) editableGroups.add(tmp);</span>
+            }
+        }
+
+        //Set editable pages Ids into List editablePages
+<span class="fc" id="L233">        editablePages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L234">        int[] editablePagesIds =  Tools.getTokensInt(userDetailsOriginal.getEditablePages(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        if(editablePagesIds.length &gt; 0) {</span>
+<span class="fc" id="L236">            DocDB pagesDB = DocDB.getInstance();</span>
+<span class="fc" id="L237">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            for(int editablePageId : editablePagesIds) {</span>
+<span class="fc" id="L240">                DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">                if (tmp != null) {</span>
+<span class="fc" id="L242">                    tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));</span>
+<span class="fc" id="L243">                    editablePages.add(tmp);</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L248" title="All 4 branches covered.">        if (loadSubQueries &amp;&amp; userId &gt; 0) {</span>
+            //Set permission groups
+<span class="fc" id="L250">            List&lt;PermissionGroupBean&gt; userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups</span>
+
+            //If group size is bigger than 0, push them into permGroup field (this group will be checked in the list of all group)
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            if(userPermGroups.size() &gt; 0) {</span>
+<span class="fc" id="L254">                permGroups = new Integer[userPermGroups.size()];</span>
+
+<span class="fc" id="L256">                int userPermGroupsCount = 0;</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">                for(PermissionGroupBean userPermGroup : userPermGroups) {</span>
+
+<span class="fc" id="L259">                    permGroups[userPermGroupsCount] = userPermGroup.getUserPermGroupId();</span>
+<span class="fc" id="L260">                    userPermGroupsCount++;</span>
+<span class="fc" id="L261">                }</span>
+            }
+
+            //Set disabled/non-disabled items
+<span class="fc" id="L265">            Modules modules = Modules.getInstance();</span>
+<span class="fc" id="L266">            List&lt;ModuleInfo&gt; allModuleItems = modules.getUserEditItems(prop);</span>
+
+<span class="fc" id="L268">            Identity user = new Identity(UsersDB.getUser(userId));</span>
+<span class="fc" id="L269">            UsersDB.loadDisabledItemsFromDB(user, false);</span>
+<span class="fc" id="L270">            String enabledItemsKeysString = &quot;&quot;;</span>
+<span class="fc" id="L271">            Set&lt;String&gt; disabledItems = user.getDisabledItemsTable().keySet();</span>
+
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            if (user.isAdmin()) {</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">                for(ModuleInfo modulItem : allModuleItems) {</span>
+<span class="fc" id="L275">                    boolean disabled = false;</span>
+
+<span class="fc bfc" id="L277" title="All 2 branches covered.">                    for(String key : disabledItems) {</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">                        if(key.equals(modulItem.getItemKey())) {</span>
+<span class="fc" id="L279">                            disabled = true;</span>
+<span class="fc" id="L280">                            break;</span>
+                        }
+<span class="fc" id="L282">                    }</span>
+
+<span class="fc bfc" id="L284" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(modulItem.getItemKey())) {</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">                        if (disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(&quot;editorFullMenu&quot;);</span>
+                    }
+                    else {
+<span class="fc bfc" id="L288" title="All 2 branches covered.">                        if(!disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(modulItem.getItemKey());</span>
+                    }
+<span class="fc" id="L290">                }</span>
+            }
+<span class="fc" id="L292">            enabledItems = Tools.getTokens(enabledItemsKeysString, &quot;,&quot;);</span>
+
+            //writable_folders - kazdy zaznam na novom riadku
+<span class="fc" id="L295">            String folders[] = Tools.getTokens(userDetailsOriginal.getWritableFolders(), &quot;\n&quot;);</span>
+<span class="fc" id="L296">            writableFolders = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">            for (String folder : folders) {</span>
+<span class="fc" id="L298">                folder = Tools.replace(folder, &quot;*&quot;, &quot;&quot;); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost</span>
+<span class="fc" id="L299">                DirTreeItem item = new DirTreeItem(folder);</span>
+<span class="fc" id="L300">                writableFolders.add(item);</span>
+            }
+
+            //nastav heslo na Unchanged, aby presla validacia
+<span class="fc" id="L304">            userDetailsOriginal.setPassword(UserTools.PASS_UNCHANGED);</span>
+        }
+
+<span class="fc" id="L307">        login = userDetailsOriginal.getLogin();</span>
+
+        //Set this Editor fields
+<span class="fc" id="L310">        userDetailsOriginal.setEditorFields(this);</span>
+
+        //nastav cervene zobrazenie pre userov, ktory nemaju povolene prihlasenie
+<span class="fc" id="L313">        boolean isNotAvailable = false;</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        if (Boolean.FALSE.equals(userDetailsOriginal.getAuthorized())) {</span>
+<span class="fc" id="L315">            isNotAvailable = true;</span>
+        }
+        //skontroluj ci sa moze prihlasit
+<span class="fc" id="L318">        long startL = 0;</span>
+<span class="fc" id="L319">        long endL = Long.MAX_VALUE;</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">        if (userDetailsOriginal.getAllowLoginStart()!=null) startL = userDetailsOriginal.getAllowLoginStart().getTime();</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        if (userDetailsOriginal.getAllowLoginEnd()!=null) endL = userDetailsOriginal.getAllowLoginEnd().getTime()+(60*60*24 * 1000);</span>
+<span class="fc" id="L322">        long now = Tools.getNow();</span>
+<span class="pc bpc" id="L323" title="1 of 4 branches missed.">        if (now &lt; startL || now &gt; endL) isNotAvailable = true;</span>
+
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (isNotAvailable) addRowClass(&quot;is-disabled&quot;);</span>
+<span class="fc" id="L326">    }</span>
+
+    public void toUserDetailsEntity(UserDetailsEntity userDetailsOriginal, HttpServletRequest request) {
+
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields()==null) return;</span>
+
+<span class="fc" id="L332">        String userGroupIdsString = UserDetailsService.getUserGroupIds(userDetailsOriginal.getEditorFields().getPermisions(), userDetailsOriginal.getEditorFields().getEmails());</span>
+        //Set new string of selected useg group ids
+<span class="fc" id="L334">        userDetailsOriginal.setUserGroupsIds(userGroupIdsString);</span>
+
+        //Get editable group ids and add them to string
+<span class="fc" id="L337">        List&lt;GroupDetails&gt; seletedEditableGroups = userDetailsOriginal.getEditorFields().getEditableGroups();</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">        if (seletedEditableGroups != null) {</span>
+<span class="fc" id="L339">            String editableGroupIdsString = &quot;&quot;;</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">            for(int i = 0; i &lt; seletedEditableGroups.size(); i++) {</span>
+
+<span class="fc bfc" id="L342" title="All 2 branches covered.">                if(editableGroupIdsString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L343">                    editableGroupIdsString = &quot;&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+                } else {
+<span class="fc" id="L345">                    editableGroupIdsString += &quot;,&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+                }
+            }
+            //Set new string of selected editabled groups
+<span class="fc" id="L349">            userDetailsOriginal.setEditableGroups(editableGroupIdsString);</span>
+        }
+
+        //Get editable page ids and add them to string
+<span class="fc" id="L353">        List&lt;DocDetails&gt; selectedEditablePages =  userDetailsOriginal.getEditorFields().getEditablePages();</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">        if (selectedEditablePages != null) {</span>
+<span class="fc" id="L355">            String editablePageIdsString = &quot;&quot;;</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">            for(int i = 0; i &lt; selectedEditablePages.size(); i++) {</span>
+
+<span class="fc bfc" id="L358" title="All 2 branches covered.">                if(editablePageIdsString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L359">                    editablePageIdsString = &quot;&quot; + selectedEditablePages.get(i).getDocId();</span>
+                } else {
+<span class="fc" id="L361">                    editablePageIdsString += &quot;,&quot; + selectedEditablePages.get(i).getDocId();</span>
+                }
+            }
+            //Set new string of selected editabled pages
+<span class="fc" id="L365">            userDetailsOriginal.setEditablePages(editablePageIdsString);</span>
+        }
+
+        //writableFolders
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields().getWritableFolders()!=null) {</span>
+<span class="fc" id="L370">            StringBuilder writableFoldersStr = new StringBuilder();</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">            for (DirTreeItem dir : userDetailsOriginal.getEditorFields().getWritableFolders()) {</span>
+<span class="pc bpc" id="L372" title="2 of 4 branches missed.">                if (dir == null || Tools.isEmpty(dir.getVirtualPath())) continue;</span>
+
+<span class="fc bfc" id="L374" title="All 2 branches covered.">                if (writableFoldersStr.length()&gt;0) writableFoldersStr.append(&quot;\n&quot;);</span>
+<span class="fc" id="L375">                writableFoldersStr.append(dir.getVirtualPath());</span>
+<span class="pc bpc" id="L376" title="1 of 2 branches missed.">                if (dir.getVirtualPath().endsWith(&quot;*&quot;)==false) {</span>
+                    //WJ kontroluje /images/* a /images/ ale GUI automaticky predpoklada len format /images/*
+<span class="pc bpc" id="L378" title="1 of 2 branches missed.">                    if (dir.getVirtualPath().endsWith(&quot;/&quot;)==false) writableFoldersStr.append(&quot;/&quot;);</span>
+<span class="fc" id="L379">                    writableFoldersStr.append(&quot;*&quot;);</span>
+                }
+
+<span class="fc" id="L382">            }</span>
+<span class="fc" id="L383">            userDetailsOriginal.setWritableFolders(writableFoldersStr.toString());</span>
+        }
+
+        //Set login and E-mail from editor fields to original entity
+<span class="pc bpc" id="L387" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(userDetailsOriginal.getEditorFields().getLogin())) userDetailsOriginal.setLogin(userDetailsOriginal.getEditorFields().getLogin());</span>
+<span class="fc" id="L388">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

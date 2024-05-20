@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NumberComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.displaytag</a> &gt; <span class="el_source">NumberComparator.java</span></div><h1>NumberComparator.java</h1><pre class="source lang-java linenums">package sk.iway.displaytag;
+
+
+import java.io.Serializable;
+
+import org.displaytag.exception.ObjectLookupException;
+import org.displaytag.exception.RuntimeLookupException;
+import org.displaytag.model.Cell;
+import org.displaytag.model.DefaultComparator;
+import org.displaytag.model.Row;
+import org.displaytag.util.LookupUtil;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.SearchTools;
+
+/**
+ *  NumberComparator.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2006
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 10.4.2006 10:56:56
+ *@modified     $Date: 2006/11/30 09:31:20 $
+ */
+<span class="nc" id="L27">public class NumberComparator extends DefaultComparator implements Serializable</span>
+{
+	/**
+	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
+	 */
+	private static final long serialVersionUID = -6110437067864934090L;
+	/**
+	 * name of the property in bean.
+	 */
+	private String property;
+	/**
+	 * sort order ascending?
+	 */
+	private boolean ascending;
+
+	/**
+	 * @param ascending
+	 *           The ascending to set.
+	 */
+	public void setAscending(boolean ascending)
+	{
+<span class="nc" id="L48">		this.ascending = ascending;</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * @param property
+	 *           The property to set.
+	 */
+	public void setProperty(String property)
+	{
+<span class="nc" id="L57">		this.property = property;</span>
+<span class="nc" id="L58">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public int compare(Object object1, Object object2)
+	{
+
+<span class="nc" id="L69">		Object obj1 = null;</span>
+<span class="nc" id="L70">      Object obj2 = null;</span>
+
+      // if property is null compare using two static cell objects
+<span class="nc bnc" id="L73" title="All 2 branches missed.">      if (this.property == null)</span>
+      {
+<span class="nc" id="L75">          return checkNullsAndCompare(object1, object2);</span>
+      }
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">      if (object1 instanceof Row)</span>
+      {
+<span class="nc" id="L80">          obj1 = ((Row) object1).getObject();</span>
+      }
+<span class="nc bnc" id="L82" title="All 2 branches missed.">      if (object2 instanceof Row)</span>
+      {
+<span class="nc" id="L84">          obj2 = ((Row) object2).getObject();</span>
+      }
+
+      try
+      {
+<span class="nc" id="L89">          Object result1 = null;</span>
+<span class="nc" id="L90">          Object result2 = null;</span>
+
+          // If they have supplied a decorator, then make sure and use it for the sorting as well
+<span class="nc" id="L93">          result1 = LookupUtil.getBeanProperty(obj1, this.property);</span>
+<span class="nc" id="L94">          result2 = LookupUtil.getBeanProperty(obj2, this.property);</span>
+
+<span class="nc" id="L96">          return checkNullsAndCompare(result1, result2);</span>
+      }
+<span class="nc" id="L98">      catch (ObjectLookupException e)</span>
+      {
+<span class="nc" id="L100">          throw new RuntimeLookupException(getClass(), this.property, e);</span>
+      }
+
+
+
+	}
+
+	/**
+    * Compares two given objects handlig nulls and not comparable objects are handled. Not comparable objects are
+    * compared using their string representation.
+    * @param object1 first object to compare
+    * @param object2 second object to compare
+    * @return int result
+    */
+   private int checkNullsAndCompare(Object object1, Object object2)
+   {
+<span class="nc" id="L116">       int returnValue = 0;</span>
+
+<span class="nc bnc" id="L118" title="All 4 branches missed.">       if (object1 != null &amp;&amp; object2 != null)</span>
+       {
+           // if object are not null and don't implement comparable, compare using string values
+
+			try
+			{
+<span class="nc" id="L124">				String str1 = object1.toString().trim();</span>
+<span class="nc" id="L125">				String str2 = object2.toString().trim();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (object1 instanceof Cell)</span>
+				{
+<span class="nc" id="L129">					str1 = (String)((Cell)object1).getStaticValue();</span>
+				}
+<span class="nc bnc" id="L131" title="All 2 branches missed.">				if (object2 instanceof Cell)</span>
+				{
+<span class="nc" id="L133">					str2 = (String)((Cell)object2).getStaticValue();</span>
+				}
+
+<span class="nc" id="L136">				str1 = SearchTools.htmlToPlain(str1);</span>
+<span class="nc" id="L137">				str2 = SearchTools.htmlToPlain(str2);</span>
+
+<span class="nc" id="L139">				str1 = str1.replace(',', '.');</span>
+<span class="nc" id="L140">				str2 = str2.replace(',', '.');</span>
+
+<span class="nc" id="L142">				str1 = Tools.replace(str1, &quot;%&quot;, &quot;&quot;);</span>
+<span class="nc" id="L143">				str1 = Tools.replace(str1, &quot; &quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L145">				str2 = Tools.replace(str2, &quot;%&quot;, &quot;&quot;);</span>
+<span class="nc" id="L146">				str2 = Tools.replace(str2, &quot; &quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if (&quot;-&quot;.equals(str1)) str1=&quot;0&quot;;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				if (&quot;-&quot;.equals(str2)) str2=&quot;0&quot;;</span>
+
+<span class="nc" id="L151">				str1 = getOnlyNumber(str1);</span>
+<span class="nc" id="L152">				str2 = getOnlyNumber(str2);</span>
+
+				//System.out.println(&quot;compare: &quot;+str1+&quot; vs &quot;+str2);
+
+<span class="nc" id="L156">				double number1 = Double.parseDouble(str1);</span>
+<span class="nc" id="L157">				double number2 = Double.parseDouble(str2);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				if (number1==number2)</span>
+				{
+<span class="nc" id="L160">					return 0;</span>
+				}
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (number1 &lt; number2)</span>
+				{
+<span class="nc" id="L164">					returnValue = 1;</span>
+				}
+				else
+				{
+<span class="nc" id="L168">					returnValue = -1;</span>
+				}
+			}
+<span class="nc" id="L171">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L173">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L174">			}</span>
+       }
+<span class="nc bnc" id="L176" title="All 4 branches missed.">       else if (object1 == null &amp;&amp; object2 != null)</span>
+       {
+<span class="nc" id="L178">           returnValue = 1;</span>
+       }
+<span class="nc bnc" id="L180" title="All 4 branches missed.">       else if (object1 != null &amp;&amp; object2 == null)</span>
+       {
+<span class="nc" id="L182">           returnValue = -1;</span>
+       }
+       else
+       {
+           // both null
+<span class="nc" id="L187">           returnValue = 0;</span>
+       }
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">       int ascendingInt = this.ascending ? 1 : -1;</span>
+<span class="nc" id="L191">       return ascendingInt * returnValue;</span>
+   }
+
+   /**
+    * vrati napr z 10 123.22 EUR &gt; 10123.22
+    * @param src
+    * @return
+    */
+   private String getOnlyNumber(String src)
+   {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">   	if(Tools.isEmpty(src)) return &quot;0&quot;;</span>
+<span class="nc" id="L202">   	StringBuilder builder = new StringBuilder(&quot;&quot;);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">      for (int i = 0; i &lt; src.length(); i++) {</span>
+<span class="nc" id="L204">          char c = src.charAt(i);</span>
+<span class="nc bnc" id="L205" title="All 6 branches missed.">          if (Character.isDigit(c) || '.' == c || ',' == c) {</span>
+<span class="nc" id="L206">              builder.append(c);</span>
+          }
+      }
+<span class="nc bnc" id="L209" title="All 2 branches missed.">      return (builder.length() &gt; 0 ? builder.toString() : &quot;0&quot;);</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

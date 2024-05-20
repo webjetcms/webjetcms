@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetadataCleaner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.metadata</a> &gt; <span class="el_source">MetadataCleaner.java</span></div><h1>MetadataCleaner.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.metadata;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
+
+<span class="nc" id="L15">public class MetadataCleaner {</span>
+
+	public static boolean removeMetadata(String virtualPath)
+	{
+<span class="nc" id="L19">		IwcmFile file = new IwcmFile(Constants.getServletContext().getRealPath(virtualPath));</span>
+<span class="nc" id="L20">		return removeMetadata(file);</span>
+	}
+
+	public static boolean removeMetadata(IwcmFile file)
+	{
+<span class="nc" id="L25">		String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
+<span class="nc" id="L26">		String metadataRemoverParams = Constants.getString(&quot;metadataRemoverParams&quot;);</span>
+<span class="nc" id="L27">		String metadataRemoverExtensions = Constants.getString(&quot;metadataRemoverExtensions&quot;);</span>
+
+<span class="nc" id="L29">		boolean result = false;</span>
+
+
+		try
+		{
+<span class="nc bnc" id="L34" title="All 2 branches missed.">			if (Tools.isNotEmpty(metadataRemoverCommand))</span>
+			{
+<span class="nc" id="L36">				File f = new File(metadataRemoverCommand);</span>
+<span class="nc bnc" id="L37" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.canRead())</span>
+				{
+					//overi, ci sa pripona suboru nachadza medzi filtrovanymi priponami.
+<span class="nc" id="L40">					String fileExtension = file.getName().substring(file.getName().lastIndexOf(&quot;.&quot;)+1, file.getName().length()).toLowerCase();</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">					if (Arrays.asList(Tools.getTokens(metadataRemoverExtensions.toLowerCase(), &quot;,&quot;)).contains(fileExtension))</span>
+					{
+<span class="nc" id="L43">						waitForGfs();</span>
+
+<span class="nc" id="L45">						Logger.println(MetadataCleaner.class, &quot;executing metadata remover: &quot; + metadataRemoverCommand);</span>
+<span class="nc" id="L46">						Runtime rt = Runtime.getRuntime();</span>
+<span class="nc" id="L47">						String[] params = Tools.getTokens(metadataRemoverParams, &quot; &quot;);</span>
+<span class="nc" id="L48">						String[] args = new String[params.length+1];</span>
+<span class="nc" id="L49">						int index=0;</span>
+<span class="nc" id="L50">						args[index++] = metadataRemoverCommand;</span>
+						//naseka argumenty do pola
+<span class="nc bnc" id="L52" title="All 2 branches missed.">						for (int i=0; i&lt;params.length; i++)</span>
+						{
+<span class="nc bnc" id="L54" title="All 2 branches missed.">							if (params[i].indexOf(&quot;{filePath}&quot;)!=-1)</span>
+							{
+								//ak je DBFS, vytvori lokalnu kopiu na disku, na konci ju ulozi opat do DB.
+<span class="nc bnc" id="L57" title="All 2 branches missed.">								if (IwcmFsDB.useDBStorage(file.getVirtualPath()))</span>
+								{
+<span class="nc" id="L59">									IwcmFsDB.writeFileToDisk(new File(file.getPath()),new File(IwcmFsDB.getTempFilePath(file.getPath())));</span>
+<span class="nc" id="L60">									args[index++] = IwcmFsDB.getTempFilePath(file.getPath());</span>
+								}
+								else
+								{
+<span class="nc" id="L64">									args[index++] = file.getPath();</span>
+								}
+							}
+							else
+							{
+<span class="nc" id="L69">								args[index++] = params[i];</span>
+							}
+
+						}
+
+<span class="nc" id="L74">						String cmdString = &quot;&quot;;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">						if (args != null)</span>
+						{
+<span class="nc bnc" id="L77" title="All 2 branches missed.">							for (int i = 0; i &lt; args.length; i++)</span>
+							{
+<span class="nc bnc" id="L79" title="All 2 branches missed.">								if (Tools.isNotEmpty(args[i]))</span>
+<span class="nc" id="L80">									cmdString += &quot; &quot; + args[i];</span>
+							}
+						}
+<span class="nc" id="L83">						Logger.println(MetadataCleaner.class, &quot;CMD:\n&quot; + cmdString);</span>
+<span class="nc" id="L84">						Process proc = rt.exec(args);</span>
+<span class="nc" id="L85">						InputStream stderr = proc.getErrorStream();</span>
+<span class="nc" id="L86">						BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L87">						String line = null;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">						while ((line = br.readLine()) != null)</span>
+						{
+<span class="nc" id="L90">							Logger.println(MetadataCleaner.class, line);</span>
+						}
+<span class="nc" id="L92">						br.close();</span>
+<span class="nc" id="L93">						int exitValue = proc.waitFor();</span>
+
+						//ak ide o subor z DBFS, ulozi ho naspat do DB
+<span class="nc bnc" id="L96" title="All 2 branches missed.">						if (IwcmFsDB.useDBStorage(file.getVirtualPath()))</span>
+						{
+<span class="nc" id="L98">							IwcmFsDB.writeFileToDB(new File(IwcmFsDB.getTempFilePath(file.getVirtualPath())), new File(file.getVirtualPath()));</span>
+<span class="nc" id="L99">							new File(IwcmFsDB.getTempFilePath(file.getVirtualPath())).delete();</span>
+						}
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">						if (exitValue==0)</span>
+<span class="nc" id="L103">							result = true;</span>
+<span class="nc" id="L104">						Logger.println(MetadataCleaner.class, &quot;ExitValue: &quot; + exitValue);</span>
+<span class="nc" id="L105">					}</span>
+					else
+<span class="nc" id="L107">						result = true;</span>
+				}
+			}
+		}
+<span class="nc" id="L111">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L113">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L114">		}</span>
+<span class="nc" id="L115">		return result;</span>
+	}
+
+	public static void waitForGfs()
+	{
+<span class="nc" id="L120">		int metadataWaitTime = Constants.getInt(&quot;metadataWaitTime&quot;);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (metadataWaitTime &gt; 0)</span>
+		{
+			try
+			{
+				//kvoli GFS a tomu, ze menime existujuci subor je potrebne pockat aby nevznikol konflikt
+<span class="nc" id="L126">				Thread.sleep(metadataWaitTime);</span>
+			}
+<span class="nc" id="L128">			catch (Exception e)</span>
+			{
+<span class="nc" id="L130">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L131">			}</span>
+		}
+<span class="nc" id="L133">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

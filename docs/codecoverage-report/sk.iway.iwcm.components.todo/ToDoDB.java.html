@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDoDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.todo</a> &gt; <span class="el_source">ToDoDB.java</span></div><h1>ToDoDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.todo;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Query;
+
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+/**
+ * ToDoDB.java
+ *
+ * DAO class for manipulating with ToDoBean
+ *
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2010
+ * @author $Author: mkolejak $
+ * @version $Revision: 1.3 $
+ * @created Date: 01.07.2014 14:54:26
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+public class ToDoDB extends JpaDB&lt;ToDoBean&gt;
+{
+	public ToDoDB()
+	{
+<span class="fc" id="L37">		super(ToDoBean.class);</span>
+<span class="fc" id="L38">	}</span>
+
+	public static boolean saveToDo(ToDoBean toDo)
+	{
+<span class="nc" id="L42">		return new JpaDB&lt;&gt;(ToDoBean.class).save(toDo);</span>
+	}
+
+	public ToDoBean findFirstByToDoId(int todoId)
+	{
+<span class="nc" id="L47">		return JpaTools.findFirstByMatchingProperty(ToDoBean.class, &quot;todoId&quot;, todoId);</span>
+	}
+
+	public boolean resolveToDo(int todoId)
+	{
+<span class="nc" id="L52">		Logger.debug(this, &quot;method resolveToDo() todoId: &quot; + todoId);</span>
+<span class="nc" id="L53">		ToDoBean toDo = findFirstByToDoId(todoId);</span>
+<span class="nc" id="L54">		toDo.setIsResolved(true);</span>
+<span class="nc" id="L55">		toDo.setModifDate(new Date());</span>
+<span class="nc" id="L56">		boolean wasSaved = saveToDo(toDo);</span>
+<span class="nc" id="L57">		Logger.debug(this, &quot;method resolveToDo() wasSaved: &quot; + wasSaved);</span>
+<span class="nc" id="L58">		return wasSaved;</span>
+	}
+
+	public boolean remove(ToDoBean toDoBean) {
+<span class="nc" id="L62">		return new JpaDB&lt;&gt;(ToDoBean.class).delete(toDoBean);</span>
+	}
+
+	public List&lt;ToDoBean&gt; getToDo(int userId)
+	{
+		//Logger.debug(this, &quot;method getToDo()&quot;);
+<span class="fc" id="L68">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L69">		List&lt;ToDoBean&gt; results = new ArrayList&lt;&gt;();</span>
+		try
+		{
+<span class="fc" id="L72">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L73">			ReadAllQuery dbQuery = new ReadAllQuery(ToDoBean.class, builder);</span>
+<span class="fc" id="L74">			Expression isGlobal = builder.get(&quot;isGlobal&quot;).equal(true);</span>
+<span class="fc" id="L75">			Expression isResolved = builder.get(&quot;isResolved&quot;).equal(false);</span>
+<span class="fc" id="L76">			Expression isUserId = builder.get(&quot;userId&quot;).equal(userId);</span>
+<span class="fc" id="L77">			Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L78">			cal.add(Calendar.HOUR,-24);</span>
+<span class="fc" id="L79">			Expression isBetween = builder.get(&quot;modifDate&quot;).between(cal.getTime(), new Date());</span>
+//			why name to do why?!?
+//			&quot;SELECT * FROM to do WHERE is_global=1 OR user_id=? AND (is_resolved=0 OR modif_date BETWEEN ? AND ?) ORDER BY priority, is_resolved&quot;;
+<span class="fc" id="L82">			dbQuery.setSelectionCriteria(isGlobal.or(isUserId.and(isResolved.or(isBetween))));</span>
+			//Logger.debug(this, &quot;method getToDo() q: &quot; + dbQuery.toString());
+<span class="fc" id="L84">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L85">			results = JpaDB.getResultList(query);</span>
+			//Logger.debug(this, &quot;method getToDo() results: &quot; + results.toString());
+		}
+<span class="nc" id="L88">		catch (Exception e)</span>
+		{
+<span class="nc" id="L90">			sk.iway.iwcm.Logger.error(e);</span>
+		}
+		finally
+		{
+<span class="fc" id="L94">			em.close();</span>
+		}
+<span class="fc" id="L96">		return results;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

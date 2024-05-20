@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketDB.java</span></div><h1>BasketDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketDBTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.system.jpa.JpaTools;
+
+/**
+ *  BasketDB.java - Praca s nakupnym kosikom, funkcie na pracu s databazou s tabulkou basket_item
+ *  MBO: upravene aby sa dalo pracovat len s polozkami s domain_id aktualnej domeny
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2010
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.16 $
+ *@created      Date: 9.11.2005 15:08:15
+ *@modified     $Date: 2010/01/20 10:12:27 $
+ */
+<span class="nc" id="L46">public class BasketDB</span>
+{
+	private static final String BASKET_INVOICE_ID = &quot;basketInvoiceId&quot;;
+	private static final String BASKET_INVOICE = &quot;basketInvoice&quot;;
+	protected static final String BROWSER_ID_SESSION_KEY = &quot;BasketDB.browserIdSession&quot;;
+
+	/**
+	 * Vrati instanciu objektu BasketItemBean podla zadaneho identifikatora
+	 *
+	 * @param basketItemId
+	 * @return
+	 */
+	public static BasketItemBean getBasketItemById(int basketItemId)
+	{
+		//return JpaTools.getEclipseLinkEntityManager().find(BasketItemBean.class, basketItemId);
+
+<span class="nc" id="L62">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L63">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+
+		//Filter by domainId
+<span class="nc" id="L66">		Expression expression = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L68">		expression = JpaDB.and(expression, builder.get(&quot;basketItemId&quot;).equal(basketItemId));</span>
+
+<span class="nc" id="L70">		ReadAllQuery dbQuery = new ReadAllQuery(BasketItemBean.class, builder);</span>
+
+<span class="nc" id="L72">		dbQuery.setSelectionCriteria(expression);</span>
+
+
+<span class="nc" id="L75">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L76">		BasketItemBean result = null;</span>
+		try
+		{
+<span class="nc" id="L79">			result = (BasketItemBean) query.getSingleResult();</span>
+<span class="nc" id="L80">			return result;</span>
+		}
+<span class="nc" id="L82">		catch (NoResultException ex)</span>
+		{
+<span class="nc" id="L84">			return null;</span>
+		}
+	}
+
+	/**
+	 * Toto bolo povodne zalozene na statBrowserId, ale po zvazeni som to preimplementoval
+	 * tak, aby to bolo zavisle na session (inak by zostavali neobjednane produkty v kosiku)
+	 *
+	 * @param request
+	 *
+	 * @return
+	 */
+	public static long getBrowserId(HttpServletRequest request)
+	{
+<span class="nc" id="L98">		long browserId = 0;</span>
+
+<span class="nc" id="L100">		String cValue = (String)request.getSession().getAttribute(BROWSER_ID_SESSION_KEY);</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (Tools.isEmpty(cValue))</span>
+		{
+<span class="nc" id="L104">			browserId = PkeyGenerator.getNextValue(&quot;basket_browser_id&quot;);</span>
+<span class="nc" id="L105">			request.getSession().setAttribute(BROWSER_ID_SESSION_KEY, Long.toString(browserId));</span>
+		}
+		else
+		{
+<span class="nc" id="L109">			browserId = Integer.parseInt(cValue);</span>
+		}
+
+<span class="nc" id="L112">		return(browserId);</span>
+	}
+
+	/**
+	 * Vrati userId z requestu
+	 *
+	 * @param request
+	 * @return
+	 */
+	public static int getUserId(HttpServletRequest request)
+	{
+<span class="nc" id="L123">		int userId = -1;</span>
+<span class="nc" id="L124">		HttpSession session = request.getSession();</span>
+<span class="nc" id="L125">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (user != null)</span>
+<span class="nc" id="L127">			userId = user.getUserId();</span>
+
+<span class="nc" id="L129">		return(userId);</span>
+	}
+
+	/**
+	 * Prida (nastavi QTY) polozku do nakupneho kosika
+	 *  @param basketItemId = docId stranky s polozkou
+	 *  @param basketQty = pocet kusov (ak je null pouzije sa 1)
+	 *  @param basketUserNote = poznamka k polozke
+	 *  @param request
+	 *
+	 * @return
+	 */
+	public static boolean setItemFromDoc(HttpServletRequest request, int basketItemId, int basketQty, String basketUserNote)
+	{
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (ShowDoc.getXssRedirectUrl(request) != null)</span>
+<span class="nc" id="L144">			return false;</span>
+
+<span class="nc" id="L146">		int itemId = Tools.getIntValue(basketItemId, -1);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (itemId == -1)</span>
+<span class="nc" id="L148">			return(false);</span>
+
+<span class="nc" id="L150">		boolean ok = false;</span>
+
+<span class="nc" id="L152">		long browserId = getBrowserId(request);</span>
+<span class="nc" id="L153">		int userId = BasketDB.getUserId(request);</span>
+<span class="nc" id="L154">		int qty = basketQty;</span>
+<span class="nc" id="L155">		String userNote = basketUserNote;</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (userNote == null)</span>
+<span class="nc" id="L158">			userNote = &quot;&quot;;</span>
+
+		//MBO: zabranenie ziskania DocDetails dokumentu pre inu domenu musi byt osetrene na urovni DocDB
+<span class="nc" id="L161">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L162">		DocDetails doc = docDB.getDoc(itemId);</span>
+
+<span class="nc" id="L164">		int invoiceId = -1;</span>
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (doc != null)</span>
+		{
+<span class="nc" id="L168">			BasketItemBean basketItem = null;</span>
+<span class="nc" id="L169">			basketItem = getBasketItemBean(basketItem, request, qty, userNote);</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (basketItem != null)</span>
+			{
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				if (userId &gt; 0)</span>
+<span class="nc" id="L174">					basketItem.setLoggedUserId(userId);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">				if (Tools.isNotEmpty(userNote))</span>
+<span class="nc" id="L176">					basketItem.setItemNote(userNote);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				if (&quot;set&quot;.equals(request.getParameter(&quot;act&quot;)))</span>
+				{
+<span class="nc bnc" id="L179" title="All 2 branches missed.">					if (qty &lt; 1)</span>
+					{
+<span class="nc" id="L181">						BasketDB.deleteBasketItem(basketItem.getBasketItemId());</span>
+<span class="nc" id="L182">						return true;</span>
+					}
+					else
+					{
+<span class="nc bnc" id="L186" title="All 2 branches missed.">						if(!canAddItem(doc, null, Integer.valueOf(qty)))</span>
+<span class="nc" id="L187">							return false;</span>
+<span class="nc" id="L188">						basketItem.setItemQty(Integer.valueOf(qty));</span>
+					}
+				}
+				else
+				{
+<span class="nc bnc" id="L193" title="All 2 branches missed.">					if(!canAddItem(doc, basketItem, qty))</span>
+<span class="nc" id="L194">						return false;</span>
+<span class="nc" id="L195">					basketItem.setItemQty(Integer.valueOf(basketItem.getItemQty().intValue() + qty));</span>
+				}
+<span class="nc" id="L197">				ok = true;</span>
+			}
+			else
+			{
+<span class="nc" id="L201">				basketItem = new BasketItemBean();</span>
+
+<span class="nc" id="L203">				basketItem.setBrowserId(Long.valueOf(browserId));</span>
+<span class="nc" id="L204">				basketItem.setLoggedUserId(userId);</span>
+<span class="nc" id="L205">				basketItem.setItemId(itemId);</span>
+
+<span class="nc" id="L207">				Double price = Double.valueOf(doc.getPrice(request));</span>
+<span class="nc" id="L208">				Double vat = Double.valueOf(doc.getVat());</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if(request.getAttribute(&quot;docPrice&quot;)!= null)</span>
+<span class="nc" id="L211">					price = Tools.getDoubleValue(request.getAttribute(&quot;docPrice&quot;), 0);</span>
+
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if(request.getAttribute(&quot;docVat&quot;)!= null)</span>
+<span class="nc" id="L214">					vat = Tools.getDoubleValue(request.getAttribute(&quot;docVat&quot;), 0);</span>
+
+<span class="nc" id="L216">				basketItem.setItemPrice(price);</span>
+<span class="nc" id="L217">				basketItem.setItemVat(vat);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				if(!canAddItem(doc, basketItem, qty))</span>
+<span class="nc" id="L219">					return false;</span>
+<span class="nc" id="L220">				basketItem.setItemQty(Integer.valueOf(qty));</span>
+<span class="nc" id="L221">				basketItem.setItemNote(userNote);</span>
+<span class="nc" id="L222">				basketItem.setDateInsert(new Date(Tools.getNow()));</span>
+
+				//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovanya vzdy sa vlozi aktualna domena.
+<span class="nc" id="L225">				basketItem.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+<span class="nc" id="L227">				basketItem.setBasketInvoice(InvoiceDB.getInvoiceById(invoiceId));</span>
+
+				//uloz aj nazov a PN, lebo sa moze stat, ze dokument sa vymaze
+<span class="nc" id="L230">				basketItem.setItemTitle(doc.getTitle());</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if(request.getAttribute(&quot;itemTitle&quot;)!= null)</span>
+<span class="nc" id="L232">					basketItem.setItemTitle((String)request.getAttribute(&quot;docTitle&quot;));</span>
+<span class="nc" id="L233">				basketItem.setItemPartNo(doc.getFieldA());</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">				if(request.getAttribute(&quot;itemPartNo&quot;)!= null)</span>
+<span class="nc" id="L235">					basketItem.setItemPartNo((String)request.getAttribute(&quot;itemPartNo&quot;));</span>
+			}
+
+<span class="nc" id="L238">			BasketDB.saveBasketItem(basketItem);</span>
+<span class="nc" id="L239">			ok = true;</span>
+		}
+
+<span class="nc" id="L242">		return(ok);</span>
+	}
+
+	private static BasketItemBean getBasketItemBean(BasketItemBean basketItem, HttpServletRequest request, int qty, String userNote)
+	{
+<span class="nc" id="L247">		long browserId = getBrowserId(request);</span>
+<span class="nc" id="L248">		int invoiceId = -1;</span>
+<span class="nc" id="L249">		int itemId = Tools.getIntValue(Tools.getIntValue(request.getParameter(&quot;basketItemId&quot;), -1), -1);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (itemId == -1)</span>
+<span class="nc" id="L251">			return null;</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;basketCumulateItems&quot;))</span>
+		{
+<span class="nc" id="L255">			int basketId = Tools.getIntValue(request.getParameter(&quot;basketId&quot;), -1);</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (basketId &gt; 0)</span>
+			{
+				//basketItem = getBasketItem(session, browserId, invoiceId, itemId);
+<span class="nc" id="L259">				basketItem = BasketDB.getBasketItemById(basketId);</span>
+			}
+			else
+			{
+<span class="nc" id="L263">				basketItem = BasketDB.getBasketItem(getBrowserId(request), invoiceId, itemId);</span>
+<span class="nc bnc" id="L264" title="All 6 branches missed.">				if (basketItem!=null &amp;&amp; qty != basketItem.getItemQty().intValue() &amp;&amp; Tools.isNotEmpty(userNote))</span>
+				{
+					//ak sa meni QTY, skus najst aj podla userNote (measureshop...)
+<span class="nc" id="L267">					basketItem = BasketDB.getBasketItem(browserId, invoiceId, itemId, userNote);</span>
+				}
+			}
+<span class="nc" id="L270">		}</span>
+		else
+		{
+<span class="nc" id="L273">			int basketId = Tools.getIntValue(request.getParameter(&quot;basketId&quot;), -1);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (basketId &gt; 0)</span>
+			{
+				//basketItem = getBasketItem(session, browserId, invoiceId, itemId);
+<span class="nc" id="L277">				basketItem = BasketDB.getBasketItemById(basketId);</span>
+			}
+		}
+
+<span class="nc" id="L281">		return basketItem;</span>
+	}
+
+	/** Ak je dost produktov na sklade tak vrati true (mozeme vlozit do kosiku)
+	 *
+	 * @param doc
+	 * @param basketItemBean
+	 * @param newQty - pocet produktov ktore pridavame
+	 * @return
+	 * @author		$Author: $(prau)
+	 * @Ticket 		Number: #16989 WJ Cloud - Rozšírenie košíka o počet položiek na sklade
+	 */
+	private static boolean canAddItem(DocDetails doc, BasketItemBean basketItemBean,int newQty)
+	{
+<span class="nc" id="L295">		Logger.debug(BasketDB.class, &quot;doc: &quot;+doc+&quot; basketItemBean: &quot;+basketItemBean  +&quot; newQty: &quot;+newQty);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if(doc == null)</span>
+		{
+<span class="nc" id="L298">			return false;</span>
+		}
+
+<span class="nc" id="L301">		int oldQty = 0;</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">		if(basketItemBean != null)</span>
+<span class="nc" id="L303">			oldQty = Tools.getIntValue(basketItemBean.getItemQty());</span>
+
+		//kvoli moznostiam dopravy ktore su v /system adresari
+<span class="nc bnc" id="L306" title="All 2 branches missed.">		if (doc.getDocLink().toLowerCase().startsWith(&quot;/system&quot;))</span>
+		{
+<span class="nc" id="L308">			return true;</span>
+		}
+
+		//ak tam nie je ziadne cislo pocitanie kusov na sklade neriesime
+<span class="nc bnc" id="L312" title="All 4 branches missed.">		if (Tools.isEmpty(doc.getFieldB()) || Tools.getIntValue(doc.getFieldB(),-9999)==-9999) return true;</span>
+
+<span class="nc bnc" id="L314" title="All 2 branches missed.">		return Tools.getIntValue(doc.getFieldB(),0) &gt;= (newQty+oldQty);</span>
+	}
+
+	/** Ak je dost produktov na sklade tak vrati true (mozeme vlozit do kosiku)
+	 *
+	 * @param req - HttpServletRequest
+	 * @return
+	 * @author		$Author: $(prau)
+	 * @Ticket 		Number: #16989 WJ Cloud - Rozšírenie košíka o počet položiek na sklade
+	 */
+	public static boolean canAddItem(HttpServletRequest req)
+	{
+<span class="nc" id="L326">		int qty = Tools.getIntValue(req.getParameter(&quot;basketQty&quot;), 1);</span>
+<span class="nc" id="L327">		String userNote = req.getParameter(&quot;basketUserNote&quot;);</span>
+<span class="nc" id="L328">		int itemId = Tools.getIntValue(Tools.getIntValue(req.getParameter(&quot;basketItemId&quot;), -1), -1);</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		if (itemId == -1)</span>
+<span class="nc" id="L330">			return(false);</span>
+
+<span class="nc" id="L332">		BasketItemBean basketItem = null;</span>
+<span class="nc" id="L333">		basketItem = getBasketItemBean(basketItem, req, qty, userNote);</span>
+
+<span class="nc" id="L335">		boolean result = canAddItem(DocDB.getInstance().getDoc(itemId), basketItem, Tools.getIntValue(req.getParameter(&quot;basketQty&quot;), 1));</span>
+<span class="nc" id="L336">		return result;</span>
+	}
+
+	/**
+	 * Prida (nastavi QTY) polozku do nakupneho kosika, v requeste ocakava nasledovne parametre:&lt;br /&gt;
+	 * - basketItemId = docId stranky s polozkou&lt;br /&gt;
+	 * - basketQty = pocet kusov (ak je null pouzije sa 1)&lt;br /&gt;
+	 * - basketUserNote = poznamka k polozke&lt;br /&gt;
+	 *
+	 * @param request
+	 *
+	 * @return
+	 */
+	public static boolean setItemFromDoc(HttpServletRequest request)
+	{
+<span class="nc" id="L351">		int itemId = Tools.getIntValue(request.getParameter(&quot;basketItemId&quot;), -1);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">		if (itemId == -1)</span>
+<span class="nc" id="L353">			return(false);</span>
+<span class="nc" id="L354">		int qty = Tools.getIntValue(request.getParameter(&quot;basketQty&quot;), 1);</span>
+<span class="nc" id="L355">		String userNote = request.getParameter(&quot;basketUserNote&quot;);</span>
+<span class="nc" id="L356">		return setItemFromDoc(request, itemId, qty, userNote);</span>
+	}
+
+	/**
+	 * Vrati polozku z kosika (ak existuje) pre zadane browserId, invoiceId a itemId. Ak neexistuje, vrati null
+	 *
+	 * @param browserId	identifikator podla browsera
+	 * @param invoiceId	identifikator faktury
+	 * @param itemId		identifikator polozky v kosiku
+	 *
+	 * @return
+	 */
+	public static BasketItemBean getBasketItem(long browserId, int invoiceId, int itemId)
+	{
+<span class="nc" id="L370">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+
+<span class="nc" id="L372">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L373">		ReadAllQuery dbQuery = new ReadAllQuery(BasketItemBean.class, builder);</span>
+
+<span class="nc" id="L375">		Expression expr = builder.get(&quot;browserId&quot;).equal(Long.valueOf(browserId));</span>
+<span class="nc" id="L376">		expr = JpaDB.and(expr, builder.get(&quot;itemId&quot;).equal(itemId));</span>
+
+		//kontroluje aj id domeny
+<span class="nc" id="L379">		int domId = CloudToolsForCore.getDomainId();</span>
+<span class="nc" id="L380">		expr = JpaDB.and(expr, builder.get(&quot;domainId&quot;).equal(domId));</span>
+
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		if (invoiceId == -1)</span>
+<span class="nc" id="L383">			expr = expr.and(builder.get(BASKET_INVOICE).isNull());</span>
+		else
+<span class="nc" id="L385">			expr = expr.and(builder.get(BASKET_INVOICE).get(BASKET_INVOICE_ID).equal(invoiceId));</span>
+
+<span class="nc" id="L387">		dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="nc" id="L389">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L390">		List&lt;BasketItemBean&gt; basketItems = JpaDB.getResultList(query);</span>
+
+		//Logger.println(BasketDB.class, &quot;getBasketItem(long browserId, int invoiceId, int itemId) : exp: &quot; + dbQuery.toString() + &quot;\n &quot; + expr.toString());
+
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (basketItems.size()&gt;0)</span>
+<span class="nc" id="L395">			return(basketItems.get(0));</span>
+
+<span class="nc" id="L397">		return(null);</span>
+	}
+
+	/**
+	 * Vrati polozku z kosika (ak existuje) pre zadane browserId, userId a itemId a itemNote alebo null
+	 * @param browserId
+	 * @param invoiceId
+	 * @param itemId
+	 * @param itemNote
+	 * @return
+	 */
+	public static BasketItemBean getBasketItem(long browserId, int invoiceId, int itemId, String itemNote)
+	{
+<span class="nc" id="L410">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+
+<span class="nc" id="L412">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L413">		ReadAllQuery dbQuery = new ReadAllQuery(BasketItemBean.class, builder);</span>
+
+<span class="nc" id="L415">		Expression expr = builder.get(&quot;browserId&quot;).equal(Long.valueOf(browserId));</span>
+<span class="nc" id="L416">		expr = expr.and(builder.get(&quot;itemId&quot;).equal(itemId));</span>
+
+		//kontroluje aj id domeny
+<span class="nc" id="L419">		expr = expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+
+<span class="nc bnc" id="L421" title="All 2 branches missed.">		if (invoiceId == -1)</span>
+<span class="nc" id="L422">			expr = expr.and(builder.get(BASKET_INVOICE).isNull());</span>
+		else
+<span class="nc" id="L424">			expr = expr.and(builder.get(BASKET_INVOICE).get(BASKET_INVOICE_ID).equal(invoiceId));</span>
+
+<span class="nc" id="L426">		expr = expr.and(builder.get(&quot;itemNote&quot;).equal(itemNote));</span>
+
+		//Logger.println(BasketDB.class, &quot;exp: &quot; + expr.toString());
+
+<span class="nc" id="L430">		dbQuery.setSelectionCriteria(expr);</span>
+
+<span class="nc" id="L432">		Query query = em.createQuery(dbQuery);</span>
+<span class="nc" id="L433">		List&lt;BasketItemBean&gt; items = JpaDB.getResultList(query);</span>
+
+<span class="nc bnc" id="L435" title="All 2 branches missed.">		if (items.size() &gt; 0)</span>
+<span class="nc" id="L436">			return(items.get(0));</span>
+
+<span class="nc" id="L438">		return(null);</span>
+	}
+
+	/**
+	 * Vrati zoznam poloziek nakupneho kosika
+	 * @param request
+	 * @return
+	 */
+	public static List&lt;BasketItemBean&gt; getBasketItems(HttpServletRequest request)
+	{
+<span class="nc" id="L448">		long browserId = getBrowserId(request);</span>
+
+<span class="nc" id="L450">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+
+<span class="nc" id="L452">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L453">		ReadAllQuery dbQuery = new ReadAllQuery(BasketItemBean.class, builder);</span>
+
+<span class="nc" id="L455">		Expression expr = builder.get(&quot;browserId&quot;).equal(Long.valueOf(browserId));</span>
+<span class="nc" id="L456">		expr = expr.and(builder.get(BASKET_INVOICE).isNull());</span>
+
+		//kontroluje aj id domeny
+<span class="nc" id="L459">		expr = JpaDB.and(expr, builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+
+<span class="nc" id="L461">		dbQuery.setSelectionCriteria(expr);</span>
+<span class="nc" id="L462">		Query query = em.createQuery(dbQuery);</span>
+
+<span class="nc" id="L464">		return JpaDB.getResultList(query);</span>
+	}
+
+	/**
+	 * Vymaze polozku v kosiku
+	 *
+	 * @param basketItemBeanId	identifikator polozky v kosiku
+	 */
+	public static void deleteBasketItem(int basketItemBeanId)
+	{
+<span class="nc" id="L474">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+		try
+		{
+<span class="nc" id="L477">			BasketItemBean basketItem = getBasketItemById(basketItemBeanId);//em.getReference(BasketItemBean.class, basketItemBeanId);</span>
+
+<span class="nc" id="L479">			em.getTransaction().begin();</span>
+<span class="nc" id="L480">			em.remove(basketItem);</span>
+<span class="nc" id="L481">			em.getTransaction().commit();</span>
+		}
+<span class="nc" id="L483">		catch (NoResultException ex)</span>
+		{
+<span class="nc" id="L485">			Logger.debug(BasketDB.class, &quot;Položku košíka nieje možné vymazať&quot;);</span>
+<span class="nc" id="L486">		}</span>
+<span class="nc" id="L487">	}</span>
+
+	/**
+	 * Vymazanie celeho nakupneho kosika - vsetkych poloziek ulozenych v session
+	 *
+	 * @param request
+	 * @return
+	 */
+	public static boolean deleteAll(HttpServletRequest request)
+	{
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		for (BasketItemBean item : getBasketItems(request))</span>
+		{
+<span class="nc" id="L499">			BasketDB.deleteBasketItem(item.getBasketItemId());</span>
+<span class="nc" id="L500">		}</span>
+
+<span class="nc" id="L502">		request.getSession().removeAttribute(BROWSER_ID_SESSION_KEY);</span>
+
+<span class="nc" id="L504">		return true;</span>
+	}
+
+	/**
+	 * Vrati celkovu cenu poloziek bez DPH
+	 *
+	 * @param items
+	 * @return
+	 */
+	public static double getTotalPrice(List&lt;BasketItemBean&gt; items)
+	{
+<span class="nc" id="L515">		double totalPrice = 0;</span>
+
+<span class="nc bnc" id="L517" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+		{
+<span class="nc" id="L519">			totalPrice += b.getItemPriceQty();</span>
+<span class="nc" id="L520">		}</span>
+
+<span class="nc" id="L522">		return(totalPrice);</span>
+	}
+
+	/**
+	 * Vrati celkovu cenu poloziek vratane DPH
+	 *
+	 * @param items
+	 * @return
+	 */
+	public static double getTotalPriceVat(List&lt;BasketItemBean&gt; items)
+	{
+<span class="nc" id="L533">		double totalPrice = 0;</span>
+
+<span class="nc bnc" id="L535" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+		{
+<span class="nc" id="L537">			totalPrice += b.getItemPriceVatQty();</span>
+<span class="nc" id="L538">		}</span>
+
+<span class="nc" id="L540">		return(totalPrice);</span>
+	}
+
+	/**
+	 * Vrati celkovy pocet poloziek v kosiku (vratane QTY)
+	 * @param items
+	 * @return
+	 */
+	public static int getTotalItems(List&lt;BasketItemBean&gt; items)
+	{
+<span class="nc" id="L550">		int totalItems = 0;</span>
+
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+		{
+<span class="nc" id="L554">			totalItems += b.getItemQty().intValue();</span>
+<span class="nc" id="L555">		}</span>
+
+<span class="nc" id="L557">		return(totalItems);</span>
+	}
+
+	/**
+	 * Ulozi polozku kosika do tabulky basket_item
+	 *
+	 * @param basketItem	instancia objektu polozky v kosiku
+	 *
+	 * @return true, ak sa ulozenie vydarilo, inak false
+	 */
+	public static boolean saveBasketItem(BasketItemBean basketItem)
+	{
+<span class="nc" id="L569">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+		try
+		{
+<span class="nc" id="L572">			em.getTransaction().begin();</span>
+<span class="nc bnc" id="L573" title="All 2 branches missed.">			if(basketItem.getBasketItemId() &gt; 0)</span>
+			{
+				//BasketItemBean originalBasketItem = em.find(BasketItemBean.class, basketItem.getBasketItemId());
+				//em.merge(originalBasketItem);
+
+				//pri zmene udajov kosiku musime mergnut k zmenenej entite co prisla, nie k originalu, lebo sa nam neulozia udaje (ziadane WebActive)
+<span class="nc" id="L579">				em.merge(basketItem);</span>
+			}
+			else
+<span class="nc" id="L582">				em.persist(basketItem);</span>
+
+<span class="nc" id="L584">			em.getTransaction().commit();</span>
+
+<span class="nc" id="L586">			return true;</span>
+		}
+<span class="nc" id="L588">		catch(Exception e)</span>
+		{
+<span class="nc" id="L590">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L591">			return false;</span>
+		}
+	}
+
+	/**
+	 * Funkcia vrati z requestu zobrazovanu menu, ak sa v requeste nenachadza, vrati default z Constants.getString(&quot;basketDisplayCurrency&quot;)
+	 * v pripade cloudu kontroluje nastavenia root grupy fieldC az potom berie basketDisplayCurrency
+	 * @param request
+	 * @return
+	 */
+	public static String getDisplayCurrency(HttpServletRequest request)
+	{
+<span class="nc" id="L603">		return BasketDBTools.getDisplayCurrency(request);</span>
+	}
+
+	/**
+	 *
+	 *
+	 * @param items
+	 * @param request
+	 * @return
+	 */
+	public static double getTotalLocalPrice(List&lt;BasketItemBean&gt; items, HttpServletRequest request)
+	{
+<span class="nc" id="L615">		double totalPrice = 0;</span>
+
+<span class="nc bnc" id="L617" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+		{
+<span class="nc" id="L619">			totalPrice += b.getItemLocalPriceQty(request);</span>
+<span class="nc" id="L620">		}</span>
+
+<span class="nc" id="L622">		return(totalPrice);</span>
+	}
+
+	/**
+	 *
+	 * @param items
+	 * @param request
+	 * @return
+	 */
+	public static double getTotalLocalPriceVat(List&lt;BasketItemBean&gt; items, HttpServletRequest request)
+	{
+<span class="nc" id="L633">		double totalPrice = 0;</span>
+
+<span class="nc bnc" id="L635" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+		{
+<span class="nc" id="L637">			totalPrice += b.getItemLocalPriceVatQty(request);</span>
+<span class="nc" id="L638">		}</span>
+
+<span class="nc" id="L640">		return(totalPrice);</span>
+	}
+
+
+	/**Vrati aktualne moznosti dopravy. Ak doprava neexistuje, vrati prazdny list
+	 *
+	 * MBO: moze sa poslat parameter lng, vtedy hlada [nazov][lng], ak nenajde, hlada [nazov]
+	 *
+	 * @return
+	 * @author		$Author: $(prau)
+	 * @Ticket 		Number: #15137
+	 */
+	public static List&lt;DocDetails&gt; getModeOfTransports(String... lng)
+	{
+<span class="nc" id="L654">		return getModeOfTransports(null, lng);</span>
+	}
+
+	/**
+	 * Vrati moznosti len osobneho vyzdvihnutia tovaru, ak je v kosiku polozka, ktora sa da vyzdvihnut len osobne.
+	 * Definovanie cez konf. premennu basketTransportInStorePickupFieldName, pokial nie je zadana, vrati vsetky moznosti dopravy
+	 *
+	 * @param request
+	 * @param lng
+	 * @return
+	 */
+	public static List&lt;DocDetails&gt; getModeOfTransports(HttpServletRequest request, String... lng)
+	{
+<span class="nc" id="L667">		List&lt;DocDetails&gt; modeOfTransports = new ArrayList&lt;DocDetails&gt;();</span>
+<span class="nc" id="L668">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L669">		String language = &quot;&quot;;</span>
+<span class="nc" id="L670">		String basketTransportsGroupName = Constants.getString(&quot;basketTransportGroupName&quot;);</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		if(Tools.isEmpty(basketTransportsGroupName)) basketTransportsGroupName = &quot;ModeOfTransport&quot;; //vychodzi nazov</span>
+<span class="nc bnc" id="L672" title="All 4 branches missed.">		if (lng!=null&amp;&amp;lng.length&gt;0)</span>
+		{
+<span class="nc" id="L674">			language = lng[0];</span>
+		}
+		// ModeOfTransport je zapisany aj v /components/cloud/basket/admin_transports_list.jsp
+<span class="nc" id="L677">		GroupDetails groupDetails = groupsDB.getLocalSystemGroup();</span>
+<span class="nc bnc" id="L678" title="All 2 branches missed.">		if (groupDetails==null)</span>
+		{
+			//asi to neni cloud alebo multidomain WJ, alebo bezi na localhost (iwcm.interway.sk)
+<span class="nc" id="L681">			groupDetails = groupsDB.getGroupByPath(&quot;/System&quot;);</span>
+		}
+<span class="nc" id="L683">		boolean modeOfTransportsFound = false;</span>
+<span class="nc bnc" id="L684" title="All 2 branches missed.">		if(groupDetails != null)</span>
+		{
+<span class="nc" id="L686">			List&lt;GroupDetails&gt; subgroups = groupsDB.getGroups(groupDetails.getGroupId());</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (subgroups!=null)</span>
+			{
+				//hladaj najprv jazykovu mutaciu
+<span class="nc bnc" id="L690" title="All 2 branches missed.">				for (GroupDetails group:subgroups)</span>
+				{
+<span class="nc bnc" id="L692" title="All 2 branches missed.">					if(group.getGroupName().equals(basketTransportsGroupName+language))</span>
+					{
+<span class="nc" id="L694">						modeOfTransports.addAll(DocDB.getInstance().getDocByGroup(group.getGroupId()));</span>
+<span class="nc" id="L695">						modeOfTransportsFound = true;</span>
+					}
+<span class="nc" id="L697">				}</span>
+				//ak nic nenasiel, hladaj bez pripony jazyka
+<span class="nc bnc" id="L699" title="All 2 branches missed.">				if(modeOfTransportsFound == false)</span>
+				{
+<span class="nc bnc" id="L701" title="All 2 branches missed.">					for (GroupDetails group:subgroups)</span>
+					{
+<span class="nc bnc" id="L703" title="All 2 branches missed.">						if(group.getGroupName().equals(basketTransportsGroupName))</span>
+						{
+<span class="nc" id="L705">							modeOfTransports.addAll(DocDB.getInstance().getDocByGroup(group.getGroupId()));</span>
+<span class="nc" id="L706">							return modeOfTransports;</span>
+						}
+<span class="nc" id="L708">					}</span>
+				}
+			}
+		}
+
+		/**
+		 * [LESYSR-81]: ak niektory z produktov ma nastavene len osobny odber na predajni, tak cely nakupny kosik musi mat obmedzenie len na osobný odber
+		 * zistim, ci mam polozka v kosiku ktora sa da vyzdvihnut len osobne a vratim moznost len osobneho odberu celej objednavky
+		 * basketTransportInStorePickupFieldName - tu mam definovane pole kde je priznak osobneho odberu napr. fieldM
+		*/
+<span class="nc" id="L718">		String inStorePickupFieldName = Constants.getString(&quot;basketTransportInStorePickupFieldName&quot;);</span>
+<span class="nc bnc" id="L719" title="All 8 branches missed.">		if(request != null &amp;&amp; Tools.isNotEmpty(inStorePickupFieldName) &amp;&amp; modeOfTransportsFound &amp;&amp; modeOfTransports.size() &gt; 0)</span>
+		{
+<span class="nc" id="L721">			List &lt;BasketItemBean&gt; basketItems = BasketDB.getBasketItems(request);</span>
+<span class="nc" id="L722">			boolean foundInStorePickup = false;</span>
+<span class="nc bnc" id="L723" title="All 4 branches missed.">			if(basketItems != null &amp;&amp; basketItems.size() &gt; 0)</span>
+			{
+				//zistim, ci je nieco zadane v danom poli. Ak je prazdne, beriem, ze je oznacene len pre odobny odber
+<span class="nc bnc" id="L726" title="All 2 branches missed.">				for(BasketItemBean item : basketItems)</span>
+				{
+					try
+					{
+<span class="nc bnc" id="L730" title="All 2 branches missed.">						if(Tools.isNotEmpty(BeanUtils.getProperty(item.getDoc(), inStorePickupFieldName)))</span>
+						{
+<span class="nc" id="L732">							foundInStorePickup = true;</span>
+<span class="nc" id="L733">							break;</span>
+						}
+					}
+<span class="nc" id="L736">					catch(Exception e)</span>
+<span class="nc" id="L737">					{}</span>
+<span class="nc" id="L738">				}</span>
+				//ak ano, vymazem ine sposoby dorucenia. Osobny odber musi mat tiez zadane v danom volnom poli, ze sa jedna o osobny odber
+<span class="nc bnc" id="L740" title="All 2 branches missed.">				if(foundInStorePickup)</span>
+				{
+<span class="nc" id="L742">					Iterator&lt;DocDetails&gt; transportIterator = modeOfTransports.iterator();</span>
+<span class="nc bnc" id="L743" title="All 2 branches missed.">					while (transportIterator.hasNext())</span>
+					{
+<span class="nc" id="L745">						DocDetails transport = transportIterator.next();</span>
+						try
+						{
+<span class="nc bnc" id="L748" title="All 2 branches missed.">							if(Tools.isEmpty(BeanUtils.getProperty(transport, inStorePickupFieldName)))</span>
+<span class="nc" id="L749">								transportIterator.remove();</span>
+						}
+<span class="nc" id="L751">						catch(Exception e)</span>
+<span class="nc" id="L752">						{}</span>
+<span class="nc" id="L753">					}</span>
+				}
+			}
+		}
+
+<span class="nc" id="L758">		return modeOfTransports;</span>
+	}
+
+	/** Vrati pocet poloziek na sklade
+	 *
+	 * @param doc
+	 * @return
+	 * @author		$Author: $(prau)
+	 */
+	public static synchronized int getCountInRepository(DocDetails doc)
+	{
+<span class="nc bnc" id="L769" title="All 2 branches missed.">		if(doc == null)</span>
+<span class="nc" id="L770">			return 0;</span>
+
+<span class="nc" id="L772">		return Tools.getIntValue(doc.getFieldB(), 0);</span>
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

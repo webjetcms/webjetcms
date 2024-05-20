@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationRoomManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationRoomManager.java</span></div><h1>ReservationRoomManager.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+
+/**
+ * ReservationRoomManager.java
+ *
+ * @Title webjet7
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2014
+ * @author $Author: jeeff mkolejak $
+ * @version $Revision: 1.3 $
+ * @created Date: 6.11.2014 18:20:23
+ * @modified $Date: 2004/08/16 06:26:11 $
+ */
+<span class="nc" id="L26">public class ReservationRoomManager</span>
+{
+<span class="nc" id="L28">	private int posun = 2;</span>
+
+	/**
+	 * Zoznam obsadenosti: datum rezervacie, obsadenost/max obsadenost (
+	 * occupancy/max reservation), objekt rezervacie, pozicia dna a pozicia
+	 * objektu rezervacie
+	 *
+	 * @param data
+	 * @param datesBetween
+	 * @param reservationObjectList
+	 * @return
+	 * @throws ParseException
+	 */
+	public String[][] getArrayFromHashPovodne(Map&lt;String, Integer&gt; data, List&lt;Date&gt; datesBetween,
+				List&lt;ReservationObjectBean&gt; reservationObjectList) throws ParseException
+	{
+<span class="nc" id="L44">		String[][] str = null;</span>
+<span class="nc" id="L45">		Object[] keys = data.keySet().toArray();</span>
+<span class="nc" id="L46">		Object[] values = data.values().toArray();</span>
+<span class="nc" id="L47">		str = new String[keys.length][values.length];</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		for (int i = 0; i &lt; keys.length; i++)</span>
+		{
+<span class="nc" id="L50">			String key = (String) keys[i];</span>
+<span class="nc" id="L51">			String[] keyArray = key.split(&quot;-&quot;);</span>
+			// reservationDatum-reservationObjectId-maxReservations
+<span class="nc" id="L53">			String datumReservation = keyArray[0];</span>
+<span class="nc" id="L54">			String reservationObjectId = keyArray[1];</span>
+<span class="nc" id="L55">			String maxReservations = keyArray[2];</span>
+<span class="nc" id="L56">			Integer occupancy = (Integer) values[i];</span>
+<span class="nc" id="L57">			DateFormat dateFormat = new SimpleDateFormat(&quot;dd.MM.yyyy&quot;);</span>
+<span class="nc" id="L58">			String datumReservationBezMena = datumReservation.substring(datumReservation.indexOf(&quot;.&quot;) + 1);</span>
+<span class="nc" id="L59">			Date datumReservationDate = dateFormat.parse(datumReservationBezMena);</span>
+<span class="nc" id="L60">			int dayPosition = getDatePosition(datesBetween, datumReservationDate);</span>
+<span class="nc" id="L61">			int roomPosition = getRoomPosition(reservationObjectList, Integer.valueOf(reservationObjectId));</span>
+<span class="nc" id="L62">			str[i][0] = datumReservation;</span>
+<span class="nc" id="L63">			str[i][1] = occupancy + &quot;/&quot; + maxReservations;</span>
+<span class="nc" id="L64">			str[i][2] = reservationObjectId;</span>
+<span class="nc" id="L65">			str[i][3] = String.valueOf(dayPosition);</span>
+<span class="nc" id="L66">			str[i][4] = String.valueOf(roomPosition);</span>
+		}
+<span class="nc" id="L68">		return str;</span>
+	}
+
+	/**
+	 * Zoznam obsadenosti: datum rezervacie, obsadenost/max obsadenost (
+	 * occupancy/max reservation), objekt rezervacie, pozicia dna, pozicia
+	 * objektu rezervacie, pozicia mena objektu rezervacie
+	 *
+	 * @param data
+	 * @return
+	 * @throws ParseException
+	 */
+	public String[][] getOccupancyArrayFromHash(Map&lt;String, Integer&gt; data, List&lt;Date&gt; datesBetween,
+				List&lt;ReservationObjectBean&gt; reservationObjectList) throws ParseException
+	{
+<span class="nc" id="L83">		Object[] keys = data.keySet().toArray();</span>
+<span class="nc" id="L84">		Object[] values = data.values().toArray();</span>
+<span class="nc" id="L85">		int numberOfRow = reservationObjectList.size() + reservationObjectList.size() + 1;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (1 == numberOfRow)</span>
+		{
+<span class="nc" id="L88">			numberOfRow = 0;</span>
+		}
+<span class="nc" id="L90">		int dates = datesBetween.size();</span>
+<span class="nc" id="L91">		String[][] str = new String[numberOfRow][dates];</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (int k = 1, j = 0; k &lt; numberOfRow; k += 2, j++)</span>
+		{
+<span class="nc" id="L94">			int room = getMaxReservationPosition(reservationObjectList, j);</span>
+<span class="nc" id="L95">			ReservationObjectBean reservationObject = reservationObjectList.get(j);</span>
+<span class="nc" id="L96">			String name = reservationObject.getName();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			for (int i = 0; i &lt; datesBetween.size(); i++)</span>
+			{
+<span class="nc" id="L99">				str[k - 1][0] = name;</span>
+<span class="nc" id="L100">				str[k][i] = &quot;0/&quot; + room;</span>
+			}
+		}
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		for (int i = 0; i &lt; keys.length; i++)</span>
+		{
+<span class="nc" id="L105">			String key = (String) keys[i];</span>
+<span class="nc" id="L106">			String[] keyArray = key.split(&quot;-&quot;);</span>
+			// datumReservation-reservationObjectId-maxReservations
+<span class="nc" id="L108">			String datumReservation = keyArray[0];</span>
+<span class="nc" id="L109">			String reservationObjectId = keyArray[1];</span>
+<span class="nc" id="L110">			String maxReservations = keyArray[2];</span>
+<span class="nc" id="L111">			Integer occupancy = (Integer) values[i];</span>
+<span class="nc" id="L112">			DateFormat dateFormat = new SimpleDateFormat(&quot;dd.MM.yyyy&quot;);</span>
+<span class="nc" id="L113">			String datumReservationBezMena = datumReservation.substring(datumReservation.indexOf(&quot;.&quot;) + 1);</span>
+<span class="nc" id="L114">			Date datumReservationDate = dateFormat.parse(datumReservationBezMena);</span>
+<span class="nc" id="L115">			int dayPosition = getDatePosition(datesBetween, datumReservationDate);</span>
+<span class="nc" id="L116">			int roomPosition = getRoomPosition(reservationObjectList, Integer.valueOf(reservationObjectId));</span>
+<span class="nc" id="L117">			str[roomPosition][dayPosition] = occupancy + &quot;/&quot; + maxReservations;</span>
+		}
+<span class="nc" id="L119">		return str;</span>
+	}
+
+	/**
+	 * Pozicia datumu v tabulke rezervacii
+	 *
+	 * @param datesBetween
+	 * @param datumReservation
+	 * @return
+	 */
+	private int getDatePosition(List&lt;Date&gt; datesBetween, Date datumReservation)
+	{
+<span class="nc" id="L131">		int ret = 0;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		for (int i = 0; i &lt; datesBetween.size(); i++)</span>
+		{
+<span class="nc" id="L134">			Date actualDate = datesBetween.get(i);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (actualDate.equals(datumReservation))</span>
+			{
+<span class="nc" id="L137">				ret = i;</span>
+<span class="nc" id="L138">				break;</span>
+			}
+		}
+<span class="nc" id="L141">		return ret;</span>
+	}
+
+	/**
+	 * Pozicia izby ( jej obsadenosti ) v tabulke rezervacii
+	 *
+	 * @param reservationObjectList
+	 * @param reservationObjectId
+	 * @return
+	 */
+	public int getRoomPosition(List&lt;ReservationObjectBean&gt; reservationObjectList, int reservationObjectId)
+	{
+<span class="nc" id="L153">		int ret = 0;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		for (int i = 0, k = 1; i &lt; reservationObjectList.size(); i++, k += 2)</span>
+		{
+<span class="nc" id="L156">			ReservationObjectBean reservationObject = reservationObjectList.get(i);</span>
+<span class="nc" id="L157">			int resObjId = reservationObject.getReservationObjectId();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			if (reservationObjectId == resObjId)</span>
+			{
+<span class="nc" id="L160">				ret = k;</span>
+<span class="nc" id="L161">				break;</span>
+			}
+		}
+<span class="nc" id="L164">		return ret;</span>
+	}
+
+	/**
+	 * Pozicia max reservation v tabulke rezervacii
+	 *
+	 * @param reservationObjectList
+	 * @param reservationObjectId
+	 * @return
+	 */
+	public int getMaxReservationPosition(List&lt;ReservationObjectBean&gt; reservationObjectList, int reservationObjectOrder)
+	{
+<span class="nc" id="L176">		int ret = 0;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		for (int i = 0; i &lt; reservationObjectList.size(); i++)</span>
+		{
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (reservationObjectOrder == i)</span>
+			{
+<span class="nc" id="L181">				ReservationObjectBean reservation = reservationObjectList.get(i);</span>
+<span class="nc" id="L182">				ret = reservation.getMaxReservations();</span>
+<span class="nc" id="L183">				break;</span>
+			}
+		}
+<span class="nc" id="L186">		return ret;</span>
+	}
+
+	/**
+	 * Naplni zoznam dni do tabulky
+	 *
+	 * @param data
+	 * @return
+	 */
+	public String[][] getDaysArrayFromList(List&lt;String&gt; data)
+	{
+<span class="nc" id="L197">		String[][] str = null;</span>
+<span class="nc" id="L198">		Object[] values = data.toArray();</span>
+<span class="nc" id="L199">		str = new String[values.length][7];</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		for (int i = 0; i &lt; values.length; i++)</span>
+		{
+<span class="nc" id="L202">			String value = (String) values[i];</span>
+<span class="nc" id="L203">			String[] keyArray = value.split(&quot;\\.&quot;);</span>
+			// nazovDna.den.mesiac.rok
+<span class="nc" id="L205">			String denNazov = keyArray[0];</span>
+<span class="nc" id="L206">			String den = keyArray[1];</span>
+<span class="nc" id="L207">			String mesiac = keyArray[2];</span>
+<span class="nc" id="L208">			String rok = keyArray[3];</span>
+<span class="nc" id="L209">			String mesiacNazovIn = keyArray[4];</span>
+<span class="nc" id="L210">			str[i][0] = denNazov;</span>
+<span class="nc" id="L211">			str[i][1] = den;</span>
+<span class="nc" id="L212">			str[i][2] = mesiac;</span>
+<span class="nc" id="L213">			str[i][3] = rok;</span>
+<span class="nc" id="L214">			str[i][4] = mesiacNazovIn;</span>
+<span class="nc" id="L215">			str[i][5] = value;</span>
+<span class="nc" id="L216">			str[i][6] = &quot;&quot; + i;</span>
+		}
+<span class="nc" id="L218">		return str;</span>
+	}
+
+	/**
+	 * List obsadenosti pre vsetky dni medzi datumami Zatial iba pre jeden
+	 * rezervacny objekt
+	 *
+	 * @param occupancyMap
+	 * @param datumBetweenStringListForDay
+	 * @return
+	 */
+	public List&lt;String&gt; getListOccupancyWithDatum(Map&lt;String, Integer&gt; occupancyMap,
+				List&lt;String&gt; datumBetweenStringListForDay, String rezobjid)
+	{
+<span class="nc" id="L232">		List&lt;String&gt; retOccupancyList = new ArrayList&lt;&gt;();</span>
+		// iba obsadene dni
+<span class="nc" id="L234">		List&lt;String&gt; occupancyList = getListOccupancyForOccupedDays(occupancyMap);</span>
+<span class="nc" id="L235">		String emptyOccupancy = &quot;&quot;;</span>
+<span class="nc" id="L236">		String del = &quot;-&quot;;</span>
+<span class="nc" id="L237">		ReservationObjectBean resObj = ReservationManager.getReservationObject(Integer.valueOf(rezobjid));</span>
+<span class="nc" id="L238">		int maxReservations = resObj.getMaxReservations();</span>
+<span class="nc" id="L239">		String occupancyRatioEmpty = &quot;0/&quot; + maxReservations;</span>
+<span class="nc" id="L240">		emptyOccupancy = rezobjid + del + occupancyRatioEmpty;</span>
+		// najskor kazdy den z rozsahu naplnim '0/maxReservation'
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		for (int i = 0; i &lt; datumBetweenStringListForDay.size(); i++)</span>
+		{
+<span class="nc" id="L244">			String day = datumBetweenStringListForDay.get(i);</span>
+<span class="nc" id="L245">			retOccupancyList.add(i, day + del + emptyOccupancy);</span>
+		}
+		// neskor ich prechadzam a ak nejaky den ma nenulovu obsadenost prepisem
+		// ho
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		for (int k = 0; k &lt; datumBetweenStringListForDay.size(); k++)</span>
+		{
+<span class="nc" id="L251">			String dayFull = datumBetweenStringListForDay.get(k);</span>
+<span class="nc" id="L252">			String[] dayArray = dayFull.split(&quot;-&quot;);</span>
+<span class="nc" id="L253">			String day = dayArray[0];</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			for (int m = 0; m &lt; occupancyList.size(); m++)</span>
+			{
+<span class="nc" id="L256">				String occupancy2 = occupancyList.get(m);</span>
+<span class="nc" id="L257">				String[] occupancySplits2 = occupancy2.split(del);</span>
+<span class="nc" id="L258">				String occupancyDay2 = occupancySplits2[0];</span>
+<span class="nc" id="L259">				String occupancyObjectId = occupancySplits2[1];</span>
+<span class="nc" id="L260">				String occupancy = occupancySplits2[2];</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (day.equals(occupancyDay2))</span>
+				{
+<span class="nc" id="L263">					String ocup = dayFull + del + occupancyObjectId + del + occupancy;</span>
+<span class="nc" id="L264">					retOccupancyList.set(k, ocup);</span>
+				}
+			}
+		}
+<span class="nc" id="L268">		return retOccupancyList;</span>
+	}
+
+	/**
+	 * List obsadenosti, iba pre dni, ked su izby obsadene aspon jednym
+	 * zakaznikom
+	 *
+	 * &lt;pre&gt;
+	 * Format:
+	 * datumReservation-reservationObjectId-occupancy/maxReservations
+	 *
+	 * Št.06.11.2014.okt-42-Studio-1/4
+	 * Št.17.11.2014.okt-42-Studio-3/4
+	 * &lt;/pre&gt;
+	 *
+	 * @param occupancyMap
+	 * @return
+	 */
+	private List&lt;String&gt; getListOccupancyForOccupedDays(Map&lt;String, Integer&gt; occupancyMap)
+	{
+<span class="nc" id="L288">		Iterator&lt;String&gt; keySetIterator = occupancyMap.keySet().iterator();</span>
+<span class="nc" id="L289">		List&lt;String&gt; retList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		while (keySetIterator.hasNext())</span>
+		{
+<span class="nc" id="L292">			String keyPovod = keySetIterator.next();</span>
+<span class="nc" id="L293">			String value = String.valueOf(occupancyMap.get(keyPovod));</span>
+<span class="nc" id="L294">			String maxReservations = keyPovod.substring(keyPovod.lastIndexOf(&quot;-&quot;) + 1);</span>
+<span class="nc" id="L295">			String key = keyPovod.substring(0, keyPovod.lastIndexOf(&quot;-&quot;) + 1);</span>
+<span class="nc" id="L296">			key = key + value;</span>
+<span class="nc" id="L297">			retList.add(key + &quot;/&quot; + maxReservations);</span>
+<span class="nc" id="L298">		}</span>
+<span class="nc" id="L299">		return retList;</span>
+	}
+
+	public String[][] getArrayOccupancyWithDatum(Map&lt;String, Integer&gt; occupancyMap, List&lt;String&gt; datumBetweenStringListForDay,
+				String rezobjid)
+	{
+<span class="nc" id="L305">		List&lt;String&gt; occupancyWithDatum = getListOccupancyWithDatum(occupancyMap, datumBetweenStringListForDay, rezobjid);</span>
+		// datumReservation-positionColumn/positionRow-reservationObjectId-occupancy/maxReservations
+<span class="nc" id="L307">		String[][] occupancy = null;</span>
+<span class="nc" id="L308">		Object[] values = occupancyWithDatum.toArray();</span>
+<span class="nc" id="L309">		occupancy = new String[12][8];</span>
+		// skratene nazvy dni v tyzdni
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		for (int i = 0; i &lt; values.length; i++)</span>
+		{
+			// Po.03.11.2014.nov-1/1-43-0/4
+			// datum
+<span class="nc" id="L315">			String value = (String) values[i];</span>
+<span class="nc" id="L316">			String[] keyArray = value.split(&quot;-&quot;);</span>
+<span class="nc" id="L317">			String datumFull = keyArray[0];</span>
+<span class="nc" id="L318">			String[] datumArray = datumFull.split(&quot;\\.&quot;);</span>
+<span class="nc" id="L319">			String den = datumArray[1];</span>
+
+			// position
+<span class="nc" id="L322">			String position = keyArray[1];</span>
+<span class="nc" id="L323">			String[] positionArray = position.split(&quot;\\/&quot;);</span>
+<span class="nc" id="L324">			String positionColumn = positionArray[0];</span>
+<span class="nc" id="L325">			int column = Integer.parseInt(positionColumn);</span>
+<span class="nc" id="L326">			String positionRow = positionArray[1];</span>
+
+<span class="nc" id="L328">			int row = Integer.valueOf(positionRow) + posun;</span>
+			// occupancy
+<span class="nc" id="L330">			String occup = keyArray[3];</span>
+<span class="nc" id="L331">			int percentageOccupancy = getOccupancyPercentage(occup);</span>
+<span class="nc" id="L332">			String occupancyTitle = getOccupancyTitle(occup);</span>
+<span class="nc" id="L333">			String out = den + &quot;-&quot; + occupancyTitle + &quot;-&quot; + percentageOccupancy + &quot;-&quot; + datumArray[1]+&quot;.&quot;+datumArray[2]+&quot;.&quot;+datumArray[3];</span>
+<span class="nc" id="L334">			Logger.debug(ReservationRoomManager.class, &quot;&quot; + row + &quot;/&quot; + column + &quot;:&quot; + out);</span>
+<span class="nc" id="L335">			occupancy[row][column] = out;</span>
+		}
+
+		//odstran prazdne riadky
+<span class="nc" id="L339">		List&lt;String[]&gt; occupancyList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		for (int i=0; i&lt;occupancy.length; i++)</span>
+		{
+<span class="nc" id="L342">			boolean isNotEmpty = false;</span>
+			//System.out.print(i+&quot;: &quot;);
+<span class="nc bnc" id="L344" title="All 2 branches missed.">			for (int j=0; j&lt;occupancy[i].length; j++)</span>
+			{
+				//System.out.print(occupancy[i][j]+&quot;;&quot;);
+<span class="nc bnc" id="L347" title="All 2 branches missed.">				if (Tools.isNotEmpty(occupancy[i][j])) isNotEmpty = true;</span>
+			}
+			//System.out.println(&quot;&quot;);
+
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			if (isNotEmpty)</span>
+			{
+<span class="nc" id="L353">				occupancyList.add(occupancy[i]);</span>
+			}
+		}
+
+<span class="nc" id="L357">		occupancy = new String[occupancyList.size()][8];</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		for (int i=0; i&lt;occupancyList.size(); i++)</span>
+		{
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			for (int j=0; j&lt;8; j++)</span>
+			{
+<span class="nc" id="L362">				String[] row = occupancyList.get(i);</span>
+<span class="nc" id="L363">				occupancy[i][j] = row[j];</span>
+			}
+		}
+
+<span class="nc" id="L367">		return occupancy;</span>
+	}
+
+	private int getOccupancyPercentage(String ratioOccupancy)
+	{
+<span class="nc" id="L372">		int ret = 100;</span>
+<span class="nc" id="L373">		String[] ratioArray = ratioOccupancy.split(&quot;\\/&quot;);</span>
+<span class="nc" id="L374">		String occupiedRooms = ratioArray[0];</span>
+<span class="nc" id="L375">		String numberAllRooms = ratioArray[1];</span>
+<span class="nc" id="L376">		double occupiedRoomsInt = Double.parseDouble(occupiedRooms);</span>
+<span class="nc" id="L377">		double numberAllRoomsInt = Double.parseDouble(numberAllRooms);</span>
+<span class="nc" id="L378">		double ratio = occupiedRoomsInt / numberAllRoomsInt;</span>
+<span class="nc" id="L379">		int percentage = (int) (ratio * 30d);</span>
+<span class="nc" id="L380">		int obsadene = percentage;</span>
+		// vsade ratam obsadene izby a zobrazujem volne
+<span class="nc" id="L382">		ret = 30 - obsadene;</span>
+<span class="nc" id="L383">		return ret;</span>
+	}
+
+	private String getOccupancyTitle(String ratioOccupancy)
+	{
+<span class="nc" id="L388">		String ret = &quot;&quot;;</span>
+<span class="nc" id="L389">		String[] ratioArray = ratioOccupancy.split(&quot;\\/&quot;);</span>
+<span class="nc" id="L390">		String occupiedRooms = ratioArray[0];</span>
+<span class="nc" id="L391">		String numberAllRooms = ratioArray[1];</span>
+<span class="nc" id="L392">		int occupiedRoomsInt = Integer.parseInt(occupiedRooms);</span>
+<span class="nc" id="L393">		int numberAllRoomsInt = Integer.parseInt(numberAllRooms);</span>
+		// vsade ratam obsadene izby a zobrazujem volne
+<span class="nc" id="L395">		int freeRooms = numberAllRoomsInt - occupiedRoomsInt;</span>
+<span class="nc" id="L396">		ret = freeRooms + &quot; z &quot; + numberAllRooms;</span>
+<span class="nc" id="L397">		return ret;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

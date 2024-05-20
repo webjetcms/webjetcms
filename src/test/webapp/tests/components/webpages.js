@@ -17,7 +17,7 @@ Scenario('zoznam stranok', ({ I, DT}) => {
     I.see("Testovaci newsletter");
 
     //over prava
-    DT.checkPerms("menuWebpages,cmp_news", "/admin/v9/webpages/web-pages-list/?groupid=0", "datatableInit");
+    DT.checkPerms("menuWebpages,cmp_blog,cmp_blog_admin,cmp_news,cmp_abtesting", "/admin/v9/webpages/web-pages-list/?groupid=0", "datatableInit");
 });
 
 Scenario('logout', async ({I}) => {
@@ -27,7 +27,7 @@ Scenario('logout', async ({I}) => {
 
 Scenario('nový adresár', ({ I, DTE }) => {
     I.waitForElement("button.buttons-create", 10, container);
-    I.click("button.buttons-create", container);
+    I.clickCss("button.buttons-create", container);
     DTE.waitForEditor("groups-datatable");
     I.groupSetRootParent();
     I.click("Pridať");
@@ -47,7 +47,7 @@ Scenario('editácia adresáru', ({ I, DTE }) => {
     I.waitForText("test-adresar-" + randomNumber, 20, container);
 
     I.click("test-adresar-" + randomNumber, container);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     I.clearField("#DTE_Field_groupName");
     I.fillField("#DTE_Field_groupName", "test-adresar-2-" + randomNumber);
     DTE.save();
@@ -63,7 +63,7 @@ Scenario('overenie zobrazenia backdropov medzi 2 editormi', ({ I, DT, DTE }) => 
     I.waitForText("test-adresar-2-" + randomNumber, 20, container);
     DT.waitForLoader();
     I.click("test-adresar-2-" + randomNumber, container);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     //zrus editaciu adresara
     I.click({css: "#groups-datatable_modal div.DTE_Footer.modal-footer button.btn-close-editor"});
@@ -97,7 +97,7 @@ Scenario('zmazanie adresaru', ({ I, DTE }) => {
 
     within(container, () => {
         I.click("test-adresar-2-" + randomNumber);
-        I.click("button.buttons-remove");
+        I.clickCss("button.buttons-remove");
     });
 
     I.click("Zmazať");
@@ -109,15 +109,15 @@ Scenario('zmazanie adresaru', ({ I, DTE }) => {
 
 Scenario('planovanie a historia', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Test publikovania"]);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
 
-    I.click("#pills-dt-groups-datatable-publishing-tab");
+    I.clickCss("#pills-dt-groups-datatable-publishing-tab");
     DT.waitForLoader();
     I.see("Test publikovania-2030", "#datatableFieldDTE_Field_editorFields-groupSchedulerPlannedChanges_wrapper");
     I.dontSee("Test publikovania-20180", "#datatableFieldDTE_Field_editorFields-groupSchedulerPlannedChanges_wrapper");
 
-    I.click("#pills-dt-groups-datatable-history-tab");
+    I.clickCss("#pills-dt-groups-datatable-history-tab");
     DT.waitForLoader();
     I.dontSee("Test publikovania-2030", "#datatableFieldDTE_Field_editorFields-groupSchedulerChangeHistory_wrapper");
     I.see("Test publikovania-20180", "#datatableFieldDTE_Field_editorFields-groupSchedulerChangeHistory_wrapper");
@@ -143,7 +143,7 @@ Scenario('System adresar', ({ I, DT }) => {
     I.dontSee("System", "#SomStromcek");
 
     //prepni sa na System zalozku
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     I.dontSee("Jet portal 4", "#SomStromcek");
     I.dontSee("Newsletter", "#SomStromcek");
@@ -155,9 +155,10 @@ Scenario('System adresar', ({ I, DT }) => {
     //I.see("WebJET 9 info", "#datatableInit_wrapper");
 
     //prepni sa na Kos zalozku
-    I.click("#pills-trash-tab");
+    I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
     I.jstreeWaitForLoader();
+    I.wait(1);
     I.dontSee("Jet portal 4", "#SomStromcek");
     I.dontSee("Newsletter", "#SomStromcek");
     I.dontSee("System", "#SomStromcek");
@@ -169,7 +170,7 @@ Scenario('System adresar', ({ I, DT }) => {
     I.see("Test zmazania stránky", "#datatableInit_wrapper");
 
     //prepnit sa nazad na Priecinky zalozku
-    I.click("#pills-folders-tab");
+    I.clickCss("#pills-folders-tab");
     DT.waitForLoader();
     I.see("Jet portal 4", "#SomStromcek");
     I.see("Newsletter", "#SomStromcek");
@@ -187,11 +188,11 @@ Scenario('Zmena domeny', ({ I }) => {
     I.dontSee("domena1.tau27.iway.sk", container);
 
     //domenovy selektor
-    I.click("div.js-domain-toggler div.bootstrap-select button");
+    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("domena1.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
+    I.clickCss(".toastr-buttons button.btn-primary");
 
     //domena zmenena, over zobrazenie
     I.dontSee("Jet portal 4", container);
@@ -211,7 +212,7 @@ Scenario('Import/export stranok', ({ I, DT }) => {
     DT.waitForLoader();
     I.dontSeeElement("#datatableInit_wrapper div.dt-buttons button.buttons-import-export.disabled");
     I.seeElement("#datatableInit_wrapper div.dt-buttons button.buttons-import-export");
-    I.click("#datatableInit_wrapper div.dt-buttons button.buttons-import-export");
+    I.clickCss("#datatableInit_wrapper div.dt-buttons button.buttons-import-export");
     I.wait(4);
     I.switchToNextTab();
     I.see("Importovať web stránky zo ZIP archívu (xml)");
@@ -220,23 +221,23 @@ Scenario('Import/export stranok', ({ I, DT }) => {
 
 Scenario('Overenie zobrazenia sablon podla adresarov', ({ I, DTE }) => {
     I.click("Jet portal 4", container);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     I.waitForText('Šablóna pre web stránky', 10);
-    I.click("div.DTE_Field_Name_tempId div.dropdown");
+    I.clickCss("div.DTE_Field_Name_tempId div.dropdown");
     I.see("Homepage", "div.dropdown-menu.show");
     I.dontSee("Newsletter", "div.dropdown-menu.show");
-    I.click("div.DTE_Field_Name_tempId div.dropdown");
+    I.clickCss("div.DTE_Field_Name_tempId div.dropdown");
 
     I.click({css: "#groups-datatable_modal div.DTE_Footer.modal-footer button.btn-close-editor"});
 
     I.click("Newsletter", container);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     I.waitForText('Šablóna pre web stránky', 10);
-    I.click("div.DTE_Field_Name_tempId div.dropdown");
+    I.clickCss("div.DTE_Field_Name_tempId div.dropdown");
     I.see("Homepage", "div.dropdown-menu.show");
     I.see("Newsletter", "div.dropdown-menu.show");
     //aby sa zatvoril select box
@@ -263,11 +264,11 @@ Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
     I.see("Čakajúce na schválenie-zmena titulku", "#datatableInit_wrapper");
 
     //prepni domenu a over, ze tam nie je nic ine
-    I.click("div.js-domain-toggler div.bootstrap-select button");
+    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("test23.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
+    I.clickCss(".toastr-buttons button.btn-primary");
 
     I.wait(1);
 
@@ -287,7 +288,7 @@ Scenario('Overenie nova web stranka', ({ I, DT, DTE }) => {
     DT.filter("title", oldValue);
     I.click(oldValue);
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_title", oldValue);
     I.seeInField("#DTE_Field_navbar", oldValue);
     I.seeInField("#DTE_Field_virtualPath", "nova-web-stranka.html");
@@ -295,8 +296,8 @@ Scenario('Overenie nova web stranka', ({ I, DT, DTE }) => {
     //vypln title na nieco ine a sprav blur
     I.appendField('#DTE_Field_title', newValue);
     //nevedel som inak spravit blur
-    I.click("#pills-dt-datatableInit-template-tab");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.seeInField("#DTE_Field_title", newValue);
     I.seeInField("#DTE_Field_navbar", newValue);
@@ -310,11 +311,11 @@ Scenario('Automaticke rozbalenie domeny', ({ I }) => {
     var container = "#SomStromcek";
 
     //domenovy selektor
-    I.click("div.js-domain-toggler div.bootstrap-select button");
+    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("rozbalenie.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
+    I.clickCss(".toastr-buttons button.btn-primary");
 
     //domena zmenena, over zobrazenie
     I.dontSee("Jet portal 4", container);
@@ -379,13 +380,13 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     I.see("Microsite - blue");
 
     //rozklikni select
-    I.click("div.dataTables_scrollHeadInner div.dt-filter-tempId button");
+    I.clickCss("div.dataTables_scrollHeadInner div.dt-filter-tempId button");
     I.see("Microsite - blue", "ul.dropdown-menu.inner.show");
     I.wait(1);
 
-    I.click("#pills-changes-tab");
+    I.clickCss("#pills-changes-tab");
     I.wait(1);
-    I.click("#pills-pages-tab");
+    I.clickCss("#pills-pages-tab");
 
     //over zobrazenie sablony v tabulke
     I.see("Produktová stránka - B verzia");
@@ -401,16 +402,16 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
 
     var container = "#datatableInit_wrapper";
 
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Obnoviť");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
     I.wait(1);
 
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Prehľadávať");
     I.click("Povoliť prístup len pre skupinu používateľov");
@@ -442,8 +443,8 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
 
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Obnoviť");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
@@ -468,26 +469,26 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     I.click(name);
     DTE.waitForEditor();
 
-    I.click('#pills-dt-datatableInit-basic-tab');
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
     I.fillField("#DTE_Field_title", name + "_" +randomNumber);
 
     //Change to tab template
-    I.click('#pills-dt-datatableInit-template-tab');
+    I.clickCss('#pills-dt-datatableInit-template-tab');
 
     //Set select tempFieldADocId
-    I.click(".DTE_Field_Name_tempFieldADocId");
+    I.clickCss(".DTE_Field_Name_tempFieldADocId");
     I.click(locate('span').withText('Hlavičky/Default header'));
     I.wait(1);
     //Set select tempFieldADocId
-    I.click(".DTE_Field_Name_tempFieldBDocId");
+    I.clickCss(".DTE_Field_Name_tempFieldBDocId");
     I.click(locate('span').withText('System'));
     I.wait(1);
     //Set select tempFieldADocId
-    I.click(".DTE_Field_Name_tempFieldCDocId");
+    I.clickCss(".DTE_Field_Name_tempFieldCDocId");
     I.click(locate('span').withText('Hlavičky/Default header'));
     I.wait(1);
     //Set select tempFieldADocId
-    I.click(".DTE_Field_Name_tempFieldDDocId");
+    I.clickCss(".DTE_Field_Name_tempFieldDDocId");
     I.click(locate('span').withText('Hlavičky/Default footer'));
     I.wait(1);
 
@@ -499,11 +500,11 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     I.click(name + "_" +randomNumber);
     DTE.waitForEditor();
 
-    I.click('#pills-dt-datatableInit-basic-tab');
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
     I.fillField("#DTE_Field_title", name);
 
     //Change to tab template
-    I.click('#pills-dt-datatableInit-template-tab');
+    I.clickCss('#pills-dt-datatableInit-template-tab');
 
     //CHECK if set values in selects are correct
     //Select tempFieldADocId
@@ -524,7 +525,7 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
 
     //Go to history tab
-    I.click('#pills-dt-datatableInit-history-tab');
+    I.clickCss('#pills-dt-datatableInit-history-tab');
     I.wait(1);
     I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 200);
 
@@ -534,14 +535,14 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
     I.wait(1);
     I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 200);
 
-    I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    I.click(".buttons-history-edit");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.clickCss(".buttons-history-edit");
 
     //Check set values from history
 
     //Change to tab template
     I.waitForElement("#pills-dt-datatableInit-content-tab.nav-link.active", 10);
-    I.click('#pills-dt-datatableInit-template-tab');
+    I.clickCss('#pills-dt-datatableInit-template-tab');
 
     //CHECK if set values in selects are correct
     //Select tempFieldADocId
@@ -582,7 +583,9 @@ Scenario('Check REQUEST object filtration', async ({ I }) => {
     I.assertNotContain(data, userAgent, "Contains unescaped user agent!");
     I.assertNotContain(data, userAgent.toLowerCase(), "Contains unescaped user agent lowercase!");
     I.assertContain(data, userAgentEscaped, "Does not contain escaped user agent!");
-    I.assertContain(data, userAgentEscaped.toLowerCase(), "Does not contain escaped user agent lowercase!");
+    //BrowserDetector doesn't know this, so it should be parsed as some generic OS
+    I.assertNotContain(data, userAgentEscaped.toLowerCase(), "Does contain escaped user agent lowercase in html data attributes!");
+    I.assertContain(data, 'data-browser-name="mobile safari" data-browser-version="5" data-device-type="phone" data-device-os="ios 5"', "Does not contain correctly parsed User-Agent!");
 });
 
 Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
@@ -596,34 +599,34 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
     I.click(name);
     DTE.waitForEditor();
 
-    I.click('#pills-dt-datatableInit-basic-tab');
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
     I.fillField("#DTE_Field_title", name + "_" +randomNumber);
 
     //Change to tab template
-    I.click('#pills-dt-datatableInit-menu-tab');
+    I.clickCss('#pills-dt-datatableInit-menu-tab');
 
     //Set select showInMenu
-    I.click(".DTE_Field_Name_showInMenu");
+    I.clickCss(".DTE_Field_Name_showInMenu");
     I.click(locate('span').withText('Zobraziť'));
     I.wait(2);
     //Set select showInNavbar
-    I.click(".DTE_Field_Name_showInNavbar");
+    I.clickCss(".DTE_Field_Name_showInNavbar");
     I.click(locate('span').withText('Nezobraziť'));
     I.wait(2);
     //Set select showInSitemap
-    I.click(".DTE_Field_Name_showInSitemap");
+    I.clickCss(".DTE_Field_Name_showInSitemap");
     I.click(locate('span').withText('Rovnako ako menu'));
     I.wait(2);
     //Set select loggedShowInMenu
-    I.click(".DTE_Field_Name_loggedShowInMenu");
+    I.clickCss(".DTE_Field_Name_loggedShowInMenu");
     I.click(locate('span').withText('Nezobraziť'));
     I.wait(2);
     //Set select loggedShowInNavbar
-    I.click(".DTE_Field_Name_loggedShowInNavbar");
+    I.clickCss(".DTE_Field_Name_loggedShowInNavbar");
     I.click(locate('span').withText('Rovnako ako pre neprihláseného'));
     I.wait(2);
     //Set select loggedShowInSitemap
-    I.click(".DTE_Field_Name_loggedShowInSitemap");
+    I.clickCss(".DTE_Field_Name_loggedShowInSitemap");
     I.click(locate('span').withText('Zobraziť'));
     I.wait(2);
 
@@ -634,11 +637,11 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
     I.click(name + "_" +randomNumber);
     DTE.waitForEditor();
 
-    I.click('#pills-dt-datatableInit-basic-tab');
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
     I.fillField("#DTE_Field_title", name);
 
     //Change to tab template
-    I.click('#pills-dt-datatableInit-menu-tab');
+    I.clickCss('#pills-dt-datatableInit-menu-tab');
 
     //CHECK if set values in selects are correct
     I.seeElement(locate('button').withAttr({title: 'Zobraziť'}).inside(locate('.DTE_Field_Name_showInMenu')))
@@ -650,13 +653,15 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
 
     //Save change entity
     DTE.save();
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
 
     //Edit this entity again
     I.click(name);
     DTE.waitForEditor();
 
     //Go to history tab
-    I.click('#pills-dt-datatableInit-history-tab');
+    I.clickCss('#pills-dt-datatableInit-history-tab');
     I.waitForVisible("#pills-dt-datatableInit-history", 20);
     I.wait(2);
 
@@ -664,12 +669,12 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
     I.pressKey('Enter', "input.dt-filter-key");
     I.wait(1);
 
-    I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    I.click(".buttons-history-edit");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.clickCss(".buttons-history-edit");
     I.wait(3);
 
     //Change to tab template
-    I.click('#pills-dt-datatableInit-menu-tab');
+    I.clickCss('#pills-dt-datatableInit-menu-tab');
     I.waitForVisible("#pills-dt-datatableInit-menu", 10);
 
     //Check set values from history
@@ -685,7 +690,7 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
 
 Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     I.jstreeNavigate(['Jet portal 4', 'Úvodná stránka']);
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     I.dontSeeElement("div.DTE_Field_Name_domainName");
     I.dontSeeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
@@ -699,13 +704,13 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
 
     I.click('Jet portal 4', container);
     DT.waitForLoader();
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     I.seeElement("div.DTE_Field_Name_domainName");
     I.seeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     //zmen parent na /English
-    I.click('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('English', 5);
@@ -719,14 +724,14 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     //test otvorenim priamo editora
     I.amOnPage("/admin/v9/webpages/web-pages-list?groupid=23");
     DT.waitForLoader();
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     I.dontSeeElement("div.DTE_Field_Name_domainName");
     I.dontSeeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list?groupid=1");
     DT.waitForLoader();
-    I.click("button.buttons-edit", container);
+    I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     I.seeElement("div.DTE_Field_Name_domainName");
     I.seeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
@@ -735,14 +740,14 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
 Scenario('Overenie zobrazenia tooltipov', ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=11");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.dontSee("Správny titulok vystihuje podstatu stránky");
     I.moveCursorTo("div.DTE_Field_Name_title button.btn-tooltip");
     I.see("Správny titulok vystihuje podstatu stránky", "div.tooltip.show");
 
     //over konverziu Markdown na HTML kod
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     I.scrollTo('div.DTE_Field_Name_htmlHead');
     I.dontSee("Voliteľne môžete zadať HTML kód, ktorý sa priamo vloží do HTML kódu web stránky.");
     I.moveCursorTo("div.DTE_Field_Name_htmlHead button.btn-tooltip");
@@ -753,9 +758,9 @@ Scenario('nejde otvorit stranku z Naposledy upravene', ({ I, DT, DTE }) => {
     //neslo otvorit stranku z Naposledy upravene kvoli groupId=999997 co je NULL
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
-    I.click("#pills-changes-tab");
+    I.clickCss("#pills-changes-tab");
     DT.waitForLoader();
-    I.click("table.datatableInit tbody tr:nth-child(4) td.dt-row-edit a");
+    I.clickCss("table.datatableInit tbody tr:nth-child(4) td.dt-row-edit a");
     DT.waitForLoader();
     I.dontSee("Nastala neočakávaná chyba");
     DTE.waitForEditor();
@@ -766,16 +771,16 @@ Scenario('NPE chyby po prechode na repozitar', ({ I, DTE }) => {
     //padalo otvorenie z historie kvoli NPE hodnotam
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=10");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-history-tab");
+    I.clickCss("#pills-dt-datatableInit-history-tab");
     I.wait(5);
     I.fillField("#datatableFieldDTE_Field_editorFields-history_wrapper .dt-filter-to-historySaveDate", "22.11.2018 12:14:57");
-    I.click("#datatableFieldDTE_Field_editorFields-history_wrapper .dt-filtrujem-historySaveDate");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper .dt-filtrujem-historySaveDate");
     I.wait(5);
     //overenie filtrovania podla datumov, to bol tiez bug kvoli poradiu stlpcov
     I.dontSee("04.01.2022", "#datatableFieldDTE_Field_editorFields-history_wrapper");
 
     I.forceClick(locate("#datatableFieldDTE_Field_editorFields-history td.dt-select-td").withText("362"));
-    I.click("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-history-edit");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-history-edit");
     I.amAcceptingPopups();
     I.wait(5);
     //over, ze sa preplo na zalozku Obsah
@@ -918,10 +923,10 @@ Scenario('Nacitanie CSS do listy', ({ I, DTE, Browser }) => {
     if (Browser.isFirefox()) I.wait(3);
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
-    I.click("#WebJETEditorBody");
+    I.clickCss("#WebJETEditorBody");
     I.switchTo();
 
-    I.click(".cke_combo__styles .cke_combo_button");
+    I.clickCss(".cke_combo__styles .cke_combo_button");
 
     I.switchTo(".cke_panel_frame");
     I.see("baretest1");
@@ -982,15 +987,15 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=32");
     var container = "#datatableInit_wrapper";
 
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Obnoviť");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
-    I.click(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-settings");
     I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Značky", container+" div.colvisbtn_wrapper");
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
@@ -1010,8 +1015,8 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
     I.dontSee(" Loyalty club: Vacation in Nha Trang", container);
     I.dontSee("Konsolidácia naprieč trhmi", container);
 
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
+    I.clickCss(container+" button.buttons-settings");
+    I.clickCss(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     I.click("Obnoviť");
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
@@ -1024,19 +1029,19 @@ Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {
     I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.dontSeeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.see("System", "#datatableInit_wrapper");
     I.seeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
-    I.click("#pills-folders-tab");
+    I.clickCss("#pills-folders-tab");
     DT.waitForLoader();
     I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.dontSee("System", "#datatableInit_wrapper");
     I.dontSeeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
     I.see("System", "#datatableInit_wrapper");
@@ -1048,7 +1053,7 @@ Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa r
     I.wait(1);
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     //over, ze mame viac ako 10 riadkov
-    I.see("Záznamy 1 až 11 z", "#datatableInit_wrapper .dataTables_info");
+    I.see("Záznamy 1 až 12 z", "#datatableInit_wrapper .dataTables_info");
     I.see("11 stránka v Adresári", "#datatableInit_wrapper");
 });
 
@@ -1067,13 +1072,147 @@ Scenario("Check editor for user with perms only for one webpage", ({ I, DTE }) =
 
     //
     I.say("Check editor values");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_title", "Home");
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     I.see("Homepage", "div.DTE_Field_Name_tempId div.filter-option-inner-inner");
 
     DTE.cancel();
 });
+
+Scenario("logout jtester", ({ I }) => {
+    I.logout();
+});
+
+Scenario("Group doc name change based oon another", async ({ I, DT, DTE }) => {
+    let parentGroup = "pg-autotest-" + randomNumber;
+    let childGroup = "cg-autotest-" + randomNumber;
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=84");
+    DT.waitForLoader();
+
+    I.say("Create parent group");
+        I.click( locate("div.tree-col").find("button.buttons-create") );
+        DTE.waitForEditor("groups-datatable");
+        I.fillField("#DTE_Field_groupName", parentGroup);
+        DTE.save();
+
+    I.say("Edit parent group DOC");
+        editDoc(I, DT, DTE, parentGroup);
+        changeDocName(I, DTE, parentGroup + "_1");
+
+    I.say("Select changed parent group (NEW name)");
+        I.jstreeClick(parentGroup + "_1");
+        const parentGroupId = await I.grabValueFrom("#tree-doc-id");
+
+    I.say("Create child group");
+        I.click( locate("div.tree-col").find("button.buttons-create") );
+        DTE.waitForEditor("groups-datatable");
+        I.fillField("#DTE_Field_groupName", childGroup);
+        DTE.save();
+
+        I.jstreeClick(childGroup);
+        editGroup(I, DT, DTE, childGroup);
+        DTE.cancel();
+        const childGroupId = await I.grabValueFrom("#tree-doc-id");
+
+    I.say("Set parent group DOC as main for child group");
+        editGroup(I, DT, DTE, childGroup);
+        changeGroupMainDoc(I, ["test", parentGroup + "_1"], parentGroupId)
+        DTE.save();
+
+    I.say("NOW test, that change of DOC does NOT change group name");
+    I.say("Because 1 page is main page to more groups");
+        editDoc(I, DT, DTE, parentGroup + "_1");
+        changeDocName(I, DTE, parentGroup + "_2");
+
+        I.say("Check gropups names");
+        I.jstreeClick(parentGroup + "_1");
+        I.jstreeClick(childGroup);
+
+        I.say("Change group name and check that DOC name does not change");
+        editGroup(I, DT, DTE, parentGroup + "_1");
+
+        I.wait(1);
+        I.clickCss("#DTE_Field_groupName");
+        I.fillField("#DTE_Field_groupName", parentGroup + "_3");
+        DTE.save();
+        //Checks
+        I.jstreeClick(parentGroup + "_3");
+        within("#datatableInit_wrapper", () => { I.see( parentGroup + "_2") });
+
+
+    I.say("NOW set parentGroup main DOC as childGroup DOC");
+    I.say("In this case, there is no multiple groups with same DOC as main BUT main DOC is in another group that group itself");
+        I.say("Change parent group DOC to child group DOC");
+        editGroup(I, DT, DTE, parentGroup + "_3");
+        changeGroupMainDoc(I, ["test", parentGroup + "_3", childGroup], childGroupId);
+        DTE.save();
+
+        I.say("Switch to child group and check that DOC name is NOT changed");
+        I.jstreeClick(childGroup);
+        within("#datatableInit_wrapper", () => { I.see( childGroup ) });
+
+        I.say("Change child group DOC name");
+        editDoc(I, DT, DTE, childGroup);
+        changeDocName(I, DTE, childGroup + "_1");
+
+        I.say("DO parent group name change");
+        I.jstreeClick(parentGroup + "_3");
+        editGroup(I, DT, DTE, parentGroup + "_3");
+        I.wait(1);
+        I.clickCss("#DTE_Field_groupName");
+        I.fillField("#DTE_Field_groupName", parentGroup + "_4");
+        DTE.save();
+
+        I.jstreeClick(parentGroup + "_4");
+        within("#datatableInit_wrapper", () => { I.see( parentGroup + "_2") });
+
+        I.jstreeClick(childGroup);
+        within("#datatableInit_wrapper", () => { I.see( childGroup ) });
+
+    I.say("DELETE THIS GROUPS");
+        I.jstreeClick(parentGroup + "_4");
+        I.click( locate("div.tree-col").find("button.buttons-remove") );
+        I.waitForElement("div.DTE_Action_Remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+});
+
+function editDoc (I, DT, DTE, groupName) {
+    DT.waitForLoader();
+    I.jstreeClick(groupName);
+    DT.waitForLoader();
+    I.click( locate("#datatableInit_wrapper").find("button.buttons-select-all") );
+    I.click( locate("#datatableInit_wrapper").find("button.buttons-edit") );
+    DTE.waitForEditor();
+}
+
+function editGroup (I, DT, DTE, groupName) {
+    DT.waitForLoader();
+    I.jstreeClick(groupName);
+    DT.waitForLoader();
+    I.click( locate("div.tree-col").find("button.buttons-edit") );
+    DTE.waitForEditor("groups-datatable");
+}
+
+function changeDocName(I, DTE, newDocName) {
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
+    I.fillField("#DTE_Field_title", newDocName);
+    DTE.save();
+}
+
+function changeGroupMainDoc(I, arr, id) {
+    within("#groups-datatable_modal > div.modal-dialog", () => {
+        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
+        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
+    });
+
+    I.waitForElement("#jsTree");
+    for(let i = 0; i < arr.length; i++) {
+        I.click(locate('#jsTree .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
+    }
+    I.clickCss("#docId-" + id + "_anchor");
+}
 
 Scenario('odhlasenie', ({ I }) => {
     I.logout();

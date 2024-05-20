@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HistoryDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">HistoryDB.java</span></div><h1>HistoryDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Description of the Class
+ *
+ * @Title magma-web
+ * @Company Interway s.r.o. (www.interway.sk)
+ * @Copyright Interway s.r.o. (c) 2001-2002
+ * @author $Author: jeeff $
+ * @version $Revision: 1.6 $
+ * @created Piatok, 2002, jun 14
+ * @modified $Date: 2004/03/07 20:58:27 $
+ */
+public class HistoryDB extends DB
+{
+<span class="pc" id="L31">	private String serverName = &quot;iwcm&quot;;</span>
+
+	/**
+	 * Constructor for the HistoryDB object
+	 *
+	 * @param serverName
+	 *           Description of the Parameter
+	 */
+	public HistoryDB(String serverName)
+<span class="fc" id="L40">	{</span>
+<span class="fc" id="L41">		this.serverName = serverName;</span>
+<span class="fc" id="L42">	}</span>
+
+	/**
+	 * Constructor for the HistoryDB object
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+<span class="nc" id="L48">	private HistoryDB() { }</span>
+
+	/**
+	 * Gets the history attribute of the HistoryDB object
+	 *
+	 * @param doc_id
+	 *           Description of the Parameter
+	 * @return The history value
+	 */
+	public List&lt;DocDetails&gt; getHistory(int doc_id)
+	{
+<span class="nc" id="L59">		return (getHistory(doc_id, false, false));</span>
+	}
+
+	/**
+	 * Gets the history attribute of the HistoryDB object
+	 *
+	 * @param doc_id
+	 *           Description of the Parameter
+	 * @param data
+	 *           Description of the Parameter
+	 * @param onlyNew
+	 *           Description of the Parameter
+	 * @return The history value
+	 */
+	public List&lt;DocDetails&gt; getHistory(int doc_id, boolean data, boolean onlyNew)
+	{
+<span class="fc" id="L75">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L77">		Connection db_conn = null;</span>
+<span class="fc" id="L78">		PreparedStatement ps = null;</span>
+<span class="fc" id="L79">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L82">			Prop prop = Prop.getInstance();</span>
+
+<span class="fc" id="L84">			db_conn = DBPool.getConnection(serverName);</span>
+			//toto je tu koli optimalizacii, cez 2 selecty to zbehne asi tak 20x
+			// rychlejsie
+<span class="fc" id="L87">			ps = db_conn.prepareStatement(&quot;SELECT history_id FROM documents_history WHERE doc_id=?&quot;);</span>
+<span class="fc" id="L88">			ps.setInt(1, doc_id);</span>
+<span class="fc" id="L89">			StringBuilder historyIds = null;</span>
+<span class="fc" id="L90">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">			while (rs.next())</span>
+			{
+<span class="fc bfc" id="L93" title="All 2 branches covered.">				if (historyIds == null)</span>
+				{
+<span class="fc" id="L95">					historyIds = new StringBuilder(Integer.toString(rs.getInt(&quot;history_id&quot;)));</span>
+				}
+				else
+				{
+<span class="fc" id="L99">					historyIds.append(&quot;,&quot;).append(rs.getInt(&quot;history_id&quot;));</span>
+				}
+			}
+<span class="fc" id="L102">			rs.close();</span>
+<span class="fc" id="L103">			ps.close();</span>
+
+<span class="fc bfc" id="L105" title="All 2 branches covered.">			if (historyIds != null)</span>
+			{
+<span class="fc" id="L107">				String fields = DocDB.getDocumentFields(data);</span>
+
+<span class="fc" id="L109">				String selectStart = &quot;SELECT d.history_id, d.save_date, d.approved_by, d.disapproved_by, d.actual, d.approve_date, d.publicable, d.awaiting_approve, d.publish_after_start, &quot;+fields+&quot;, u.title as u_title, u.first_name, u.last_name &quot;;</span>
+
+<span class="fc" id="L111">				String sql = selectStart + &quot; FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN (&quot;+historyIds.toString()+&quot;) AND d.publicable=&quot;+DB.getBooleanSql(true)+&quot; ORDER BY history_id DESC &quot;;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">				if (Constants.DB_TYPE == Constants.DB_ORACLE) //PGSQL OK</span>
+				{
+<span class="nc" id="L114">					sql = &quot;SELECT d.*, u.title as u_title, u.first_name, u.last_name FROM documents_history d,  users u WHERE d.author_id=u.user_id(+) AND history_id IN (&quot;+historyIds.toString()+&quot;) AND d.publicable=&quot;+DB.getBooleanSql(true)+&quot; ORDER BY history_id DESC &quot;;</span>
+				}
+<span class="fc" id="L116">			   ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L117">			   rs = ps.executeQuery();</span>
+			   UserDetails userDetails;
+			   //tu sa nacitava zoznam neschvalenych verzii
+<span class="fc bfc" id="L120" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+<span class="fc" id="L122">					DocDetails doc = new DocDetails();</span>
+<span class="fc" id="L123">					doc.setHistoryId(rs.getInt(&quot;history_id&quot;));</span>
+<span class="fc" id="L124">					doc.setHistorySaveDate(getDbDateTime(rs, &quot;save_date&quot;, serverName));</span>
+<span class="fc" id="L125">					doc.setHistoryApprovedBy(rs.getInt(&quot;approved_by&quot;));</span>
+<span class="fc" id="L126">					doc.setHistoryActual(rs.getBoolean(&quot;actual&quot;));</span>
+<span class="fc" id="L127">					doc.setHistoryApproveDate(getDbDateTime(rs, &quot;approve_date&quot;, serverName));</span>
+<span class="fc" id="L128">					doc.setHistoryDisapprovedBy(rs.getInt(&quot;disapproved_by&quot;));</span>
+
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">					if (rs.getBoolean(&quot;publicable&quot;))</span>
+					{
+						//zistuje ci stranka bude niekedy publikovana alebo uz nie
+<span class="fc" id="L133">						doc.setPublishStartStringExtra(getDbDateTime(rs, &quot;publish_start&quot;, serverName));</span>
+					}
+					else
+					{
+<span class="nc" id="L137">						doc.setPublishStartStringExtra(&quot;&amp;nbsp;&quot;);</span>
+					}
+
+<span class="fc" id="L140">					doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L141">					doc.setTitle(getDbString(rs, &quot;title&quot;));</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">					if (data)</span>
+					{
+<span class="nc" id="L144">						doc.setData(DB.getDbString(rs, &quot;data&quot;));</span>
+					}
+<span class="fc" id="L146">					doc.setExternalLink(getDbString(rs, &quot;external_link&quot;));</span>
+<span class="fc" id="L147">					doc.setVirtualPath(getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="fc" id="L148">					doc.setNavbar(getDbString(rs, &quot;navbar&quot;));</span>
+<span class="fc" id="L149">					doc.setDateCreated(DB.getDbTimestamp(rs, &quot;date_created&quot;));</span>
+<span class="fc" id="L150">					doc.setPublishStart(DB.getDbTimestamp(rs, &quot;publish_start&quot;));</span>
+<span class="fc" id="L151">					doc.setPublishEnd(DB.getDbTimestamp(rs, &quot;publish_end&quot;));</span>
+<span class="fc" id="L152">					doc.setAuthorId(rs.getInt(&quot;author_id&quot;));</span>
+<span class="fc" id="L153">					doc.setAuthorName(getFullName(rs));</span>
+<span class="fc" id="L154">					doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="fc" id="L155">					doc.setTempId(rs.getInt(&quot;temp_id&quot;));</span>
+<span class="fc" id="L156">					doc.setSearchable(rs.getBoolean(&quot;searchable&quot;));</span>
+<span class="fc" id="L157">					doc.setAvailable(rs.getBoolean(&quot;available&quot;));</span>
+<span class="fc" id="L158">					doc.setPasswordProtected(getDbString(rs, &quot;password_protected&quot;));</span>
+<span class="fc" id="L159">					doc.setCacheable(rs.getBoolean(&quot;cacheable&quot;));</span>
+<span class="fc" id="L160">					doc.setFileName(getDbString(rs, &quot;file_name&quot;));</span>
+<span class="fc" id="L161">					doc.setSortPriority(rs.getInt(&quot;sort_priority&quot;));</span>
+<span class="fc" id="L162">					doc.setHeaderDocId(rs.getInt(&quot;header_doc_id&quot;));</span>
+<span class="fc" id="L163">					doc.setFooterDocId(rs.getInt(&quot;footer_doc_id&quot;));</span>
+<span class="fc" id="L164">					doc.setMenuDocId(rs.getInt(&quot;menu_doc_id&quot;));</span>
+<span class="fc" id="L165">					doc.setRightMenuDocId(rs.getInt(&quot;right_menu_doc_id&quot;));</span>
+
+<span class="fc" id="L167">					doc.setFieldA(DB.getDbString(rs, &quot;field_a&quot;));</span>
+<span class="fc" id="L168">					doc.setFieldB(DB.getDbString(rs, &quot;field_b&quot;));</span>
+<span class="fc" id="L169">					doc.setFieldC(DB.getDbString(rs, &quot;field_c&quot;));</span>
+<span class="fc" id="L170">					doc.setFieldD(DB.getDbString(rs, &quot;field_d&quot;));</span>
+<span class="fc" id="L171">					doc.setFieldE(DB.getDbString(rs, &quot;field_e&quot;));</span>
+<span class="fc" id="L172">					doc.setFieldF(DB.getDbString(rs, &quot;field_f&quot;));</span>
+
+<span class="fc" id="L174">					doc.setFieldG(DB.getDbString(rs, &quot;field_g&quot;));</span>
+<span class="fc" id="L175">					doc.setFieldH(DB.getDbString(rs, &quot;field_h&quot;));</span>
+<span class="fc" id="L176">					doc.setFieldI(DB.getDbString(rs, &quot;field_i&quot;));</span>
+<span class="fc" id="L177">					doc.setFieldJ(DB.getDbString(rs, &quot;field_j&quot;));</span>
+<span class="fc" id="L178">					doc.setFieldK(DB.getDbString(rs, &quot;field_k&quot;));</span>
+<span class="fc" id="L179">					doc.setFieldL(DB.getDbString(rs, &quot;field_l&quot;));</span>
+
+<span class="fc" id="L181">					doc.setDisableAfterEnd(rs.getBoolean(&quot;disable_after_end&quot;));</span>
+<span class="fc" id="L182">					doc.setPublishAfterStart(rs.getBoolean(&quot;publish_after_start&quot;));</span>
+
+<span class="fc" id="L184">					doc.setFieldM(DB.getDbString(rs, &quot;field_m&quot;));</span>
+<span class="fc" id="L185">					doc.setFieldN(DB.getDbString(rs, &quot;field_n&quot;));</span>
+<span class="fc" id="L186">					doc.setFieldO(DB.getDbString(rs, &quot;field_o&quot;));</span>
+<span class="fc" id="L187">					doc.setFieldP(DB.getDbString(rs, &quot;field_p&quot;));</span>
+<span class="fc" id="L188">					doc.setFieldQ(DB.getDbString(rs, &quot;field_q&quot;));</span>
+<span class="fc" id="L189">					doc.setFieldR(DB.getDbString(rs, &quot;field_r&quot;));</span>
+<span class="fc" id="L190">					doc.setFieldS(DB.getDbString(rs, &quot;field_s&quot;));</span>
+<span class="fc" id="L191">					doc.setFieldT(DB.getDbString(rs, &quot;field_t&quot;));</span>
+
+<span class="fc" id="L193">					doc.setRequireSsl(rs.getBoolean(&quot;require_ssl&quot;));</span>
+
+
+<span class="pc bpc" id="L196" title="4 of 6 branches missed.">					if ((doc.getHistoryApprovedBy()&gt;0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()) || doc.getHistoryDisapprovedBy()&gt;0) {</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">						if (doc.getHistoryApprovedBy()&gt;0)</span>
+						{
+<span class="nc" id="L199">							userDetails = UsersDB.getUser(doc.getHistoryApprovedBy());</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">							if (userDetails != null)</span>
+							{
+<span class="nc" id="L202">								doc.setHistoryApprovedByName(userDetails.getFullName());</span>
+							} else {
+<span class="nc" id="L204">								doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
+							}
+<span class="nc" id="L206">							doc.setHistoryDisapprovedByName(&quot;&quot;);</span>
+						}
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">						if (doc.getHistoryDisapprovedBy()&gt;0)</span>
+						{
+<span class="nc" id="L211">							userDetails = UsersDB.getUser(doc.getHistoryDisapprovedBy());</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">							if (userDetails != null)</span>
+							{
+<span class="nc" id="L214">								doc.setHistoryDisapprovedByName(userDetails.getFullName());</span>
+							} else {
+<span class="nc" id="L216">								doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
+							}
+<span class="nc" id="L218">							doc.setHistoryApprovedByName(&quot;&quot;);</span>
+						}
+					} else {
+<span class="fc" id="L221">						String awaitingApprove = getDbString(rs, &quot;awaiting_approve&quot;);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">						if (Tools.isEmpty(awaitingApprove)) {</span>
+<span class="fc" id="L223">							doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_to_approve&quot;));</span>
+<span class="fc" id="L224">							doc.setHistoryDisapprovedByName(&quot;&quot;);</span>
+						} else {
+<span class="nc" id="L226">							doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_approved&quot;));</span>
+						}
+					}
+
+<span class="fc" id="L230">					ret.add(doc);</span>
+
+<span class="fc" id="L232">				}</span>
+<span class="fc" id="L233">				rs.close();</span>
+<span class="fc" id="L234">				ps.close();</span>
+
+				//tu sa nacitava zoznam este nepublikovanych alebo kompletny zoznam historie
+<span class="fc" id="L237">				ps = db_conn.prepareStatement(selectStart + &quot; FROM documents_history d LEFT JOIN  users u ON d.author_id=u.user_id WHERE history_id IN (&quot;+historyIds.toString()+&quot;) AND d.publicable=&quot;+DB.getBooleanSql(false)+&quot; ORDER BY history_id DESC &quot;);</span>
+<span class="fc" id="L238">				rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">				while (rs.next())</span>
+				{
+
+<span class="fc" id="L242">					DocDetails doc = new DocDetails();</span>
+<span class="fc" id="L243">					doc.setHistoryId(rs.getInt(&quot;history_id&quot;));</span>
+<span class="fc" id="L244">					doc.setHistorySaveDate(getDbDateTime(rs, &quot;save_date&quot;, serverName));</span>
+<span class="fc" id="L245">					doc.setHistoryApprovedBy(rs.getInt(&quot;approved_by&quot;));</span>
+<span class="fc" id="L246">					doc.setHistoryDisapprovedBy(rs.getInt(&quot;disapproved_by&quot;));</span>
+<span class="fc" id="L247">					doc.setHistoryActual(rs.getBoolean(&quot;actual&quot;));</span>
+<span class="fc" id="L248">					doc.setHistoryApproveDate(getDbDateTime(rs, &quot;approve_date&quot;, serverName));</span>
+
+<span class="pc bpc" id="L250" title="1 of 4 branches missed.">					if (rs.getBoolean(&quot;publicable&quot;) || rs.getBoolean(&quot;publish_after_start&quot;)) //zistuje ci stranka bude</span>
+																// niekedy publikovana alebo uz
+																// nie
+<span class="fc" id="L253">					  doc.setPublishStartStringExtra(getDbDateTime(rs, &quot;publish_start&quot;, serverName));</span>
+					else
+					{
+<span class="fc" id="L256">					  doc.setPublishStartStringExtra(&quot;&amp;nbsp;&quot;);</span>
+					}
+
+<span class="fc bfc" id="L259" title="All 4 branches covered.">					if (onlyNew &amp;&amp; doc.isHistoryActual())</span>
+					{
+<span class="fc" id="L261">						rs.close();</span>
+<span class="fc" id="L262">						ps.close();</span>
+<span class="fc" id="L263">						db_conn.close();</span>
+<span class="fc" id="L264">						rs = null;</span>
+<span class="fc" id="L265">						ps = null;</span>
+<span class="fc" id="L266">						db_conn = null;</span>
+
+<span class="fc" id="L268">						return (ret);</span>
+					}
+
+<span class="fc" id="L271">					String awaitingApprove = getDbString(rs, &quot;awaiting_approve&quot;);</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">					if (Tools.isEmpty(awaitingApprove)) {</span>
+<span class="fc" id="L273">						doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_to_approve&quot;));</span>
+<span class="fc" id="L274">						doc.setHistoryDisapprovedByName(&quot;&quot;);</span>
+					} else {
+<span class="fc" id="L276">						doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_approved&quot;));</span>
+					}
+
+<span class="fc" id="L279">					doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L280">					doc.setTitle(getDbString(rs, &quot;title&quot;));</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">					if (data)</span>
+					{
+<span class="nc" id="L283">						doc.setData(DB.getDbString(rs, &quot;data&quot;));</span>
+					}
+<span class="fc" id="L285">					doc.setExternalLink(getDbString(rs, &quot;external_link&quot;));</span>
+<span class="fc" id="L286">					doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="fc" id="L287">					doc.setNavbar(getDbString(rs, &quot;navbar&quot;));</span>
+<span class="fc" id="L288">					doc.setDateCreated(DB.getDbTimestamp(rs, &quot;date_created&quot;));</span>
+<span class="fc" id="L289">					doc.setPublishStart(DB.getDbTimestamp(rs, &quot;publish_start&quot;));</span>
+<span class="fc" id="L290">					doc.setPublishEnd(DB.getDbTimestamp(rs, &quot;publish_end&quot;));</span>
+<span class="fc" id="L291">					doc.setAuthorId(rs.getInt(&quot;author_id&quot;));</span>
+<span class="fc" id="L292">					doc.setAuthorName(getFullName(rs));</span>
+<span class="fc" id="L293">					doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="fc" id="L294">					doc.setTempId(rs.getInt(&quot;temp_id&quot;));</span>
+<span class="fc" id="L295">					doc.setSearchable(rs.getBoolean(&quot;searchable&quot;));</span>
+<span class="fc" id="L296">					doc.setAvailable(rs.getBoolean(&quot;available&quot;));</span>
+<span class="fc" id="L297">					doc.setPasswordProtected(getDbString(rs, &quot;password_protected&quot;));</span>
+<span class="fc" id="L298">					doc.setCacheable(rs.getBoolean(&quot;cacheable&quot;));</span>
+<span class="fc" id="L299">					doc.setFileName(getDbString(rs, &quot;file_name&quot;));</span>
+<span class="fc" id="L300">					doc.setSortPriority(rs.getInt(&quot;sort_priority&quot;));</span>
+<span class="fc" id="L301">					doc.setHeaderDocId(rs.getInt(&quot;header_doc_id&quot;));</span>
+<span class="fc" id="L302">					doc.setFooterDocId(rs.getInt(&quot;footer_doc_id&quot;));</span>
+<span class="fc" id="L303">					doc.setMenuDocId(rs.getInt(&quot;menu_doc_id&quot;));</span>
+
+<span class="fc" id="L305">					doc.setDisableAfterEnd(rs.getBoolean(&quot;disable_after_end&quot;));</span>
+
+<span class="fc" id="L307">					ret.add(doc);</span>
+
+<span class="fc" id="L309">				}</span>
+<span class="fc" id="L310">				rs.close();</span>
+<span class="fc" id="L311">				ps.close();</span>
+			}
+
+<span class="fc bfc" id="L314" title="All 2 branches covered.">			for (DocDetails doc : ret)</span>
+			{
+				/*
+					Author is allso approver, but awaiting_approve is empty. Reason is that if author == approver, approverId is set but awaiting_approve
+					is empty so this approver will not receive redundant email about approving page.
+					This chnage in logic was made in ApproveService.loadApproveTables ifn, at the end
+				*/
+<span class="pc bpc" id="L321" title="1 of 4 branches missed.">				if(doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId() == doc.getHistoryApprovedBy()) {</span>
+<span class="fc" id="L322">					UserDetails approver = UsersDB.getUser(doc.getHistoryApprovedBy());</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">					if (approver != null) doc.setHistoryApprovedByName(approver.getFullName());</span>
+				}
+
+<span class="pc bpc" id="L326" title="1 of 4 branches missed.">				if ((doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()))</span>
+				{
+<span class="nc" id="L328">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryApprovedBy());</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">					if (approver != null)</span>
+					{
+<span class="nc" id="L331">						doc.setHistoryApprovedByName(approver.getFullName());</span>
+					} else {
+<span class="nc" id="L333">						doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
+					}
+				}
+
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">				if (doc.getHistoryDisapprovedBy() &gt; 0)</span>
+				{
+<span class="nc" id="L339">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryDisapprovedBy());</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">					if (approver != null)</span>
+					{
+<span class="nc" id="L342">						doc.setHistoryDisapprovedByName(approver.getFullName());</span>
+					} else {
+<span class="nc" id="L344">						doc.setHistoryDisapprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
+					}
+
+<span class="nc" id="L347">					doc.setHistoryApprovedByName(&quot;&quot;);</span>
+				}
+<span class="fc" id="L349">			}</span>
+
+<span class="fc" id="L351">			db_conn.close();</span>
+<span class="fc" id="L352">			db_conn = null;</span>
+<span class="fc" id="L353">			rs = null;</span>
+<span class="fc" id="L354">			ps = null;</span>
+		}
+<span class="nc" id="L356">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+		finally{
+			try{
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L362">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+
+<span class="fc" id="L365">		return (ret);</span>
+	}
+	public boolean deleteHistory(int historyId) {
+
+<span class="nc" id="L369">		Connection db_conn = null;</span>
+<span class="nc" id="L370">		PreparedStatement ps = null;</span>
+
+		try
+		{
+<span class="nc" id="L374">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L375">			ps = db_conn.prepareStatement(&quot;DELETE FROM documents_history WHERE history_id=?&quot;);</span>
+<span class="nc" id="L376">			ps.setInt(1, historyId);</span>
+<span class="nc" id="L377">			ps.execute();</span>
+<span class="nc" id="L378">			ps.close();</span>
+<span class="nc" id="L379">			db_conn.close();</span>
+<span class="nc" id="L380">			ps = null;</span>
+<span class="nc" id="L381">			db_conn = null;</span>
+
+<span class="nc" id="L383">			return true;</span>
+<span class="nc" id="L384">		} catch(Exception e) {</span>
+<span class="nc" id="L385">			sk.iway.iwcm.Logger.error(e);</span>
+		}finally {
+			try {
+<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L390">			}catch(SQLException e) {sk.iway.iwcm.Logger.error(e);}</span>
+		}
+<span class="nc" id="L392">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

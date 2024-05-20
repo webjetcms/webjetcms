@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
   <base href="/latest/">
 
+  <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
+
   <style type="text/css">
     :root {
       --base-background-color: #13151B;
@@ -118,6 +120,21 @@
         font-size: inherit;
         border: 1px solid transparent;
     }
+
+    div.gsc-results-wrapper-visible {
+      background-color: white;
+    }
+    div.input-wrap {
+      background-color: var(--search-input-background-color) !important;
+    }
+
+    table.gssb_c {
+      left: auto !important;
+    }
+    input[type="checkbox"] {
+      pointer-events: none;
+    }
+
   </style>
 </head>
 <body>
@@ -126,7 +143,7 @@
   <div id="search" style="display: none;">
     <div class="search">
       <div class="input-wrap">
-        <input type="search" value="" aria-label="Search text" placeholder="Vyhľadávanie">
+        <div class="gcse-search"></div>
       </div>
     </div>
   </div>
@@ -137,6 +154,7 @@
             window.location.href.indexOf("127.0.0.1") > -1
             || window.location.href.indexOf("iwcm.interway.sk") > -1
             || window.location.href.indexOf("docs.interway.sk") > -1
+            || window.location.href.indexOf("localhost") > -1
         ) {
             basePath = "/";
         }
@@ -144,7 +162,7 @@
       name: 'WebJET CMS',
       nameLink: basePath,
       repo: 'https://github.com/webjetcms/webjetcms',
-      logo: basePath+'sk/_media/logo.png',
+      logo: basePath+'assets/images/logo.png',
       basePath: "/", //because of base tag in head this must be set to /
       routerMode: 'history',
       auto2top: true, //Scrolls to the top of the screen when the route is changed.
@@ -165,7 +183,7 @@
       },
       relativePath: false, //otherwise history routing will not work
       // complete configuration parameters
-      search: {
+      /*search: {
         maxAge: 86400000, // Expiration time, the default one day
         paths: 'auto',
 
@@ -196,7 +214,7 @@
         // When initialiazing an index, we look for the first path from the sidebar.
         // If it matches the prefix from the list, we switch to the corresponding index.
         pathNamespaces: ['/sk', '/en'],
-      },
+      },*/
     }
   </script>
   <!-- Docsify v4 -->
@@ -208,7 +226,7 @@
   <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 
   <!-- Full text search - https://docsify.js.org/#/plugins?id=full-text-search -->
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <!-- script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script-->
 
   <!-- docsify-tabs (latest v1.x.x) https://jhildenbiddle.github.io/docsify-tabs/#/ -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
@@ -233,11 +251,21 @@
       window.$docsify.markdown.renderer.link = function(href, title, text) {
           //console.log("href=", href, "title=", title, "text=", text, "location=", window.location.href, "basePath=", basePath);
 
+          if (href.indexOf("http")==0) {
+            return originalRender(href, title, text);
+          }
+
+          if (href.indexOf("/")) {
+            //link in same folder
+            //append link to window.location.pathname without part after last /
+            href = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/")+1) + href;
+          }
+
           var lngPrefix = "/sk/";
           if (window.location.href.indexOf("/en/")!=-1) {
             lngPrefix = "/en/";
           }
-          if (href.indexOf("http")!=0 && href.indexOf("..")!=0 && href.indexOf("#")!=0 && href.indexOf("//")!=0) {
+          if (href.indexOf("http")!=0 && href.indexOf("..")!=0 && href.indexOf("#")!=0 && href.indexOf("//")!=0 && href.indexOf("/")!=-1) {
             if (href.indexOf("/sk")!=0 && href.indexOf("/en")!=0) {
               href = lngPrefix + href;
               href = href.replace("//", "/");
@@ -278,6 +306,15 @@
           }
           link = link.replace('href="../', 'href="'+pathname+'../');
 
+          if (basePath.length>1) {
+            var basePathWithoutSlash = basePath.substring(1, basePath.length-1);
+            link = link.replace('/'+basePathWithoutSlash+lngPrefix+basePathWithoutSlash+'/', '/'+basePathWithoutSlash+lngPrefix);
+          }
+
+          //prevent double lngprefix insertion
+          link = link.replaceAll(lngPrefix+lngPrefix, lngPrefix);
+          link = link.replaceAll(lngPrefix+lngPrefix.substring(1), lngPrefix);
+
           //prevent docsify onclick event
           link = link.replace('target="_blank"', 'target="_blank" onclick="handleExternalClick(this, event)"');
           //console.log("link final: ", link);
@@ -285,14 +322,14 @@
       }
 
       //move #search element into aside.sidebar after h1 element
-      /*var search = document.getElementById("search");
+      var search = document.getElementById("search");
       var sidebar = document.getElementsByClassName("sidebar")[0];
       var h1 = sidebar.getElementsByTagName("h1")[0];
       if (h1) {
         h1.parentNode.insertBefore(search, h1.nextSibling);
       }
       search.style.display = "block";
-      */
+
 
 
     });
@@ -302,6 +339,30 @@
       event.stopPropagation();
       window.open(link.href, '_blank');
     }
+
+    var cx = "340da4568aa0d44ca";
+    if (window.location.href.indexOf("/en/")!=-1) cx = "44ede7df6984c4a20";
+
+    //append this before body end '<script async src="">
+    var tag = document.createElement("script");
+    tag.src = "https://cse.google.com/cse.js?cx="+cx;
+    tag.async = "async";
+    document.getElementsByTagName("body")[0].appendChild(tag);
+
+    if (window.location.pathname==basePath) {
+      try {
+          var language = navigator.languages
+              ? navigator.languages[0]
+              : (navigator.language || navigator.userLanguage);
+
+          if (language.indexOf("sk")!=-1) window.location.href=basePath+"sk/";
+          else if (language.indexOf("cs")!=-1 || language.indexOf("cz")!=-1) window.location.href=basePath+"sk/";
+          else window.location.href=basePath+"en/";
+      } catch (e) {
+          console.log(e);
+      }
+    }
+
   </script>
 
 </body>

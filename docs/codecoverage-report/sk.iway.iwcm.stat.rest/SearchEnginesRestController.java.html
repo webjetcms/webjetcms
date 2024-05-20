@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchEnginesRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat.rest</a> &gt; <span class="el_source">SearchEnginesRestController.java</span></div><h1>SearchEnginesRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat.rest;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.components.seo.rest.SeoService;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.stat.FilterHeaderDto;
+import sk.iway.iwcm.stat.jpa.SearchEnginesDTO;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/stat/search-engines&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_stat')&quot;)
+@Datatable
+public class SearchEnginesRestController extends DatatableRestControllerV2&lt;SearchEnginesDTO, Long&gt; {
+    private final DocDetailsRepository docDetailsRepository;
+
+    @Autowired
+    public SearchEnginesRestController(DocDetailsRepository docDetailsRepository) {
+<span class="fc" id="L32">        super(null);</span>
+<span class="fc" id="L33">        this.docDetailsRepository = docDetailsRepository;</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public void beforeSave(SearchEnginesDTO entity) {
+<span class="nc" id="L38">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public Page&lt;SearchEnginesDTO&gt; getAllItems(Pageable pageable) {
+        //Process params from request into FilterHeaderDto
+<span class="nc" id="L44">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="nc" id="L45">        DatatablePageImpl&lt;SearchEnginesDTO&gt; page = new DatatablePageImpl&lt;&gt;( StatService.getSearchEnginesTableData(filter) );</span>
+<span class="nc" id="L46">        return page;</span>
+    }
+
+    @Override
+    public Page&lt;SearchEnginesDTO&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, SearchEnginesDTO search) {
+        //Process received params into FilterHeaderDto
+<span class="fc" id="L52">        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);</span>
+<span class="fc" id="L53">        DatatablePageImpl&lt;SearchEnginesDTO&gt; page = new DatatablePageImpl&lt;&gt;( StatService.getSearchEnginesTableData(filter) );</span>
+<span class="fc" id="L54">        return page;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/pieChartData&quot;,
+        params={&quot;dayDate&quot;, &quot;rootDir&quot;})
+    public List&lt;SearchEnginesDTO&gt; getPieChartData(
+                @RequestParam(&quot;dayDate&quot;) String stringRange,
+                @RequestParam(&quot;rootDir&quot;) int rootGroupId) {
+
+<span class="nc" id="L64">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="nc" id="L65">        String rootGroupIdQuery = FilterHeaderDto.groupIdToQuery(rootGroupId);</span>
+<span class="nc" id="L66">        return StatService.getSearchEnginesPieChartData(dateRangeArr[0], dateRangeArr[1], rootGroupIdQuery);</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/searchEnginesSelect&quot;,
+        params={&quot;dayDate&quot;, &quot;rootDir&quot;, &quot;webPage&quot;})
+    public List&lt;String&gt; getSearchEnginesSelectValues(
+            @RequestParam(&quot;dayDate&quot;) String dayDate,
+            @RequestParam(&quot;rootDir&quot;) Integer rootDir,
+            @RequestParam(&quot;webPage&quot;) Integer webPage) {
+
+<span class="fc" id="L77">        return SeoService.getSearchEnginesSelectValues(dayDate, rootDir, webPage);</span>
+    }
+
+    @RequestMapping(value=&quot;/webPageSelect&quot;, params={&quot;rootDir&quot;})
+    public Map&lt;Integer, String&gt; getWebPageSelectValues(@RequestParam(&quot;rootDir&quot;) int rootGroupId) {
+<span class="fc" id="L82">        return SeoService.getWebPageSelectValues(rootGroupId, docDetailsRepository);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

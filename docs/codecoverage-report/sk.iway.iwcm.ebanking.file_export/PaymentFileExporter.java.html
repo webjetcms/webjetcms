@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentFileExporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.ebanking.file_export</a> &gt; <span class="el_source">PaymentFileExporter.java</span></div><h1>PaymentFileExporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.ebanking.file_export;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.ebanking.Payment;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmOutputStream;
+
+/**
+ *  PaymentFileExporter.java
+ *
+ *@Title        webjet4_repair
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.4 $
+ *@created      Date: 25.8.2009 16:06:00
+ *@modified     $Date: 2010/01/20 11:14:26 $
+ */
+<span class="nc" id="L26">public abstract class PaymentFileExporter</span>
+{
+<span class="nc" id="L28">	private BigDecimal maximumCap = new BigDecimal(Long.MAX_VALUE);</span>
+
+	private List&lt;Payment&gt; payments;
+
+	private IwcmFile exportFile;
+
+	private StringBuilder content;
+
+	private Payment sourceAccount;
+
+	public IwcmFile createExportFile(List&lt;Payment&gt; payments) throws InsufficientFundsException
+	{
+<span class="nc" id="L40">		this.payments = new ArrayList&lt;Payment&gt;(payments);</span>
+<span class="nc" id="L41">		throwExceptionIfCapIsReached();</span>
+<span class="nc" id="L42">		exportFile = createEmptyFileForExport();</span>
+<span class="nc" id="L43">		createFileContent();</span>
+<span class="nc" id="L44">		writeContentToExportFile();</span>
+<span class="nc" id="L45">		return exportFile;</span>
+	}
+
+	private void throwExceptionIfCapIsReached() throws InsufficientFundsException
+	{
+<span class="nc" id="L50">		BigDecimal counter = BigDecimal.ZERO;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		for (Payment payment : payments)</span>
+<span class="nc" id="L52">			counter = counter.add(payment.getAmount());</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (counter.compareTo(maximumCap) &gt; 0)</span>
+<span class="nc" id="L55">			throw new InsufficientFundsException();</span>
+<span class="nc" id="L56">	}</span>
+
+	private IwcmFile createEmptyFileForExport()
+	{
+<span class="nc" id="L60">		String exceptionMessage = null;</span>
+		try
+		{
+<span class="nc" id="L63">			String filePath = createFilePath();</span>
+<span class="nc" id="L64">			String directory = filePath.substring(0, filePath.lastIndexOf('/') + 1);</span>
+<span class="nc" id="L65">			String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);</span>
+<span class="nc" id="L66">			IwcmFile file = new IwcmFile(directory, fileName);</span>
+<span class="nc" id="L67">			file.mkdirs();</span>
+<span class="nc" id="L68">			file.createNewFile();</span>
+<span class="nc" id="L69">			return file;</span>
+		}
+<span class="nc" id="L71">		catch (IOException e)</span>
+		{
+<span class="nc" id="L73">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L74">			exceptionMessage = e.getMessage();</span>
+		}
+<span class="nc" id="L76">		throw new IllegalStateException(exceptionMessage);</span>
+	}
+
+	private void createFileContent()
+	{
+<span class="nc" id="L81">		content = new StringBuilder();</span>
+
+<span class="nc" id="L83">		content.append(createHeader());</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		for (Payment payment : this.payments)</span>
+<span class="nc" id="L85">			content.append(createRowFrom(payment));</span>
+<span class="nc" id="L86">		content.append(createFooter());</span>
+<span class="nc" id="L87">	}</span>
+
+	protected abstract String createRowFrom(Payment payment);
+
+	protected String createHeader()
+	{
+<span class="nc" id="L93">		return &quot;&quot;;</span>
+	}
+
+	protected String createFooter()
+	{
+<span class="nc" id="L98">		return &quot;&quot;;</span>
+	}
+
+	private void writeContentToExportFile()
+	{
+<span class="nc" id="L103">		String exceptionMessage = null;</span>
+<span class="nc" id="L104">		IwcmOutputStream output = null;</span>
+		try
+		{
+<span class="nc" id="L107">			output = new IwcmOutputStream(exportFile);</span>
+<span class="nc" id="L108">			output.write(content.toString().getBytes());</span>
+<span class="nc" id="L109">			output.close();</span>
+<span class="nc" id="L110">			output = null;</span>
+		}
+<span class="nc" id="L112">		catch (IOException e) {</span>
+<span class="nc" id="L113">			exceptionMessage = e.getMessage();</span>
+			try
+			{
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if (output != null)</span>
+<span class="nc" id="L117">					output.close();</span>
+			}
+<span class="nc" id="L119">			catch (IOException e1){}</span>
+<span class="nc" id="L120">		}</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (exceptionMessage != null)</span>
+<span class="nc" id="L122">			throw new IllegalStateException(exceptionMessage);</span>
+<span class="nc" id="L123">	}</span>
+
+	protected String createFilePath()
+	{
+<span class="nc" id="L127">		return new StringBuilder(Tools.getRealPath(&quot;/files/protected/&quot;)).</span>
+<span class="nc" id="L128">			append('/').</span>
+<span class="nc" id="L129">			append(getExporterIdentifierForFileName()).</span>
+<span class="nc" id="L130">			append(&quot;_on_&quot;).</span>
+<span class="nc" id="L131">			append(new SimpleDateFormat(&quot;yyyy-MM-dd&quot;).format(new Date())).</span>
+<span class="nc" id="L132">			append('.').</span>
+<span class="nc" id="L133">			append(getFileExtension()).toString();</span>
+	}
+
+
+	protected abstract String getFileExtension();
+
+	protected abstract String getExporterIdentifierForFileName();
+
+	public void setMaximumCap(BigDecimal maximumCap)
+	{
+<span class="nc" id="L143">		this.maximumCap = maximumCap;</span>
+<span class="nc" id="L144">	}</span>
+
+	public void setSourceAccount(Payment sourceAccount)
+	{
+<span class="nc" id="L148">		this.sourceAccount = sourceAccount;</span>
+<span class="nc" id="L149">	}</span>
+
+	protected Payment getSourceAccount()
+	{
+<span class="nc" id="L153">		return sourceAccount;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

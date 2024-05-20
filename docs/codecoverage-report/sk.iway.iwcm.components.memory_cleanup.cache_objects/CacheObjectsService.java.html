@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CacheObjectsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.memory_cleanup.cache_objects</a> &gt; <span class="el_source">CacheObjectsService.java</span></div><h1>CacheObjectsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.memory_cleanup.cache_objects;
+
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.support.PagedListHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.tags.CombineTag;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.utils.Pair;
+
+import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
+import java.util.*;
+
+@Service
+public class CacheObjectsService {
+
+    private final CacheObjectsMapper memoryCleanupMapper;
+    private final CacheDtoComparator cacheDtoComparator;
+
+    @Autowired
+<span class="fc" id="L32">    public CacheObjectsService(CacheObjectsMapper memoryCleanupMapper, CacheDtoComparator cacheDtoComparator) {</span>
+<span class="fc" id="L33">        this.memoryCleanupMapper = memoryCleanupMapper;</span>
+<span class="fc" id="L34">        this.cacheDtoComparator = cacheDtoComparator;</span>
+<span class="fc" id="L35">    }</span>
+
+    Page&lt;CacheDto&gt; getAllCacheBeans(HttpServletRequest request, Pageable pageable) {
+<span class="fc" id="L38">        Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L39">        Enumeration&lt;CacheBean&gt; cacheBeans = cache.getAllElements();</span>
+<span class="fc" id="L40">        List&lt;CacheBean&gt; listOfCacheBeans = Collections.list(cacheBeans);</span>
+<span class="fc" id="L41">        List&lt;CacheDto&gt; cacheDtoList = memoryCleanupMapper.beanListToDtoList(listOfCacheBeans);</span>
+
+<span class="fc" id="L43">        String sort = request.getParameter(&quot;sort&quot;);</span>
+<span class="fc" id="L44">        String[] sortArray = sort.split(&quot;,&quot;);</span>
+<span class="fc" id="L45">        Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortArray[0], sortArray[1]);</span>
+
+<span class="fc" id="L47">        sortCacheDtos(sortPair, cacheDtoList);</span>
+
+<span class="fc" id="L49">        PagedListHolder&lt;CacheDto&gt; holder = new PagedListHolder&lt;&gt;(cacheDtoList);</span>
+<span class="fc" id="L50">        holder.setPage(pageable.getPageNumber());</span>
+<span class="fc" id="L51">        holder.setPageSize(pageable.getPageSize());</span>
+
+<span class="fc" id="L53">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, cacheDtoList.size());</span>
+    }
+
+    boolean deleteCacheBean(CacheDto cacheBean) {
+<span class="nc" id="L57">        Cache cache = Cache.getInstance();</span>
+<span class="nc" id="L58">        cache.removeObject(cacheBean.getName());</span>
+<span class="nc" id="L59">        ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache-&quot; + cacheBean.getName(), 250));</span>
+<span class="nc" id="L60">        Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache, key= &quot; + cacheBean.getName(), -1, -1);</span>
+<span class="nc" id="L61">        return true;</span>
+    }
+
+    boolean deleteAllCacheBeans() {
+<span class="fc" id="L65">        Cache cache = Cache.getInstance();</span>
+        try {
+<span class="fc" id="L67">            cache.clearAll();</span>
+            //zmaz aj doc db a podobne
+<span class="fc" id="L69">            DocDB.getInstance(true);</span>
+<span class="fc" id="L70">            GroupsDB.getInstance(true);</span>
+<span class="fc" id="L71">            TemplatesDB.getInstance(true);</span>
+<span class="fc" id="L72">            UserGroupsDB.getInstance(true);</span>
+            //prenes zmenu na cely cluster
+<span class="fc" id="L74">            ClusterDB.addRefresh(&quot;sk.iway.iwcm.Cache-delAll&quot;);</span>
+
+            //zmen version tag
+<span class="fc" id="L77">            long now = Tools.getNow();</span>
+<span class="fc" id="L78">            ClusterDB.addRefresh(&quot;sk.iway.iwcm.tags.CombineTag-&quot;+now);</span>
+
+<span class="fc" id="L80">            DB.resetHtmlAllowedFields();</span>
+<span class="fc" id="L81">            CombineTag.setVersion(now);</span>
+
+<span class="fc" id="L83">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache ALL&quot;, -1, -1);</span>
+<span class="nc" id="L84">        } catch (Exception e) {</span>
+<span class="nc" id="L85">            Logger.error(CacheObjectsService.class, &quot;Error deleting all cache objects. Error message: &quot; + e.getMessage());</span>
+<span class="nc" id="L86">            return false;</span>
+<span class="fc" id="L87">        }</span>
+
+<span class="fc" id="L89">        return true;</span>
+    }
+
+    boolean deletePictureCache() {
+<span class="nc" id="L93">        String dirStr = sk.iway.iwcm.Tools.getRealPath(Constants.getString(&quot;thumbServletCacheDir&quot;));</span>
+<span class="nc" id="L94">        IwcmFile dir = new IwcmFile(dirStr);</span>
+        try {
+<span class="nc" id="L96">            deletePictureCacheCycleClass(dir);</span>
+<span class="nc" id="L97">        } catch (Exception e) {</span>
+<span class="nc" id="L98">            Logger.error(CacheObjectsService.class, &quot;Error deleting picture cache. Error message: &quot; + e.getMessage());</span>
+<span class="nc" id="L99">            return false;</span>
+<span class="nc" id="L100">        }</span>
+
+<span class="nc" id="L102">        return true;</span>
+    }
+
+    private void deletePictureCacheCycleClass(IwcmFile iwcmFile) {
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (IwcmFile file : iwcmFile.listFiles()) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (file.isDirectory()) {</span>
+<span class="nc" id="L108">                deletePictureCacheCycleClass(file);</span>
+            } else {
+<span class="nc" id="L110">                file.delete();</span>
+            }
+        }
+<span class="nc" id="L113">    }</span>
+
+    Page&lt;CacheDto&gt; getFilteredCacheDtos(Map&lt;String, String&gt; searchMap, Pair&lt;String, String&gt; sortPair,
+                                        Pageable pageable) {
+<span class="nc" id="L117">        Cache cache = Cache.getInstance();</span>
+<span class="nc" id="L118">        Enumeration&lt;CacheBean&gt; cacheBeans = cache.getAllElements();</span>
+<span class="nc" id="L119">        List&lt;CacheBean&gt; listOfCacheBeans = Collections.list(cacheBeans);</span>
+<span class="nc" id="L120">        List&lt;CacheDto&gt; cacheDtoList = memoryCleanupMapper.beanListToDtoList(listOfCacheBeans);</span>
+<span class="nc" id="L121">        List&lt;CacheDto&gt; filteredCacheDtos = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        for (CacheDto entity : cacheDtoList) {</span>
+<span class="nc" id="L124">            BeanWrapper beanWrapper = new BeanWrapperImpl(entity);</span>
+<span class="nc" id="L125">            boolean present = false;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            for (Map.Entry&lt;String, String&gt; searchParameter : searchMap.entrySet()) {</span>
+<span class="nc" id="L127">                present = false;</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                if (searchParameter.getKey().equals(&quot;expirationDate&quot;)) {</span>
+<span class="nc" id="L130">                    Pair&lt;Timestamp, Timestamp&gt; datePair = getCleanExpirationDateValue(searchParameter.getValue());</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                    if (null == datePair.first) {</span>
+<span class="nc bnc" id="L133" title="All 4 branches missed.">                        if (null != entity.getExpirationDate() &amp;&amp; entity.getExpirationDate().before(datePair.second)) {</span>
+<span class="nc" id="L134">                            present = true;</span>
+                        }
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    } else if (null == datePair.second) {</span>
+<span class="nc bnc" id="L137" title="All 4 branches missed.">                        if (null != entity.getExpirationDate() &amp;&amp; entity.getExpirationDate().after(datePair.first)) {</span>
+<span class="nc" id="L138">                            present = true;</span>
+                        }
+                    } else {
+<span class="nc bnc" id="L141" title="All 6 branches missed.">                        if (null != entity.getExpirationDate() &amp;&amp; entity.getExpirationDate().after(datePair.first) &amp;&amp; entity.getExpirationDate().before(datePair.second)) {</span>
+<span class="nc" id="L142">                            present = true;</span>
+                        }
+                    }
+<span class="nc" id="L145">                } else {</span>
+<span class="nc" id="L146">                    String entityValue = (String) beanWrapper.getPropertyValue(searchParameter.getKey());</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                    if (null == entityValue) break;</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                    if (entityValue.toLowerCase().contains(searchParameter.getValue().toLowerCase())) present = true;</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (!present) break;</span>
+                }
+<span class="nc" id="L154">            }</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (present) filteredCacheDtos.add(entity);</span>
+<span class="nc" id="L156">        }</span>
+
+<span class="nc" id="L158">        sortCacheDtos(sortPair, filteredCacheDtos);</span>
+
+<span class="nc" id="L160">        PagedListHolder&lt;CacheDto&gt; holder = new PagedListHolder&lt;&gt;(filteredCacheDtos);</span>
+<span class="nc" id="L161">        holder.setPage(pageable.getPageNumber());</span>
+<span class="nc" id="L162">        holder.setPageSize(pageable.getPageSize());</span>
+
+<span class="nc" id="L164">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, filteredCacheDtos.size());</span>
+    }
+
+    private Pair&lt;Timestamp, Timestamp&gt; getCleanExpirationDateValue(String updateDate) {
+        //String filteredDate = updateDate.replace(&quot;daterange:&quot;, &quot;&quot;);
+        //String[] stringDateArray = new String[2];
+<span class="nc" id="L170">        Timestamp from = null;</span>
+<span class="nc" id="L171">        Timestamp to = null;</span>
+
+<span class="nc" id="L173">        String[] values = Tools.getTokens(updateDate.substring(updateDate.indexOf(&quot;:&quot;) + 1), &quot;-&quot;);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (values.length == 2) {</span>
+<span class="nc" id="L175">            from = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+<span class="nc" id="L176">            to = new Timestamp(Tools.getLongValue(values[1], 0));</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        } else if (values.length == 1) {</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">            if (updateDate.contains(&quot;range:-&quot;)) to = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+<span class="nc" id="L179">            else from = new Timestamp(Tools.getLongValue(values[0], 0));</span>
+        }
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (to != null) {</span>
+            //to nam pride vo formate 2.6.2020 ale mysli sa do konca dna, je potrebne pridat 24 hodin
+<span class="nc" id="L184">            Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L185">            cal.setTimeInMillis(to.getTime());</span>
+<span class="nc" id="L186">            cal.add(Calendar.DATE, 1);</span>
+<span class="nc" id="L187">            to = new Timestamp(cal.getTimeInMillis());</span>
+        }
+
+//        if (filteredDate.contains(&quot;-&quot;)) {
+//            if(filteredDate.startsWith(&quot;-&quot;)){
+//                stringDateArray[0] = &quot;&quot;;
+//                stringDateArray[1] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);
+//            } else {
+//                stringDateArray = filteredDate.split(&quot;-&quot;);
+//            }
+//        } else {
+//            stringDateArray[0] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);
+//            stringDateArray[1] = &quot;&quot;;
+//        }
+//
+//        long[] longDateArray = new long[]{Tools.getLongValue(stringDateArray[0], 0), Tools.getLongValue(stringDateArray[1], new Date().getTime())};
+//
+//        Date dateFrom = new Date(longDateArray[0]);
+//        Date dateTo = new Date(longDateArray[1]);
+<span class="nc" id="L206">        return new Pair&lt;&gt;(from, to);</span>
+    }
+
+    private void sortCacheDtos(Pair&lt;String, String&gt; sortPair, List&lt;CacheDto&gt; cacheDtoList) {
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (sortPair.second.equals(&quot;asc&quot;)) {</span>
+<span class="fc" id="L211">            cacheDtoList.sort(cacheDtoComparator.getSortingComparator(sortPair.first));</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        } else if (sortPair.second.equals(&quot;desc&quot;)) {</span>
+<span class="nc" id="L213">            cacheDtoList.sort(cacheDtoComparator.getSortingComparator(sortPair.first).reversed());</span>
+        }
+<span class="fc" id="L215">    }</span>
+
+    boolean checkSearchParam(String param) {
+<span class="nc" id="L218">        return param.startsWith(&quot;search&quot;);</span>
+    }
+
+    boolean checkSortParam(String param) {
+<span class="nc" id="L222">        return param.equals(&quot;sort&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

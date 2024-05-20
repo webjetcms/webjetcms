@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormMailAjax.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">FormMailAjax.java</span></div><h1>FormMailAjax.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+
+import javax.servlet.http.HttpServletRequest;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.SimpleMessage;
+import net.sourceforge.stripes.validation.SimpleError;
+import net.sourceforge.stripes.validation.ValidationErrorHandler;
+import net.sourceforge.stripes.validation.ValidationErrors;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.form.FormMailAction;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.stripes.ActionContextJavaScriptResolution;
+import sk.iway.iwcm.tags.JSEscapeTag;
+
+/**
+ *  FormMailAjax.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2008
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 3.2.2008 16:02:43
+ *@modified     $Date: 2008/03/14 09:27:53 $
+ */
+<span class="fc" id="L33">public class FormMailAjax implements ActionBean, ValidationErrorHandler</span>
+{
+	private ActionBeanContext context;
+
+	@Override
+	public Resolution handleValidationErrors(ValidationErrors errors) throws Exception 
+	{  
+<span class="nc" id="L40">		Logger.debug(FormMailAjax.class, &quot;handleValidationErrors: &quot;+errors);</span>
+<span class="nc" id="L41">		return new ActionContextJavaScriptResolution(this);  </span>
+	}
+	
+	@DefaultHandler
+	public Resolution defaultResolution()
+	{
+<span class="fc" id="L47">		Logger.debug(FormMailAjax.class, &quot;DefaultResolution&quot;);</span>
+		
+<span class="fc" id="L49">		String formName = DB.internationalToEnglish(context.getRequest().getParameter(&quot;savedb&quot;));</span>
+
+		//POZOR vsetky request pemenne treba ziskavat z tohto, nie z context.getRequest() - inak by neslo nastavenie formu cez databazove hodnoty
+<span class="fc" id="L52">		HttpServletRequest request = FormMailAction.fillRequestWithDatabaseOptions(formName, context.getRequest(), null);</span>
+<span class="fc" id="L53">		String forward = FormMailAction.saveForm(request, null, null, getContext());</span>
+		
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">		if (context.getValidationErrors().size()&gt;0)</span>
+		{
+<span class="nc" id="L57">			return new ActionContextJavaScriptResolution(this);</span>
+		}
+		
+		//tato metoda berie hodnotu podla session, takze sa pouzije spravny jazyk
+<span class="fc" id="L61">		Prop prop = Prop.getInstance(PageLng.getUserLng(getContext().getRequest()));</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (forward.indexOf(&quot;formsend=true&quot;)!=-1)</span>
+		{
+<span class="fc" id="L64">			context.getMessages().add(new SimpleMessage(prop.getTextWithSuffix(&quot;checkform.sent&quot;, formName)));</span>
+<span class="fc" id="L65">			String forwardOk = request.getParameter(&quot;forward&quot;);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(forwardOk))</span>
+			{
+<span class="nc" id="L68">				context.getMessages().add(new SimpleMessage(&quot;&lt;script type='text/javascript'&gt;window.location.href=\&quot;&quot;+ Tools.replace(JSEscapeTag.jsEscape(forwardOk), &quot;&amp;amp;&quot;, &quot;&amp;&quot;)+&quot;\&quot;;&lt;/script&gt;&quot;));</span>
+			}
+<span class="fc" id="L70">		}</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">		else if (forward.indexOf(&quot;formfail=formIsAllreadySubmitted&quot;)!=-1)</span>
+		{
+<span class="nc" id="L73">			context.getValidationErrors().add(&quot;notSendMessage&quot;, new SimpleError(prop.getText(&quot;checkform.formIsAllreadySubmitted&quot;)));</span>
+		}
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		else if (forward.indexOf(&quot;formfail=javascript&quot;)!=-1)</span>
+		{
+<span class="nc" id="L77">			context.getValidationErrors().add(&quot;notSendMessage&quot;, new SimpleError(prop.getText(&quot;checkform.fail_javascript&quot;)));</span>
+		}
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		else if (forward.indexOf(&quot;formfail=probablySpamBot&quot;)!=-1)</span>
+		{
+<span class="fc" id="L81">			context.getValidationErrors().add(&quot;notSendMessage&quot;, new SimpleError(prop.getText(&quot;checkform.fail_probablySpamBot&quot;)));</span>
+		}
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		else if (forward.indexOf(&quot;formfail=requiredFields&quot;)!=-1)</span>
+		{
+<span class="nc" id="L85">			context.getValidationErrors().add(&quot;recipients&quot;, new SimpleError(prop.getText(&quot;checkform.fail_requiredFields&quot;)));</span>
+		}
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		else if (forward.indexOf(&quot;formfail=bad_file&quot;)!=-1)</span>
+		{
+<span class="nc" id="L89">			context.getValidationErrors().add(&quot;recipients&quot;, new SimpleError(prop.getText(&quot;checkform.bad_file&quot;)));</span>
+		}
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		else if (forward.indexOf(&quot;formfail=captcha&quot;)!=-1)</span>
+		{
+<span class="nc" id="L93">			context.getValidationErrors().add(&quot;recipients&quot;, new SimpleError(prop.getText(&quot;captcha.textNotCorrect&quot;)));</span>
+		}
+		else
+		{
+<span class="nc" id="L97">			context.getValidationErrors().add(&quot;notSendMessage&quot;, new SimpleError(prop.getTextWithSuffix(&quot;checkform.sendfail&quot;, formName)));</span>
+		}
+		
+		//query was created  
+<span class="fc" id="L101">		return new ActionContextJavaScriptResolution(this); </span>
+	}
+	
+	@Override
+	public ActionBeanContext getContext()
+	{
+<span class="fc" id="L107">		return context;</span>
+	}
+
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+<span class="fc" id="L113">		this.context = context;</span>
+<span class="fc" id="L114">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

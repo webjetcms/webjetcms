@@ -6,7 +6,7 @@ Výhodou je, že každý e-mail môže byť personalizovaný - ak do tela mailu 
 
 E-mail je možné posielať návštevníkom, ktorí sú registrovaní v admin časti systému Web JET, alebo vytvoriť súbor so zoznamom mien a e-mail adries a tie potom naimportovať ako príjemcov emailu.
 
-![](datatable.png)
+![](dataTable.png)
 
 ## Karta - Základné
 

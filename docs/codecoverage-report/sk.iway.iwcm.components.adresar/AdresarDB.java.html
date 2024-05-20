@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdresarDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.adresar</a> &gt; <span class="el_source">AdresarDB.java</span></div><h1>AdresarDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.adresar;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ *  AdresarDB.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: bhric mhruby $
+ *@version      $Revision: 1.1 $
+ *@created      Date: 1.10.2009 16:28:40
+ *@modified     $Date: 2009/10/08 08:06:38 $
+ */
+public class AdresarDB
+{
+	private AdresarDB() {
+
+	}
+
+	/**
+	 * @param filterParam nepouziva sa vyhladava sa nad stlpcami ktore su definovane v searchcolums
+	 * @param searchString vyraz pre hladanie
+	 * @param request
+	 * @return zoznam registrovanych pouzivatelov vyhovujucim hladaniu
+	 */
+	public static List&lt;UserDetails&gt; listUsers(@Deprecated String filterParam, String searchString, HttpServletRequest request) {
+
+<span class="fc" id="L50">		int enumerationTypeId = EnumerationTypeDB.getEnumerationIdFromString(Constants.getString(&quot;usersFaxList&quot;));</span>
+<span class="fc" id="L51">		int enumerationTypeId2 = EnumerationTypeDB.getEnumerationIdFromString(Constants.getString(&quot;usersPositionList&quot;));</span>
+<span class="fc" id="L52">	    List&lt;Integer&gt; integers = null;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">	    if (!Tools.isEmpty(searchString))</span>
+<span class="nc" id="L54">	    	integers = new SimpleQuery().forListInteger(&quot;SELECT enumeration_data_id FROM enumeration_data WHERE hidden != true AND enumeration_type_id IN (&quot; + enumerationTypeId + &quot;,&quot;+enumerationTypeId2 +&quot;) AND string1 LIKE '%&quot;+ DB.removeSlashes(searchString) + &quot;%'&quot;);</span>
+<span class="fc" id="L55">		return listUsers(integers,searchString,request);</span>
+	}
+
+	/**
+	 * @param oddelenieIds ids enumerationDataCiselnika
+	 * @param searchString vyraz pre hladanie
+	 * @param request
+	 * @return zoznam registrovanych pouzivatelov vyhovujucim hladaniu
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+	public static List&lt;UserDetails&gt; listUsers(List&lt;Integer&gt; oddelenieIds, String searchString, HttpServletRequest request) {
+<span class="fc" id="L66">		List&lt;String&gt; searchColumns = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L67">		searchColumns.add(&quot;last_name&quot;);</span>
+<span class="fc" id="L68">		searchColumns.add(&quot;first_name&quot;);</span>
+<span class="fc" id="L69">		searchColumns.add(&quot;email&quot;);</span>
+<span class="fc" id="L70">		searchColumns.add(&quot;phone&quot;);</span>
+<span class="fc" id="L71">		searchColumns.add(&quot;company&quot;);</span>
+
+<span class="fc" id="L73">		List&lt;UserDetails&gt; users = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L75">		Connection db_conn = null;</span>
+<span class="fc" id="L76">		PreparedStatement ps = null;</span>
+<span class="fc" id="L77">		ResultSet rs = null;</span>
+		try
+		{
+<span class="fc" id="L80">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L81">			PageParams pageParams = new PageParams(request);</span>
+<span class="fc" id="L82">			StringBuilder userGroupsSQL = new StringBuilder();</span>
+<span class="fc" id="L83">			String groupIds = pageParams.getValue(&quot;groupIds&quot;,&quot;&quot;);</span>
+<span class="pc bpc" id="L84" title="2 of 4 branches missed.">			if(Tools.isNotEmpty(groupIds) &amp;&amp; groupIds.indexOf(',') != -1)</span>
+<span class="nc" id="L85">				groupIds = Tools.replace(groupIds, &quot;,&quot;, &quot;+&quot;);</span>
+<span class="fc" id="L86">			String[] groupIdsList = Tools.getTokens(groupIds, &quot;+&quot;);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">			for(String groupId : groupIdsList)</span>
+			{
+<span class="fc" id="L89">				int groupIdInt = Tools.getIntValue(groupId, -1);</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">				if(groupIdInt != -1)</span>
+				{
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">					if(Tools.isEmpty(userGroupsSQL))</span>
+<span class="fc" id="L93">						userGroupsSQL.append( &quot;(&quot;);</span>
+					else
+<span class="nc" id="L95">						userGroupsSQL.append( &quot; OR &quot;);</span>
+<span class="fc" id="L96">					userGroupsSQL.append(&quot;(user_groups='&quot;).append(groupId).append(&quot;' OR user_groups LIKE '%,&quot;).append(groupId).append(&quot;' OR user_groups LIKE '&quot;).append(groupId).append(&quot;,%' OR user_groups LIKE '%,&quot;).append(groupId).append(&quot;,%')&quot;);</span>
+				}
+			}
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(userGroupsSQL))</span>
+<span class="fc" id="L100">				userGroupsSQL.append( ')');</span>
+<span class="fc" id="L101">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM users WHERE authorized = &quot;+DB.getBooleanSql(true)+&quot; AND &quot;).append(userGroupsSQL);</span>
+
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(searchString) ) {</span>
+<span class="nc" id="L104">				sql.append(&quot; AND (&quot;);</span>
+<span class="nc" id="L105">				Iterator&lt;String&gt; iterator = searchColumns.iterator();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				while (iterator.hasNext()) {</span>
+<span class="nc" id="L107">					String filter = iterator.next();</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="nc" id="L109">						filter += &quot; COLLATE Latin1_general_CI_AI&quot;;</span>
+<span class="nc" id="L110">					sql.append(filter).append(&quot; LIKE ?&quot;);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">					if (iterator.hasNext())</span>
+<span class="nc" id="L112">						sql.append(&quot; OR &quot;);</span>
+<span class="nc" id="L113">					}</span>
+<span class="nc" id="L114">				sql.append(&quot;)&quot;);</span>
+				}
+
+<span class="fc" id="L117">			boolean useless = true;</span>
+<span class="pc bpc" id="L118" title="3 of 4 branches missed.">            if (oddelenieIds != null &amp;&amp; !oddelenieIds.isEmpty()) {</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                sql.append(useless ? &quot; OR &quot; : &quot; AND &quot;);</span>
+<span class="nc" id="L120">                sql.append(&quot; fax IN (&quot; + StringUtils.join(oddelenieIds, &quot;,&quot;) + &quot;) &quot;);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                if (useless)</span>
+<span class="nc" id="L122">                	sql.append(&quot; OR position IN (&quot; + StringUtils.join(oddelenieIds,&quot;,&quot;)+&quot;) &quot;);</span>
+            }
+
+			//sortovanie
+<span class="fc" id="L126">			StringBuilder orderSql = new StringBuilder();</span>
+<span class="fc" id="L127">			String orderBy = pageParams.getValue(&quot;orderBy&quot;,&quot;&quot;);</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(orderBy)) {</span>
+<span class="nc" id="L129">				String[] orderByList = Tools.getTokens(orderBy, &quot;+&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				for(String orderByTmp : orderByList) {</span>
+<span class="nc" id="L131">					String orderType = orderByTmp;</span>
+<span class="nc" id="L132">					String orderVar = &quot;ASC&quot;;</span>
+<span class="nc" id="L133">					int ind = orderByTmp.lastIndexOf('-');</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">					if(ind != -1) {</span>
+<span class="nc" id="L135">						orderType = orderByTmp.substring(0, ind).trim();</span>
+<span class="nc" id="L136">						String orderVarTmp = orderByTmp.substring(ind+1, orderByTmp.length()).trim();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">						if(&quot;desc&quot;.equalsIgnoreCase(orderVarTmp))</span>
+<span class="nc" id="L138">							orderVar = &quot;DESC&quot;;</span>
+					}
+<span class="nc bnc" id="L140" title="All 2 branches missed.">					if(Tools.isEmpty(orderSql.toString())) {</span>
+<span class="nc" id="L141">						orderSql.append(&quot; ORDER BY &quot;).append(orderType).append(' ').append(orderVar);</span>
+					} else {
+<span class="nc" id="L143">						orderSql.append(&quot;, &quot;).append(orderType).append(' ').append(orderVar);</span>
+					}
+				}
+<span class="nc" id="L146">			} else {</span>
+<span class="fc" id="L147">				orderSql = new StringBuilder(&quot; ORDER BY last_name,first_name&quot;);</span>
+			}
+<span class="fc" id="L149">			sql.append(orderSql);</span>
+
+<span class="fc" id="L151">			Logger.println(AdresarDB.class, &quot;ADRESAR SQL = &quot;+sql);</span>
+<span class="fc" id="L152">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L153">			int ind = 1;</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(searchString)) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">				for (String str : searchColumns) {</span>
+<span class="nc" id="L156">					ps.setString(ind++, &quot;%&quot; + searchString + &quot;%&quot;);</span>
+<span class="nc" id="L157">				}</span>
+			}
+
+<span class="fc" id="L160">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">			while (rs.next()) {</span>
+<span class="fc" id="L162">				UserDetails usr = new UserDetails();</span>
+<span class="fc" id="L163">				UsersDB.fillUserDetails(usr, rs);</span>
+
+<span class="pc bpc" id="L165" title="2 of 4 branches missed.">				if (Tools.isNotEmpty(usr.getFirstName()) &amp;&amp; Tools.isNotEmpty(usr.getLastName()))</span>
+				{
+<span class="fc" id="L167">					users.add(usr);</span>
+				}
+<span class="fc" id="L169">			}</span>
+<span class="fc" id="L170">			rs.close();</span>
+<span class="fc" id="L171">			ps.close();</span>
+<span class="fc" id="L172">			db_conn.close();</span>
+<span class="fc" id="L173">			rs = null;</span>
+<span class="fc" id="L174">			ps = null;</span>
+<span class="fc" id="L175">			db_conn = null;</span>
+<span class="nc" id="L176">		} catch (Exception ex) {</span>
+<span class="nc" id="L177">			users = null;</span>
+<span class="nc" id="L178">			sk.iway.iwcm.Logger.error(ex);</span>
+		} finally {
+			try {
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L182">					rs.close();</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L184">					ps.close();</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L186">					db_conn.close();</span>
+<span class="nc" id="L187">			} catch (Exception ex2) {</span>
+<span class="nc" id="L188">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L189">			}</span>
+		}
+<span class="fc" id="L191">		return users;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

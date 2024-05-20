@@ -1,8 +1,30 @@
 @charset "UTF-8";
 
 /* fixy pre verziu dt-buttons 2.2.2 */
-div.dt-buttons div.btn-group {
-    position: relative;
+div.dt-buttons  {
+    div.btn-group {
+        position: relative;
+        float: left;
+
+        &:has(button.buttons-settings) {
+            float: right;
+            margin-right: 8px;
+            > div.dt-button-collection {
+                right: 0px !important;
+                left: auto !important;
+            }
+        }
+        button.buttons-settings::after {
+            display: none;
+        }
+    }
+    button.btn.buttons-right {
+        float: right;
+    }
+}
+button.btn.dropdown-toggle.buttons-colvis::after, button.btn.dropdown-toggle.buttons-page-length::after {
+    //disable arrow down on settings button
+    display: none;
 }
 div.dt-header-row div.dt-button-collection {
     width: auto;
@@ -23,7 +45,7 @@ table.table {
             th {
                 font-size: 14px;
                 line-height: 18px;
-                padding: 16px 16px;
+                padding: 16px 6px;
                 border-top: 0;
                 border-bottom: 0;
                 white-space: nowrap;
@@ -38,7 +60,7 @@ table.table {
             td {
                 font-size: 13px;
                 line-height: 24px;
-                padding: 8px 16px;
+                padding: 8px 6px;
                 white-space: nowrap;
                 overflow: hidden;
                 border-bottom-width: 0px;
@@ -52,10 +74,10 @@ table.table {
                 &.dt-select-td {
 
                     position: relative;
-                    padding-left: 36px;
+                    padding-left: 40px !important;
 
                     &::before {
-                        font-family: $fa-font-name;
+                        font-family: $ti-font-name-filled;
                         font-weight: 300;
                         -moz-osx-font-smoothing: grayscale;
                         -webkit-font-smoothing: antialiased;
@@ -64,11 +86,10 @@ table.table {
                         text-rendering: auto;
                         line-height: 1;
                         font-size: 18px;
-
-                        content: "\f0c8";
+                        content: $ti-icon-square;
                         color: #868EA5;
                         position: absolute;
-                        left: 16px;
+                        left: 18px;
                         top: 10px;
                     }
                     &:hover {
@@ -94,7 +115,7 @@ table.table {
                     &::before {
                         font-weight: 600;
                         color: white;
-                        content: "\f14a";
+                        content: "\eb28";
                     }
                 }
             }
@@ -185,15 +206,15 @@ table.datatableInit {
             font-variant: normal;
             text-rendering: auto;
             -webkit-font-smoothing: antialiased;
-            font-family: $fa-font-name;
             font-weight: 300;
             font-size: 14px;
+            font-family: $ti-font-name-filled;
         }
 
 
         &.sorting {
             &:hover::before {
-                content: "\f0de";
+                content: $ti-icon-caret-up-filled;
                 font-weight: 900;
             }
         }
@@ -201,8 +222,8 @@ table.datatableInit {
         &.sorting_asc {
             color: $primary;
             &::before {
-                content: "\f0de";
-            }
+                content: $ti-icon-caret-up-filled;
+                }
             &:hover::before {
                 font-weight: 900;
             }
@@ -211,11 +232,11 @@ table.datatableInit {
         &.sorting_desc {
             color: $primary;
             &::before {
-                content: "\f0dd";
+                content: $ti-icon-caret-down-filled;
             }
             &:hover::before {
                 font-weight: 900;
-                content: "\f0dd";
+                content: $ti-icon-caret-down-filled;
             }
         }
     }
@@ -289,7 +310,8 @@ table.datatableInit {
 
         div.filter-option-inner {
             div.filter-option-inner-inner i {
-                line-height: 28px;
+                line-height: 27px;
+                font-size: 90%;
             }
         }
 
@@ -390,17 +412,17 @@ table.datatableInit {
         &.cardViewS tbody tr
         {
             td { width: 138px; }
-            td.dt-image, td.dt-select-td { width: 150px; height: 100px; }
+            td.dt-image, td.dt-select-td { width: 150px; height: 100px; padding-left: 0px !important; }
         }
         &.cardViewM tbody tr
         {
             td { width: 213px; }
-            td.dt-image, td.dt-select-td { width: 225px; height: 150px; }
+            td.dt-image, td.dt-select-td { width: 225px; height: 150px; padding-left: 0px !important; }
         }
         &.cardViewL tbody tr
         {
             td { width: 288px; }
-            td.dt-image, td.dt-select-td { width: 300px; height: 200px; }
+            td.dt-image, td.dt-select-td { width: 300px; height: 200px; padding-left: 0px !important; }
         }
     }
 }
@@ -412,12 +434,13 @@ table.datatableInit {
 
 .dt-header-row,
 .dt-footer-row {
-    padding-top: 14px;
-    padding-bottom: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     //robi problem pri zalomeni poloziek max-height: 60px;
 }
 .dt-header-row {
-    padding-bottom: 6px;
+    padding-top: 8px;
+    padding-bottom: 0px;
 }
 
 
@@ -452,12 +475,10 @@ table.datatableInit {
 
         .col-pk-input {
             width: auto;
-            display: inline-block;
             padding-right: 0;
-            position: absolute;
-            right: 0px;
-            top: 0px;
             background-color: $nice-gray;
+            float: right;
+            margin-bottom: 8px;
         }
     }
 
@@ -480,6 +501,21 @@ table.datatableInit {
 
         .btn {
             white-space: nowrap;
+            padding-top: 6px;
+            padding-bottom: 2px;
+
+            &.with-text {
+                padding-top: 4px;
+                padding-bottom: 4px;
+                i.ti {
+                    vertical-align: text-top;
+                }
+            }
+
+            &.buttons-refresh {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
         }
 
         > .btn {
@@ -487,7 +523,7 @@ table.datatableInit {
             float: left;
             position: relative;
             &:last-child {
-                margin-right: 0;
+                //not anymore because od reversed order and float right margin-right: 0;
             }
             &.is-disabled,
             &:disabled,
@@ -527,7 +563,7 @@ table.datatableInit {
         }
 
         .buttons-divider {
-            margin-right: 16px;
+            margin-right: 12px;
         }
 
         .buttons-divider-both {
@@ -536,7 +572,7 @@ table.datatableInit {
         }
 
         .buttons-divider-left {
-            margin-left: 16px;
+            margin-left: 8px;
         }
 
         .buttons-create {
@@ -655,6 +691,10 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
     > .btn {
         text-align: left;
         border-radius: 0 !important;
+        i.ti-menu.flipped {
+            transform: rotate(90deg);
+            display: inline-block;
+        }
         &:hover {
             background-color: $secondary;
             color:white;
@@ -737,12 +777,12 @@ div.dt-header-row .dt-dropdown-menu .dt-button-collection {
         -o-text-overflow: ellipsis;
         text-overflow: ellipsis;
         color: $secondary;
+        font-size: 16px;
         // border: 1px solid $secondary;
         &::before {
-            font-family: $fa-font-name;
+            font-family: $ti-font-name-filled;
             font-weight: 300;
-            font-size: 14px;
-            content: "\f0c8";
+            content: $ti-icon-square;
             margin-right: 4px;
         }
         //oznacena moznost v nastaveni DT v dialogu (napr. pocet riadkov)
@@ -751,10 +791,10 @@ div.dt-header-row .dt-dropdown-menu .dt-button-collection {
             color: $white;
             border: 1px solid $primary;
             border-radius: 6px;
+            font-size: 16px;
 
             &::before {
-                content: "\f14a";
-                font-weight: 600;
+                content: "\eb28";
             }
         }
 
@@ -828,11 +868,11 @@ div.dt-header-row .dt-dropdown-menu .dt-button-collection {
 
     button.button-page-length {
         &::before {
-            content: "\f111";
+            content: "\ea6b";
         }
         &.active {
             &::before {
-                content: "\f192";
+                content: "\efb1";
             }
         }
     }
@@ -919,7 +959,7 @@ div.dt-button-collection div.btn-group button:last-child {
 
     thead tr {
         th {
-            padding-right: 16px !important;
+            padding-right: 6px !important;
             div.filter-input-prepend {
                 width: 28px !important;
             }
@@ -931,9 +971,16 @@ div.dt-button-collection div.btn-group button:last-child {
             width: 75px;
             max-width: 75px;
             div.dropdown {
-                max-width: 55px;
+                max-width: 54px;
             }
         }
+    }
+
+    tr td:first-child, tr th:first-child {
+        padding-left: 12px !important;
+    }
+    tr td:last-child, tr th:last-child {
+        padding-right: 12px !important;
     }
 
     .input-group {
@@ -1012,37 +1059,44 @@ div.dt-button-collection div.btn-group button:last-child {
             min-height: 28px;
         }
 
-            button.btn-outline-secondary {
-                font-size: 13px;
-                min-width: 28px;
-                height: 28px;
-                padding: 0;
-                text-align: center !important;
+        button.btn-outline-secondary {
+            font-size: 13px;
+            min-width: 28px;
+            height: 28px;
+            padding: 0;
+            text-align: center !important;
+            box-shadow: none !important;
+            outline: none !important;
+            .filter-option {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+            &:hover,
+            &:focus {
                 box-shadow: none !important;
                 outline: none !important;
-                .filter-option {
-                    padding-left: 6px;
-                    padding-right: 6px;
-                }
-                &:hover,
-                &:focus {
-                    box-shadow: none !important;
-                    outline: none !important;
-                }
             }
+        }
 
-            button.btn-outline-secondary {
-                //border-top-left-radius: 0;
-                //border-bottom-left-radius: 0;
-            }
+        button.btn-outline-secondary {
+            //border-top-left-radius: 0;
+            //border-bottom-left-radius: 0;
+        }
 
-            div.filter-input-prepend {
-                .filter-option {
-                    text-align: center !important;
-                    padding-left: 0px;
-                    padding-right: 0px;
-                }
+        div.filter-input-prepend {
+            .filter-option {
+                text-align: center !important;
+                padding-left: 0px;
+                padding-right: 0px;
             }
+        }
+
+        .ti {
+            font-size: 1rem !important;
+            &.ti-square, &.ti-square-check, &.ti-search {
+                padding-top: 3px;
+            }
+        }
 
     }
 
@@ -1056,11 +1110,8 @@ div.dt-button-collection div.btn-group button:last-child {
         background-size: 12px 9px;
     }
 
-    .fas,
-    .fal,
-    .far,
-    .fad {
-        width: 1.25em;
+    .ti {
+        display: inline-block;
     }
 
     td.dt-style-text-wrap .datatable-column-width, td.dt-style-json .datatable-column-width {
@@ -1099,6 +1150,14 @@ div.dt-button-collection div.btn-group button:last-child {
         -webkit-hyphens: auto;
         hyphens: auto;
 
+        i.ti {
+            font-size: 16px;
+            text-align: center;
+
+            &.ti-pencil {
+                text-align: left;
+            }
+        }
     }
 
  }
@@ -1126,7 +1185,7 @@ div.dt-button-collection div.btn-group button:last-child {
         }
         &__headline {
             max-width: 120px;
-            margin-right: 8px;
+            margin-right: 6px;
             white-space: nowrap;
             overflow: hidden;
             -o-text-overflow: ellipsis;
@@ -1274,10 +1333,6 @@ html.in-iframe-show-table {
 }
 
 @media (max-width: ($bp-laptop - 1)) {
-    .dt-header-row {
-        padding-top: 9px;
-        padding-bottom: 1px;
-    }
     .dt-footer-row {
         padding-top: 3px;
         padding-bottom: 3px;
@@ -1396,9 +1451,7 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
                 margin-bottom: 10px;
             }
             .col-pk-input {
-                float: none;
                 margin-bottom: 10px;
-                vertical-align: top;
             }
         }
         .dt-filter-labels {
@@ -1434,7 +1487,7 @@ div.dataTables_scrollBody > table {
     white-space: pre-line;
 }
 
-.div.dataTables_processing {
+div.dataTables_processing {
     //in inner tables search button in header is over loader
     z-index: 9;
 }

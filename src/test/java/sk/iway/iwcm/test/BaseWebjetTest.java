@@ -5,6 +5,7 @@ import java.io.File;
 import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.ConstantsV9;
 
@@ -24,13 +25,16 @@ public class BaseWebjetTest
 
 	static
 	{
+		Constants.clearValues();
+		ConstantsV9.clearValuesWebJet9();
+		Tools.reinitialize();
 		Constants.setServletContext(new MockServletContext("Webjet"){
 			@Override
 			public String getRealPath(String path)
 			{
 				String basePath = System.getProperty("webjetTestBasepath");
 				System.out.println("----> basePath = "+basePath);
-				if (basePath==null || basePath.length()<1) basePath = "./WebContent";
+				if (basePath==null || basePath.length()<1) basePath = "./src/main/webapp/";
 
 				String absolutePath = new File(new File(basePath), path).getAbsolutePath();
 				System.out.println("----> absolutePath = "+absolutePath);
@@ -38,7 +42,7 @@ public class BaseWebjetTest
 				return absolutePath;
 			}
 		});
-		ConstantsV9.clearValuesWebJet9();
+		Constants.setString("smtpServer", "mxrelay.dev.iway.sk");
 	}
 
 

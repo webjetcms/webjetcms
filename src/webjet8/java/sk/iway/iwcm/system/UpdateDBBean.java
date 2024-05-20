@@ -19,6 +19,7 @@ public class UpdateDBBean
 	String mysql;
 	String mssql;
 	String oracle;
+	String pgsql;
 	/**
 	 * @return Returns the author.
 	 */
@@ -89,7 +90,7 @@ public class UpdateDBBean
 	{
 		this.mysql = mysql;
 	}
-	
+
 	public String getNote()
 	{
 		return(date + " [" + author + "] " + desc);
@@ -107,5 +108,11 @@ public class UpdateDBBean
 	public void setOracle(String oracle)
 	{
 		this.oracle = oracle;
+	}
+	public String getPgsql() {
+		return pgsql;
+	}
+	public void setPgsql(String pgsql) {
+		this.pgsql = pgsql;
 	}
 }

@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ContextRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.context</a> &gt; <span class="el_source">ContextRequest.java</span></div><h1>ContextRequest.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.context;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ *  ContextRequest.java
+ *
+ *@Title        webjet7
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2012
+ *@author       $Author: jeeff jeeff $
+ *@version      $Revision: 1.3 $
+ *@created      Date: 8.8.2012 9:12:13
+ *@modified     $Date: 2004/08/16 06:26:11 $
+ */
+//inherited from HttpServletRequest
+@SuppressWarnings(&quot;deprecation&quot;)
+public class ContextRequest implements HttpServletRequest
+{
+	private final HttpServletRequest original;
+	private final String contextPath;
+
+	public ContextRequest(HttpServletRequest original)
+<span class="nc" id="L50">	{</span>
+<span class="nc" id="L51">		this.contextPath = original.getContextPath();</span>
+<span class="nc" id="L52">		this.original = original;</span>
+<span class="nc" id="L53">	}</span>
+	
+	@Override
+	public String getParameter(String parameter)
+	{
+<span class="nc" id="L58">		return ContextFilter.removeContextPath(contextPath, original.getParameter(parameter));</span>
+	}
+	@Override
+	public Map&lt;String, String[]&gt; getParameterMap()
+	{
+<span class="nc" id="L63">		Map&lt;String, String[]&gt; newMap = new LinkedHashMap&lt;String, String[]&gt;();</span>
+<span class="nc" id="L64">		Set&lt;Map.Entry&lt;String, String[]&gt;&gt; set = original.getParameterMap().entrySet();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		for(Map.Entry&lt;String, String[]&gt; me : set)</span>
+		{
+<span class="nc" id="L67">			newMap.put(me.getKey(), removeCp(me.getValue()));</span>
+<span class="nc" id="L68">		}</span>
+		
+<span class="nc" id="L70">		return newMap;</span>
+	}
+	@Override
+	public Enumeration&lt;String&gt; getParameterNames()
+	{
+<span class="nc" id="L75">		return original.getParameterNames();</span>
+	}
+	@Override
+	public String[] getParameterValues(String parameter)
+	{
+<span class="nc" id="L80">		return removeCp(original.getParameterValues(parameter));</span>
+	}	
+	
+	/**
+	 * Odstrani context path z celej sady parametrov
+	 * @param values
+	 * @return
+	 */
+	private String[] removeCp(String values[])
+	{
+<span class="nc" id="L90">		String newValues[] = new String[values.length];</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		for (int i=0; i&lt;values.length; i++)</span>
+		{
+<span class="nc" id="L93">			newValues[i] = ContextFilter.removeContextPath(contextPath, values[i]);</span>
+		}
+<span class="nc" id="L95">		return newValues;</span>
+	}
+			
+	//-----------------DELEGATE METHODS--------------------------
+	@Override
+	public Object getAttribute(String attribute)
+	{
+<span class="nc" id="L102">		return original.getAttribute(attribute);</span>
+	}
+	@Override
+	public Enumeration&lt;String&gt; getAttributeNames()
+	{
+<span class="nc" id="L107">		return original.getAttributeNames();</span>
+	}
+	@Override
+	public String getAuthType()
+	{
+<span class="nc" id="L112">		return original.getAuthType();</span>
+	}
+	@Override
+	public int getContentLength()
+	{
+<span class="nc" id="L117">		return original.getContentLength();</span>
+	}
+	@Override
+	public String getContentType()
+	{
+<span class="nc" id="L122">		return original.getContentType();</span>
+	}
+	@Override
+	public String getContextPath()
+	{
+<span class="nc" id="L127">		return original.getContextPath();</span>
+	}
+	@Override
+	public Cookie[] getCookies()
+	{
+<span class="nc" id="L132">		return original.getCookies();</span>
+	}
+	@Override
+	public long getDateHeader(String headerName)
+	{
+<span class="nc" id="L137">		return original.getDateHeader(headerName);</span>
+	}
+	@Override
+	public String getHeader(String headerName)
+	{
+<span class="nc" id="L142">		return original.getHeader(headerName);</span>
+	}
+	@Override
+	public Enumeration&lt;String&gt; getHeaderNames()
+	{
+<span class="nc" id="L147">		return original.getHeaderNames();</span>
+	}
+	@Override
+	public Enumeration&lt;String&gt; getHeaders(String headerName)
+	{
+<span class="nc" id="L152">		return original.getHeaders(headerName);</span>
+	}
+	@Override
+	public String getCharacterEncoding()
+	{
+<span class="nc" id="L157">		return original.getCharacterEncoding();</span>
+	}
+	@Override
+	public ServletInputStream getInputStream() throws IOException
+	{
+<span class="nc" id="L162">		return original.getInputStream();</span>
+	}
+	@Override
+	public int getIntHeader(String headerName)
+	{
+<span class="nc" id="L167">		return original.getIntHeader(headerName);</span>
+	}
+	@Override
+	public String getLocalAddr()
+	{
+<span class="nc" id="L172">		return original.getLocalAddr();</span>
+	}
+	@Override
+	public Locale getLocale()
+	{
+<span class="nc" id="L177">		return original.getLocale();</span>
+	}
+	@Override
+	public Enumeration&lt;Locale&gt; getLocales()
+	{
+<span class="nc" id="L182">		return original.getLocales();</span>
+	}
+	@Override
+	public String getLocalName()
+	{
+<span class="nc" id="L187">		return original.getLocalName();</span>
+	}
+	@Override
+	public int getLocalPort()
+	{
+<span class="nc" id="L192">		return original.getLocalPort();</span>
+	}
+	@Override
+	public String getMethod()
+	{
+<span class="nc" id="L197">		return original.getMethod();</span>
+	}
+	@Override
+	public String getPathInfo()
+	{
+<span class="nc" id="L202">		return original.getPathInfo();</span>
+	}
+	@Override
+	public String getPathTranslated()
+	{
+<span class="nc" id="L207">		return original.getPathTranslated();</span>
+	}
+	@Override
+	public String getProtocol()
+	{
+<span class="nc" id="L212">		return original.getProtocol();</span>
+	}
+	@Override
+	public String getQueryString()
+	{
+<span class="nc" id="L217">		return original.getQueryString();</span>
+	}
+	@Override
+	public BufferedReader getReader() throws IOException
+	{
+<span class="nc" id="L222">		return original.getReader();</span>
+	}
+	@Override
+	public String getRealPath(String localPath)
+	{
+<span class="nc" id="L227">		return original.getRealPath(localPath);</span>
+	}
+	@Override
+	public String getRemoteAddr()
+	{
+<span class="nc" id="L232">		return original.getRemoteAddr();</span>
+	}
+	@Override
+	public String getRemoteHost()
+	{
+<span class="nc" id="L237">		return original.getRemoteHost();</span>
+	}
+	@Override
+	public int getRemotePort()
+	{
+<span class="nc" id="L242">		return original.getRemotePort();</span>
+	}
+	@Override
+	public String getRemoteUser()
+	{
+<span class="nc" id="L247">		return original.getRemoteUser();</span>
+	}
+	@Override
+	public RequestDispatcher getRequestDispatcher(String target)
+	{
+<span class="nc" id="L252">		return original.getRequestDispatcher(target);</span>
+	}
+	@Override
+	public String getRequestedSessionId()
+	{
+<span class="nc" id="L257">		return original.getRequestedSessionId();</span>
+	}
+	@Override
+	public String getRequestURI()
+	{
+<span class="nc" id="L262">		return original.getRequestURI();</span>
+	}
+	@Override
+	public StringBuffer getRequestURL()
+	{
+<span class="nc" id="L267">		return original.getRequestURL();</span>
+	}
+	@Override
+	public String getServerName()
+	{
+<span class="nc" id="L272">		return Tools.getServerName(original);</span>
+	}
+	@Override
+	public int getServerPort()
+	{
+<span class="nc" id="L277">		return original.getServerPort();</span>
+	}
+	@Override
+	public String getServletPath()
+	{
+<span class="nc" id="L282">		return original.getServletPath();</span>
+	}
+	@Override
+	public HttpSession getSession()
+	{
+<span class="nc" id="L287">		return original.getSession();</span>
+	}
+	@Override
+	public HttpSession getSession(boolean createNew)
+	{
+<span class="nc" id="L292">		return original.getSession(createNew);</span>
+	}
+	@Override
+	public String getScheme()
+	{
+<span class="nc" id="L297">		return original.getScheme();</span>
+	}
+	@Override
+	public Principal getUserPrincipal()
+	{
+<span class="nc" id="L302">		return original.getUserPrincipal();</span>
+	}
+	@Override
+	public boolean isRequestedSessionIdFromCookie()
+	{
+<span class="nc" id="L307">		return original.isRequestedSessionIdFromCookie();</span>
+	}
+	@Override
+	public boolean isRequestedSessionIdFromUrl()
+	{
+<span class="nc" id="L312">		return original.isRequestedSessionIdFromUrl();</span>
+	}
+	@Override
+	public boolean isRequestedSessionIdFromURL()
+	{
+<span class="nc" id="L317">		return original.isRequestedSessionIdFromURL();</span>
+	}
+	@Override
+	public boolean isRequestedSessionIdValid()
+	{
+<span class="nc" id="L322">		return original.isRequestedSessionIdValid();</span>
+	}
+	@Override
+	public boolean isSecure()
+	{
+<span class="nc" id="L327">		return original.isSecure();</span>
+	}
+	@Override
+	public boolean isUserInRole(String role)
+	{
+<span class="nc" id="L332">		return original.isUserInRole(role);</span>
+	}
+	@Override
+	public void removeAttribute(String attributeName)
+	{
+<span class="nc" id="L337">		original.removeAttribute(attributeName);</span>
+<span class="nc" id="L338">	}</span>
+	@Override
+	public void setAttribute(String attributeName, Object value)
+	{
+<span class="nc" id="L342">		original.setAttribute(attributeName, value);</span>
+<span class="nc" id="L343">	}</span>
+	@Override
+	public void setCharacterEncoding(String encoding) throws UnsupportedEncodingException
+	{
+<span class="nc" id="L347">		original.setCharacterEncoding(encoding);</span>
+<span class="nc" id="L348">	}</span>
+	
+	@Override
+	public boolean authenticate(HttpServletResponse res) throws IOException,
+			ServletException {
+<span class="nc" id="L353">		return original.authenticate(res);</span>
+	}
+
+	@Override
+	public AsyncContext getAsyncContext() {
+<span class="nc" id="L358">		return original.getAsyncContext();</span>
+	}
+
+	@Override
+	public DispatcherType getDispatcherType() {
+<span class="nc" id="L363">		return original.getDispatcherType();</span>
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+<span class="nc" id="L368">		return original.getServletContext();</span>
+	}
+
+	@Override
+	public boolean isAsyncStarted() {
+<span class="nc" id="L373">		return original.isAsyncStarted();</span>
+	}
+
+	@Override
+	public boolean isAsyncSupported() {
+<span class="nc" id="L378">		return original.isAsyncSupported();</span>
+	}
+
+	@Override
+	public AsyncContext startAsync() {
+<span class="nc" id="L383">		return original.startAsync();</span>
+	}
+
+	@Override
+	public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1) {
+<span class="nc" id="L388">		return original.startAsync(arg0, arg1);</span>
+	}
+
+	@Override
+	public Part getPart(String arg0) throws IOException, IllegalStateException,
+			ServletException {
+<span class="nc" id="L394">		return original.getPart(arg0);</span>
+	}
+
+	@Override
+	public Collection&lt;Part&gt; getParts() throws IOException,
+			IllegalStateException, ServletException {
+<span class="nc" id="L400">		return original.getParts();</span>
+	}
+
+	@Override
+	public void login(String arg0, String arg1) throws ServletException {
+<span class="nc" id="L405">		original.login(arg0, arg1);</span>
+<span class="nc" id="L406">	}</span>
+
+	@Override
+	public void logout() throws ServletException {
+<span class="nc" id="L410">		original.logout();</span>
+<span class="nc" id="L411">	}</span>
+
+	@Override
+	public long getContentLengthLong()
+	{
+		// TODO Auto-generated method stub
+<span class="nc" id="L417">		return 0;</span>
+	}
+
+	@Override
+	public String changeSessionId()
+	{
+		// TODO Auto-generated method stub
+<span class="nc" id="L424">		return null;</span>
+	}
+
+	@Override
+	public &lt;T extends HttpUpgradeHandler&gt; T upgrade(Class&lt;T&gt; arg0) throws IOException, ServletException
+	{
+		// TODO Auto-generated method stub
+<span class="nc" id="L431">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

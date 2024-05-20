@@ -1,0 +1,1288 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WriteTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">WriteTag.java</span></div><h1>WriteTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+
+import net.sourceforge.stripes.exception.SourcePageNotFoundException;
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.struts.Globals;
+import org.apache.struts.util.ResponseUtils;
+import org.springframework.context.ApplicationContext;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.ninja.Amp;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.InlineEditor;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.system.WJResponseWrapper;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
+import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
+import sk.iway.iwcm.system.spring.components.SpringContext;
+import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
+import sk.iway.iwcm.users.UsersDB;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ *  vypise string ulozeny v request objekte (vyhodne ked sa to setne v nejakej
+ *  Action triede)
+ *
+ *@Title        Interway Content Management
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2002
+ *@author       $Author: jeeff $
+ *@version      $Revision: 1.45 $
+ *@created      $Date: 2010/01/20 10:13:50 $
+ */
+<span class="fc" id="L54">public class WriteTag extends BodyTagSupport</span>
+{
+	private static final long serialVersionUID = -5549714303388477615L;
+
+	public static final String SKIP_BODY = &quot;writeTag.skipBody&quot;;
+
+	// Name of request attribute - required
+<span class="fc" id="L61">	private String name = null;</span>
+
+	private static final String INCLUDE_START = &quot;!INCLUDE(&quot;;
+	private static final String INCLUDE_END = &quot;)!&quot;;
+
+	public static final String PAGE_PARAMS = &quot;includePageParams&quot;;
+
+	private static final String AFTER_WRITE_INCLUDE_LIST = &quot;sk.iway.iwcm.tags.afterWriteIncludeFile&quot;;
+
+	private static final String INLINE_EDITING_BUTTONS_KEY = &quot;inlineEditingButtons&quot;;
+	private static final String INLINE_EDITING_BUTTONS_TOP_KEY = &quot;inlineEditingButtonsTop&quot;;
+	private static final String INLINE_EDITING_MODULE_PROPS_DISABLE_KEY = &quot;inlineEditingModulePropsDisabled&quot;;
+	private static final String INLINE_EDITING_MODULE_PROPS_TEXT_KEY = &quot;inlineEditingModulePropsTextKey&quot;;
+	private static final String INLINE_EDITING_MODULE_PROPS_ICON = &quot;inlineEditingModulePropsIcon&quot;;
+	public static final String INLINE_EDITING_PLACEHOLDER = &quot;&lt;div class='inlineEditingToolbarPlaceholder'&gt;&lt;/div&gt;&quot;;
+
+	private static final String INLINE_EDITING_DISABLE_DELETE_BUTTON = &quot;inlineEditingDisableDeleteButton&quot;;
+
+
+	@Override
+	public void release()
+	{
+<span class="fc" id="L83">		super.release();</span>
+<span class="fc" id="L84">		name = null;</span>
+<span class="fc" id="L85">	}</span>
+
+	/**
+	 *  Description of the Method
+	 *
+	 *@return                   Description of the Return Value
+	 *@exception  JspException  Description of the Exception
+	 */
+	@Override
+	public final int doEndTag() throws JspException
+	{
+		try
+		{
+<span class="fc" id="L98">			HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();</span>
+
+<span class="fc" id="L100">			Object value = null;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">			if (Tools.isNotEmpty(name))</span>
+			{
+<span class="fc" id="L103">				value = request.getAttribute(name);</span>
+			}
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">			else if (getBodyContent()!=null)</span>
+			{
+<span class="fc" id="L107">				value = getBodyContent().getString();</span>
+			}
+
+<span class="fc" id="L110">			request.setAttribute(&quot;writeTagName&quot;, name);</span>
+<span class="fc" id="L111">			pageContext.setAttribute(&quot;writeTagName&quot;, name);</span>
+
+<span class="fc" id="L113">			String lng = PageLng.getUserLng(request);</span>
+<span class="fc" id="L114">			pageContext.setAttribute(&quot;lng&quot;, lng);</span>
+
+<span class="fc" id="L116">			int docId = Tools.getDocId(request);</span>
+<span class="fc" id="L117">			boolean inlineEditingToolbarAppended = false;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">			if (&quot;doc_data&quot;.equals(name))</span>
+			{
+				//WebJET7 vyzaduje jQuery
+<span class="fc" id="L121">				String tempName = (String)request.getAttribute(&quot;doc_temp_name&quot;);</span>
+				//ochrana pre RSS aby sa negenerovalo
+<span class="pc bpc" id="L123" title="3 of 6 branches missed.">				if (tempName == null || (tempName.toLowerCase().indexOf(&quot;rss&quot;)==-1 &amp;&amp; tempName.toLowerCase().indexOf(&quot;nojquery&quot;)==-1))</span>
+				{
+<span class="fc" id="L125">					String jQueryHtml = Tools.insertJQuery(request);</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(jQueryHtml))</span>
+					{
+<span class="nc" id="L128">						pageContext.getOut().write(jQueryHtml);</span>
+					}
+				}
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">				if (InlineEditor.isInlineEditingEnabled(request))</span>
+				{
+<span class="fc" id="L134">					Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">					if (isInlinePageEditable(user, docId, request))</span>
+					{
+<span class="fc bfc" id="L137" title="All 2 branches covered.">						if (&quot;true&quot;.equals(request.getParameter(&quot;inlineEditorAdmin&quot;))) {</span>
+<span class="fc" id="L138">							request.setAttribute(&quot;writeTag.inlineEditingScriptInserted&quot;, &quot;1&quot;);</span>
+<span class="fc" id="L139">							pageContext.include(WriteTag.getCustomPageAdminNotNull(&quot;/admin/inline/inline_page_toolbar_v9.jsp&quot;, request));</span>
+<span class="fc" id="L140">							inlineEditingToolbarAppended = true;</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">							if (request.getAttribute(SKIP_BODY)!=null)</span>
+							{
+<span class="nc" id="L143">								value = null;</span>
+							}
+						} else {
+<span class="fc" id="L146">							appendInlineEditingScript(pageContext, request);</span>
+<span class="fc" id="L147">							pageContext.include(WriteTag.getCustomPageAdminNotNull(&quot;/admin/inline/inline_page_toolbar.jsp&quot;, request));</span>
+<span class="fc" id="L148">							inlineEditingToolbarAppended = true;</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">							if (request.getAttribute(SKIP_BODY)!=null)</span>
+							{
+<span class="nc" id="L151">								value = null;</span>
+							}
+						}
+					}
+				}
+<span class="fc" id="L156">			}</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">			else if (InlineEditor.isInlineEditingEnabled(request))</span>
+			{
+<span class="fc" id="L159">				String editableObjects = Constants.getString(&quot;inlineEditableObjects&quot;);</span>
+<span class="pc bpc" id="L160" title="3 of 6 branches missed.">				if (Tools.isNotEmpty(name) &amp;&amp; Tools.isNotEmpty(editableObjects) &amp;&amp; editableObjects.indexOf(name)!=-1)</span>
+				{
+<span class="nc" id="L162">					DocDetails doc = (DocDetails)request.getAttribute(name+&quot;-docDetails&quot;);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					if (doc != null)</span>
+					{
+<span class="nc" id="L165">						Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L166" title="All 4 branches missed.">						if (isInlinePageEditable(user, docId, request) &amp;&amp; isInlinePageEditable(user, doc.getDocId(), request))</span>
+						{
+<span class="nc" id="L168">							String html = (String)request.getAttribute(name);</span>
+<span class="nc" id="L169">							value = &quot;&lt;div id='&quot;+name+&quot;Editor'&quot;+InlineEditor.getEditAttrs(request, doc)+&quot;&gt;&quot;+html+&quot;&lt;/div&gt;&quot;;</span>
+						}
+					}
+				}
+			}
+
+<span class="fc" id="L175">			String afterWriteEndTag = null;</span>
+<span class="pc bpc" id="L176" title="1 of 4 branches missed.">			if (inlineEditingToolbarAppended &amp;&amp; &quot;doc_data&quot;.equals(name))</span>
+			{
+<span class="fc" id="L178">				DocDetails doc = (DocDetails)request.getAttribute(&quot;docDetails&quot;);</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">				if (doc != null)</span>
+				{
+<span class="fc" id="L181">					pageContext.getOut().write(&quot;&lt;div id='wjInline-docdata' &quot;+InlineEditor.getEditAttrs(request, doc, &quot;doc_data&quot;, false)+&quot;&gt;&quot;);</span>
+
+<span class="fc" id="L183">					afterWriteEndTag = &quot;&lt;/div&gt;&quot;;</span>
+				}
+			}
+
+<span class="fc bfc" id="L187" title="All 2 branches covered.">			if (value != null)</span>
+			{
+<span class="fc" id="L189">				writeText(value.toString(), pageContext, name);</span>
+			}
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">			if (afterWriteEndTag != null)</span>
+			{
+<span class="fc" id="L194">				pageContext.getOut().print(afterWriteEndTag);</span>
+			}
+
+<span class="fc bfc" id="L197" title="All 4 branches covered.">			if (&quot;doc_data&quot;.equals(name) || &quot;doc_header&quot;.equals(name))</span>
+			{
+				try
+				{
+<span class="fc" id="L201">					boolean showToolbar = true;</span>
+
+					//skus ziskat zo sablony priznak, ze sa nema zobrazit
+<span class="fc" id="L204">					String afterBody = (String)request.getAttribute(&quot;after_body&quot;);</span>
+
+<span class="pc bpc" id="L206" title="2 of 4 branches missed.">					if (afterBody!=null &amp;&amp; afterBody.indexOf(&quot;NO WJTOOLBAR&quot;)!=-1)</span>
+					{
+<span class="nc" id="L208">						showToolbar = false;</span>
+					}
+
+<span class="pc bpc" id="L211" title="2 of 8 branches missed.">					if (request.getHeader(&quot;dmail&quot;)!=null || request.getAttribute(&quot;NO WJTOOLBAR&quot;)!=null || request.getParameter(&quot;NO_WJTOOLBAR&quot;)!=null || request.getAttribute(&quot;isPreview&quot;)!=null)</span>
+					{
+<span class="fc" id="L213">						showToolbar = false;</span>
+					}
+
+<span class="fc bfc" id="L216" title="All 2 branches covered.">					if (request.getSession().getAttribute(Constants.SESSION_GROUP_ID) == null)</span>
+					{
+						//este nebol realne v admin casti v menu WebStranky (mozno sa prihlasil ako normalny user)
+<span class="fc" id="L219">						showToolbar = false;</span>
+					}
+
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">					if (Constants.getBoolean(&quot;disableWebJETToolbar&quot;))</span>
+					{
+<span class="nc" id="L224">						showToolbar = false;</span>
+					}
+
+<span class="fc bfc" id="L227" title="All 2 branches covered.">					if (inlineEditingToolbarAppended)</span>
+					{
+<span class="fc" id="L229">						showToolbar = false;</span>
+					}
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">					if (showToolbar)</span>
+					{
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">						if (&quot;doc_data&quot;.equals(name))</span>
+						{
+<span class="nc" id="L236">							pageContext.include(&quot;/admin/page_toolbar.jsp&quot;);</span>
+						}
+					}
+				}
+<span class="nc" id="L240">				catch (Exception e)</span>
+				{
+<span class="nc" id="L242">					Logger.error(WriteTag.class, e);</span>
+<span class="fc" id="L243">				}</span>
+
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">				if (request.getParameter(&quot;_editFormId&quot;)!=null)</span>
+				{
+<span class="nc" id="L247">					pageContext.include(&quot;/components/form/admin_fill_form_data.jsp&quot;);</span>
+				}
+			}
+
+			//dt.diff(&quot;done: &quot;+(String)value);
+		}
+<span class="nc" id="L253">		catch (JspException je)</span>
+		{
+<span class="nc" id="L255">			Logger.error(WriteTag.class, &quot;{&quot;+Constants.getInstallName()+&quot;} error: &quot; + je.getMessage());</span>
+<span class="nc" id="L256">			Logger.error(WriteTag.class, je);</span>
+		}
+<span class="nc" id="L258">		catch (Exception e)</span>
+		{
+<span class="nc" id="L260">			Logger.error(WriteTag.class, &quot;{&quot;+Constants.getInstallName()+&quot;} error: &quot; + e.getMessage());</span>
+<span class="nc" id="L261">			Logger.error(WriteTag.class, e);</span>
+<span class="pc" id="L262">		}</span>
+<span class="fc" id="L263">		return EVAL_PAGE;</span>
+	}
+
+	/**
+	 *  Set the required tag attribute &lt;b&gt;name&lt;/b&gt; .
+	 *
+	 *@param  newName  The new name value
+	 */
+	public final void setName(String newName)
+	{
+<span class="fc" id="L273">		name = newName;</span>
+<span class="fc" id="L274">	}</span>
+
+	/**
+	 * @deprecated pouzi WriteTagToolsForCore.isFileExists((fileUrl));
+	 */
+	@Deprecated
+	public static boolean isFileExists(String fileUrl)
+	{
+<span class="nc" id="L282">		return WriteTagToolsForCore.isFileExists((fileUrl));</span>
+	}
+
+	/**
+	 * Pre zadane URL JSP suboru najde jeho custom alternativu
+	 * @param includeFileName
+	 * @param request
+	 * @return
+	 *
+	 * @deprecated pouzi WriteTagToolsForCore.getCustomPage(includeFileName,request);
+	 */
+	@Deprecated
+	public static String getCustomPage(String includeFileName, HttpServletRequest request)
+	{
+<span class="fc" id="L296">		return WriteTagToolsForCore.getCustomPage(includeFileName,request);</span>
+	}
+
+	/**
+	 * Vrati custom cestu ku komponente, alebo null, ak nie je custom cesta
+	 * @param includeFileName
+	 * @param request
+	 * @return
+	 *
+	 * @deprecated pouzi WriteTagToolsForCore.getCustomPageNull(includeFileName,request);
+	 */
+	@Deprecated
+	public static String getCustomPageNull(String includeFileName, HttpServletRequest request)
+	{
+<span class="fc" id="L310">		return WriteTagToolsForCore.getCustomPageNull(includeFileName,request);</span>
+
+	}
+
+	/**
+	 * Vrati cestu k custom page pre Admin cast, alebo null, ak neexistuje ziadna
+	 * @param pageURL
+	 * @param request
+	 * @return
+	 *
+	 * @deprecated pouzi WriteTagToolsForCore.getCustomPageAdmin(pageURL,request);
+	 */
+	@Deprecated
+	public static String getCustomPageAdmin(String pageURL, HttpServletRequest request)
+	{
+<span class="fc" id="L325">		return WriteTagToolsForCore.getCustomPageAdmin(pageURL,request);</span>
+	}
+
+	/**
+	 * Vrati cestu k custom verzii stranky, ak neexistuje vrati povodnu pageURL
+	 * @param pageURL
+	 * @param request
+	 * @return
+	 */
+	public static String getCustomPageAdminNotNull(String pageURL, HttpServletRequest request)
+	{
+<span class="fc" id="L336">		String customPath = WriteTagToolsForCore.getCustomPageAdmin(pageURL, request);</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">		if (customPath != null) return customPath;</span>
+
+<span class="fc" id="L339">		return pageURL;</span>
+	}
+
+	public static void writeText(String text, PageContext pageContext, String name) throws Exception
+	{
+<span class="fc" id="L344">		DebugTimer dt = new DebugTimer(&quot;WriteTag&quot;);</span>
+<span class="fc" id="L345">		StringBuilder buff = new StringBuilder(text);</span>
+
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;editorEnableXHTML&quot;))</span>
+		{
+<span class="fc" id="L349">			pageContext.setAttribute(Globals.XHTML_KEY, &quot;true&quot;, PageContext.PAGE_SCOPE);</span>
+		}
+
+<span class="fc" id="L352">		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();</span>
+<span class="fc" id="L353">		HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();</span>
+
+<span class="fc" id="L355">		boolean writePerfStat = false;</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;_writePerfStat&quot;))) writePerfStat = true;</span>
+<span class="fc" id="L357">		boolean disableCache = false;</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">		if (&quot;true&quot;.equals(request.getParameter(&quot;_disableCache&quot;))) disableCache = true;</span>
+
+<span class="fc" id="L360">		buff = WriteTagToolsForCore.fixXhtml(buff, request);</span>
+<span class="fc" id="L361">		buff = WriteTagToolsForCore.preventSpam(buff, request);</span>
+<span class="fc" id="L362">		buff = WriteTagToolsForCore.secureFormmail(buff, request);</span>
+
+<span class="fc" id="L364">		BrowserDetector browser = BrowserDetector.getInstance(request);</span>
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">		if (browser.isAmp()) {</span>
+<span class="nc" id="L366">			Amp amp = new Amp(request);</span>
+<span class="nc" id="L367">			buff = new StringBuilder(amp.replaceInString(buff.toString()));</span>
+		}
+
+		//Logger.println(this,&quot;BUFF SIZE=&quot;+ response.getBufferSize());
+		//Logger.println(this,&quot;BUFF SIZE JSP=&quot;+ pageContext.getOut().getBufferSize());
+
+
+		/*WJResponseWrapper respWrapper = new WJResponseWrapper(response);
+
+      pageContext.getOut().write(&quot;ahoj&quot;);
+
+      //pageContext.include(&quot;/components/sopk/meniny.jsp&quot;);
+      request.getRequestDispatcher(&quot;/components/sopk/redir.jsp&quot;).include(request, respWrapper);
+
+      if (respWrapper.redirectURL!=null)
+      {
+      	response.sendRedirect(respWrapper.redirectURL);
+      	return;
+      }
+
+      pageContext.getOut().write(respWrapper.strWriter.getBuffer().toString());
+
+      //response.sendRedirect(&quot;http://www.interway.sk&quot;);
+      //response.sendRedirect(&quot;http://www.sme.sk&quot;);
+      Logger.println(this,&quot;redirected 5&quot;);
+      if (1==1) return;*/
+
+<span class="fc" id="L394">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L395">		Identity user = null;</span>
+		try
+		{
+			//ziskaj meno lognuteho usera
+<span class="fc bfc" id="L399" title="All 2 branches covered.">			if (session.getAttribute(Constants.USER_KEY) != null)</span>
+			{
+<span class="fc" id="L401">				user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+			}
+		}
+<span class="nc" id="L404">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L406">			Logger.error(WriteTag.class, ex);</span>
+<span class="fc" id="L407">		}</span>
+
+<span class="fc" id="L409">		StringBuilder content = new StringBuilder();</span>
+<span class="fc" id="L410">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L411">		String lng = PageLng.getUserLng(request);</span>
+
+		try
+		{
+			//text = new String(text.getBytes(), &quot;iso-8859-1&quot;);
+<span class="fc" id="L416">			int docId = -1;</span>
+			try
+			{
+<span class="fc bfc" id="L419" title="All 2 branches covered.">				if (Tools.isNotEmpty(request.getParameter(&quot;docid&quot;)))</span>
+				{
+<span class="fc" id="L421">					docId = Integer.parseInt(Tools.getParameter(request, &quot;docid&quot;));</span>
+				}
+				else
+				{
+<span class="pc bpc" id="L425" title="1 of 2 branches missed.">					if (request.getAttribute(&quot;docid&quot;)!=null)</span>
+					{
+<span class="nc" id="L427">						docId = Integer.parseInt((String)request.getAttribute(&quot;docid&quot;));</span>
+					}
+				}
+			}
+<span class="nc" id="L431">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L433">				Logger.error(WriteTag.class, ex);</span>
+<span class="fc" id="L434">			}</span>
+<span class="fc" id="L435">			buff = DocTools.updateCodes(user, buff, docId, request, pageContext.getServletContext());</span>
+		}
+<span class="nc" id="L437">		catch (Exception ex2)</span>
+		{
+<span class="nc" id="L439">			Logger.error(WriteTag.class, ex2);</span>
+<span class="fc" id="L440">		}</span>
+
+		//Logger.println(this,&quot;----&gt; QUERY WRITE TAG: &quot; + request.getQueryString());
+
+<span class="fc" id="L444">		Cache c = Cache.getInstance();</span>
+
+		//skus zistit ci tam je nejaky include
+<span class="fc bfc" id="L447" title="All 2 branches covered.">		if (buff.indexOf(INCLUDE_START)!=-1)</span>
+		{
+			try
+			{
+<span class="fc" id="L451">				int startIndex = buff.indexOf(INCLUDE_START);</span>
+				int includeEndIndex;
+<span class="fc" id="L453">				String includeFileName = &quot;&quot;;</span>
+<span class="fc" id="L454">				String includeText = &quot;&quot;;</span>
+				String pageParams;
+				int commaIndex;
+<span class="fc" id="L457">				int failsafe = 0;</span>
+<span class="fc" id="L458">				int cacheTime = 0;</span>
+<span class="fc" id="L459">				String cacheKey = null;</span>
+<span class="pc bpc" id="L460" title="1 of 4 branches missed.">				while (startIndex != -1 &amp;&amp; failsafe &lt; 100)</span>
+				{
+<span class="fc" id="L462">					failsafe++;</span>
+					try
+					{
+						//zapis zaciatocny text
+<span class="fc" id="L466">						includeEndIndex = buff.indexOf(INCLUDE_END, startIndex);</span>
+
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">						if (includeEndIndex &lt; 0)</span>
+						{
+							//nenasiel sa koniec
+<span class="nc" id="L471">							content.append(buff.substring(0, startIndex+INCLUDE_START.length()));</span>
+<span class="nc" id="L472">							buff.delete(0,startIndex+INCLUDE_START.length());</span>
+<span class="nc" id="L473">							startIndex = buff.indexOf(INCLUDE_START);</span>
+<span class="nc" id="L474">							continue;</span>
+						}
+
+<span class="fc" id="L477">						includeText = buff.substring(startIndex, includeEndIndex);</span>
+<span class="fc" id="L478">						cacheTime = 0;</span>
+<span class="fc" id="L479">						cacheKey = &quot;writeTag_&quot;+includeText;</span>
+						//aby sa dala spravit page dependent cache
+						//lng - aby sa neprekryvali verzie v roznych jazykoch
+<span class="fc" id="L482">						cacheKey = Tools.replace(cacheKey, &quot;!DOC_ID!&quot;, request.getParameter(&quot;docid&quot;)) + &quot; ;&quot;+lng;</span>
+
+
+<span class="fc" id="L485">						StopWatch executionTimeStopWatch = new StopWatch();</span>
+<span class="fc" id="L486">						executionTimeStopWatch.start();</span>
+<span class="fc" id="L487">						MemoryMeasurement memoryConsumed = new MemoryMeasurement();</span>
+
+						try
+						{
+<span class="fc bfc" id="L491" title="All 2 branches covered.">							if (disableCache==false)</span>
+							{
+<span class="fc" id="L493">								int cacheTimePos = includeText.indexOf(&quot;cacheMinutes=&quot;);</span>
+
+								//news komponenta nemoze cachovat ak ma parameter page
+<span class="pc bpc" id="L496" title="3 of 8 branches missed.">								if (cacheTimePos!=-1 &amp;&amp; includeText.indexOf(&quot;/news/news&quot;)!=-1 &amp;&amp; (request.getParameter(&quot;page&quot;)!=null &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;page&quot;))==false))</span>
+								{
+<span class="nc" id="L498">									cacheTimePos = -1;</span>
+								}
+
+<span class="fc bfc" id="L501" title="All 2 branches covered.">								if (cacheTimePos != -1)</span>
+								{
+<span class="fc" id="L503">									StringTokenizer st = new StringTokenizer(includeText.substring(cacheTimePos+13), &quot; ,)&quot;);</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">									if (st.hasMoreTokens())</span>
+									{
+<span class="fc" id="L506">										cacheTime = Tools.getIntValue(st.nextToken(), 0);</span>
+									}
+
+									//vybereme z cache, adminom ale zobrazujeme priamo (a dole spravime refresh cache)
+<span class="pc bpc" id="L510" title="7 of 8 branches missed.">									if (cacheTime &gt; 0 &amp;&amp; (user==null || user.isAdmin()==false || Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==true))</span>
+									{
+										//skus ziskat z cache
+<span class="nc" id="L513">										String htmlCode = (String)c.getObject(cacheKey);</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">										if (htmlCode == null)</span>
+										{
+											//nastav do cache nieco, aby ostatne thready nespustili lavinu
+<span class="nc" id="L517">											c.setObjectSeconds(cacheKey, &quot;&lt;!-- caching data, try reload --&gt;&quot;, 120, false);</span>
+										}
+<span class="nc bnc" id="L519" title="All 2 branches missed.">										if (Tools.isNotEmpty(htmlCode))</span>
+										{
+<span class="nc" id="L521">											Logger.debug(WriteTag.class, &quot;Serving from cache: &quot;+cacheKey);</span>
+											//vypiseme vysledok z cache
+<span class="nc bnc" id="L523" title="All 2 branches missed.">											if (startIndex &gt; 0)</span>
+											{
+<span class="nc" id="L525">												content.append(buff.substring(0, startIndex));</span>
+											}
+<span class="nc" id="L527">											content.append(htmlCode);</span>
+<span class="nc" id="L528">											buff.delete(0,includeEndIndex + INCLUDE_END.length());</span>
+<span class="nc" id="L529">											startIndex = buff.indexOf(INCLUDE_START);</span>
+
+<span class="nc bnc" id="L531" title="All 2 branches missed.">											if (writePerfStat)</span>
+											{
+<span class="nc" id="L533">												long diff = dt.getDiff();</span>
+<span class="nc" id="L534">												long lastDiff = dt.getLastDiff();</span>
+<span class="nc" id="L535">												String logText = &quot;PerfStat: &quot; + diff + &quot; ms (+&quot;+lastDiff+&quot;) &quot; + includeText+&quot;\n&quot;;</span>
+<span class="nc" id="L536">												content.append('\n').append(logText);</span>
+<span class="nc" id="L537">												Logger.debug(WriteTag.class, logText);</span>
+											}
+
+<span class="nc" id="L540">											executionTimeStopWatch.stop();</span>
+<span class="nc" id="L541">											ExecutionTimeMonitor.recordComponentExecutionFromCache(cacheKey, executionTimeStopWatch.getTime());</span>
+<span class="nc" id="L542">											continue;</span>
+										}
+
+<span class="nc" id="L545">										request.setAttribute(BuffTag.IS_BUFF_TAG, &quot;true&quot;);</span>
+									}
+								}
+							}
+						}
+<span class="nc" id="L550">						catch (Exception e)</span>
+						{
+<span class="nc" id="L552">							Logger.error(WriteTag.class, e);</span>
+<span class="fc" id="L553">						}</span>
+
+<span class="fc" id="L555">						content.append(WriteTagToolsForCore.replaceWriteText(new StringBuilder(buff.substring(0, startIndex)), request));</span>
+
+						//ziskaj data
+
+<span class="fc" id="L559">						includeFileName = buff.substring(startIndex + INCLUDE_START.length(), includeEndIndex);</span>
+<span class="fc" id="L560">						includeFileName = Tools.replace(includeFileName, &quot;%20&quot;, &quot; &quot;);</span>
+<span class="fc" id="L561">						includeFileName = Tools.replace(includeFileName, &quot;\n&quot;, &quot;&quot;);</span>
+<span class="fc" id="L562">						includeFileName = Tools.replace(includeFileName, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L563">						commaIndex = includeFileName.indexOf(',');</span>
+<span class="fc bfc" id="L564" title="All 2 branches covered.">						if (commaIndex != -1)</span>
+						{
+<span class="fc" id="L566">							pageParams = includeFileName.substring(commaIndex + 1);</span>
+<span class="fc" id="L567">							includeFileName =includeFileName.substring(0, commaIndex);</span>
+						}
+						else
+						{
+<span class="fc" id="L571">							pageParams = &quot;&quot;;</span>
+						}
+
+<span class="fc" id="L574">						includeFileName = includeFileName.trim();</span>
+<span class="fc" id="L575">						pageParams = pageParams.trim();</span>
+
+<span class="fc" id="L577">						pageContext.getRequest().removeAttribute(PAGE_PARAMS);</span>
+<span class="fc" id="L578">						pageContext.getRequest().setAttribute(PAGE_PARAMS,  pageParams);</span>
+						//zisti ci ten include existuje
+<span class="fc" id="L580">						includeFileName = WriteTagToolsForCore.getCustomPage(includeFileName, request);</span>
+
+
+<span class="fc" id="L583">						boolean canInclude = false;</span>
+<span class="fc" id="L584">						boolean isSpringComponent = false;</span>
+<span class="fc" id="L585">						ApplicationContext applicationContext = SpringContext.getApplicationContext();</span>
+<span class="fc bfc" id="L586" title="All 2 branches covered.">						if (applicationContext.containsBean(includeFileName)) {</span>
+<span class="fc" id="L587">							canInclude = true;</span>
+<span class="fc" id="L588">							isSpringComponent = true;</span>
+						}
+<span class="pc bpc" id="L590" title="1 of 2 branches missed.">						else if(includeFileName.startsWith(&quot;/components&quot;))</span>
+						{
+<span class="fc" id="L592">							canInclude = true;</span>
+						}
+<span class="nc bnc" id="L594" title="All 2 branches missed.">						else if (includeFileName.startsWith(&quot;/maillist.do&quot;))</span>
+						{
+<span class="nc" id="L596">							canInclude = true;</span>
+						}
+						else
+						{
+<span class="nc" id="L600">							Logger.debug(WriteTag.class, &quot;attempt to include non component file: &quot; + includeFileName + &quot;, include denied&quot;);</span>
+						}
+
+						//Only if banner can be included
+<span class="fc" id="L604">						boolean checkDeviceType = true;</span>
+<span class="fc" id="L605">						final String deviceParam = &quot;device=&quot;;</span>
+						//In preview mode it does not matter what type of device we use (we want see all banners)
+<span class="fc bfc" id="L607" title="All 2 branches covered.">						if (request.getAttribute(&quot;inPreviewMode&quot;)!=null) checkDeviceType = false;</span>
+						
+						/** Check if this app can be included in current device type **/
+<span class="pc bpc" id="L610" title="1 of 6 branches missed.">						if(canInclude &amp;&amp; checkDeviceType &amp;&amp; includeText.contains(deviceParam)) {</span>
+<span class="fc" id="L611">							final String regex = &quot;([^\&quot;;, ]*)&quot;;</span>
+<span class="fc" id="L612">							Pattern pattern = Pattern.compile(deviceParam + regex);</span>
+<span class="fc" id="L613">							Matcher matcher = pattern.matcher(includeText);</span>
+
+							//Is deviceParam presented in include ? -&gt; NO, then do nothing
+<span class="pc bpc" id="L616" title="1 of 2 branches missed.">							if(matcher.find()) {</span>
+<span class="fc" id="L617">								String devicesString = matcher.group(1);</span>
+								//Does deviceParam contain any value ? -&gt; NO, then do nothing
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">								if(Tools.isNotEmpty(devicesString)) {</span>
+									//Devices values are separated by &quot;+&quot;
+<span class="fc" id="L621">									StringTokenizer devices = new StringTokenizer(devicesString, &quot;+&quot;);</span>
+
+									//So there is set device type limitation, set canInclude to false, until we verify that actual device is right type (supported device type)
+<span class="pc bpc" id="L624" title="1 of 2 branches missed.">									if(devices.hasMoreTokens()) canInclude = false;</span>
+
+									//Loop all suported device types and check if actual device has right type
+<span class="fc bfc" id="L627" title="All 2 branches covered.">									while(devices.hasMoreTokens()) {</span>
+<span class="fc" id="L628">										String device = Tools.getStringValue(devices.nextToken(), &quot;&quot;);</span>
+
+<span class="fc bfc" id="L630" title="All 4 branches covered.">										if(&quot;phone&quot;.equals(device) &amp;&amp; browser.isPhone()) {</span>
+<span class="fc" id="L631">											canInclude = true;</span>
+<span class="fc" id="L632">											break;</span>
+<span class="fc bfc" id="L633" title="All 4 branches covered.">										} else if(&quot;tablet&quot;.equals(device) &amp;&amp; browser.isTablet()) {</span>
+<span class="fc" id="L634">											canInclude = true;</span>
+<span class="fc" id="L635">											break;</span>
+<span class="fc bfc" id="L636" title="All 4 branches covered.">										} else if(&quot;pc&quot;.equals(device) &amp;&amp; browser.isDesktop()) {</span>
+<span class="fc" id="L637">											canInclude = true;</span>
+<span class="fc" id="L638">											break;</span>
+										}
+<span class="fc" id="L640">									}</span>
+								}
+							}
+						}
+
+<span class="fc" id="L645">						buff.delete(0,includeEndIndex + INCLUDE_END.length());</span>
+
+<span class="fc bfc" id="L647" title="All 2 branches covered.">						if(canInclude)</span>
+						{
+<span class="fc" id="L649">							Logger.debug(WriteTag.class, &quot;INCLUDING: &quot;+includeFileName);</span>
+							//Logger.println(this,&quot;includeFileName=&quot;+includeFileName);
+<span class="pc bpc" id="L651" title="4 of 10 branches missed.">							if (WriteTagToolsForCore.isFileExists(includeFileName) || includeFileName.endsWith(&quot;.do&quot;) || includeFileName.indexOf(&quot;.do?&quot;)!=-1 || includeFileName.endsWith(&quot;.action&quot;) || isSpringComponent)</span>
+							{
+<span class="fc" id="L653">								preserveParametersSet(includeFileName, request);</span>
+
+<span class="pc bpc" id="L655" title="3 of 8 branches missed.">								if (request.getAttribute(&quot;writeTagDisableCodeFix&quot;)==null &amp;&amp; Constants.getBoolean(&quot;disableWJResponseWrapper&quot;)==false &amp;&amp; (request.getAttribute(BuffTag.IS_BUFF_TAG)!=null || Constants.getBoolean(&quot;editorEnableXHTML&quot;)))</span>
+								{
+									//respWrapper.setBufferSize(response.getBufferSize());
+									//FakeHttpServletResponse respWrapper = new FakeHttpServletResponse(response);
+
+									//inline toolbar append
+<span class="fc" id="L661">									StringBuilder inlineEditingStart = null;</span>
+<span class="fc" id="L662">									boolean inlineEditingAppendEndDiv = false;</span>
+<span class="fc" id="L663">									request.removeAttribute(INLINE_EDITING_BUTTONS_KEY);</span>
+									//request.removeAttribute(INLINE_EDITING_BUTTONS_TOP_KEY); - toto je globalne pre cely request
+<span class="fc" id="L665">									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_DISABLE_KEY);</span>
+<span class="fc" id="L666">									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_TEXT_KEY);</span>
+<span class="fc" id="L667">									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_ICON);</span>
+<span class="fc" id="L668">									request.removeAttribute(&quot;isInlineEditing&quot;);</span>
+<span class="fc" id="L669">									int inlineDocId = -1;</span>
+<span class="fc" id="L670">									boolean isInlineEditing = false;</span>
+<span class="pc bpc" id="L671" title="1 of 2 branches missed.">									if (Constants.getBoolean(&quot;inlineEditingEnabled&quot;))</span>
+									{
+<span class="pc bpc" id="L673" title="2 of 8 branches missed.">										if (request.getHeader(&quot;dmail&quot;) == null &amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;) == null &amp;&amp; request.getParameter(&quot;isDmail&quot;) == null &amp;&amp; request.getAttribute(&quot;isPreview&quot;) == null)</span>
+										{
+<span class="fc bfc" id="L675" title="All 4 branches covered.">											if (&quot;doc_data&quot;.equals(name) || request.getAttribute(name + &quot;-docId=&quot;) != null)</span>
+											{
+<span class="fc bfc" id="L677" title="All 4 branches covered.">												if (user != null &amp;&amp; user.isAdmin())</span>
+												{
+<span class="fc" id="L679">													inlineDocId = DocTools.getRequestNameDocId(name, request);</span>
+<span class="fc" id="L680">													request.setAttribute(&quot;isInlineEditing&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L681">													isInlineEditing = true;</span>
+												}
+											}
+										}
+									}
+
+<span class="fc" id="L687">									StringBuilder htmlCode = null;</span>
+<span class="pc bpc" id="L688" title="1 of 4 branches missed.">									if (applicationContext != null &amp;&amp; applicationContext.containsBean(includeFileName)) {</span>
+<span class="fc" id="L689">										WebjetComponentParser webjetComponentParser = applicationContext.getBean(&quot;webjetComponentParser&quot;, WebjetComponentParser.class);</span>
+<span class="pc bpc" id="L690" title="1 of 2 branches missed.">										if (webjetComponentParser != null) {</span>
+<span class="fc" id="L691">											htmlCode = new StringBuilder(webjetComponentParser.parse(request, response, text));</span>
+										}
+									}
+
+<span class="fc bfc" id="L695" title="All 2 branches covered.">									if (htmlCode == null) {</span>
+<span class="fc" id="L696">										WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);</span>
+<span class="fc" id="L697">										request.getRequestDispatcher(includeFileName).include(request, respWrapper);</span>
+<span class="pc bpc" id="L698" title="1 of 2 branches missed.">										if (respWrapper.redirectURL != null) {</span>
+<span class="nc" id="L699">											response.sendRedirect(respWrapper.redirectURL);</span>
+<span class="nc" id="L700">											return;</span>
+										}
+
+<span class="fc" id="L703">										htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());</span>
+									}
+
+<span class="fc" id="L706">									htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);</span>
+<span class="fc" id="L707">									htmlCode = WriteTagToolsForCore.preventSpam(htmlCode, request);</span>
+<span class="fc" id="L708">									htmlCode = WriteTagToolsForCore.secureFormmail(htmlCode, request);</span>
+<span class="fc" id="L709">									htmlCode = WriteTagToolsForCore.replaceWriteText(htmlCode, request);</span>
+<span class="fc" id="L710">									executionTimeStopWatch.stop();</span>
+<span class="fc" id="L711">									ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());</span>
+
+<span class="fc bfc" id="L713" title="All 4 branches covered.">									if (isInlineEditing &amp;&amp; isInlinePageEditable(user, inlineDocId, request))</span>
+									{
+<span class="fc" id="L715">										inlineEditingStart = getInlineEditingStart(includeFileName, includeText, user, inlineDocId, request, prop);</span>
+									}
+
+<span class="fc bfc" id="L718" title="All 2 branches covered.">									if (inlineEditingStart!=null)</span>
+									{
+										//ak nenastalo volanie hideInlineComponentEditButton
+<span class="pc bpc" id="L721" title="1 of 2 branches missed.">										if (isInlineComponentEditButton(request))</span>
+										{
+<span class="fc" id="L723">											appendInlineEditingScript(pageContext, request);</span>
+
+<span class="fc" id="L725">											StringBuilder inlineEditingButtons = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_KEY);</span>
+<span class="pc bpc" id="L726" title="1 of 2 branches missed.">											if (inlineEditingButtons != null)</span>
+											{
+<span class="nc" id="L728">												inlineEditingStart = Tools.replace(inlineEditingStart, &quot;{inlineEditingButtons}&quot;, inlineEditingButtons.toString());</span>
+											}
+											else
+											{
+<span class="fc" id="L732">												inlineEditingStart = Tools.replace(inlineEditingStart, &quot;{inlineEditingButtons}&quot;, &quot;&quot;);</span>
+											}
+
+<span class="pc bpc" id="L735" title="1 of 2 branches missed.">											if (htmlCode.indexOf(INLINE_EDITING_PLACEHOLDER)==-1)</span>
+											{
+<span class="fc" id="L737">												content.append(inlineEditingStart);</span>
+<span class="fc" id="L738">												inlineEditingAppendEndDiv = true;</span>
+											}
+											else
+											{
+<span class="nc" id="L742">												htmlCode = Tools.replace(htmlCode, INLINE_EDITING_PLACEHOLDER, inlineEditingStart.append(&quot;&lt;/div&gt;&quot;).toString());</span>
+											}
+
+										}
+									}
+
+<span class="fc" id="L748">									StringBuilder buttonsTop = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);</span>
+<span class="pc bpc" id="L749" title="3 of 6 branches missed.">									if (isInlineEditing &amp;&amp; buttonsTop != null &amp;&amp; buttonsTop.length()&gt;0)</span>
+									{
+<span class="nc" id="L751">										appendInlineEditingScript(pageContext, request);</span>
+
+<span class="nc" id="L753">										String buttonsTopString = buttonsTop.toString();</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">										if (buttonsTopString.indexOf(&quot;{inlineComponentEdit}&quot;)!=-1)</span>
+										{
+											//ak sme toto nespravili nenaslo nam to nizsie getInlineEditorComponent
+<span class="nc" id="L757">											request.removeAttribute(INLINE_EDITING_MODULE_PROPS_DISABLE_KEY);</span>
+
+<span class="nc" id="L759">											StringBuilder href = new StringBuilder();</span>
+<span class="nc" id="L760">											href.append(&quot;javascript:inlineComponentEdit('&quot;).append(includeFileName).append(&quot;', '&quot;).append(JSEscapeTag.jsEscape(pageParams)).append(&quot;', &quot;);</span>
+<span class="nc" id="L761">											href.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(includeText)).append(&quot;', &quot;);</span>
+<span class="nc" id="L762">											href.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(getInlineEditorComponent(includeFileName, request))).append(&quot;', &quot;);</span>
+<span class="nc" id="L763">											href.append(inlineDocId);</span>
+<span class="nc" id="L764">											href.append(&quot;)&quot;);</span>
+
+<span class="nc" id="L766">											buttonsTopString = Tools.replace(buttonsTopString, &quot;{inlineComponentEdit}&quot;, href.toString());</span>
+										}
+
+<span class="nc" id="L769">										content.append(&quot;&lt;div class=\&quot;inlineComponentEditButtonsTop\&quot;&gt;&quot;).append(buttonsTopString).append(&quot;&lt;/div&gt;&quot;);</span>
+
+<span class="nc" id="L771">										request.removeAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);</span>
+									}
+
+<span class="fc" id="L774">									content.append(htmlCode);</span>
+
+<span class="fc bfc" id="L776" title="All 2 branches covered.">									if (inlineEditingAppendEndDiv) content.append(&quot;&lt;/div&gt;&quot;);</span>
+
+<span class="pc bpc" id="L778" title="1 of 2 branches missed.">									if (cacheTime &gt; 0)</span>
+									{
+<span class="nc" id="L780">										Logger.debug(WriteTag.class, &quot;Setting to cache: &quot;+cacheKey);</span>
+<span class="nc" id="L781">										c.setObjectSeconds(cacheKey, htmlCode.toString(), cacheTime*60, true);</span>
+									}
+
+<span class="fc" id="L784">									preserveParametersRemove(includeFileName, request);</span>
+<span class="fc" id="L785">								}</span>
+								else
+								{
+<span class="nc" id="L788">									pageContext.include(includeFileName);</span>
+								}
+							}
+							else
+							{
+								//subor neexistuje
+<span class="nc" id="L794">								content.append(getErrorMessage(prop, &quot;writetag.error_not_exists&quot;, includeFileName));</span>
+							}
+						}
+					}
+<span class="nc" id="L798">					catch (SourcePageNotFoundException ex1) {</span>
+						//toto nas nezaujima, pravdepodobne to je len search bot
+<span class="nc" id="L800">						Logger.error(WriteTag.class, &quot;WRITE TAG INCLUDE ERROR: &quot; + ex1.getMessage());</span>
+<span class="nc" id="L801">						content.append(getErrorMessage(prop, &quot;writetag.error&quot;, includeFileName));</span>
+					}
+<span class="nc" id="L803">					catch (Exception ex1)</span>
+					{
+<span class="nc" id="L805">						Logger.error(WriteTag.class,&quot;WRITE TAG INCLUDE ERROR: &quot; + ex1.getMessage());</span>
+
+<span class="nc" id="L807">						StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L808">						ex1.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L810">						String stack = sw.toString();</span>
+
+<span class="nc bnc" id="L812" title="All 6 branches missed.">						if (stack != null &amp;&amp; stack.contains(&quot;Unabled to prepare ActionBean for JSP Usage&quot;)==false &amp;&amp; stack.contains(&quot;_404_jsp&quot;)==false)</span>
+						{
+<span class="nc" id="L814">							Logger.error(WriteTag.class, ex1);</span>
+<span class="nc" id="L815">							content.append(getErrorMessage(prop, &quot;writetag.error&quot;, includeFileName));</span>
+
+<span class="nc bnc" id="L817" title="All 8 branches missed.">							if (user != null &amp;&amp; user.isAdmin() &amp;&amp; user.isEnabledItem(&quot;cmp_adminlog&quot;) &amp;&amp; request.getAttribute(&quot;writeTagDontShowError&quot;) == null)</span>
+							{
+<span class="nc" id="L819">								content.append(&quot;&lt;div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'&gt;&quot; + ResponseUtils.filter(ex1.getMessage()) + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L820">								String stackTrace = ResponseUtils.filter(stack);</span>
+<span class="nc" id="L821">								content.append(stackTrace + &quot;&lt;/div&gt;&quot;);</span>
+							}
+
+<span class="nc" id="L824">							Adminlog.add(Adminlog.TYPE_JSPERROR, &quot;ERROR: &quot; + includeFileName + &quot;\n\n&quot; + ex1.getMessage() + &quot;\n\n&quot; + sw.toString(), -1, -1);</span>
+							//break;
+						}
+<span class="pc" id="L827">					}</span>
+
+<span class="pc bpc" id="L829" title="1 of 2 branches missed.">					if (request.getAttribute(SKIP_BODY)!=null)</span>
+					{
+						//uz neincludujeme vysledok dalej
+<span class="nc" id="L832">						buff = new StringBuilder();</span>
+<span class="nc" id="L833">						request.removeAttribute(SKIP_BODY);</span>
+					}
+
+<span class="fc" id="L836">					startIndex = buff.indexOf(INCLUDE_START);</span>
+
+					//dt.diff(includeText);
+<span class="pc bpc" id="L839" title="1 of 2 branches missed.">					if (writePerfStat)</span>
+					{
+<span class="nc" id="L841">						long diff = dt.getDiff();</span>
+<span class="nc" id="L842">						long lastDiff = dt.getLastDiff();</span>
+<span class="nc" id="L843">						String logText = &quot;PerfStat: &quot; + diff + &quot; ms (+&quot;+lastDiff+&quot;) &quot; + includeText+&quot;\n&quot;;</span>
+<span class="nc" id="L844">						content.append('\n').append(logText);</span>
+<span class="nc" id="L845">						Logger.debug(WriteTag.class, logText);</span>
+<span class="nc" id="L846">					}</span>
+				}
+
+<span class="fc" id="L849">				content.append(WriteTagToolsForCore.replaceWriteText(buff, request));</span>
+			}
+<span class="nc" id="L851">			catch (Exception ex)</span>
+			{
+<span class="nc" id="L853">				Logger.error(WriteTag.class, ex);</span>
+				//nieco sa nam potototo...
+<span class="nc" id="L855">				content.append(buff.toString());</span>
+<span class="pc" id="L856">			}</span>
+		}
+		else
+		{
+<span class="fc" id="L860">			content.append(WriteTagToolsForCore.replaceWriteText(buff, request));</span>
+		}
+
+		try
+		{
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L866">			List&lt;String&gt; afterWriteIncludeFile = (List&lt;String&gt;)request.getAttribute(AFTER_WRITE_INCLUDE_LIST);</span>
+<span class="pc bpc" id="L867" title="1 of 2 branches missed.">			if (afterWriteIncludeFile!=null)</span>
+			{
+<span class="nc bnc" id="L869" title="All 2 branches missed.">				for (String includeFileName : afterWriteIncludeFile)</span>
+				{
+<span class="nc" id="L871">					pageContext.include(includeFileName);</span>
+<span class="nc" id="L872">				}</span>
+<span class="nc" id="L873">				request.removeAttribute(AFTER_WRITE_INCLUDE_LIST);</span>
+			}
+		}
+<span class="nc" id="L876">		catch (RuntimeException ex1)</span>
+		{
+<span class="nc" id="L878">			sk.iway.iwcm.Logger.error(ex1);</span>
+<span class="fc" id="L879">		}</span>
+
+<span class="fc" id="L881">		String html = content.toString();</span>
+
+		//replace cloud keys with texts in corresponding language, ticket 15053
+<span class="pc bpc" id="L884" title="7 of 8 branches missed.">		if(Constants.getString(&quot;installName&quot;).equals(&quot;cloud&quot;) &amp;&amp; InitServlet.isTypeCloud()==false &amp;&amp; (DocDB.getDomain(request).indexOf(&quot;template&quot;)!=-1 || request.getParameter(&quot;forceLng&quot;)!=null))</span>
+		{
+			//preklad pri zobrazeni sa vykonava len pre manager node
+<span class="nc" id="L887">			Logger.debug(WriteTag.class, &quot;cloud manager, translating texts.., lng=&quot;+lng);</span>
+<span class="nc" id="L888">			html = CloudToolsForCore.translate(lng, html);</span>
+		}
+
+<span class="fc" id="L891">		pageContext.getOut().write(html);</span>
+<span class="fc" id="L892">	}</span>
+
+	/**
+	 * Prida do zoznamu subor, ktory sa includne po vykonani tohto write
+	 * (ak nemoze byt includnuty kdekolvek do textu toho write)
+	 * @param file - url suboru pre include (napr. /component/nieco/subor.jsp)
+	 */
+	public static void addAfterWriteInclude(String file, HttpServletRequest request)
+	{
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L902">		List&lt;String&gt; afterWriteIncludeFile = (List&lt;String&gt;)request.getAttribute(AFTER_WRITE_INCLUDE_LIST);</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">		if (afterWriteIncludeFile==null)</span>
+		{
+<span class="nc" id="L905">			afterWriteIncludeFile = new ArrayList&lt;&gt;();</span>
+		}
+<span class="nc bnc" id="L907" title="All 2 branches missed.">		for (String includeFileName : afterWriteIncludeFile)</span>
+		{
+<span class="nc bnc" id="L909" title="All 2 branches missed.">			if (file.equals(includeFileName))</span>
+			{
+				//uz je to tam pridane, preskakujem
+<span class="nc" id="L912">				return;</span>
+			}
+<span class="nc" id="L914">		}</span>
+<span class="nc" id="L915">		afterWriteIncludeFile.add(file);</span>
+<span class="nc" id="L916">		request.setAttribute(AFTER_WRITE_INCLUDE_LIST, afterWriteIncludeFile);</span>
+<span class="nc" id="L917">	}</span>
+
+	/**
+	 * Vykona nahradenie znaciek !WRITE a !CALL v texte ktory sa vypisuje (napr. az po vykonani nejakeho include)
+	 * @param text
+	 * @param request
+	 * @return
+	 *
+	 * @deprecated pouzi WriteTagToolsForCore.replaceWriteText(text,request);
+	 */
+	@Deprecated
+	public static StringBuilder replaceWriteText(StringBuilder text, HttpServletRequest request)
+	{
+<span class="nc" id="L930">		return WriteTagToolsForCore.replaceWriteText(text,request);</span>
+	}
+
+	public static String getErrorMessage(Prop prop, String key, String fullPath)
+	{
+<span class="nc" id="L935">		String fileName = fullPath;</span>
+		try
+		{
+<span class="nc" id="L938">			int i = fullPath.lastIndexOf('/');</span>
+<span class="nc bnc" id="L939" title="All 2 branches missed.">			if (i&gt;0) fileName = fullPath.substring(i+1);</span>
+		}
+<span class="nc" id="L941">		catch (Exception e)</span>
+		{
+			//
+<span class="nc" id="L944">		}</span>
+<span class="nc" id="L945">		String fileNameUser = Tools.replace(fileName, &quot;.jsp&quot;, &quot;&quot;);</span>
+<span class="nc" id="L946">		fileNameUser = Tools.replace(fileNameUser, &quot;_&quot;, &quot; &quot;);</span>
+<span class="nc" id="L947">		fileNameUser = Tools.replace(fileNameUser, &quot;-&quot;, &quot; &quot;);</span>
+
+<span class="nc" id="L949">		return prop.getText(key, fullPath, fileName, fileNameUser);</span>
+	}
+
+	/**
+	 * @deprecated pouzi WriteTagToolsForCore.fixXhtml(text,request);
+	 */
+	@Deprecated
+	public static StringBuilder fixXhtml(StringBuilder text, HttpServletRequest request)
+	{
+<span class="nc" id="L958">		return WriteTagToolsForCore.fixXhtml(text,request);</span>
+	}
+
+	/**
+	 * @deprecated pouzi WriteTagToolsForCore.preventSpam(text,request);
+	 */
+	@Deprecated
+	public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request)
+	{
+<span class="nc" id="L967">		return WriteTagToolsForCore.preventSpam(text,request);</span>
+	}
+
+	/**
+	 * @deprecated pouzi WriteTagToolsForCore.encodeEmailAddress(email);
+	 */
+	@Deprecated
+	public static String encodeEmailAddress(String email)
+	{
+<span class="nc" id="L976">		return WriteTagToolsForCore.encodeEmailAddress(email);</span>
+	}
+
+	public static String decodeEmailAddress(String email)
+	{
+<span class="pc bpc" id="L981" title="2 of 4 branches missed.">		if (email.indexOf('~')==-1 &amp;&amp; email.indexOf('!')==-1)</span>
+		{
+			//nie je zakodovane
+<span class="fc" id="L984">			return(email);</span>
+		}
+
+<span class="nc" id="L987">		String returnEmail = email;</span>
+<span class="nc" id="L988">		returnEmail = returnEmail.replace('~', '@');</span>
+<span class="nc" id="L989">		returnEmail = returnEmail.replace('!', '.');</span>
+
+		//cele to pre istotu otoc
+<span class="nc" id="L992">		char[] newEmail = new char[returnEmail.length()];</span>
+<span class="nc bnc" id="L993" title="All 2 branches missed.">		for (int i=0; i&lt;returnEmail.length(); i++)</span>
+		{
+<span class="nc" id="L995">			newEmail[i] = returnEmail.charAt(returnEmail.length()-i-1);</span>
+		}
+<span class="nc" id="L997">		returnEmail = new String(newEmail);</span>
+
+<span class="nc" id="L999">		return(returnEmail);</span>
+	}
+
+	/**
+	 * Vlozi do stranky subor pre podporu inline editacia (primarne JavaScript kod)
+	 * @param context
+	 * @param request
+	 * @throws Exception
+	 */
+	public static void appendInlineEditingScript(PageContext context, HttpServletRequest request) throws Exception
+	{
+<span class="fc" id="L1010">		String KEY = &quot;writeTag.inlineEditingScriptInserted&quot;;</span>
+<span class="fc bfc" id="L1011" title="All 2 branches covered.">		if (request.getAttribute(KEY)!=null) return;</span>
+
+<span class="fc" id="L1013">		context.include( WriteTag.getCustomPageAdminNotNull(&quot;/admin/inline/inline_script.jsp&quot;, request));</span>
+
+<span class="fc" id="L1015">		request.setAttribute(KEY, &quot;1&quot;);</span>
+<span class="fc" id="L1016">	}</span>
+
+	/**
+	 * Pre zadanu cestu k JSP komponente najde jej verziu editor_component.jsp, alebo NULL ak neexistuje
+	 * @param includeFileName
+	 * @return
+	 */
+	@SuppressWarnings(&quot;java:S1075&quot;)
+	private static String getInlineEditorComponent(String includeFileName, HttpServletRequest request)
+	{
+<span class="pc bpc" id="L1026" title="1 of 2 branches missed.">		if (isInlineComponentEditButton(request)==false) return null;</span>
+
+<span class="fc" id="L1028">		String path = includeFileName.substring(0, includeFileName.lastIndexOf(&quot;/&quot;))+&quot;/editor_component.jsp&quot;;</span>
+<span class="pc bpc" id="L1029" title="1 of 2 branches missed.">		if (FileTools.isFile(path))</span>
+		{
+<span class="pc bpc" id="L1031" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(request)) path = ContextFilter.addContextPath(request.getContextPath(), path);</span>
+<span class="fc" id="L1032">			return path;</span>
+		}
+
+		//skus removnut installName
+<span class="nc bnc" id="L1036" title="All 2 branches missed.">		if (path.indexOf(&quot;/&quot;+Constants.getInstallName()+&quot;/&quot;)!=-1)</span>
+		{
+<span class="nc" id="L1038">			path = Tools.replace(path, &quot;/&quot;+Constants.getInstallName()+&quot;/&quot;, &quot;/&quot;);</span>
+<span class="nc bnc" id="L1039" title="All 2 branches missed.">			if (FileTools.isFile(path))</span>
+			{
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">				if (ContextFilter.isRunning(request)) path = ContextFilter.addContextPath(request.getContextPath(), path);</span>
+<span class="nc" id="L1042">				return path;</span>
+			}
+		}
+
+		//skus pridat installName
+<span class="nc bnc" id="L1047" title="All 2 branches missed.">		if (path.indexOf(&quot;/&quot;+Constants.getInstallName()+&quot;/&quot;)==-1)</span>
+		{
+<span class="nc" id="L1049">			path = Tools.replace(path, &quot;/components/&quot;, &quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot;);</span>
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">			if (FileTools.isFile(path))</span>
+			{
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">				if (ContextFilter.isRunning(request)) path = ContextFilter.addContextPath(request.getContextPath(), path);</span>
+<span class="nc" id="L1053">				return path;</span>
+			}
+		}
+
+<span class="nc" id="L1057">		return null;</span>
+	}
+
+	/**
+	 * Pomocna metoda pre cachovanie hodnoty EditorDB.isEditable
+	 * @param user
+	 * @param docId
+	 * @param request
+	 * @return
+	 */
+	public static boolean isInlinePageEditable(Identity user, int docId, HttpServletRequest request)
+	{
+<span class="fc bfc" id="L1069" title="All 4 branches covered.">		if (user == null || user.isAdmin()==false) return false;</span>
+
+<span class="fc" id="L1071">		String KEY = &quot;writeTag.isInlinePageEditable-&quot;+docId;</span>
+<span class="fc" id="L1072">		Boolean isEditable = (Boolean)request.getAttribute(KEY);</span>
+<span class="fc bfc" id="L1073" title="All 2 branches covered.">		if (isEditable == null)</span>
+		{
+<span class="fc" id="L1075">			String path = PathFilter.getOrigPath(request);</span>
+
+<span class="pc bpc" id="L1077" title="1 of 2 branches missed.">			if (DocTools.isXssStrictUrlException(path, &quot;inlineEditingDisabledUrls&quot;)) isEditable = Boolean.FALSE;</span>
+
+<span class="pc bpc" id="L1079" title="1 of 2 branches missed.">			if (isEditable==null) isEditable = Boolean.valueOf(EditorDB.isPageEditable(user, docId));</span>
+
+			//Logger.debug(WriteTag.class, &quot;isInlinePageEditable, docId=&quot;+docId+&quot; path=&quot;+path+&quot; exception=&quot;+ShowDocAction.isXssStrictUrlException(path, &quot;inlineEditingDisabledUrls&quot;)+&quot; isEditable=&quot;+isEditable);
+<span class="fc" id="L1082">			request.setAttribute(KEY, isEditable);</span>
+		}
+<span class="fc" id="L1084">		return isEditable.booleanValue();</span>
+	}
+
+	/**
+	 * Vrati HTML kod pre inline editaciu, alebo NULL ak pre danu komponentu inline editacia nie je podporovana
+	 * @param includeFileName
+	 * @param includeText
+	 * @param user
+	 * @param docId
+	 * @param request
+	 * @return
+	 */
+	public static StringBuilder getInlineEditingStart(String includeFileName, String includeText, Identity user, int docId, HttpServletRequest request, Prop prop)
+	{
+<span class="pc bpc" id="L1098" title="3 of 6 branches missed.">		if (Constants.getBoolean(&quot;inlineEditingEnabled&quot;)==false || user == null || user.isAdmin()==false) return null;</span>
+
+		//test na isPageEditable je az tu, aby sa zbytocne netestoval pre ine komponenty na zaciatku metody
+<span class="fc" id="L1101">		String includeFileNameNoInstallName = includeFileName;</span>
+
+<span class="fc" id="L1103">		String returnIncludeFileName = includeFileName;</span>
+<span class="fc bfc" id="L1104" title="All 2 branches covered.">		if (includeFileNameNoInstallName.startsWith(&quot;/components/&quot;+Constants.getInstallName())) returnIncludeFileName = &quot;/components&quot;+returnIncludeFileName.substring((&quot;/components/&quot;+Constants.getInstallName()).length());</span>
+
+<span class="pc bpc" id="L1106" title="2 of 6 branches missed.">		if (DocTools.isXssStrictUrlException(returnIncludeFileName, &quot;inlineEditingComponents&quot;)  &amp;&amp; isInlinePageEditable(user, docId, request) &amp;&amp; Tools.isNotEmpty(getInlineComponentEditTextKey(request)))</span>
+		{
+<span class="fc" id="L1108">			StringBuilder html = new StringBuilder();</span>
+<span class="fc" id="L1109">			html.append(&quot;&lt;div class=\&quot;inlineComponentEdit\&quot;&gt;&lt;div class='inlineComponentButtonsWrapper'&gt;&lt;div class='inlineComponentButtons'&gt;&quot;);</span>
+
+<span class="fc" id="L1111">			String editorComponent = getInlineEditorComponent(returnIncludeFileName, request);</span>
+
+<span class="fc" id="L1113">			String pageParams = &quot;&quot;;</span>
+<span class="pc bpc" id="L1114" title="2 of 4 branches missed.">			if (editorComponent != null &amp;&amp; Tools.isNotEmpty(getInlineComponentEditTextKey(request)))</span>
+			{
+<span class="fc" id="L1116">				int ciarka = includeText.indexOf(',');</span>
+<span class="pc bpc" id="L1117" title="1 of 2 branches missed.">				if (ciarka &gt; 0)</span>
+				{
+<span class="fc" id="L1119">					pageParams = includeText.substring(ciarka+1);</span>
+				}
+
+<span class="fc" id="L1122">				html.append(&quot;&lt;a href=\&quot;javascript:inlineComponentEdit('&quot;).append(returnIncludeFileName).append(&quot;', '&quot;).append(JSEscapeTag.jsEscape(pageParams)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1123">				html.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(includeText)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1124">				html.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(editorComponent)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1125">				html.append(docId);</span>
+<span class="fc" id="L1126">				html.append(&quot;)\&quot; class=\&quot;inlineComponentButton inlineComponentButtonEdit cke_button\&quot; style=\&quot;background-image:url('&quot;);</span>
+<span class="fc" id="L1127">				html.append(getInlineComponentEditIcon(request));</span>
+<span class="fc" id="L1128">				html.append(&quot;');\&quot;&gt;&lt;span&gt;&quot;);</span>
+<span class="fc" id="L1129">				html.append(prop.getText(getInlineComponentEditTextKey(request)));</span>
+<span class="fc" id="L1130">				html.append(&quot;&lt;/span&gt;&lt;/a&gt;&quot;);</span>
+			}
+
+<span class="fc" id="L1133">			html.append(&quot;{inlineEditingButtons}&quot;);</span>
+
+<span class="pc bpc" id="L1135" title="3 of 6 branches missed.">			if (editorComponent != null &amp;&amp; Constants.getBoolean(&quot;inlineEditingAllowDelete&quot;) &amp;&amp; request.getAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON)==null)</span>
+			{
+<span class="fc" id="L1137">				html.append(&quot;&lt;a href=\&quot;javascript:inlineComponentDelete('&quot;).append(returnIncludeFileName).append(&quot;', '&quot;).append(JSEscapeTag.jsEscape(pageParams)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1138">				html.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(includeText)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1139">				html.append(&quot; '&quot;).append(JSEscapeTag.jsEscape(editorComponent)).append(&quot;', &quot;);</span>
+<span class="fc" id="L1140">				html.append(docId);</span>
+<span class="fc" id="L1141">				html.append(&quot;)\&quot; class=\&quot;inlineComponentButton inlineComponentButtonDelete cke_button\&quot; style=\&quot;background-image:url('&quot;);</span>
+<span class="fc" id="L1142">				html.append(&quot;/components/_common/admin/inline/icon-delete.png&quot;);</span>
+<span class="fc" id="L1143">				html.append(&quot;');\&quot;&gt;&lt;span&gt;&quot;);</span>
+<span class="fc" id="L1144">				html.append(prop.getText(&quot;button.delete&quot;));</span>
+<span class="fc" id="L1145">				html.append(&quot;&lt;/span&gt;&lt;/a&gt;&quot;);</span>
+			}
+<span class="fc" id="L1147">			request.removeAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON);</span>
+
+<span class="fc" id="L1149">			html.append(&quot;&lt;/div&gt;&lt;/div&gt;&quot;);</span>
+
+<span class="fc" id="L1151">			return html;</span>
+		}
+
+<span class="fc" id="L1154">		return null;</span>
+	}
+
+	/**
+	 * Vrati true ak je pre aktualne vkladanu komponentu do stranky povolena inline editacia, vola sa priamo z danej JSP
+	 * @param request
+	 * @return
+	 */
+	public static boolean isInlineEditing(HttpServletRequest request)
+	{
+<span class="nc" id="L1164">		return &quot;true&quot;.equals(request.getAttribute(&quot;isInlineEditing&quot;));</span>
+	}
+
+	public static void addInlineButton(String textKey, String iconLink, String href, String textParam1, String textParam2, HttpServletRequest request)
+	{
+<span class="nc" id="L1169">		String lng = PageLng.getUserLng(request);</span>
+<span class="nc" id="L1170">		Prop prop = Prop.getInstance(lng);</span>
+
+<span class="nc" id="L1172">		StringBuilder buttons = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_KEY);</span>
+<span class="nc bnc" id="L1173" title="All 2 branches missed.">		if (buttons == null)</span>
+		{
+<span class="nc" id="L1175">			buttons = new StringBuilder();</span>
+<span class="nc" id="L1176">			request.setAttribute(INLINE_EDITING_BUTTONS_KEY, buttons);</span>
+		}
+
+<span class="nc" id="L1179">		buttons.append(&quot;&lt;a class=\&quot;inlineComponentButton\&quot; href=\&quot;&quot;);</span>
+<span class="nc" id="L1180">		buttons.append(href);</span>
+<span class="nc" id="L1181">		buttons.append(&quot;\&quot; style=\&quot;background-image:url('&quot;);</span>
+<span class="nc" id="L1182">		buttons.append(iconLink);</span>
+<span class="nc" id="L1183">		buttons.append(&quot;');\&quot;&gt;&lt;span&gt;&quot;);</span>
+<span class="nc" id="L1184">		buttons.append(prop.getText(textKey, textParam1, textParam2));</span>
+<span class="nc" id="L1185">		buttons.append(&quot;&lt;/span&gt;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L1186">	}</span>
+
+	public static void addInlineButtonTop(String textKey, String iconLink, String href, String textParam1, String textParam2, HttpServletRequest request)
+	{
+<span class="nc" id="L1190">		String lng = PageLng.getUserLng(request);</span>
+<span class="nc" id="L1191">		Prop prop = Prop.getInstance(lng);</span>
+
+<span class="nc" id="L1193">		StringBuilder buttons = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);</span>
+<span class="nc bnc" id="L1194" title="All 2 branches missed.">		if (buttons == null)</span>
+		{
+<span class="nc" id="L1196">			buttons = new StringBuilder();</span>
+<span class="nc" id="L1197">			request.setAttribute(INLINE_EDITING_BUTTONS_TOP_KEY, buttons);</span>
+		}
+
+<span class="nc" id="L1200">		buttons.append(&quot;&lt;a class=\&quot;inlineComponentButton\&quot; href=\&quot;&quot;);</span>
+<span class="nc" id="L1201">		buttons.append(href);</span>
+<span class="nc" id="L1202">		buttons.append(&quot;\&quot; style=\&quot;background-image:url('&quot;);</span>
+<span class="nc" id="L1203">		buttons.append(iconLink);</span>
+<span class="nc" id="L1204">		buttons.append(&quot;');\&quot;&gt;&quot;);</span>
+<span class="nc" id="L1205">		buttons.append(prop.getText(textKey, textParam1, textParam2));</span>
+<span class="nc" id="L1206">		buttons.append(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L1207">	}</span>
+
+	public static void hideInlineComponentEditButton(HttpServletRequest request)
+	{
+<span class="nc" id="L1211">		request.setAttribute(INLINE_EDITING_MODULE_PROPS_DISABLE_KEY, Boolean.FALSE);</span>
+<span class="nc" id="L1212">	}</span>
+
+	private static boolean isInlineComponentEditButton(HttpServletRequest request)
+	{
+<span class="pc bpc" id="L1216" title="1 of 2 branches missed.">		if (request.getAttribute(INLINE_EDITING_MODULE_PROPS_DISABLE_KEY)!=null)</span>
+		{
+<span class="nc" id="L1218">			return false;</span>
+		}
+<span class="fc" id="L1220">		return true;</span>
+	}
+
+	public static void setInlineComponentEditTextKey(String key, HttpServletRequest request)
+	{
+<span class="fc" id="L1225">		request.setAttribute(INLINE_EDITING_MODULE_PROPS_TEXT_KEY, key);</span>
+<span class="fc" id="L1226">	}</span>
+
+	public static void disableDeleteButton(HttpServletRequest request)
+	{
+<span class="nc" id="L1230">		request.setAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON, &quot;1&quot;);</span>
+<span class="nc" id="L1231">	}</span>
+
+	private static String getInlineComponentEditTextKey(HttpServletRequest request)
+	{
+<span class="fc" id="L1235">		String key = (String)request.getAttribute(INLINE_EDITING_MODULE_PROPS_TEXT_KEY);</span>
+<span class="fc bfc" id="L1236" title="All 2 branches covered.">		if (key == null) key = &quot;editor.inline.editComponent&quot;;</span>
+
+<span class="fc" id="L1238">		return key;</span>
+	}
+
+	public static void setInlineComponentEditIcon(String url, HttpServletRequest request)
+	{
+<span class="fc" id="L1243">		request.setAttribute(INLINE_EDITING_MODULE_PROPS_ICON, url);</span>
+<span class="fc" id="L1244">	}</span>
+
+	private static String getInlineComponentEditIcon(HttpServletRequest request)
+	{
+<span class="fc" id="L1248">		String icon = (String)request.getAttribute(INLINE_EDITING_MODULE_PROPS_ICON);</span>
+<span class="pc bpc" id="L1249" title="1 of 2 branches missed.">		if (icon == null) icon = &quot;/components/_common/admin/inline/icon-properties.png&quot;;</span>
+
+<span class="fc" id="L1251">		return icon;</span>
+	}
+
+	private static void preserveParametersSet(String includeFileName, HttpServletRequest request)
+	{
+		//toto robi search komponente problem, koliduje to s jej vyrazmi, kvoli problemom s custom JSP to davam radsej sem
+<span class="pc bpc" id="L1257" title="1 of 2 branches missed.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
+		{
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">			for (String pname : SearchTools.getCheckInputParams())</span>
+			{
+<span class="nc" id="L1261">				String value = (String)request.getAttribute(pname);</span>
+<span class="nc bnc" id="L1262" title="All 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
+				{
+<span class="nc" id="L1264">					request.setAttribute(&quot;preserve_&quot;+pname, value);</span>
+<span class="nc" id="L1265">					request.removeAttribute(pname);</span>
+				}
+			}
+		}
+<span class="fc" id="L1269">	}</span>
+
+	private static void preserveParametersRemove(String includeFileName, HttpServletRequest request)
+	{
+		//toto robi search komponente problem, koliduje to s jej vyrazmi, kvoli problemom s custom JSP to davam radsej sem
+<span class="pc bpc" id="L1274" title="1 of 2 branches missed.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
+		{
+<span class="nc bnc" id="L1276" title="All 2 branches missed.">			for (String pname : SearchTools.getCheckInputParams())</span>
+			{
+<span class="nc" id="L1278">				String value = (String)request.getAttribute(&quot;preserve_&quot;+pname);</span>
+<span class="nc bnc" id="L1279" title="All 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
+				{
+<span class="nc" id="L1281">					request.setAttribute(pname, value);</span>
+<span class="nc" id="L1282">					request.removeAttribute(&quot;preserve_&quot;+pname);</span>
+				}
+			}
+		}
+<span class="fc" id="L1286">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

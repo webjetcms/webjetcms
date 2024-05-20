@@ -36,16 +36,27 @@
                 tdDbName.innerHTML =  /*[[#{setup.setup.db.name}]]*/ '';
                 tdDbName.innerHTML = tdDbName.innerHTML + ":"
             }
-            var selectedOptionText = document.getElementById("dbDriver").options[ document.getElementById("dbDriver").selectedIndex ].text;
-            if (selectedOptionText.indexOf("4.1")!=-1) {
-                dbParameters = "";
-            } else if ("net.sourceforge.jtds.jdbc.Driver" == value) {
+
+            if ("net.sourceforge.jtds.jdbc.Driver" == value) {
                 dbParameters = "encoding=utf-8";
             } else if ("oracle.jdbc.driver.OracleDriver" == value) {
                 dbParameters = /*[[${setupForm.dbParameters}]]*/ '';
                 document.getElementById("dbPort").value = "1521";
                 if (tdDbName != null) tdDbName.innerHTML = "SID:";
+            } else if ("org.postgresql.Driver" == value) {
+                dbParameters = /*[[${setupForm.dbParameters}]]*/ '';
             }
+
+            var selectedOptionText = document.getElementById("dbDriver").options[ document.getElementById("dbDriver").selectedIndex ].text;
+            //console.log("selectedOptionText: " + selectedOptionText, "dbParameters: " + dbParameters, "value: " + value);
+            if (selectedOptionText.indexOf("4.1")!=-1) {
+                dbParameters = "";
+            } else if ("PostgreSQL" == selectedOptionText) {
+                if (dbParameters == "") {
+                    dbParameters = "currentSchema=webjet_cms";
+                }
+            }
+
             document.getElementById("dbParameters").value = dbParameters;
         }
 
@@ -88,6 +99,7 @@
                         <option value="org.mariadb.jdbc.Driver">MariaDB</option>
                         <option value="net.sourceforge.jtds.jdbc.Driver">Microsoft SQL</option>
                         <option value="oracle.jdbc.driver.OracleDriver">Oracle</option>
+                        <option value="org.postgresql.Driver">PostgreSQL</option>
                     </select>
                 </td>
             </tr>

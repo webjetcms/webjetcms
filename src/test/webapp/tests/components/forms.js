@@ -18,7 +18,6 @@ const assert = require('assert');
 
 Before(({ I, login }) => {
     login('admin');
-    I.amOnPage("/apps/form/admin/");
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
         randomNumber2 = "2-"+randomNumber;
@@ -26,6 +25,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('zoznam formularov', async ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
     I.see("Názov formuláru");
     within(".active", () => {
         I.see("Zoznam formulárov");
@@ -50,6 +50,7 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
 });
 
 Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
     DT.filter(`formName`, formName);
 
     I.click(formName);
@@ -83,6 +84,7 @@ Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
 });
 
 Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
     I.fillField(`input.dt-filter-formName`, formName);
     I.pressKey('Enter', `input.dt-filter-dt-filter-formName`);
 
@@ -105,6 +107,7 @@ Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
 });
 
 Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
     I.fillField(`input.dt-filter-formName`, formName);
     I.pressKey('Enter', `input.dt-filter-dt-filter-formName`);
 
@@ -126,11 +129,26 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     });
 });
 
-function fillFormSimple(I, random) {
-    I.fillField("Meno a priezvisko", "Form-autotest-"+random);
+function fillFormSimple(I, DTE, random) {
+    if (DTE == null) I.fillField("Meno a priezvisko", "Form-autotest-"+random);
+    else I.fillField("Meno a priezvisko", "Form-autotest-"+random+"<b>strong</b>");
+
     I.fillField("E-mailová adresa", "fixemail");
     I.fillField("E-mailová adresa", "autotest."+random+"@balat.sk");
-    I.fillField("Vaša otázka", "Test odoslania formularu\nrandom: "+random);
+
+    if (DTE == null) I.fillField("Vaša otázka", "Test odoslania formularu\nrandom: "+random);
+    else {
+        DTE.fillCleditor("form.formsimple > div.form-group", "Test odoslania formularu");
+        I.pressKey(['CommandOrControl', 'A']);
+        I.wait(0.3);
+        I.pressKey(['CommandOrControl', 'B'])
+        I.wait(0.3);
+        I.pressKey('ArrowRight');
+        I.wait(0.3);
+        I.pressKey('Enter');
+        I.pressKey(['CommandOrControl', 'B'])
+        I.type("random: "+random, 50);
+    }
     I.click("Súhlas s podmienkami");
     I.click("Odoslať");
 
@@ -140,30 +158,37 @@ function fillFormSimple(I, random) {
 Scenario("vyplnenie formsimple", ({ I }) => {
     I.amOnPage("/apps/formular-lahko/");
 
-    fillFormSimple(I, randomNumber);
+    fillFormSimple(I, null, randomNumber);
     I.see("Formulár bol úspešne odoslaný");
 
     //over spam ochranu
     I.wait(5);
-    fillFormSimple(I, randomNumber2);
+    fillFormSimple(I, null, randomNumber2);
     I.dontSee("Formulár bol úspešne odoslaný");
     I.see("Formulár bol detekovaný ako SPAM");
 
     I.wait(30);
 
-    fillFormSimple(I, randomNumber2);
+    fillFormSimple(I, null, randomNumber2);
     I.see("Formulár bol úspešne odoslaný");
 });
 
-function checkFormSimpleRowHtml(I, random, rowNumber) {
+function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
     I.forceClick("#form-detail tbody tr:nth-child("+rowNumber+") a.form-view");
     I.wait(2);
     I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
     I.waitForText("Meno a priezvisko", 10);
     I.waitForText("E-mailová adresa", 5);
-    I.waitForText("Form-autotest-"+random, 5);
+    if (isWysiwyg) I.waitForText("Form-autotest-"+random+"<b>strong</b>", 5);
+    else I.waitForText("Form-autotest-"+random, 5);
     I.waitForText("autotest."+random+"@balat.sk", 5);
+
+    if (isWysiwyg) {
+        I.seeElement(locate("span.formsimple-wysiwyg b").withText("Test odoslania formularu"));
+        I.seeElement(locate("span.formsimple-wysiwyg div").withText("random: "+randomNumber));
+    }
+
     I.switchTo();
     I.click("#modalIframe div.modal-footer button.btn-primary");
 }
@@ -215,6 +240,7 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
 });
 
 Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
     //tester
     I.see("formular-lahko");
     I.see("Elektornicky-formular");
@@ -316,7 +342,7 @@ Scenario("domainId odhlasenie", ({ I }) => {
 Scenario("formsimple-encrypted", ({ I }) => {
     I.amOnPage("/apps/formular-lahko/formular-lahko-encrypted.html");
 
-    fillFormSimple(I, randomNumber);
+    fillFormSimple(I, null, randomNumber);
     I.see("Formulár bol úspešne odoslaný");
 
     //over zobrazenie v admine
@@ -422,6 +448,58 @@ Scenario("form attachments", async ({ I }) => {
     I.see("Vitajte, Tester2 Playwright2");
 });
 
+Scenario("Form simple ADVANCED tab", ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=87146");
+    DTE.waitForEditor();
+    I.wait(5);
+
+    I.say("First nullify the advanced tab values");
+        openAdvancedTab(I);
+        fillAdvancedTab(I, "", "", "");
+        I.switchTo();
+        I.switchTo();
+        I.click( { css: 'a[title=OK]' } );
+        I.wait(5);
+
+    I.say("Set advanced tab values");
+        openAdvancedTab(I);
+        fillAdvancedTab(I, "tester@test.sk", "/tseer/formular.html", "18660");
+        I.switchTo();
+        I.switchTo();
+        I.click( { css: 'a[title=OK]' } );
+        I.wait(5);
+
+    I.say("Check advanced tab values");
+        openAdvancedTab(I);
+        I.seeInField({ css: 'input[name=attribute_ccEmails]' }, "tester@test.sk");
+        I.seeInField({ css: 'input[name=attribute_forward]' }, "/tseer/formular.html");
+        I.seeInField({ css: 'input[name=attribute_useFormMailDocId]' }, "18660");
+});
+
+function openAdvancedTab(I) {
+    //
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.click("iframe.wj_component");
+    I.switchTo();
+    I.wait(2);
+
+    //
+    I.switchTo(".cke_dialog_ui_iframe");
+    I.wait(2);
+    I.switchTo("#editorComponent");
+    I.wait(2);
+    I.click("#tabLink2");
+}
+
+function fillAdvancedTab(I, ccEmails, forward, useFormMailDocId) {
+    //Must be twice !!
+    I.fillField({ css: 'input[name=attribute_ccEmails]' }, ccEmails);
+    I.fillField({ css: 'input[name=attribute_ccEmails]' }, ccEmails);
+
+    I.fillField({ css: 'input[name=attribute_forward]' }, forward);
+    I.fillField({ css: 'input[name=attribute_useFormMailDocId]' }, useFormMailDocId);
+}
+
 Scenario("odhlasenie2", async ({ I }) => {
     I.logout();
 });
@@ -456,4 +534,31 @@ Scenario("BUG switch tabs by arrow key", ({ I, DTE, Document }) => {
 
     I.click(locate("table.cke_dialog_contents td.cke_dialog_footer a").withText("Zrušiť"));
     DTE.cancel();
+});
+
+Scenario("formsimple-wysiwyg", ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html");
+
+    fillFormSimple(I, DTE, randomNumber);
+    I.see("Formulár bol úspešne odoslaný");
+
+    //
+    I.say("Check the form in the admin");
+    I.amOnPage("/apps/form/admin/#/detail/formsimple-wysiwyg");
+    DT.waitForLoader();
+    I.waitForText("Form-autotest-"+randomNumber+"<b>strong</b>", 10);
+    I.seeElement(locate("td.cell-not-editable div.datatable-column-width b").withText("Test odoslania formularu"));
+    I.seeElement(locate("td.cell-not-editable div.datatable-column-width div").withText("random: "+randomNumber));
+
+    //
+    I.say("Verify HTML/email version");
+    DT.filter("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
+    checkFormSimpleRowHtml(I, randomNumber, 1, true);
+
+    //
+    I.say("Delete form record");
+    I.click("#form-detail tbody tr:nth-child(1) td.dt-select-td");
+    I.click("button.buttons-remove");
+    I.waitForElement("#form-detail_modal");
+    DTE.save();
 });

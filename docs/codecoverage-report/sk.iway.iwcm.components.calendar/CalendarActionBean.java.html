@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarActionBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.calendar</a> &gt; <span class="el_source">CalendarActionBean.java</span></div><h1>CalendarActionBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.calendar;
+
+import static sk.iway.iwcm.system.stripes.WebJETActionBean.RESOLUTION_CLOSE;
+import static sk.iway.iwcm.system.stripes.WebJETActionBean.RESOLUTION_CONTINUE;
+
+import java.util.List;
+
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.DontValidate;
+import net.sourceforge.stripes.action.ForwardResolution;
+import net.sourceforge.stripes.action.HandlesEvent;
+import net.sourceforge.stripes.action.Resolution;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SpamProtection;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.calendar.CalendarDB;
+import sk.iway.iwcm.calendar.CalendarDetails;
+import sk.iway.iwcm.calendar.CalendarInvitationDetails;
+import sk.iway.iwcm.calendar.EventForm;
+import sk.iway.iwcm.calendar.EventTypeDB;
+import sk.iway.iwcm.calendar.EventTypeDetails;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.SettingsBean;
+
+/**
+ *  CalendarActionBean.java
+ *
+ *@Title        webjet4
+ *@Company      Interway s.r.o. (www.interway.sk)
+ *@Copyright    Interway s.r.o. (c) 2001-2009
+ *@author       $Author: bhric $
+ *@version      $Revision: 1.2 $
+ *@created      Date: 23.1.2009 13:53:50
+ *@modified     $Date: 2009/08/04 07:51:02 $
+ */
+<span class="nc" id="L42">public class CalendarActionBean implements ActionBean</span>
+{
+	private ActionBeanContext context;
+	private int userId;
+	private int calendarId;
+	private String akcia;
+<span class="nc" id="L48">	private EventForm event = new EventForm();</span>
+<span class="nc" id="L49">	private EventTypeDetails eventType = new EventTypeDetails();</span>
+	private int approveEventId;
+	private int approveStatus;
+	private String odporuceneId;
+	private int odporucitAkcia;
+	private String vyraz;
+	private String region;
+	private int[] eventTypes;
+	private String domain;
+	private String approverMail;
+
+	@Override
+	public ActionBeanContext getContext()
+	{
+<span class="nc" id="L63">		return context;</span>
+	}
+	@Override
+   public void setContext(ActionBeanContext context)
+   {
+<span class="nc" id="L68"> 	   this.context = context;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed."> 	   if (context.getRequest().getParameter(&quot;typeId&quot;) != null)</span>
+		{
+<span class="nc" id="L71"> 	   	int typeId = Tools.getIntValue(context.getRequest().getParameter(&quot;typeId&quot;), -1);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed."> 	   	if(typeId != -1)</span>
+<span class="nc" id="L73"> 	   		this.eventType = EventTypeDB.getTypeById(typeId);</span>
+		}
+<span class="nc" id="L75">   }</span>
+	public int getUserId()
+	{
+<span class="nc" id="L78">		return userId;</span>
+	}
+	public void setUserId(int userId)
+	{
+<span class="nc" id="L82">		this.userId = userId;</span>
+<span class="nc" id="L83">	}</span>
+	public int getCalendarId()
+	{
+<span class="nc" id="L86">		return calendarId;</span>
+	}
+	public void setCalendarId(int calendarId)
+	{
+<span class="nc" id="L90">		this.calendarId = calendarId;</span>
+<span class="nc" id="L91">	}</span>
+	public String getAkcia()
+	{
+<span class="nc" id="L94">		return akcia;</span>
+	}
+	public void setAkcia(String akcia)
+	{
+<span class="nc" id="L98">		this.akcia = akcia;</span>
+<span class="nc" id="L99">	}</span>
+	public EventForm getEvent()
+	{
+<span class="nc" id="L102">		return event;</span>
+	}
+	public void setEvent(EventForm event)
+	{
+<span class="nc" id="L106">		this.event = event;</span>
+<span class="nc" id="L107">	}</span>
+	public EventTypeDetails getEventType()
+	{
+<span class="nc" id="L110">		return eventType;</span>
+	}
+	public void setEventType(EventTypeDetails eventType)
+	{
+<span class="nc" id="L114">		this.eventType = eventType;</span>
+<span class="nc" id="L115">	}</span>
+	public int getApproveEventId()
+	{
+<span class="nc" id="L118">		return approveEventId;</span>
+	}
+	public void setApproveEventId(int approveEventId)
+	{
+<span class="nc" id="L122">		this.approveEventId = approveEventId;</span>
+<span class="nc" id="L123">	}</span>
+	public int getApproveStatus()
+	{
+<span class="nc" id="L126">		return approveStatus;</span>
+	}
+	public void setApproveStatus(int approveStatus)
+	{
+<span class="nc" id="L130">		this.approveStatus = approveStatus;</span>
+<span class="nc" id="L131">	}</span>
+	public String getOdporuceneId()
+	{
+<span class="nc" id="L134">		return odporuceneId;</span>
+	}
+	public void setOdporuceneId(String odporuceneId)
+	{
+<span class="nc" id="L138">		this.odporuceneId = odporuceneId;</span>
+<span class="nc" id="L139">	}</span>
+	public int getOdporucitAkcia()
+	{
+<span class="nc" id="L142">		return odporucitAkcia;</span>
+	}
+	public void setOdporucitAkcia(int odporucitAkcia)
+	{
+<span class="nc" id="L146">		this.odporucitAkcia = odporucitAkcia;</span>
+<span class="nc" id="L147">	}</span>
+	public String getVyraz()
+	{
+<span class="nc" id="L150">		return vyraz;</span>
+	}
+	public void setVyraz(String vyraz)
+	{
+<span class="nc" id="L154">		this.vyraz = vyraz;</span>
+<span class="nc" id="L155">	}</span>
+	public String getRegion()
+	{
+<span class="nc" id="L158">		return region;</span>
+	}
+	public void setRegion(String region)
+	{
+<span class="nc" id="L162">		this.region = region;</span>
+<span class="nc" id="L163">	}</span>
+	public void setEventTypes(int[] eventTypes)
+	{
+<span class="nc" id="L166">		this.eventTypes = eventTypes;</span>
+<span class="nc" id="L167">	}</span>
+
+	@DefaultHandler
+	@DontValidate
+   @HandlesEvent(&quot;saveRemoveUserId&quot;)
+   public Resolution saveRemoveUserId()
+   {
+<span class="nc" id="L174">		boolean saveOk = false;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if(userId != -1)</span>
+		{
+<span class="nc" id="L177">			CalendarInvitationDetails inv = CalendarDB.getInvitationByUser(calendarId, userId);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			if(akcia.equals(&quot;save&quot;))</span>
+			{
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if(inv == null)</span>
+				{
+<span class="nc" id="L182">					saveOk = CalendarDB.saveCalendarInvitation(calendarId, userId);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">					if(saveOk)</span>
+					{
+<span class="nc" id="L185">						inv = CalendarDB.getInvitationByUser(calendarId, userId);</span>
+<span class="nc" id="L186">						saveOk = CalendarDB.setCalendarInvitationStatus(inv.getCalendarInvitationId(), &quot;A&quot;);</span>
+					}
+				}
+				else
+				{
+<span class="nc" id="L191">					saveOk = CalendarDB.setCalendarInvitationStatus(inv.getCalendarInvitationId(), &quot;A&quot;);</span>
+				}
+			}
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			else if(akcia.equals(&quot;remove&quot;))</span>
+			{
+<span class="nc bnc" id="L196" title="All 2 branches missed.">				if(inv == null)</span>
+				{
+<span class="nc" id="L198">					saveOk = CalendarDB.saveCalendarInvitation(calendarId, userId);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">					if(saveOk)</span>
+					{
+<span class="nc" id="L201">						inv = CalendarDB.getInvitationByUser(calendarId, userId);</span>
+<span class="nc" id="L202">						saveOk = CalendarDB.setCalendarInvitationStatus(inv.getCalendarInvitationId(), &quot;D&quot;);</span>
+					}
+				}
+				else
+				{
+<span class="nc" id="L207">					saveOk = CalendarDB.setCalendarInvitationStatus(inv.getCalendarInvitationId(), &quot;D&quot;);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L212">		context.getRequest().setAttribute(&quot;saveOk&quot;, saveOk);</span>
+<span class="nc" id="L213"> 		context.getRequest().setAttribute(&quot;calendarId&quot;, calendarId);</span>
+<span class="nc" id="L214">	   return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;pridajAkciu&quot;)
+   public Resolution pridajAkciu()
+   {
+<span class="nc" id="L221">		EventTypeDetails eventTypeDetails = EventTypeDB.getTypeById(event.getTypeId());</span>
+<span class="nc" id="L222">		String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L223">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if(eventTypeDetails.getSchvalovatelId() == -1)</span>
+<span class="nc" id="L225">			event.setApprove(1);</span>
+		else
+<span class="nc" id="L227">			event.setApprove(-1);</span>
+<span class="nc" id="L228">		boolean saveOk = CalendarDB.saveEventToDB(event);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if(saveOk)</span>
+		{
+<span class="nc" id="L231">			context.getRequest().setAttribute(&quot;saveOk&quot;,  prop.getText(&quot;components.calendar.akciaSaved&quot;));</span>
+<span class="nc" id="L232">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+		else{
+<span class="nc" id="L235">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;editor.perex_group.chyba_pri_ukladani&quot;));</span>
+<span class="nc" id="L236">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;editujTyp&quot;)
+   public Resolution editujTyp()
+   {
+<span class="nc" id="L244">		int ret = EventTypeDB.updateType(eventType);</span>
+<span class="nc" id="L245">		String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L246">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc" id="L247">		boolean saveOk = false;</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if(ret == -1)</span>
+<span class="nc" id="L249">			saveOk = false;</span>
+		else
+<span class="nc" id="L251">			saveOk = true;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if(saveOk)</span>
+		{
+<span class="nc" id="L254">			context.getRequest().setAttribute(&quot;customScript&quot;,  &quot;alert('&quot;+prop.getText(&quot;calendar_edit.configType.saved&quot;)+&quot;');window.opener.location.reload();&quot;);</span>
+<span class="nc" id="L255">			return new ForwardResolution(RESOLUTION_CLOSE);</span>
+		}
+		else{
+<span class="nc" id="L258">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;editor.perex_group.chyba_pri_ukladani&quot;));</span>
+<span class="nc" id="L259">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;schvalujem&quot;)
+   public Resolution schvalujem()
+   {
+<span class="nc" id="L267">		boolean saveOk = CalendarDB.saveApproveStatus(approveEventId, approveStatus, true);</span>
+<span class="nc" id="L268">		String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L269">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		if(saveOk)</span>
+		{
+<span class="nc" id="L272">			context.getRequest().setAttribute(&quot;customScript&quot;,  &quot;alert(\&quot;&quot;+prop.getText(&quot;components.calendar.akciaSaved&quot;)+&quot;\&quot;);window.opener.location.reload();&quot;);</span>
+<span class="nc" id="L273">			return new ForwardResolution(RESOLUTION_CLOSE);</span>
+		}
+		else{
+<span class="nc" id="L276">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;editor.perex_group.chyba_pri_ukladani&quot;));</span>
+<span class="nc" id="L277">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;odporucujem&quot;)
+   public Resolution odporucujem()
+   {
+<span class="nc" id="L286">		boolean saveOk = false;</span>
+<span class="nc" id="L287">		String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L288">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		if(Tools.isNotEmpty(odporuceneId))</span>
+		{
+<span class="nc" id="L291">			saveOk = CalendarDB.setSuggestEvents(odporucitAkcia, odporuceneId);</span>
+		}
+		else
+		{
+<span class="nc" id="L295">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;calendar.check_event_error&quot;));</span>
+<span class="nc" id="L296">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		if(saveOk)</span>
+		{
+<span class="nc" id="L300">			context.getRequest().setAttribute(&quot;saveOk&quot;,saveOk);</span>
+<span class="nc" id="L301">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+		else
+		{
+<span class="nc" id="L305">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;editor.perex_group.chyba_pri_ukladani&quot;));</span>
+<span class="nc" id="L306">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;fullTextSearch&quot;)
+   public Resolution fullTextSearch()
+   {
+<span class="nc" id="L315">		Identity user = (Identity)context.getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="nc" id="L316">		boolean zobrazVsetky = true;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		if (user != null)</span>
+		{
+<span class="nc" id="L319">			SettingsBean sbPerms = user.getSettings().get(&quot;kaZobrazujAkcie&quot;);</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			if (sbPerms!=null)</span>
+			{
+<span class="nc bnc" id="L322" title="All 2 branches missed.">				if(&quot;vsetky&quot;.equals(sbPerms.getSvalue1()))</span>
+<span class="nc" id="L323">					zobrazVsetky = true;</span>
+				else
+<span class="nc" id="L325">					zobrazVsetky = false;</span>
+			}
+		}
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		if(Tools.isNotEmpty(vyraz))</span>
+		{
+<span class="nc" id="L331">			List&lt;CalendarDetails&gt; events = CalendarDB.fullTextSearch(vyraz);</span>
+<span class="nc" id="L332">			context.getRequest().setAttribute(&quot;events&quot;,events);</span>
+<span class="nc" id="L333">		}</span>
+		else
+		{
+<span class="nc" id="L336">			List&lt;CalendarDetails&gt; events = null;</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if(zobrazVsetky)</span>
+<span class="nc" id="L338">				events = CalendarDB.getEventsByRegionAndType(getContext().getRequest());</span>
+			else
+			{
+				//VUB: todo - toto treba znova odkomentovat po prechode VUB na WJ7
+				//events = KalendarAkciiDB.getVubAkcie(getContext().getRequest());
+			}
+<span class="nc" id="L344">			context.getRequest().setAttribute(&quot;events&quot;,events);</span>
+		}
+<span class="nc" id="L346">		return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+   }
+
+	@DontValidate
+   @HandlesEvent(&quot;filtruj&quot;)
+   public Resolution filtruj()
+   {
+<span class="nc" id="L353">		String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L354">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc bnc" id="L355" title="All 4 branches missed.">		if(eventTypes != null &amp;&amp; eventTypes.length &gt; 0)</span>
+		{
+<span class="nc" id="L357">			context.getRequest().setAttribute(&quot;calStart&quot;, Tools.formatDate(Tools.getNow()));</span>
+<span class="nc" id="L358">			context.getRequest().removeAttribute(&quot;calEnd&quot;);</span>
+<span class="nc" id="L359">			context.getRequest().setAttribute(&quot;showApprove&quot;, &quot;1&quot;);</span>
+<span class="nc" id="L360">			context.getRequest().removeAttribute(&quot;suggest&quot;);</span>
+<span class="nc" id="L361">			List&lt;CalendarDetails&gt; events = CalendarDB.getEventsByRegionAndType(context.getRequest(), eventTypes, region);</span>
+<span class="nc" id="L362">			context.getRequest().setAttribute(&quot;events&quot;,events);</span>
+<span class="nc" id="L363">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+		else{
+<span class="nc" id="L366">			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.calendar.empty_search_term&quot;));</span>
+<span class="nc" id="L367">			return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+		}
+
+   }
+
+		@DontValidate
+	   @HandlesEvent(&quot;pridajAkciuVerejnost&quot;)
+	   public Resolution pridajAkciuVerejnost()
+	   {
+<span class="nc" id="L376">			String lng = PageLng.getUserLng(context.getRequest());</span>
+<span class="nc" id="L377">			Prop prop = Prop.getInstance(lng);</span>
+
+<span class="nc bnc" id="L379" title="All 2 branches missed.">			if (!SpamProtection.canPost(&quot;form&quot;, null, context.getRequest()))</span>
+	   		{
+<span class="nc" id="L381">	   			Adminlog.add(Adminlog.TYPE_FORMMAIL, &quot;detectSpam (ReviewsAction.bSave()) TRUE: can't post&quot;, -1, -1);</span>
+	   			//setErrorText(&quot;Formulár bol detekovaný ako SPAM&quot;);
+<span class="nc" id="L383">	   			context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;checkform.fail_probablySpamBot&quot;));</span>
+<span class="nc" id="L384">	   			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+	   		}
+<span class="nc" id="L386">			event.setApprove(-1);</span>
+
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if(event.getTimeRange() == null) event.setTimeRange(&quot;&quot;);</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">			if(event.getArea() == null) event.setArea(&quot;&quot;);</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">			if(event.getAddress() == null) event.setAddress(&quot;&quot;);</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">			if(event.getInfo1() == null) event.setInfo1(&quot;&quot;);</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			if(event.getInfo2() == null) event.setInfo2(&quot;&quot;);</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">			if(event.getInfo3() == null) event.setInfo3(&quot;&quot;);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			if(event.getInfo4() == null) event.setInfo4(&quot;&quot;);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			if(event.getInfo5() == null) event.setInfo5(&quot;&quot;);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">			if(event.getLng() == null) event.setLng(&quot;&quot;);</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if(event.getDescription() == null) event.setDescription(&quot;&quot;);</span>
+
+<span class="nc bnc" id="L399" title="All 2 branches missed.">			if(event.getNotifyEmails() == null) event.setNotifyEmails(&quot;&quot;);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">			if(event.getNotifySender() == null) event.setNotifySender(&quot;&quot;);</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">			if(event.getNotifyIntrotext() == null) event.setNotifyIntrotext(&quot;&quot;);</span>
+
+<span class="nc" id="L403">			event.setTitle(DB.filterHtml(event.getTitle()));</span>
+<span class="nc" id="L404">			event.setDateFrom(DB.filterHtml(event.getDateFrom()));</span>
+<span class="nc" id="L405">			event.setDateTo(DB.filterHtml(event.getDateTo()));</span>
+<span class="nc" id="L406">			event.setTimeRange(DB.filterHtml(event.getTimeRange()));</span>
+<span class="nc" id="L407">			event.setCity(DB.filterHtml(event.getCity()));</span>
+<span class="nc" id="L408">			event.setAddress(DB.filterHtml(event.getAddress()));</span>
+<span class="nc" id="L409">			event.setDescription(DB.filterHtml(event.getDescription()));</span>
+
+<span class="nc" id="L411">			boolean saveOk = CalendarDB.saveEventPublicToDB(event, domain, approverMail, prop);</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">			if(saveOk)</span>
+			{
+<span class="nc" id="L414">				context.getRequest().setAttribute(&quot;saveOk&quot;,  prop.getText(&quot;components.calendar.akciaSaved&quot;));</span>
+<span class="nc" id="L415">				return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+			}
+			else{
+<span class="nc" id="L418">				context.getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;editor.perex_group.chyba_pri_ukladani&quot;));</span>
+<span class="nc" id="L419">				return new ForwardResolution(RESOLUTION_CONTINUE);</span>
+			}
+	   }
+		public String getDomain() {
+<span class="nc" id="L423">			return domain;</span>
+		}
+		public void setDomain(String domain) {
+<span class="nc" id="L426">			this.domain = domain;</span>
+<span class="nc" id="L427">		}</span>
+
+		public String getApproverMail() {
+<span class="nc" id="L430">			return approverMail;</span>
+		}
+		public void setApproverMail(String approverMail) {
+<span class="nc" id="L433">			this.approverMail = approverMail;</span>
+<span class="nc" id="L434">		}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

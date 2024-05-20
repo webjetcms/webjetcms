@@ -30,7 +30,6 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @Datatable
 public class GdprSearchRestController extends DatatableRestControllerV2<GdprSearchEntity, Long>{
 
-
     @Autowired
     public GdprSearchRestController() {
         super(null);
@@ -41,8 +40,7 @@ public class GdprSearchRestController extends DatatableRestControllerV2<GdprSear
         //all vracia prazdny zoznam, az spustenie vyhladavania findByColumns nieco realne vykona
 
         List<GdprSearchEntity> items = new ArrayList<>();
-        DatatablePageImpl<GdprSearchEntity> page = new DatatablePageImpl<>(items);
-        return page;
+        return new DatatablePageImpl<>(items);
     }
 
     @Override
@@ -81,8 +79,7 @@ public class GdprSearchRestController extends DatatableRestControllerV2<GdprSear
         for(GdprModule module : modules) {
 
             //For modul get list of GdprResult from result(Map<GdprModule, List<GdprResult>>)
-            List<GdprResult> list = new ArrayList<>();
-            list = results.get(module);
+            List<GdprResult> list = results.get(module);
 
             //Call getModuleName proc to obtain modul name from translation-key text
             String moduleName = getModuleName(module);
@@ -97,7 +94,6 @@ public class GdprSearchRestController extends DatatableRestControllerV2<GdprSear
                 tmp.setName(listEntity.getName());
                 tmp.setModul(moduleName);
                 tmp.setValue(listEntity.getText());
-                //tmp.setUrl(listEntity.getLinkView());
 
                 String url = listEntity.getLink();
                 if (url.startsWith("/admin/formlist.do")) {

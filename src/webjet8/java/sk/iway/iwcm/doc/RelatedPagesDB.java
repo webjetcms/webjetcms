@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -295,11 +296,11 @@ public class RelatedPagesDB
 				{
 					String sql = "SELECT ";
 					if (Constants.DB_TYPE == Constants.DB_MSSQL) sql += " TOP "+Constants.getInt("relatedPagesMaxSize")+" ";
-					sql += DocDB.getDocumentFieldsNodata()+" FROM documents d WHERE d.available=1 AND d.perex_group LIKE ? ORDER BY d.publish_start DESC";
-					if (Constants.DB_TYPE == Constants.DB_MYSQL)
+					sql += DocDB.getDocumentFieldsNodata()+" FROM documents d WHERE d.available="+DB.getBooleanSql(true)+" AND d.perex_group LIKE ? ORDER BY d.publish_start DESC";
+					if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)
 					{
 						sql = Tools.replace(sql, "d.doc_id", "DISTINCT d.doc_id");
-						sql += " LIMIT 0, "+Constants.getInt("relatedPagesMaxSize");
+						sql += " LIMIT "+Constants.getInt("relatedPagesMaxSize");
 					}
 
 					ps = db_conn.prepareStatement(sql);
@@ -323,8 +324,8 @@ public class RelatedPagesDB
 						String sql = "SELECT ";
 						if (Constants.DB_TYPE == Constants.DB_MSSQL) sql += " TOP "+Constants.getInt("relatedPagesMaxSize")+" ";
 						//#17157 - uprava getRelatedPages - zmena setovanie do IN podmienky BEZ PreparedStatement (robilo to haluze pri cislach skupin vacsich ako 10000 ktore boli na zaciatku)
-						sql += DocDB.getDocumentFieldsNodata()+" FROM documents d LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id WHERE d.available=1 AND p.perex_group_id IN ("+groupNamesIn+") ORDER BY d.publish_start DESC";
-						if (Constants.DB_TYPE == Constants.DB_MYSQL) sql += " LIMIT 0, "+Constants.getInt("relatedPagesMaxSize");
+						sql += DocDB.getDocumentFieldsNodata()+" FROM documents d LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id WHERE d.available="+DB.getBooleanSql(true)+" AND p.perex_group_id IN ("+groupNamesIn+") ORDER BY d.publish_start DESC";
+						if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) sql += " LIMIT "+Constants.getInt("relatedPagesMaxSize");
 						ps = db_conn.prepareStatement(sql);
 						rs = ps.executeQuery();
 					}

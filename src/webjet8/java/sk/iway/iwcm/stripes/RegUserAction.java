@@ -416,7 +416,7 @@ public class RegUserAction extends WebJETActionBean
 		{
 			db_conn = DBPool.getConnection();
 
-			ps = db_conn.prepareStatement("SELECT user_id, password FROM  users WHERE email=? AND is_admin=1 ORDER BY user_id ASC");
+			ps = db_conn.prepareStatement("SELECT user_id, password FROM  users WHERE email=? AND is_admin="+DB.getBooleanSql(true)+" ORDER BY user_id ASC");
 			ps.setString(1, infoemail);
 			rs = ps.executeQuery();
 			if (rs.next())

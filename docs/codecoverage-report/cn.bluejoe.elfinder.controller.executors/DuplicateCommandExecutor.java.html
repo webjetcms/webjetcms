@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DuplicateCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">DuplicateCommandExecutor.java</span></div><h1>DuplicateCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.io.FilenameUtils;
+import org.json.JSONObject;
+
+import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
+
+<span class="nc" id="L18">public class DuplicateCommandExecutor extends AbstractJsonCommandExecutor</span>
+{
+	@Override
+	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
+			throws Exception
+	{
+<span class="nc" id="L24">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+
+<span class="nc" id="L26">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
+
+<span class="nc bnc" id="L28" title="All 2 branches missed.">		for (String target : targets)</span>
+		{
+<span class="nc" id="L30">			FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="nc" id="L31">			String name = fsi.getName();</span>
+<span class="nc" id="L32">			String baseName = FilenameUtils.getBaseName(name);</span>
+<span class="nc" id="L33">			String extension = FilenameUtils.getExtension(name);</span>
+<span class="nc" id="L34">			FsItemEx newFile = null;</span>
+
+			//JEEFF: upravene pre podporu nasho DocGroup
+<span class="nc bnc" id="L37" title="All 2 branches missed.">			if (fsi.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+			{
+<span class="nc" id="L39">				((IwcmDocGroupFsVolume)fsi.getVolume()).createAndCopy(fsi, fsi.getParent(), false);</span>
+				//toto realne neviem vykonstruovat newFile = new FsItemEx(fsi.getParent(), fsi.getPath());
+				//musim nieco poslat, aby sa vyvolal added event a nasledne reload
+<span class="nc" id="L42">				newFile = fsi;</span>
+<span class="nc" id="L43">				RequestBean.setAttribute(&quot;forceReloadTree&quot;, Boolean.TRUE);</span>
+			}
+			else
+			{
+
+<span class="nc" id="L48">				int i = 1;</span>
+<span class="nc" id="L49">				baseName = baseName.replaceAll(&quot;-\\d+$&quot;, &quot;&quot;);</span>
+
+				while (true)
+				{
+<span class="nc bnc" id="L53" title="All 4 branches missed.">					String newName = String.format(&quot;%s-%d%s&quot;, baseName, i, (extension == null || extension.isEmpty() ? &quot;&quot;</span>
+<span class="nc" id="L54">							: &quot;.&quot; + extension));</span>
+<span class="nc" id="L55">					newFile = new FsItemEx(fsi.getParent(), newName);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">					if (!newFile.exists())</span>
+					{
+<span class="nc" id="L58">						break;</span>
+					}
+<span class="nc" id="L60">					i++;</span>
+<span class="nc" id="L61">				}</span>
+
+<span class="nc" id="L63">				createAndCopy(fsi, newFile);</span>
+			}
+<span class="nc" id="L65">			added.add(newFile);</span>
+		}
+
+<span class="nc" id="L68">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+<span class="nc" id="L69">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

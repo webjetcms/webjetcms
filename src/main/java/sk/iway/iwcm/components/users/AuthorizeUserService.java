@@ -104,7 +104,7 @@ public class AuthorizeUserService {
 	 * @param request - request
 	 * @return
 	 */
-	private static boolean sendInfoEmail(UserDetailsEntity userToApprove, String password, Identity approveByUser, HttpServletRequest request) {
+	public static boolean sendInfoEmail(UserDetailsEntity userToApprove, String password, Identity approveByUser, HttpServletRequest request) {
 		boolean emailSend = false;
 
 		if(userToApprove == null || approveByUser == null) return false;
