@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
  *@created      $Date: 2004/03/23 20:41:10 $
  *@modified     $Date: 2004/03/23 20:41:10 $
  */
+@SuppressWarnings({"java:S6905"})
 public class DocDB extends DB
 {
 	/**
@@ -2930,7 +2931,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2949,6 +2950,13 @@ public class DocDB extends DB
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
+				doc.setShowInSitemap(DB.getBoolean(rs, "show_in_sitemap"));
+				doc.setShowInNavbar(DB.getBoolean(rs, "show_in_navbar"));
+
+				doc.setLoggedShowInMenu(DB.getBoolean(rs, "logged_show_in_menu"));
+				doc.setLoggedShowInSitemap(DB.getBoolean(rs, "logged_show_in_sitemap"));
+				doc.setLoggedShowInNavbar(DB.getBoolean(rs, "logged_show_in_navbar"));
+
 				doc.setSortPriority(rs.getInt("sort_priority"));
 				doc.setPasswordProtected(DB.getDbString(rs, "password_protected"));
 				doc.setTempId(rs.getInt("temp_id"));
@@ -3031,7 +3039,7 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu
+	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu, showInSitemap, showInNavbar, loggedShowIn...
 	 * @param docId - id stranky
 	 * @param doNotReturnNull - ak je nastavene na true, tak to vzdy vrati aspon prazdny objekt
 	 * @return

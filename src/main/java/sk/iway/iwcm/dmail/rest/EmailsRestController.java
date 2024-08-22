@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.Sender;
@@ -150,7 +151,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             if (emailsToInsert.length==1) emailToInsert = entity;
             else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());
 
-            prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
+            boolean prepareSuccess = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
+            if(prepareSuccess == false) continue;
+
             //Save entity into DB
             if (saved == null) saved = emailsRepository.save(emailToInsert);
             else emailsRepository.save(emailToInsert);
@@ -182,7 +185,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
      * @param loggedUserId
      * @param entity
      */
-    public static void prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
 
         //trimni email adresu
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
@@ -197,6 +200,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName("- -");
         }
         else {
+            //Check if user is valid
+            if(UserDetailsService.isUserDisabled(recipient) == true) return false;
+
             entity.setRecipientUserId(recipient.getUserId());
             if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(recipient.getFullName());
         }
@@ -224,6 +230,8 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         if (entity.getId()==null || entity.getId().longValue()<1) {
             entity.setDisabled(true);
         }
+
+        return true;
     }
 
     @Override

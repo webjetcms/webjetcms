@@ -27,8 +27,12 @@ import sk.iway.iwcm.users.UsersDB;
 
 public class LicenseActionService {
 
-    private static final String success = "/admin/setup/license_saved";
-    private static final String error = "/admin/setup/license";
+    private static final String SUCCESS = "/admin/setup/license_saved";
+    private static final String ERROR = "/admin/setup/license";
+
+	private LicenseActionService() {
+		//utility class
+	}
 
 	/**
 	 * Update WebJET license. License is not checked, but user must give correct login username and password and
@@ -42,7 +46,7 @@ public class LicenseActionService {
 	 * @throws IOException
 	 * @throws ServletException
 	 */
-	public static String updateLicense(LicenseFormBean licenseForm, Model model, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public static String updateLicense(LicenseFormBean licenseForm, Model model, HttpServletRequest request, HttpServletResponse response) {
 		Map<String, String> errors = new Hashtable<>();
 
 		//Validate user data and right to do this action
@@ -51,7 +55,7 @@ public class LicenseActionService {
 		if (errors.get("ERROR_KEY") != null) {
 			Logger.error(LicenseActionService.class,"su nejake chyby v logovacom formulari");
 			setModel(model, licenseForm, true, errors.get("ERROR_KEY"), true, false);
-			return error;
+			return ERROR;
 		}
 
 		String license = licenseForm.getLicense();
@@ -74,7 +78,7 @@ public class LicenseActionService {
 
 		setModel(model, null, false, null, true, true);
 
-		return success;
+		return SUCCESS;
 	}
 
 	/**
@@ -115,19 +119,24 @@ public class LicenseActionService {
 		if (user != null) {
 			//Check password
 			boolean passok = false;
-			String passwordInDb = user.getPassword();
+			String passwordInDb = null;
+			try {
+				passwordInDb = (new SimpleQuery()).forString("SELECT password FROM users WHERE login=?", username);
+			} catch(IllegalStateException ex) {
+				//Salt fiel does not EXIST yet -> in case when we run setup without license (it's not inicialized yet)
+			}
 
 			String salt = null;
 			try {
-				salt = (new SimpleQuery()).forString("SELECT salt FROM users WHERE login=?", username);
+				salt = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE login=?", username);
 			} catch(IllegalStateException ex) {
 				//Salt fiel does not EXIST yet -> in case when we run setup without license (it's not inicialized yet)
 			}
 
 			try {
 				sk.iway.Password pass = new sk.iway.Password();
-				if(!Tools.isEmpty(passwordInDb) && salt == null) {
-					if(passwordInDb.equals(password)) passok = true;
+				if(Tools.isNotEmpty(passwordInDb) && salt == null) {
+					if(pass.encrypt(password).equals(passwordInDb)) passok = true;
 				} else {
 
 					if(Tools.isEmpty(passwordInDb)) {
@@ -224,7 +233,7 @@ public class LicenseActionService {
 	 * @param disableLng - if we want disable option to change language
 	 * @param isSave - it's after save action
 	 */
-	private static void setModel(Model model, LicenseFormBean licenseForm, Boolean isErr, String errMsg, Boolean disableLng, Boolean isSave) {
+	private static void setModel(Model model, LicenseFormBean licenseForm, Boolean isErr, String errMsg, Boolean disableLng, boolean isSave) {
 		//Informing FE what key to use, when creating page
 		if(isSave)
 			// page /admin/setup/license

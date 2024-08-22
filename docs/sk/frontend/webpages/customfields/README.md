@@ -35,7 +35,7 @@ POZOR: **nastavenie typu** sa musí nastaviť vždy pre predvolený jazyk (nasta
 
 Typ poľa ```text``` je štandardné textové pole. Je ale možné limitovať maximálnu veľkosť poľa a aj po zadanom počte znakov zobraziť varovanie:
 
-- ```editor.field_x.type=text``` - štandardné textové pole
+- ```editor.field_x.type=text``` - štandardné textové pole s veľkosťou maximálne 255 znakov
 - ```editor.field_x.type=text-10``` - štandardné textové pole s veľkosťou maximálne 10 znakov
 - ```editor.field_x.type=text-160, warningLength-50``` - štandardné textové pole s veľkosťou maximálne 160 znakov, po zadaní 50 znakov sa zobrazí varovanie o prekročení odporúčanej dĺžky textu (napr. pole opis Google odporúča mať dlhé 50-160 znakov)
 

@@ -9,6 +9,9 @@
 - [x] Web stránky - 24008 Media - editujem stránku, kliknem na kartu Media, otvorím Media, zatvorim krížikom hore, kliknem na Uložiť vo web stránke, okno sa nezatvorí. (opravené, test v webpages.js)
 - [ ] #39751-46 Galéria - test nahratia obrázka, jeho otočenia (overenie otočenia porovnaním screenshotu).
 - [ ] Media - test keď používateľ nemá práva na všetky média, že ide editovať médium v stránke a pridať nové.
+- [ ] Formuláre - test kliknutia na linku pri formulároch s nastaveným Dátum potvrdenia súhlasu - /apps/formular/formular-doubleoptin.html
+- [ ] Web stránky - vytvorím novú stránku, ktorá má rovno nastavené publikovanie do budúcnosti, vypublikujem. Následne otvorím znova v editore, zobrazí sa notifikácia, že existuje verzia v budúcnosti. Zatvorím okno, označím riadok a stránku zmažem. Posiela sa v JSON dátach aj Json notify, nesmie to padnúť. Overiť sa dá zmazaním riadku `@NoArgsConstructor` v triede `NotifyButton`.
+- [ ] Galéria - cez web stránku dialóg vloženia obrázku do stránky vytvorím priečinok v galérii, nahrám fotku a následne prejdem do galérie. Priečinok je biely, nejde zmazať (ID je -1, takže entita sa nenájde).
 
 ## Java 17
 

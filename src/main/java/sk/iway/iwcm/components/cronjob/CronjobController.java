@@ -79,4 +79,11 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
         page.addOptions("clusterNode", ClusterDB.getClusterNodeNamesExpandedAuto(), null, null, false);
     }
 
+    @Override
+    public void afterSave(CronTask entity, CronTask saved) {
+        //restart cron
+        ClusterDB.addRefresh(CronFacade.class);
+		CronFacade.getInstance(true);
+    }
+
 }

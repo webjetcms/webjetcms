@@ -391,8 +391,7 @@ export class DatatablesCkEditor {
 							});
 
 							if (videoFile != "") {
-								var editor = window.getCkEditorInstance().document;
-								editor.wjInsertUpdateComponent("!INCLUDE(/components/video/video_player.jsp, file="+videoFile+")!");
+								this._.editor.wjInsertUpdateComponent("!INCLUDE(/components/video/video_player.jsp, file="+videoFile+")!");
 								return;
 							}
 
@@ -474,7 +473,7 @@ export class DatatablesCkEditor {
 						//console.log("ON SHOW 1");
 						var urlElement = this.getContentElement("info", "url").getElement();
 
-						if (document.getElementById("wjLinkIframe") == null)
+						if (that.ckEditorObject.document.getById("wjLinkIframe") == null)
 						{
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
 							iframeElement.setAttribute("src", "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp");
@@ -986,7 +985,7 @@ export class DatatablesCkEditor {
 									var nameCleared = $this.getContentElement("info", "_cke_saved_name");
 									if (nameCleared != "")
 									{
-										var editor = that.ckEditorObject.instances.data;
+										var editor = $this._.editor;
 										//toto je element na ktory sa doubleclicklo (je selectnuty)
 										var element = editor.getSelection().getStartElement();
 
@@ -1046,7 +1045,7 @@ export class DatatablesCkEditor {
 
 							//console.log(name);
 
-							if (name == "") {
+							if (name == "" && typeof this.getContentElement("info", "name") != "undefined") {
 								name = this.getContentElement("info", "name").getValue();
 							}
 
@@ -1064,7 +1063,7 @@ export class DatatablesCkEditor {
 							//----- zavolajme vytvorenie input pola ------
 							var result = original.call(this);
 
-							var editor = that.ckEditorObject.instances.data;
+							var editor = this._.editor;
 							var startElement = editor.getSelection().getStartElement();
 
 							//console.log(startElement);

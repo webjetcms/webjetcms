@@ -87,3 +87,9 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
     I.see("Pole B", "#groups-datatable_modal div.DTE_Field_Name_fieldB");
     I.see("Pole D", "#groups-datatable_modal div.DTE_Field_Name_fieldD");
 });
+
+Scenario("BUG custom-fields-webpage-prefix", ({I}) => {
+    I.amOnPage("/novy-adresar-01/volitelne-polia/?NO_WJTOOLBAR=true");
+    I.waitForText("text - A", 5, "p.noprefix-a");
+    I.waitForText("Temp Group Prefixed TEST", 5, "p.noprefix-test");
+});

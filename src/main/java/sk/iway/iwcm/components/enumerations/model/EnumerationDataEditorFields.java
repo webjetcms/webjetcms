@@ -11,12 +11,15 @@ import org.springframework.beans.BeanWrapperImpl;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Getter
 @Setter
@@ -37,30 +40,60 @@ public class EnumerationDataEditorFields {
     private static final String DATE_PREFIX = "date";
 
     @DataTableColumn(
-        inputType = DataTableColumnType.SELECT,
+        inputType = DataTableColumnType.TEXT,
         title="components.enumerations.child_enumeration_type_name",
-        hidden = true
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/enumeration/enumeration-data/autocomplete-child"),
+                    @DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+                    @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-render-item-fn", value = "disableDeletedEnum")
+                }
+            )
+        }
     )
-    private Integer childEnumTypeId;
+    private String childEnumTypeName;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.SELECT,
+        inputType = DataTableColumnType.TEXT,
         title="components.enumerations.parent_enumeration_data_name",
-        hidden = true
+        hidden = true,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/enumeration/enumeration-data/autocomplete-parent"),
+                    @DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_typeId, #DTE_Field_string1"),
+                    @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-render-item-fn", value = "disableDeletedEnum")
+                }
+            )
+        }
     )
-    private Integer parentEnumDataId;
+    private String parentEnumDataName;
 
-    public void fromEnumerationData(EnumerationDataBean entity, EnumerationTypeBean typeEntity) {
+    public void fromEnumerationData(EnumerationDataBean entity, EnumerationTypeBean typeEntity, boolean addFields, Prop prop) {
         fieldsDefinition = new ArrayList<>();
 
-        //Set default values
-        childEnumTypeId = entity.getChildEnumerationType() == null ? null : entity.getChildEnumerationType().getEnumerationTypeId();
-        parentEnumDataId = entity.getParentEnumerationData() == null ? null : entity.getParentEnumerationData().getEnumerationDataId();
+        String prefixForHidden = prop.getText("enum_type.deleted_type_mark.js");
+        if(entity.getChildEnumerationType() != null) {
+            childEnumTypeName = entity.getChildEnumerationType().getTypeName();
+            if(entity.getChildEnumerationType().isHidden()) childEnumTypeName = prefixForHidden + childEnumTypeName;
+        }
 
-        prepareAndAddFields(STRING_PREFIX, STRING_FIELDS_COUNT, entity, typeEntity);
-        prepareAndAddFields(DECIMAL_PREFIX, DECIMAL_FIELDS_COUNT, entity, typeEntity);
-        prepareAndAddFields(BOOLEAN_PREFIX, BOOLEAN_FIELDS_COUNT, entity, typeEntity);
-        prepareAndAddFields(DATE_PREFIX, DATE_FIELDS_COUNT, entity, typeEntity);
+        if(entity.getParentEnumerationData() != null) {
+            parentEnumDataName = entity.getParentEnumerationData().getString1();
+            if(entity.getParentEnumerationData().isHidden()) parentEnumDataName = prefixForHidden + parentEnumDataName;
+        }
+
+        if(addFields == true) {
+            prepareAndAddFields(STRING_PREFIX, STRING_FIELDS_COUNT, entity, typeEntity);
+            prepareAndAddFields(DECIMAL_PREFIX, DECIMAL_FIELDS_COUNT, entity, typeEntity);
+            prepareAndAddFields(BOOLEAN_PREFIX, BOOLEAN_FIELDS_COUNT, entity, typeEntity);
+            prepareAndAddFields(DATE_PREFIX, DATE_FIELDS_COUNT, entity, typeEntity);
+        }
 
         entity.setEditorFields(this);
     }
@@ -70,7 +103,7 @@ public class EnumerationDataEditorFields {
         if(entity.getType() == null) entity.setType(dataTypeEntity);
 
         /*Handle child enumeration type id*/
-        Integer newChildEnumTypeId = entity.getEditorFields().getChildEnumTypeId() == null ? -1 : entity.getEditorFields().getChildEnumTypeId();
+        Integer newChildEnumTypeId = Tools.isEmpty(entity.getEditorFields().getChildEnumTypeName()) == true ? -1 : etr.getIdByTypeName(entity.getEditorFields().getChildEnumTypeName());
 
         //FIX - entity.getChildEnumerationType will allways come like NULL from editor
         Integer oldChildEnumTypeId = edr.getChildEnumTypeIdByEnumDataId(entity.getEnumerationDataId());
@@ -79,7 +112,7 @@ public class EnumerationDataEditorFields {
         //If not equal, aka childEnumType has changed
         if(!newChildEnumTypeId.equals(oldChildEnumTypeId)) {
             //BE permission check to set child enum type
-            if(!dataTypeEntity.isAllowChildEnumerationType())
+            if(dataTypeEntity.isAllowChildEnumerationType()==false)
                 throw new IllegalArgumentException(prop.getText("enum_data.set_childEnumTyp_notAllowed"));
 
             //Check that selected type is not deleted (soft deleted, hidden)
@@ -104,16 +137,16 @@ public class EnumerationDataEditorFields {
         }
 
         /*Handle parent enumeration data id*/
-        Integer newParentEnumDataId = entity.getEditorFields().getParentEnumDataId() == null ? -1 : entity.getEditorFields().getParentEnumDataId();
+        Integer newParentEnumDataId = Tools.isEmpty(entity.getEditorFields().getParentEnumDataName()) == true ? -1 : edr.getIdByString1AndTypeId(entity.getEditorFields().getParentEnumDataName(), dataTypeEntity.getEnumerationTypeId());
 
-        //FIX - entity.getParentEnumerationData will allways come like NULL from editor
-        Integer oldParentEnumDataId = edr.getParentenumDataIdByEnumDataId(entity.getEnumerationDataId());
+        //FIX - entity.getParentEnumerationData will always come like NULL from editor
+        Integer oldParentEnumDataId = edr.getParentEnumDataIdByEnumDataId(entity.getEnumerationDataId());
         oldParentEnumDataId = oldParentEnumDataId == null ? -1 : oldParentEnumDataId;
 
         //If not equal, aka childEnumType has changed
         if(!newParentEnumDataId.equals(oldParentEnumDataId)) {
             //BE permission check to set parent enum data
-            if(!dataTypeEntity.isAllowParentEnumerationData())
+            if(dataTypeEntity.isAllowParentEnumerationData()==false)
                 throw new IllegalArgumentException(prop.getText("enum_data.set_parentEnumData_notAllowed"));
 
             //Check if we want to set deleted option
@@ -128,7 +161,7 @@ public class EnumerationDataEditorFields {
             //Nothing is selected
             entity.setParentEnumerationData(null);
         } else {
-            //Select parentEnumerationdata
+            //Select parentEnumerationData
             entity.setParentEnumerationData(edr.getEnumId(newParentEnumDataId));
         }
     }

@@ -35,14 +35,14 @@ public class EnumerationTypeEditorFields implements Serializable {
         if(enumerationTypeOriginal.isAllowChildEnumerationType() && enumerationTypeOriginal.isAllowParentEnumerationData())
             throw new IllegalArgumentException(prop.getText("enum_type.allow_error"));
 
-        //Check loop dependecie (A can have B as child, but B cant have A as child same time)
-        //If leep dependecie is ok, then set enumeration child bean (if null or -1 its empty select)
+        //Check loop dependencies (A can have B as child, but B cant have A as child same time)
+        //If loop dependencies is ok, then set enumeration child bean (if null or -1 its empty select)
         Integer childId = enumerationTypeOriginal.getEditorFields().getChildEnumTypeId() == null ? -1 : enumerationTypeOriginal.getEditorFields().getChildEnumTypeId();
         Integer oldChildId = etr.getChildEnumTypeId(enumerationTypeOriginal.getEnumerationTypeId());
         oldChildId = oldChildId == null ? -1 : oldChildId;
 
         //Check only if childId is changed
-        //!! Very important in case child is same but allready deleted
+        //!! Very important in case child is same but already deleted
         if(oldChildId.equals(childId)==false) {
             EnumerationTypeBean childEnumType = etr.getByEnumId(childId);
             if(childEnumType != null) {

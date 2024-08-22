@@ -66,10 +66,10 @@ public class FormsEntityBasic {
 
     @Column(name = "double_optin_confirmation_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date doubleOptinConfigurationDate;
+    private Date doubleOptinConfirmationDate;
 
     @Column(name = "double_optin_hash")
-    private String double_optin_hash;
+    private String doubleOptinHash;
 
     @Transient
     private Map<String, String> columnNamesAndValues;

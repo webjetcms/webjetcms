@@ -310,19 +310,7 @@ public class UserDetailsEditorFields extends BaseEditorFields {
         userDetailsOriginal.setEditorFields(this);
 
         //nastav cervene zobrazenie pre userov, ktory nemaju povolene prihlasenie
-        boolean isNotAvailable = false;
-        if (Boolean.FALSE.equals(userDetailsOriginal.getAuthorized())) {
-            isNotAvailable = true;
-        }
-        //skontroluj ci sa moze prihlasit
-        long startL = 0;
-        long endL = Long.MAX_VALUE;
-        if (userDetailsOriginal.getAllowLoginStart()!=null) startL = userDetailsOriginal.getAllowLoginStart().getTime();
-        if (userDetailsOriginal.getAllowLoginEnd()!=null) endL = userDetailsOriginal.getAllowLoginEnd().getTime()+(60*60*24 * 1000);
-        long now = Tools.getNow();
-        if (now < startL || now > endL) isNotAvailable = true;
-
-        if (isNotAvailable) addRowClass("is-disabled");
+        if (UserDetailsService.isUserDisabled(userDetailsOriginal)) addRowClass("is-disabled");
     }
 
     public void toUserDetailsEntity(UserDetailsEntity userDetailsOriginal, HttpServletRequest request) {

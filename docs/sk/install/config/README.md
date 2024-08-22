@@ -76,3 +76,8 @@ Pre niektoré časti sa historicky používa generátor primárnych kľúčov, m
 
 Aby nedochádzalo ku konfliktu v cluster konfigurácii používa sa hodnota `pkeyGenOffset` pre posun podľa nodov. Napr. hodnota `pkeyGenIncrement` je nastavená na 5 a `offset` na 0-5 pre jednotlivé uzly. Pri režime `auto` clustra je automaticky nastavená hodnota `pkeyGenBlockSize=1` aby sa vždy čítala posledná hodnota z databázy. Má to mierny dopad na výkon servera.
 
+## Licencie
+
+Pre niektoré knižnice môže byť potrebné zakúpiť dodatočné licencie na ich použitie:
+
+- `amchartLicense` - licenčné číslo pre knižnicu [amCharts](https://www.amcharts.com) pre zobrazenie grafov, po nastavení licenčného kľúča sa nebude v grafe zobrazovať logo amCharts.

@@ -263,7 +263,7 @@ public class SitemapULAction
 			if (group.getShowInSitemap(request) != GroupDetails.MENU_TYPE_ONLYDEFAULT && currentDepth < maxDepth)
 			{
 
-				List<DocDetails> docs = docDB.getDocByGroup(rootGroup, DocDB.ORDER_PRIORITY, true, -1, -1, false); // docDB.getDocByGroup(rootGroup);
+				List<DocDetails> docs = docDB.getBasicDocDetailsByGroup(rootGroup, DocDB.ORDER_PRIORITY); // docDB.getDocByGroup(rootGroup);
 
 				group = groupsDB.getGroup(rootGroup);
 				for (DocDetails doc : docs)

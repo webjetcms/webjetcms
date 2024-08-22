@@ -361,6 +361,8 @@ private static String combineCss(String cssStyle)
             request.setAttribute("templates_group_id", tempGroupId);
         }
 
+        RequestBean.addTextKeyPrefix("temp-"+temp.getTempId(), false);
+
 		request.setAttribute("doc_temp_name", temp.getTempName());
 		request.setAttribute("template_id", Integer.toString(temp.getTempId()));
 		request.setAttribute("template_name", temp.getTempName());

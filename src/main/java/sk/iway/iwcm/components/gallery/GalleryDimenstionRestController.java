@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -139,9 +140,32 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         if(entity == null) {
             //Get dimension id (who is calling, who is parent gallery)
             int dimensionId = Tools.getIntValue(getRequest().getParameter("dimensionId"), -1);
-            //If dimension id is present, get parent gallery and set his path to child (in insertItem we will adding to path new entity name)
+
+            //If dimension id is not present, set default path from path parameter
+            String parentPath = getRequest().getParameter("path");
+            if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images"; //NOSONAR
+
+            String forcePath = null;
+
+            //If dimension id is present it's parent ID, copy properties
+            GalleryDimension parentGallery = null;
             if(dimensionId != -1) {
-                GalleryDimension parentGallery = repository.getById(Long.valueOf(dimensionId));
+                parentGallery = repository.getById(Long.valueOf(dimensionId));
+            } else {
+                //find settings by parentPath recursivelly from repository, so search for /images/gallery/path/subfolder, then /images/gallery/path etc until root
+                String[] pathParts = parentPath.split("/");
+                for(int i = pathParts.length; i > 0; i--) {
+                    String path = String.join("/", Arrays.copyOfRange(pathParts, 0, i));
+                    Optional<GalleryDimension> optional = repository.findFirstByPathAndDomainId(path, CloudToolsForCore.getDomainId());
+                    if (optional.isPresent()) {
+                        parentGallery = optional.get();
+                        forcePath = parentPath;
+                        break;
+                    }
+                }
+            }
+
+            if (parentGallery != null) {
                 entity = getNewEntity(parentGallery.getPath());
                 entity.setName("");
                 entity.setResizeMode(parentGallery.getResizeMode());
@@ -153,13 +177,12 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
                 entity.setWatermarkPlacement(parentGallery.getWatermarkPlacement());
                 entity.setWatermarkSaturation(parentGallery.getWatermarkSaturation());
             } else {
-                //If dimension id is not present, set default path
-                String parentPath = getRequest().getParameter("path");
-                if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images"; //NOSONAR
                 //tu nemozeme poslat cestu, lebo by sa nastavil nazov, nevieme rozlisit ci sa jedna o edit, alebo o pridanie
                 entity = getNewEntity("");
                 entity.setPath(parentPath);
             }
+
+            if (forcePath!=null) entity.setPath(forcePath);
         }
 
         return entity;
@@ -199,6 +222,16 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         }
 
         return super.beforeDelete(entity);
+    }
+
+    @Override
+    public boolean deleteItem(GalleryDimension entity, long id) {
+        if (entity.getId() != null && entity.getId() > 0) {
+            return super.deleteItem(entity, id);
+        } else {
+            //entity is not in DB (eg. created in elfinder), just delete files
+            return beforeDelete(entity);
+        }
     }
 
     /**

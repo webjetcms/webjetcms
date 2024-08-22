@@ -136,6 +136,9 @@
             &.wrap textarea {
                 white-space: normal;
             }
+            &.pre textarea, textarea.textarea-code {
+                white-space: pre;
+            }
             &.required {
                 label {
                     &::after {

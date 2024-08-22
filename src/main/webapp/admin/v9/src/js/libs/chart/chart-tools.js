@@ -451,7 +451,8 @@ export async function createAmchart(chartForm, update) {
     else root.locale = window.am5locales_sk_SK;
 
     //Hide amcharts logo
-    root._logo.dispose();
+    if (window.am5.registry.licenses.length>0) root._logo.dispose();
+
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
@@ -1057,7 +1058,7 @@ export async function createServerMonitoringChart(rootName, type) {
     //Create root
     var root = am5.Root.new(rootName);
     //Hide amcharts5 logo
-    root._logo.dispose();
+    if (window.am5.registry.licenses.length>0) root._logo.dispose();
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),

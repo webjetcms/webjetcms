@@ -20,7 +20,8 @@ public class ConfDetailsDto extends ConfDetails {
         inputType = DataTableColumnType.ID,
         renderFormat = "dt-format-selector",
         title = "admin.conf_editor.id",
-        tab = "basic"
+        tab = "basic",
+        filter = false
     )
     private Long id;
 

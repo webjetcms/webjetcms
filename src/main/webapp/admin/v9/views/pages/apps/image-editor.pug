@@ -85,8 +85,12 @@ block content
                             path: `${dir}/${name}?v=${now}`,
                             name: name,
                         },
-                        menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
+                        menu: ['resize', 'crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
                         locale: {
+                            'Resize': '[[\#{image_editor.resize}]]',
+                            'Width': '[[\#{image_editor.width}]]',
+                            'Height': '[[\#{image_editor.height}]]',
+                            'Lock Aspect Ratio': '[[\#{image_editor.constrain_proportions}]]',
                             'Crop': '[[\#{components.gallery.tui-image-editor.Crop}]]',
                             'Invert': '[[\#{components.gallery.tui-image-editor.Invert}]]',
                             'Remove White': '[[\#{components.gallery.tui-image-editor.Remove_White}]]',

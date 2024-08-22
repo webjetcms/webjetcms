@@ -55,6 +55,18 @@ Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho
 - ```formmail_sendUserInfoDocId``` - ak je nastavené na hodnotu docId niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
 - ```isPdfVersion``` - ak je nastavené na true, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
 
+## Nastavenie potvrdenia emailovej adresy
+
+Formuláru je možné nastaviť **potvrdenie e-mailovej adresy** `double opt-in`. Dosiahnete tak potvrdenie odoslania formuláru kliknutím na odkaz v e-maile a teda **overíte**, že návštevník, ktorý formulár vyplnil, zadal **skutočne platnú e-mailovú adresu**.
+
+Je potrebné nastaviť:
+
+1. Vo vlastnostiach formuláru je potrebné zvoliť možnosť **Vyžadovať potvrdenie súhlasu e-mailom**.
+2. Vytvoriť stránku pre potvrdenie súhlasu, v nej musí byť vložená aplikácia ```!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!```, ktorá súhlas na základe parametrov v databáze potvrdí. Stránka môže byť použitá pre viacero rôznych formulárov, môže mať URl adresu napr. `/potvrdenie-double-optin/`.
+3. Vytvoriť stránku s textom e-mailu napr. "Pre potvrdenie platnosti email adresy kliknite na nasledovný odkaz" a vložiť odkaz na stránku, kde bude potvrdenie súhlasu. Odkaz musí obsahovať parametre `!FORM_ID!,!OPTIN_HASH!`, teda napr. `/potvrdenie-double-optin/?formId=!FORM_ID!&hash=!OPTIN_HASH!`.  ID tejto stránky nastaviť do poľa Doc ID notifikácie pre používateľa.
+
+Po kliknutí na odkaz v emaile sa vo formulári nastaví pole Dátum potvrdenia súhlasu, tak viete identifikovať formuláre, ktoré majú súhlas potvrdený.
+
 ## Možné konfiguračné premenné
 
 - ```formmailAllowedRecipients``` - Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: ```@interway.sk,podpora@demo.webjet.sk```. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu

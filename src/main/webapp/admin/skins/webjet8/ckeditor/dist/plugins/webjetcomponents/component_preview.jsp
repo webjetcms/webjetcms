@@ -158,7 +158,9 @@ else
 			if (group != null) request.setAttribute("pageGroupDetails", group);
 
 			TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
-			if (temp != null) request.setAttribute("templateDetails", temp);
+			if (temp != null) {
+				sk.iway.iwcm.doc.ShowDoc.setRequestData(temp, request);
+			}
 		}
 	}
 

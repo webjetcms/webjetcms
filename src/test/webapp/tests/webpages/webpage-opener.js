@@ -281,3 +281,29 @@ Scenario('Filter by ID', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=4");
     DTE.waitForEditor();
 });
+
+Scenario('BUG open group from another domain', ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
+    DT.waitForLoader();
+    I.fillField("#tree-folder-id", "9811");
+    I.pressKey('Enter');
+    I.waitForElement("#SomStromcek li[id='9811']", 20);
+    I.seeInCurrentUrl("/admin/v9/webpages/web-pages-list/?groupid=9811");
+});
+
+Scenario('logout', ({I}) => {
+    I.logout();
+});
+
+Scenario("BUG filter clientSide table by ID equals value", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+    I.waitForText("Generic", 5, "#datatableInit tbody");
+    I.see("Homepage", "#datatableInit tbody");
+
+    DT.filter("tempId", "1");
+
+    I.waitForText("Generic", 5, "#datatableInit tbody");
+    I.dontSee("Homepage", "#datatableInit tbody");
+    I.waitForText("Záznamy 1 až 1 z 1", 5, "#datatableInit_info");
+});

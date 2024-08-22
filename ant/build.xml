@@ -38,7 +38,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.0.21" />
+        <property name="artifact.version" value="2024.0.34" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -153,7 +153,6 @@
                 <include name="text*.properties"/>
             </zipfileset>
             <zipfileset dir="${root}/WebContent/WEB-INF" prefix="META-INF/resources/WEB-INF">
-                <include name="app.tld"/>
                 <include name="iway.tld"/>
                 <include name="iwcm.tld"/>
                 <include name="vue.tld"/>

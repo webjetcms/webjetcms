@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 
 @Controller
 @RequestMapping(path = "/admin/adminlog")
@@ -39,7 +40,9 @@ public class LoggingController {
     @PostMapping("/logging")
     public String save(@RequestParam(required = false) boolean isDebug, @RequestParam String logLevels) {
         Constants.setString("logLevel", isDebug ? "debug" : "normal");
+        Logger.setWJLogLevel(isDebug ? "debug" : "normal");
         Constants.setString("logLevels", logLevels);
+        Logger.setWJLogLevels(Logger.getLogLevelsMap(logLevels));
 
         return "redirect:/admin/adminlog/logging";
     }

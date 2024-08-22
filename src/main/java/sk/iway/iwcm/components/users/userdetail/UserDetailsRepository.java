@@ -37,4 +37,6 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     @Modifying
     @Query(value = "UPDATE users SET mobile_device = ?2 WHERE user_id = ?1", nativeQuery=true)
     void updateMobileDeviceByUserId(Long userId, String mobileDevice);
+
+    UserDetailsEntity findByEmail(String email);
 }

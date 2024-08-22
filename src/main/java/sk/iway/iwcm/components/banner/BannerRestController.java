@@ -25,6 +25,8 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.components.banner.model.BannerWebDocBean;
+import sk.iway.iwcm.components.banner.model.BannerWebGroupBean;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -123,6 +125,21 @@ public class BannerRestController extends DatatableRestControllerV2<BannerBean, 
         }
 
         return ac;
+    }
+
+    @Override
+    public void beforeDuplicate(BannerBean entity) {
+        if (entity.getDocIds()!=null) {
+            for(BannerWebDocBean docBean : entity.getDocIds()) {
+                docBean.setId(null);
+            }
+        }
+        if (entity.getGroupIds() != null) {
+            for(BannerWebGroupBean groupBean : entity.getGroupIds()) {
+                groupBean.setId(null);
+            }
+        }
+        super.beforeDuplicate(entity);
     }
 
     @Override

@@ -20,6 +20,7 @@
     }
 
     if (url.indexOf("?")>0) url = url.substring(0, url.indexOf("?"));
+    if (url.startsWith("/thumb/")) url = url.substring("/thumb".length());
     String hashParent = null;
     String volume = "iwcm_1_";
 

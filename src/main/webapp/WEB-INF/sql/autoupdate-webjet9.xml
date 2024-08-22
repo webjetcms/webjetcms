@@ -1141,5 +1141,27 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>18.6.2024</string></void>
+             <void property="desc"><string>cookies - update domain_id for not multidomain webs</string></void>
+             <void property="mysql"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+             <void property="mssql"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+             <void property="oracle"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>29.07.2024</string></void>
+                <void property="desc"><string>Nastav stlpec name v tabuľke enumeration_type ako required.</string></void>
+                <void property="mysql"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR(255) NOT NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE enumeration_type ALTER COLUMN name NVARCHAR(255) NOT NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR2(255) NOT NULL;</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

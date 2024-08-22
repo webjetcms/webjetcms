@@ -3114,4 +3114,12 @@ public class Tools
 
         return springContext.getBean(name, clazz);
     }
+
+	public static boolean isTrue(Boolean b) {
+		return Boolean.TRUE.equals(b);
+	}
+
+	public static boolean isFalse(Boolean b) {
+		return Boolean.FALSE.equals(b);
+	}
 }

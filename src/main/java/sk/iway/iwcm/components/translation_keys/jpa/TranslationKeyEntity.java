@@ -33,7 +33,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 public class TranslationKeyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_webjet_properties")
-    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = "not-export")
+    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = "not-export", filter = false)
     private Long id;
 
     @Column(name = "prop_key")
@@ -75,7 +75,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
     )
     private String fieldA = ""; //aby sme pri exporte nemali Nevyplnene ale prazdnu hodnotu v jazykoch kde kluc nie je zadany
@@ -97,7 +97,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
     )
     private String fieldB = "";
@@ -119,7 +119,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldC = "";
@@ -141,7 +141,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldD = "";
@@ -163,7 +163,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldE = "";
@@ -185,7 +185,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldF = "";
@@ -207,7 +207,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldG = "";
@@ -229,7 +229,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldH = "";
@@ -251,7 +251,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldI = "";
@@ -273,7 +273,7 @@ public class TranslationKeyEntity {
     @Transient
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap",
+        className = "wrap show-html",
         filter = true
         )
     private String fieldJ = "";

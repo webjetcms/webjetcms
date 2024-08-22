@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.enumerations.model;
 
-import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,16 +17,13 @@ public interface EnumerationDataRepository extends JpaRepository<EnumerationData
 
     Page<EnumerationDataBean> findAllByTypeIdAndHiddenFalse(Integer enumerationTypeId, Pageable pageable);
 
-    @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_type_id = ?1", nativeQuery=true)
-    List<EnumerationDataBean> findAllByTypeId(Integer enumerationtypeId);
-
     @Transactional
     @Modifying
     @Query(value = "UPDATE EnumerationDataBean SET hidden = 1 WHERE enumerationDataId = :enumerationDataId")
     void deleteEnumDataById(@Param("enumerationDataId")Integer enumerationDataId);
 
     @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_data_id = ?1 and hidden = 0", nativeQuery=true)
-    EnumerationDataBean getNonHiddenByEnumId(Integer enumerationDataId);
+    EnumerationDataBean getNonHiddenByEnumId(Long enumerationDataId);
 
     @Query(value = "SELECT * FROM enumeration_data WHERE enumeration_data_id = ?1", nativeQuery=true)
     EnumerationDataBean getEnumId(Integer enumerationDataId);
@@ -40,7 +37,7 @@ public interface EnumerationDataRepository extends JpaRepository<EnumerationData
     Integer getChildEnumTypeIdByEnumDataId(Integer enumerationDataId);
 
     @Query(value = "SELECT parent_enumeration_data_id FROM enumeration_data WHERE enumeration_data_id = ?1", nativeQuery=true)
-    Integer getParentenumDataIdByEnumDataId(Integer enumerationDataId);
+    Integer getParentEnumDataIdByEnumDataId(Integer enumerationDataId);
 
     @Query(value = "SELECT hidden FROM enumeration_data WHERE enumeration_data_id = ?1", nativeQuery=true)
     Object getHiddenByEnumerationDataId(Integer enumerationDataId);
@@ -54,4 +51,10 @@ public interface EnumerationDataRepository extends JpaRepository<EnumerationData
     @Modifying
     @Query(value = "UPDATE enumeration_data SET parent_enumeration_data_id = null WHERE enumeration_type_id = ?1", nativeQuery=true)
     void denyParentEnumerationDataByTypeId(Long enumerationTypeId);
+
+    @Query(value = "SELECT edb.id FROM EnumerationDataBean edb WHERE edb.string1 = :string1 AND edb.typeId = :typeId")
+    Integer getIdByString1AndTypeId(@Param("string1")String string1, @Param("typeId")Integer typeId);
+
+    @Query(value = "SELECT MAX(edb.sortPriority) FROM EnumerationDataBean edb WHERE edb.typeId = :typeId")
+    Optional<Integer> findMaxSortPriorityByTypeId(@Param("typeId")Integer typeId);
 }

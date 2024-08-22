@@ -342,3 +342,33 @@ Scenario('editor check instance image change', ({ I, DTE }) => {
     I.say("recheck");
     I.dontSeeElement(locate("#toast-container-upload div.toast-message span").withText("dsc04080.jpeg"));
 });
+
+Scenario('BUG set gallery dimmension by not saved/white parent #56393-10', ({ I, DT, DTE }) => {
+    //There was a bug when the parent was not saved (white) and you would like to create new gallery dimension default values was not set correctly
+    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/apps/blog/");
+    //apps is saved - has 200x200 dimension
+    //blog is not saved, it's white
+
+    I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText("blog"));
+    I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText("blog").find("i.jstree-icon.far.fa-folder"));
+
+    I.click(".tree-col button.buttons-create");
+    DTE.waitForEditor("galleryDimensionDatatable");
+
+    I.seeInField("#DTE_Field_path", "/images/gallery/apps/blog");
+    I.click("#pills-dt-galleryDimensionDatatable-sizes-tab");
+    I.seeInField("#DTE_Field_imageWidth", "200");
+    I.seeInField("#DTE_Field_imageHeight", "200");
+
+    I.seeInField("#DTE_Field_normalWidth", "400");
+    I.seeInField("#DTE_Field_normalHeight", "400");
+
+    DTE.cancel();
+});
+
+Scenario("BUG - filter by URL and imageName", async ({ I }) => {
+    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/#dt-filter-imageName=chrysanthemum.jpg");
+    I.waitForText("chrysanthemum.jpg", 10, "table.datatableInit td.dt-row-edit");
+    const numVisible = await I.grabNumberOfVisibleElements(locate("#galleryTable td.dt-row-edit").withText("chrysanthemum.jpg"));
+    I.assertEqual(numVisible, 1);
+});

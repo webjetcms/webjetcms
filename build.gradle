@@ -630,7 +630,7 @@ task writePom() {
             }
 
             //remove sk.iway artifacts, they are packages to webjet-VERSION-libs.jar
-            if (groupId.startsWith("sk.iway")) {
+            if (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName)==false) {
                 println "----> removing: "+artifactName
                 i.remove();
             }

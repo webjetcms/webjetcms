@@ -70,7 +70,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2024.0.21.{minor.number} {build.date}";
+	private static String actualVersion = "2024.0.34.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 
@@ -525,6 +525,10 @@ public class InitServlet extends HttpServlet
 
 			Constants.setInstallName(installName);
 			Logger.setInstallName(installName);
+
+			if ("O".equals(Constants.getString("wjVersion"))==false) {
+				Constants.setString("amchartLicense", ConfDB.tryDecrypt("encr"+"ypted:f4a06"+"45be29a4d976"+"9f5f8683d106619"));
+			}
 
 			dt.diff("Before loadConstants");
 			loadConstants(databaseValues);

@@ -13,9 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
@@ -40,6 +40,8 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     private final EnumerationDataRepository enumerationDataRepository;
     private final EnumerationTypeRepository enumerationTypeRepository;
 
+    private static final String ENUMERATION_TYPE_ID = "enumerationTypeId";
+
     @Autowired
     public EnumerationDataRestController(EnumerationDataRepository enumerationDataRepository, EnumerationTypeRepository enumerationTypeRepository) {
         super(enumerationDataRepository);
@@ -49,60 +51,29 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
 
     private EnumerationTypeBean getActualSelectedType() {
         EnumerationTypeBean actualSelectedType;
-        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter("enumerationTypeId"), -1);
-        if(enumerationTypeId == -1) {
-            actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(0);
-        } else {
-            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId);
-        }
+        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
+
+        if(enumerationTypeId == -1) actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(0);
+        else actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId);
+
         return actualSelectedType;
     }
 
     @Override
     public Page<EnumerationDataBean> getAllItems(Pageable pageable) {
-
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
         DatatablePageImpl<EnumerationDataBean> page;
 
-        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter("enumerationTypeId"), -1);
+        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
         if(enumerationTypeId == -1) {
             //In FE, first  enumTypes is selected by default, soo get this default enumTypes and return its values
-            if (actualSelectedType!=null) page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
+            if (actualSelectedType != null) page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
             else page = new DatatablePageImpl<>(new ArrayList<>());
         } else {
             page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));
-            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId);
         }
 
         processFromEntity(page, ProcessItemAction.GETALL);
-
-        //Enumeration type's - select options
-        List<EnumerationTypeBean> enumerationTypes = enumerationTypeRepository.findAll();
-
-        //Mark deleted one
-        for(EnumerationTypeBean enumType : enumerationTypes) {
-            if(enumType.isHidden()) {
-                enumType.setTypeName(getProp().getText("enum_type.deleted_type_mark.js") + enumType.getTypeName());
-            }
-        }
-
-        page.addDefaultOption("editorFields.childEnumTypeId", "", "-1");
-        page.addOptions("editorFields.childEnumTypeId", enumerationTypes, "typeName", "enumerationTypeId", false);
-
-        if (actualSelectedType != null) {
-            //Enumeration data's by enumeration type - select options
-            List<EnumerationDataBean> enumerationDatasByType = enumerationDataRepository.findAllByTypeId(actualSelectedType.getEnumerationTypeId());
-
-            //Mark deleted one
-            for(EnumerationDataBean enumData : enumerationDatasByType) {
-                if(enumData.isHidden()) {
-                    enumData.setString1(getProp().getText("enum_type.deleted_type_mark.js") + enumData.getString1());
-                }
-            }
-
-            page.addDefaultOption("editorFields.parentEnumDataId", "-", "-1");
-            page.addOptions("editorFields.parentEnumDataId", enumerationDatasByType, "string1", "enumerationDataId", false);
-        }
 
         return page;
     }
@@ -112,9 +83,9 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         EnumerationDataBean entity;
 
         if(id == -1) entity = new EnumerationDataBean();
-        else entity = enumerationDataRepository.getNonHiddenByEnumId(Integer.valueOf(id+""));
+        else entity = enumerationDataRepository.getNonHiddenByEnumId(id);
 
-        processFromEntity(entity, ProcessItemAction.GETONE);
+        processFromEntity(entity, ProcessItemAction.GETONE, 1);
 
         return entity;
     }
@@ -124,7 +95,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         //Only hidden = false records (non soft deleted)
         predicates.add(builder.isFalse(root.get("hidden")));
 
-        int typeId = Tools.getIntValue(params.get("enumerationTypeId"), -1);
+        int typeId = Tools.getIntValue(params.get(ENUMERATION_TYPE_ID), -1);
         if(typeId > 0) {
             predicates.add(builder.equal(root.get("typeId"), Integer.valueOf(typeId)));
         }
@@ -139,24 +110,33 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @Override
-    public EnumerationDataBean processFromEntity(EnumerationDataBean entity, ProcessItemAction action) {
+    public EnumerationDataBean processFromEntity(EnumerationDataBean entity, ProcessItemAction action, int rowCount) {
         if (entity == null) entity = new EnumerationDataBean();
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
 
-        //If EnnumerationType is not set, we cant set editor fields
+        //If action is CREATE - Set sort priority
+        if(entity.getId() == null || entity.getId() == -1) {
+            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(getActualSelectedType().getEnumerationTypeId()).orElse(0);
+            entity.setSortPriority(maxSortPriority + 1);
+        }
+
+        //If EnumerationType is not set, we cant set editor fields
         if(actualSelectedType == null) return entity;
 
         if(entity.getEditorFields() == null) {
             EnumerationDataEditorFields edef = new EnumerationDataEditorFields();
-            edef.fromEnumerationData(entity, actualSelectedType);
+
+            //If get all data, prepare custom FIELDS only once
+            edef.fromEnumerationData(entity, actualSelectedType, rowCount == 1, getProp());
         }
+
         return entity;
     }
 
     @Override
     public EnumerationDataBean processToEntity(EnumerationDataBean entity, ProcessItemAction action) {
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
-        //If EnnumerationType is not set, we cant check duplicity so we cant transfer data from editor fields to bean
+        //If EnumerationType is not set, we cant check duplicity so we cant transfer data from editor fields to bean
         if(actualSelectedType == null) return entity;
 
         if(entity != null) {
@@ -185,7 +165,6 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @RequestMapping(value="/enum-types")
-    @ResponseBody
     public Map<Integer, String> getEnumerationTypes() {
         HashMap<Integer, String> enumTypesMap = new HashMap<>();
         List<EnumerationTypeBean> enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById();
@@ -196,9 +175,8 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         return enumTypesMap;
     }
 
-    @RequestMapping( value="/enum-type", params={"enumerationTypeId"})
-    @ResponseBody
-    public EnumerationTypeBean getEnumerationType(@RequestParam("enumerationTypeId") Integer enumTypeId) {
+    @RequestMapping( value="/enum-type", params={ENUMERATION_TYPE_ID})
+    public EnumerationTypeBean getEnumerationType(@RequestParam(ENUMERATION_TYPE_ID) Integer enumTypeId) {
         return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId);
     }
 
@@ -208,5 +186,15 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         Adminlog.add(Adminlog.TYPE_UPDATEDB, "DELETE/HIDE:\nid: "+id+"\nstring1: "+entity.getString1(), (int)id, -1);
         Cache.getInstance().removeObjectStartsWithName("enumeration.");
         return true;
+    }
+
+    @GetMapping("/autocomplete-parent")
+    public List<String> getAutocomplete(@RequestParam String term, @RequestParam("DTE_Field_typeId") Integer typeId, @RequestParam("DTE_Field_string1") String name) {
+        return EnumerationService.getEnumDataAutocomplete(term, typeId, name, getProp());
+    }
+
+    @GetMapping("/autocomplete-child")
+    public List<String> getAutocomplete(@RequestParam String term) {
+        return EnumerationService.getEnumTypeAutocomplete(term, getProp());
     }
 }

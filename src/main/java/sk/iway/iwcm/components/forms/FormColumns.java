@@ -13,5 +13,6 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 @Setter
 public class FormColumns {
     private int count = 0;
+    private boolean doubleOptIn;
     private List<LabelValue> columns;
 }

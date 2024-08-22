@@ -1011,6 +1011,9 @@ public class FormMailAction extends HttpServlet
 		boolean spamProtectionEnabled = true;
 		if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection()==false;
 
+		//conf value overrides everything
+		if (Constants.getBoolean("spamProtection")==false) spamProtectionEnabled = false;
+
 		//DETEKCIA SPAMU
 		boolean isCaptchOk = true;
 		if (spamProtectionEnabled) {

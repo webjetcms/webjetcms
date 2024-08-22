@@ -86,6 +86,10 @@ if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 	{
 		file = file.substring(file.indexOf("/v/") + 3);
 	}
+	else if (file.indexOf("/shorts/") != -1)
+	{
+		file = file.substring(file.indexOf("/shorts/") + 8);
+	}
 
 	link = "http://www.youtube.com/v/" + file + "?version=3";
 	if(percentageWidth > 0) {

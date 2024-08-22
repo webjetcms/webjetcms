@@ -268,7 +268,8 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             if (Tools.isEmail(recipientEmail) == true) {
                 //Prepare and save email
                 EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
-                EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
+                boolean prepareSuccess = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
+                if(prepareSuccess == false) continue; //Email is not valid
 
                 emailToAdd.setSubject(entity.getSubject());
                 emailToAdd.setUrl(entity.getUrl());

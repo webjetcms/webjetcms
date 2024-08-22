@@ -111,7 +111,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
-		return processFromEntity(saved, ProcessItemAction.CREATE);
+		return processFromEntity(saved, ProcessItemAction.CREATE, 1);
 	}
 
 	/**
@@ -139,7 +139,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
-		return processFromEntity(saved, ProcessItemAction.EDIT);
+		return processFromEntity(saved, ProcessItemAction.EDIT, 1);
 	}
 
 	/**
@@ -178,8 +178,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		Query query = entityManager.createQuery(raq);
 		List<T> list = (List<T>) query.getResultList();
+		int rowCount = 1;
 		for (T entity : list) {
-			processFromEntity(entity, ProcessItemAction.FIND);
+			processFromEntity(entity, ProcessItemAction.FIND, rowCount);
+			rowCount++;
 		}
 		return list;
 	}
@@ -317,7 +319,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				result = byId.get();
 			}
 		}
-		return processFromEntity(result, ProcessItemAction.GETONE);
+		return processFromEntity(result, ProcessItemAction.GETONE, 1);
 	}
 
 	/**
@@ -403,8 +405,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : page.getContent()) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
 	}
 
@@ -420,9 +424,22 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : entities) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
+	}
+
+	/**
+	 * Vykona upravy v entite pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param entity
+	 * @param action - typ zmeny - create,edit,getall...
+	 * @param rowCount - cislo riadka v tabulke
+	 */
+	public T processFromEntity(T entity, ProcessItemAction action, int rowCount) {
+		return processFromEntity(entity, action);
 	}
 
 	/**
@@ -535,8 +552,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : page.getContent()) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
 
 		return page;

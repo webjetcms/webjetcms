@@ -32,8 +32,6 @@ public interface EnumerationTypeRepository extends JpaRepository<EnumerationType
 
     Page<EnumerationTypeBean> findAllByHiddenFalse(Pageable pagebale);
 
-    List<EnumerationTypeBean> findAllByHiddenFalse();
-
     @Query(value = "SELECT hidden FROM enumeration_type WHERE enumeration_type_id = ?1", nativeQuery=true)
     Object getHiddenByEnumTypeId(Integer enumerationTypeId);
 
@@ -45,4 +43,7 @@ public interface EnumerationTypeRepository extends JpaRepository<EnumerationType
 
     @Query(value = "SELECT allow_parent_enumeration_data FROM enumeration_type WHERE enumeration_type_id = ?1", nativeQuery=true)
     Object isAllowParentEnumerationData(Long enumerationTypeId);
+
+    @Query(value = "SELECT etb.id FROM EnumerationTypeBean etb WHERE etb.typeName = :typeName")
+    Integer getIdByTypeName(@Param("typeName")String typeName);
 }

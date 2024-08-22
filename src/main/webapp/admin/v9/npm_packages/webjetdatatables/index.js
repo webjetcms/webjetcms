@@ -2695,8 +2695,15 @@ export const dataTableInit = options => {
                 html = `
                 <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
                     <i class="far fa-check-square"></i>
-                </button>
-                <input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
+                </button>`;
+                if (DATA.serverSide === false) {
+                    html += `<div style="display: none">
+                        <select class="filter-input-prepend">
+                            <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="ti ti-arrow-bar-left"></i> ${WJ.translate('datatables.select.equals.js')}</option>
+                        </select>
+                    </div>`;
+                }
+                html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
                 `;
             }
 
@@ -2776,8 +2783,20 @@ export const dataTableInit = options => {
 
             var filterHtml = inputGroupBefore + html + inputGroupAfter;
             //console.log("filter["+i+"] typeof=", typeof DATA.columns[i].filter);
-            if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) $(this).html(filterHtml);
-            else $(this).html("");
+            if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) {
+                $(this).html(filterHtml);
+            } else {
+                if ($(this).hasClass("dt-format-selector")) {
+                    html = `
+                    <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
+                        <i class="far fa-check-square"></i>
+                    </button>
+                    `;
+                    $(this).html(inputGroupBefore + html + "</div></form>");
+                } else {
+                    $(this).html("");
+                }
+            }
 
             if (extfilterExists) {
                 //console.log("Setting ext filter for ", fieldName, " html: ", filterHtml);

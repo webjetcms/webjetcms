@@ -1,10 +1,25 @@
 package sk.iway.iwcm.components.users.userdetail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 
 import sk.iway.Password;
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.LogonTools;
@@ -14,16 +29,15 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.SessionHolder;
-import sk.iway.iwcm.users.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.users.AuthorizeAction;
+import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.PasswordsHistoryBean;
+import sk.iway.iwcm.users.PasswordsHistoryDB;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
 
 @Service
 public class UserDetailsService {
@@ -533,5 +547,59 @@ public class UserDetailsService {
         } else if (Tools.isEmpty(entity.getPassword())) {
             errors.rejectValue("errorField.password", "403", prop.getText("javax.validation.constraints.NotBlank.message"));
         }
+    }
+
+    /**
+     * Check if user is authorized AND can login
+     * @param userDetails
+     * @return true if user is disabled
+     */
+    public static boolean isUserDisabled(UserDetails userDetails) {
+        if(userDetails == null) return false;
+
+        //isAuthorized ?
+        if(userDetails.isAuthorized() == false) return false;
+
+        //can user login ?
+        long startL = 0;
+        long endL = Long.MAX_VALUE;
+
+        if (Tools.isEmpty(userDetails.getAllowLoginStart()) == false) {
+            Date start = Tools.getDateFromString(userDetails.getAllowLoginStart(), "dd.MM.yyyy");
+            startL = start.getTime();
+        }
+
+        if (Tools.isEmpty(userDetails.getAllowLoginEnd()) == false) {
+            Date end = Tools.getDateFromString(userDetails.getAllowLoginEnd(), "dd.MM.yyyy");
+            endL = end.getTime()+(60*60*24 * 1000);
+        }
+
+        long now = Tools.getNow();
+
+        if (now < startL || now > endL) return true;
+        return false;
+    }
+
+    /**
+     * Check if user is authorized AND can login
+     * @param userDetails
+     * @return true if user is disabled
+     */
+    public static boolean isUserDisabled(UserDetailsEntity userDetails) {
+        if(userDetails == null) return true;
+
+        //isAuthorized ?
+        if(Boolean.FALSE.equals(userDetails.getAuthorized())) return true;
+
+        //can user login ?
+        long startL = 0;
+        long endL = Long.MAX_VALUE;
+        if (userDetails.getAllowLoginStart() != null) startL = userDetails.getAllowLoginStart().getTime();
+        if (userDetails.getAllowLoginEnd() != null) endL = userDetails.getAllowLoginEnd().getTime()+(60*60*24 * 1000);
+        long now = Tools.getNow();
+
+        if (now < startL || now > endL) return true;
+
+        return false;
     }
 }

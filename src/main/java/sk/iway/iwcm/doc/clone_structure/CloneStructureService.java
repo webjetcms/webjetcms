@@ -89,6 +89,9 @@ public class CloneStructureService {
             } else {
                 (new SimpleQuery()).execute("UPDATE groups SET sync_id=? WHERE group_id=?", syncId, group.getGroupId());
             }
+            group.setSyncId(syncId);
+            GroupDetails cached = GroupsDB.getInstance().getGroup(group.getGroupId());
+            if (cached != null) cached.setSyncId(syncId);
         }
         return syncId;
     }
@@ -105,6 +108,7 @@ public class CloneStructureService {
         if(syncId < 1) {
             syncId = PkeyGenerator.getNextValue("structuremirroring");
             (new SimpleQuery()).execute("UPDATE documents SET sync_id=? WHERE doc_id=?", syncId, doc.getDocId());
+            doc.setSyncId(syncId);
         }
         return syncId;
     }

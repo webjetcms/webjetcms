@@ -455,12 +455,10 @@ public class IwcmDocGroupFsVolume implements FsVolume
 
 			for (GroupDetails group : subGroups)
 			{
-				if (group.getParentGroupId() < 1)
+				//skip full text index folders
+				if ("images".equalsIgnoreCase(group.getGroupName()) || "files".equalsIgnoreCase(group.getGroupName()))
 				{
-					if ("images".equalsIgnoreCase(group.getGroupName()) || "files".equalsIgnoreCase(group.getGroupName()))
-					{
-						continue;
-					}
+					continue;
 				}
 
 				list.add(new IwcmDocGroupItem(this, group));

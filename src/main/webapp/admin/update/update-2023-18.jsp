@@ -307,6 +307,10 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 							content = Tools.replace(content, "uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
 							content = Tools.replace(content, "prefix=\"html\" uri=\"/WEB-INF/struts-html.tld\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
 						} else content = Tools.replace(content, "</html:form>", "</form>");
+
+						//fix FILE input type for upload
+						content = Tools.replace(content, "<html:file property=\"file\" styleClass=\"input\"", "<input type=\"file\" name=\"file\" class=\"input\"");
+						content = Tools.replace(content, "<html:file property=\"file\"", "<input type=\"file\" name=\"file\"");
 					}
 				}
 			}

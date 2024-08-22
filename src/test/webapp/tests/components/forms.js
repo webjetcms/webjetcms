@@ -457,3 +457,39 @@ Scenario("BUG switch tabs by arrow key", ({ I, DTE, Document }) => {
     I.click(locate("table.cke_dialog_contents td.cke_dialog_footer a").withText("Zrušiť"));
     DTE.cancel();
 });
+
+Scenario("BUG double opt in column in admin not shown", ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/#/detail/Formular-doubleoptin");
+    I.waitForText("Dátum potvrdenia súhlasu", 10, "th.dt-th-doubleOptinConfirmationDate");
+    I.see("06.06.2024 11:11:11", "td.cell-not-editable div");
+    I.see("06.06.2024 11:20:20", "td.cell-not-editable div");
+
+    //
+    I.say("Filter by date");
+    DT.filter("from-doubleOptinConfirmationDate", "06.06.2024 11:15");
+    I.see("06.06.2024 11:20:20", "td.cell-not-editable div");
+    I.dontSee("06.06.2024 11:11:11", "td.cell-not-editable div");
+
+    //verify that the column is not shown in the normal form
+    I.amOnPage("/admin/v9/");
+    I.amOnPage("/apps/form/admin/#/detail/Kontakt");
+    I.waitForText("Dátum posledného exportu", 10, "th.dt-th-lastExportDate");
+    I.dontSee("Dátum potvrdenia súhlasu");
+});
+
+Scenario("vyplnenie formsimple spamProtection=false @singlethread", ({ I, Document }) => {
+    //BUG: spamProtection=false required CSRF token, which was not generated
+    Document.setConfigValue("spamProtection", "false");
+    I.amOnPage("/apps/formular-lahko/formular-lahko-encrypted.html");
+    randomNumber = I.getRandomText();
+
+    fillFormSimple(I, randomNumber);
+    I.waitForText("Formulár bol úspešne odoslaný", 10);
+    I.dontSee("Formulár bol detekovaný ako SPAM");
+
+    Document.setConfigValue("spamProtection", "true");
+});
+
+Scenario("vyplnenie formsimple spamProtection=false - revert config @singlethread", ({ I, Document }) => {
+    Document.setConfigValue("spamProtection", "true");
+});

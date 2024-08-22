@@ -15,6 +15,7 @@ export default class AutoCompleter {
         this.collision = "flipfit";
         this.select = false;
         this.instance = null;
+        this.renderItemFn = null;
     }
 
     setName(name) {
@@ -51,6 +52,11 @@ export default class AutoCompleter {
         return this;
     };
 
+    setRenderItemFn(fnName) {
+        this.renderItemFn = fnName;
+        return this;
+    }
+
     getInstance() {
         return this.instance;
     };
@@ -84,7 +90,7 @@ export default class AutoCompleter {
             this.setName("term")
         }
 
-
+        this._setParameterFromData("render-item-fn", value => { this.setRenderItemFn(value) });
 
         this.transform();
 
@@ -162,10 +168,20 @@ export default class AutoCompleter {
                 delay: 800,
                 minLength: autoCompleter.minLengthBeforeSearch,
                 position: { my: "left top+2", at: "left bottom", collision: autoCompleter.collision }
-            });
+            })
+
+            //If renderItemFn is set, use this method via window to render items (LI elements)
+            if(autoCompleter.renderItemFn != null) {
+                autoCompleter.$target.autocomplete("instance")._renderItem = function( ul, item) {
+                    return window[autoCompleter.renderItemFn](ul, item);
+                };
+            }
+
+            //If LI element contain class 'disabled', it will not be selectable !!
+            autoCompleter.$target.autocomplete("instance").widget().menu( "option", "items", "> :not(.disabled)" );
 
             autoCompleter.instance = autoCompleter.$target.autocomplete("instance");
-
+            
             if (autoCompleter.select===true) {
                 //console.log("setting focus", autoCompleter.instance);
                 autoCompleter.$target.on("focus", function () {

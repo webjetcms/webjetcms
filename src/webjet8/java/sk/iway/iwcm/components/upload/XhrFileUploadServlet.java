@@ -32,6 +32,7 @@ public class XhrFileUploadServlet extends HttpServlet
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		Prop prop = Prop.getInstance();
 		try {
 			String name = request.getParameter("name");
 			Logger.debug(XhrFileUploadServlet.class, "doPost, name from parameter: "+name);
@@ -51,7 +52,7 @@ public class XhrFileUploadServlet extends HttpServlet
 			if (!allowedExtensions.contains("*") && !allowedExtensions.contains(extension)) {
 				Logger.debug(XhrFileUploadServlet.class, "doPost, extension not allowed: "+extension);
 				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
-				xhrFileUploadResponse.setError(Prop.getInstance().getText("components.forum.new.upload_not_allowed_filetype"));
+				xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
 				xhrFileUploadResponse.setFile(name);
 				xhrFileUploadResponse.setSuccess(false);
 				setResponse(response, xhrFileUploadResponse);
@@ -124,7 +125,7 @@ public class XhrFileUploadServlet extends HttpServlet
 						fileBytes = null;
 						fis.close();
 						fis = null;
-						inputFile.delete();
+						inputFile.delete(); //NOSONAR
 					}
 					fos.close();
 					fos = null;
@@ -169,7 +170,7 @@ public class XhrFileUploadServlet extends HttpServlet
 			sk.iway.iwcm.Logger.error(ex);
 
 			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
-			xhrFileUploadResponse.setError(ex.getMessage());
+			xhrFileUploadResponse.setError(prop.getText("components.docman.error.db"));
 			xhrFileUploadResponse.setSuccess(false);
 			setResponse(response, xhrFileUploadResponse);
 		}

@@ -158,7 +158,7 @@
 			}
 
 			var file = $('#txtUrl').val();
-            if (file.indexOf("/images")!=0 || file.indexOf("/files")!=0)
+            if (file.indexOf("/images")!=0 && file.indexOf("/files")!=0 && file.indexOf("/thumb")!=0)
             {
                 file = "";
             }
@@ -295,8 +295,7 @@
 			}
 
 			var file = $('#txtUrl').val();
-			//console.log("file=", file);
-            if (file.indexOf("/images")!=0 && file.indexOf("/files")!=0)
+            if (file.indexOf("/images")!=0 && file.indexOf("/files")!=0 && file.indexOf("/thumb")!=0)
 			{
 				file = "";
 			}

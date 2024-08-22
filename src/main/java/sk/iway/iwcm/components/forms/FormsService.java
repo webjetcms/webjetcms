@@ -16,6 +16,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.form.FormAttributeDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -204,6 +205,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         FormColumns formColumns = new FormColumns();
         formColumns.setColumns(columns);
         formColumns.setCount(formsRepository.countAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId()));
+        Map<String, String> attributes = new FormAttributeDB().load(formName);
+        if (attributes != null) {
+            formColumns.setDoubleOptIn(attributes.containsKey("doubleOptIn") && attributes.get("doubleOptIn").equalsIgnoreCase("true"));
+        }
         return formColumns;
     }
 
@@ -274,7 +279,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                         predicates.add(root.get("id").in(idsList));
                 } else if (checkSearchParam(key)) {
                     key = DatatableRestControllerV2.getCleanKey(paramsEntry.getKey());
-                    if ("createDate".equals(key) || "lastExportDate".equals(key)) {
+                    if ("createDate".equals(key) || "lastExportDate".equals(key) || "doubleOptinConfirmationDate".equals(key)) {
                         String dateRange = paramsEntry.getValue();
                         Pair<Date, Date> datePair = parseDate(dateRange);
                         if (datePair != null) {

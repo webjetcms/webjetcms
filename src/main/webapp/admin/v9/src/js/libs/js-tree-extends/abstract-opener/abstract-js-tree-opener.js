@@ -711,7 +711,7 @@ export default class AbstractJsTreeOpener {
                 //console.log("domain=", domain, "selectedDomain=", selectedDomain, "result=", result);
                 if (domain != null && domain != "null" && domain != "" && domain !== selectedDomain) {
                     // presmerovenie, ak je stranka pre inu domenu
-                    window.location.href = '/admin/v9/webpages/web-pages-list/?docid=' + this._currentId;
+                    window.location.href = '/admin/v9/webpages/web-pages-list/?'+this._idKey+'='+this._currentId;
                     return;
                 }
 

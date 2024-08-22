@@ -25,6 +25,41 @@ WebJET CMS verzie 2024 prešiel na Java verzie 17. Obsahuje nasledovné zmeny:
 
 ### Oprava chýb
 
+2024.0.34
+
+- Audit - opravené zobrazenie opisu auditu v prehliadači Firefox.
+- Bezpečnosť - pri chybe nahrávania súboru nebude zobrazená chyba zo servera ale generická chybová správa (#56277-13).
+- Číselníky - optimalizované načítanie údajov, upravené nastavenie rodiča číselníka na `autocomplete` pre optimálnejšie čítanie dát (#57017).
+- Datatabuľky - opravené vyhľadávanie podľa ID záznamu - hľadá sa typ rovná sa, nie obsahuje pri tabuľkách bez serverového stránkovania (#56993).
+- Galéria - opravené vyhľadávanie - hľadá sa len v aktuálne zobrazenom priečinku nie všetkých priečinkoch (#56945).
+- GDPR/Cookies - opravené nastavenie cookies v jedno doménovom WebJETe (duplikovanie nastavených cookies).
+- Datatabuľky - vypnutá možnosť filtrovania podľa ID v tabuľkách, kde ID nie je primárny kľúč, napr. Konfigurácia, Mazanie dát, Prekladové kľúče (#56277-12).
+- Formuláre - opravené zobrazenie stĺpca Dátum potvrdenia súhlasu pri formulároch s nastaveným [potvrdením email adresy](redactor/apps/form/README.md#nastavenie-potvrdenia-emailovej-adresy) (#56393-7).
+- Formuláre - opravené zobrazenie textu "prázdne" v tabuľke (#56277-10).
+- Formuláre - upravený export čísel - čísla s desatinným miestom oddeleným znakom čiarka sú skonvertované na oddeľovač bodka a na číselnú reprezentáciu pre správny formát v Exceli. Nepoužije sa na čísla začínajúce znakom + alebo 0 (#56277-10).
+- Formuláre - opravený duplicitný export pri prechode medzi viacerými formulármi bez obnovenia stránky (#56277-10).
+- Formuláre - pri vypnutej spam ochrane `spamProtection=false` sa už nebude kontrolovať CSRF token pri odoslaní formuláru (#56277-13).
+- Galéria - opravené zmazanie priečinka galérie vytvorenej cez web stránku pri vkladaní obrázku (#56393-8).
+- Galéria - opravené nastavenie parametrov priečinka galérie ak rodičovský priečinok nemá uložené nastavenia (je biely). Hľadá sa uložené nastavenie priečinka smerom ku koreňu (#56393-10).
+- Galéria/Editor obrázkov - doplnená chýbajúca funkcia na zmenu veľkosti obrázka.
+- Hromadný email - opravená chyba vloženia príjemcu zo skupiny používateľov, ktorý nemá povolené prihlásenie (je deaktivovaný, alebo nemá platné dátumy prihlásenia od-do) (#56701).
+- Klonovanie štruktúry - opravené nastavenie prepojenia priečinkov pri klonovaní (mohlo dochádzať k neúplnému naklonovaniu priečinkov) (#56277-7).
+- Mapa stránok - opravené generovanie súboru `/sitemap.xml` podľa nastavených atribútov zobrazenia web stránky v Mape stránok (karta Navigácia web stránky) (#56993).
+- Prekladové kľúče - upravené zobrazenie aby sa zobrazil v tabuľke prípadný HTML kód hodnoty kľúča (#56993).
+- Skripty, Bannerový systém, Skupiny práv - opravená funkcia duplikovať záznam (#56849).
+- Štatistika - pridaná možnosť [nastaviť licenčné číslo](install/config/README.md#licencie) pre knižnicu amcharts na zobrazenie grafov (#56277-7).
+- Štatistika - upravené zaznamenávanie chybných URL adries - odstránený identifikátor session `jsessionid`, ktorý môžu pridávať do URL adresy niektoré roboty (#56277-11).
+- Úlohy na pozadí - opravený reštart úloh na pozadí po uložení úlohy.
+- Úrovne logovania - opravené nastavenie úrovní do `Logger` objektu (#56277-12).
+- Video - pridaná podpora vkladania odkazov na `YouTube Shorts` stránku (#56993).
+- Web stránky - opravené otvorenie priečinka zadaním jeho ID, ak sa priečinok nachádza v inej doméne (#56277-7).
+- Web stránky - PageBuilder - opravené vkladanie odkazu (duplikovanie okna súborov), vkladanie formulárových polí a upravený vizuál podľa aktuálnej verzie (#56277-9).
+- Web stránky - v okne vloženia obrázku pridaná podpora zobrazenia cesty v stromovej štruktúre k existujúcemu obrázku s prefixom `/thumb` (#56277-9).
+- Web stránky - opravené zobrazenie prekladových kľúčov na základe prefixu ID šablóny (#56393-7).
+- Web stránky - opravené zmazanie stránky, ktorá má nastavené aj publikovanie do budúcna/notifikáciu (a pred zmazaním bola zobrazená v editore stránok) (#56393-8).
+- Web stránky - Page Builder - opravené vkladanie video súborov (odkazov na YouTube video) (#56993).
+- Web stránky - pri vkladaní odkazu na web stránku sú filtrované priečinky `images,files` s plno textovým indexom aj keď sa nejedná o koreňový priečinok (#56981).
+
 2024.0.21
 
 UPOZORNENIE: upravené čítanie a ukladanie hesiel používateľov, po nasadení overte prácu s používateľským kontom, hlavne zmenu hesla, zabudnuté heslo atď. Použite skript `/admin/update/update-2023-18.jsp` pre základnú úpravu súborov.

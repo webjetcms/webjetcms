@@ -44,20 +44,8 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
     @Override
     public Page<EnumerationTypeBean> getAllItems(Pageable pageable) {
         DatatablePageImpl<EnumerationTypeBean> page = new DatatablePageImpl<>(enumerationTypeRepository.findAllByHiddenFalse(pageable));
-
         processFromEntity(page, ProcessItemAction.GETALL);
-
-        //Enumeration type's - select options
-        List<EnumerationTypeBean> enumerationTypes = enumerationTypeRepository.findAll();
-
-        //Mark deleted one
-        for(EnumerationTypeBean type : enumerationTypes)
-            if(type.isHidden())
-                type.setTypeName(getProp().getText("enum_type.deleted_type_mark.js") + type.getTypeName());
-
-        page.addDefaultOption("editorFields.childEnumTypeId", "", "-1");
-        page.addOptions("editorFields.childEnumTypeId", enumerationTypes, "typeName", "enumerationTypeId", false);
-
+        EnumerationService.prepareEnumTypesOptions(page, getProp());
         return page;
     }
 
@@ -87,14 +75,14 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
         Long entityId = entity.getId();
         if(entityId != null && entityId != -1) {
             //If allowChildEnumerationType was changed to false, remove from data all set child enum type's
-            if(!entity.isAllowChildEnumerationType()) {
+            if(entity.isAllowChildEnumerationType()==false) {
                 //Only if in DB is value still true
                 if(jpaToBoolean(enumerationTypeRepository.isAllowChildEnumerationType(entityId)))
                     enumerationDataRepository.denyChildEnumerationTypeByTypeId(entityId);
             }
 
             //If allowParentEnumerationData was changed to false, remove from data all set parent enum data's
-            if(!entity.isAllowParentEnumerationData()) {
+            if(entity.isAllowParentEnumerationData()==false) {
                 //Only if in DB is value still true
                 if(jpaToBoolean(enumerationTypeRepository.isAllowParentEnumerationData(entityId)))
                     enumerationDataRepository.denyParentEnumerationDataByTypeId(entityId);

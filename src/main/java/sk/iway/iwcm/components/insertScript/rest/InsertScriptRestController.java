@@ -14,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.insertScript.InsertScriptBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptDB;
+import sk.iway.iwcm.components.insertScript.InsertScriptDocBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptGroupBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptRepository;
 import sk.iway.iwcm.i18n.Prop;
@@ -44,6 +45,21 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
         data.addOptions("cookieClass", getCookieClassifications(prop), "label", "value", false);
 
         return data;
+    }
+
+    @Override
+    public void beforeDuplicate(InsertScriptBean entity) {
+        if (entity.getDocIds()!=null) {
+            for(InsertScriptDocBean docBean : entity.getDocIds()) {
+                docBean.setId(null);
+            }
+        }
+        if (entity.getGroupIds() != null) {
+            for(InsertScriptGroupBean groupBean : entity.getGroupIds()) {
+                groupBean.setId(null);
+            }
+        }
+        super.beforeDuplicate(entity);
     }
 
     @Override

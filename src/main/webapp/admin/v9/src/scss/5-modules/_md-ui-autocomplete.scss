@@ -29,6 +29,11 @@ ul.ui-autocomplete {
             }
         }
     }
+
+    li.disabled {
+        background-color: #ceced2 !important;
+        cursor: not-allowed !important;
+    }
 }
 
 .DTE_Field_InputControl input.ui-autocomplete-input:focus, .DTE_Field_InputControl input.ui-autocomplete-input:hover {
